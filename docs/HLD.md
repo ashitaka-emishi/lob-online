@@ -144,6 +144,7 @@ Player A (browser)          Server                Player B (browser)
 ### Phase 1 — MVP (ship a complete, playable game)
 
 **What is built:**
+
 - Discord OAuth2 login (`passport-discord`), JWT cookie session
 - Full Express REST API (`/auth`, `/api/v1/games`, `/api/v1/map`)
 - Rules engine covering the complete South Mountain scenario: movement, fire combat, close combat, morale, orders/command, artillery, VP tracking, all 10 SM rule overrides, all 4 errata corrections
@@ -157,6 +158,7 @@ Player A (browser)          Server                Player B (browser)
 - Vitest test suite, ESLint + Prettier configured
 
 **What is explicitly deferred:**
+
 - Discord bot DMs (private per-player notifications) — Phase 2
 - Replay/history viewer — Phase 2
 - Scenarios other than South Mountain — Phase 3
@@ -165,6 +167,7 @@ Player A (browser)          Server                Player B (browser)
 - Mobile-optimised layout — Phase 2
 
 **Acceptance criteria:**
+
 - Two players can log in with Discord accounts
 - Players can create a game, invite an opponent (share game link), and play a full South Mountain scenario to completion
 - All SM rule overrides and errata corrections are enforced by the server; illegal moves are rejected with a clear error code
@@ -176,6 +179,7 @@ Player A (browser)          Server                Player B (browser)
 ### Phase 2 — Enhanced Experience
 
 **What is built:**
+
 - Discord bot registered with per-user DMs (private turn notifications replacing shared webhook)
 - Action history viewer / replay mode — step through past actions on the map
 - Improved map UX: move highlighting, valid-target overlay, animated unit movement
@@ -185,6 +189,7 @@ Player A (browser)          Server                Player B (browser)
 - Game abandonment / forfeit handling
 
 **Acceptance criteria:**
+
 - Players receive a Discord DM when it's their turn
 - A completed game can be replayed action-by-action
 - The app is usable on a tablet
@@ -194,6 +199,7 @@ Player A (browser)          Server                Player B (browser)
 ### Phase 3 — Extended Content
 
 **What is built:**
+
 - Additional LoB scenarios (scenario data JSON + any scenario-specific rule overrides)
 - Spectator mode (read-only game view)
 - AI opponent (stretch goal — even a random-legal-move AI has value for testing)
@@ -229,11 +235,11 @@ Player A (browser)          Server                Player B (browser)
 Applied globally in `app.js`:
 
 ```js
-app.use(helmet())
-app.use(cors({ origin: process.env.CLIENT_ORIGIN, credentials: true }))
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'))
-app.use(cookieParser())
-app.use(express.json())
+app.use(helmet());
+app.use(cors({ origin: process.env.CLIENT_ORIGIN, credentials: true }));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use(cookieParser());
+app.use(express.json());
 ```
 
 Applied to protected routes:
@@ -313,15 +319,27 @@ req.game = {
   state: {
     turn: 4,
     phase: 'activation',
-    oob: { /* full unit tree */ },
-    leaders: { /* leader states */ },
-    hexControl: { /* hex → side */ },
-    artilleryAmmo: { /* unit id → shots remaining */ },
+    oob: {
+      /* full unit tree */
+    },
+    leaders: {
+      /* leader states */
+    },
+    hexControl: {
+      /* hex → side */
+    },
+    artilleryAmmo: {
+      /* unit id → shots remaining */
+    },
     vpTotals: { union: 3, confederate: 1 },
-    activeOrders: { /* order group activations remaining */ },
-    log: [ /* action results this turn */ ]
-  }
-}
+    activeOrders: {
+      /* order group activations remaining */
+    },
+    log: [
+      /* action results this turn */
+    ],
+  },
+};
 ```
 
 ---
@@ -330,10 +348,10 @@ req.game = {
 
 ### Two-Layer Design
 
-| Concern | Layer | Technology |
-|---------|-------|------------|
-| Game state (large, append-heavy) | Object storage | DigitalOcean Spaces |
-| User records, game index, queries | Relational | SQLite (`better-sqlite3`) |
+| Concern                           | Layer          | Technology                |
+| --------------------------------- | -------------- | ------------------------- |
+| Game state (large, append-heavy)  | Object storage | DigitalOcean Spaces       |
+| User records, game index, queries | Relational     | SQLite (`better-sqlite3`) |
 
 The two layers are isolated behind `store/spaces.js` and `store/sqlite.js`. Routes and the engine never call the storage clients directly.
 
@@ -361,41 +379,47 @@ lob-online-games/                         ← Spaces bucket
 import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 
 const client = new S3Client({
-  endpoint: process.env.DO_SPACES_ENDPOINT,   // e.g. https://nyc3.digitaloceanspaces.com
-  region: process.env.DO_SPACES_REGION,       // e.g. nyc3
+  endpoint: process.env.DO_SPACES_ENDPOINT, // e.g. https://nyc3.digitaloceanspaces.com
+  region: process.env.DO_SPACES_REGION, // e.g. nyc3
   credentials: {
     accessKeyId: process.env.DO_SPACES_KEY,
     secretAccessKey: process.env.DO_SPACES_SECRET,
   },
 });
 
-const BUCKET = process.env.DO_SPACES_BUCKET;  // e.g. lob-online-games
+const BUCKET = process.env.DO_SPACES_BUCKET; // e.g. lob-online-games
 
 export async function saveGameState(gameId, state) {
-  await client.send(new PutObjectCommand({
-    Bucket: BUCKET,
-    Key: `games/${gameId}/state.json`,
-    Body: JSON.stringify(state),
-    ContentType: 'application/json',
-  }));
+  await client.send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: `games/${gameId}/state.json`,
+      Body: JSON.stringify(state),
+      ContentType: 'application/json',
+    })
+  );
 }
 
 export async function loadGameState(gameId) {
-  const response = await client.send(new GetObjectCommand({
-    Bucket: BUCKET,
-    Key: `games/${gameId}/state.json`,
-  }));
+  const response = await client.send(
+    new GetObjectCommand({
+      Bucket: BUCKET,
+      Key: `games/${gameId}/state.json`,
+    })
+  );
   return JSON.parse(await response.Body.transformToString());
 }
 
 export async function appendHistory(gameId, seq, record) {
   const key = `games/${gameId}/history/${String(seq).padStart(6, '0')}.json`;
-  await client.send(new PutObjectCommand({
-    Bucket: BUCKET,
-    Key: key,
-    Body: JSON.stringify(record),
-    ContentType: 'application/json',
-  }));
+  await client.send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      Body: JSON.stringify(record),
+      ContentType: 'application/json',
+    })
+  );
 }
 ```
 
@@ -488,12 +512,14 @@ export async function notifyWebhook(url, { gameId, playerName, turnNumber, phase
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       content: `⚔️ **${playerName}** has taken their action — it's your turn!`,
-      embeds: [{
-        title: 'South Mountain',
-        description: `Turn ${turnNumber} · ${phase} phase`,
-        url: `${process.env.APP_URL}/games/${gameId}`,
-        color: 0x5865F2,
-      }]
+      embeds: [
+        {
+          title: 'South Mountain',
+          description: `Turn ${turnNumber} · ${phase} phase`,
+          url: `${process.env.APP_URL}/games/${gameId}`,
+          color: 0x5865f2,
+        },
+      ],
     }),
   });
 }
@@ -507,7 +533,7 @@ The `discord_webhook_url` is stored in the SQLite `games` table, set optionally 
 
 ```js
 // app.js (Socket.io setup)
-io.use(authenticateSocketJWT);   // verify JWT cookie on socket handshake
+io.use(authenticateSocketJWT); // verify JWT cookie on socket handshake
 
 io.on('connection', (socket) => {
   const userId = socket.user.id;
@@ -554,14 +580,14 @@ socket.on('game:state-updated', ({ state, lastAction }) => {
 
 #### Event Catalogue
 
-| Event | Direction | Payload |
-|-------|-----------|---------|
-| `game:join` | client → server | `{ gameId }` |
-| `game:leave` | client → server | `{ gameId }` |
-| `game:state-updated` | server → client | `{ state, lastAction }` |
-| `game:player-online` | server → client | `{ userId }` |
-| `game:player-offline` | server → client | `{ userId }` |
-| `game:complete` | server → client | `{ state, winner }` |
+| Event                 | Direction       | Payload                 |
+| --------------------- | --------------- | ----------------------- |
+| `game:join`           | client → server | `{ gameId }`            |
+| `game:leave`          | client → server | `{ gameId }`            |
+| `game:state-updated`  | server → client | `{ state, lastAction }` |
+| `game:player-online`  | server → client | `{ userId }`            |
+| `game:player-offline` | server → client | `{ userId }`            |
+| `game:complete`       | server → client | `{ state, winner }`     |
 
 ---
 
@@ -605,12 +631,12 @@ socket.on('game:state-updated', ({ state, lastAction }) => {
 
 ### State Definitions
 
-| State | Data initialised | Valid transitions | Trigger |
-|-------|-----------------|-------------------|---------|
-| `setup` | Game record created; Union player assigned; awaiting Confederate player | → `in_progress` | Confederate player POSTs `/join` |
-| `in_progress` | Scenario loaded: units at start positions, orders set per SM_SCENARIO_DATA (Complex defense → Move), all SM overrides active | → `suspended`, → `complete` | Each action POST; end-of-turn VP check |
-| `suspended` | Timestamp of suspension recorded | → `in_progress` | Either player POSTs `/resume` |
-| `complete` | Final VP totals, winner recorded | terminal | End-of-turn VP check meets threshold, or player forfeits |
+| State         | Data initialised                                                                                                             | Valid transitions           | Trigger                                                  |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------- | -------------------------------------------------------- |
+| `setup`       | Game record created; Union player assigned; awaiting Confederate player                                                      | → `in_progress`             | Confederate player POSTs `/join`                         |
+| `in_progress` | Scenario loaded: units at start positions, orders set per SM_SCENARIO_DATA (Complex defense → Move), all SM overrides active | → `suspended`, → `complete` | Each action POST; end-of-turn VP check                   |
+| `suspended`   | Timestamp of suspension recorded                                                                                             | → `in_progress`             | Either player POSTs `/resume`                            |
+| `complete`    | Final VP totals, winner recorded                                                                                             | terminal                    | End-of-turn VP check meets threshold, or player forfeits |
 
 ### LoB Turn Sequence Within `in_progress`
 
@@ -780,7 +806,7 @@ Engine modules read from `scenarioRules` rather than hardcoding values:
 ```js
 // engine/los.js
 function treeHeight(scenarioRules) {
-  return scenarioRules.treeLosHeight ?? 3;  // default LoB: 3; SM: 1
+  return scenarioRules.treeLosHeight ?? 3; // default LoB: 3; SM: 1
 }
 ```
 
@@ -801,12 +827,15 @@ function treeHeight(scenarioRules) {
 ### Auth Endpoints
 
 #### `GET /auth/discord`
+
 Redirects browser to Discord authorization page. No request body.
 
 #### `GET /auth/discord/callback`
+
 Discord redirects here after user approves. Server exchanges code for Discord user profile, upserts user in SQLite, issues JWT cookie.
 
 **Response (redirect to frontend):**
+
 ```
 302 Found
 Set-Cookie: lob_session=<jwt>; HttpOnly; Secure; SameSite=Lax; Path=/
@@ -814,20 +843,25 @@ Location: /
 ```
 
 #### `POST /auth/logout`
+
 Clears the JWT cookie.
 
 **Response:**
+
 ```json
 { "ok": true }
 ```
+
 ```
 Set-Cookie: lob_session=; Max-Age=0; HttpOnly; ...
 ```
 
 #### `GET /auth/me`
+
 Returns the authenticated user's profile.
 
 **Response:**
+
 ```json
 {
   "id": "usr_a1b2c3",
@@ -842,9 +876,11 @@ Returns the authenticated user's profile.
 ### Game Endpoints
 
 #### `POST /api/v1/games`
+
 Create a new game. Creator is assigned Union by default (configurable).
 
 **Request:**
+
 ```json
 {
   "scenario": "south-mountain",
@@ -854,6 +890,7 @@ Create a new game. Creator is assigned Union by default (configurable).
 ```
 
 **Response `201`:**
+
 ```json
 {
   "id": "gam_x9y8z7",
@@ -869,11 +906,13 @@ Create a new game. Creator is assigned Union by default (configurable).
 ---
 
 #### `POST /api/v1/games/:id/join`
+
 Second player joins. Triggers scenario initialisation.
 
 **Request:** (no body required — identity from JWT cookie)
 
 **Response `200`:**
+
 ```json
 {
   "id": "gam_x9y8z7",
@@ -886,9 +925,11 @@ Second player joins. Triggers scenario initialisation.
 ---
 
 #### `GET /api/v1/games/:id`
+
 Get current game state. Available to both players.
 
 **Response `200`:**
+
 ```json
 {
   "id": "gam_x9y8z7",
@@ -918,7 +959,7 @@ Get current game state. Available to both players.
           }
         }
       },
-      "confederate": { "..." : "..." }
+      "confederate": { "...": "..." }
     },
     "leaders": {
       "Hill": { "hex": "1204", "rating": "Normal", "attached": "Garland Brigade" }
@@ -939,9 +980,11 @@ Get current game state. Available to both players.
 ---
 
 #### `POST /api/v1/games/:id/actions`
+
 Submit a player action. All action types share this endpoint; the `type` field routes to the correct engine module.
 
 **Request — Move action:**
+
 ```json
 {
   "type": "MOVE",
@@ -951,6 +994,7 @@ Submit a player action. All action types share this endpoint; the `type` field r
 ```
 
 **Request — Fire action:**
+
 ```json
 {
   "type": "FIRE",
@@ -961,6 +1005,7 @@ Submit a player action. All action types share this endpoint; the `type` field r
 ```
 
 **Request — End activation:**
+
 ```json
 {
   "type": "END_ACTIVATION",
@@ -969,6 +1014,7 @@ Submit a player action. All action types share this endpoint; the `type` field r
 ```
 
 **Response `200` — Move:**
+
 ```json
 {
   "result": {
@@ -984,6 +1030,7 @@ Submit a player action. All action types share this endpoint; the `type` field r
 ```
 
 **Response `422` — Rules violation:**
+
 ```json
 {
   "error": {
@@ -1002,9 +1049,11 @@ Submit a player action. All action types share this endpoint; the `type` field r
 ---
 
 #### `GET /api/v1/games/:id/history`
+
 Full action log, oldest first.
 
 **Response `200`:**
+
 ```json
 {
   "gameId": "gam_x9y8z7",
@@ -1013,7 +1062,7 @@ Full action log, oldest first.
       "seq": 1,
       "timestamp": "2026-02-19T10:05:00Z",
       "playerId": "usr_a1b2c3",
-      "action": { "type": "MOVE", "unitId": "5NC", "path": ["1204","1205"] },
+      "action": { "type": "MOVE", "unitId": "5NC", "path": ["1204", "1205"] },
       "result": { "mpUsed": 2, "mpRemaining": 2 }
     }
   ]
@@ -1025,9 +1074,11 @@ Full action log, oldest first.
 ### Map Endpoint
 
 #### `GET /api/v1/map/south-mountain`
+
 Returns the hex grid data needed by the client to render the SVG map. Served from the static `data/scenarios/south-mountain/map.json` file; does not require authentication.
 
 **Response `200`:**
+
 ```json
 {
   "scenario": "south-mountain",
@@ -1035,7 +1086,8 @@ Returns the hex grid data needed by the client to render the SVG map. Served fro
   "hexes": [
     {
       "id": "1204",
-      "q": 12, "r": 4,
+      "q": 12,
+      "r": 4,
       "terrain": "woods",
       "elevation": 2,
       "road": false,
@@ -1044,7 +1096,8 @@ Returns the hex grid data needed by the client to render the SVG map. Served fro
     },
     {
       "id": "1205",
-      "q": 12, "r": 5,
+      "q": 12,
+      "r": 5,
       "terrain": "clear",
       "elevation": 1,
       "road": true,
@@ -1071,14 +1124,14 @@ All error responses use this shape:
 }
 ```
 
-| HTTP Status | When |
-|-------------|------|
-| 400 | Malformed request / Zod validation failure |
-| 401 | Missing or expired JWT |
-| 403 | Authenticated but not authorised (e.g. not a player in this game, not your turn) |
-| 404 | Resource not found |
-| 422 | Valid request, rejected by rules engine |
-| 500 | Unexpected server error |
+| HTTP Status | When                                                                             |
+| ----------- | -------------------------------------------------------------------------------- |
+| 400         | Malformed request / Zod validation failure                                       |
+| 401         | Missing or expired JWT                                                           |
+| 403         | Authenticated but not authorised (e.g. not a player in this game, not your turn) |
+| 404         | Resource not found                                                               |
+| 422         | Valid request, rejected by rules engine                                          |
+| 500         | Unexpected server error                                                          |
 
 ---
 
@@ -1240,11 +1293,14 @@ export default [
       ...pluginN.configs['flat/recommended'].rules,
       'n/no-missing-import': 'error',
       'n/no-extraneous-import': 'error',
-      'import/order': ['warn', {
-        'groups': ['builtin', 'external', 'internal'],
-        'newlines-between': 'always',
-      }],
-      'no-console': 'off',           // logging is intentional server-side
+      'import/order': [
+        'warn',
+        {
+          groups: ['builtin', 'external', 'internal'],
+          'newlines-between': 'always',
+        },
+      ],
+      'no-console': 'off', // logging is intentional server-side
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
@@ -1318,17 +1374,14 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
-      include: [
-        'server/src/**/*.js',
-        'client/src/**/*.{js,vue}',
-      ],
+      include: ['server/src/**/*.js', 'client/src/**/*.{js,vue}'],
       exclude: [
         '**/*.test.js',
-        'server/src/server.js',   // entry point; not unit-testable
+        'server/src/server.js', // entry point; not unit-testable
         'client/src/main.js',
       ],
       thresholds: {
-        lines: 70,                // start modest; raise as engine matures
+        lines: 70, // start modest; raise as engine matures
         functions: 70,
       },
     },
@@ -1377,75 +1430,75 @@ DISCORD_CALLBACK_URL=http://localhost:3000/auth/discord/callback
 
 ### Rules Engine Complexity
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| **LOS calculation** — SM has elevation contours, woods (+1 height per SM override), ridge hexsides. Getting LOS exactly right for all terrain combinations is the hardest single problem in the engine. | High | Build `los.test.js` with an exhaustive set of known-correct LOS pairs drawn from the physical rulebook examples. Implement and test before combat. |
-| **ZOC rules** — Zone of Control entry, exit, and the many exceptions (roads, friendly units, routed units) are notoriously fiddly in LoB. | Medium | Implement ZOC in isolation with a dedicated test suite. Add each exception as a named test case keyed to the rule number in LOB_RULES. |
-| **Morale cascade** — rout propagation up the unit hierarchy (regiment → brigade → division) has complex stop conditions. | Medium | Model the hierarchy explicitly in GS_OOB. Test cascade with a mock game state that forces rout at each level. |
+| Risk                                                                                                                                                                                                    | Severity | Mitigation                                                                                                                                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **LOS calculation** — SM has elevation contours, woods (+1 height per SM override), ridge hexsides. Getting LOS exactly right for all terrain combinations is the hardest single problem in the engine. | High     | Build `los.test.js` with an exhaustive set of known-correct LOS pairs drawn from the physical rulebook examples. Implement and test before combat. |
+| **ZOC rules** — Zone of Control entry, exit, and the many exceptions (roads, friendly units, routed units) are notoriously fiddly in LoB.                                                               | Medium   | Implement ZOC in isolation with a dedicated test suite. Add each exception as a named test case keyed to the rule number in LOB_RULES.             |
+| **Morale cascade** — rout propagation up the unit hierarchy (regiment → brigade → division) has complex stop conditions.                                                                                | Medium   | Model the hierarchy explicitly in GS_OOB. Test cascade with a mock game state that forces rout at each level.                                      |
 
 ---
 
 ### Data Modeling
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| **Map digitisation** — Converting `SM_Map.jpg` to `map.json` (every hex with coordinates, terrain type, elevation, road/trail flags) is manual work for ~600+ hexes. This is the largest single pre-code task. | High | Treat it as a dedicated milestone. Consider building a simple hex-painting tool (or using a hex map editor like Tiled) to accelerate the data entry. Do not start implementing the SVG map until `map.json` has at least one complete pass. |
-| **GS_OOB hierarchy depth** — Leader attachment/detachment mid-game, the difference between in-command and out-of-command ranges, and the exact OOB hierarchy (army → corps → division → brigade → regiment) needs careful schema design before any combat logic is written. | Medium | Draft the full GS_OOB JSON schema as the first data modeling task, reviewed against SM_Regimental_Roster.pdf before coding begins. |
+| Risk                                                                                                                                                                                                                                                                        | Severity | Mitigation                                                                                                                                                                                                                                  |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Map digitisation** — Converting `SM_Map.jpg` to `map.json` (every hex with coordinates, terrain type, elevation, road/trail flags) is manual work for ~600+ hexes. This is the largest single pre-code task.                                                              | High     | Treat it as a dedicated milestone. Consider building a simple hex-painting tool (or using a hex map editor like Tiled) to accelerate the data entry. Do not start implementing the SVG map until `map.json` has at least one complete pass. |
+| **GS_OOB hierarchy depth** — Leader attachment/detachment mid-game, the difference between in-command and out-of-command ranges, and the exact OOB hierarchy (army → corps → division → brigade → regiment) needs careful schema design before any combat logic is written. | Medium   | Draft the full GS_OOB JSON schema as the first data modeling task, reviewed against SM_Regimental_Roster.pdf before coding begins.                                                                                                          |
 
 ---
 
 ### Persistence
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| **DO Spaces latency** — Each action does at least one Spaces write (state.json) and one read (on load). Round-trip to nyc3 from a co-located Droplet should be 10–50ms, but this adds up in real-time play. | Low | Co-locate Droplet and Spaces in the same region (nyc3). Profile early. If latency is noticeable, batch state + history write in parallel with `Promise.all`. |
-| **state.json growing large** — After many actions, `state.json` may become large (detailed OOB). | Low | State is always a full snapshot, not a diff. Keep GS_OOB lean — store only the mutable fields (strength, moraleState, hex, order); derive immutable stats from the static `oob.json` data file. |
+| Risk                                                                                                                                                                                                        | Severity | Mitigation                                                                                                                                                                                      |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **DO Spaces latency** — Each action does at least one Spaces write (state.json) and one read (on load). Round-trip to nyc3 from a co-located Droplet should be 10–50ms, but this adds up in real-time play. | Low      | Co-locate Droplet and Spaces in the same region (nyc3). Profile early. If latency is noticeable, batch state + history write in parallel with `Promise.all`.                                    |
+| **state.json growing large** — After many actions, `state.json` may become large (detailed OOB).                                                                                                            | Low      | State is always a full snapshot, not a diff. Keep GS_OOB lean — store only the mutable fields (strength, moraleState, hex, order); derive immutable stats from the static `oob.json` data file. |
 
 ---
 
 ### Auth
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| **Discord OAuth outage** — If Discord is down, new logins fail. | Low | Existing JWTs remain valid until expiry (7 days). Players mid-session are unaffected. Show a clear "Login unavailable" message on failure. Not worth a fallback for a hobby project. |
-| **User revokes Discord access** — The Discord access token becomes invalid. | Low | The app uses Discord only for identity at login time. The JWT is the active session credential. Revocation only affects the next login, not active sessions. |
+| Risk                                                                        | Severity | Mitigation                                                                                                                                                                           |
+| --------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Discord OAuth outage** — If Discord is down, new logins fail.             | Low      | Existing JWTs remain valid until expiry (7 days). Players mid-session are unaffected. Show a clear "Login unavailable" message on failure. Not worth a fallback for a hobby project. |
+| **User revokes Discord access** — The Discord access token becomes invalid. | Low      | The app uses Discord only for identity at login time. The JWT is the active session credential. Revocation only affects the next login, not active sessions.                         |
 
 ---
 
 ### Hex Map
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| **SVG performance on large maps** — ~600 hexes × multiple SVG elements each = potentially thousands of DOM nodes. | Medium | Use Vue's `v-for` with stable `:key` values so the virtual DOM patches minimally. Benchmark on a mid-range tablet early. If needed, switch hex terrain to a static SVG background image and overlay only units + UI elements as interactive DOM nodes. |
-| **Honeycomb.js LOS integration** — Honeycomb.js provides hex geometry but not LOS ray-casting with terrain height. Custom LOS must be written. | Medium | LOS is server-side only (in `engine/los.js`). The client highlights valid targets based on the server's response; it does not compute LOS itself. This separation keeps the client simple. |
+| Risk                                                                                                                                           | Severity | Mitigation                                                                                                                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **SVG performance on large maps** — ~600 hexes × multiple SVG elements each = potentially thousands of DOM nodes.                              | Medium   | Use Vue's `v-for` with stable `:key` values so the virtual DOM patches minimally. Benchmark on a mid-range tablet early. If needed, switch hex terrain to a static SVG background image and overlay only units + UI elements as interactive DOM nodes. |
+| **Honeycomb.js LOS integration** — Honeycomb.js provides hex geometry but not LOS ray-casting with terrain height. Custom LOS must be written. | Medium   | LOS is server-side only (in `engine/los.js`). The client highlights valid targets based on the server's response; it does not compute LOS itself. This separation keeps the client simple.                                                             |
 
 ---
 
 ### Multiplayer
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| **Game abandonment** — A player goes silent in an async game indefinitely. | Medium | Phase 2: add a forfeit endpoint (`POST /games/:id/forfeit`). For MVP, games can simply remain `in_progress` indefinitely without harm. |
-| **Real-time desync** — A player submits an action while a Socket.io event is in flight. | Low | Actions are serialised by turn enforcement in SQLite. The REST response is the authoritative state; the socket event is a convenience notification. The client always reconciles from the REST response, not the socket event alone. |
-| **Socket.io reconnection gap** — Player reconnects after a brief drop and misses a state update event. | Low | On reconnect, the client calls `GET /games/:id` to re-sync from Spaces. The socket room just delivers live updates; it is not the source of truth. |
+| Risk                                                                                                   | Severity | Mitigation                                                                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Game abandonment** — A player goes silent in an async game indefinitely.                             | Medium   | Phase 2: add a forfeit endpoint (`POST /games/:id/forfeit`). For MVP, games can simply remain `in_progress` indefinitely without harm.                                                                                               |
+| **Real-time desync** — A player submits an action while a Socket.io event is in flight.                | Low      | Actions are serialised by turn enforcement in SQLite. The REST response is the authoritative state; the socket event is a convenience notification. The client always reconciles from the REST response, not the socket event alone. |
+| **Socket.io reconnection gap** — Player reconnects after a brief drop and misses a state update event. | Low      | On reconnect, the client calls `GET /games/:id` to re-sync from Spaces. The socket room just delivers live updates; it is not the source of truth.                                                                                   |
 
 ---
 
 ### Scope
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| **Rules engine underestimated** — LoB has many interacting systems. The full rules are 36 pages. | High | Build incrementally: movement first, then fire combat, then close combat, then morale. Each phase must have passing tests before the next begins. Do not attempt to implement all rules simultaneously. |
-| **Map data entry underestimated** — See above. | High | Start map digitisation in parallel with engine development; it does not block engine work. |
-| **Phase 1 scope drift** — "Just one more feature" pressure during MVP development. | Medium | Hold the Phase 1 acceptance criteria firm. Anything not in the criteria list goes on the Phase 2 backlog. |
+| Risk                                                                                             | Severity | Mitigation                                                                                                                                                                                              |
+| ------------------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Rules engine underestimated** — LoB has many interacting systems. The full rules are 36 pages. | High     | Build incrementally: movement first, then fire combat, then close combat, then morale. Each phase must have passing tests before the next begins. Do not attempt to implement all rules simultaneously. |
+| **Map data entry underestimated** — See above.                                                   | High     | Start map digitisation in parallel with engine development; it does not block engine work.                                                                                                              |
+| **Phase 1 scope drift** — "Just one more feature" pressure during MVP development.               | Medium   | Hold the Phase 1 acceptance criteria firm. Anything not in the criteria list goes on the Phase 2 backlog.                                                                                               |
 
 ---
 
 ### Testing
 
-| Concern | Approach |
-|---------|----------|
-| **Rules correctness** | Golden-path integration tests: feed known game situations (from the rulebook examples and SM_Rules.pdf) into the engine and assert the exact expected outcome. These are the most valuable tests in the project. |
-| **Regression safety** | Every bug found during playtesting gets a test case added before the fix is applied. |
-| **LOS / movement coverage** | Property-based tests (fast-check or similar) to fuzz hex coordinates and movement paths and check that the engine never throws unexpected errors. |
-| **API contract** | Supertest integration tests for each route covering happy path, auth failure, rules violation, and not-found cases. |
+| Concern                     | Approach                                                                                                                                                                                                         |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Rules correctness**       | Golden-path integration tests: feed known game situations (from the rulebook examples and SM_Rules.pdf) into the engine and assert the exact expected outcome. These are the most valuable tests in the project. |
+| **Regression safety**       | Every bug found during playtesting gets a test case added before the fix is applied.                                                                                                                             |
+| **LOS / movement coverage** | Property-based tests (fast-check or similar) to fuzz hex coordinates and movement paths and check that the engine never throws unexpected errors.                                                                |
+| **API contract**            | Supertest integration tests for each route covering happy path, auth failure, rules violation, and not-found cases.                                                                                              |

@@ -12,7 +12,7 @@ You are a software architect. Using the project context below, generate a compre
 
 ## 1. Project Summary
 
-**lob-online** is an online, two-player implementation of the *Line of Battle v2.0* (LoB) wargame system published by Multi-Man Publishing. The first game being implemented is *South Mountain* (RSS #4) — a Civil War battle chosen for its manageable scope.
+**lob-online** is an online, two-player implementation of the _Line of Battle v2.0_ (LoB) wargame system published by Multi-Man Publishing. The first game being implemented is _South Mountain_ (RSS #4) — a Civil War battle chosen for its manageable scope.
 
 ### Development philosophy: ship a real MVP first
 
@@ -32,68 +32,68 @@ Documentation and scoping only. No code exists. All source material (rulebooks, 
 
 **Runtime & framework**
 
-| Layer | Technology |
-|-------|------------|
-| Backend runtime | Node.js |
-| Backend framework | Express.js |
-| Frontend | Vue 3 + Vite + Pinia |
-| Repo structure | npm workspaces (monorepo — `server/` and `client/` as workspace packages) |
+| Layer             | Technology                                                                |
+| ----------------- | ------------------------------------------------------------------------- |
+| Backend runtime   | Node.js                                                                   |
+| Backend framework | Express.js                                                                |
+| Frontend          | Vue 3 + Vite + Pinia                                                      |
+| Repo structure    | npm workspaces (monorepo — `server/` and `client/` as workspace packages) |
 
 **Auth & security**
 
-| Layer | Technology |
-|-------|------------|
-| Authentication | Discord OAuth2 — "Login with Discord". No username/password; no argon2. |
-| Discord app | Application registered in Discord developer portal — provides `DISCORD_CLIENT_ID` + `DISCORD_CLIENT_SECRET` |
-| OAuth library | `passport` + `passport-discord` |
-| Auth tokens | JWT (`jsonwebtoken`) — issued by the server after OAuth completes; stored in `httpOnly` cookies |
-| Security middleware | `helmet` (HTTP headers) + `cors` (dev: Vite port → Express port) |
-| Input validation | Zod — validates all incoming request bodies before the rules engine sees them |
+| Layer               | Technology                                                                                                  |
+| ------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Authentication      | Discord OAuth2 — "Login with Discord". No username/password; no argon2.                                     |
+| Discord app         | Application registered in Discord developer portal — provides `DISCORD_CLIENT_ID` + `DISCORD_CLIENT_SECRET` |
+| OAuth library       | `passport` + `passport-discord`                                                                             |
+| Auth tokens         | JWT (`jsonwebtoken`) — issued by the server after OAuth completes; stored in `httpOnly` cookies             |
+| Security middleware | `helmet` (HTTP headers) + `cors` (dev: Vite port → Express port)                                            |
+| Input validation    | Zod — validates all incoming request bodies before the rules engine sees them                               |
 
 **Persistence**
 
-| Layer | Technology |
-|-------|------------|
-| Game state storage | DigitalOcean Spaces (S3-compatible object storage) — JSON files per game |
-| Storage client | `@aws-sdk/client-s3` v3 with custom `endpoint` pointing to DO Spaces |
-| Auth / game index | SQLite via `better-sqlite3` — user records (`discord_id`, `username`, `avatar_url`), game list, player-to-game mapping |
+| Layer              | Technology                                                                                                             |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Game state storage | DigitalOcean Spaces (S3-compatible object storage) — JSON files per game                                               |
+| Storage client     | `@aws-sdk/client-s3` v3 with custom `endpoint` pointing to DO Spaces                                                   |
+| Auth / game index  | SQLite via `better-sqlite3` — user records (`discord_id`, `username`, `avatar_url`), game list, player-to-game mapping |
 
 **Hex map**
 
-| Layer | Technology |
-|-------|------------|
+| Layer         | Technology                                                                 |
+| ------------- | -------------------------------------------------------------------------- |
 | Map rendering | SVG (browser-rendered, in-DOM — natural for click/hover on discrete hexes) |
-| Hex grid math | Honeycomb.js — cube coordinates, neighbor lookup, range, LOS geometry |
+| Hex grid math | Honeycomb.js — cube coordinates, neighbor lookup, range, LOS geometry      |
 
 **Multiplayer**
 
-| Layer | Technology |
-|-------|------------|
-| Multiplayer modes | Async (PBEM-style) AND real-time (both supported) |
+| Layer               | Technology                                                                                                       |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Multiplayer modes   | Async (PBEM-style) AND real-time (both supported)                                                                |
 | Async notifications | Discord webhook — optional URL stored per game; server POSTs a message when it's a player's turn. No SDK needed. |
-| Real-time sync | **TBD** — recommend Socket.io vs. SSE vs. polling (see Section 5) |
+| Real-time sync      | **TBD** — recommend Socket.io vs. SSE vs. polling (see Section 5)                                                |
 
 **Infrastructure**
 
-| Layer | Technology |
-|-------|------------|
-| Deployment | DigitalOcean Droplet (~$6/month, 1 vCPU / 1GB RAM) |
-| Object storage | DigitalOcean Spaces (~$5/month, 250GB) |
-| Static assets | Vue build served by Express (no separate CDN for MVP) |
-| Reverse proxy | nginx — terminates HTTPS, proxies to Node process |
-| TLS | Let's Encrypt via Certbot (auto-renewing) |
-| Process management | PM2 — keeps Node process alive, handles restarts, log management |
-| CI/CD | GitHub Actions — lint + test on every PR; deploy to Droplet on merge to `main` |
+| Layer              | Technology                                                                        |
+| ------------------ | --------------------------------------------------------------------------------- |
+| Deployment         | DigitalOcean Droplet (~$6/month, 1 vCPU / 1GB RAM)                                |
+| Object storage     | DigitalOcean Spaces (~$5/month, 250GB)                                            |
+| Static assets      | Vue build served by Express (no separate CDN for MVP)                             |
+| Reverse proxy      | nginx — terminates HTTPS, proxies to Node process                                 |
+| TLS                | Let's Encrypt via Certbot (auto-renewing)                                         |
+| Process management | PM2 — keeps Node process alive, handles restarts, log management                  |
+| CI/CD              | GitHub Actions — lint + test on every PR; deploy to Droplet on merge to `main`    |
 | Environment config | `dotenv` locally; environment variables set directly on the Droplet in production |
-| Request logging | `morgan` (dev) / structured JSON log in production |
+| Request logging    | `morgan` (dev) / structured JSON log in production                                |
 
 **Tooling**
 
-| Layer | Technology |
-|-------|------------|
-| Testing | Vitest |
-| Linting | ESLint v9+ flat config — `@eslint/js` recommended + `eslint-plugin-vue` (vue3-recommended) + `eslint-plugin-n` (Node.js) + `eslint-plugin-import` |
-| Formatting | Prettier + `eslint-config-prettier` |
+| Layer      | Technology                                                                                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Testing    | Vitest                                                                                                                                            |
+| Linting    | ESLint v9+ flat config — `@eslint/js` recommended + `eslint-plugin-vue` (vue3-recommended) + `eslint-plugin-n` (Node.js) + `eslint-plugin-import` |
+| Formatting | Prettier + `eslint-config-prettier`                                                                                                               |
 
 ---
 
@@ -109,12 +109,12 @@ Documentation and scoping only. No code exists. All source material (rulebooks, 
 
 ### Planned JSON data models (not yet built)
 
-| Model ID | Contents |
-|----------|----------|
-| SM_SCENARIO_DATA | At-start positions, orders, reinforcement schedule, VP hexes, ammo reserves |
-| GS_OOB | Order of Battle — all units with LoB stats, morale state, full hierarchy (army > corps > division > brigade > regiment) |
-| GS_LEADERS | Leader data — ratings, command/morale values, special rule flags |
-| GS_TURN | Game state — active orders, fluke stoppage, artillery depletion, VP totals, random event log |
+| Model ID         | Contents                                                                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| SM_SCENARIO_DATA | At-start positions, orders, reinforcement schedule, VP hexes, ammo reserves                                             |
+| GS_OOB           | Order of Battle — all units with LoB stats, morale state, full hierarchy (army > corps > division > brigade > regiment) |
+| GS_LEADERS       | Leader data — ratings, command/morale values, special rule flags                                                        |
+| GS_TURN          | Game state — active orders, fluke stoppage, artillery depletion, VP totals, random event log                            |
 
 ### Rules engine scope
 
@@ -161,6 +161,7 @@ Produce a complete HLD document structured with the following twelve sections. B
 ### Section 1 — System Architecture Diagram
 
 Provide a text/ASCII diagram showing how the major components relate:
+
 - Vue 3 browser client — game UI + SVG hex map
 - Express.js server (DigitalOcean Droplet)
 - Auth layer (Discord OAuth2 → JWT in httpOnly cookies)
@@ -189,6 +190,7 @@ For each phase: what is built, what is explicitly deferred, and what the accepta
 ### Section 3 — Backend Architecture
 
 Detail the Express.js server structure:
+
 - Route hierarchy (propose URL conventions)
 - Middleware chain (session, validation, game-state loading, etc.)
 - Internal module boundaries — how the rules engine is separated from HTTP concerns
@@ -201,6 +203,7 @@ Include a proposed file/module structure for the `server/` directory.
 ### Section 4 — Data Persistence Strategy
 
 The persistence layer must:
+
 - Allow async (PBEM) games to survive indefinitely between sessions
 - Store full game state snapshots after each action
 - Support action history / replay
@@ -221,6 +224,7 @@ Design the two layers as clearly separated modules so either could be swapped in
 The system must support two modes:
 
 **Async mode (PBEM-style)**:
+
 - Player A submits an action; server validates and advances state; POSTs a Discord webhook notification to the game's configured webhook URL (if set)
 - Player B connects later and sees updated state; submits their action
 - The webhook URL is optional — games without one still work, players just check the app manually
@@ -228,6 +232,7 @@ The system must support two modes:
 - Show the Discord webhook POST payload and where the webhook URL is stored (SQLite game record)
 
 **Real-time mode**:
+
 - Both players online simultaneously; actions reflected to the opponent immediately
 - **Evaluate and recommend:** Socket.io, SSE (Server-Sent Events), or polling
 - Describe the event model: what events are emitted, what payload each carries
@@ -243,6 +248,7 @@ new → setup → in_progress → [suspended] → complete
 ```
 
 For each state:
+
 - What data is required / initialized
 - What transitions are valid
 - What API actions trigger each transition
@@ -312,15 +318,18 @@ Expand `server/`, `client/`, and `data/` in detail. Include where Vitest tests l
 Provide concrete starter configuration for:
 
 **ESLint (flat config — `eslint.config.js`)**:
+
 - Use the new flat config format (ESLint v9+)
 - Include: `@eslint/js` recommended, `eslint-plugin-vue` vue3-recommended, `eslint-plugin-n` for Node.js server code, `eslint-plugin-import` for import ordering
 - `eslint-config-prettier` last to disable conflicting formatting rules
 - Show how to scope different rules to `server/` vs `client/` directories
 
 **Prettier (`.prettierrc`)**:
+
 - Propose sensible defaults for this project (semi, singleQuote, printWidth, trailingComma, etc.)
 
 **Vitest (`vitest.config.js`)**:
+
 - Separate configs or environments for server-side (Node) and client-side (jsdom) tests
 - Coverage configuration
 
@@ -333,12 +342,14 @@ Show the actual config file content, not just descriptions.
 Design the full DevOps pipeline for deploying to a DigitalOcean Droplet.
 
 **GitHub Actions — CI (runs on every PR):**
+
 - Lint: `eslint .`
 - Test: `vitest run --coverage` (both server and client workspaces)
 - Build: `vite build` (catch build errors before merge)
 - Show the complete `.github/workflows/ci.yml`
 
 **GitHub Actions — CD (runs on merge to `main`):**
+
 - SSH into the Droplet
 - Pull latest code (`git pull`)
 - Install dependencies (`npm ci`)
@@ -348,6 +359,7 @@ Design the full DevOps pipeline for deploying to a DigitalOcean Droplet.
 - Explain what GitHub secrets are required (`DO_DROPLET_IP`, `DO_SSH_KEY`, etc.)
 
 **Droplet setup — what must be configured once:**
+
 - nginx config: reverse proxy from port 80/443 → Node port 3000; serve the Vue static build
 - Let's Encrypt / Certbot for HTTPS
 - PM2 ecosystem file (`ecosystem.config.js`) — app name, entry point, env vars, log paths
@@ -355,6 +367,7 @@ Design the full DevOps pipeline for deploying to a DigitalOcean Droplet.
 - SQLite file location and persistence strategy (path on Droplet disk)
 
 Show:
+
 - The nginx server block config
 - The `ecosystem.config.js` for PM2
 - The `.github/workflows/ci.yml`

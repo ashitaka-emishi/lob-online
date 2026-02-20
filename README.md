@@ -1,14 +1,14 @@
 # Line of Battle Online
 
-An online implementation of the *Line of Battle v2.0* wargame system (Multi-Man Publishing). The first game is **South Mountain** (RSS #4).
+An online implementation of the _Line of Battle v2.0_ wargame system (Multi-Man Publishing). The first game is **South Mountain** (RSS #4).
 
 ## Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Server | Node.js, Express, Socket.io |
-| Client | Vue 3, Vite, Pinia, honeycomb-grid |
-| Auth | Discord OAuth (passport-discord), JWT |
+| Layer   | Technology                                        |
+| ------- | ------------------------------------------------- |
+| Server  | Node.js, Express, Socket.io                       |
+| Client  | Vue 3, Vite, Pinia, honeycomb-grid                |
+| Auth    | Discord OAuth (passport-discord), JWT             |
 | Storage | SQLite (game state), DigitalOcean Spaces (assets) |
 
 ## Development

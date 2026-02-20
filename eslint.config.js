@@ -7,7 +7,14 @@ import configPrettier from 'eslint-config-prettier';
 export default [
   // Global ignores
   {
-    ignores: ['**/dist/**', '**/node_modules/**', 'docs/**', 'coverage/**'],
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      'docs/**',
+      'coverage/**',
+      'ecosystem.config.cjs',
+      'scripts/**',
+    ],
   },
 
   // Base JS rules — all files
@@ -32,7 +39,7 @@ export default [
       'n/no-missing-import': 'error',
       'n/no-extraneous-import': 'error',
       'no-console': 'off',
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'import/order': [
         'warn',
         {
@@ -43,8 +50,17 @@ export default [
     },
   },
 
+  // Server test files — relax Node.js import restrictions (vitest/supertest are root devDeps)
+  {
+    files: ['server/src/**/*.test.js'],
+    rules: {
+      'n/no-extraneous-import': 'off',
+      'n/no-missing-import': 'off',
+    },
+  },
+
   // Client — Vue 3 rules (applies to .vue files via plugin processor)
-  ...pluginVue.configs['flat/vue3-recommended'],
+  ...pluginVue.configs['flat/recommended'],
 
   // Client — additional JS/Vue overrides scoped to client/src
   {
@@ -60,7 +76,7 @@ export default [
     },
     rules: {
       'vue/multi-word-component-names': 'off',
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
     },
   },
 

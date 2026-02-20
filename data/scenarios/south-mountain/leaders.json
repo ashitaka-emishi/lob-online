@@ -1,6 +1,489 @@
 {
-  "_status": "todo",
-  "_description": "To be built from SM_Rules.pdf — leader ratings, command values, special rule flags",
-  "union": {},
-  "confederate": {}
+  "_status": "available",
+  "_source": "SM_Rules.pdf sections 2.1, 2.2, 3.1–3.5, 7.1, 7.2",
+  "_notes": {
+    "initiativeRating": "Physical counter value (die-roll rating for initiative). Not published in source PDFs — set to null pending counter scan.",
+    "commandRadius": "Base LoB v2.0 values (MP): army=12, corps=8, division=6, brigade=3. SM does not override these.",
+    "woundedPenalty": "Per random event rules: Wounded leader is placed on HQ and rating reduced by -1 for remainder of game.",
+    "looseCannonImmunity": "SM 3.2: D.H. Hill is the ONLY leader who may ignore Loose Cannon initiative results. This immunity is revoked when Longstreet arrives at 5pm.",
+    "artilleryReplenishFromAnyReserve": "SM override (LOBv2_GameSpecificUpdates.pdf): Pelham and Pleasonton artillery may replenish from any friendly ammo reserve."
+  },
+  "union": {
+    "_note": "Army of the Potomac",
+    "army": [
+      {
+        "id": "mcclellan",
+        "name": "George B. McClellan",
+        "rank": "Major General",
+        "commandLevel": "army",
+        "commandsId": null,
+        "initiativeRating": null,
+        "specialRules": {
+          "arrivedOnMap": false,
+          "arrivalTime": "15:00",
+          "arrivalNote": "Until McClellan arrives, Union orders may only be issued by leader initiative (SM 2.1).",
+          "casualtyEffect": "If McClellan becomes a casualty, Burnside assumes army command and all Burnside restrictions are lifted."
+        }
+      },
+      {
+        "id": "burnside",
+        "name": "Ambrose E. Burnside",
+        "rank": "Major General",
+        "commandLevel": "wing",
+        "commandsId": null,
+        "initiativeRating": null,
+        "specialRules": {
+          "supernumerary": true,
+          "restrictions": "Burnside may NOT issue or receive orders and may NOT use initiative until: (a) McClellan becomes a casualty and Burnside assumes army command, or (b) Reno becomes a casualty and Burnside takes 9 Corps command (SM 2.1).",
+          "canTake9Corps": true
+        }
+      }
+    ],
+    "corps": [
+      {
+        "id": "hooker",
+        "name": "Joseph Hooker",
+        "rank": "Major General",
+        "commandLevel": "corps",
+        "commandsId": "1c",
+        "initiativeRating": null,
+        "specialRules": {
+          "detachmentAllowed": "1 Corps may detach one Division; each 1 Corps Division may detach one Brigade (SM 2.3)."
+        }
+      },
+      {
+        "id": "reno",
+        "name": "Jesse L. Reno",
+        "rank": "Major General",
+        "commandLevel": "corps",
+        "commandsId": "9c",
+        "initiativeRating": null,
+        "specialRules": {
+          "detachmentAllowed": "9 Corps may detach a maximum of two Divisions; may NOT detach Brigades (SM 2.3).",
+          "casualtyEffect": "If Reno becomes a casualty, Burnside assumes 9 Corps command (all Burnside restrictions lifted)."
+        }
+      }
+    ],
+    "cavalry": [
+      {
+        "id": "pleasonton",
+        "name": "Alfred Pleasonton",
+        "rank": "Brigadier General",
+        "commandLevel": "division",
+        "commandsId": "cav-div",
+        "initiativeRating": null,
+        "specialRules": {
+          "artilleryReplenishFromAnyReserve": true,
+          "replenishNote": "Pleasonton's artillery (C&G 3 US) may replenish from any friendly ammo reserve, not just the assigned corps reserve (SM override, LOBv2_GameSpecificUpdates.pdf)."
+        }
+      }
+    ],
+    "divisions": [
+      {
+        "id": "hatch",
+        "name": "John P. Hatch",
+        "rank": "Brigadier General",
+        "commandLevel": "division",
+        "commandsId": "1d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "ricketts",
+        "name": "James B. Ricketts",
+        "rank": "Brigadier General",
+        "commandLevel": "division",
+        "commandsId": "2d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "meade",
+        "name": "George G. Meade",
+        "rank": "Brigadier General",
+        "commandLevel": "division",
+        "commandsId": "3d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "willcox",
+        "name": "Orlando B. Willcox",
+        "rank": "Brigadier General",
+        "commandLevel": "division",
+        "commandsId": "1d-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "sturgis",
+        "name": "Samuel D. Sturgis",
+        "rank": "Brigadier General",
+        "commandLevel": "division",
+        "commandsId": "2d-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "rodman",
+        "name": "Isaac P. Rodman",
+        "rank": "Brigadier General",
+        "commandLevel": "division",
+        "commandsId": "3d-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "cox",
+        "name": "Jacob D. Cox",
+        "rank": "Brigadier General",
+        "commandLevel": "division",
+        "commandsId": "kd-9c",
+        "initiativeRating": null
+      }
+    ],
+    "brigades": [
+      {
+        "id": "phelps",
+        "name": "Walter Phelps Jr.",
+        "commandLevel": "brigade",
+        "commandsId": "1b-1d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "doubleday",
+        "name": "Abner Doubleday",
+        "commandLevel": "brigade",
+        "commandsId": "2b-1d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "patrick",
+        "name": "Marsena R. Patrick",
+        "commandLevel": "brigade",
+        "commandsId": "3b-1d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "gibbon",
+        "name": "John Gibbon",
+        "commandLevel": "brigade",
+        "commandsId": "4b-1d-1c",
+        "initiativeRating": null,
+        "specialRules": {
+          "ironBrigade": true,
+          "randomEvent9": "Brigade of Iron — all units in Gibbon's Brigade may ignore unfavorable Morale results during current Union player turn (SM 7.2 event 9)."
+        }
+      },
+      {
+        "id": "duryea",
+        "name": "Abram Duryea",
+        "commandLevel": "brigade",
+        "commandsId": "1b-2d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "christian",
+        "name": "William H. Christian",
+        "commandLevel": "brigade",
+        "commandsId": "2b-2d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "hartsuff",
+        "name": "George L. Hartsuff",
+        "commandLevel": "brigade",
+        "commandsId": "3b-2d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "seymour",
+        "name": "Truman Seymour",
+        "commandLevel": "brigade",
+        "commandsId": "1b-3d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "magilton",
+        "name": "Albert L. Magilton",
+        "commandLevel": "brigade",
+        "commandsId": "2b-3d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "gallagher",
+        "name": "Thomas F. Gallagher",
+        "commandLevel": "brigade",
+        "commandsId": "3b-3d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "christ",
+        "name": "Benjamin C. Christ",
+        "commandLevel": "brigade",
+        "commandsId": "1b-1d-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "welsh",
+        "name": "Thomas Welsh",
+        "commandLevel": "brigade",
+        "commandsId": "2b-1d-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "nagle",
+        "name": "James Nagle",
+        "commandLevel": "brigade",
+        "commandsId": "1b-2d-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "ferrero",
+        "name": "Edward Ferrero",
+        "commandLevel": "brigade",
+        "commandsId": "2b-2d-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "fairchild",
+        "name": "Harrison S. Fairchild",
+        "commandLevel": "brigade",
+        "commandsId": "1b-3d-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "harland",
+        "name": "Edward Harland",
+        "commandLevel": "brigade",
+        "commandsId": "2b-3d-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "scammon",
+        "name": "Eliakim P. Scammon",
+        "commandLevel": "brigade",
+        "commandsId": "1b-kd-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "crook",
+        "name": "George Crook",
+        "commandLevel": "brigade",
+        "commandsId": "2b-kd-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "farnsworth",
+        "name": "Elon J. Farnsworth",
+        "commandLevel": "brigade",
+        "commandsId": "fcav",
+        "initiativeRating": null
+      }
+    ]
+  },
+  "confederate": {
+    "_note": "Army of Northern Virginia — Longstreet's Wing",
+    "wing": [
+      {
+        "id": "longstreet",
+        "name": "James Longstreet",
+        "rank": "Major General",
+        "commandLevel": "wing",
+        "commandsId": "csa-wing",
+        "initiativeRating": null,
+        "specialRules": {
+          "arrivedOnMap": false,
+          "arrivalTime": "17:00",
+          "actsAsArmyCommander": true,
+          "armyCommanderNote": "Longstreet acts as army commander — no initiative required to issue orders. He may issue orders to any Division leader or Brigade leader he is stacked with, EXCEPT leaders in D.H. Hill's division (SM 3.1).",
+          "initiativeScope": "On successful initiative roll, Longstreet may issue ONE order to a Division leader OR ONE order to a Brigade leader.",
+          "dhHillException": "Longstreet may NOT issue orders to D.H. Hill or any brigade leader in dH Division.",
+          "noReplacement": true,
+          "casualtyEffect": "If Longstreet becomes a casualty, there is no replacement — Confederate forces continue as separate commands (SM 3.1).",
+          "looseCannonImmunityRevoked": "When Longstreet arrives, D.H. Hill's Loose Cannon immunity is revoked and Hill reverts to normal division command (SM 3.2)."
+        }
+      }
+    ],
+    "divisions": [
+      {
+        "id": "dh-hill",
+        "name": "Daniel Harvey Hill",
+        "rank": "Major General",
+        "commandLevel": "division",
+        "commandsId": "dh-div",
+        "initiativeRating": null,
+        "specialRules": {
+          "looseCannonImmunity": true,
+          "looseCannonNote": "D.H. Hill is the ONLY leader in the game who may ignore Loose Cannon initiative results. This immunity is active until Longstreet arrives at 5pm, at which point it is revoked (SM 3.2).",
+          "expandedInitiativeScope": "Until Longstreet arrives, Hill may use initiative to issue orders to any Division leader or Brigade leader he is stacked with. On success: issue ONE order to a Division leader (may be Hill himself) OR orders to any TWO Brigade leaders (SM 3.2).",
+          "randomEvent2": "Roll on Leader Loss Table. If Wounded, Hill is placed on division HQ (must remain there) and continues to issue orders with initiative rating of 3 (SM 7.1 event 2).",
+          "randomEvent3and12": "Hill may not attempt Initiative for next 2 turns (SM 7.1 events 3 & 12)."
+        }
+      },
+      {
+        "id": "hood",
+        "name": "John Bell Hood",
+        "rank": "Brigadier General",
+        "commandLevel": "division",
+        "commandsId": "h-div",
+        "initiativeRating": null,
+        "specialRules": {
+          "arrivedOnMap": false,
+          "arrivalTime": "17:00",
+          "arrivalNote": "Hood arrives at 5pm with his two brigades (Wofford and Law). Detachments are not allowed for Hood's division (SM 3.3).",
+          "detachmentAllowed": false
+        }
+      },
+      {
+        "id": "dr-jones",
+        "name": "David R. Jones",
+        "rank": "Brigadier General",
+        "commandLevel": "division",
+        "commandsId": "j-div",
+        "initiativeRating": null,
+        "specialRules": {
+          "arrivedOnMap": false,
+          "detachmentAllowed": "D.R. Jones division may detach up to three Brigades (SM 3.3).",
+          "arrivalNote": "Reinforces per scenario reinforcement schedule."
+        }
+      }
+    ],
+    "brigades": [
+      {
+        "id": "gb-anderson",
+        "name": "George Burgwyn Anderson",
+        "rank": "Brigadier General",
+        "commandLevel": "brigade",
+        "commandsId": "adh",
+        "initiativeRating": null
+      },
+      {
+        "id": "colquitt",
+        "name": "Alfred Holt Colquitt",
+        "rank": "Brigadier General",
+        "commandLevel": "brigade",
+        "commandsId": "cdh",
+        "initiativeRating": null
+      },
+      {
+        "id": "garland",
+        "name": "Samuel Garland Jr.",
+        "rank": "Brigadier General",
+        "commandLevel": "brigade",
+        "commandsId": "gdh",
+        "initiativeRating": null,
+        "specialRules": {
+          "detachedAtStart": true,
+          "detachedNote": "Garland's brigade is DETACHED at scenario start to defend Fox's Gap (SM setup)."
+        }
+      },
+      {
+        "id": "ripley",
+        "name": "Roswell Sabine Ripley",
+        "rank": "Brigadier General",
+        "commandLevel": "brigade",
+        "commandsId": "ridh",
+        "initiativeRating": null
+      },
+      {
+        "id": "rodes",
+        "name": "Robert Emmett Rodes",
+        "rank": "Brigadier General",
+        "commandLevel": "brigade",
+        "commandsId": "rodh",
+        "initiativeRating": null
+      },
+      {
+        "id": "wofford",
+        "name": "William Tatum Wofford",
+        "rank": "Brigadier General",
+        "commandLevel": "brigade",
+        "commandsId": "wh",
+        "initiativeRating": null,
+        "specialRules": {
+          "arrivedOnMap": false,
+          "arrivalTime": "17:00"
+        }
+      },
+      {
+        "id": "law",
+        "name": "Evander McIver Law",
+        "rank": "Brigadier General",
+        "commandLevel": "brigade",
+        "commandsId": "lh",
+        "initiativeRating": null,
+        "specialRules": {
+          "arrivedOnMap": false,
+          "arrivalTime": "17:00"
+        }
+      },
+      {
+        "id": "gt-anderson",
+        "name": "George Thomas Anderson",
+        "rank": "Brigadier General",
+        "commandLevel": "brigade",
+        "commandsId": "aj",
+        "initiativeRating": null,
+        "specialRules": {
+          "arrivedOnMap": false,
+          "arrivalNote": "Reinforces per scenario reinforcement schedule."
+        }
+      },
+      {
+        "id": "drayton",
+        "name": "Thomas Fenwick Drayton",
+        "rank": "Brigadier General",
+        "commandLevel": "brigade",
+        "commandsId": "dj",
+        "initiativeRating": null,
+        "specialRules": {
+          "arrivedOnMap": false,
+          "arrivalNote": "Reinforces per scenario reinforcement schedule."
+        }
+      },
+      {
+        "id": "garnett",
+        "name": "Richard Brooke Garnett",
+        "rank": "Brigadier General",
+        "commandLevel": "brigade",
+        "commandsId": "gj",
+        "initiativeRating": null,
+        "specialRules": {
+          "detachedAtStart": true,
+          "detachedNote": "Garnett's brigade is DETACHED at scenario start — reinforces Turner's Gap as Order 3 (SM setup)."
+        }
+      },
+      {
+        "id": "kemper",
+        "name": "James Lawson Kemper",
+        "rank": "Brigadier General",
+        "commandLevel": "brigade",
+        "commandsId": "kj",
+        "initiativeRating": null,
+        "specialRules": {
+          "arrivedOnMap": false,
+          "arrivalNote": "Reinforces per scenario reinforcement schedule."
+        }
+      },
+      {
+        "id": "walker",
+        "name": "Joseph Walker",
+        "rank": "Colonel",
+        "commandLevel": "brigade",
+        "commandsId": "wj",
+        "initiativeRating": null,
+        "specialRules": {
+          "arrivedOnMap": false,
+          "arrivalNote": "Reinforces per scenario reinforcement schedule."
+        }
+      },
+      {
+        "id": "evans",
+        "name": "Nathan George Evans",
+        "rank": "Brigadier General",
+        "commandLevel": "brigade",
+        "commandsId": "evans-bde",
+        "initiativeRating": null,
+        "specialRules": {
+          "independentBrigade": true,
+          "independentNote": "Evans commands an independent brigade, technically a division with Hood's two brigades attached. Separated from Hood due to command friction over captured ambulances. (SM 3.3 / historical note)"
+        }
+      }
+    ]
+  }
 }
