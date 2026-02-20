@@ -1,12 +1,13 @@
-import 'dotenv/config';
 import { fileURLToPath } from 'url';
 import { join } from 'path';
-import express from 'express';
 import { createServer } from 'http';
-import { Server } from 'socket.io';
+
+import 'dotenv/config';
+import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import { Server } from 'socket.io';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -36,7 +37,7 @@ if (process.env.MAP_EDITOR_ENABLED === 'true') {
   const { default: mapEditorRouter } = await import('./routes/mapEditor.js');
   app.use(
     '/tools/map-editor/assets',
-    express.static(join(__dirname, '../../docs'), { index: false, dotfiles: 'deny', maxAge: '1h' }),
+    express.static(join(__dirname, '../../docs'), { index: false, dotfiles: 'deny', maxAge: '1h' })
   );
   app.use('/api/tools/map-editor', mapEditorRouter);
   console.log('[server] map editor enabled at /tools/map-editor');

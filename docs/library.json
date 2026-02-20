@@ -124,9 +124,7 @@
           "filename": "SM_Cover.jpg",
           "description": "South Mountain game box cover art",
           "status": "available",
-          "covers": [
-            "Game box cover art"
-          ]
+          "covers": ["Game box cover art"]
         },
         {
           "id": "SM_MAP",
@@ -239,11 +237,32 @@
     "schemas": {
       "label": "Zod Schemas & Tooling (M0)",
       "files": [
-        { "id": "SCHEMA_OOB",      "filename": "server/src/schemas/oob.schema.js",      "status": "available" },
-        { "id": "SCHEMA_LEADERS",  "filename": "server/src/schemas/leaders.schema.js",  "status": "available" },
-        { "id": "SCHEMA_SCENARIO", "filename": "server/src/schemas/scenario.schema.js", "status": "available" },
-        { "id": "SCHEMA_MAP",      "filename": "server/src/schemas/map.schema.js",      "status": "available" },
-        { "id": "VALIDATE_SCRIPT", "filename": "scripts/validate-data.js",              "status": "available", "runWith": "npm run validate-data" }
+        {
+          "id": "SCHEMA_OOB",
+          "filename": "server/src/schemas/oob.schema.js",
+          "status": "available"
+        },
+        {
+          "id": "SCHEMA_LEADERS",
+          "filename": "server/src/schemas/leaders.schema.js",
+          "status": "available"
+        },
+        {
+          "id": "SCHEMA_SCENARIO",
+          "filename": "server/src/schemas/scenario.schema.js",
+          "status": "available"
+        },
+        {
+          "id": "SCHEMA_MAP",
+          "filename": "server/src/schemas/map.schema.js",
+          "status": "available"
+        },
+        {
+          "id": "VALIDATE_SCRIPT",
+          "filename": "scripts/validate-data.js",
+          "status": "available",
+          "runWith": "npm run validate-data"
+        }
       ]
     }
   },

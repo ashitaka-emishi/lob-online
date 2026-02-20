@@ -52,33 +52,111 @@
       "additive": "Hexside/elevation costs are ADDED to terrain cost"
     },
     "movementAllowances": {
-      "line":           6,
-      "column":         6,
-      "mounted":        12,
-      "limbered":       7,
+      "line": 6,
+      "column": 6,
+      "mounted": 12,
+      "limbered": 7,
       "horseArtillery": 12,
-      "wagon":          6,
-      "leader":         12
+      "wagon": 6,
+      "leader": 12
     },
     "terrainCosts": {
-      "changeFormation": { "line": 1,    "column": 1,    "mounted": 3,    "limbered": 3,    "wagon": null,  "leader": null },
-      "clear":           { "line": 1,    "column": 1,    "mounted": 1,    "limbered": 1,    "wagon": 1,     "leader": 1    },
-      "orchard":         { "line": 1,    "column": 1,    "mounted": 2,    "limbered": 2,    "wagon": 2,     "leader": 1    },
-      "slopingGround":   { "line": 2,    "column": 2,    "mounted": 4,    "limbered": null, "wagon": null,  "leader": 1,   "_smSpecial": true },
-      "woods":           { "line": 2,    "column": 2,    "mounted": 3,    "limbered": 4,    "wagon": 4,     "leader": 2,   "_smSpecial": true },
-      "woodedSloping":   { "line": 2,    "column": 2,    "mounted": 4,    "limbered": null, "wagon": null,  "leader": 2    },
-      "marsh":           { "line": 2,    "column": 2,    "mounted": 3,    "limbered": 4,    "wagon": null,  "leader": 2    },
-      "pike":            { "line": "ot", "column": 0.5,  "mounted": 0.5,  "limbered": 0.5,  "wagon": 0.5,   "leader": 0.5, "_note": "Pike = National Road. 'ot' for line formation = cost of other terrain in hex." },
-      "road":            { "line": "ot", "column": 0.5,  "mounted": 0.5,  "limbered": 0.5,  "wagon": 0.5,   "leader": 0.5, "_note": "Road: add +0.5 MP per Slope hexside when using road movement only (see roadSlopePenalty)" },
-      "trail":           { "line": "ot", "column": 1,    "mounted": 1,    "limbered": 2,    "wagon": 2,     "leader": 0.5  }
+      "changeFormation": {
+        "line": 1,
+        "column": 1,
+        "mounted": 3,
+        "limbered": 3,
+        "wagon": null,
+        "leader": null
+      },
+      "clear": { "line": 1, "column": 1, "mounted": 1, "limbered": 1, "wagon": 1, "leader": 1 },
+      "orchard": { "line": 1, "column": 1, "mounted": 2, "limbered": 2, "wagon": 2, "leader": 1 },
+      "slopingGround": {
+        "line": 2,
+        "column": 2,
+        "mounted": 4,
+        "limbered": null,
+        "wagon": null,
+        "leader": 1,
+        "_smSpecial": true
+      },
+      "woods": {
+        "line": 2,
+        "column": 2,
+        "mounted": 3,
+        "limbered": 4,
+        "wagon": 4,
+        "leader": 2,
+        "_smSpecial": true
+      },
+      "woodedSloping": {
+        "line": 2,
+        "column": 2,
+        "mounted": 4,
+        "limbered": null,
+        "wagon": null,
+        "leader": 2
+      },
+      "marsh": { "line": 2, "column": 2, "mounted": 3, "limbered": 4, "wagon": null, "leader": 2 },
+      "pike": {
+        "line": "ot",
+        "column": 0.5,
+        "mounted": 0.5,
+        "limbered": 0.5,
+        "wagon": 0.5,
+        "leader": 0.5,
+        "_note": "Pike = National Road. 'ot' for line formation = cost of other terrain in hex."
+      },
+      "road": {
+        "line": "ot",
+        "column": 0.5,
+        "mounted": 0.5,
+        "limbered": 0.5,
+        "wagon": 0.5,
+        "leader": 0.5,
+        "_note": "Road: add +0.5 MP per Slope hexside when using road movement only (see roadSlopePenalty)"
+      },
+      "trail": { "line": "ot", "column": 1, "mounted": 1, "limbered": 2, "wagon": 2, "leader": 0.5 }
     },
     "hexsideCosts": {
       "_note": "These are ADDITIONAL costs added to the terrain cost when crossing the hexside",
-      "stream":        { "line": 1,  "column": 1,  "mounted": 1,  "limbered": 1,  "wagon": 1,  "leader": 0 },
-      "elevation":     { "line": 1,  "column": 1,  "mounted": 1,  "limbered": 2,  "wagon": 2,  "leader": 0, "_note": "Per elevation change" },
-      "slope":         { "line": 2,  "column": 2,  "mounted": 2,  "limbered": 4,  "wagon": 4,  "leader": 1, "_smSpecial": true },
-      "extremeSlope":  { "line": 4,  "column": 4,  "mounted": 4,  "limbered": null,"wagon": null,"leader": 2, "_smSpecial": true },
-      "verticalSlope": { "line": null,"column": null,"mounted": null,"limbered": null,"wagon": null,"leader": null, "_note": "SM Special: 50-ft contour interval — Vertical slopes are IMPASSABLE to all units" }
+      "stream": { "line": 1, "column": 1, "mounted": 1, "limbered": 1, "wagon": 1, "leader": 0 },
+      "elevation": {
+        "line": 1,
+        "column": 1,
+        "mounted": 1,
+        "limbered": 2,
+        "wagon": 2,
+        "leader": 0,
+        "_note": "Per elevation change"
+      },
+      "slope": {
+        "line": 2,
+        "column": 2,
+        "mounted": 2,
+        "limbered": 4,
+        "wagon": 4,
+        "leader": 1,
+        "_smSpecial": true
+      },
+      "extremeSlope": {
+        "line": 4,
+        "column": 4,
+        "mounted": 4,
+        "limbered": null,
+        "wagon": null,
+        "leader": 2,
+        "_smSpecial": true
+      },
+      "verticalSlope": {
+        "line": null,
+        "column": null,
+        "mounted": null,
+        "limbered": null,
+        "wagon": null,
+        "leader": null,
+        "_note": "SM Special: 50-ft contour interval — Vertical slopes are IMPASSABLE to all units"
+      }
     },
     "noEffectTerrain": ["run", "stoneWall"],
     "roadSlopePenalty": {
@@ -131,21 +209,36 @@
       }
     ],
     "confederate": [
-      { "unitId": "5va-cav",    "hex": "19.23", "order": "move" },
-      { "unitId": "pelham-a",   "hex": "22.23", "order": null, "_note": "Independent — no order needed" },
-      { "unitId": "pelham-b",   "hex": "20.23", "order": null, "_note": "Independent — no order needed" },
-      { "unitId": "csa-wagon",  "hex": "36.26", "order": null },
-      { "unitId": "dh-hill",    "hex": "36.26", "order": "move", "_note": "Hill moves division to defend Turner's Gap (Complex Defense → Move per SM rule)" },
+      { "unitId": "5va-cav", "hex": "19.23", "order": "move" },
+      {
+        "unitId": "pelham-a",
+        "hex": "22.23",
+        "order": null,
+        "_note": "Independent — no order needed"
+      },
+      {
+        "unitId": "pelham-b",
+        "hex": "20.23",
+        "order": null,
+        "_note": "Independent — no order needed"
+      },
+      { "unitId": "csa-wagon", "hex": "36.26", "order": null },
+      {
+        "unitId": "dh-hill",
+        "hex": "36.26",
+        "order": "move",
+        "_note": "Hill moves division to defend Turner's Gap (Complex Defense → Move per SM rule)"
+      },
       {
         "_groupNote": "Colquitt Brigade (C/dH) — deployed at Turner's Gap",
         "order": "move",
         "units": [
           { "unitId": "colquitt", "hex": "29.22" },
-          { "unitId": "23ga",     "hex": "30.21" },
-          { "unitId": "13ala",    "hex": "28.23" },
-          { "unitId": "27ga",     "hex": "29.23" },
-          { "unitId": "6ga",      "hex": "29.22" },
-          { "unitId": "28ga",     "hex": "30.20" }
+          { "unitId": "23ga", "hex": "30.21" },
+          { "unitId": "13ala", "hex": "28.23" },
+          { "unitId": "27ga", "hex": "29.23" },
+          { "unitId": "6ga", "hex": "29.22" },
+          { "unitId": "28ga", "hex": "30.20" }
         ]
       },
       {
@@ -178,12 +271,12 @@
         "_groupNote": "Garland Brigade (G/dH) — DETACHED, defending Fox's Gap",
         "order": "move",
         "units": [
-          { "unitId": "garland",   "hex": "28.25" },
-          { "unitId": "5nc",       "hex": "25.25" },
-          { "unitId": "20nc",      "hex": "26.25" },
-          { "unitId": "13nc",      "hex": "27.26" },
-          { "unitId": "23nc",      "hex": "28.25" },
-          { "unitId": "12nc",      "hex": "29.26" },
+          { "unitId": "garland", "hex": "28.25" },
+          { "unitId": "5nc", "hex": "25.25" },
+          { "unitId": "20nc", "hex": "26.25" },
+          { "unitId": "13nc", "hex": "27.26" },
+          { "unitId": "23nc", "hex": "28.25" },
+          { "unitId": "12nc", "hex": "29.26" },
           { "unitId": "bondurant", "hex": "30.25" }
         ]
       }
@@ -262,7 +355,21 @@
         "orderRef": "usa-order-2",
         "orderType": "move",
         "orderDescription": "1st Corps advance along Frosttown Road and capture Turner's Gap",
-        "units": ["hooker", "1c", "2ny-cav", "meade", "seymour", "magilton", "gallagher", "1b-3d-1c", "2b-3d-1c", "3b-3d-1c", "a1penn-lt", "b1penn-lt", "c5us"]
+        "units": [
+          "hooker",
+          "1c",
+          "2ny-cav",
+          "meade",
+          "seymour",
+          "magilton",
+          "gallagher",
+          "1b-3d-1c",
+          "2b-3d-1c",
+          "3b-3d-1c",
+          "a1penn-lt",
+          "b1penn-lt",
+          "c5us"
+        ]
       },
       {
         "time": "15:00",
@@ -293,14 +400,37 @@
         "orderRef": "usa-order-2",
         "orderType": "move",
         "_note": "1/1 Division less 4/1/1 and B 4 US",
-        "units": ["hatch", "phelps", "doubleday", "patrick", "1b-1d-1c", "2b-1d-1c", "3b-1d-1c", "1nh-lt", "l1ny-lt", "d1ri-lt", "f1penn-lt", "g-penn-lt"]
+        "units": [
+          "hatch",
+          "phelps",
+          "doubleday",
+          "patrick",
+          "1b-1d-1c",
+          "2b-1d-1c",
+          "3b-1d-1c",
+          "1nh-lt",
+          "l1ny-lt",
+          "d1ri-lt",
+          "f1penn-lt",
+          "g-penn-lt"
+        ]
       },
       {
         "time": "17:00",
         "entryHex": "32.01",
         "orderRef": "usa-order-2",
         "orderType": "move",
-        "units": ["ricketts", "duryea", "christian", "hartsuff", "1b-2d-1c", "2b-2d-1c", "3b-2d-1c", "f1penn-lt", "g-penn-lt"]
+        "units": [
+          "ricketts",
+          "duryea",
+          "christian",
+          "hartsuff",
+          "1b-2d-1c",
+          "2b-2d-1c",
+          "3b-2d-1c",
+          "f1penn-lt",
+          "g-penn-lt"
+        ]
       }
     ],
     "confederate": [
@@ -310,37 +440,90 @@
         "orderRef": "csa-order-1",
         "orderType": "move",
         "orderDescription": "Ripley and Rodes join division, help defend Turner's Gap",
-        "units": ["ripley", "rodes", "ridh", "rodh", "44ga", "1nc", "3nc", "3ala", "5ala", "6ala", "12ala", "26ala", "hardaway", "jones"]
+        "units": [
+          "ripley",
+          "rodes",
+          "ridh",
+          "rodh",
+          "44ga",
+          "1nc",
+          "3nc",
+          "3ala",
+          "5ala",
+          "6ala",
+          "12ala",
+          "26ala",
+          "hardaway",
+          "jones"
+        ]
       },
       {
         "_id": "force-a",
         "_note": "Jones Division (less three brigades) — VARIABLE arrival time. Roll 1d6: 1=14:30@39.35, 2-3=15:00@20.34, 4-5=15:30@39.35, 6=16:00@39.35",
         "variable": true,
         "variableTable": [
-          { "roll": 1,    "time": "14:30", "entryHex": "39.35" },
-          { "roll": "2-3","time": "15:00", "entryHex": "20.34" },
-          { "roll": "4-5","time": "15:30", "entryHex": "39.35" },
-          { "roll": 6,    "time": "16:00", "entryHex": "39.35" }
+          { "roll": 1, "time": "14:30", "entryHex": "39.35" },
+          { "roll": "2-3", "time": "15:00", "entryHex": "20.34" },
+          { "roll": "4-5", "time": "15:30", "entryHex": "39.35" },
+          { "roll": 6, "time": "16:00", "entryHex": "39.35" }
         ],
         "orderRef": "csa-order-2",
         "orderType": "move",
         "orderDescription": "Jones Division (less three brigades) defend Fox's Gap",
-        "units": ["dr-jones", "gt-anderson", "drayton", "aj", "dj", "1ga", "7ga", "8ga", "9ga", "50ga", "51ga", "15sc", "phillips-lgn", "brown"]
+        "units": [
+          "dr-jones",
+          "gt-anderson",
+          "drayton",
+          "aj",
+          "dj",
+          "1ga",
+          "7ga",
+          "8ga",
+          "9ga",
+          "50ga",
+          "51ga",
+          "15sc",
+          "phillips-lgn",
+          "brown"
+        ]
       },
       {
         "_id": "force-b",
         "_note": "Detached Jones brigades (Garnett, Kemper, Walker) — same variable timing as Force A (roll separately)",
         "variable": true,
         "variableTable": [
-          { "roll": 1,    "time": "14:30", "entryHex": "39.35" },
-          { "roll": "2-3","time": "15:00", "entryHex": "20.34" },
-          { "roll": "4-5","time": "15:30", "entryHex": "39.35" },
-          { "roll": 6,    "time": "16:00", "entryHex": "39.35" }
+          { "roll": 1, "time": "14:30", "entryHex": "39.35" },
+          { "roll": "2-3", "time": "15:00", "entryHex": "20.34" },
+          { "roll": "4-5", "time": "15:30", "entryHex": "39.35" },
+          { "roll": 6, "time": "16:00", "entryHex": "39.35" }
         ],
         "orderRef": "csa-order-3",
         "orderType": "move",
         "orderDescription": "Garnett, Kemper, Walker each detached to defend Turner's Gap (each is a separate detachment)",
-        "units": ["garnett", "kemper", "walker", "gj", "kj", "wj", "8va", "18va", "19va", "28va", "56va", "1va", "7va", "11va", "17va", "24va", "1sc", "2sc-rifles", "5sc", "6sc", "4sc-bn", "palmetto"]
+        "units": [
+          "garnett",
+          "kemper",
+          "walker",
+          "gj",
+          "kj",
+          "wj",
+          "8va",
+          "18va",
+          "19va",
+          "28va",
+          "56va",
+          "1va",
+          "7va",
+          "11va",
+          "17va",
+          "24va",
+          "1sc",
+          "2sc-rifles",
+          "5sc",
+          "6sc",
+          "4sc-bn",
+          "palmetto"
+        ]
       },
       {
         "time": "16:30",
@@ -356,7 +539,27 @@
         "orderRef": "csa-order-5",
         "orderType": "move",
         "orderDescription": "Hood defend Fox's Gap, attack southward to recapture if necessary",
-        "units": ["longstreet", "hood", "wofford", "law", "h-div", "wh", "lh", "18ga", "1tex", "4tex", "5tex", "hampton-lgn", "4ala", "2miss", "11miss", "6nc-h", "bachman", "garden", "reilly"]
+        "units": [
+          "longstreet",
+          "hood",
+          "wofford",
+          "law",
+          "h-div",
+          "wh",
+          "lh",
+          "18ga",
+          "1tex",
+          "4tex",
+          "5tex",
+          "hampton-lgn",
+          "4ala",
+          "2miss",
+          "11miss",
+          "6nc-h",
+          "bachman",
+          "garden",
+          "reilly"
+        ]
       }
     ]
   },
@@ -364,16 +567,16 @@
   "victoryPoints": {
     "_note": "VP formula: Union VP minus Confederate VP = net result. Positive = Union advantage.",
     "terrain": [
-      { "hex": "06.10", "unionVP": 0,  "confederateVP": 2  },
-      { "hex": "16.02", "unionVP": 0,  "confederateVP": 10 },
-      { "hex": "19.23", "unionVP": 4,  "confederateVP": 3  },
-      { "hex": "19.32", "unionVP": 4,  "confederateVP": 2  },
-      { "hex": "33.02", "unionVP": 0,  "confederateVP": 5  },
-      { "hex": "36.26", "unionVP": 5,  "confederateVP": 5  },
-      { "hex": "39.34", "unionVP": 6,  "confederateVP": 2  },
-      { "hex": "40.07", "unionVP": 1,  "confederateVP": 5  },
-      { "hex": "56.21", "unionVP": 2,  "confederateVP": 2  },
-      { "hex": "56.23", "unionVP": 2,  "confederateVP": 2  }
+      { "hex": "06.10", "unionVP": 0, "confederateVP": 2 },
+      { "hex": "16.02", "unionVP": 0, "confederateVP": 10 },
+      { "hex": "19.23", "unionVP": 4, "confederateVP": 3 },
+      { "hex": "19.32", "unionVP": 4, "confederateVP": 2 },
+      { "hex": "33.02", "unionVP": 0, "confederateVP": 5 },
+      { "hex": "36.26", "unionVP": 5, "confederateVP": 5 },
+      { "hex": "39.34", "unionVP": 6, "confederateVP": 2 },
+      { "hex": "40.07", "unionVP": 1, "confederateVP": 5 },
+      { "hex": "56.21", "unionVP": 2, "confederateVP": 2 },
+      { "hex": "56.23", "unionVP": 2, "confederateVP": 2 }
     ],
     "wreck": {
       "_note": "VPs awarded to the OPPONENT for wrecking formations or eliminating artillery.",
@@ -407,13 +610,13 @@
   "victoryConditions": {
     "_note": "Result = Union VP total minus Confederate VP total.",
     "results": [
-      { "label": "Confederate Massive Victory", "min": null, "max": -6  },
-      { "label": "Confederate Major Victory",   "min": -5,   "max": 1   },
-      { "label": "Confederate Marginal Victory","min": 2,    "max": 8   },
-      { "label": "Draw",                         "min": 9,    "max": 15  },
-      { "label": "Union Marginal Victory",       "min": 16,   "max": 20  },
-      { "label": "Union Major Victory",          "min": 21,   "max": 29  },
-      { "label": "Union Massive Victory",        "min": 30,   "max": null }
+      { "label": "Confederate Massive Victory", "min": null, "max": -6 },
+      { "label": "Confederate Major Victory", "min": -5, "max": 1 },
+      { "label": "Confederate Marginal Victory", "min": 2, "max": 8 },
+      { "label": "Draw", "min": 9, "max": 15 },
+      { "label": "Union Marginal Victory", "min": 16, "max": 20 },
+      { "label": "Union Major Victory", "min": 21, "max": 29 },
+      { "label": "Union Massive Victory", "min": 30, "max": null }
     ]
   },
 

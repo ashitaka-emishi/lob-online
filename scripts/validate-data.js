@@ -11,13 +11,13 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { OOBSchema }      from '../server/src/schemas/oob.schema.js';
-import { LeadersSchema }  from '../server/src/schemas/leaders.schema.js';
+import { OOBSchema } from '../server/src/schemas/oob.schema.js';
+import { LeadersSchema } from '../server/src/schemas/leaders.schema.js';
 import { ScenarioSchema } from '../server/src/schemas/scenario.schema.js';
-import { MapSchema }      from '../server/src/schemas/map.schema.js';
+import { MapSchema } from '../server/src/schemas/map.schema.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DATA_DIR  = join(__dirname, '../data/scenarios/south-mountain');
+const DATA_DIR = join(__dirname, '../data/scenarios/south-mountain');
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -26,10 +26,20 @@ const DATA_DIR  = join(__dirname, '../data/scenarios/south-mountain');
 let errors = 0;
 let warnings = 0;
 
-function pass(msg)  { console.log(`  ✓ ${msg}`); }
-function fail(msg)  { console.error(`  ✗ ${msg}`); errors++; }
-function warn(msg)  { console.warn(`  ⚠ ${msg}`); warnings++; }
-function section(h) { console.log(`\n── ${h} ──`); }
+function pass(msg) {
+  console.log(`  ✓ ${msg}`);
+}
+function fail(msg) {
+  console.error(`  ✗ ${msg}`);
+  errors++;
+}
+function warn(msg) {
+  console.warn(`  ⚠ ${msg}`);
+  warnings++;
+}
+function section(h) {
+  console.log(`\n── ${h} ──`);
+}
 
 function loadJSON(filename) {
   const path = join(DATA_DIR, filename);
@@ -61,8 +71,12 @@ function validate(schema, data, label) {
 function collectUnitIds(oob) {
   const ids = new Set();
 
-  function addUnit(u) { if (u?.id) ids.add(u.id); }
-  function addBattery(b) { if (b?.id) ids.add(b.id); }
+  function addUnit(u) {
+    if (u?.id) ids.add(u.id);
+  }
+  function addBattery(b) {
+    if (b?.id) ids.add(b.id);
+  }
 
   // Union
   for (const corps of oob.union.corps) {
@@ -166,7 +180,9 @@ function checkLeaderCommandsReferenceOOB(leaders, unitIds) {
     } else {
       // commandsId may reference a corps/division ID not in unit id set — that's expected
       // for top-level IDs like "1c", "9c", "csa-wing" which are structural not unit records
-      warn(`Leader "${l.id}" commandsId "${l.commandsId}" not found in OOB unit IDs (may be a corps/army-level structural ID — verify manually)`);
+      warn(
+        `Leader "${l.id}" commandsId "${l.commandsId}" not found in OOB unit IDs (may be a corps/army-level structural ID — verify manually)`
+      );
     }
   }
   pass(`Leader commandsIds checked — ${ok} resolved against OOB`);
@@ -216,16 +232,20 @@ function checkScenarioUnitsInOOB(scenario, unitIds) {
   let missing = 0;
   for (const uid of allRefUnits) {
     if (!unitIds.has(uid)) {
-      warn(`Scenario references unit "${uid}" not found in OOB (may be a leader ID or corps-level structural ref)`);
+      warn(
+        `Scenario references unit "${uid}" not found in OOB (may be a leader ID or corps-level structural ref)`
+      );
       missing++;
     }
   }
-  pass(`Scenario unit references checked — ${allRefUnits.size} total, ${missing} unresolved (see warnings above)`);
+  pass(
+    `Scenario unit references checked — ${allRefUnits.size} total, ${missing} unresolved (see warnings above)`
+  );
 }
 
 function checkVPHexesInMap(scenario, map) {
-  const mapHexIds = new Set(map.hexes.map(h => h.hex));
-  const vpHexes   = scenario.victoryPoints?.terrain ?? [];
+  const mapHexIds = new Set(map.hexes.map((h) => h.hex));
+  const vpHexes = scenario.victoryPoints?.terrain ?? [];
 
   let ok = 0;
   for (const vp of vpHexes) {
@@ -239,7 +259,7 @@ function checkVPHexesInMap(scenario, map) {
 }
 
 function checkSetupHexesInMap(scenario, map) {
-  const mapHexIds = new Set(map.hexes.map(h => h.hex));
+  const mapHexIds = new Set(map.hexes.map((h) => h.hex));
 
   // Collect exact hexes referenced in setup
   const setupHexes = new Set();
@@ -264,8 +284,8 @@ function checkSetupHexesInMap(scenario, map) {
 }
 
 function checkEntryHexesInMap(scenario, map) {
-  const mapHexIds = new Set(map.hexes.map(h => h.hex));
-  const allRefs   = [];
+  const mapHexIds = new Set(map.hexes.map((h) => h.hex));
+  const allRefs = [];
 
   for (const side of ['union', 'confederate']) {
     for (const group of scenario.reinforcements?.[side] ?? []) {
@@ -295,10 +315,10 @@ console.log('lob-online — M0 Data Validation');
 console.log('=================================');
 
 section('1. Loading JSON files');
-const rawOOB      = loadJSON('oob.json');
-const rawLeaders  = loadJSON('leaders.json');
+const rawOOB = loadJSON('oob.json');
+const rawLeaders = loadJSON('leaders.json');
 const rawScenario = loadJSON('scenario.json');
-const rawMap      = loadJSON('map.json');
+const rawMap = loadJSON('map.json');
 
 if (!rawOOB || !rawLeaders || !rawScenario || !rawMap) {
   console.error('\nFatal: one or more files failed to load. Fix above errors first.\n');
@@ -307,18 +327,20 @@ if (!rawOOB || !rawLeaders || !rawScenario || !rawMap) {
 pass('All four JSON files loaded');
 
 section('2. Schema validation');
-const oob      = validate(OOBSchema,      rawOOB,      'oob.json');
-const leaders  = validate(LeadersSchema,  rawLeaders,  'leaders.json');
+const oob = validate(OOBSchema, rawOOB, 'oob.json');
+const leaders = validate(LeadersSchema, rawLeaders, 'leaders.json');
 const scenario = validate(ScenarioSchema, rawScenario, 'scenario.json');
-const map      = validate(MapSchema,      rawMap,      'map.json');
+const map = validate(MapSchema, rawMap, 'map.json');
 
 section('3. Cross-reference checks');
 
 if (oob && leaders) {
-  const unitIds    = collectUnitIds(oob);
-  const leaderIds  = collectLeaderIds(leaders);
-  const allIds     = new Set([...unitIds, ...leaderIds]);
-  pass(`OOB unit ID pool: ${unitIds.size} unit IDs + ${leaderIds.size} leader IDs = ${allIds.size} total`);
+  const unitIds = collectUnitIds(oob);
+  const leaderIds = collectLeaderIds(leaders);
+  const allIds = new Set([...unitIds, ...leaderIds]);
+  pass(
+    `OOB unit ID pool: ${unitIds.size} unit IDs + ${leaderIds.size} leader IDs = ${allIds.size} total`
+  );
   checkLeaderCommandsReferenceOOB(leaders, allIds);
 
   if (scenario) {
@@ -334,10 +356,12 @@ if (scenario && map) {
 
 section('4. Map completeness');
 if (map) {
-  const unknownTerrain = rawMap.hexes.filter(h => h.terrain === 'unknown').length;
-  const totalHexes     = rawMap.hexes.length;
+  const unknownTerrain = rawMap.hexes.filter((h) => h.terrain === 'unknown').length;
+  const totalHexes = rawMap.hexes.length;
   if (unknownTerrain > 0) {
-    warn(`${unknownTerrain}/${totalHexes} hexes have terrain="unknown" — map digitization incomplete`);
+    warn(
+      `${unknownTerrain}/${totalHexes} hexes have terrain="unknown" — map digitization incomplete`
+    );
   } else {
     pass(`All ${totalHexes} hexes have a terrain type`);
   }

@@ -14,25 +14,50 @@ const props = defineProps({
 
 const emit = defineEmits(['hex-update']);
 
-const TERRAIN_TYPES = ['unknown', 'clear', 'woods', 'slopingGround', 'woodedSloping', 'orchard', 'marsh'];
-const HEXSIDE_TYPES = ['', 'stream', 'road', 'pike', 'trail', 'slope', 'extremeSlope', 'verticalSlope', 'stoneWall'];
+const TERRAIN_TYPES = [
+  'unknown',
+  'clear',
+  'woods',
+  'slopingGround',
+  'woodedSloping',
+  'orchard',
+  'marsh',
+];
+const HEXSIDE_TYPES = [
+  '',
+  'stream',
+  'road',
+  'pike',
+  'trail',
+  'slope',
+  'extremeSlope',
+  'verticalSlope',
+  'stoneWall',
+];
 const HEXSIDE_DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
 
 const form = ref(null);
 
-watch(() => props.hex, (hex) => {
-  if (!hex) { form.value = null; return; }
-  form.value = {
-    terrain: hex.terrain ?? 'unknown',
-    elevation: hex.elevation ?? '',
-    hexsides: { ...hex.hexsides },
-    vpHex: hex.vpHex ?? false,
-    entryHex: hex.entryHex ?? false,
-    side: hex.side ?? '',
-    _note: hex._note ?? '',
-    setupUnits: hex.setupUnits ?? [],
-  };
-}, { immediate: true });
+watch(
+  () => props.hex,
+  (hex) => {
+    if (!hex) {
+      form.value = null;
+      return;
+    }
+    form.value = {
+      terrain: hex.terrain ?? 'unknown',
+      elevation: hex.elevation ?? '',
+      hexsides: { ...hex.hexsides },
+      vpHex: hex.vpHex ?? false,
+      entryHex: hex.entryHex ?? false,
+      side: hex.side ?? '',
+      _note: hex._note ?? '',
+      setupUnits: hex.setupUnits ?? [],
+    };
+  },
+  { immediate: true }
+);
 
 function emitUpdate() {
   if (!props.hex || !form.value) return;
@@ -66,58 +91,58 @@ function emitUpdate() {
       <div class="hex-id">Hex {{ selectedHexId }}</div>
 
       <template v-if="form">
-      <label>
-        Terrain
-        <select v-model="form.terrain" @change="emitUpdate">
-          <option v-for="t in TERRAIN_TYPES" :key="t" :value="t">{{ t }}</option>
-        </select>
-      </label>
+        <label>
+          Terrain
+          <select v-model="form.terrain" @change="emitUpdate">
+            <option v-for="t in TERRAIN_TYPES" :key="t" :value="t">{{ t }}</option>
+          </select>
+        </label>
 
-      <label>
-        Elevation
-        <input type="number" v-model="form.elevation" @change="emitUpdate" placeholder="e.g. 2" />
-      </label>
+        <label>
+          Elevation
+          <input type="number" v-model="form.elevation" @change="emitUpdate" placeholder="e.g. 2" />
+        </label>
 
-      <fieldset>
-        <legend>Hexsides</legend>
-        <div class="hexsides-grid">
-          <label v-for="dir in HEXSIDE_DIRS" :key="dir">
-            {{ dir }}
-            <select v-model="form.hexsides[dir]" @change="emitUpdate">
-              <option v-for="t in HEXSIDE_TYPES" :key="t" :value="t">{{ t || '—' }}</option>
-            </select>
-          </label>
+        <fieldset>
+          <legend>Hexsides</legend>
+          <div class="hexsides-grid">
+            <label v-for="dir in HEXSIDE_DIRS" :key="dir">
+              {{ dir }}
+              <select v-model="form.hexsides[dir]" @change="emitUpdate">
+                <option v-for="t in HEXSIDE_TYPES" :key="t" :value="t">{{ t || '—' }}</option>
+              </select>
+            </label>
+          </div>
+        </fieldset>
+
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="form.vpHex" @change="emitUpdate" />
+          VP Hex
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="form.entryHex" @change="emitUpdate" />
+          Entry Hex
+        </label>
+
+        <label v-if="form.entryHex">
+          Side
+          <select v-model="form.side" @change="emitUpdate">
+            <option value="">—</option>
+            <option value="union">union</option>
+            <option value="confederate">confederate</option>
+          </select>
+        </label>
+
+        <label>
+          Note
+          <textarea v-model="form._note" @change="emitUpdate" rows="3" />
+        </label>
+
+        <div v-if="form.setupUnits.length" class="setup-units">
+          <div class="setup-units-label">Setup Units</div>
+          <div v-for="u in form.setupUnits" :key="u" class="unit-id">{{ u }}</div>
         </div>
-      </fieldset>
-
-      <label class="checkbox-label">
-        <input type="checkbox" v-model="form.vpHex" @change="emitUpdate" />
-        VP Hex
-      </label>
-
-      <label class="checkbox-label">
-        <input type="checkbox" v-model="form.entryHex" @change="emitUpdate" />
-        Entry Hex
-      </label>
-
-      <label v-if="form.entryHex">
-        Side
-        <select v-model="form.side" @change="emitUpdate">
-          <option value="">—</option>
-          <option value="union">union</option>
-          <option value="confederate">confederate</option>
-        </select>
-      </label>
-
-      <label>
-        Note
-        <textarea v-model="form._note" @change="emitUpdate" rows="3" />
-      </label>
-
-      <div v-if="form.setupUnits.length" class="setup-units">
-        <div class="setup-units-label">Setup Units</div>
-        <div v-for="u in form.setupUnits" :key="u" class="unit-id">{{ u }}</div>
-      </div>
       </template>
     </template>
   </div>
@@ -157,7 +182,9 @@ label {
   gap: 0.15rem;
 }
 
-select, input[type="number"], textarea {
+select,
+input[type='number'],
+textarea {
   background: #1a1a1a;
   border: 1px solid #555;
   color: #e0d8c8;

@@ -36,11 +36,15 @@ const ReinforcementGroup = z.object({
   orderDescription: z.string().optional(),
   units: z.array(z.string()),
   variable: z.boolean().optional(),
-  variableTable: z.array(z.object({
-    roll: z.union([z.number(), z.string()]),
-    time: TimeStr,
-    entryHex: HexId,
-  })).optional(),
+  variableTable: z
+    .array(
+      z.object({
+        roll: z.union([z.number(), z.string()]),
+        time: TimeStr,
+        entryHex: HexId,
+      })
+    )
+    .optional(),
   _id: z.string().optional(),
   _note: z.string().optional(),
   _groupNote: z.string().optional(),
@@ -89,15 +93,19 @@ export const ScenarioSchema = z.object({
     union: z.array(z.unknown()),
     confederate: z.array(z.unknown()),
   }),
-  initialOrders: z.object({
-    confederate: z.array(z.object({
-      id: z.string(),
-      type: OrderType,
-      originalType: z.string().optional(),
-      assignedTo: z.string(),
-      description: z.string().optional(),
-    })),
-  }).optional(),
+  initialOrders: z
+    .object({
+      confederate: z.array(
+        z.object({
+          id: z.string(),
+          type: OrderType,
+          originalType: z.string().optional(),
+          assignedTo: z.string(),
+          description: z.string().optional(),
+        })
+      ),
+    })
+    .optional(),
   reinforcements: z.object({
     _note: z.string().optional(),
     union: z.array(ReinforcementGroup),

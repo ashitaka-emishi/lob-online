@@ -9,13 +9,26 @@ const MAP_IMAGE = '/tools/map-editor/assets/SM_Map.jpg';
 
 // ── Calibration ───────────────────────────────────────────────────────────────
 
-const DEFAULT_CALIBRATION = { cols: 64, rows: 35, dx: 0, dy: 0, hexWidth: 35, hexHeight: 35, imageScale: 1, orientation: 'flat', strokeWidth: 0.5, evenColUp: false };
+const DEFAULT_CALIBRATION = {
+  cols: 64,
+  rows: 35,
+  dx: 0,
+  dy: 0,
+  hexWidth: 35,
+  hexHeight: 35,
+  imageScale: 1,
+  orientation: 'flat',
+  strokeWidth: 0.5,
+  evenColUp: false,
+};
 
 function loadCalibration() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) return { ...DEFAULT_CALIBRATION, ...JSON.parse(stored) };
-  } catch (_) { /* ignore */ }
+  } catch (_) {
+    /* ignore */
+  }
   return { ...DEFAULT_CALIBRATION };
 }
 
@@ -122,7 +135,9 @@ async function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
   if (!mapData.value) {
     saveStatus.value = 'saved';
-    setTimeout(() => { saveStatus.value = ''; }, 2000);
+    setTimeout(() => {
+      saveStatus.value = '';
+    }, 2000);
     return;
   }
   try {
@@ -135,7 +150,9 @@ async function save() {
     if (res.ok) {
       unsaved.value = false;
       saveStatus.value = 'saved';
-      setTimeout(() => { saveStatus.value = ''; }, 2000);
+      setTimeout(() => {
+        saveStatus.value = '';
+      }, 2000);
     } else {
       saveStatus.value = 'error';
       saveErrors.value = body.issues ?? [];
@@ -179,7 +196,13 @@ async function save() {
     <div class="editor-body">
       <!-- Left: map + overlay -->
       <div class="map-pane">
-        <div class="map-container" :style="{ width: (imgNaturalWidth * calibration.imageScale) + 'px', height: (imgNaturalHeight * calibration.imageScale) + 'px' }">
+        <div
+          class="map-container"
+          :style="{
+            width: imgNaturalWidth * calibration.imageScale + 'px',
+            height: imgNaturalHeight * calibration.imageScale + 'px',
+          }"
+        >
           <img
             :src="MAP_IMAGE"
             :width="imgNaturalWidth * calibration.imageScale"

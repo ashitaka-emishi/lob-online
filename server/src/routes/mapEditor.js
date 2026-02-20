@@ -1,7 +1,9 @@
-import { Router } from 'express';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
+
+import { Router } from 'express';
+
 import { MapSchema } from '../schemas/map.schema.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));

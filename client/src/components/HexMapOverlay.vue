@@ -58,9 +58,10 @@ const vpHexSet = computed(() => new Set(props.vpHexIds));
 
 // Recompute grid whenever calibration or image size changes
 const gridData = computed(() => {
-  const { dx, dy, hexWidth, hexHeight, imageScale, orientation, evenColUp, cols, rows } = props.calibration;
-  const gridCols = (cols > 0 ? cols : 64);
-  const gridRows = (rows > 0 ? rows : 35);
+  const { dx, dy, hexWidth, hexHeight, imageScale, orientation, evenColUp, cols, rows } =
+    props.calibration;
+  const gridCols = cols > 0 ? cols : 64;
+  const gridRows = rows > 0 ? rows : 35;
   const orient = orientation === 'pointy' ? Orientation.POINTY : Orientation.FLAT;
 
   const Hex = defineHex({
@@ -75,7 +76,7 @@ const gridData = computed(() => {
   // Anchor hex: col=0, row=gridRows-1 is the lower-left game hex (01.01)
   const anchorHex = grid.getHex({ col: 0, row: gridRows - 1 });
   const tx = dx - anchorHex.x;
-  const ty = (props.imageHeight * imageScale - dy) - anchorHex.y;
+  const ty = props.imageHeight * imageScale - dy - anchorHex.y;
 
   const cells = [];
   grid.forEach((hex) => {
@@ -93,8 +94,8 @@ const gridData = computed(() => {
     cells.push({ id, points, cx, cy, fill, isVP });
   });
 
-  const visible = cells.filter((cell) =>
-    props.calibrationMode || cell.isVP || cell.id === props.selectedHexId
+  const visible = cells.filter(
+    (cell) => props.calibrationMode || cell.isVP || cell.id === props.selectedHexId
   );
 
   return { cells: visible, grid, tx, ty };
@@ -114,7 +115,7 @@ function onSvgClick(event) {
   const localY = svgPt.y - ty;
   const hex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
   if (hex) {
-    const gridRows = (props.calibration.rows > 0 ? props.calibration.rows : 35);
+    const gridRows = props.calibration.rows > 0 ? props.calibration.rows : 35;
     const gameCol = hex.col + 1;
     const gameRow = gridRows - hex.row;
     const id = `${String(gameCol).padStart(2, '0')}.${String(gameRow).padStart(2, '0')}`;
@@ -127,7 +128,7 @@ function onSvgClick(event) {
   <svg
     :width="imageWidth * calibration.imageScale"
     :height="imageHeight * calibration.imageScale"
-    style="position: absolute; top: 0; left: 0; cursor: crosshair;"
+    style="position: absolute; top: 0; left: 0; cursor: crosshair"
     @click="onSvgClick"
   >
     <g :transform="`translate(${gridData.tx},${gridData.ty})`">
@@ -137,9 +138,25 @@ function onSvgClick(event) {
         :points="cell.points"
         :fill="cell.fill"
         :fill-opacity="cell.fill === 'transparent' ? 0 : 0.45"
-        :stroke="calibrationMode ? '#cc88ff' : (selectedHexId === cell.id ? '#ffdd00' : cell.isVP ? '#cc3333' : '#88776644')"
-        :stroke-width="calibrationMode ? calibration.strokeWidth : (selectedHexId === cell.id ? Math.max(calibration.strokeWidth * 3, 2) : cell.isVP ? Math.max(calibration.strokeWidth * 2, 1.5) : calibration.strokeWidth)"
-        :stroke-opacity="calibrationMode ? 0.75 : (selectedHexId === cell.id || cell.isVP ? 1 : 0.6)"
+        :stroke="
+          calibrationMode
+            ? '#cc88ff'
+            : selectedHexId === cell.id
+              ? '#ffdd00'
+              : cell.isVP
+                ? '#cc3333'
+                : '#88776644'
+        "
+        :stroke-width="
+          calibrationMode
+            ? calibration.strokeWidth
+            : selectedHexId === cell.id
+              ? Math.max(calibration.strokeWidth * 3, 2)
+              : cell.isVP
+                ? Math.max(calibration.strokeWidth * 2, 1.5)
+                : calibration.strokeWidth
+        "
+        :stroke-opacity="calibrationMode ? 0.75 : selectedHexId === cell.id || cell.isVP ? 1 : 0.6"
       />
       <template v-if="calibrationMode">
         <text
@@ -153,7 +170,9 @@ function onSvgClick(event) {
           fill="#ffdd00"
           fill-opacity="0.85"
           pointer-events="none"
-        >{{ cell.id }}</text>
+        >
+          {{ cell.id }}
+        </text>
       </template>
     </g>
   </svg>

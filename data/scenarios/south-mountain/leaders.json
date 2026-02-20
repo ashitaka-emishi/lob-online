@@ -137,9 +137,27 @@
       }
     ],
     "brigades": [
-      { "id": "phelps",    "name": "Walter Phelps Jr.",     "commandLevel": "brigade", "commandsId": "1b-1d-1c",  "initiativeRating": null },
-      { "id": "doubleday", "name": "Abner Doubleday",       "commandLevel": "brigade", "commandsId": "2b-1d-1c",  "initiativeRating": null },
-      { "id": "patrick",   "name": "Marsena R. Patrick",    "commandLevel": "brigade", "commandsId": "3b-1d-1c",  "initiativeRating": null },
+      {
+        "id": "phelps",
+        "name": "Walter Phelps Jr.",
+        "commandLevel": "brigade",
+        "commandsId": "1b-1d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "doubleday",
+        "name": "Abner Doubleday",
+        "commandLevel": "brigade",
+        "commandsId": "2b-1d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "patrick",
+        "name": "Marsena R. Patrick",
+        "commandLevel": "brigade",
+        "commandsId": "3b-1d-1c",
+        "initiativeRating": null
+      },
       {
         "id": "gibbon",
         "name": "John Gibbon",
@@ -151,21 +169,111 @@
           "randomEvent9": "Brigade of Iron — all units in Gibbon's Brigade may ignore unfavorable Morale results during current Union player turn (SM 7.2 event 9)."
         }
       },
-      { "id": "duryea",   "name": "Abram Duryea",          "commandLevel": "brigade", "commandsId": "1b-2d-1c",  "initiativeRating": null },
-      { "id": "christian","name": "William H. Christian",   "commandLevel": "brigade", "commandsId": "2b-2d-1c",  "initiativeRating": null },
-      { "id": "hartsuff", "name": "George L. Hartsuff",    "commandLevel": "brigade", "commandsId": "3b-2d-1c",  "initiativeRating": null },
-      { "id": "seymour",  "name": "Truman Seymour",         "commandLevel": "brigade", "commandsId": "1b-3d-1c",  "initiativeRating": null },
-      { "id": "magilton", "name": "Albert L. Magilton",    "commandLevel": "brigade", "commandsId": "2b-3d-1c",  "initiativeRating": null },
-      { "id": "gallagher","name": "Thomas F. Gallagher",   "commandLevel": "brigade", "commandsId": "3b-3d-1c",  "initiativeRating": null },
-      { "id": "christ",   "name": "Benjamin C. Christ",    "commandLevel": "brigade", "commandsId": "1b-1d-9c",  "initiativeRating": null },
-      { "id": "welsh",    "name": "Thomas Welsh",           "commandLevel": "brigade", "commandsId": "2b-1d-9c",  "initiativeRating": null },
-      { "id": "nagle",    "name": "James Nagle",            "commandLevel": "brigade", "commandsId": "1b-2d-9c",  "initiativeRating": null },
-      { "id": "ferrero",  "name": "Edward Ferrero",         "commandLevel": "brigade", "commandsId": "2b-2d-9c",  "initiativeRating": null },
-      { "id": "fairchild","name": "Harrison S. Fairchild", "commandLevel": "brigade", "commandsId": "1b-3d-9c",  "initiativeRating": null },
-      { "id": "harland",  "name": "Edward Harland",         "commandLevel": "brigade", "commandsId": "2b-3d-9c",  "initiativeRating": null },
-      { "id": "scammon",  "name": "Eliakim P. Scammon",    "commandLevel": "brigade", "commandsId": "1b-kd-9c",  "initiativeRating": null },
-      { "id": "crook",    "name": "George Crook",           "commandLevel": "brigade", "commandsId": "2b-kd-9c",  "initiativeRating": null },
-      { "id": "farnsworth","name": "Elon J. Farnsworth",   "commandLevel": "brigade", "commandsId": "fcav",       "initiativeRating": null }
+      {
+        "id": "duryea",
+        "name": "Abram Duryea",
+        "commandLevel": "brigade",
+        "commandsId": "1b-2d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "christian",
+        "name": "William H. Christian",
+        "commandLevel": "brigade",
+        "commandsId": "2b-2d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "hartsuff",
+        "name": "George L. Hartsuff",
+        "commandLevel": "brigade",
+        "commandsId": "3b-2d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "seymour",
+        "name": "Truman Seymour",
+        "commandLevel": "brigade",
+        "commandsId": "1b-3d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "magilton",
+        "name": "Albert L. Magilton",
+        "commandLevel": "brigade",
+        "commandsId": "2b-3d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "gallagher",
+        "name": "Thomas F. Gallagher",
+        "commandLevel": "brigade",
+        "commandsId": "3b-3d-1c",
+        "initiativeRating": null
+      },
+      {
+        "id": "christ",
+        "name": "Benjamin C. Christ",
+        "commandLevel": "brigade",
+        "commandsId": "1b-1d-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "welsh",
+        "name": "Thomas Welsh",
+        "commandLevel": "brigade",
+        "commandsId": "2b-1d-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "nagle",
+        "name": "James Nagle",
+        "commandLevel": "brigade",
+        "commandsId": "1b-2d-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "ferrero",
+        "name": "Edward Ferrero",
+        "commandLevel": "brigade",
+        "commandsId": "2b-2d-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "fairchild",
+        "name": "Harrison S. Fairchild",
+        "commandLevel": "brigade",
+        "commandsId": "1b-3d-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "harland",
+        "name": "Edward Harland",
+        "commandLevel": "brigade",
+        "commandsId": "2b-3d-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "scammon",
+        "name": "Eliakim P. Scammon",
+        "commandLevel": "brigade",
+        "commandsId": "1b-kd-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "crook",
+        "name": "George Crook",
+        "commandLevel": "brigade",
+        "commandsId": "2b-kd-9c",
+        "initiativeRating": null
+      },
+      {
+        "id": "farnsworth",
+        "name": "Elon J. Farnsworth",
+        "commandLevel": "brigade",
+        "commandsId": "fcav",
+        "initiativeRating": null
+      }
     ]
   },
   "confederate": {
