@@ -25,9 +25,17 @@ export const MapSchema = z.object({
   scenario: z.string(),
   layout: z.literal('pointy-top'),
   hexIdFormat: z.string().optional(),
-  gridDimensions: z.object({
+  gridSpec: z.object({
     cols: z.number().int().positive(),
     rows: z.number().int().positive(),
+    dx: z.number(),
+    dy: z.number(),
+    hexWidth: z.number().positive(),
+    hexHeight: z.number().positive(),
+    imageScale: z.number().positive(),
+    strokeWidth: z.number().positive(),
+    orientation: z.enum(['flat', 'pointy']),
+    evenColUp: z.boolean(),
     _note: z.string().optional(),
   }).optional(),
   terrainTypes: z.array(z.string()).optional(),

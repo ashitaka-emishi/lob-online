@@ -5,16 +5,23 @@
   "scenario": "south-mountain",
   "layout": "pointy-top",
   "hexIdFormat": "col.row",
-  "gridDimensions": {
-    "cols": 56,
-    "rows": 35,
-    "_note": "Approximate — verify against SM_Map.jpg"
-  },
   "terrainTypes": [
-    "clear", "woods", "slopingGround", "woodedSloping", "orchard", "marsh"
+    "clear",
+    "woods",
+    "slopingGround",
+    "woodedSloping",
+    "orchard",
+    "marsh"
   ],
   "hexsideTypes": [
-    "stream", "road", "pike", "trail", "slope", "extremeSlope", "verticalSlope", "stoneWall"
+    "stream",
+    "road",
+    "pike",
+    "trail",
+    "slope",
+    "extremeSlope",
+    "verticalSlope",
+    "stoneWall"
   ],
   "elevationSystem": {
     "contourInterval": 50,
@@ -23,26 +30,91 @@
     "_note": "SM Special Slope rule (1.1): 50-foot contour interval. Vertical slopes are impassable to all units."
   },
   "vpHexes": [
-    { "hex": "06.10", "unionVP": 0,  "confederateVP": 2,  "label": "Reno Monument area / Fox's Gap south" },
-    { "hex": "16.02", "unionVP": 0,  "confederateVP": 10, "label": "Turner's Gap / National Road summit" },
-    { "hex": "19.23", "unionVP": 4,  "confederateVP": 3,  "label": "Fox's Gap" },
-    { "hex": "19.32", "unionVP": 4,  "confederateVP": 2,  "label": "Frostown Road / southern approach" },
-    { "hex": "33.02", "unionVP": 0,  "confederateVP": 5,  "label": "Bolivar / National Road east" },
-    { "hex": "36.26", "unionVP": 5,  "confederateVP": 5,  "label": "D.H. Hill HQ / Wing Supply Wagon start" },
-    { "hex": "39.34", "unionVP": 6,  "confederateVP": 2,  "label": "Southern objective" },
-    { "hex": "40.07", "unionVP": 1,  "confederateVP": 5,  "label": "Northern objective" },
-    { "hex": "56.21", "unionVP": 2,  "confederateVP": 2,  "label": "East edge objective" },
-    { "hex": "56.23", "unionVP": 2,  "confederateVP": 2,  "label": "East edge objective" }
+    {
+      "hex": "06.10",
+      "unionVP": 0,
+      "confederateVP": 2,
+      "label": "Reno Monument area / Fox's Gap south"
+    },
+    {
+      "hex": "16.02",
+      "unionVP": 0,
+      "confederateVP": 10,
+      "label": "Turner's Gap / National Road summit"
+    },
+    {
+      "hex": "19.23",
+      "unionVP": 4,
+      "confederateVP": 3,
+      "label": "Fox's Gap"
+    },
+    {
+      "hex": "19.32",
+      "unionVP": 4,
+      "confederateVP": 2,
+      "label": "Frostown Road / southern approach"
+    },
+    {
+      "hex": "33.02",
+      "unionVP": 0,
+      "confederateVP": 5,
+      "label": "Bolivar / National Road east"
+    },
+    {
+      "hex": "36.26",
+      "unionVP": 5,
+      "confederateVP": 5,
+      "label": "D.H. Hill HQ / Wing Supply Wagon start"
+    },
+    {
+      "hex": "39.34",
+      "unionVP": 6,
+      "confederateVP": 2,
+      "label": "Southern objective"
+    },
+    {
+      "hex": "40.07",
+      "unionVP": 1,
+      "confederateVP": 5,
+      "label": "Northern objective"
+    },
+    {
+      "hex": "56.21",
+      "unionVP": 2,
+      "confederateVP": 2,
+      "label": "East edge objective"
+    },
+    {
+      "hex": "56.23",
+      "unionVP": 2,
+      "confederateVP": 2,
+      "label": "East edge objective"
+    }
   ],
   "entryHexes": {
     "union": [
-      { "hex": "01.09", "label": "West road entry — K/9 and 9 Corps" },
-      { "hex": "15.01", "label": "North-central entry — 1 Corps and 9 Corps reinforcements" },
-      { "hex": "32.01", "label": "North-east entry — 1/1 Division and 2/1 Division" }
+      {
+        "hex": "01.09",
+        "label": "West road entry — K/9 and 9 Corps"
+      },
+      {
+        "hex": "15.01",
+        "label": "North-central entry — 1 Corps and 9 Corps reinforcements"
+      },
+      {
+        "hex": "32.01",
+        "label": "North-east entry — 1/1 Division and 2/1 Division"
+      }
     ],
     "confederate": [
-      { "hex": "20.34", "label": "South entry — alternate Jones Division arrival hex (variable roll 2-3)" },
-      { "hex": "39.35", "label": "East-south entry — Confederate main reinforcement entry" }
+      {
+        "hex": "20.34",
+        "label": "South entry — alternate Jones Division arrival hex (variable roll 2-3)"
+      },
+      {
+        "hex": "39.35",
+        "label": "East-south entry — Confederate main reinforcement entry"
+      }
     ]
   },
   "hexes": [
@@ -83,7 +155,9 @@
       "hex": "19.23",
       "terrain": "unknown",
       "vpHex": true,
-      "setupUnits": ["5va-cav"],
+      "setupUnits": [
+        "5va-cav"
+      ],
       "_note": "Fox's Gap — 5th Va Cavalry at-start. Verify terrain."
     },
     {
@@ -95,7 +169,9 @@
     {
       "hex": "20.23",
       "terrain": "unknown",
-      "setupUnits": ["pelham-b"],
+      "setupUnits": [
+        "pelham-b"
+      ],
       "_note": "Pelham B at-start"
     },
     {
@@ -108,13 +184,17 @@
     {
       "hex": "22.23",
       "terrain": "unknown",
-      "setupUnits": ["pelham-a"],
+      "setupUnits": [
+        "pelham-a"
+      ],
       "_note": "Pelham A at-start"
     },
     {
       "hex": "25.25",
       "terrain": "unknown",
-      "setupUnits": ["5nc"],
+      "setupUnits": [
+        "5nc"
+      ],
       "_note": "Garland Brigade (detached) — 5 NC at-start"
     },
     {
@@ -125,61 +205,83 @@
     {
       "hex": "26.25",
       "terrain": "unknown",
-      "setupUnits": ["20nc"],
+      "setupUnits": [
+        "20nc"
+      ],
       "_note": "Garland Brigade (detached) — 20 NC at-start"
     },
     {
       "hex": "27.26",
       "terrain": "unknown",
-      "setupUnits": ["13nc"],
+      "setupUnits": [
+        "13nc"
+      ],
       "_note": "Garland Brigade (detached) — 13 NC at-start"
     },
     {
       "hex": "28.23",
       "terrain": "unknown",
-      "setupUnits": ["13ala"],
+      "setupUnits": [
+        "13ala"
+      ],
       "_note": "Colquitt Brigade — 13 Ala at-start"
     },
     {
       "hex": "28.25",
       "terrain": "unknown",
-      "setupUnits": ["garland", "23nc"],
+      "setupUnits": [
+        "garland",
+        "23nc"
+      ],
       "_note": "Garland HQ + 23 NC at-start (Fox's Gap defense)"
     },
     {
       "hex": "29.22",
       "terrain": "unknown",
-      "setupUnits": ["colquitt", "6ga"],
+      "setupUnits": [
+        "colquitt",
+        "6ga"
+      ],
       "_note": "Colquitt HQ + 6 Ga at-start"
     },
     {
       "hex": "29.23",
       "terrain": "unknown",
-      "setupUnits": ["27ga"],
+      "setupUnits": [
+        "27ga"
+      ],
       "_note": "Colquitt Brigade — 27 Ga at-start"
     },
     {
       "hex": "29.26",
       "terrain": "unknown",
-      "setupUnits": ["12nc"],
+      "setupUnits": [
+        "12nc"
+      ],
       "_note": "Garland Brigade (detached) — 12 NC at-start"
     },
     {
       "hex": "30.20",
       "terrain": "unknown",
-      "setupUnits": ["28ga"],
+      "setupUnits": [
+        "28ga"
+      ],
       "_note": "Colquitt Brigade — 28 Ga at-start"
     },
     {
       "hex": "30.21",
       "terrain": "unknown",
-      "setupUnits": ["23ga"],
+      "setupUnits": [
+        "23ga"
+      ],
       "_note": "Colquitt Brigade — 23 Ga at-start"
     },
     {
       "hex": "30.25",
       "terrain": "unknown",
-      "setupUnits": ["bondurant"],
+      "setupUnits": [
+        "bondurant"
+      ],
       "_note": "Arty/dH (Bondurant) — attached to Garland Brigade at-start"
     },
     {
@@ -191,20 +293,27 @@
     {
       "hex": "34.17",
       "terrain": "unknown",
-      "setupUnits": ["lane"],
+      "setupUnits": [
+        "lane"
+      ],
       "_note": "Army Reserve Artillery (Lane) at-start"
     },
     {
       "hex": "35.26",
       "terrain": "unknown",
-      "setupUnits": ["carter"],
+      "setupUnits": [
+        "carter"
+      ],
       "_note": "Arty/dH (Carter) at-start"
     },
     {
       "hex": "36.26",
       "terrain": "unknown",
       "vpHex": true,
-      "setupUnits": ["dh-hill", "csa-wagon"],
+      "setupUnits": [
+        "dh-hill",
+        "csa-wagon"
+      ],
       "_note": "D.H. Hill HQ + Wing Supply Wagon at-start. Also VP hex (5/5)."
     },
     {
@@ -242,9 +351,42 @@
   "_todoHexes": {
     "_note": "The following setup positions use zone constraints (within N hexes of reference). All hexes in these zones must be populated from SM_Map.jpg.",
     "zones": [
-      { "constraint": "within5Of", "referenceHex": "18.05", "units": ["pleasonton", "fcav", "8ill", "3ind", "1mass", "cg3us"], "_note": "Union Cavalry Division at-start zone" },
-      { "constraint": "within2Of", "referenceHex": "38.31", "units": ["gb-anderson", "2nc", "4nc", "14nc", "30nc"],           "_note": "Anderson Brigade (A/dH) at-start zone" },
-      { "constraint": "within3Of", "referenceHex": "36.27", "units": ["lloyd", "blackshears", "ross", "patterson"],            "_note": "Reserve Artillery at-start zone" }
+      {
+        "constraint": "within5Of",
+        "referenceHex": "18.05",
+        "units": [
+          "pleasonton",
+          "fcav",
+          "8ill",
+          "3ind",
+          "1mass",
+          "cg3us"
+        ],
+        "_note": "Union Cavalry Division at-start zone"
+      },
+      {
+        "constraint": "within2Of",
+        "referenceHex": "38.31",
+        "units": [
+          "gb-anderson",
+          "2nc",
+          "4nc",
+          "14nc",
+          "30nc"
+        ],
+        "_note": "Anderson Brigade (A/dH) at-start zone"
+      },
+      {
+        "constraint": "within3Of",
+        "referenceHex": "36.27",
+        "units": [
+          "lloyd",
+          "blackshears",
+          "ross",
+          "patterson"
+        ],
+        "_note": "Reserve Artillery at-start zone"
+      }
     ]
   },
   "_digitizationPlan": {
