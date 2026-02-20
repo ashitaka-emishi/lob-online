@@ -1,7 +1,7 @@
 {
   "project": "Line of Battle - South Mountain (RSS #4)",
   "system": "Line of Battle v2.0 (Multi-Man Publishing)",
-  "lastUpdated": "2026-02-19",
+  "lastUpdated": "2026-02-20",
   "fileLibrary": {
     "seriesRules": {
       "label": "Series Rules & Charts",
@@ -145,52 +145,84 @@
         },
         {
           "id": "SM_SCENARIO_DATA",
-          "filename": null,
-          "description": "Structured scenario data (JSON) — to be built from SM_Rules.pdf",
-          "status": "todo",
+          "filename": "data/scenarios/south-mountain/scenario.json",
+          "description": "Structured scenario data (JSON) — built from SM_Rules.pdf and LOBv2_GameSpecificUpdates.pdf",
+          "status": "available",
           "covers": [
-            "At-start unit positions by hex",
-            "At-start orders per formation",
-            "Reinforcement schedule (time, hex, units, orders)",
-            "Artillery ammo reserve assignments",
-            "Victory Point hex list with point values",
-            "Victory level thresholds"
+            "Turn structure (45 turns, 09:00–20:00, 20 min/turn)",
+            "At-start unit positions by hex (exact hexes + zone constraints)",
+            "At-start orders per formation (Complex Defense → Move per SM rule)",
+            "Full Union reinforcement schedule (12 groups, 09:00–17:00)",
+            "Full Confederate reinforcement schedule with variable arrival dice rolls",
+            "Artillery ammo reserves (CSA Wing shell:30/can:18; Union 1C shell:24/can:12; 9C shell:24/can:12)",
+            "Victory Point terrain hexes (10 hexes) with Union/Confederate values",
+            "VP for wrecked formations (brigade, division, artillery)",
+            "Victory level thresholds (Massive through Draw through Massive)",
+            "SM terrain movement chart — all terrain types and unit classes",
+            "Confederate random event table (12 entries)",
+            "Union random event table (12 entries)",
+            "SM-specific rules (movement costs, detachment limits, fluke stoppage exclusions)"
           ]
         }
       ]
     },
     "gameState": {
-      "label": "Game State Models (to be built)",
+      "label": "Game State Models",
       "files": [
         {
           "id": "GS_OOB",
-          "filename": null,
-          "description": "Order of Battle JSON — all units with full LoB stats",
-          "status": "todo",
+          "filename": "data/scenarios/south-mountain/oob.json",
+          "description": "Order of Battle JSON — all units with full LoB stats for South Mountain",
+          "status": "available",
+          "unitCount": 219,
           "covers": [
-            "Unit id, name, side, type",
-            "Morale rating, weapon type, strength points",
-            "Formation, morale state",
-            "Artillery: gun rating, shell/canister current/max",
-            "Hierarchy: army > corps > division > brigade > regiment"
+            "219 unit IDs indexed (infantry, cavalry, artillery batteries)",
+            "Morale rating, weapon type, strength points, straggler boxes",
+            "Brigade wreckThreshold and wreckTrackTotal from Brigade Loss Charts",
+            "Division stragglerBoxes and divisionWreckThreshold",
+            "Hierarchy: army > corps > division > brigade > regiment",
+            "Confederate: independentBrigades (Evans), independent cavalry/artillery, reserve artillery",
+            "All 4 errata corrections applied with _errata notes on affected records"
           ]
         },
         {
           "id": "GS_LEADERS",
-          "filename": null,
-          "description": "Leader data JSON",
-          "status": "todo",
+          "filename": "data/scenarios/south-mountain/leaders.json",
+          "description": "Leader data JSON — all Union and Confederate leaders with special rule flags",
+          "status": "available",
+          "leaderCount": 48,
           "covers": [
-            "Leader id, name, rank, side",
-            "Command rating, morale rating",
-            "Army commander status and initiative state",
-            "Special rules flags (Hill loose cannon immunity, Burnside restrictions, etc.)"
+            "48 leader IDs across army, corps, division, brigade levels",
+            "commandsId links each leader to their OOB unit/formation",
+            "initiativeRating: null (physical counter value — not in source PDFs)",
+            "Longstreet: armyCommander, no initiative needed, dhHillException",
+            "D.H. Hill: looseCannonImmunity until Longstreet arrives",
+            "Burnside: supernumerary restrictions, canTake9Corps on Reno casualty",
+            "McClellan: arrivalTime 15:00, pre-arrival order restriction",
+            "Pleasonton: artilleryReplenishFromAnyReserve",
+            "Gibbon: ironBrigade flag, randomEvent9 reference",
+            "Garland and Garnett: detachedAtStart flags"
+          ]
+        },
+        {
+          "id": "SM_MAP_DATA",
+          "filename": "data/scenarios/south-mountain/map.json",
+          "description": "Hex map data — scaffold with known hexes, full digitization pending",
+          "status": "partial",
+          "hexCount": 31,
+          "covers": [
+            "31 known hexes (VP hexes, setup hexes, entry hexes) from scenario data",
+            "VP hexes with Union/Confederate values",
+            "Union entry hexes: 01.09, 15.01, 32.01",
+            "Confederate entry hexes: 20.34, 39.35",
+            "Elevation system: 50-ft contour interval, vertical slopes impassable",
+            "All hexes currently terrain=unknown — requires SM_Map.jpg digitization"
           ]
         },
         {
           "id": "GS_TURN",
           "filename": null,
-          "description": "Turn and game state JSON",
+          "description": "Turn and game state JSON — to be built when game engine is implemented",
           "status": "todo",
           "covers": [
             "Current turn time and number",
@@ -202,6 +234,16 @@
             "Random event log"
           ]
         }
+      ]
+    },
+    "schemas": {
+      "label": "Zod Schemas & Tooling (M0)",
+      "files": [
+        { "id": "SCHEMA_OOB",      "filename": "server/src/schemas/oob.schema.js",      "status": "available" },
+        { "id": "SCHEMA_LEADERS",  "filename": "server/src/schemas/leaders.schema.js",  "status": "available" },
+        { "id": "SCHEMA_SCENARIO", "filename": "server/src/schemas/scenario.schema.js", "status": "available" },
+        { "id": "SCHEMA_MAP",      "filename": "server/src/schemas/map.schema.js",      "status": "available" },
+        { "id": "VALIDATE_SCRIPT", "filename": "scripts/validate-data.js",              "status": "available", "runWith": "npm run validate-data" }
       ]
     }
   },

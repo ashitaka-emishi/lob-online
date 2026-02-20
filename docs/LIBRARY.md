@@ -2,7 +2,7 @@
 
 **System:** Line of Battle v2.0 (Multi-Man Publishing)
 **Game:** South Mountain, RSS #4
-**Last Updated:** 2026-02-19
+**Last Updated:** 2026-02-20
 
 ---
 
@@ -34,17 +34,28 @@
 | SM_ERRATA | `SM_Errata.pdf` | ✅ | 5 corrections: Chicago Dragoons brigade, E/2 US arty rating, 28 Ohio loss chart, 5 Va Cav morale |
 | SM_COVER | `SM_Cover.jpg` | ✅ | Game box cover art |
 | SM_MAP | `SM_Map.jpg` | ✅ | Hex map with terrain, elevation contours, slope hexsides, roads, VP hexes, entry area hexes |
-| SM_SCENARIO_DATA | *(to be built)* | 🔧 | Structured JSON derived from SM_Rules: at-start positions, orders, ammo reserves, reinforcement schedule, VP hex list |
+| SM_SCENARIO_DATA | `data/scenarios/south-mountain/scenario.json` | ✅ | At-start positions, reinforcement schedule (with variable arrival rolls), VP hexes + thresholds, ammo reserves, random event tables, terrain movement chart. All 4 errata applied. |
 
 ---
 
-## Game State Models (to be built)
+## Data Models (M0 — built)
 
 | ID | File | Status | Notes |
 |----|------|--------|-------|
-| GS_OOB | *(to be built)* | 🔧 | Full OOB JSON — all units with LoB stats, hierarchy, formation, morale state |
-| GS_LEADERS | *(to be built)* | 🔧 | Leader JSON — ratings, command status, special rule flags |
+| GS_OOB | `data/scenarios/south-mountain/oob.json` | ✅ | Full OOB JSON — 219 unit IDs. All units (infantry, cavalry, artillery) with morale/weapon/strength/straggler boxes, brigade/division hierarchy, wreck thresholds. Evans Brigade in `independentBrigades`. All errata applied. |
+| GS_LEADERS | `data/scenarios/south-mountain/leaders.json` | ✅ | 48 leader IDs. Army through brigade level, both sides. Special rule flags: Longstreet army-commander, Hill loose-cannon immunity, Burnside restrictions, Pleasonton replenishment, Gibbon Iron Brigade event. Counter ratings null (not in PDFs). |
+| SM_MAP_DATA | `data/scenarios/south-mountain/map.json` | 🔧 | Hex scaffold with 31 known hexes (VP hexes, setup hexes, entry hexes). Full terrain digitization from SM_Map.jpg required to reach `available`. |
 | GS_TURN | *(to be built)* | 🔧 | Turn/game state JSON — active orders, fluke stoppage tracking, arty depletion, VP totals |
+
+## Schemas & Tooling (M0 — built)
+
+| File | Purpose |
+|------|---------|
+| `server/src/schemas/oob.schema.js` | Zod schema for oob.json |
+| `server/src/schemas/leaders.schema.js` | Zod schema for leaders.json |
+| `server/src/schemas/scenario.schema.js` | Zod schema for scenario.json |
+| `server/src/schemas/map.schema.js` | Zod schema for map.json |
+| `scripts/validate-data.js` | Cross-reference integrity checker (`npm run validate-data`) |
 
 ---
 

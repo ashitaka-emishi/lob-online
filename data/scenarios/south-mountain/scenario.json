@@ -1,27 +1,542 @@
 {
-  "_status": "todo",
-  "_description": "To be built from SM_Rules.pdf and LOBv2_GameSpecificUpdates.pdf",
+  "_status": "available",
+  "_source": "SM_Rules.pdf + LOBv2_GameSpecificUpdates.pdf",
   "id": "south-mountain",
   "name": "South Mountain",
   "system": "Line of Battle v2.0",
   "publication": "RSS #4",
+
+  "turnStructure": {
+    "firstTurn": "09:00",
+    "lastTurn": "20:00",
+    "totalTurns": 45,
+    "minutesPerTurn": 20,
+    "firstPlayer": "union",
+    "date": "1862-09-14"
+  },
+
   "rules": {
     "_note": "SM-specific overrides — see LOBv2_GameSpecificUpdates.pdf and SM_Rules.pdf",
     "treeLosHeight": 1,
     "armyCommanderRating": "Normal",
     "breastworksAllowed": false,
     "longstreetIsArmyCommander": true,
-    "initialOrderOverride": { "complexDefense": "move" },
-    "artilleryReplenishFromAnyReserve": ["Pelham", "Pleasonton"],
+    "initialOrderOverride": {
+      "complexDefense": "move",
+      "_note": "All at-start Complex Defense orders are replaced by Move orders (SM special rule)"
+    },
+    "artilleryReplenishFromAnyReserve": ["pelham-a", "pelham-b", "cg3us"],
     "ignoreLobRules": ["4.2", "4.3"],
     "movementChart": "south-mountain",
     "trailMovementCosts": "rss",
     "slopeContourInterval": 50,
-    "verticalSlopesImpassable": true
+    "verticalSlopesImpassable": true,
+    "detachment": {
+      "1c": { "maxDivisionDetachments": 1, "divisionsCanDetachBrigades": true },
+      "9c": { "maxDivisionDetachments": 2, "divisionsCanDetachBrigades": false },
+      "dh-div": { "maxBrigadeDetachments": 3 },
+      "j-div": { "maxBrigadeDetachments": 3 },
+      "h-div": { "maxBrigadeDetachments": 0 }
+    },
+    "flukeStoppageReserveExclusions": ["g1me", "6ny-cav", "3ohio-cav"],
+    "_flukeNote": "9 Corps cavalry units may NOT fulfill reserve requirement for Fluke Stoppage (SM rule)"
   },
-  "turnLimit": null,
-  "victoryConditions": {},
-  "setup": {},
-  "reinforcements": [],
-  "ammoReserves": {}
+
+  "movementCosts": {
+    "_source": "SM_Rules.pdf — SM Special Terrain Effects on Movement chart",
+    "_notes": {
+      "P": "Prohibited — unit type may not enter or cross",
+      "ne": "No effect",
+      "ot": "Cost equals other terrain in hex (road/pike/trail overlays)",
+      "0.5": "Half the unit's full movement allowance (round up)",
+      "additive": "Hexside/elevation costs are ADDED to terrain cost"
+    },
+    "movementAllowances": {
+      "line":           6,
+      "column":         6,
+      "mounted":        12,
+      "limbered":       7,
+      "horseArtillery": 12,
+      "wagon":          6,
+      "leader":         12
+    },
+    "terrainCosts": {
+      "changeFormation": { "line": 1,    "column": 1,    "mounted": 3,    "limbered": 3,    "wagon": null,  "leader": null },
+      "clear":           { "line": 1,    "column": 1,    "mounted": 1,    "limbered": 1,    "wagon": 1,     "leader": 1    },
+      "orchard":         { "line": 1,    "column": 1,    "mounted": 2,    "limbered": 2,    "wagon": 2,     "leader": 1    },
+      "slopingGround":   { "line": 2,    "column": 2,    "mounted": 4,    "limbered": null, "wagon": null,  "leader": 1,   "_smSpecial": true },
+      "woods":           { "line": 2,    "column": 2,    "mounted": 3,    "limbered": 4,    "wagon": 4,     "leader": 2,   "_smSpecial": true },
+      "woodedSloping":   { "line": 2,    "column": 2,    "mounted": 4,    "limbered": null, "wagon": null,  "leader": 2    },
+      "marsh":           { "line": 2,    "column": 2,    "mounted": 3,    "limbered": 4,    "wagon": null,  "leader": 2    },
+      "pike":            { "line": "ot", "column": 0.5,  "mounted": 0.5,  "limbered": 0.5,  "wagon": 0.5,   "leader": 0.5, "_note": "Pike = National Road. 'ot' for line formation = cost of other terrain in hex." },
+      "road":            { "line": "ot", "column": 0.5,  "mounted": 0.5,  "limbered": 0.5,  "wagon": 0.5,   "leader": 0.5, "_note": "Road: add +0.5 MP per Slope hexside when using road movement only (see roadSlopePenalty)" },
+      "trail":           { "line": "ot", "column": 1,    "mounted": 1,    "limbered": 2,    "wagon": 2,     "leader": 0.5  }
+    },
+    "hexsideCosts": {
+      "_note": "These are ADDITIONAL costs added to the terrain cost when crossing the hexside",
+      "stream":        { "line": 1,  "column": 1,  "mounted": 1,  "limbered": 1,  "wagon": 1,  "leader": 0 },
+      "elevation":     { "line": 1,  "column": 1,  "mounted": 1,  "limbered": 2,  "wagon": 2,  "leader": 0, "_note": "Per elevation change" },
+      "slope":         { "line": 2,  "column": 2,  "mounted": 2,  "limbered": 4,  "wagon": 4,  "leader": 1, "_smSpecial": true },
+      "extremeSlope":  { "line": 4,  "column": 4,  "mounted": 4,  "limbered": null,"wagon": null,"leader": 2, "_smSpecial": true },
+      "verticalSlope": { "line": null,"column": null,"mounted": null,"limbered": null,"wagon": null,"leader": null, "_note": "SM Special: 50-ft contour interval — Vertical slopes are IMPASSABLE to all units" }
+    },
+    "noEffectTerrain": ["run", "stoneWall"],
+    "roadSlopePenalty": {
+      "road": 0.5,
+      "extremeSlope": 1,
+      "_note": "When moving along a Road (not Pike or Trail), add this cost per slope hexside crossed"
+    }
+  },
+
+  "ammoReserves": {
+    "_source": "LOBv2_GameSpecificUpdates.pdf",
+    "confederate": {
+      "wing": {
+        "id": "csa-wagon",
+        "name": "Wing Supply Wagon",
+        "shell": 30,
+        "canister": 18,
+        "supplyNote": "Artillery may trace supply to Wing Supply Wagon OR any road hex on west edge of map (SM 3.6)"
+      }
+    },
+    "union": {
+      "apot": {
+        "id": "usa-train",
+        "name": "APot HQ & Supply",
+        "shell": 0,
+        "canister": 0
+      },
+      "1c": {
+        "name": "1 Corps Reserve",
+        "shell": 24,
+        "canister": 12
+      },
+      "9c": {
+        "name": "9 Corps Reserve",
+        "shell": 24,
+        "canister": 12
+      }
+    }
+  },
+
+  "setup": {
+    "_note": "At-start hex coordinates use col.row format. Setup constraints use setupZone/referenceHex notation.",
+    "union": [
+      {
+        "_groupNote": "Cavalry Division — all units set up within 5 hexes of 18.05",
+        "setupZone": "within5Of",
+        "referenceHex": "18.05",
+        "order": "none",
+        "units": ["pleasonton", "fcav", "8ill", "3ind", "1mass", "cg3us"]
+      }
+    ],
+    "confederate": [
+      { "unitId": "5va-cav",    "hex": "19.23", "order": "move" },
+      { "unitId": "pelham-a",   "hex": "22.23", "order": null, "_note": "Independent — no order needed" },
+      { "unitId": "pelham-b",   "hex": "20.23", "order": null, "_note": "Independent — no order needed" },
+      { "unitId": "csa-wagon",  "hex": "36.26", "order": null },
+      { "unitId": "dh-hill",    "hex": "36.26", "order": "move", "_note": "Hill moves division to defend Turner's Gap (Complex Defense → Move per SM rule)" },
+      {
+        "_groupNote": "Colquitt Brigade (C/dH) — deployed at Turner's Gap",
+        "order": "move",
+        "units": [
+          { "unitId": "colquitt", "hex": "29.22" },
+          { "unitId": "23ga",     "hex": "30.21" },
+          { "unitId": "13ala",    "hex": "28.23" },
+          { "unitId": "27ga",     "hex": "29.23" },
+          { "unitId": "6ga",      "hex": "29.22" },
+          { "unitId": "28ga",     "hex": "30.20" }
+        ]
+      },
+      {
+        "_groupNote": "Anderson Brigade (A/dH) — within 2 hexes of 38.31",
+        "setupZone": "within2Of",
+        "referenceHex": "38.31",
+        "order": "move",
+        "units": ["gb-anderson", "2nc", "4nc", "14nc", "30nc"]
+      },
+      {
+        "_groupNote": "Carter artillery (Arty/dH)",
+        "unitId": "carter",
+        "hex": "35.26",
+        "order": null
+      },
+      {
+        "_groupNote": "Lane (Arty Res) — Army Reserve Artillery",
+        "unitId": "lane",
+        "hex": "34.17",
+        "order": null
+      },
+      {
+        "_groupNote": "Reserve Artillery batteries — within 3 hexes of 36.27",
+        "setupZone": "within3Of",
+        "referenceHex": "36.27",
+        "order": null,
+        "units": ["lloyd", "blackshears", "ross", "patterson"]
+      },
+      {
+        "_groupNote": "Garland Brigade (G/dH) — DETACHED, defending Fox's Gap",
+        "order": "move",
+        "units": [
+          { "unitId": "garland",   "hex": "28.25" },
+          { "unitId": "5nc",       "hex": "25.25" },
+          { "unitId": "20nc",      "hex": "26.25" },
+          { "unitId": "13nc",      "hex": "27.26" },
+          { "unitId": "23nc",      "hex": "28.25" },
+          { "unitId": "12nc",      "hex": "29.26" },
+          { "unitId": "bondurant", "hex": "30.25" }
+        ]
+      }
+    ]
+  },
+
+  "initialOrders": {
+    "confederate": [
+      {
+        "id": "csa-order-1",
+        "type": "move",
+        "originalType": "complexDefense",
+        "assignedTo": "dh-div",
+        "description": "D.H. Hill's division moving to defend Turner's Gap and Frosttown Road (Complex Defense → Move per SM rule)"
+      },
+      {
+        "id": "csa-order-2",
+        "type": "move",
+        "originalType": "complexDefense",
+        "assignedTo": "gdh",
+        "description": "Garland's brigade DETACHED to defend Fox's Gap (Complex Defense → Move per SM rule)"
+      }
+    ]
+  },
+
+  "reinforcements": {
+    "_note": "Reinforcement times are scenario clock times (HH:MM, 24-hour). Turn = ceil((minutesSince0900)/20) + 1. Entry hexes use col.row format.",
+    "union": [
+      {
+        "time": "09:00",
+        "entryHex": "01.09",
+        "orderRef": "usa-order-1",
+        "orderType": "move",
+        "orderDescription": "9th Corps advance NW and capture Fox's Gap",
+        "units": ["cox", "scammon", "12ohio", "23ohio", "30ohio", "wva", "1b-kd-9c"]
+      },
+      {
+        "time": "09:15",
+        "entryHex": "01.09",
+        "orderRef": "usa-order-1",
+        "orderType": "move",
+        "units": ["reno", "9c", "usa-train", "g1me", "6ny-cav", "3ohio-cav", "lm3us", "l2ny"]
+      },
+      {
+        "time": "09:30",
+        "entryHex": "01.09",
+        "orderRef": "usa-order-1",
+        "orderType": "move",
+        "units": ["crook", "11ohio", "28ohio", "36ohio", "chicago-dgn", "2b-kd-9c"]
+      },
+      {
+        "time": "11:30",
+        "entryHex": "15.01",
+        "orderRef": "usa-order-1",
+        "orderType": "move",
+        "units": ["willcox", "christ", "1b-1d-9c", "welsh", "2b-1d-9c", "e2us", "8mass-lt"]
+      },
+      {
+        "time": "12:00",
+        "entryHex": "15.01",
+        "orderRef": "usa-order-1",
+        "orderType": "move",
+        "units": ["2b-1d-9c", "8mass-lt"],
+        "_note": "2/1/9 and Arty/1/9"
+      },
+      {
+        "time": "14:00",
+        "entryHex": "15.01",
+        "orderRef": "usa-order-1",
+        "orderType": "move",
+        "units": ["sturgis", "nagle", "ferrero", "1b-2d-9c", "2b-2d-9c", "d-penn-lt", "e4us"]
+      },
+      {
+        "time": "14:30",
+        "entryHex": "15.01",
+        "orderRef": "usa-order-2",
+        "orderType": "move",
+        "orderDescription": "1st Corps advance along Frosttown Road and capture Turner's Gap",
+        "units": ["hooker", "1c", "2ny-cav", "meade", "seymour", "magilton", "gallagher", "1b-3d-1c", "2b-3d-1c", "3b-3d-1c", "a1penn-lt", "b1penn-lt", "c5us"]
+      },
+      {
+        "time": "15:00",
+        "entryHex": "15.01",
+        "orderRef": "usa-order-3",
+        "orderType": "move",
+        "orderDescription": "APot HQ moving to crossroads at Bolivar",
+        "units": ["mcclellan", "burnside", "usa-train"]
+      },
+      {
+        "time": "15:00",
+        "entryHex": "15.01",
+        "orderRef": "usa-order-4",
+        "orderType": "move",
+        "orderDescription": "4/1/1 Brigade with B 4 US establish defensive positions near Beachley House (26.15)",
+        "units": ["gibbon", "19ind", "2wisc", "6wisc", "7wisc", "b4us", "4b-1d-1c"]
+      },
+      {
+        "time": "15:30",
+        "entryHex": "15.01",
+        "orderRef": "usa-order-1",
+        "orderType": "move",
+        "units": ["rodman", "fairchild", "harland", "1b-3d-9c", "2b-3d-9c", "3d-9c"]
+      },
+      {
+        "time": "15:30",
+        "entryHex": "32.01",
+        "orderRef": "usa-order-2",
+        "orderType": "move",
+        "_note": "1/1 Division less 4/1/1 and B 4 US",
+        "units": ["hatch", "phelps", "doubleday", "patrick", "1b-1d-1c", "2b-1d-1c", "3b-1d-1c", "1nh-lt", "l1ny-lt", "d1ri-lt", "f1penn-lt", "g-penn-lt"]
+      },
+      {
+        "time": "17:00",
+        "entryHex": "32.01",
+        "orderRef": "usa-order-2",
+        "orderType": "move",
+        "units": ["ricketts", "duryea", "christian", "hartsuff", "1b-2d-1c", "2b-2d-1c", "3b-2d-1c", "f1penn-lt", "g-penn-lt"]
+      }
+    ],
+    "confederate": [
+      {
+        "time": "11:30",
+        "entryHex": "39.35",
+        "orderRef": "csa-order-1",
+        "orderType": "move",
+        "orderDescription": "Ripley and Rodes join division, help defend Turner's Gap",
+        "units": ["ripley", "rodes", "ridh", "rodh", "44ga", "1nc", "3nc", "3ala", "5ala", "6ala", "12ala", "26ala", "hardaway", "jones"]
+      },
+      {
+        "_id": "force-a",
+        "_note": "Jones Division (less three brigades) — VARIABLE arrival time. Roll 1d6: 1=14:30@39.35, 2-3=15:00@20.34, 4-5=15:30@39.35, 6=16:00@39.35",
+        "variable": true,
+        "variableTable": [
+          { "roll": 1,    "time": "14:30", "entryHex": "39.35" },
+          { "roll": "2-3","time": "15:00", "entryHex": "20.34" },
+          { "roll": "4-5","time": "15:30", "entryHex": "39.35" },
+          { "roll": 6,    "time": "16:00", "entryHex": "39.35" }
+        ],
+        "orderRef": "csa-order-2",
+        "orderType": "move",
+        "orderDescription": "Jones Division (less three brigades) defend Fox's Gap",
+        "units": ["dr-jones", "gt-anderson", "drayton", "aj", "dj", "1ga", "7ga", "8ga", "9ga", "50ga", "51ga", "15sc", "phillips-lgn", "brown"]
+      },
+      {
+        "_id": "force-b",
+        "_note": "Detached Jones brigades (Garnett, Kemper, Walker) — same variable timing as Force A (roll separately)",
+        "variable": true,
+        "variableTable": [
+          { "roll": 1,    "time": "14:30", "entryHex": "39.35" },
+          { "roll": "2-3","time": "15:00", "entryHex": "20.34" },
+          { "roll": "4-5","time": "15:30", "entryHex": "39.35" },
+          { "roll": 6,    "time": "16:00", "entryHex": "39.35" }
+        ],
+        "orderRef": "csa-order-3",
+        "orderType": "move",
+        "orderDescription": "Garnett, Kemper, Walker each detached to defend Turner's Gap (each is a separate detachment)",
+        "units": ["garnett", "kemper", "walker", "gj", "kj", "wj", "8va", "18va", "19va", "28va", "56va", "1va", "7va", "11va", "17va", "24va", "1sc", "2sc-rifles", "5sc", "6sc", "4sc-bn", "palmetto"]
+      },
+      {
+        "time": "16:30",
+        "entryHex": "39.35",
+        "orderRef": "csa-order-4",
+        "orderType": "move",
+        "orderDescription": "Evans move to defend Turner's Gap",
+        "units": ["evans", "evans-bde"]
+      },
+      {
+        "time": "17:00",
+        "entryHex": "39.35",
+        "orderRef": "csa-order-5",
+        "orderType": "move",
+        "orderDescription": "Hood defend Fox's Gap, attack southward to recapture if necessary",
+        "units": ["longstreet", "hood", "wofford", "law", "h-div", "wh", "lh", "18ga", "1tex", "4tex", "5tex", "hampton-lgn", "4ala", "2miss", "11miss", "6nc-h", "bachman", "garden", "reilly"]
+      }
+    ]
+  },
+
+  "victoryPoints": {
+    "_note": "VP formula: Union VP minus Confederate VP = net result. Positive = Union advantage.",
+    "terrain": [
+      { "hex": "06.10", "unionVP": 0,  "confederateVP": 2  },
+      { "hex": "16.02", "unionVP": 0,  "confederateVP": 10 },
+      { "hex": "19.23", "unionVP": 4,  "confederateVP": 3  },
+      { "hex": "19.32", "unionVP": 4,  "confederateVP": 2  },
+      { "hex": "33.02", "unionVP": 0,  "confederateVP": 5  },
+      { "hex": "36.26", "unionVP": 5,  "confederateVP": 5  },
+      { "hex": "39.34", "unionVP": 6,  "confederateVP": 2  },
+      { "hex": "40.07", "unionVP": 1,  "confederateVP": 5  },
+      { "hex": "56.21", "unionVP": 2,  "confederateVP": 2  },
+      { "hex": "56.23", "unionVP": 2,  "confederateVP": 2  }
+    ],
+    "wreck": {
+      "_note": "VPs awarded to the OPPONENT for wrecking formations or eliminating artillery.",
+      "confederate": {
+        "_earnedBy": "union",
+        "_note": "Union earns these VPs by wrecking Confederate units",
+        "perBrigadeWrecked": 1,
+        "perArtilleryEliminated": 0.5,
+        "dhDivisionWrecked": 2,
+        "jDivisionWrecked": 2,
+        "hDivisionWrecked": 1,
+        "5thVaCavWrecked": 2
+      },
+      "union": {
+        "_earnedBy": "confederate",
+        "_note": "Confederate earns these VPs by wrecking Union units",
+        "perBrigadeWrecked": 1,
+        "perArtilleryEliminated": 1,
+        "div1of1Wrecked": 3,
+        "div2of1Wrecked": 2,
+        "div3of1Wrecked": 2,
+        "div1of9Wrecked": 1,
+        "div2of9Wrecked": 1,
+        "div3of9Wrecked": 1,
+        "divKof9Wrecked": 1,
+        "fcavBrigadeWrecked": 3
+      }
+    }
+  },
+
+  "victoryConditions": {
+    "_note": "Result = Union VP total minus Confederate VP total.",
+    "results": [
+      { "label": "Confederate Massive Victory", "min": null, "max": -6  },
+      { "label": "Confederate Major Victory",   "min": -5,   "max": 1   },
+      { "label": "Confederate Marginal Victory","min": 2,    "max": 8   },
+      { "label": "Draw",                         "min": 9,    "max": 15  },
+      { "label": "Union Marginal Victory",       "min": 16,   "max": 20  },
+      { "label": "Union Major Victory",          "min": 21,   "max": 29  },
+      { "label": "Union Massive Victory",        "min": 30,   "max": null }
+    ]
+  },
+
+  "randomEvents": {
+    "_note": "Roll 2d6 at the start of the Confederate or Union player turn (as applicable). Special re-roll triggers noted per table.",
+    "confederate": {
+      "_rerollOn": "11 or 12 — roll again",
+      "table": [
+        {
+          "roll": 2,
+          "event": "Hill May Be Injured",
+          "text": "Roll on Leader Loss Table for D.H. Hill. If Killed, remove from play. If Wounded, place on division HQ, must remain with HQ for remainder of game, but may continue to issue orders at initiative rating 3. Ignore if Hill is already Wounded."
+        },
+        {
+          "roll": 3,
+          "event": "Hill is Indecisive",
+          "text": "D.H. Hill may not attempt Initiative for next 2 turns. Ignore if currently under this restriction."
+        },
+        {
+          "roll": 4,
+          "event": "Brigade Morale",
+          "text": "Select one Confederate Brigade at random. Immediately make a Morale Check for each unit in that Brigade using all applicable modifiers. Execute results normally."
+        },
+        {
+          "roll": 5,
+          "event": "Ammo Shortage",
+          "text": "Union player freely picks any one Confederate combat unit and marks it Low Ammo. Cannot reduce a unit to No Ammo status."
+        },
+        {
+          "roll": 6,
+          "event": "Reinforcements Are Delayed",
+          "text": "Next scheduled Confederate reinforcement group is delayed 2 turns. Variable reinforcements are unaffected unless they have already been scheduled. If Force A and Force B are scheduled for the same turn, select one at random."
+        },
+        {
+          "roll": 7,
+          "event": "Reinforcements Arrive Early",
+          "text": "Freely select any one Confederate Brigade scheduled as a reinforcement and advance its arrival by 4 turns. If the new time is the current turn or earlier, the Brigade arrives this turn. Ignore Force A/B unless already scheduled."
+        },
+        {
+          "roll": 8,
+          "event": "Flank Fire",
+          "text": "During the Fire Combat Phase of the current turn, the Confederate player may apply all Flank fire modifiers to any one Fire Combat involving Small Arms fire. Include all Flank modifiers on any resulting Straggler/Morale Checks."
+        },
+        {
+          "roll": 9,
+          "event": "Friendly Fire",
+          "text": "Union player freely chooses one Confederate infantry or dismounted cavalry unit within 3 hexes of a Union infantry or dismounted cavalry unit. Immediately resolve Fire Combat against it using the 4–6 column on the Fire Combat Table (no other modifiers). Ignore Low Ammo markings; apply Flank modifier to any Straggler/Morale Checks."
+        },
+        {
+          "roll": 10,
+          "event": "Desperate Stand",
+          "text": "Freely choose any three Confederate Brigades, then randomly select one of those three. All units of the selected Brigade ignore all unfavorable Morale results during the current Confederate player turn."
+        },
+        {
+          "roll": 11,
+          "event": "Brigade Halt",
+          "text": "Select one Confederate Brigade at random. That Brigade may not move or fire during the current Confederate player turn."
+        },
+        {
+          "roll": 12,
+          "event": "Hill is Indecisive",
+          "text": "D.H. Hill may not attempt Initiative for next 2 turns. Ignore if currently under this restriction."
+        }
+      ]
+    },
+    "union": {
+      "_rerollOn": "10, 11, or 12 — roll again",
+      "table": [
+        {
+          "roll": 2,
+          "event": "Corps Leader May Be Injured",
+          "text": "Select one Union Corps leader at random and roll on the Leader Loss Table. If Killed, remove from play. If Wounded, place on Corps HQ (must remain there for remainder of game) and reduce leader rating by -1. Ignore if any Corps leader is already Wounded or Killed."
+        },
+        {
+          "roll": 3,
+          "event": "McClellan Remains Aloof",
+          "text": "McClellan may not issue orders for the next 4 turns. Ignore if currently under this restriction or if McClellan has not yet arrived on the map."
+        },
+        {
+          "roll": "4-5",
+          "event": "Brigade Halt",
+          "text": "Select one Union Brigade at random. That Brigade may not move or fire during the current Union player turn."
+        },
+        {
+          "roll": 6,
+          "event": "Ammo Shortage",
+          "text": "Confederate player freely picks any one Union combat unit and marks it Low Ammo. Cannot reduce a unit to No Ammo status."
+        },
+        {
+          "roll": 7,
+          "event": "Reinforcements Are Delayed",
+          "text": "The next scheduled Union reinforcement group is delayed 2 turns."
+        },
+        {
+          "roll": 8,
+          "event": "Order Status",
+          "text": "Randomly select one order currently in Delay status. Roll again on the Order Acceptance Table using the same values as the original order. Apply the new result normally."
+        },
+        {
+          "roll": 9,
+          "event": "Brigade of Iron",
+          "text": "All units of Gibbon's Brigade (4/1/1) may ignore all unfavorable Morale results during the current Union player turn.",
+          "affectsUnit": "4b-1d-1c"
+        },
+        {
+          "roll": 10,
+          "event": "Friendly Fire",
+          "text": "Confederate player freely chooses one Union infantry or dismounted cavalry unit within 3 hexes of a Confederate infantry or dismounted cavalry unit. Immediately resolve Fire Combat against it using the 4–6 column on the Fire Combat Table (no other modifiers). Apply Flank modifier to any Straggler/Morale Checks.",
+          "_reroll": true
+        },
+        {
+          "roll": 11,
+          "event": "Division Stoppage",
+          "text": "Select one Union Division at random. If that Division is currently acting on an attack order (by itself or as part of a Corps order), treat it as having failed a Stoppage Check and apply the effects immediately. New orders or Initiative are required to resume. Ignore if the selected Division (or its Corps) does not have a currently Accepted order.",
+          "_reroll": true
+        },
+        {
+          "roll": 12,
+          "event": "Corps Confusion",
+          "text": "Union Corps leaders may not attempt Initiative for the next 2 turns.",
+          "_reroll": true
+        }
+      ]
+    }
+  }
 }
