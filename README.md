@@ -13,7 +13,7 @@ An online implementation of the _Line of Battle v2.0_ wargame system (Multi-Man 
 
 ## Architecture
 
-Single-server, two-player async/real-time wargame. See [docs/HLD.md](docs/HLD.md) for the full high-level design.
+Single-server, two-player async/real-time wargame. See [docs/HLD.md](docs/HLD.md) for the full high-level design. Development notes are in the [Devlog](docs/DEVLOG.md).
 
 ## Project Structure
 

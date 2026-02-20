@@ -1,11 +1,11 @@
 ---
-description: Write a dev diary entry for this PR, then create the pull request on GitHub
+description: Write a devlog entry for this PR, then create the pull request on GitHub
 allowed-tools: Read, Edit, Glob, Bash
 ---
 
 You are about to create a pull request. Work through these two tasks in order.
 
-## Task 1 — Dev Diary Entry
+## Task 1 — Devlog Entry
 
 Run `date +%Y-%m-%d-%H%M` to get the current timestamp. List `docs/diary/` to see the most
 recent entry and confirm the naming convention.
@@ -31,13 +31,13 @@ The entry should cover:
 - Any non-obvious tradeoffs or constraints future readers should know about
 - What was explicitly deferred to a later PR, if applicable
 
-After writing the file, append a row to the index table in `docs/DEVDIARY.md` (newest entries at
+After writing the file, append a row to the index table in `docs/DEVLOG.md` (newest entries at
 the bottom of the table) with the filename linked and a one-line summary.
 
 Commit the diary file before creating the PR so it is included in the branch:
 
 ```
-git add docs/diary/TIMESTAMP-pr-short-title.md docs/DEVDIARY.md
+git add docs/diary/TIMESTAMP-pr-short-title.md docs/DEVLOG.md
 git commit -m "docs: add diary entry for PR"
 ```
 

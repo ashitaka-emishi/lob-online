@@ -78,11 +78,11 @@ When answering rules or data questions, cite which source document applies and f
 ## Post-Plan Protocol
 
 After any plan is implemented, run `/wrap-plan` to verify lint, formatting, and tests pass; write
-a dev diary entry; review CLAUDE.md for needed updates; and assess whether HLD.md requires
+a devlog entry; review CLAUDE.md for needed updates; and assess whether HLD.md requires
 architectural revision. Do not skip this step before ending a working session.
 
 When creating a pull request, run `/create-pr` instead of `gh pr create` directly. The command
 writes a diary entry for the PR, runs the build checks, and then opens the PR.
 
-Dev diary entries are individual Markdown files in `docs/diary/`, named
-`YYYY-MM-DD-HHMM-short-title.md`. `docs/DEVDIARY.md` is an index only.
+Devlog entries are individual Markdown files in `docs/diary/`, named
+`YYYY-MM-DD-HHMM-short-title.md`. `docs/DEVLOG.md` is an index only.

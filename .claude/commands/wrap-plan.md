@@ -1,5 +1,5 @@
 ---
-description: Write a dev diary entry and update documentation after a plan is implemented
+description: Write a devlog entry and update documentation after a plan is implemented
 allowed-tools: Read, Edit, Glob, Bash
 ---
 
@@ -19,7 +19,7 @@ If any command fails, stop immediately and report the failure with the relevant 
 proceed to documentation tasks until all three pass. Fix any issues first, then re-run to confirm
 before continuing.
 
-## Task 1 — Dev Diary Entry
+## Task 1 — Devlog Entry
 
 Run `date +%Y-%m-%d-%H%M` to get the current timestamp. List `docs/diary/` to see the most
 recent entry and confirm the naming convention.
@@ -42,7 +42,7 @@ The entry should cover:
 - Non-obvious constraints or tradeoffs that future readers should know about
 - What was explicitly deferred and why, if applicable
 
-After writing the file, append a row to the index table in `docs/DEVDIARY.md` (newest entries at
+After writing the file, append a row to the index table in `docs/DEVLOG.md` (newest entries at
 the bottom of the table) with the filename linked and a one-line summary.
 
 Write the entry now before moving to Task 2.
