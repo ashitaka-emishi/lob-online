@@ -100,7 +100,7 @@ function emitUpdate() {
 
         <label>
           Elevation
-          <input type="number" v-model="form.elevation" @change="emitUpdate" placeholder="e.g. 2" />
+          <input v-model="form.elevation" type="number" placeholder="e.g. 2" @change="emitUpdate" />
         </label>
 
         <fieldset>
@@ -116,12 +116,12 @@ function emitUpdate() {
         </fieldset>
 
         <label class="checkbox-label">
-          <input type="checkbox" v-model="form.vpHex" @change="emitUpdate" />
+          <input v-model="form.vpHex" type="checkbox" @change="emitUpdate" />
           VP Hex
         </label>
 
         <label class="checkbox-label">
-          <input type="checkbox" v-model="form.entryHex" @change="emitUpdate" />
+          <input v-model="form.entryHex" type="checkbox" @change="emitUpdate" />
           Entry Hex
         </label>
 
@@ -136,7 +136,7 @@ function emitUpdate() {
 
         <label>
           Note
-          <textarea v-model="form._note" @change="emitUpdate" rows="3" />
+          <textarea v-model="form._note" rows="3" @change="emitUpdate" />
         </label>
 
         <div v-if="form.setupUnits.length" class="setup-units">

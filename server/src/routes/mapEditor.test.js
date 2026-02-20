@@ -8,7 +8,8 @@ vi.mock('fs', () => ({
   writeFileSync: vi.fn(),
 }));
 
-// Import mocks after vi.mock hoisting
+// Import mocks after vi.mock hoisting (eslint-disable required: vi.mock is hoisted by vitest)
+// eslint-disable-next-line import/order
 import { readFileSync, writeFileSync } from 'fs';
 
 const VALID_MAP = {

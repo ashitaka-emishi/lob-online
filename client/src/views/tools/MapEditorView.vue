@@ -204,12 +204,12 @@ async function save() {
           }"
         >
           <img
+            alt="South Mountain map"
+            draggable="false"
             :src="MAP_IMAGE"
             :width="imgNaturalWidth * calibration.imageScale"
             :height="imgNaturalHeight * calibration.imageScale"
             @load="onImageLoad"
-            alt="South Mountain map"
-            draggable="false"
           />
           <HexMapOverlay
             :calibration="calibration"

@@ -32,91 +32,91 @@ function toggleEvenColUp() {
       Grid Cols
       <input
         type="number"
-        :value="calibration.cols"
-        @input="update('cols', $event.target.value)"
         step="1"
         min="1"
+        :value="calibration.cols"
+        @input="update('cols', $event.target.value)"
       />
     </label>
     <label>
       Grid Rows
       <input
         type="number"
-        :value="calibration.rows"
-        @input="update('rows', $event.target.value)"
         step="1"
         min="1"
+        :value="calibration.rows"
+        @input="update('rows', $event.target.value)"
       />
     </label>
     <label>
       Offset X (dx)
       <input
         type="number"
+        step="1"
         :value="calibration.dx"
         @input="update('dx', $event.target.value)"
-        step="1"
       />
     </label>
     <label>
       Offset Y from bottom (dy)
       <input
         type="number"
+        step="1"
         :value="calibration.dy"
         @input="update('dy', $event.target.value)"
-        step="1"
       />
     </label>
     <label>
       Hex Width (xRadius)
       <input
         type="number"
-        :value="calibration.hexWidth"
-        @input="update('hexWidth', $event.target.value)"
         step="0.5"
         min="5"
         max="100"
+        :value="calibration.hexWidth"
+        @input="update('hexWidth', $event.target.value)"
       />
     </label>
     <label>
       Hex Height (yRadius)
       <input
         type="number"
-        :value="calibration.hexHeight"
-        @input="update('hexHeight', $event.target.value)"
         step="0.5"
         min="5"
         max="100"
+        :value="calibration.hexHeight"
+        @input="update('hexHeight', $event.target.value)"
       />
     </label>
     <label>
       Image Scale
       <input
         type="number"
-        :value="calibration.imageScale"
-        @input="update('imageScale', $event.target.value)"
         step="0.01"
         min="0.1"
         max="5"
+        :value="calibration.imageScale"
+        @input="update('imageScale', $event.target.value)"
       />
     </label>
     <label>
       Line Width
       <input
         type="number"
-        :value="calibration.strokeWidth"
-        @input="update('strokeWidth', $event.target.value)"
         step="0.1"
         min="0.1"
         max="5"
+        :value="calibration.strokeWidth"
+        @input="update('strokeWidth', $event.target.value)"
       />
     </label>
     <button @click="toggleOrientation">
       {{ calibration.orientation === 'flat' ? 'Flat-top' : 'Pointy-top' }} ⇌
     </button>
-    <button @click="$emit('toggle-calibration-mode')" :class="{ active: calibrationMode }">
+    <button :class="{ active: calibrationMode }" @click="$emit('toggle-calibration-mode')">
       {{ calibrationMode ? 'Labels ON' : 'Labels OFF' }}
     </button>
-    <button @click="toggleEvenColUp" :class="{ active: calibration.evenColUp }">Even Col ↑</button>
+    <button :class="{ active: calibration.evenColUp }" @click="toggleEvenColUp">Even Col ↑</button>
   </div>
 </template>
 
