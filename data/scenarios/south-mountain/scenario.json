@@ -1,0 +1,27 @@
+{
+  "_status": "todo",
+  "_description": "To be built from SM_Rules.pdf and LOBv2_GameSpecificUpdates.pdf",
+  "id": "south-mountain",
+  "name": "South Mountain",
+  "system": "Line of Battle v2.0",
+  "publication": "RSS #4",
+  "rules": {
+    "_note": "SM-specific overrides — see LOBv2_GameSpecificUpdates.pdf and SM_Rules.pdf",
+    "treeLosHeight": 1,
+    "armyCommanderRating": "Normal",
+    "breastworksAllowed": false,
+    "longstreetIsArmyCommander": true,
+    "initialOrderOverride": { "complexDefense": "move" },
+    "artilleryReplenishFromAnyReserve": ["Pelham", "Pleasonton"],
+    "ignoreLobRules": ["4.2", "4.3"],
+    "movementChart": "south-mountain",
+    "trailMovementCosts": "rss",
+    "slopeContourInterval": 50,
+    "verticalSlopesImpassable": true
+  },
+  "turnLimit": null,
+  "victoryConditions": {},
+  "setup": {},
+  "reinforcements": [],
+  "ammoReserves": {}
+}

@@ -1,0 +1,12 @@
+{
+  "_status": "todo",
+  "_description": "To be built from SM_Regimental_Roster.pdf — all units with LoB stats, hierarchy, morale state",
+  "_errata": [
+    "Chicago Dragoons → 2/K/9 (not 1/K/9)",
+    "E/2 US Artillery → rated HvR (not R)",
+    "28 Ohio Regimental Loss Chart → 15 boxes (not 14)",
+    "5th Va Cavalry Brigade Loss Chart morale → C (not B)"
+  ],
+  "union": {},
+  "confederate": {}
+}

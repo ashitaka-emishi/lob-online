@@ -1,0 +1,226 @@
+{
+  "project": "Line of Battle - South Mountain (RSS #4)",
+  "system": "Line of Battle v2.0 (Multi-Man Publishing)",
+  "lastUpdated": "2026-02-19",
+  "fileLibrary": {
+    "seriesRules": {
+      "label": "Series Rules & Charts",
+      "files": [
+        {
+          "id": "LOB_RULES",
+          "filename": "LOBv2_Rules.pdf",
+          "description": "Line of Battle v2.0 complete series rulebook",
+          "status": "available",
+          "pages": 36,
+          "covers": [
+            "Hex movement and terrain",
+            "Command and orders system",
+            "Morale states (Blood Lust, Normal, Shaken, DG, Routed)",
+            "Formation effects (Line, Column, Mounted, Limbered, Open Order)",
+            "Fire combat and modifiers",
+            "Closing Rolls and Opening Volleys",
+            "Charges and close combat",
+            "Artillery ammunition depletion",
+            "Fluke Stoppage",
+            "Attack Recovery",
+            "Skedaddle",
+            "Initiative (10.10b)"
+          ]
+        },
+        {
+          "id": "LOB_CHARTS",
+          "filename": "LOBv2_Tables.pdf",
+          "description": "Line of Battle v2.0 complete charts and tables reference",
+          "status": "available",
+          "pages": 6,
+          "covers": [
+            "Fire Combat Table",
+            "Morale Table",
+            "Terrain Effects on Movement",
+            "Leader Loss Table",
+            "Order Acceptance Table",
+            "Artillery Depletion tables"
+          ]
+        },
+        {
+          "id": "LOB_GAME_UPDATES",
+          "filename": "LOBv2_GameSpecificUpdates.pdf",
+          "description": "LoB v2.0 updates and overrides for all RSS-era games including South Mountain",
+          "status": "available",
+          "pages": 4,
+          "covers": [
+            "RSS-to-LoB conversion rules",
+            "SM-specific: slope and LOS rules (trees +1 not +3)",
+            "SM-specific: army commander ratings (all Normal)",
+            "SM-specific: no breastworks allowed",
+            "SM-specific: artillery ammo reserves (Hill's Wing, Union corps)",
+            "SM-specific: Longstreet as army commander",
+            "SM-specific: complex orders replaced by Move orders",
+            "SM-specific: Pelham/Pleasonton artillery replenishment",
+            "SM-specific: ignore rules 4.2 and 4.3",
+            "Fluke Stoppage grace period for reinforcements",
+            "RSS Leader single-value conversion to LoB dual-value"
+          ]
+        }
+      ]
+    },
+    "gameSpecific": {
+      "label": "South Mountain Game Files",
+      "files": [
+        {
+          "id": "SM_RULES",
+          "filename": "SM_Rules.pdf",
+          "description": "South Mountain game rules, scenario, victory conditions, reinforcements, random events",
+          "status": "available",
+          "pages": 28,
+          "covers": [
+            "Terrain rules: slopes, vertical slopes, sloping ground, runs, orchards",
+            "Union special rules: Burnside/McClellan command restrictions, detachments",
+            "Confederate special rules: DH Hill initiative, Longstreet arrival, detachments",
+            "Confederate independent units: 5th Va Cav and Pelham batteries",
+            "Reserve artillery command rules",
+            "EZOC withdrawal morale check (rule 4.2)",
+            "Random events (Confederate and Union tables)",
+            "Scenario setup: start positions, orders, artillery ammo",
+            "Reinforcement schedule with entry hexes and orders",
+            "Victory points: terrain hexes, wrecked formations",
+            "Victory level thresholds",
+            "Brigade and regimental loss charts",
+            "Terrain Effects on Movement chart (SM-specific)",
+            "Historical notes and OOB notes"
+          ]
+        },
+        {
+          "id": "SM_ROSTER",
+          "filename": "SM_Regimental_Roster.pdf",
+          "description": "Complete unit roster for both sides: infantry, cavalry, artillery stats",
+          "status": "available",
+          "pages": 5,
+          "covers": [
+            "Union infantry: morale, weapon type, strength — all regiments",
+            "Confederate infantry: morale, weapon type, strength — all regiments",
+            "Union artillery batteries: ratings, strength, shell/canister ammo",
+            "Confederate artillery batteries: ratings, strength, shell/canister ammo",
+            "Brigade and division loss chart data (wreck points, straggler boxes)",
+            "Army train ammo entries"
+          ]
+        },
+        {
+          "id": "SM_ERRATA",
+          "filename": "SM_Errata.pdf",
+          "description": "Official errata for South Mountain (dated 20 May 08)",
+          "status": "available",
+          "pages": 1,
+          "covers": [
+            "Chicago Dragoons counter error: belongs to 2/K/9 not 1/K/9",
+            "E/2 US Artillery should be HvR not R",
+            "AFS cav replacement counter morale corrections",
+            "28 Ohio regimental loss chart: 15 boxes not 14",
+            "5 Va Cavalry brigade loss chart morale: C not B"
+          ]
+        },
+        {
+          "id": "SM_COVER",
+          "filename": "SM_Cover.jpg",
+          "description": "South Mountain game box cover art",
+          "status": "available",
+          "covers": [
+            "Game box cover art"
+          ]
+        },
+        {
+          "id": "SM_MAP",
+          "filename": "SM_Map.jpg",
+          "description": "South Mountain hex map with terrain, elevation, roads, VP hexes",
+          "status": "available",
+          "covers": [
+            "Hex grid with coordinates",
+            "Terrain types per hex",
+            "Elevation contours and slope hexsides",
+            "Vertical slope hexsides (impassable)",
+            "Roads, Pike (National Road), Trails",
+            "Victory Point hex locations",
+            "Entry area hexes for reinforcements"
+          ]
+        },
+        {
+          "id": "SM_SCENARIO_DATA",
+          "filename": null,
+          "description": "Structured scenario data (JSON) — to be built from SM_Rules.pdf",
+          "status": "todo",
+          "covers": [
+            "At-start unit positions by hex",
+            "At-start orders per formation",
+            "Reinforcement schedule (time, hex, units, orders)",
+            "Artillery ammo reserve assignments",
+            "Victory Point hex list with point values",
+            "Victory level thresholds"
+          ]
+        }
+      ]
+    },
+    "gameState": {
+      "label": "Game State Models (to be built)",
+      "files": [
+        {
+          "id": "GS_OOB",
+          "filename": null,
+          "description": "Order of Battle JSON — all units with full LoB stats",
+          "status": "todo",
+          "covers": [
+            "Unit id, name, side, type",
+            "Morale rating, weapon type, strength points",
+            "Formation, morale state",
+            "Artillery: gun rating, shell/canister current/max",
+            "Hierarchy: army > corps > division > brigade > regiment"
+          ]
+        },
+        {
+          "id": "GS_LEADERS",
+          "filename": null,
+          "description": "Leader data JSON",
+          "status": "todo",
+          "covers": [
+            "Leader id, name, rank, side",
+            "Command rating, morale rating",
+            "Army commander status and initiative state",
+            "Special rules flags (Hill loose cannon immunity, Burnside restrictions, etc.)"
+          ]
+        },
+        {
+          "id": "GS_TURN",
+          "filename": null,
+          "description": "Turn and game state JSON",
+          "status": "todo",
+          "covers": [
+            "Current turn time and number",
+            "Active orders queue with delivery timers",
+            "Fluke stoppage tracking per formation",
+            "Attack recovery status",
+            "Artillery depletion states",
+            "VP totals per side",
+            "Random event log"
+          ]
+        }
+      ]
+    }
+  },
+  "knownErrataApplied": [
+    "Chicago Dragoons assigned to 2/K/9",
+    "E/2 US Artillery rated HvR",
+    "28 Ohio loss chart corrected to 15 boxes",
+    "5 Va Cavalry brigade morale corrected to C"
+  ],
+  "lobOverridesForSM": [
+    "Trees add +1 (not +3) to LOS",
+    "All army commanders rated Normal",
+    "No breastworks allowed",
+    "Longstreet acts as army commander (no initiative required)",
+    "Complex defense orders replaced by Move orders",
+    "Pelham and Pleasonton artillery replenish from any friendly reserve",
+    "Ignore LoB rules 4.2 and 4.3 (use SM game-specific versions)",
+    "Use SM Terrain Effects on Movement chart (not standard LoB)",
+    "Use RSS Trail movement costs",
+    "Use Special Slope rule (SM 1.1)"
+  ]
+}

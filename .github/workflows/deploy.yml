@@ -1,0 +1,44 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to DigitalOcean Droplet
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DO_DROPLET_IP }}
+          username: ${{ secrets.DO_SSH_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/lob-online
+
+            echo "→ Pulling latest code..."
+            git pull origin main
+
+            echo "→ Installing dependencies..."
+            npm ci --omit=dev
+
+            echo "→ Building client..."
+            npm run build
+
+            echo "→ Reloading application..."
+            pm2 reload ecosystem.config.cjs --env production
+
+            echo "✓ Deploy complete"
+
+# Required GitHub secrets:
+#   DO_DROPLET_IP  — IP address of the DigitalOcean Droplet
+#   DO_SSH_USER    — SSH user on the Droplet (e.g. "deploy" or "root")
+#   DO_SSH_KEY     — Private SSH key with access to the Droplet
+#
+# Branch protection: configure GitHub to require CI to pass before
+# allowing merge to main, ensuring deploy only runs on green code.
