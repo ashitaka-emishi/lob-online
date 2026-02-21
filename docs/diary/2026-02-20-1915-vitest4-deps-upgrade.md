@@ -4,11 +4,11 @@
 
 Dependabot opened a PR bumping three packages together:
 
-| Package               | Before  | After   |
-| --------------------- | ------- | ------- |
-| `esbuild`             | 0.21.5  | 0.27.3  |
-| `vitest`              | 2.1.9   | 4.0.18  |
-| `@vitest/coverage-v8` | 2.1.9   | 4.0.18  |
+| Package               | Before | After  |
+| --------------------- | ------ | ------ |
+| `esbuild`             | 0.21.5 | 0.27.3 |
+| `vitest`              | 2.1.9  | 4.0.18 |
+| `@vitest/coverage-v8` | 2.1.9  | 4.0.18 |
 
 The esbuild bump is indirect (pulled in by Vite). The vitest major version jump
 from 2→4 introduced two breaking changes that caused all 6 client-side test suites
