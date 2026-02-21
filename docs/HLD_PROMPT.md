@@ -1,3 +1,6 @@
+> **ARCHIVED TEMPLATE** — This document was the prompt used to generate `HLD.md`.
+> It is kept for reference. Do not treat it as live documentation.
+
 # HLD Generation Prompt — lob-online
 
 Paste this entire document into a new Claude session to generate a comprehensive high-level design document for the lob-online project.

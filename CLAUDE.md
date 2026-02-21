@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **lob-online** is an online game implementation of the _Line of Battle v2.0_ wargame system (Multi-Man Publishing). The first game being implemented is _South Mountain_ (RSS #4), chosen because it is a smaller, more tractable battle.
 
-**Current state:** Pre-implementation. No tech stack or architecture decisions have been made. The repo is in a documentation and scoping phase — establishing the reference library, understanding the rules system, and defining data models before any code is written.
+**Current state:** Phase 1 scaffold complete. The tech stack is established (Node.js/Express/Socket.io server, Vue 3/Vite/Pinia client), and the following are all built and tested: four data JSON files with Zod schemas, a hex map editor dev tool, Vitest test suites for both server and client, ESLint/Prettier config, and a GitHub Actions CI pipeline. Game logic (rules engine, auth, multiplayer) is planned for subsequent phases.
 
 ## Reference Library
 
@@ -27,12 +27,23 @@ All source material lives in `docs/`. The library is tracked in two parallel fil
 | SM_ERRATA        | `SM_Errata.pdf`                 | 5 official corrections (all applied to canonical data)                    |
 | SM_MAP           | `SM_Map.jpg`                    | South Mountain hex map (high-resolution image)                            |
 
-### Planned Data Models (not yet built)
+### Data Models
 
-- **SM_SCENARIO_DATA**: Structured JSON from SM_Rules — at-start positions, orders, reinforcement schedule, VP hexes, ammo reserves
-- **GS_OOB**: Order of Battle JSON — all units with LoB stats, morale state, full hierarchy (army > corps > division > brigade > regiment)
-- **GS_LEADERS**: Leader data — ratings, command/morale values, special rule flags
-- **GS_TURN**: Game state — active orders, fluke stoppage, artillery depletion, VP totals, random event log
+All four data files exist under `data/scenarios/south-mountain/` and are validated by Zod schemas in `server/src/schemas/`.
+
+| ID               | File                                          | Contents                                                                                              |
+| ---------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| SM_MAP_DATA      | `data/scenarios/south-mountain/map.json`      | Hex terrain, gridSpec calibration, VP/entry hexes (partial — digitization in progress via map editor) |
+| GS_OOB           | `data/scenarios/south-mountain/oob.json`      | 219 units, brigade/division hierarchy, wreck thresholds                                               |
+| GS_LEADERS       | `data/scenarios/south-mountain/leaders.json`  | 48 leaders, ratings, special rule flags                                                               |
+| SM_SCENARIO_DATA | `data/scenarios/south-mountain/scenario.json` | Turn structure, reinforcements, VP conditions, movement costs, random events                          |
+
+### Developer Tools
+
+A hex map editor is available as a dev-only tool for digitizing `SM_Map.jpg` into `map.json` terrain data.
+
+- **Enable:** set `MAP_EDITOR_ENABLED=true` in `.env`
+- **Launch:** `npm run dev:map-editor` (starts both server and client with the env flag set)
 
 ## South Mountain Rule Overrides
 
@@ -63,3 +74,15 @@ When answering rules or data questions, cite which source document applies and f
 - Whether an SM override or errata correction changes the base LoB answer
 - Whether the relevant data file is still missing or not yet built
 - Whether the answer comes from LOB_RULES, LOB_GAME_UPDATES, or SM_RULES (the source matters)
+
+## Post-Plan Protocol
+
+After any plan is implemented, run `/wrap-plan` to verify lint, formatting, and tests pass; write
+a devlog entry; review CLAUDE.md for needed updates; and assess whether HLD.md requires
+architectural revision. Do not skip this step before ending a working session.
+
+When creating a pull request, run `/create-pr` instead of `gh pr create` directly. The command
+writes a diary entry for the PR, runs the build checks, and then opens the PR.
+
+Devlog entries are individual Markdown files in `docs/diary/`, named
+`YYYY-MM-DD-HHMM-short-title.md`. `docs/DEVLOG.md` is an index only.

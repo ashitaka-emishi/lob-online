@@ -17,8 +17,19 @@
 7. [Rules Engine Design](#7-rules-engine-design)
 8. [API Contract](#8-api-contract)
 9. [Project Directory Structure](#9-project-directory-structure)
-10. [Tooling Configuration](#10-tooling-configuration)
-11. [Open Questions and Risks](#11-open-questions-and-risks)
+10. [Developer Tools](#10-developer-tools)
+11. [Tooling Configuration](#11-tooling-configuration)
+12. [Open Questions and Risks](#12-open-questions-and-risks)
+
+---
+
+> **Implementation Status (as of 2026-02-20)**
+>
+> **Completed:** tech stack selection, server scaffold (Express + Socket.io), data models (all four JSON files), Zod validation schemas, map editor dev tool, Vitest test suites (server + client), ESLint/Prettier configuration, GitHub Actions CI pipeline.
+>
+> **Planned:** Discord OAuth auth, game rules engine, DigitalOcean Spaces persistence, multiplayer coordination, frontend game UI.
+>
+> Sections describing completed work are accurate to the implementation. Sections describing planned work reflect design intent and may evolve.
 
 ---
 
@@ -228,7 +239,14 @@ Player A (browser)          Server                Player B (browser)
 
   /map
     GET    /south-mountain        → hex grid data (coordinates, terrain, elevation)
+
+/tools/map-editor                 (mounted only when MAP_EDITOR_ENABLED=true)
+  GET  /api/tools/map-editor/data          → read map.json
+  PUT  /api/tools/map-editor/data          → write map.json (Zod-validated)
+  GET  /tools/map-editor/assets/*          → static serve docs/ (map image, PDFs)
 ```
+
+> **Tool toggle pattern:** The map editor routes are guarded by a `MAP_EDITOR_ENABLED` environment variable. In `server.js`, if the flag is set, the router is imported with a dynamic `await import(...)` and mounted. This keeps the map editor completely absent from production bundles. The Vue route `/tools/map-editor` is always present in the client router but the API backing it requires the env flag.
 
 ### Middleware Chain
 
@@ -1110,6 +1128,40 @@ Returns the hex grid data needed by the client to render the SVG map. Served fro
 
 ---
 
+### Developer Tools Endpoints
+
+These endpoints are **only mounted when `MAP_EDITOR_ENABLED=true`**. They are never present in production.
+
+#### `GET /api/tools/map-editor/data`
+
+Returns the current contents of `data/scenarios/south-mountain/map.json`.
+
+**Response `200`:** the full map JSON object (same shape as `map.json`).
+
+No authentication required.
+
+---
+
+#### `PUT /api/tools/map-editor/data`
+
+Overwrites `map.json` with the request body after Zod validation against `MapSchema`.
+
+**Request:** full map JSON object.
+
+**Response `200`:**
+
+```json
+{ "ok": true }
+```
+
+**Response `400` (validation failure):**
+
+```json
+{ "ok": false, "issues": [{ "path": ["hexes", 0, "terrain"], "message": "Invalid enum value" }] }
+```
+
+---
+
 ### Standard Error Envelope
 
 All error responses use this shape:
@@ -1137,86 +1189,56 @@ All error responses use this shape:
 
 ## 9. Project Directory Structure
 
-Tests are **co-located** (`*.test.js` alongside the module). Reason: when a module changes, its test file is in the same directory — no hunting across a `tests/` tree. The rules engine in particular benefits from this because each engine module has direct, focused tests.
+Tests are **co-located** (`*.test.js` alongside the module). Reason: when a module changes, its test file is in the same directory — no hunting across a `tests/` tree.
+
+The tree below reflects the **actual current layout** of the repository.
 
 ```
 lob-online/
 │
-├── package.json              ← root workspace manifest
-│   (workspaces: ["server", "client"])
-│
-├── eslint.config.js          ← root; scoped rules for server/ vs client/
-├── .prettierrc               ← root
-├── vitest.config.js          ← root; projects array for node + jsdom envs
+├── package.json              ← root workspace manifest (workspaces: ["server", "client"])
+├── eslint.config.js          ← flat config; scoped rules for server/ vs client/
+├── .prettierrc               ← root Prettier config
+├── vitest.workspace.js       ← workspace: server (node) + client (jsdom + Vue plugin)
+├── vitest.config.js          ← coverage provider v8, 70% lines threshold
 ├── .env.example              ← documents all required env vars
 ├── .gitignore
+├── ecosystem.config.cjs      ← PM2 production config
 │
 ├── docs/
-│   ├── LIBRARY.md
-│   ├── library.json
-│   ├── HLD_PROMPT.md
+│   ├── LIBRARY.md            ← human-readable reference library manifest
+│   ├── library.json          ← machine-readable catalog
+│   ├── HLD_PROMPT.md         ← archived prompt used to generate HLD.md
 │   ├── HLD.md                ← this document
-│   └── *.pdf / *.jpg         ← source reference material
+│   └── *.pdf / *.jpg         ← source reference material (rules, roster, map)
 │
 ├── data/
 │   └── scenarios/
 │       └── south-mountain/
-│           ├── scenario.json     ← scenario metadata + rules overrides
-│           ├── map.json          ← hex grid (coords, terrain, elevation)
-│           ├── oob.json          ← order of battle (all units + stats)
-│           └── leaders.json      ← leader ratings and special flags
+│           ├── map.json          ← hex terrain, gridSpec, VP/entry hexes
+│           ├── oob.json          ← 219 units, brigade/division hierarchy
+│           ├── leaders.json      ← 48 leaders, ratings, special flags
+│           └── scenario.json     ← turn structure, reinforcements, VP conditions
+│
+├── scripts/
+│   ├── map-editor.sh         ← launches server + client with MAP_EDITOR_ENABLED=true
+│   └── validate-data.js      ← cross-validates all JSON data files against Zod schemas
 │
 ├── server/
 │   ├── package.json
 │   └── src/
-│       ├── app.js               ← Express + Socket.io wiring; middleware chain
-│       ├── server.js            ← http.createServer(); listen()
+│       ├── server.js            ← http.createServer(); listen(); map editor guard
 │       │
 │       ├── routes/
-│       │   ├── auth.js
-│       │   ├── games.js
-│       │   └── map.js
+│       │   └── mapEditor.js     ← GET/PUT /api/tools/map-editor/data
+│       │       mapEditor.test.js
 │       │
-│       ├── engine/
-│       │   ├── index.js
-│       │   ├── index.test.js
-│       │   ├── scenario.js
-│       │   ├── hex.js
-│       │   ├── hex.test.js
-│       │   ├── los.js
-│       │   ├── los.test.js
-│       │   ├── movement.js
-│       │   ├── movement.test.js
-│       │   ├── morale.js
-│       │   ├── morale.test.js
-│       │   ├── orders.js
-│       │   ├── orders.test.js
-│       │   ├── artillery.js
-│       │   ├── artillery.test.js
-│       │   ├── vp.js
-│       │   ├── vp.test.js
-│       │   └── combat/
-│       │       ├── fire.js
-│       │       ├── fire.test.js
-│       │       ├── melee.js
-│       │       └── melee.test.js
-│       │
-│       ├── store/
-│       │   ├── index.js
-│       │   ├── spaces.js
-│       │   └── sqlite.js
-│       │
-│       ├── auth/
-│       │   ├── discord.js
-│       │   ├── jwt.js
-│       │   └── middleware.js
-│       │
-│       ├── notifications/
-│       │   └── discord.js
-│       │
-│       └── middleware/
-│           ├── loadGame.js
-│           └── validate.js
+│       └── schemas/
+│           ├── map.schema.js        ← Zod schema for map.json
+│           │   map.schema.test.js
+│           ├── oob.schema.js        ← Zod schema for oob.json
+│           ├── leaders.schema.js    ← Zod schema for leaders.json
+│           └── scenario.schema.js   ← Zod schema for scenario.json
 │
 └── client/
     ├── package.json
@@ -1226,40 +1248,80 @@ lob-online/
         ├── App.vue
         │
         ├── components/
-        │   ├── HexMap/
-        │   │   ├── HexMap.vue         ← root SVG element; renders all hexes
-        │   │   ├── HexCell.vue        ← single hex: terrain, highlight, click handler
-        │   │   └── UnitCounter.vue    ← unit SVG overlay on a hex
-        │   │
-        │   ├── GamePanel/
-        │   │   ├── ActionPanel.vue    ← current valid actions for selected unit
-        │   │   ├── OrdersPanel.vue    ← order group activation list
-        │   │   └── VPTracker.vue      ← VP totals display
-        │   │
-        │   └── Auth/
-        │       └── LoginButton.vue    ← "Login with Discord" button
+        │   ├── HexMapOverlay.vue        ← SVG hex grid overlay on the map image
+        │   │   HexMapOverlay.test.js
+        │   ├── CalibrationControls.vue  ← gridSpec calibration UI
+        │   │   CalibrationControls.test.js
+        │   └── HexEditPanel.vue         ← terrain/hexside/VP editor for a clicked hex
+        │       HexEditPanel.test.js
         │
         ├── views/
-        │   ├── Home.vue              ← lobby / game list
-        │   ├── Game.vue              ← main game view (map + panels)
-        │   └── Lobby.vue             ← create / join game
+        │   ├── StatusView.vue           ← server health / status page
+        │   │   StatusView.test.js
+        │   └── tools/
+        │       ├── MapEditorView.vue    ← map editor root view
+        │       └── MapEditorView.test.js
         │
-        ├── stores/
-        │   ├── auth.js               ← current user; login state
-        │   └── game.js               ← game state; selected unit; pending action
-        │
-        ├── api/
-        │   ├── client.js             ← base fetch wrapper (attaches credentials)
-        │   └── games.js              ← typed wrappers for game API calls
-        │
-        └── socket.js                 ← Socket.io client init + event binding
+        └── router/
+            ├── index.js                ← Vue Router config (includes /tools/map-editor)
+            └── index.test.js
 ```
 
 ---
 
-## 10. Tooling Configuration
+## 10. Developer Tools
+
+### Map Editor
+
+The map editor is a dev-only tool for digitizing `docs/SM_Map.jpg` into structured hex terrain data in `data/scenarios/south-mountain/map.json`. It is not part of the game itself and is never active in production.
+
+**Purpose:** Click each hex on the map image, assign terrain type and hexside data, mark VP hexes and entry hexes, calibrate the hex grid over the image — then save to `map.json`.
+
+**Toggle:** set `MAP_EDITOR_ENABLED=true` in `.env`. The guard in `server.js` uses a dynamic import:
+
+```js
+if (process.env.MAP_EDITOR_ENABLED === 'true') {
+  const { default: mapEditorRouter } = await import('./routes/mapEditor.js');
+  app.use('/tools/map-editor/assets', express.static(...));
+  app.use('/api/tools/map-editor', mapEditorRouter);
+}
+```
+
+**Launch:**
+
+```bash
+npm run dev:map-editor    # runs scripts/map-editor.sh
+```
+
+This script sets `MAP_EDITOR_ENABLED=true` and starts both the Express server and the Vite client in parallel.
+
+**Architecture:**
+
+```
+MapEditorView.vue
+  └── HexMapOverlay.vue        ← SVG hex grid drawn over the map image
+  └── CalibrationControls.vue  ← adjust origin, hex size, columns/rows
+  └── HexEditPanel.vue         ← edit terrain/hexsides/VP for the selected hex
+```
+
+**Data flow:**
+
+```
+1. Load     GET /api/tools/map-editor/data  → map.json into Vue state
+2. Calibrate  CalibrationControls adjusts gridSpec; hex grid redraws
+3. Edit       Click hex → HexEditPanel opens; user edits terrain/hexside/VP fields
+4. Save       PUT /api/tools/map-editor/data → Zod validation → write map.json
+```
+
+**Note:** The Vue route `/tools/map-editor` is always registered in the client router. Visiting it without `MAP_EDITOR_ENABLED=true` on the server will result in API 404s when the editor tries to load or save data.
+
+---
+
+## 11. Tooling Configuration
 
 ### `eslint.config.js` (root)
+
+Uses ESLint flat config. Key structure:
 
 ```js
 import js from '@eslint/js';
@@ -1271,57 +1333,55 @@ import configPrettier from 'eslint-config-prettier';
 export default [
   // Global ignores
   {
-    ignores: ['**/dist/**', '**/node_modules/**', 'docs/**'],
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      'docs/**',
+      'coverage/**',
+      'ecosystem.config.cjs',
+      'scripts/**',
+    ],
   },
 
-  // Base JS rules for all files
+  // Base JS rules — all files
   js.configs.recommended,
 
-  // Server-side: Node.js rules
+  // Server — Node.js rules
   {
     files: ['server/src/**/*.js'],
     plugins: { n: pluginN, import: pluginImport },
-    languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: 'module',
-      globals: {
-        process: 'readonly',
-        console: 'readonly',
-      },
-    },
     rules: {
       ...pluginN.configs['flat/recommended'].rules,
       'n/no-missing-import': 'error',
       'n/no-extraneous-import': 'error',
+      'no-console': 'off',
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'import/order': [
         'warn',
-        {
-          groups: ['builtin', 'external', 'internal'],
-          'newlines-between': 'always',
-        },
+        { groups: ['builtin', 'external', 'internal'], 'newlines-between': 'always' },
       ],
-      'no-console': 'off', // logging is intentional server-side
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
 
-  // Client-side: Vue 3 rules
+  // Server test files — relax Node.js import restrictions (vitest/supertest are root devDeps)
+  {
+    files: ['server/src/**/*.test.js'],
+    rules: { 'n/no-extraneous-import': 'off', 'n/no-missing-import': 'off' },
+  },
+
+  // Client — Vue 3 rules via flat/recommended (applies to .vue files via plugin processor)
+  ...pluginVue.configs['flat/recommended'],
+
+  // Client — additional overrides scoped to client/src
   {
     files: ['client/src/**/*.{js,vue}'],
-    plugins: { vue: pluginVue },
-    processor: pluginVue.processors['.vue'],
-    languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: 'module',
-    },
     rules: {
-      ...pluginVue.configs['vue3-recommended'].rules,
-      'vue/multi-word-component-names': 'off', // views like Home.vue are fine
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'vue/multi-word-component-names': 'off',
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
     },
   },
 
-  // Prettier: must be last — disables all formatting rules
+  // Prettier — must be last; disables all formatting rules
   configPrettier,
 ];
 ```
@@ -1344,33 +1404,46 @@ export default [
 
 ---
 
+### `vitest.workspace.js` (root)
+
+Defines the two test environments. The `@vitejs/plugin-vue` plugin is added for the client workspace so Vue SFCs are compiled correctly.
+
+```js
+import { defineWorkspace } from 'vitest/config';
+import vue from '@vitejs/plugin-vue';
+
+export default defineWorkspace([
+  // Server-side tests — Node environment
+  {
+    test: {
+      name: 'server',
+      include: ['server/src/**/*.test.js'],
+      environment: 'node',
+      globals: true,
+    },
+  },
+  // Client-side tests — jsdom environment
+  {
+    plugins: [vue()],
+    test: {
+      name: 'client',
+      include: ['client/src/**/*.test.js'],
+      environment: 'jsdom',
+      globals: true,
+    },
+  },
+]);
+```
+
 ### `vitest.config.js` (root)
+
+Coverage configuration (separate from workspace so it applies to the whole suite):
 
 ```js
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    projects: [
-      // Server-side tests: run in Node environment
-      {
-        test: {
-          name: 'server',
-          include: ['server/src/**/*.test.js'],
-          environment: 'node',
-          globals: true,
-        },
-      },
-      // Client-side tests: run in jsdom environment
-      {
-        test: {
-          name: 'client',
-          include: ['client/src/**/*.test.js'],
-          environment: 'jsdom',
-          globals: true,
-        },
-      },
-    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
@@ -1379,11 +1452,12 @@ export default defineConfig({
         '**/*.test.js',
         'server/src/server.js', // entry point; not unit-testable
         'client/src/main.js',
+        'client/src/App.vue',
+        'server/src/schemas/leaders.schema.js', // data-only schemas
+        'server/src/schemas/oob.schema.js',
+        'server/src/schemas/scenario.schema.js',
       ],
-      thresholds: {
-        lines: 70, // start modest; raise as engine matures
-        functions: 70,
-      },
+      thresholds: { lines: 70 }, // raise as engine matures
     },
   },
 });
@@ -1426,7 +1500,7 @@ DISCORD_CALLBACK_URL=http://localhost:3000/auth/discord/callback
 
 ---
 
-## 11. Open Questions and Risks
+## 12. Open Questions and Risks
 
 ### Rules Engine Complexity
 
@@ -1440,10 +1514,10 @@ DISCORD_CALLBACK_URL=http://localhost:3000/auth/discord/callback
 
 ### Data Modeling
 
-| Risk                                                                                                                                                                                                                                                                        | Severity | Mitigation                                                                                                                                                                                                                                  |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Map digitisation** — Converting `SM_Map.jpg` to `map.json` (every hex with coordinates, terrain type, elevation, road/trail flags) is manual work for ~600+ hexes. This is the largest single pre-code task.                                                              | High     | Treat it as a dedicated milestone. Consider building a simple hex-painting tool (or using a hex map editor like Tiled) to accelerate the data entry. Do not start implementing the SVG map until `map.json` has at least one complete pass. |
-| **GS_OOB hierarchy depth** — Leader attachment/detachment mid-game, the difference between in-command and out-of-command ranges, and the exact OOB hierarchy (army → corps → division → brigade → regiment) needs careful schema design before any combat logic is written. | Medium   | Draft the full GS_OOB JSON schema as the first data modeling task, reviewed against SM_Regimental_Roster.pdf before coding begins.                                                                                                          |
+| Risk                                                                                                                                                                                                                                                                        | Severity              | Mitigation                                                                                                                                                                 |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Map digitisation** — Converting `SM_Map.jpg` to `map.json` (every hex with coordinates, terrain type, elevation, road/trail flags) is manual work for ~600+ hexes.                                                                                                        | ~~High~~ **Resolved** | Map editor dev tool built (`MapEditorView` + `HexMapOverlay` + `CalibrationControls` + `HexEditPanel`). Terrain digitization is in progress via the tool.                  |
+| **GS_OOB hierarchy depth** — Leader attachment/detachment mid-game, the difference between in-command and out-of-command ranges, and the exact OOB hierarchy (army → corps → division → brigade → regiment) needs careful schema design before any combat logic is written. | Medium                | `oob.json` and `leaders.json` are built and Zod-validated. Schema reviewed against SM_Regimental_Roster.pdf. Hierarchy encoding confirmed before rules engine work begins. |
 
 ---
 
