@@ -76,4 +76,66 @@ describe('HexMapOverlay', () => {
     const svg = wrapper.find('svg');
     expect(svg.attributes('width')).toBe('800');
   });
+
+  it('LOS hex A renders a polygon when losHexA is set', () => {
+    // Grid is 4×3; game id col=1,row=1 => "01.01"
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        calibrationMode: false,
+        vpHexIds: [],
+        losHexA: '01.03',
+      },
+    });
+    expect(wrapper.findAll('polygon').length).toBeGreaterThan(0);
+  });
+
+  it('LOS hex B renders a polygon when losHexB is set', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        calibrationMode: false,
+        vpHexIds: [],
+        losHexB: '01.03',
+      },
+    });
+    expect(wrapper.findAll('polygon').length).toBeGreaterThan(0);
+  });
+
+  it('losPathHexes renders polygons for path hexes', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        calibrationMode: false,
+        vpHexIds: [],
+        losPathHexes: ['01.03', '02.03'],
+      },
+    });
+    expect(wrapper.findAll('polygon').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('losBlockedHex renders a polygon for the blocked hex', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        calibrationMode: false,
+        vpHexIds: [],
+        losBlockedHex: '01.03',
+      },
+    });
+    expect(wrapper.findAll('polygon').length).toBeGreaterThan(0);
+  });
+
+  it('accepts new LOS props without errors when all are null/empty', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        losHexA: null,
+        losHexB: null,
+        losPathHexes: [],
+        losBlockedHex: null,
+      },
+    });
+    expect(wrapper.find('svg').exists()).toBe(true);
+  });
 });

@@ -23,9 +23,11 @@
 
 ---
 
-> **Implementation Status (as of 2026-02-20)**
+> **Implementation Status (as of 2026-02-22)**
 >
-> **Completed:** tech stack selection, server scaffold (Express + Socket.io), data models (all four JSON files), Zod validation schemas, map editor dev tool, Vitest test suites (server + client), ESLint/Prettier configuration, GitHub Actions CI pipeline.
+> **Completed:** tech stack selection, server scaffold (Express + Socket.io), data models (all four JSON files), Zod validation schemas, Vitest test suites (server + client), ESLint/Prettier configuration, GitHub Actions CI pipeline.
+>
+> **In progress:** map editor dev tool (hex terrain digitization, LOS test panel — terrain data entry ongoing).
 >
 > **Planned:** Discord OAuth auth, game rules engine, DigitalOcean Spaces persistence, multiplayer coordination, frontend game UI.
 >

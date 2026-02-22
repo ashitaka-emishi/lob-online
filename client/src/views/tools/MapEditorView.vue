@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import HexMapOverlay from '../../components/HexMapOverlay.vue';
 import HexEditPanel from '../../components/HexEditPanel.vue';
 import CalibrationControls from '../../components/CalibrationControls.vue';
+import LosTestPanel from '../../components/LosTestPanel.vue';
 
 const STORAGE_KEY = 'lob-map-editor-calibration-v4';
 const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
@@ -35,8 +36,13 @@ function loadCalibration() {
 const calibration = ref(loadCalibration());
 const calibrationMode = ref(false);
 const showExportOverlay = ref(false);
-const calibrationOpen = ref(true);
-const hexEditOpen = ref(true);
+
+// Accordion: only one panel open at a time
+const openPanel = ref('hexEdit'); // 'calibration' | 'hexEdit' | 'losTest' | null
+
+function togglePanel(name) {
+  openPanel.value = openPanel.value === name ? null : name;
+}
 
 const exportData = computed(() =>
   mapData.value ? { ...mapData.value, gridSpec: calibration.value } : null
@@ -108,9 +114,35 @@ const selectedHex = computed(() => {
   return mapData.value.hexes.find((h) => h.hex === selectedHexId.value) ?? null;
 });
 
+// ── LOS pick mode ─────────────────────────────────────────────────────────────
+
+const losHexA = ref(null);
+const losHexB = ref(null);
+const losSelectingHex = ref(null); // 'A' | 'B' | null
+const losResult = ref(null);
+
+const losPathHexes = computed(() => {
+  if (!losResult.value) return [];
+  return losResult.value.steps.filter((s) => s.role === 'intermediate').map((s) => s.hexId);
+});
+
+const losBlockedHex = computed(() => {
+  if (!losResult.value) return null;
+  return losResult.value.steps.find((s) => s.blocked)?.hexId ?? null;
+});
+
 function onHexClick(hexId) {
-  selectedHexId.value = hexId;
-  // If hex not in data yet, don't create it — user must edit to create
+  if (losSelectingHex.value === 'A') {
+    losHexA.value = hexId;
+    losSelectingHex.value = null;
+    openPanel.value = 'losTest';
+  } else if (losSelectingHex.value === 'B') {
+    losHexB.value = hexId;
+    losSelectingHex.value = null;
+    openPanel.value = 'losTest';
+  } else {
+    selectedHexId.value = hexId;
+  }
 }
 
 function onHexUpdate(updatedHex) {
@@ -219,6 +251,10 @@ async function save() {
             :calibration-mode="calibrationMode"
             :image-width="imgNaturalWidth"
             :image-height="imgNaturalHeight"
+            :los-hex-a="losHexA"
+            :los-hex-b="losHexB"
+            :los-path-hexes="losPathHexes"
+            :los-blocked-hex="losBlockedHex"
             @hex-click="onHexClick"
           />
         </div>
@@ -228,11 +264,11 @@ async function save() {
       <div class="panel-pane">
         <!-- Grid Calibration -->
         <div class="accordion-section">
-          <button class="accordion-header" @click="calibrationOpen = !calibrationOpen">
+          <button class="accordion-header" @click="togglePanel('calibration')">
             <span>Grid Calibration</span>
-            <span class="accordion-chevron">{{ calibrationOpen ? '▾' : '▸' }}</span>
+            <span class="accordion-chevron">{{ openPanel === 'calibration' ? '▾' : '▸' }}</span>
           </button>
-          <div v-if="calibrationOpen">
+          <div v-if="openPanel === 'calibration'">
             <CalibrationControls
               :calibration="calibration"
               :calibration-mode="calibrationMode"
@@ -242,16 +278,59 @@ async function save() {
           </div>
         </div>
         <!-- Hex Edit -->
-        <div class="accordion-section accordion-hex">
-          <button class="accordion-header" @click="hexEditOpen = !hexEditOpen">
+        <div
+          class="accordion-section accordion-hex"
+          :class="{ 'accordion-flex': openPanel === 'hexEdit' }"
+        >
+          <button class="accordion-header" @click="togglePanel('hexEdit')">
             <span>{{ selectedHexId ? `Hex ${selectedHexId}` : 'Hex Edit' }}</span>
-            <span class="accordion-chevron">{{ hexEditOpen ? '▾' : '▸' }}</span>
+            <span class="accordion-chevron">{{ openPanel === 'hexEdit' ? '▾' : '▸' }}</span>
           </button>
-          <div v-if="hexEditOpen" class="accordion-hex-content">
+          <div v-if="openPanel === 'hexEdit'" class="accordion-hex-content">
             <HexEditPanel
               :hex="selectedHex"
               :selected-hex-id="selectedHexId"
               @hex-update="onHexUpdate"
+            />
+          </div>
+        </div>
+        <!-- LOS Test -->
+        <div
+          class="accordion-section accordion-hex"
+          :class="{ 'accordion-flex': openPanel === 'losTest' }"
+        >
+          <button class="accordion-header" @click="togglePanel('losTest')">
+            <span>LOS Test</span>
+            <span class="accordion-chevron">{{ openPanel === 'losTest' ? '▾' : '▸' }}</span>
+          </button>
+          <div v-if="openPanel === 'losTest'" class="accordion-hex-content">
+            <LosTestPanel
+              :hex-a="losHexA"
+              :hex-b="losHexB"
+              :map-data="mapData"
+              :grid-spec="calibration"
+              :selecting-hex="losSelectingHex"
+              @pick-start="
+                (side) => {
+                  losSelectingHex = side;
+                }
+              "
+              @pick-cancel="losSelectingHex = null"
+              @set-hex-a="
+                (id) => {
+                  losHexA = id;
+                }
+              "
+              @set-hex-b="
+                (id) => {
+                  losHexB = id;
+                }
+              "
+              @los-result="
+                (r) => {
+                  losResult = r;
+                }
+              "
             />
           </div>
         </div>
@@ -396,11 +475,14 @@ async function save() {
 }
 
 .accordion-hex {
-  flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
+}
+
+.accordion-flex {
+  flex: 1;
 }
 
 .accordion-hex-content {

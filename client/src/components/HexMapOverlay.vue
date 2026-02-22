@@ -31,6 +31,22 @@ const props = defineProps({
     type: Number,
     default: 900,
   },
+  losHexA: {
+    type: String,
+    default: null,
+  },
+  losHexB: {
+    type: String,
+    default: null,
+  },
+  losPathHexes: {
+    type: Array,
+    default: () => [],
+  },
+  losBlockedHex: {
+    type: String,
+    default: null,
+  },
 });
 
 const emit = defineEmits(['hex-click']);
@@ -55,6 +71,7 @@ const hexIndex = computed(() => {
 });
 
 const vpHexSet = computed(() => new Set(props.vpHexIds));
+const losPathSet = computed(() => new Set(props.losPathHexes));
 
 // Recompute grid whenever calibration or image size changes
 const gridData = computed(() => {
@@ -91,11 +108,22 @@ const gridData = computed(() => {
     const terrain = known?.terrain ?? 'unknown';
     const fill = TERRAIN_COLORS[terrain] ?? 'transparent';
     const isVP = vpHexSet.value.has(id);
-    cells.push({ id, points, cx, cy, fill, isVP });
+    const isLosA = id === props.losHexA;
+    const isLosB = id === props.losHexB;
+    const isLosPath = losPathSet.value.has(id);
+    const isLosBlocked = id === props.losBlockedHex;
+    cells.push({ id, points, cx, cy, fill, isVP, isLosA, isLosB, isLosPath, isLosBlocked });
   });
 
   const visible = cells.filter(
-    (cell) => props.calibrationMode || cell.isVP || cell.id === props.selectedHexId
+    (cell) =>
+      props.calibrationMode ||
+      cell.isVP ||
+      cell.id === props.selectedHexId ||
+      cell.isLosA ||
+      cell.isLosB ||
+      cell.isLosPath ||
+      cell.isLosBlocked
   );
 
   return { cells: visible, grid, tx, ty };
@@ -136,27 +164,48 @@ function onSvgClick(event) {
         v-for="cell in cells"
         :key="cell.id"
         :points="cell.points"
-        :fill="cell.fill"
-        :fill-opacity="cell.fill === 'transparent' ? 0 : 0.45"
+        :fill="cell.isLosBlocked ? '#cc4444' : cell.fill"
+        :fill-opacity="cell.isLosBlocked ? 0.5 : cell.fill === 'transparent' ? 0 : 0.45"
         :stroke="
           calibrationMode
             ? '#cc88ff'
-            : selectedHexId === cell.id
-              ? '#ffdd00'
-              : cell.isVP
-                ? '#cc3333'
-                : '#88776644'
+            : cell.isLosBlocked
+              ? '#cc4444'
+              : cell.isLosA
+                ? '#44aa44'
+                : cell.isLosB
+                  ? '#4488cc'
+                  : cell.isLosPath
+                    ? '#cc8844'
+                    : selectedHexId === cell.id
+                      ? '#ffdd00'
+                      : cell.isVP
+                        ? '#cc3333'
+                        : '#88776644'
         "
         :stroke-width="
           calibrationMode
             ? calibration.strokeWidth
-            : selectedHexId === cell.id
-              ? Math.max(calibration.strokeWidth * 3, 2)
-              : cell.isVP
-                ? Math.max(calibration.strokeWidth * 2, 1.5)
-                : calibration.strokeWidth
+            : cell.isLosBlocked || cell.isLosA || cell.isLosB || cell.isLosPath
+              ? Math.max(calibration.strokeWidth * 2.5, 2)
+              : selectedHexId === cell.id
+                ? Math.max(calibration.strokeWidth * 3, 2)
+                : cell.isVP
+                  ? Math.max(calibration.strokeWidth * 2, 1.5)
+                  : calibration.strokeWidth
         "
-        :stroke-opacity="calibrationMode ? 0.75 : selectedHexId === cell.id || cell.isVP ? 1 : 0.6"
+        :stroke-opacity="
+          calibrationMode
+            ? 0.75
+            : cell.isLosBlocked ||
+                cell.isLosA ||
+                cell.isLosB ||
+                cell.isLosPath ||
+                selectedHexId === cell.id ||
+                cell.isVP
+              ? 1
+              : 0.6
+        "
       />
       <template v-if="calibrationMode">
         <text
