@@ -14,7 +14,22 @@
     "slope",
     "extremeSlope",
     "verticalSlope",
-    "stoneWall"
+    "stoneWall",
+    "elevation"
+  ],
+  "hexFeatureTypes": ["building", "ford", "fortification", "springhouse", "bridge"],
+  "edgeFeatureTypes": [
+    "stream",
+    "road",
+    "pike",
+    "trail",
+    "slope",
+    "extremeSlope",
+    "verticalSlope",
+    "stoneWall",
+    "elevation",
+    "fence",
+    "bridge"
   ],
   "elevationSystem": {
     "contourInterval": 50,

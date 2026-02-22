@@ -12,11 +12,28 @@ const TerrainType = z.enum([
   'unknown',
 ]);
 
+const HexFeature = z.object({
+  type: z.string(),
+});
+
+const EdgeFeature = z.object({
+  type: z.string(),
+  movementModifier: z.number().optional(),
+  losBlocking: z.boolean().optional(),
+  losHeightBonus: z.number().optional(),
+});
+
 const HexEntry = z.object({
   hex: HexId,
   terrain: TerrainType,
   elevation: z.number().optional(),
+  slope: z.number().int().min(0).max(5).optional(),
+  wedgeElevations: z
+    .tuple([z.number(), z.number(), z.number(), z.number(), z.number(), z.number()])
+    .optional(),
   hexsides: z.record(z.string(), z.string()).optional(),
+  edges: z.record(z.enum(['N', 'NE', 'SE', 'S', 'SW', 'NW']), z.array(EdgeFeature)).optional(),
+  features: z.array(HexFeature).optional(),
   vpHex: z.boolean().optional(),
   entryHex: z.boolean().optional(),
   side: z.enum(['union', 'confederate']).optional(),
@@ -48,6 +65,8 @@ export const MapSchema = z.object({
     .optional(),
   terrainTypes: z.array(z.string()).optional(),
   hexsideTypes: z.array(z.string()).optional(),
+  hexFeatureTypes: z.array(z.string()).optional(),
+  edgeFeatureTypes: z.array(z.string()).optional(),
   elevationSystem: z
     .object({
       contourInterval: z.number(),

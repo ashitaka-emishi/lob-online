@@ -39,7 +39,8 @@ type HexFeature = {
 // Feature on a shared edge between two adjacent hexes
 type EdgeFeature = {
   type: string; // e.g. 'road', 'pike', 'trail', 'fence', 'stoneWall',
-  //      'bridge', 'stream', 'slope', 'extremeSlope', 'verticalSlope'
+  //      'bridge', 'stream', 'slope', 'extremeSlope', 'verticalSlope',
+  //      'elevation' (thin contour crossing, +1 MP)
   movementModifier?: number; // added movement point cost crossing this edge (positive = harder)
   losBlocking?: boolean; // true if this edge feature blocks LOS between adjacent hexes
   losHeightBonus?: number; // effective height (feet) added to LOS calculation at this edge
@@ -101,10 +102,11 @@ both hexes simultaneously. This avoids canonical-owner complexity and makes per-
 trivially O(1) — the engine never needs to check the neighbouring hex to determine edge
 properties.
 
-**`hexsides` field removed.**
-The legacy `hexsides` field from the current schema is deprecated and removed. All edge data
-moves to `edges`. Because all existing hex entries are `terrain: 'unknown'` with no hexside
-data, no migration logic is needed.
+**`hexsides` field deprecated (removal deferred).**
+The legacy `hexsides` field is deprecated in favour of `edges`. The schema retains it as an
+optional field until a dedicated migration plan removes it. All existing hex entries have no
+hexside data, so the migration requires no data transformation — just a schema and editor pass
+to drop the field and update the save path.
 
 **New metadata fields.**
 The `map.json` root metadata gains two arrays alongside `terrainTypes` and `hexsideTypes`:
