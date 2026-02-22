@@ -1,4 +1,4 @@
-> **ARCHIVED TEMPLATE** — This document was the prompt used to generate `HLD.md`.
+> **ARCHIVED TEMPLATE** — This document was the prompt used to generate `high-level-design.md`.
 > It is kept for reference. Do not treat it as live documentation.
 
 # HLD Generation Prompt — lob-online

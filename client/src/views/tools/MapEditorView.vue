@@ -5,7 +5,7 @@ import HexEditPanel from '../../components/HexEditPanel.vue';
 import CalibrationControls from '../../components/CalibrationControls.vue';
 
 const STORAGE_KEY = 'lob-map-editor-calibration-v4';
-const MAP_IMAGE = '/tools/map-editor/assets/SM_Map.jpg';
+const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
 
 // ── Calibration ───────────────────────────────────────────────────────────────
 

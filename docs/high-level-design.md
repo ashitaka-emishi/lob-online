@@ -17,7 +17,7 @@
 7. [Rules Engine Design](#7-rules-engine-design)
 8. [API Contract](#8-api-contract)
 9. [Project Directory Structure](#9-project-directory-structure)
-10. [Developer Tools](#10-developer-tools)
+10. [Data Preparation Tools](#10-data-preparation-tools)
 11. [Tooling Configuration](#11-tooling-configuration)
 12. [Open Questions and Risks](#12-open-questions-and-risks)
 
@@ -41,12 +41,12 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                        BROWSER (Vue 3)                          │
 │                                                                 │
-│  ┌─────────────────────┐    ┌──────────────────────────────┐   │
-│  │   Game UI / Pinia   │    │   SVG Hex Map (Honeycomb.js) │   │
-│  │   - action forms    │    │   - click-to-select unit     │   │
-│  │   - unit panels     │    │   - click-to-move/fire       │   │
-│  │   - VP tracker      │    │   - terrain overlay          │   │
-│  └──────────┬──────────┘    └──────────────┬───────────────┘   │
+│  ┌─────────────────────┐    ┌──────────────────────────────┐    │
+│  │   Game UI / Pinia   │    │   SVG Hex Map (Honeycomb.js) │    │
+│  │   - action forms    │    │   - click-to-select unit     │    │
+│  │   - unit panels     │    │   - click-to-move/fire       │    │
+│  │   - VP tracker      │    │   - terrain overlay          │    │
+│  └──────────┬──────────┘    └──────────────┬───────────────┘    │
 │             │  REST (fetch)                │                    │
 │             │  Socket.io client            │                    │
 └─────────────┼────────────────────────────────────────────────── ┘
@@ -55,38 +55,38 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │              EXPRESS.JS SERVER  (DigitalOcean Droplet)          │
 │                                                                 │
-│  helmet → cors → morgan → cookieParser → express.json          │
+│  helmet → cors → morgan → cookieParser → express.json           │
 │                                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────┐    │
-│  │ /auth routes │  │  /api routes │  │  Socket.io server │    │
-│  │              │  │              │  │  (rooms per game) │    │
-│  │ Discord OAuth│  │ authenticateJWT  └───────┬───────────┘    │
-│  │ passport     │  │ loadGame     │           │ emit on action │
-│  │ JWT cookie   │  │ Zod validate │           │                │
-│  └──────────────┘  └──────┬───────┘           │                │
-│                           │                   │                │
-│                    ┌──────▼───────────────┐   │                │
-│                    │     Rules Engine      │   │                │
-│                    │  (pure JS, no I/O)   │   │                │
-│                    │  movement / combat   │   │                │
-│                    │  morale / orders     │   │                │
-│                    │  LOS / VP           │   │                │
-│                    └──────┬───────────────┘   │                │
-│                           │                   │                │
-│              ┌────────────┼───────────────┐   │                │
-│              ▼            ▼               ▼   │                │
-│        ┌──────────┐ ┌──────────┐  ┌────────────────┐          │
-│        │  SQLite  │ │  Spaces  │  │Discord webhook │          │
-│        │  users   │ │  client  │  │  (fetch POST)  │          │
-│        │  games   │ │          │  └────────────────┘          │
-│        └──────────┘ └──────────┘                               │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────┐      │
+│  │ /auth routes │  │  /api routes │  │  Socket.io server │      │
+│  │              │  │ authenitcate │  │  (rooms per game) │      │
+│  │ Discord OAuth│  │ JWT          |  └───────┬───────────┘      │
+│  │ passport     │  │ loadGame     │          │ emit on action   │
+│  │ JWT cookie   │  │ Zod validate │          │                  │
+│  └──────────────┘  └──────┬───────┘          │                  │
+│                           │                  │                  │
+│                    ┌──────▼───────────────┐  │                  │
+│                    │     Rules Engine     │  │                  │
+│                    │  (pure JS, no I/O)   │  │                  │
+│                    │  movement / combat   │  │                  │
+│                    │  morale / orders     │  │                  │
+│                    │  LOS / VP            │  │                  │
+│                    └──────┬───────────────┘  │                  │
+│                           │                  │                  │
+│              ┌────────────┼───────────────┐  │                  │
+│              ▼            ▼               ▼  │                  │
+│        ┌──────────┐ ┌──────────┐  ┌────────────────┐            │
+│        │  SQLite  │ │  Spaces  │  │Discord webhook │            │
+│        │  users   │ │  client  │  │  (fetch POST)  │            │
+│        │  games   │ │          │  └────────────────┘            │
+│        └──────────┘ └──────────┘                                │
 └─────────────────────────────────────────────────────────────────┘
               │                    │
               ▼                    ▼
    ┌──────────────────┐  ┌─────────────────────────────────────┐
-   │  SQLite file     │  │     DigitalOcean Spaces              │
-   │  (on Droplet)    │  │  games/{id}/state.json               │
-   │                  │  │  games/{id}/history/{seq:06d}.json   │
+   │  SQLite file     │  │     DigitalOcean Spaces             │
+   │  (on Droplet)    │  │  games/{id}/state.json              │
+   │                  │  │  games/{id}/history/{seq:06d}.json  │
    └──────────────────┘  └─────────────────────────────────────┘
 
               ┌─────────────────────────────┐
@@ -147,6 +147,17 @@ Player A (browser)          Server                Player B (browser)
       │  (own view updated    │  state-updated event      │
       │   from REST response) │  (Pinia store updated)    │
 ```
+
+### Hybrid Play
+
+Live and async modes are not mutually exclusive — a game naturally degrades to PBEM when one player is offline and upgrades to real-time when both reconnect. No explicit mode switch exists because none is needed:
+
+- Actions always flow through `POST /api/v1/games/:id/actions` regardless of whether both players are present.
+- Socket.io is a _notification layer_, not the action channel. When both players are in the same game room, state updates arrive instantly. When one disconnects, the room simply has fewer sockets — the emit still fires for those that remain.
+- The Discord webhook fires on every action if configured. If the opponent is already online and watching via socket, the webhook is redundant but harmless.
+- There is no `mode` field in the game state or SQLite schema.
+
+A session that starts live on Saturday, continues asynchronously via Discord notifications through the week, and resumes live the following weekend requires no migration step and no user action.
 
 ---
 
@@ -627,14 +638,14 @@ socket.on('game:state-updated', ({ state, lastAction }) => {
         │ in_progress│◄─────────────────────┐
         └──────┬─────┘                      │
                │                            │ (turn advances,
-    ┌──────────┼──────────────┐              │  not a new state)
-    │          │              │              │
-    │   POST /games/:id/      │              │
-    │     actions             │              │
-    │  (each action stays     │              │
-    │   in_progress)          │              │
-    │                         │              │
-    ▼                         ▼              │
+    ┌──────────┼──────────────┐             │  not a new state)
+    │          │              │             │
+    │   POST /games/:id/      │             │
+    │     actions             │             │
+    │  (each action stays     │             │
+    │   in_progress)          │             │
+    │                         │             │
+    ▼                         ▼             │
 ┌──────────┐           ┌───────────┐        │
 │ suspended│           │ complete  │        │
 │          │           │           │        │
@@ -1206,11 +1217,15 @@ lob-online/
 ├── ecosystem.config.cjs      ← PM2 production config
 │
 ├── docs/
-│   ├── LIBRARY.md            ← human-readable reference library manifest
+│   ├── reference/            ← source reference material (rules PDFs, map image)
+│   │   └── *.pdf / *.jpg
+│   ├── devlog/               ← devlog entries (YYYY-MM-DD-HHMM-*.md)
+│   ├── devlog.md             ← devlog index
+│   ├── high-level-design.md  ← this document
+│   ├── high-level-design-prompt.md ← archived prompt used to generate high-level-design.md
+│   ├── library.md            ← human-readable reference library manifest
 │   ├── library.json          ← machine-readable catalog
-│   ├── HLD_PROMPT.md         ← archived prompt used to generate HLD.md
-│   ├── HLD.md                ← this document
-│   └── *.pdf / *.jpg         ← source reference material (rules, roster, map)
+│   └── map-editor-design.md  ← map editor detailed design spec
 │
 ├── data/
 │   └── scenarios/
@@ -1269,11 +1284,18 @@ lob-online/
 
 ---
 
-## 10. Developer Tools
+## 10. Data Preparation Tools
+
+This section describes the dev-only tooling required to prepare accurate game data. Non-trivial tooling is needed to ensure the map digitisation and unit statistics are correct before any game logic is implemented. The tools must cover:
+
+- **Map digitisation** — convert the paper map image to `map.json` hex terrain data
+- **Unit data validation** — inspect and correct unit stats in `oob.json` and `leaders.json`
+- **Scenario editing** — set and adjust starting positions, orders, and reinforcement schedules in `scenario.json`
+- **AI-generated data inspection** — review AI-produced datasets (tables, reinforcement schedules, terrain assignments) before committing them to the canonical data files
 
 ### Map Editor
 
-The map editor is a dev-only tool for digitizing `docs/SM_Map.jpg` into structured hex terrain data in `data/scenarios/south-mountain/map.json`. It is not part of the game itself and is never active in production.
+The map editor is a dev-only tool for digitizing `docs/reference/sm-map.jpg` into structured hex terrain data in `data/scenarios/south-mountain/map.json`. It is not part of the game itself and is never active in production.
 
 **Purpose:** Click each hex on the map image, assign terrain type and hexside data, mark VP hexes and entry hexes, calibrate the hex grid over the image — then save to `map.json`.
 
@@ -1298,22 +1320,49 @@ This script sets `MAP_EDITOR_ENABLED=true` and starts both the Express server an
 **Architecture:**
 
 ```
-MapEditorView.vue
-  └── HexMapOverlay.vue        ← SVG hex grid drawn over the map image
-  └── CalibrationControls.vue  ← adjust origin, hex size, columns/rows
-  └── HexEditPanel.vue         ← edit terrain/hexsides/VP for the selected hex
+MapEditorView.vue              ← orchestrator; owns all editor state
+  ├── EditorToolbar.vue        (NEW) ← mode selector, paint terrain/edge picker, layer toggles
+  ├── HexMapOverlay.vue        (EXTEND) ← layer rendering, edge overlay, multi-select rect
+  ├── CalibrationControls.vue  (EXTEND) ← rotation slider, grid lock toggle
+  ├── HexEditPanel.vue         (EXTEND) ← elevation, slope direction, hex features list
+  ├── WedgeEditor.vue          (NEW) ← graphical 6-wedge hex diagram with elevation offsets
+  └── EdgeEditPanel.vue        (NEW) ← list editor for multiple features on a selected edge
 ```
 
 **Data flow:**
 
 ```
-1. Load     GET /api/tools/map-editor/data  → map.json into Vue state
-2. Calibrate  CalibrationControls adjusts gridSpec; hex grid redraws
-3. Edit       Click hex → HexEditPanel opens; user edits terrain/hexside/VP fields
-4. Save       PUT /api/tools/map-editor/data → Zod validation → write map.json
+1. Load       GET /api/tools/map-editor/data → map.json into Vue state; offer localStorage
+              draft restore if draft._savedAt > server._savedAt
+2. Calibrate  CalibrationControls adjusts gridSpec (origin, size, rotation); hex grid redraws
+3. Edit       Click hex → select mode opens HexEditPanel (terrain, elevation, slope, edges,
+              features); paint mode sets terrain on hover; edge mode paints EdgeFeature on
+              both adjacent hexes; elevation mode increments/decrements elevation
+4. Autosave   Every change writes working copy to localStorage (lob-map-editor-mapdata-v1)
+5. Save       PUT /api/tools/map-editor/data → Zod validation → write map.json;
+              clears localStorage working copy on success
+6. Export     "Export engine JSON" button strips editor-only fields and downloads as a file
 ```
 
 **Note:** The Vue route `/tools/map-editor` is always registered in the client router. Visiting it without `MAP_EDITOR_ENABLED=true` on the server will result in API 404s when the editor tries to load or save data.
+
+#### Detailed Design
+
+See `docs/map-editor-design.md` for the full specification, including:
+
+- **§1 Hex Data Model** — the revised `HexEntry` schema with `edges`, `slope`,
+  `wedgeElevations`, and `features`; the `hexsides`→`edges` migration rationale; symmetric
+  edge storage; and metadata list fields.
+- **§2 Grid Calibration Extensions** — `gridSpec.rotation` (SVG rotate transform) and
+  `gridSpec.locked` (disables calibration UI).
+- **§3 Editor Component Architecture** — per-component scope for all five components and
+  the full `MapEditorView` state object.
+- **§4 Interaction Modes** — select (single/multi/rubber-band), paint (click-drag terrain),
+  elevation (increment/decrement), edge draw (snap-to-edge, mirror update).
+- **§5 Visualization Layers** — six independently-toggled SVG layers, render order,
+  wedge/edge/slope geometry formulas, and the `HexDir` 0–5 index reference.
+- **§6 Save Model** — three-tier save (localStorage autosave → server save → engine export)
+  and the draft-restoration conflict flow.
 
 ---
 
@@ -1516,8 +1565,8 @@ DISCORD_CALLBACK_URL=http://localhost:3000/auth/discord/callback
 
 | Risk                                                                                                                                                                                                                                                                        | Severity              | Mitigation                                                                                                                                                                 |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Map digitisation** — Converting `SM_Map.jpg` to `map.json` (every hex with coordinates, terrain type, elevation, road/trail flags) is manual work for ~600+ hexes.                                                                                                        | ~~High~~ **Resolved** | Map editor dev tool built (`MapEditorView` + `HexMapOverlay` + `CalibrationControls` + `HexEditPanel`). Terrain digitization is in progress via the tool.                  |
-| **GS_OOB hierarchy depth** — Leader attachment/detachment mid-game, the difference between in-command and out-of-command ranges, and the exact OOB hierarchy (army → corps → division → brigade → regiment) needs careful schema design before any combat logic is written. | Medium                | `oob.json` and `leaders.json` are built and Zod-validated. Schema reviewed against SM_Regimental_Roster.pdf. Hierarchy encoding confirmed before rules engine work begins. |
+| **Map digitisation** — Converting `sm-map.jpg` to `map.json` (every hex with coordinates, terrain type, elevation, road/trail flags) is manual work for ~600+ hexes.                                                                                                        | ~~High~~ **Resolved** | Map editor dev tool built (`MapEditorView` + `HexMapOverlay` + `CalibrationControls` + `HexEditPanel`). Terrain digitization is in progress via the tool.                  |
+| **GS_OOB hierarchy depth** — Leader attachment/detachment mid-game, the difference between in-command and out-of-command ranges, and the exact OOB hierarchy (army → corps → division → brigade → regiment) needs careful schema design before any combat logic is written. | Medium                | `oob.json` and `leaders.json` are built and Zod-validated. Schema reviewed against sm-regimental-roster.pdf. Hierarchy encoding confirmed before rules engine work begins. |
 
 ---
 
@@ -1572,7 +1621,7 @@ DISCORD_CALLBACK_URL=http://localhost:3000/auth/discord/callback
 
 | Concern                     | Approach                                                                                                                                                                                                         |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Rules correctness**       | Golden-path integration tests: feed known game situations (from the rulebook examples and SM_Rules.pdf) into the engine and assert the exact expected outcome. These are the most valuable tests in the project. |
+| **Rules correctness**       | Golden-path integration tests: feed known game situations (from the rulebook examples and sm-rules.pdf) into the engine and assert the exact expected outcome. These are the most valuable tests in the project. |
 | **Regression safety**       | Every bug found during playtesting gets a test case added before the fix is applied.                                                                                                                             |
 | **LOS / movement coverage** | Property-based tests (fast-check or similar) to fuzz hex coordinates and movement paths and check that the engine never throws unexpected errors.                                                                |
 | **API contract**            | Supertest integration tests for each route covering happy path, auth failure, rules violation, and not-found cases.                                                                                              |
