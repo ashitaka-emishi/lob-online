@@ -8,7 +8,7 @@
       "files": [
         {
           "id": "LOB_RULES",
-          "filename": "LOBv2_Rules.pdf",
+          "filename": "lob-rules.pdf",
           "description": "Line of Battle v2.0 complete series rulebook",
           "status": "available",
           "pages": 36,
@@ -29,7 +29,7 @@
         },
         {
           "id": "LOB_CHARTS",
-          "filename": "LOBv2_Tables.pdf",
+          "filename": "lob-tables.pdf",
           "description": "Line of Battle v2.0 complete charts and tables reference",
           "status": "available",
           "pages": 6,
@@ -44,7 +44,7 @@
         },
         {
           "id": "LOB_GAME_UPDATES",
-          "filename": "LOBv2_GameSpecificUpdates.pdf",
+          "filename": "lob-game-specific-updates.pdf",
           "description": "LoB v2.0 updates and overrides for all RSS-era games including South Mountain",
           "status": "available",
           "pages": 4,
@@ -69,7 +69,7 @@
       "files": [
         {
           "id": "SM_RULES",
-          "filename": "SM_Rules.pdf",
+          "filename": "sm-rules.pdf",
           "description": "South Mountain game rules, scenario, victory conditions, reinforcements, random events",
           "status": "available",
           "pages": 28,
@@ -92,7 +92,7 @@
         },
         {
           "id": "SM_ROSTER",
-          "filename": "SM_Regimental_Roster.pdf",
+          "filename": "sm-regimental-roster.pdf",
           "description": "Complete unit roster for both sides: infantry, cavalry, artillery stats",
           "status": "available",
           "pages": 5,
@@ -107,7 +107,7 @@
         },
         {
           "id": "SM_ERRATA",
-          "filename": "SM_Errata.pdf",
+          "filename": "sm-errata.pdf",
           "description": "Official errata for South Mountain (dated 20 May 08)",
           "status": "available",
           "pages": 1,
@@ -121,14 +121,14 @@
         },
         {
           "id": "SM_COVER",
-          "filename": "SM_Cover.jpg",
+          "filename": "sm-cover.jpg",
           "description": "South Mountain game box cover art",
           "status": "available",
           "covers": ["Game box cover art"]
         },
         {
           "id": "SM_MAP",
-          "filename": "SM_Map.jpg",
+          "filename": "sm-map.jpg",
           "description": "South Mountain hex map with terrain, elevation, roads, VP hexes",
           "status": "available",
           "covers": [
@@ -144,7 +144,7 @@
         {
           "id": "SM_SCENARIO_DATA",
           "filename": "data/scenarios/south-mountain/scenario.json",
-          "description": "Structured scenario data (JSON) — built from SM_Rules.pdf and LOBv2_GameSpecificUpdates.pdf",
+          "description": "Structured scenario data (JSON) — built from sm-rules.pdf and lob-game-specific-updates.pdf",
           "status": "available",
           "covers": [
             "Turn structure (45 turns, 09:00–20:00, 20 min/turn)",
@@ -214,7 +214,7 @@
             "Union entry hexes: 01.09, 15.01, 32.01",
             "Confederate entry hexes: 20.34, 39.35",
             "Elevation system: 50-ft contour interval, vertical slopes impassable",
-            "All hexes currently terrain=unknown — requires SM_Map.jpg digitization"
+            "All hexes currently terrain=unknown — requires sm-map.jpg digitization"
           ]
         },
         {

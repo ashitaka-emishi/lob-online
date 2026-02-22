@@ -20,9 +20,9 @@
 
 | ID               | File                            | Status | Notes                                                                                                                 |
 | ---------------- | ------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------- |
-| LOB_RULES        | `LOBv2_Rules.pdf`               | ✅     | Complete 36-page rulebook. Covers movement, command, morale, fire, close combat, artillery, fluke stoppage, skedaddle |
-| LOB_CHARTS       | `LOBv2_Tables.pdf`              | ✅     | 6-page charts reference. Fire table, morale table, terrain effects, leader loss, order acceptance                     |
-| LOB_GAME_UPDATES | `LOBv2_GameSpecificUpdates.pdf` | ✅     | RSS-to-LoB conversion rules plus SM-specific overrides for slopes, ammo reserves, command, and rule replacements      |
+| LOB_RULES        | `lob-rules.pdf`                 | ✅     | Complete 36-page rulebook. Covers movement, command, morale, fire, close combat, artillery, fluke stoppage, skedaddle |
+| LOB_CHARTS       | `lob-tables.pdf`                | ✅     | 6-page charts reference. Fire table, morale table, terrain effects, leader loss, order acceptance                     |
+| LOB_GAME_UPDATES | `lob-game-specific-updates.pdf` | ✅     | RSS-to-LoB conversion rules plus SM-specific overrides for slopes, ammo reserves, command, and rule replacements      |
 
 ---
 
@@ -30,11 +30,11 @@
 
 | ID               | File                                          | Status | Notes                                                                                                                                                                              |
 | ---------------- | --------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SM_RULES         | `SM_Rules.pdf`                                | ✅     | Full game rules, terrain, union/CSA special rules, scenario setup, reinforcement schedule, random events, VP system, loss charts, terrain movement chart                           |
-| SM_ROSTER        | `SM_Regimental_Roster.pdf`                    | ✅     | All unit stats — infantry morale/weapon/strength, artillery ratings and ammo, brigade/division loss chart data                                                                     |
-| SM_ERRATA        | `SM_Errata.pdf`                               | ✅     | 5 corrections: Chicago Dragoons brigade, E/2 US arty rating, 28 Ohio loss chart, 5 Va Cav morale                                                                                   |
-| SM_COVER         | `SM_Cover.jpg`                                | ✅     | Game box cover art                                                                                                                                                                 |
-| SM_MAP           | `SM_Map.jpg`                                  | ✅     | Hex map with terrain, elevation contours, slope hexsides, roads, VP hexes, entry area hexes                                                                                        |
+| SM_RULES         | `sm-rules.pdf`                                | ✅     | Full game rules, terrain, union/CSA special rules, scenario setup, reinforcement schedule, random events, VP system, loss charts, terrain movement chart                           |
+| SM_ROSTER        | `sm-regimental-roster.pdf`                    | ✅     | All unit stats — infantry morale/weapon/strength, artillery ratings and ammo, brigade/division loss chart data                                                                     |
+| SM_ERRATA        | `sm-errata.pdf`                               | ✅     | 5 corrections: Chicago Dragoons brigade, E/2 US arty rating, 28 Ohio loss chart, 5 Va Cav morale                                                                                   |
+| SM_COVER         | `sm-cover.jpg`                                | ✅     | Game box cover art                                                                                                                                                                 |
+| SM_MAP           | `sm-map.jpg`                                  | ✅     | Hex map with terrain, elevation contours, slope hexsides, roads, VP hexes, entry area hexes                                                                                        |
 | SM_SCENARIO_DATA | `data/scenarios/south-mountain/scenario.json` | ✅     | At-start positions, reinforcement schedule (with variable arrival rolls), VP hexes + thresholds, ammo reserves, random event tables, terrain movement chart. All 4 errata applied. |
 
 ---
@@ -45,7 +45,7 @@
 | ----------- | -------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | GS_OOB      | `data/scenarios/south-mountain/oob.json`     | ✅     | Full OOB JSON — 219 unit IDs. All units (infantry, cavalry, artillery) with morale/weapon/strength/straggler boxes, brigade/division hierarchy, wreck thresholds. Evans Brigade in `independentBrigades`. All errata applied.                     |
 | GS_LEADERS  | `data/scenarios/south-mountain/leaders.json` | ✅     | 48 leader IDs. Army through brigade level, both sides. Special rule flags: Longstreet army-commander, Hill loose-cannon immunity, Burnside restrictions, Pleasonton replenishment, Gibbon Iron Brigade event. Counter ratings null (not in PDFs). |
-| SM_MAP_DATA | `data/scenarios/south-mountain/map.json`     | 🔧     | Hex scaffold with 31 known hexes (VP hexes, setup hexes, entry hexes). Full terrain digitization from SM_Map.jpg required to reach `available`.                                                                                                   |
+| SM_MAP_DATA | `data/scenarios/south-mountain/map.json`     | 🔧     | Hex scaffold with 31 known hexes (VP hexes, setup hexes, entry hexes). Full terrain digitization from sm-map.jpg required to reach `available`.                                                                                                   |
 | GS_TURN     | _(to be built)_                              | 🔧     | Turn/game state JSON — active orders, fluke stoppage tracking, arty depletion, VP totals                                                                                                                                                          |
 
 ## Schemas & Tooling (M0 — built)
@@ -79,7 +79,7 @@ These replace or supplement standard LoB v2.0 rules when playing SM:
 
 ## Errata Applied
 
-All corrections from `SM_Errata.pdf` are incorporated:
+All corrections from `sm-errata.pdf` are incorporated:
 
 - Chicago Dragoons → **2/K/9** (not 1/K/9)
 - E/2 US Artillery → rated **HvR** (not R)

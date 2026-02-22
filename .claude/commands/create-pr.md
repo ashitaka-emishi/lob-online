@@ -7,37 +7,49 @@ You are about to create a pull request. Work through these two tasks in order.
 
 ## Task 1 — Devlog Entry
 
-Run `date +%Y-%m-%d-%H%M` to get the current timestamp. List `docs/diary/` to see the most
-recent entry and confirm the naming convention.
+Run `date +%Y-%m-%d` to get today's date and `date +%H%M` for the current time.
 
 Run `git log main..HEAD --oneline` to see all commits on this branch. Run `git diff main...HEAD
 --stat` to see which files changed. Use this to understand the full scope of what the PR contains.
 
-Create a new file at `docs/diary/TIMESTAMP-pr-short-title.md` where:
+The daily devlog file is `docs/devlog/YYYY-MM-DD.md`. Check whether it already exists:
 
-- `TIMESTAMP` is the output of the date command above
-- `short-title` is a kebab-case slug (3–6 words) describing what the PR delivers
+**If the file does not exist:** create it with the following structure:
 
-File contents format:
+```
+# YYYY-MM-DD
 
-- First line: `# YYYY-MM-DD — PR: Full readable title` (derive the date portion from the timestamp)
-- Blank line
-- 3–5 paragraphs of prose — no sub-headers within the entry
+## HH:MM — PR: Full readable title
 
-The entry should cover:
+3–5 paragraphs of prose.
+```
+
+**If the file already exists:** append a new section at the end:
+
+```
+
+## HH:MM — PR: Full readable title
+
+3–5 paragraphs of prose.
+```
+
+Each entry should cover:
 
 - What the PR delivers and the motivation behind it
 - Key design decisions made during implementation and why they were made that way
 - Any non-obvious tradeoffs or constraints future readers should know about
 - What was explicitly deferred to a later PR, if applicable
 
-After writing the file, append a row to the index table in `docs/DEVLOG.md` (newest entries at
-the bottom of the table) with the filename linked and a one-line summary.
+After writing or appending the entry, update `docs/devlog.md`:
 
-Commit the diary file before creating the PR so it is included in the branch:
+- If a row for today's file (`devlog/YYYY-MM-DD.md`) already exists in the index table,
+  update its summary to reflect all entries for the day.
+- If no row exists yet for today, append a new row at the bottom with the filename linked.
+
+Commit the devlog file before creating the PR so it is included in the branch:
 
 ```
-git add docs/diary/TIMESTAMP-pr-short-title.md docs/DEVLOG.md
+git add docs/devlog/YYYY-MM-DD.md docs/devlog.md
 git commit -m "docs: add diary entry for PR"
 ```
 
