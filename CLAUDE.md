@@ -12,20 +12,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 All source material lives in `docs/`. The library is tracked in two parallel files that must stay in sync:
 
-- `docs/LIBRARY.md` — human-readable manifest with status indicators (✅ available, ⬜ needed, 🔧 to be built)
+- `docs/library.md` — human-readable manifest with status indicators (✅ available, ⬜ needed, 🔧 to be built)
 - `docs/library.json` — machine-readable catalog (`"available"`, `"missing"`, `"todo"`)
 
 ### Available Source Documents
 
 | ID               | File                            | Contents                                                                  |
 | ---------------- | ------------------------------- | ------------------------------------------------------------------------- |
-| LOB_RULES        | `LOBv2_Rules.pdf`               | Complete 36-page LoB v2.0 series rulebook                                 |
-| LOB_CHARTS       | `LOBv2_Tables.pdf`              | 6-page combat/morale/terrain tables                                       |
-| LOB_GAME_UPDATES | `LOBv2_GameSpecificUpdates.pdf` | RSS-to-LoB conversions + SM-specific rule overrides                       |
-| SM_RULES         | `SM_Rules.pdf`                  | 28-page South Mountain scenario rules, terrain, reinforcements, VP system |
-| SM_ROSTER        | `SM_Regimental_Roster.pdf`      | All unit statistics for both sides                                        |
-| SM_ERRATA        | `SM_Errata.pdf`                 | 5 official corrections (all applied to canonical data)                    |
-| SM_MAP           | `SM_Map.jpg`                    | South Mountain hex map (high-resolution image)                            |
+| LOB_RULES        | `lob-rules.pdf`                 | Complete 36-page LoB v2.0 series rulebook                                 |
+| LOB_CHARTS       | `lob-tables.pdf`                | 6-page combat/morale/terrain tables                                       |
+| LOB_GAME_UPDATES | `lob-game-specific-updates.pdf` | RSS-to-LoB conversions + SM-specific rule overrides                       |
+| SM_RULES         | `sm-rules.pdf`                  | 28-page South Mountain scenario rules, terrain, reinforcements, VP system |
+| SM_ROSTER        | `sm-regimental-roster.pdf`      | All unit statistics for both sides                                        |
+| SM_ERRATA        | `sm-errata.pdf`                 | 5 official corrections (all applied to canonical data)                    |
+| SM_MAP           | `sm-map.jpg`                    | South Mountain hex map (high-resolution image)                            |
 
 ### Data Models
 
@@ -40,7 +40,7 @@ All four data files exist under `data/scenarios/south-mountain/` and are validat
 
 ### Developer Tools
 
-A hex map editor is available as a dev-only tool for digitizing `SM_Map.jpg` into `map.json` terrain data.
+A hex map editor is available as a dev-only tool for digitizing `docs/reference/sm-map.jpg` into `map.json` terrain data.
 
 - **Enable:** set `MAP_EDITOR_ENABLED=true` in `.env`
 - **Launch:** `npm run dev:map-editor` (starts both server and client with the env flag set)
@@ -78,11 +78,11 @@ When answering rules or data questions, cite which source document applies and f
 ## Post-Plan Protocol
 
 After any plan is implemented, run `/wrap-plan` to verify lint, formatting, and tests pass; write
-a devlog entry; review CLAUDE.md for needed updates; and assess whether HLD.md requires
+a devlog entry; review CLAUDE.md for needed updates; and assess whether high-level-design.md requires
 architectural revision. Do not skip this step before ending a working session.
 
 When creating a pull request, run `/create-pr` instead of `gh pr create` directly. The command
 writes a diary entry for the PR, runs the build checks, and then opens the PR.
 
-Devlog entries are individual Markdown files in `docs/diary/`, named
-`YYYY-MM-DD-HHMM-short-title.md`. `docs/DEVLOG.md` is an index only.
+Devlog entries are appended to a per-day file in `docs/devlog/YYYY-MM-DD.md`. Each entry
+within the file is a `## HH:MM — Title` section. `docs/devlog.md` is an index only.

@@ -21,29 +21,41 @@ before continuing.
 
 ## Task 1 — Devlog Entry
 
-Run `date +%Y-%m-%d-%H%M` to get the current timestamp. List `docs/diary/` to see the most
-recent entry and confirm the naming convention.
+Run `date +%Y-%m-%d` to get today's date and `date +%H%M` for the current time.
 
-Create a new file at `docs/diary/TIMESTAMP-short-title.md` where:
+The daily devlog file is `docs/devlog/YYYY-MM-DD.md`. Check whether it already exists:
 
-- `TIMESTAMP` is the output of the date command above
-- `short-title` is a kebab-case slug (3–6 words) describing what was implemented
+**If the file does not exist:** create it with the following structure:
 
-File contents format:
+```
+# YYYY-MM-DD
 
-- First line: `# YYYY-MM-DD — Full readable title` (derive the date portion from the timestamp)
-- Blank line
-- 3–5 paragraphs of prose — no sub-headers within the entry
+## HH:MM — Full readable title
 
-The entry should cover:
+3–5 paragraphs of prose.
+```
+
+**If the file already exists:** append a new section at the end:
+
+```
+
+## HH:MM — Full readable title
+
+3–5 paragraphs of prose.
+```
+
+Each entry should cover:
 
 - What was built and why it was structured the way it was
 - Any significant architectural or design decisions made during implementation
 - Non-obvious constraints or tradeoffs that future readers should know about
 - What was explicitly deferred and why, if applicable
 
-After writing the file, append a row to the index table in `docs/DEVLOG.md` (newest entries at
-the bottom of the table) with the filename linked and a one-line summary.
+After writing or appending the entry, update `docs/devlog.md`:
+
+- If a row for today's file (`devlog/YYYY-MM-DD.md`) already exists in the index table,
+  update its summary to reflect all entries for the day (e.g., "Map design spec; docs reorg").
+- If no row exists yet for today, append a new row at the bottom with the filename linked.
 
 Write the entry now before moving to Task 2.
 
@@ -64,7 +76,7 @@ and move on.
 
 ## Task 3 — HLD.md Assessment
 
-Read the Implementation Status callout block at the top of `docs/HLD.md` (the blockquote near
+Read the Implementation Status callout block at the top of `docs/high-level-design.md` (the blockquote near
 the top, before Section 1).
 
 Ask: did the plan add or change anything that belongs in that status summary — either moving

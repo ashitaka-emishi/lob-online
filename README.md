@@ -13,7 +13,7 @@ An online implementation of the _Line of Battle v2.0_ wargame system (Multi-Man 
 
 ## Architecture
 
-Single-server, two-player async/real-time wargame. See [docs/HLD.md](docs/HLD.md) for the full high-level design. Development notes are in the [Devlog](docs/DEVLOG.md).
+Single-server, two-player async/real-time wargame. See [docs/high-level-design.md](docs/high-level-design.md) for the full high-level design. Development notes are in the [Devlog](docs/devlog.md).
 
 ## Project Structure
 
@@ -53,7 +53,7 @@ Open `http://localhost:5173`. The Vite dev server proxies `/api`, `/auth`, and `
 
 ## Developer Tools — Map Editor
 
-The map editor is a dev-only tool for digitizing `docs/SM_Map.jpg` into `data/scenarios/south-mountain/map.json`. It is **not** part of the game itself.
+The map editor is a dev-only tool for digitizing `docs/reference/sm-map.jpg` into `data/scenarios/south-mountain/map.json`. It is **not** part of the game itself.
 
 To enable it, set `MAP_EDITOR_ENABLED=true` in `.env`, then launch both processes with:
 
