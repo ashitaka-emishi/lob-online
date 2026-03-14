@@ -45,35 +45,46 @@ A hex map editor is available as a dev-only tool for digitizing `docs/reference/
 - **Enable:** set `MAP_EDITOR_ENABLED=true` in `.env`
 - **Launch:** `npm run dev:map-editor` (starts both server and client with the env flag set)
 
-## South Mountain Rule Overrides
+A `devops` agent and four skills automate the build/run/test cycle. See `docs/devops-agent-design.md` for the full spec.
 
-These SM-specific rules override base LoB v2.0:
+- `/build` — format, lint, and build the client
+- `/start` — launch server (port 3000) and Vite dev client (port 5173), logging to `logs/`
+- `/stop` — graceful shutdown with 10 s SIGKILL fallback
+- `/test` — run suite, snapshot results to `test-results/`, detect flaky tests, correlate server errors
 
-1. Trees add **+1** (not +3) to LOS height
-2. All army commanders rated **Normal**
-3. **No breastworks** allowed
-4. **Longstreet** acts as army commander — no initiative required
-5. At-start "Complex defense" orders replaced by **Move orders**
-6. **Pelham and Pleasonton** artillery replenish from any friendly ammo reserve
-7. **Ignore LoB rules 4.2 and 4.3** — use SM game-specific versions
-8. Use **SM Terrain Effects on Movement chart** (not standard LoB)
-9. Use **RSS Trail movement costs**
-10. **SM Special Slope rule (1.1)**: 50ft contour interval; vertical slopes impassable
+For rules questions, errata, and SM-specific overrides, use the `rules-lawyer` agent.
 
-## Errata (canonical corrections)
+A `project-manager` agent manages the SDLC: filing GitHub issues, assigning milestones, and
+auditing issue/HLD consistency. Use the `/issue-intake` skill to create a well-formed,
+AI-actionable GitHub issue. See `docs/project-manager-agent-design.md` for the full spec.
 
-- Chicago Dragoons → **2/K/9** (not 1/K/9)
-- E/2 US Artillery → rated **HvR** (not R)
-- 28 Ohio Regimental Loss Chart → **15 boxes** (not 14)
-- 5th Va Cavalry Brigade Loss Chart morale → **C** (not B)
+A `code-review` agent performs quality-gate reviews. See `docs/code-review-agent-design.md`
+for the full spec.
 
-## Rules Reference Guidance
+- `/review` — reviews the current PR for coding standards, test coverage, and common defects
+- `/assess` — performs a full codebase examination for duplicate code, dead code, and
+  refactoring opportunities
 
-When answering rules or data questions, cite which source document applies and flag:
+## Coding Standards
 
-- Whether an SM override or errata correction changes the base LoB answer
-- Whether the relevant data file is still missing or not yet built
-- Whether the answer comes from LOB_RULES, LOB_GAME_UPDATES, or SM_RULES (the source matters)
+- **Runtime:** Node.js 20; ES modules (`"type": "module"`) throughout — the only CommonJS file
+  is `ecosystem.config.cjs` (PM2 requires it)
+- **Formatting:** Prettier enforced — 100-char print width, 2-space indent, single quotes,
+  semicolons, trailing commas (ES5), LF line endings. Run `npm run format` to auto-fix.
+- **Linting:** ESLint 9 flat config. Node plugin for `server/`, Vue plugin for `client/`.
+  Prefix unused variables with `_` to suppress warnings. Import order:
+  builtin → external → internal (blank line between groups).
+- **Server:** Express, plain JavaScript (no TypeScript). Structured console prefixes:
+  `[server]`, `[route]`, `[socket]`, etc. `console.log` is permitted in server code.
+- **Client:** Vue 3 with `<script setup>` Composition API only — no Options API, no Vuex.
+  Pinia for state management. Vue Router for navigation. Scoped CSS in SFCs.
+- **Testing:** Vitest. Server tests run in the Node environment; client tests in jsdom.
+  Co-locate test files as `feature.test.js` next to source. 70% line coverage threshold
+  (enforced in CI). Run `npm run test:coverage` to check locally.
+- **Data validation:** Zod schemas in `server/src/schemas/` validate all JSON data files at
+  load time. No TypeScript — runtime validation is the type safety strategy.
+- **CI gates:** `npm run lint`, `npm run format:check`, and `npm run test` must all pass before
+  merge. The `/build` skill runs these three checks locally in order.
 
 ## Post-Plan Protocol
 

@@ -11,3 +11,4 @@ file is a `## HH:MM — Title` section. This file is an index only — do not ad
 | [2026-02-20.md](devlog/2026-02-20.md) | Map editor calibration tool; PR: docs resync and post-plan protocol                                                          |
 | [2026-02-21.md](devlog/2026-02-21.md) | HLD §10 rename; map editor design spec; PR: docs restructure and naming                                                      |
 | [2026-02-22.md](devlog/2026-02-22.md) | Hex data model gap fixes: elevation hexside, feature type arrays, new HexEntry fields; PR; LOS test panel for map editor; PR |
+| [2026-03-14.md](devlog/2026-03-14.md) | Rename business-analyst agent to rules-lawyer; devops agent and skills; project-manager agent design and implementation; code-review agent design and skills |
