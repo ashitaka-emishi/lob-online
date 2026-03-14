@@ -46,6 +46,12 @@ After writing or appending the entry, update `docs/devlog.md`:
   update its summary to reflect all entries for the day.
 - If no row exists yet for today, append a new row at the bottom with the filename linked.
 
+Then run Prettier on both files to ensure correct formatting:
+
+```
+npx prettier --write docs/devlog/YYYY-MM-DD.md docs/devlog.md
+```
+
 Commit the devlog file before creating the PR so it is included in the branch:
 
 ```
