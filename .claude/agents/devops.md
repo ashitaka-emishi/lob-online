@@ -50,3 +50,19 @@ After each operation, output a concise one-paragraph summary:
 - What was done
 - What succeeded or failed
 - Any follow-up action required (e.g. fix lint errors before retrying build)
+
+## What This Agent Does NOT Do
+
+- Modify source files — that is the coding agent's domain
+- Review code quality — use the `code-review` agent for that
+- Manage GitHub issues or PRs — use the `project-manager` agent for that
+
+## Key Files
+
+- `server/src/server.js` — Express server entry point (port 3000)
+- `client/` — Vite client (dev server port 5173)
+- `docs/agents/devops/design.md` — full design spec for this agent
+- `.claude/commands/build.md` — build skill
+- `.claude/commands/start.md` — start skill
+- `.claude/commands/stop.md` — stop skill
+- `.claude/commands/test.md` — test skill

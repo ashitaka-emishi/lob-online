@@ -45,7 +45,7 @@ A hex map editor is available as a dev-only tool for digitizing `docs/reference/
 - **Enable:** set `MAP_EDITOR_ENABLED=true` in `.env`
 - **Launch:** `npm run dev:map-editor` (starts both server and client with the env flag set)
 
-A `devops` agent and four skills automate the build/run/test cycle. See `docs/devops-agent-design.md` for the full spec.
+A `devops` agent and four skills automate the build/run/test cycle. See `docs/agents/devops/design.md` for the full spec.
 
 - `/build` — format, lint, and build the client
 - `/start` — launch server (port 3000) and Vite dev client (port 5173), logging to `logs/`
@@ -53,17 +53,25 @@ A `devops` agent and four skills automate the build/run/test cycle. See `docs/de
 - `/test` — run suite, snapshot results to `test-results/`, detect flaky tests, correlate server errors
 
 For rules questions, errata, and SM-specific overrides, use the `rules-lawyer` agent.
+See `docs/agents/rules-lawyer/design.md` for the full spec.
 
 A `project-manager` agent manages the SDLC: filing GitHub issues, assigning milestones, and
 auditing issue/HLD consistency. Use the `/issue-intake` skill to create a well-formed,
-AI-actionable GitHub issue. See `docs/project-manager-agent-design.md` for the full spec.
+AI-actionable GitHub issue. See `docs/agents/project-manager/design.md` for the full spec.
 
-A `code-review` agent performs quality-gate reviews. See `docs/code-review-agent-design.md`
+A `code-review` agent performs quality-gate reviews. See `docs/agents/code-review/design.md`
 for the full spec.
 
 - `/review` — reviews the current PR for coding standards, test coverage, and common defects
 - `/assess` — performs a full codebase examination for duplicate code, dead code, and
   refactoring opportunities
+
+All agent design documents and prompts live in `docs/agents/<name>/`. Three skills manage the
+agent layer:
+
+- `/sync-agents` — read-only drift check between `design.md` and `.claude/agents/*.md`
+- `/regenerate-agents` — rebuild agent files from `design.md` section 4
+- `/standardize-agents` — normalize prompt files and cascade changes through design and agent files
 
 ## Coding Standards
 

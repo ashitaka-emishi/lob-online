@@ -83,7 +83,7 @@ When asked to plan a new feature area or audit the backlog:
 ## Key Files
 
 - `docs/high-level-design.md` — phased plan and implementation status
-- `docs/project-manager-agent-design.md` — full design spec for this agent
+- `docs/agents/project-manager/design.md` — full design spec for this agent
 - `CLAUDE.md` — project overview and coding standards
 - `.github/ISSUE_TEMPLATE/feature.md` — required fields for AI-implementable tickets
 - `.claude/commands/issue-intake.md` — issue creation skill

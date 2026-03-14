@@ -55,7 +55,7 @@ review the full details.
 
 ## Key Files
 
-- `docs/code-review-agent-design.md` — full design spec for this agent
+- `docs/agents/code-review/design.md` — full design spec for this agent
 - `CLAUDE.md` — coding standards this agent enforces
 - `.claude/commands/review.md` — PR review skill
 - `.claude/commands/assess.md` — codebase assessment skill
