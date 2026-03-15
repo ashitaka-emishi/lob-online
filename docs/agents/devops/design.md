@@ -82,8 +82,11 @@ log files. Ensures a clean slate before launching.
    `node server/src/server.js >> logs/server/server.log 2>&1 &`
 5. Start Vite dev server in background:
    `npm run dev -w client >> logs/client/client.log 2>&1 &`
-6. Poll ports until listening or 15 s timeout (1 s intervals)
-7. Report confirmed PIDs and ports, or fail with the last 20 lines of the relevant log file
+6. **Write both PIDs to `.pids`** at the project root for reliable cleanup:
+   `echo "SERVER_PID=<pid> CLIENT_PID=<pid>" > .pids`
+7. Poll ports until listening or 15 s timeout (1 s intervals)
+8. On timeout failure: kill any already-started processes, remove `.pids`, report error with last
+   20 lines of the relevant log file
 
 ### `stop` — `.claude/commands/stop.md`
 
@@ -92,12 +95,14 @@ a 10-second timeout.
 
 **Steps:**
 
-1. Find PIDs on each port: `lsof -ti :3000`, `lsof -ti :5173`
-2. If no PIDs found on either port → report "nothing running" and exit
+1. Collect PIDs from two sources (union): read `.pids` if it exists; scan `lsof -ti :3000` and
+   `lsof -ti :5173`
+2. If no PIDs found from either source → report "nothing running", remove `.pids`, and exit
 3. Send SIGTERM to each PID found
 4. Poll every 1 s for up to 10 s waiting for the ports to clear
 5. For any PID still alive after 10 s → send SIGKILL
-6. Report what was stopped (port, PID, graceful or forced)
+6. Remove `.pids`: `rm -f .pids`
+7. Report what was stopped (port, PID, graceful or forced)
 
 ### `test` — `.claude/commands/test.md`
 
@@ -106,7 +111,8 @@ and correlate failures with server-side errors.
 
 **Steps:**
 
-1. Check whether the system is running on port 3000; invoke `start` if not
+1. Check whether the system is running on port 3000. **HUMAN CONTROL POINT:** if not running,
+   stop and ask the user to run `/start` first — do not start automatically
 2. Create log and result directories if absent: `mkdir -p logs/test test-results`
 3. Determine a timestamp: `date +%Y%m%d-%H%M%S` → `TIMESTAMP`
 4. Run tests with verbose output: `npm test -- --reporter=verbose > logs/test/test-$TIMESTAMP.log 2>&1`

@@ -25,19 +25,29 @@ mkdir -p logs/server logs/client
 
 ```
 node server/src/server.js >> logs/server/server.log 2>&1 &
+echo "SERVER_PID=$!"
 ```
 
-Record the PID printed by the shell.
+Record the PID.
 
 ## Step 4 — Start Vite dev client
 
 ```
 npm run dev -w client >> logs/client/client.log 2>&1 &
+echo "CLIENT_PID=$!"
 ```
 
 Record the PID.
 
-## Step 5 — Confirm both processes are listening
+## Step 5 — Persist PIDs
+
+Write both PIDs to `.pids` at the project root so the `stop` skill can find them reliably:
+
+```
+echo "SERVER_PID=<server_pid> CLIENT_PID=<client_pid>" > .pids
+```
+
+## Step 6 — Confirm both processes are listening
 
 Poll once per second for up to 15 seconds:
 
@@ -46,8 +56,10 @@ lsof -ti :3000   # server ready
 lsof -ti :5173   # client ready
 ```
 
-If a port is still not listening after 15 seconds, report failure and show the last 20
-lines of the relevant log file:
+If a port is still not listening after 15 seconds:
+1. Kill any processes that did start: `kill <pid>` for each PID recorded above
+2. Remove `.pids`: `rm -f .pids`
+3. Report failure and show the last 20 lines of the relevant log file:
 
 ```
 tail -20 logs/server/server.log

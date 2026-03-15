@@ -7,6 +7,12 @@ You are running the **issue-intake** skill for the lob-online project. Your job 
 requirement into a filed, milestone-assigned GitHub issue that an AI coding agent can implement
 without follow-up questions.
 
+**Two human control points are required before the issue is filed:**
+1. **Milestone approval** — if the proposed milestone does not yet exist in GitHub, pause and ask
+   the user to confirm before creating it.
+2. **Issue draft approval** — always show the full draft and wait for explicit user confirmation
+   before calling `gh issue create`.
+
 Work through these steps in order.
 
 ## Step 1 — Gather
@@ -54,17 +60,32 @@ include rules-lawyer consultation note if Step 3 was triggered
 **Milestone** — `v1.0 — MVP`, `v2.0 — Enhanced`, or `v3.0 — Extended`
 (match HLD phase: Phase 1 → MVP, Phase 2 → Enhanced, Phase 3 → Extended)
 
-## Step 5 — Show and confirm
+## Step 5 — Milestone check
 
-Display the full draft and ask the user to confirm or request changes. Do not file until
-confirmed.
+Verify the milestone exists in GitHub:
 
-## Step 6 — Create the issue
+```bash
+gh api /repos/{owner}/{repo}/milestones --jq '.[].title'
+```
+
+> **HUMAN CONTROL POINT** — If the milestone does not exist, **stop here** and report:
+> "The milestone `<name>` does not exist yet. Shall I create it, or assign a different milestone?"
+> Do not create milestones or proceed until the user explicitly approves.
+
+## Step 6 — Show draft and confirm
+
+Display the complete issue draft (all fields) and ask the user to confirm or request changes.
+
+> **HUMAN CONTROL POINT** — Do not call `gh issue create` until the user replies with an
+> explicit approval ("yes", "looks good", "confirm", or equivalent). If the user requests
+> edits, revise the draft and show it again before asking for confirmation.
+
+## Step 7 — Create the issue
 
 ```bash
 gh issue create --title "TITLE" --body "BODY" --milestone "MILESTONE"
 ```
 
-## Step 7 — Report
+## Step 8 — Report
 
 Output the issue URL.

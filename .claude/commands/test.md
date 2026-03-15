@@ -6,7 +6,7 @@ allowed-tools: Bash, Read, Glob
 Run the full test suite. Capture output, summarize results, detect flaky tests, and
 correlate any failures with server-side errors.
 
-## Step 1 — Ensure system is running
+## Step 1 — Check system state
 
 Check whether the server is up:
 
@@ -14,7 +14,9 @@ Check whether the server is up:
 lsof -ti :3000
 ```
 
-If not running, invoke the `start` skill before continuing.
+> **HUMAN CONTROL POINT** — If the server is not running, **stop here** and report:
+> "The server is not running on port 3000. Start it first with `/start`, then re-run `/test`."
+> Do not start the server automatically.
 
 ## Step 2 — Create output directories
 

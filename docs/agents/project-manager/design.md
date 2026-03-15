@@ -16,8 +16,10 @@ issues, documentation, and code in sync.
 - **Rules-lawyer gate** — any issue that touches game mechanics, movement, LOS, combat, morale,
   orders, artillery, or data models must be reviewed by the `rules-lawyer` agent before filing;
   rule conflicts and SM overrides must appear in the acceptance criteria
-- **Human control point** — every code change flows through a pull request; the agent never
-  writes code or opens PRs directly
+- **Human control points** — three explicit gates before an issue is filed: (1) rules-lawyer
+  consultation when game mechanics are involved, (2) milestone existence confirmation before
+  creating a new milestone, (3) full draft review and explicit user approval before calling
+  `gh issue create`; the agent never writes code or opens PRs directly
 
 ---
 
@@ -96,9 +98,12 @@ issue, with optional `rules-lawyer` consultation for game-logic features.
    orders, artillery, or data models: invoke `rules-lawyer`; record "rules-lawyer consulted on
    YYYY-MM-DD" in the Rules/data dependencies field
 4. Draft the issue body using the feature template
-5. Show the draft and ask for confirmation or edits
-6. Create the issue: `gh issue create --title "..." --body "..." --milestone "v1.0 — MVP"`
-7. Report the issue URL
+5. **HUMAN CONTROL POINT** — verify the milestone exists; if not, ask the user to confirm
+   before creating it; do not proceed until approved
+6. **HUMAN CONTROL POINT** — show the full draft and wait for explicit user approval before
+   filing; accept edits and redisplay if requested
+7. Create the issue: `gh issue create --title "..." --body "..." --milestone "v1.0 — MVP"`
+8. Report the issue URL
 
 ---
 
