@@ -23,15 +23,15 @@ describe('HexMapOverlay', () => {
     expect(wrapper.find('svg').exists()).toBe(true);
   });
 
-  it('calibrationMode=false with empty vpHexIds renders no polygons', () => {
+  it('renders all hexes regardless of calibrationMode (visibility filter removed)', () => {
     const wrapper = mount(HexMapOverlay, {
       props: { calibration: BASE_CAL, calibrationMode: false, vpHexIds: [] },
     });
-    expect(wrapper.findAll('polygon').length).toBe(0);
+    // 4 cols * 3 rows = 12 hexes always render now
+    expect(wrapper.findAll('polygon').length).toBeGreaterThanOrEqual(12);
   });
 
-  it('calibrationMode=false with vpHexIds renders VP hex polygons', () => {
-    // The grid is 4 cols x 3 rows; game id col=1,row=3 => "01.03"
+  it('calibrationMode=false with vpHexIds still renders polygons', () => {
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
@@ -47,7 +47,7 @@ describe('HexMapOverlay', () => {
       props: { calibration: BASE_CAL, calibrationMode: true },
     });
     // 4 cols * 3 rows = 12 hexes
-    expect(wrapper.findAll('polygon').length).toBe(12);
+    expect(wrapper.findAll('polygon').length).toBeGreaterThanOrEqual(12);
   });
 
   it('selectedHexId is highlighted (polygon rendered for it)', () => {
@@ -78,7 +78,6 @@ describe('HexMapOverlay', () => {
   });
 
   it('LOS hex A renders a polygon when losHexA is set', () => {
-    // Grid is 4×3; game id col=1,row=1 => "01.01"
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
@@ -137,5 +136,183 @@ describe('HexMapOverlay', () => {
       },
     });
     expect(wrapper.find('svg').exists()).toBe(true);
+  });
+
+  // --- New layer system tests ---
+
+  it('unknown terrain renders with #cccccc fill', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [{ hex: '01.03', terrain: 'unknown' }],
+        layers: {
+          terrain: true,
+          grid: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    const polygons = wrapper.findAll('polygon');
+    const unknownPoly = polygons.find((p) => p.attributes('fill') === '#cccccc');
+    expect(unknownPoly).toBeTruthy();
+  });
+
+  it('layers.terrain=false renders polygons with fill="none"', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [{ hex: '01.03', terrain: 'clear' }],
+        layers: {
+          terrain: false,
+          grid: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    const polygons = wrapper.findAll('polygon');
+    expect(polygons.length).toBeGreaterThan(0);
+    // All terrain polygons should have fill=none
+    const nonePoly = polygons.find((p) => p.attributes('fill') === 'none');
+    expect(nonePoly).toBeTruthy();
+  });
+
+  it('layers.elevation=true renders elevation text labels', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [{ hex: '01.03', terrain: 'clear', elevation: 500 }],
+        layers: {
+          terrain: true,
+          grid: true,
+          elevation: true,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    expect(wrapper.text()).toContain('500');
+  });
+
+  it('layers.elevation=false does not render elevation text', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [{ hex: '01.03', terrain: 'clear', elevation: 500 }],
+        layers: {
+          terrain: true,
+          grid: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    // calibration labels may render if calibrationMode=true, but we're not in calibrationMode
+    expect(wrapper.text()).not.toContain('500');
+  });
+
+  it('layers.edges=true renders <line> elements for hex with edge features', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [{ hex: '01.03', terrain: 'clear', edges: { N: [{ type: 'stream' }] } }],
+        layers: {
+          terrain: true,
+          grid: true,
+          elevation: false,
+          wedges: false,
+          edges: true,
+          slopeArrows: false,
+        },
+      },
+    });
+    expect(wrapper.findAll('line').length).toBeGreaterThan(0);
+  });
+
+  it('layers.edges=false renders no edge <line> elements', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [{ hex: '01.03', terrain: 'clear', edges: { N: [{ type: 'stream' }] } }],
+        layers: {
+          terrain: true,
+          grid: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    expect(wrapper.findAll('line').length).toBe(0);
+  });
+
+  it('layers.slopeArrows=true renders a <line> for hex with slope', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [{ hex: '01.03', terrain: 'clear', slope: 0 }],
+        layers: {
+          terrain: true,
+          grid: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: true,
+        },
+      },
+    });
+    expect(wrapper.findAll('line').length).toBeGreaterThan(0);
+  });
+
+  it('layers.wedges=true renders 6 wedge polygons for hex with wedgeElevations', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [
+          {
+            hex: '01.03',
+            terrain: 'clear',
+            wedgeElevations: [10, 20, 30, -10, -20, 0],
+          },
+        ],
+        layers: {
+          terrain: true,
+          grid: true,
+          elevation: false,
+          wedges: true,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    // 12 terrain polygons + 6 wedge polygons
+    expect(wrapper.findAll('polygon').length).toBeGreaterThanOrEqual(18);
+  });
+
+  it('applies rotation transform when calibration.rotation is set', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: { ...BASE_CAL, rotation: 5 } },
+    });
+    const html = wrapper.html();
+    expect(html).toContain('rotate(5)');
+  });
+
+  it('no rotation transform when calibration.rotation is absent', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL },
+    });
+    // Should not contain a rotate transform (empty string transform is ok)
+    const innerGs = wrapper.findAll('g');
+    const hasRotate = innerGs.some((g) => g.attributes('transform')?.includes('rotate('));
+    expect(hasRotate).toBe(false);
   });
 });

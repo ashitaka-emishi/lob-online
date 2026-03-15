@@ -60,6 +60,8 @@ export const MapSchema = z.object({
       strokeWidth: z.number().positive(),
       orientation: z.enum(['flat', 'pointy']),
       evenColUp: z.boolean(),
+      rotation: z.number().min(-15).max(15).optional(),
+      locked: z.boolean().optional(),
       _note: z.string().optional(),
     })
     .optional(),

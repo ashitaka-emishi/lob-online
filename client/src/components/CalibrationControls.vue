@@ -24,6 +24,10 @@ function toggleOrientation() {
 function toggleEvenColUp() {
   emit('calibration-change', { ...props.calibration, evenColUp: !props.calibration.evenColUp });
 }
+
+function toggleLocked() {
+  emit('calibration-change', { ...props.calibration, locked: !props.calibration.locked });
+}
 </script>
 
 <template>
@@ -35,6 +39,7 @@ function toggleEvenColUp() {
         step="1"
         min="1"
         :value="calibration.cols"
+        :disabled="calibration.locked ?? false"
         @input="update('cols', $event.target.value)"
       />
     </label>
@@ -45,6 +50,7 @@ function toggleEvenColUp() {
         step="1"
         min="1"
         :value="calibration.rows"
+        :disabled="calibration.locked ?? false"
         @input="update('rows', $event.target.value)"
       />
     </label>
@@ -54,6 +60,7 @@ function toggleEvenColUp() {
         type="number"
         step="1"
         :value="calibration.dx"
+        :disabled="calibration.locked ?? false"
         @input="update('dx', $event.target.value)"
       />
     </label>
@@ -63,6 +70,7 @@ function toggleEvenColUp() {
         type="number"
         step="1"
         :value="calibration.dy"
+        :disabled="calibration.locked ?? false"
         @input="update('dy', $event.target.value)"
       />
     </label>
@@ -74,6 +82,7 @@ function toggleEvenColUp() {
         min="5"
         max="100"
         :value="calibration.hexWidth"
+        :disabled="calibration.locked ?? false"
         @input="update('hexWidth', $event.target.value)"
       />
     </label>
@@ -85,6 +94,7 @@ function toggleEvenColUp() {
         min="5"
         max="100"
         :value="calibration.hexHeight"
+        :disabled="calibration.locked ?? false"
         @input="update('hexHeight', $event.target.value)"
       />
     </label>
@@ -96,6 +106,7 @@ function toggleEvenColUp() {
         min="0.1"
         max="5"
         :value="calibration.imageScale"
+        :disabled="calibration.locked ?? false"
         @input="update('imageScale', $event.target.value)"
       />
     </label>
@@ -107,9 +118,25 @@ function toggleEvenColUp() {
         min="0.1"
         max="5"
         :value="calibration.strokeWidth"
+        :disabled="calibration.locked ?? false"
         @input="update('strokeWidth', $event.target.value)"
       />
     </label>
+    <label>
+      Rotation (°)
+      <input
+        type="number"
+        step="0.5"
+        min="-15"
+        max="15"
+        :value="calibration.rotation ?? 0"
+        :disabled="calibration.locked ?? false"
+        @input="update('rotation', $event.target.value)"
+      />
+    </label>
+    <button :class="{ active: calibration.locked }" @click="toggleLocked">
+      {{ calibration.locked ? 'Locked 🔒' : 'Lock' }}
+    </button>
     <button @click="toggleOrientation">
       {{ calibration.orientation === 'flat' ? 'Flat-top' : 'Pointy-top' }} ⇌
     </button>

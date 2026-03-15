@@ -134,6 +134,77 @@ describe('MapSchema — valid documents', () => {
   });
 });
 
+describe('MapSchema — gridSpec rotation and locked', () => {
+  const BASE_GRIDSPEC = {
+    cols: 64,
+    rows: 35,
+    dx: 0,
+    dy: 0,
+    hexWidth: 35,
+    hexHeight: 35,
+    imageScale: 1,
+    strokeWidth: 0.5,
+    orientation: 'flat',
+    evenColUp: false,
+  };
+
+  it('accepts gridSpec with rotation: 5', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: { ...BASE_GRIDSPEC, rotation: 5 },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts gridSpec with locked: true', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: { ...BASE_GRIDSPEC, locked: true },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts gridSpec with rotation: -15 (lower boundary)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: { ...BASE_GRIDSPEC, rotation: -15 },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts gridSpec with rotation: 15 (upper boundary)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: { ...BASE_GRIDSPEC, rotation: 15 },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts gridSpec with rotation: 0', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: { ...BASE_GRIDSPEC, rotation: 0 },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects rotation > 15', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: { ...BASE_GRIDSPEC, rotation: 20 },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects rotation < -15', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: { ...BASE_GRIDSPEC, rotation: -20 },
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
 describe('MapSchema — invalid documents', () => {
   it('rejects wrong layout value', () => {
     const result = MapSchema.safeParse({ ...MINIMAL_VALID, layout: 'flat-top' });
