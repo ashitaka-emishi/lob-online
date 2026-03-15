@@ -1,10 +1,14 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import HexMapOverlay from '../../components/HexMapOverlay.vue';
 import HexEditPanel from '../../components/HexEditPanel.vue';
 import CalibrationControls from '../../components/CalibrationControls.vue';
+import LosTestPanel from '../../components/LosTestPanel.vue';
+import EditorToolbar from '../../components/EditorToolbar.vue';
+import { adjacentHexId } from '../../utils/hexGeometry.js';
 
 const STORAGE_KEY = 'lob-map-editor-calibration-v4';
+const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-v1';
 const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
 
 // ── Calibration ───────────────────────────────────────────────────────────────
@@ -35,15 +39,69 @@ function loadCalibration() {
 const calibration = ref(loadCalibration());
 const calibrationMode = ref(false);
 const showExportOverlay = ref(false);
-const calibrationOpen = ref(true);
-const hexEditOpen = ref(true);
+
+// Accordion: only one panel open at a time
+const openPanel = ref('hexEdit'); // 'calibration' | 'hexEdit' | 'losTest' | null
+
+function togglePanel(name) {
+  openPanel.value = openPanel.value === name ? null : name;
+}
+
+// ── Editor modes and layers ───────────────────────────────────────────────────
+
+const editorMode = ref('select');
+const paintTerrain = ref('clear');
+const paintEdgeFeature = ref(null);
+const selectedHexIds = ref(new Set());
+const selectedEdge = ref(null);
+const layers = ref({
+  grid: true,
+  terrain: true,
+  elevation: false,
+  wedges: false,
+  edges: true,
+  slopeArrows: false,
+});
+const draftBannerVisible = ref(false);
+
+// ── Export ────────────────────────────────────────────────────────────────────
 
 const exportData = computed(() =>
   mapData.value ? { ...mapData.value, gridSpec: calibration.value } : null
 );
 
+function stripPrivateFields(obj) {
+  if (Array.isArray(obj)) return obj.map(stripPrivateFields);
+  if (obj && typeof obj === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (!k.startsWith('_')) out[k] = stripPrivateFields(v);
+    }
+    return out;
+  }
+  return obj;
+}
+
+const computedEngineExport = computed(() => {
+  if (!exportData.value) return null;
+  return stripPrivateFields(exportData.value);
+});
+
 function copyMapData() {
-  navigator.clipboard.writeText(JSON.stringify(exportData.value, null, 2));
+  navigator.clipboard.writeText(JSON.stringify(computedEngineExport.value, null, 2));
+}
+
+function downloadExport() {
+  if (!computedEngineExport.value) return;
+  const blob = new Blob([JSON.stringify(computedEngineExport.value, null, 2)], {
+    type: 'application/json',
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'map-export.json';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function onCalibrationChange(val) {
@@ -76,11 +134,56 @@ const fetchError = ref('');
 const unsaved = ref(false);
 const saveStatus = ref(''); // '' | 'saving' | 'saved' | 'error'
 
+function saveMapDraft() {
+  if (!mapData.value) return;
+  try {
+    const draft = { ...mapData.value, _savedAt: Date.now() };
+    localStorage.setItem(MAP_DRAFT_KEY, JSON.stringify(draft));
+  } catch (_) {
+    /* ignore storage errors */
+  }
+}
+
+function restoreDraft() {
+  try {
+    const draftStr = localStorage.getItem(MAP_DRAFT_KEY);
+    if (!draftStr) return;
+    const draft = JSON.parse(draftStr);
+    delete draft._savedAt;
+    mapData.value = draft;
+    draftBannerVisible.value = false;
+  } catch (_) {
+    /* ignore */
+  }
+}
+
+function dismissDraft() {
+  localStorage.removeItem(MAP_DRAFT_KEY);
+  draftBannerVisible.value = false;
+}
+
 async function fetchMapData() {
   try {
     const res = await fetch('/api/tools/map-editor/data');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    mapData.value = await res.json();
+    const serverData = await res.json();
+
+    // Check for a local draft newer than server data
+    try {
+      const draftStr = localStorage.getItem(MAP_DRAFT_KEY);
+      if (draftStr) {
+        const draft = JSON.parse(draftStr);
+        if ((draft._savedAt ?? 0) > (serverData._savedAt ?? 0)) {
+          draftBannerVisible.value = true;
+        } else {
+          localStorage.removeItem(MAP_DRAFT_KEY);
+        }
+      }
+    } catch (_) {
+      /* ignore */
+    }
+
+    mapData.value = serverData;
     if (mapData.value.gridSpec) {
       calibration.value = { ...DEFAULT_CALIBRATION, ...mapData.value.gridSpec };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
@@ -90,13 +193,23 @@ async function fetchMapData() {
   }
 }
 
-onMounted(fetchMapData);
-
 // ── VP hex IDs ────────────────────────────────────────────────────────────────
 
 const vpHexIds = computed(() => {
   if (!mapData.value) return [];
   return (mapData.value.vpHexes ?? []).map((v) => v.hex);
+});
+
+// ── Terrain + edge feature type lists ────────────────────────────────────────
+
+const terrainTypes = computed(() => {
+  if (mapData.value?.terrainTypes) return mapData.value.terrainTypes;
+  return ['unknown', 'clear', 'woods', 'slopingGround', 'woodedSloping', 'orchard', 'marsh'];
+});
+
+const edgeFeatureTypes = computed(() => {
+  if (mapData.value?.edgeFeatureTypes) return mapData.value.edgeFeatureTypes;
+  return ['road', 'stream', 'stoneWall', 'slope', 'extremeSlope', 'verticalSlope'];
 });
 
 // ── Hex selection ─────────────────────────────────────────────────────────────
@@ -108,9 +221,120 @@ const selectedHex = computed(() => {
   return mapData.value.hexes.find((h) => h.hex === selectedHexId.value) ?? null;
 });
 
-function onHexClick(hexId) {
-  selectedHexId.value = hexId;
-  // If hex not in data yet, don't create it — user must edit to create
+// ── LOS pick mode ─────────────────────────────────────────────────────────────
+
+const losHexA = ref(null);
+const losHexB = ref(null);
+const losSelectingHex = ref(null); // 'A' | 'B' | null
+const losResult = ref(null);
+
+function onLosPickStart(side) {
+  losSelectingHex.value = side;
+}
+function onLosPickCancel() {
+  losSelectingHex.value = null;
+}
+function onLosSetHexA(id) {
+  losHexA.value = id;
+}
+function onLosSetHexB(id) {
+  losHexB.value = id;
+}
+function onLosResult(r) {
+  losResult.value = r;
+}
+
+const losPathHexes = computed(() => {
+  if (!losResult.value) return [];
+  return losResult.value.steps.filter((s) => s.role === 'intermediate').map((s) => s.hexId);
+});
+
+const losBlockedHex = computed(() => {
+  if (!losResult.value) return null;
+  return losResult.value.steps.find((s) => s.blocked)?.hexId ?? null;
+});
+
+// ── Hex interaction ───────────────────────────────────────────────────────────
+
+const CONTOUR_INTERVAL = 50;
+
+const OPPOSITE_DIR = { N: 'S', S: 'N', NE: 'SW', SW: 'NE', NW: 'SE', SE: 'NW' };
+
+function onHexClick(hexId, nativeEvent) {
+  if (losSelectingHex.value === 'A') {
+    losHexA.value = hexId;
+    losSelectingHex.value = null;
+    openPanel.value = 'losTest';
+  } else if (losSelectingHex.value === 'B') {
+    losHexB.value = hexId;
+    losSelectingHex.value = null;
+    openPanel.value = 'losTest';
+  } else if (editorMode.value === 'elevation') {
+    const existing = mapData.value?.hexes.find((h) => h.hex === hexId);
+    const currentElev = existing?.elevation ?? 0;
+    const delta = nativeEvent?.shiftKey ? -CONTOUR_INTERVAL : CONTOUR_INTERVAL;
+    const updatedHex = existing
+      ? { ...existing, elevation: currentElev + delta }
+      : { hex: hexId, terrain: 'unknown', elevation: currentElev + delta };
+    onHexUpdate(updatedHex);
+  } else if (editorMode.value === 'select') {
+    if (nativeEvent?.shiftKey) {
+      const ids = new Set(selectedHexIds.value);
+      if (ids.has(hexId)) ids.delete(hexId);
+      else ids.add(hexId);
+      selectedHexIds.value = ids;
+    } else {
+      selectedHexId.value = hexId;
+    }
+  }
+}
+
+function onHexMouseenter(hexId) {
+  if (editorMode.value === 'paint') {
+    const existing = mapData.value?.hexes.find((h) => h.hex === hexId);
+    const updatedHex = existing
+      ? { ...existing, terrain: paintTerrain.value }
+      : { hex: hexId, terrain: paintTerrain.value };
+    onHexUpdate(updatedHex);
+  }
+}
+
+function onEdgeClick({ hexId, dir }) {
+  if (!mapData.value) return;
+  const featureType = paintEdgeFeature.value ?? 'road';
+  selectedEdge.value = { hexId, dir };
+
+  function toggleEdgeFeature(hex, d, ft) {
+    const edges = hex.edges ? { ...hex.edges } : {};
+    const features = edges[d] ? [...edges[d]] : [];
+    const existingIdx = features.findIndex((f) => f.type === ft);
+    if (existingIdx >= 0) {
+      features.splice(existingIdx, 1);
+    } else {
+      features.push({ type: ft });
+    }
+    if (features.length) edges[d] = features;
+    else delete edges[d];
+    return { ...hex, edges };
+  }
+
+  // Update this hex
+  const thisHex = mapData.value.hexes.find((h) => h.hex === hexId) ?? {
+    hex: hexId,
+    terrain: 'unknown',
+  };
+  onHexUpdate(toggleEdgeFeature(thisHex, dir, featureType));
+
+  // Mirror on adjacent hex
+  const adjId = adjacentHexId(hexId, dir, calibration.value);
+  if (adjId) {
+    const oppDir = OPPOSITE_DIR[dir];
+    const adjHex = mapData.value.hexes.find((h) => h.hex === adjId) ?? {
+      hex: adjId,
+      terrain: 'unknown',
+    };
+    onHexUpdate(toggleEdgeFeature(adjHex, oppDir, featureType));
+  }
 }
 
 function onHexUpdate(updatedHex) {
@@ -122,6 +346,16 @@ function onHexUpdate(updatedHex) {
     mapData.value.hexes.push(updatedHex);
   }
   unsaved.value = true;
+  saveMapDraft();
+}
+
+// ── Keyboard listener ─────────────────────────────────────────────────────────
+
+function onKeyDown(e) {
+  if (e.key === 'Escape') {
+    selectedHexIds.value = new Set();
+    losSelectingHex.value = null;
+  }
 }
 
 // ── Save ──────────────────────────────────────────────────────────────────────
@@ -131,9 +365,8 @@ const saveErrors = ref([]);
 async function save() {
   saveStatus.value = 'saving';
   saveErrors.value = [];
-  // Always persist calibration to localStorage
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
   if (!mapData.value) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
     saveStatus.value = 'saved';
     setTimeout(() => {
       saveStatus.value = '';
@@ -148,8 +381,10 @@ async function save() {
     });
     const body = await res.json();
     if (res.ok) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
       unsaved.value = false;
       saveStatus.value = 'saved';
+      localStorage.removeItem(MAP_DRAFT_KEY);
       setTimeout(() => {
         saveStatus.value = '';
       }, 2000);
@@ -162,6 +397,15 @@ async function save() {
     saveErrors.value = [{ message: err.message }];
   }
 }
+
+onMounted(() => {
+  window.addEventListener('keydown', onKeyDown);
+  fetchMapData();
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKeyDown);
+});
 </script>
 
 <template>
@@ -181,6 +425,29 @@ async function save() {
         {{ saveStatus === 'saving' ? 'Saving…' : 'Save' }}
       </button>
     </header>
+
+    <!-- Draft restore banner -->
+    <div v-if="draftBannerVisible" class="draft-banner">
+      <span>Unsaved draft found — restore it?</span>
+      <button @click="restoreDraft">Restore</button>
+      <button @click="dismissDraft">Dismiss</button>
+    </div>
+
+    <!-- Editor toolbar -->
+    <EditorToolbar
+      :editor-mode="editorMode"
+      :paint-terrain="paintTerrain"
+      :paint-edge-feature="paintEdgeFeature"
+      :layers="layers"
+      :terrain-types="terrainTypes"
+      :edge-feature-types="edgeFeatureTypes"
+      :has-map-data="!!mapData"
+      @mode-change="editorMode = $event"
+      @terrain-change="paintTerrain = $event"
+      @edge-feature-change="paintEdgeFeature = $event"
+      @layer-change="layers = $event"
+      @export-click="showExportOverlay = true"
+    />
 
     <!-- Load / validation errors -->
     <div v-if="fetchError" class="errors">
@@ -219,7 +486,16 @@ async function save() {
             :calibration-mode="calibrationMode"
             :image-width="imgNaturalWidth"
             :image-height="imgNaturalHeight"
+            :los-hex-a="losHexA"
+            :los-hex-b="losHexB"
+            :los-path-hexes="losPathHexes"
+            :los-blocked-hex="losBlockedHex"
+            :layers="layers"
+            :editor-mode="editorMode"
+            :paint-terrain="paintTerrain"
             @hex-click="onHexClick"
+            @hex-mouseenter="onHexMouseenter"
+            @edge-click="onEdgeClick"
           />
         </div>
       </div>
@@ -228,11 +504,11 @@ async function save() {
       <div class="panel-pane">
         <!-- Grid Calibration -->
         <div class="accordion-section">
-          <button class="accordion-header" @click="calibrationOpen = !calibrationOpen">
+          <button class="accordion-header" @click="togglePanel('calibration')">
             <span>Grid Calibration</span>
-            <span class="accordion-chevron">{{ calibrationOpen ? '▾' : '▸' }}</span>
+            <span class="accordion-chevron">{{ openPanel === 'calibration' ? '▾' : '▸' }}</span>
           </button>
-          <div v-if="calibrationOpen">
+          <div v-if="openPanel === 'calibration'">
             <CalibrationControls
               :calibration="calibration"
               :calibration-mode="calibrationMode"
@@ -242,16 +518,45 @@ async function save() {
           </div>
         </div>
         <!-- Hex Edit -->
-        <div class="accordion-section accordion-hex">
-          <button class="accordion-header" @click="hexEditOpen = !hexEditOpen">
+        <div
+          class="accordion-section accordion-hex"
+          :class="{ 'accordion-flex': openPanel === 'hexEdit' }"
+        >
+          <button class="accordion-header" @click="togglePanel('hexEdit')">
             <span>{{ selectedHexId ? `Hex ${selectedHexId}` : 'Hex Edit' }}</span>
-            <span class="accordion-chevron">{{ hexEditOpen ? '▾' : '▸' }}</span>
+            <span class="accordion-chevron">{{ openPanel === 'hexEdit' ? '▾' : '▸' }}</span>
           </button>
-          <div v-if="hexEditOpen" class="accordion-hex-content">
+          <div v-if="openPanel === 'hexEdit'" class="accordion-hex-content">
             <HexEditPanel
               :hex="selectedHex"
               :selected-hex-id="selectedHexId"
+              :hex-feature-types="mapData?.hexFeatureTypes ?? []"
+              :edge-feature-types="edgeFeatureTypes"
               @hex-update="onHexUpdate"
+            />
+          </div>
+        </div>
+        <!-- LOS Test -->
+        <div
+          class="accordion-section accordion-hex"
+          :class="{ 'accordion-flex': openPanel === 'losTest' }"
+        >
+          <button class="accordion-header" @click="togglePanel('losTest')">
+            <span>LOS Test</span>
+            <span class="accordion-chevron">{{ openPanel === 'losTest' ? '▾' : '▸' }}</span>
+          </button>
+          <div v-if="openPanel === 'losTest'" class="accordion-hex-content">
+            <LosTestPanel
+              :hex-a="losHexA"
+              :hex-b="losHexB"
+              :map-data="mapData"
+              :grid-spec="calibration"
+              :selecting-hex="losSelectingHex"
+              @pick-start="onLosPickStart"
+              @pick-cancel="onLosPickCancel"
+              @set-hex-a="onLosSetHexA"
+              @set-hex-b="onLosSetHexB"
+              @los-result="onLosResult"
             />
           </div>
         </div>
@@ -263,9 +568,10 @@ async function save() {
         <div class="export-header">
           <span>Map Data JSON</span>
           <button @click="copyMapData">Copy</button>
+          <button @click="downloadExport">Download</button>
           <button @click="showExportOverlay = false">✕</button>
         </div>
-        <pre class="export-pre">{{ JSON.stringify(exportData, null, 2) }}</pre>
+        <pre class="export-pre">{{ JSON.stringify(computedEngineExport, null, 2) }}</pre>
       </div>
     </div>
   </div>
@@ -350,6 +656,27 @@ async function save() {
   cursor: default;
 }
 
+.draft-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 1rem;
+  background: #3a3000;
+  border-bottom: 1px solid #665500;
+  color: #e8c840;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.draft-banner button {
+  padding: 0.2rem 0.6rem;
+  background: #554400;
+  border: 1px solid #887722;
+  color: #e8c840;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
 .errors {
   padding: 0.4rem 1rem;
   background: #3a1a1a;
@@ -396,11 +723,14 @@ async function save() {
 }
 
 .accordion-hex {
-  flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
+}
+
+.accordion-flex {
+  flex: 1;
 }
 
 .accordion-hex-content {

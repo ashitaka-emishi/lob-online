@@ -23,9 +23,11 @@
 
 ---
 
-> **Implementation Status (as of 2026-02-20)**
+> **Implementation Status (as of 2026-03-15)**
 >
-> **Completed:** tech stack selection, server scaffold (Express + Socket.io), data models (all four JSON files), Zod validation schemas, map editor dev tool, Vitest test suites (server + client), ESLint/Prettier configuration, GitHub Actions CI pipeline.
+> **Completed:** tech stack selection, server scaffold (Express + Socket.io), data models (all four JSON files), Zod validation schemas, Vitest test suites (server + client), ESLint/Prettier configuration, GitHub Actions CI pipeline, map editor dev tool (terrain paint, elevation, edge features, slope, wedge elevations, layer system, LOS test panel, localStorage autosave, engine export).
+>
+> **In progress:** terrain data digitization (ongoing field entry for South Mountain map hexes).
 >
 > **Planned:** Discord OAuth auth, game rules engine, DigitalOcean Spaces persistence, multiplayer coordination, frontend game UI.
 >

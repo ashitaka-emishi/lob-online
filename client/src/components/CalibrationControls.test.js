@@ -28,7 +28,8 @@ describe('CalibrationControls', () => {
     const wrapper = mount(CalibrationControls, {
       props: { calibration: { ...BASE_CAL, orientation: 'pointy' } },
     });
-    const btn = wrapper.findAll('button')[0];
+    // Button order: [0]=Lock, [1]=Orientation, [2]=Labels, [3]=EvenColUp
+    const btn = wrapper.findAll('button')[1];
     await btn.trigger('click');
     const emitted = wrapper.emitted('calibration-change');
     expect(emitted).toBeTruthy();
@@ -39,7 +40,7 @@ describe('CalibrationControls', () => {
     const wrapper = mount(CalibrationControls, {
       props: { calibration: { ...BASE_CAL, orientation: 'flat' } },
     });
-    const btn = wrapper.findAll('button')[0];
+    const btn = wrapper.findAll('button')[1];
     await btn.trigger('click');
     const emitted = wrapper.emitted('calibration-change');
     expect(emitted[0][0].orientation).toBe('pointy');
@@ -49,8 +50,8 @@ describe('CalibrationControls', () => {
     const wrapper = mount(CalibrationControls, {
       props: { calibration: { ...BASE_CAL, evenColUp: false } },
     });
-    // Even Col ↑ is the 3rd button
-    const btn = wrapper.findAll('button')[2];
+    // Even Col ↑ is the 4th button (after Lock, Orientation, Labels)
+    const btn = wrapper.findAll('button')[3];
     await btn.trigger('click');
     const emitted = wrapper.emitted('calibration-change');
     expect(emitted).toBeTruthy();
@@ -75,8 +76,80 @@ describe('CalibrationControls', () => {
     const wrapper = mount(CalibrationControls, {
       props: { calibration: BASE_CAL, calibrationMode: true },
     });
-    // 2nd button is toggle-calibration-mode
-    const btn = wrapper.findAll('button')[1];
+    // 2nd button is toggle-calibration-mode (after lock button)
+    const btn = wrapper.findAll('button')[2];
     expect(btn.classes()).toContain('active');
+  });
+
+  it('renders rotation input', () => {
+    const wrapper = mount(CalibrationControls, {
+      props: { calibration: BASE_CAL },
+    });
+    const inputs = wrapper.findAll('input[type="number"]');
+    // rotation is 9th input (after cols, rows, dx, dy, hexWidth, hexHeight, imageScale, strokeWidth)
+    expect(inputs.length).toBeGreaterThanOrEqual(9);
+  });
+
+  it('rotation input emits calibration-change with updated rotation', async () => {
+    const wrapper = mount(CalibrationControls, {
+      props: { calibration: { ...BASE_CAL, rotation: 0 } },
+    });
+    const inputs = wrapper.findAll('input[type="number"]');
+    const rotationInput = inputs[8];
+    await rotationInput.setValue('5');
+    await rotationInput.trigger('input');
+    const emitted = wrapper.emitted('calibration-change');
+    expect(emitted).toBeTruthy();
+    expect(emitted[emitted.length - 1][0].rotation).toBe(5);
+  });
+
+  it('lock button renders', () => {
+    const wrapper = mount(CalibrationControls, {
+      props: { calibration: BASE_CAL },
+    });
+    // Lock is first button
+    const lockBtn = wrapper.findAll('button')[0];
+    expect(lockBtn.exists()).toBe(true);
+    expect(lockBtn.text()).toContain('Lock');
+  });
+
+  it('lock toggle emits locked: true when currently unlocked', async () => {
+    const wrapper = mount(CalibrationControls, {
+      props: { calibration: { ...BASE_CAL, locked: false } },
+    });
+    const lockBtn = wrapper.findAll('button')[0];
+    await lockBtn.trigger('click');
+    const emitted = wrapper.emitted('calibration-change');
+    expect(emitted).toBeTruthy();
+    expect(emitted[0][0].locked).toBe(true);
+  });
+
+  it('lock toggle emits locked: false when currently locked', async () => {
+    const wrapper = mount(CalibrationControls, {
+      props: { calibration: { ...BASE_CAL, locked: true } },
+    });
+    const lockBtn = wrapper.findAll('button')[0];
+    await lockBtn.trigger('click');
+    const emitted = wrapper.emitted('calibration-change');
+    expect(emitted).toBeTruthy();
+    expect(emitted[0][0].locked).toBe(false);
+  });
+
+  it('numeric inputs are disabled when calibration.locked is true', () => {
+    const wrapper = mount(CalibrationControls, {
+      props: { calibration: { ...BASE_CAL, locked: true } },
+    });
+    const inputs = wrapper.findAll('input[type="number"]');
+    for (const input of inputs) {
+      expect(input.element.disabled).toBe(true);
+    }
+  });
+
+  it('lock button is not disabled when calibration.locked is true', () => {
+    const wrapper = mount(CalibrationControls, {
+      props: { calibration: { ...BASE_CAL, locked: true } },
+    });
+    const lockBtn = wrapper.findAll('button')[0];
+    expect(lockBtn.element.disabled).toBe(false);
   });
 });

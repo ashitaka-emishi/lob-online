@@ -57,6 +57,12 @@ After writing or appending the entry, update `docs/devlog.md`:
   update its summary to reflect all entries for the day (e.g., "Map design spec; docs reorg").
 - If no row exists yet for today, append a new row at the bottom with the filename linked.
 
+Then run Prettier on both files to ensure correct formatting:
+
+```
+npx prettier --write docs/devlog/YYYY-MM-DD.md docs/devlog.md
+```
+
 Write the entry now before moving to Task 2.
 
 ## Task 2 — CLAUDE.md Review

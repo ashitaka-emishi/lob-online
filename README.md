@@ -2,6 +2,18 @@
 
 An online implementation of the _Line of Battle v2.0_ wargame system (Multi-Man Publishing). The first game is **South Mountain** (RSS #4).
 
+## Repository Guide
+
+| Document                                               | Description                                                                        |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| [CONTRIBUTING.md](CONTRIBUTING.md)                     | Contribution workflow, coding standards, branch/PR conventions, and devlog process |
+| [.github/README.md](.github/README.md)                 | GitHub issue templates, pull request template, and CI/CD workflow definitions      |
+| [.claude/README.md](.claude/README.md)                 | Claude Code agent definitions and slash-command skills for development automation  |
+| [docs/high-level-design.md](docs/high-level-design.md) | Full system architecture, phased development plan, and implementation status       |
+| [docs/devlog.md](docs/devlog.md)                       | Chronological index of development session notes                                   |
+
+---
+
 ## Stack
 
 | Layer   | Technology                                        |
@@ -51,6 +63,8 @@ npm run dev:client
 
 Open `http://localhost:5173`. The Vite dev server proxies `/api`, `/auth`, and `/socket.io` to the Express server.
 
+Alternatively, use the Claude Code devops skills for a managed start/stop experience — see [.claude/README.md](.claude/README.md).
+
 ## Developer Tools — Map Editor
 
 The map editor is a dev-only tool for digitizing `docs/reference/sm-map.jpg` into `data/scenarios/south-mountain/map.json`. It is **not** part of the game itself.
@@ -61,11 +75,14 @@ To enable it, set `MAP_EDITOR_ENABLED=true` in `.env`, then launch both processe
 npm run dev:map-editor
 ```
 
-Open `http://localhost:5173/tools/map-editor`. The editor lets you:
+Open `http://localhost:5173/tools/map-editor`. The editor supports:
 
-- Calibrate the hex grid over the map image
-- Click hexes to edit terrain type, hexside data, and VP flags
-- Save edits back to `map.json` via `PUT /api/tools/map-editor/data`
+- Hex grid calibration over the map image (dx, dy, scale, rotation, lock)
+- Four interaction modes: select, paint terrain, set elevation, draw edge features
+- Per-hex editing: terrain, elevation, slope direction, sub-hex wedge elevations, hex features, and edge features (road, stream, stone wall, slope variants)
+- LOS test panel: pick two hexes and compute line-of-sight with path and blocked-hex highlighting
+- Layer toggles: terrain fills, elevation labels, wedge shading, edge lines, slope arrows
+- localStorage autosave with draft restore banner; engine export as a downloadable JSON blob
 
 > The API endpoints are only mounted when `MAP_EDITOR_ENABLED=true`. The Vue route is always present in the router.
 
