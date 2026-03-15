@@ -46,6 +46,7 @@ vi.mock('../../components/LosTestPanel.vue', () => ({
 
 import MapEditorView from './MapEditorView.vue';
 import HexEditPanel from '../../components/HexEditPanel.vue';
+import LosTestPanel from '../../components/LosTestPanel.vue';
 
 const VALID_MAP = {
   _status: 'draft',
@@ -215,6 +216,69 @@ describe('MapEditorView', () => {
     // fetch called twice: once for GET, once for PUT
     expect(fetchMock).toHaveBeenCalledTimes(2);
     wrapper.unmount();
+  });
+
+  describe('LOS panel event handling', () => {
+    async function mountWithLos() {
+      vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+      const wrapper = mount(MapEditorView, { attachTo: document.body });
+      await flushPromises();
+      // Open the LOS Test accordion so LosTestPanel is rendered
+      const headers = wrapper.findAll('button.accordion-header');
+      const losHeader = headers.find((h) => h.text().includes('LOS Test'));
+      await losHeader.trigger('click');
+      return wrapper;
+    }
+
+    it('@pick-start updates losSelectingHex prop on LosTestPanel', async () => {
+      const wrapper = await mountWithLos();
+      const panel = wrapper.findComponent(LosTestPanel);
+      panel.vm.$emit('pick-start', 'A');
+      await flushPromises();
+      expect(wrapper.findComponent(LosTestPanel).props('selectingHex')).toBe('A');
+      wrapper.unmount();
+    });
+
+    it('@pick-cancel resets losSelectingHex to null', async () => {
+      const wrapper = await mountWithLos();
+      const panel = wrapper.findComponent(LosTestPanel);
+      panel.vm.$emit('pick-start', 'B');
+      await flushPromises();
+      panel.vm.$emit('pick-cancel');
+      await flushPromises();
+      expect(wrapper.findComponent(LosTestPanel).props('selectingHex')).toBeNull();
+      wrapper.unmount();
+    });
+
+    it('@set-hex-a updates hexA prop on LosTestPanel', async () => {
+      const wrapper = await mountWithLos();
+      const panel = wrapper.findComponent(LosTestPanel);
+      panel.vm.$emit('set-hex-a', '03.05');
+      await flushPromises();
+      expect(wrapper.findComponent(LosTestPanel).props('hexA')).toBe('03.05');
+      wrapper.unmount();
+    });
+
+    it('@set-hex-b updates hexB prop on LosTestPanel', async () => {
+      const wrapper = await mountWithLos();
+      const panel = wrapper.findComponent(LosTestPanel);
+      panel.vm.$emit('set-hex-b', '07.05');
+      await flushPromises();
+      expect(wrapper.findComponent(LosTestPanel).props('hexB')).toBe('07.05');
+      wrapper.unmount();
+    });
+
+    it('@los-result captures the result object', async () => {
+      const wrapper = await mountWithLos();
+      const panel = wrapper.findComponent(LosTestPanel);
+      const fakeResult = { clear: true, steps: [] };
+      panel.vm.$emit('los-result', fakeResult);
+      await flushPromises();
+      // No public prop for losResult, but the emit should not throw
+      // and the component should remain stable
+      expect(wrapper.findComponent(LosTestPanel).exists()).toBe(true);
+      wrapper.unmount();
+    });
   });
 
   it('save success clears the localStorage draft', async () => {

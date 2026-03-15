@@ -1,5 +1,23 @@
 import { describe, it, expect } from 'vitest';
-import { parseHexId, colRowToCube, cubeToColRow, cubeRound, hexLine, evaluateLos } from './los.js';
+import {
+  parseHexId,
+  colRowToCube,
+  cubeToColRow,
+  cubeRound,
+  hexLine,
+  evaluateLos,
+  dirFromDelta,
+} from './los.js';
+
+// Cube direction deltas for flat-top hexes (shared across test cases)
+const DIR_DELTAS = [
+  { name: 'N', dq: 0, dr: -1 },
+  { name: 'NE', dq: 1, dr: -1 },
+  { name: 'SE', dq: 1, dr: 0 },
+  { name: 'S', dq: 0, dr: 1 },
+  { name: 'SW', dq: -1, dr: 1 },
+  { name: 'NW', dq: -1, dr: 0 },
+];
 
 // Minimal gridSpec for tests (10×10 flat-top, evenColUp: false = ODD_Q)
 const GRID = { cols: 10, rows: 10, evenColUp: false };
@@ -52,6 +70,29 @@ describe('cubeRound', () => {
   it('maintains q + r + s = 0 after rounding', () => {
     const rounded = cubeRound({ q: 1.4, r: -0.9, s: -0.5 });
     expect(rounded.q + rounded.r + rounded.s).toBe(0);
+  });
+
+  it('hits dq > dr && dq > ds branch: resets q = -r - s', () => {
+    // dq=0.4, dr=0.2, ds=0.2 → first branch triggers, q is recomputed
+    const rounded = cubeRound({ q: 1.6, r: 0.2, s: -1.8 });
+    expect(rounded.q + rounded.r + rounded.s).toBe(0);
+    expect(rounded.q).toBe(-rounded.r - rounded.s);
+  });
+});
+
+describe('dirFromDelta', () => {
+  it('returns the correct direction name for each of the 6 unit steps', () => {
+    expect(dirFromDelta(0, -1)).toBe('N');
+    expect(dirFromDelta(1, -1)).toBe('NE');
+    expect(dirFromDelta(1, 0)).toBe('SE');
+    expect(dirFromDelta(0, 1)).toBe('S');
+    expect(dirFromDelta(-1, 1)).toBe('SW');
+    expect(dirFromDelta(-1, 0)).toBe('NW');
+  });
+
+  it('returns null for an invalid (non-unit) delta', () => {
+    expect(dirFromDelta(2, 0)).toBeNull();
+    expect(dirFromDelta(1, 1)).toBeNull();
   });
 });
 
@@ -158,14 +199,6 @@ describe('evaluateLos', () => {
     const dq = cp.q - cc.q;
     const dr = cp.r - cc.r;
     // Map delta to direction
-    const DIR_DELTAS = [
-      { name: 'N', dq: 0, dr: -1 },
-      { name: 'NE', dq: 1, dr: -1 },
-      { name: 'SE', dq: 1, dr: 0 },
-      { name: 'S', dq: 0, dr: 1 },
-      { name: 'SW', dq: -1, dr: 1 },
-      { name: 'NW', dq: -1, dr: 0 },
-    ];
     const enteringDir = DIR_DELTAS.find((d) => d.dq === dq && d.dr === dr)?.name;
     expect(enteringDir).toBeTruthy();
 
@@ -196,14 +229,6 @@ describe('evaluateLos', () => {
     const cc = colRowToCube(cur.col, cur.row, GRID);
     const dq = cp.q - cc.q;
     const dr = cp.r - cc.r;
-    const DIR_DELTAS = [
-      { name: 'N', dq: 0, dr: -1 },
-      { name: 'NE', dq: 1, dr: -1 },
-      { name: 'SE', dq: 1, dr: 0 },
-      { name: 'S', dq: 0, dr: 1 },
-      { name: 'SW', dq: -1, dr: 1 },
-      { name: 'NW', dq: -1, dr: 0 },
-    ];
     const enteringDir = DIR_DELTAS.find((d) => d.dq === dq && d.dr === dr)?.name;
 
     const edges = { [enteringDir]: [{ type: 'stoneWall', losHeightBonus: 2 }] };

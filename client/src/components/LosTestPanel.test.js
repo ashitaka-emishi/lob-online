@@ -171,4 +171,25 @@ describe('LosTestPanel', () => {
     const wrapper = mountPanel({ hexA: '02.05', hexB: '08.05' });
     expect(wrapper.find('.los-result').exists()).toBe(false);
   });
+
+  it('updates From input when hexA prop changes', async () => {
+    const wrapper = mountPanel({ hexA: null });
+    await wrapper.setProps({ hexA: '05.10' });
+    const fromInput = wrapper.findAll('input')[0];
+    expect(fromInput.element.value).toBe('05.10');
+  });
+
+  it('updates To input when hexB prop changes', async () => {
+    const wrapper = mountPanel({ hexB: null });
+    await wrapper.setProps({ hexB: '07.03' });
+    const toInput = wrapper.findAll('input')[1];
+    expect(toInput.element.value).toBe('07.03');
+  });
+
+  it('emits pick-cancel when Pick B is clicked while selectingHex==="B"', async () => {
+    const wrapper = mountPanel({ selectingHex: 'B' });
+    const pickBtns = wrapper.findAll('button.los-pick-btn');
+    await pickBtns[1].trigger('click');
+    expect(wrapper.emitted('pick-cancel')).toBeTruthy();
+  });
 });

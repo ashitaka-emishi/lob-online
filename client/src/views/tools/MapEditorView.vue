@@ -228,6 +228,22 @@ const losHexB = ref(null);
 const losSelectingHex = ref(null); // 'A' | 'B' | null
 const losResult = ref(null);
 
+function onLosPickStart(side) {
+  losSelectingHex.value = side;
+}
+function onLosPickCancel() {
+  losSelectingHex.value = null;
+}
+function onLosSetHexA(id) {
+  losHexA.value = id;
+}
+function onLosSetHexB(id) {
+  losHexB.value = id;
+}
+function onLosResult(r) {
+  losResult.value = r;
+}
+
 const losPathHexes = computed(() => {
   if (!losResult.value) return [];
   return losResult.value.steps.filter((s) => s.role === 'intermediate').map((s) => s.hexId);
@@ -349,8 +365,8 @@ const saveErrors = ref([]);
 async function save() {
   saveStatus.value = 'saving';
   saveErrors.value = [];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
   if (!mapData.value) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
     saveStatus.value = 'saved';
     setTimeout(() => {
       saveStatus.value = '';
@@ -365,6 +381,7 @@ async function save() {
     });
     const body = await res.json();
     if (res.ok) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
       unsaved.value = false;
       saveStatus.value = 'saved';
       localStorage.removeItem(MAP_DRAFT_KEY);
@@ -535,27 +552,11 @@ onUnmounted(() => {
               :map-data="mapData"
               :grid-spec="calibration"
               :selecting-hex="losSelectingHex"
-              @pick-start="
-                (side) => {
-                  losSelectingHex = side;
-                }
-              "
-              @pick-cancel="losSelectingHex = null"
-              @set-hex-a="
-                (id) => {
-                  losHexA = id;
-                }
-              "
-              @set-hex-b="
-                (id) => {
-                  losHexB = id;
-                }
-              "
-              @los-result="
-                (r) => {
-                  losResult = r;
-                }
-              "
+              @pick-start="onLosPickStart"
+              @pick-cancel="onLosPickCancel"
+              @set-hex-a="onLosSetHexA"
+              @set-hex-b="onLosSetHexB"
+              @los-result="onLosResult"
             />
           </div>
         </div>

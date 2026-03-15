@@ -144,7 +144,7 @@ function terrainBonus(terrain, treeLosHeight) {
  * Find the compass direction name for a cube delta (dq, dr).
  * Returns null if the delta doesn't match any of the 6 directions.
  */
-function dirFromDelta(dq, dr) {
+export function dirFromDelta(dq, dr) {
   for (const d of DIR_DELTAS) {
     if (d.dq === dq && d.dr === dr) return d.name;
   }
@@ -239,8 +239,9 @@ export function evaluateLos(hexAId, hexBId, mapData, options = {}) {
       }
     }
 
-    // Edge height bonuses add to effective height
-    const edgeHeightBonus = edgeFeatures.reduce((sum, f) => sum + (f.losHeightBonus ?? 0), 0);
+    // Edge height bonuses add to effective height (target's edges cannot block)
+    const edgeHeightBonus =
+      role !== 'target' ? edgeFeatures.reduce((sum, f) => sum + (f.losHeightBonus ?? 0), 0) : 0;
     const effectiveHeight = elev + bonus + edgeHeightBonus;
 
     // Intermediate hexes also block if their effective height exceeds the LOS line
