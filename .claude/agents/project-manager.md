@@ -53,6 +53,9 @@ On request, audit that:
   are actually marked closed in GitHub
 - The HLD Implementation Status callout matches GitHub milestone completion state
 - Issue acceptance criteria align with what the `rules-lawyer` says the rules require
+- `README.md` "Repository Guide" table links are not broken and descriptions are accurate
+- `README.md` "Developer Tools — Map Editor" section reflects the current editor feature set
+- `CLAUDE.md` "Current state" paragraph accurately describes the project phase
 
 To check issue coverage against the HLD:
 
@@ -82,8 +85,12 @@ When asked to plan a new feature area or audit the backlog:
 
 ## Key Files
 
+- `README.md` — top-level project README with Repository Guide ToC; keep in sync with project state
+- `CONTRIBUTING.md` — contributor workflow, coding standards, branch/PR conventions
 - `docs/high-level-design.md` — phased plan and implementation status
 - `docs/agents/project-manager/design.md` — full design spec for this agent
 - `CLAUDE.md` — project overview and coding standards
+- `.github/README.md` — GitHub issue templates, PR template, and CI/CD workflow docs
+- `.claude/README.md` — agent and skill directory; update when agents or skills are added/removed
 - `.github/ISSUE_TEMPLATE/feature.md` — required fields for AI-implementable tickets
 - `.claude/commands/issue-intake.md` — issue creation skill
