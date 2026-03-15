@@ -23,12 +23,22 @@ Two top-level directories hold runtime artifacts. Neither is committed.
 
 ```
 logs/
-  server/        ← server process stdout/stderr  (one file per run, rotating)
-  client/        ← Vite dev server output
-  test/          ← per-run test output, timestamped
+  server/
+    YYYY_MM_DD/   ← server stdout/stderr, one file per day (server.log)
+  client/
+    YYYY_MM_DD/   ← Vite dev server output, one file per day (client.log)
+  test/
+    YYYY_MM_DD/   ← per-run test output (test-HHMMSS.log, one per invocation)
 test-results/
-  *.json         ← Vitest JSON reporter snapshots; used for flake tracking
+  YYYY_MM_DD/     ← Vitest JSON reporter snapshots (test-HHMMSS.json)
 ```
+
+**Rules:**
+- All output is written under `logs/` or `test-results/` within the project root.
+- Never write to OS temp directories (`/tmp`, `$TMPDIR`, etc.).
+- The date segment (`YYYY_MM_DD`) is derived at skill invocation time: `date +%Y_%m_%d`.
+- The `.pids` file at the project root also stores `LOG_DATE` so that the `test` skill can
+  find the matching server log even when run in a later shell session.
 
 ### .gitignore additions required
 

@@ -15,16 +15,20 @@ lsof -ti :5173
 
 If either port is occupied, invoke the `stop` skill to clean up before continuing.
 
-## Step 2 — Create log directories
+## Step 2 — Determine date and create log directories
 
 ```
-mkdir -p logs/server logs/client
+DATE=$(date +%Y_%m_%d)
+mkdir -p logs/server/$DATE logs/client/$DATE
 ```
+
+All output for this session goes under the date-stamped subdirectory. Never write to
+OS temp directories (`/tmp`, `$TMPDIR`, etc.).
 
 ## Step 3 — Start server
 
 ```
-node server/src/server.js >> logs/server/server.log 2>&1 &
+node server/src/server.js >> logs/server/$DATE/server.log 2>&1 &
 echo "SERVER_PID=$!"
 ```
 
@@ -33,7 +37,7 @@ Record the PID.
 ## Step 4 — Start Vite dev client
 
 ```
-npm run dev -w client >> logs/client/client.log 2>&1 &
+npm run dev -w client >> logs/client/$DATE/client.log 2>&1 &
 echo "CLIENT_PID=$!"
 ```
 
@@ -41,10 +45,15 @@ Record the PID.
 
 ## Step 5 — Persist PIDs
 
-Write both PIDs to `.pids` at the project root so the `stop` skill can find them reliably:
+Write both PIDs to `.pids` at the project root so the `stop` skill can find them reliably.
+Also record the log paths so `stop` and `test` can reference today's logs:
 
 ```
-echo "SERVER_PID=<server_pid> CLIENT_PID=<client_pid>" > .pids
+cat > .pids <<EOF
+SERVER_PID=<server_pid>
+CLIENT_PID=<client_pid>
+LOG_DATE=<YYYY_MM_DD>
+EOF
 ```
 
 ## Step 6 — Confirm both processes are listening
@@ -62,17 +71,17 @@ If a port is still not listening after 15 seconds:
 3. Report failure and show the last 20 lines of the relevant log file:
 
 ```
-tail -20 logs/server/server.log
-tail -20 logs/client/client.log
+tail -20 logs/server/$DATE/server.log
+tail -20 logs/client/$DATE/client.log
 ```
 
 ## Finishing
 
-Report confirmed PIDs and ports. Example:
+Report confirmed PIDs, ports, and log paths. Example:
 
 ```
-Server  PID 12345  → localhost:3000  ✓
-Client  PID 12346  → localhost:5173  ✓
+Server  PID 12345  → localhost:3000  ✓  (logs/server/2026_03_15/server.log)
+Client  PID 12346  → localhost:5173  ✓  (logs/client/2026_03_15/client.log)
 ```
 
 If either process failed to start, report the error and stop.

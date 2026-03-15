@@ -6,6 +6,9 @@ allowed-tools: Bash, Read, Glob
 Run the full test suite. Capture output, summarize results, detect flaky tests, and
 correlate any failures with server-side errors.
 
+Never write to OS temp directories (`/tmp`, `$TMPDIR`, etc.). All output goes under `logs/`
+and `test-results/` within the project root.
+
 ## Step 1 — Check system state
 
 Check whether the server is up:
@@ -18,73 +21,72 @@ lsof -ti :3000
 > "The server is not running on port 3000. Start it first with `/start`, then re-run `/test`."
 > Do not start the server automatically.
 
-## Step 2 — Create output directories
+## Step 2 — Determine date and timestamps, create output directories
 
 ```
-mkdir -p logs/test test-results
+DATE=$(date +%Y_%m_%d)
+TIME=$(date +%H%M%S)
+mkdir -p logs/test/$DATE test-results/$DATE
 ```
 
-## Step 3 — Determine timestamp
+All files for this run are written under the date-stamped subdirectory.
+
+## Step 3 — Run tests, capture verbose output
 
 ```
-date +%Y%m%d-%H%M%S
-```
-
-Use this value as `TIMESTAMP` in subsequent filenames.
-
-## Step 4 — Run tests, capture verbose output
-
-```
-npm test -- --reporter=verbose > logs/test/test-TIMESTAMP.log 2>&1
+npm test -- --reporter=verbose > logs/test/$DATE/test-$TIME.log 2>&1
 ```
 
 Note the exit code (0 = all passed, non-zero = failures present).
 
-## Step 5 — Run tests again, capture JSON snapshot
+## Step 4 — Run tests again, capture JSON snapshot
 
 ```
-npm test -- --reporter=json > test-results/test-TIMESTAMP.json 2>&1
+npm test -- --reporter=json > test-results/$DATE/test-$TIME.json 2>&1
 ```
 
 This snapshot is used for flake detection in future runs.
 
-## Step 6 — Summarize results
+## Step 5 — Summarize results
 
-Parse `test-results/test-TIMESTAMP.json` and report:
+Parse `test-results/$DATE/test-$TIME.json` and report:
 
 - Total tests / passed / failed / skipped
 - Names and file paths of any failing tests
 
-## Step 7 — Flake detection
+## Step 6 — Flake detection
 
-Find the most recent prior snapshot:
+Find the most recent prior snapshot across all date subdirectories:
 
 ```
-ls -t test-results/test-*.json | sed -n '2p'
+ls -t test-results/*/test-*.json | sed -n '2p'
 ```
 
 If a prior snapshot exists, compare it against the current one. Flag any test that
 changed state (pass → fail or fail → pass) as potentially flaky.
 
-## Step 8 — Error correlation (failures only)
+## Step 7 — Error correlation (failures only)
 
-If there are test failures, scan the server log for ERROR-level lines:
+If there are test failures, read the log date from `.pids` if available, then scan the
+server log for ERROR-level lines:
 
 ```
-grep -i "error" logs/server/server.log
+LOG_DATE=$(grep LOG_DATE .pids 2>/dev/null | cut -d= -f2)
+LOG_DATE=${LOG_DATE:-$(date +%Y_%m_%d)}
+grep -i "error" logs/server/$LOG_DATE/server.log 2>/dev/null
 ```
 
-Present any server errors alongside the names of the failing tests they may be
-related to.
+Present any server errors alongside the names of the failing tests they may be related to.
 
 ## Finishing
 
 Output a concise summary:
 
 1. **Results:** X passed, Y failed, Z skipped
-2. **Failures:** list of failing test names with file paths (if any)
-3. **Flaky tests:** list of tests that changed state vs. the prior run (if any)
-4. **Server errors:** correlated server log lines (if failures exist)
+2. **Log:** `logs/test/$DATE/test-$TIME.log`
+3. **Failures:** list of failing test names with file paths (if any)
+4. **Flaky tests:** list of tests that changed state vs. the prior run (if any)
+5. **Server errors:** correlated server log lines (if failures exist)
 
 Keep test result snapshots in `test-results/` for future flake tracking. They are
 gitignored and accumulate locally.
