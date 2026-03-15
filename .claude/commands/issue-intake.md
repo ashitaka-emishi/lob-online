@@ -8,6 +8,7 @@ requirement into a filed, milestone-assigned GitHub issue that an AI coding agen
 without follow-up questions.
 
 **Two human control points are required before the issue is filed:**
+
 1. **Milestone approval** — if the proposed milestone does not yet exist in GitHub, pause and ask
    the user to confirm before creating it.
 2. **Issue draft approval** — always show the full draft and wait for explicit user confirmation

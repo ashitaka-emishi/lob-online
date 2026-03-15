@@ -34,6 +34,7 @@ test-results/
 ```
 
 **Rules:**
+
 - All output is written under `logs/` or `test-results/` within the project root.
 - Never write to OS temp directories (`/tmp`, `$TMPDIR`, etc.).
 - The date segment (`YYYY_MM_DD`) is derived at skill invocation time: `date +%Y_%m_%d`.

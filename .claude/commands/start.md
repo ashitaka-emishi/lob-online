@@ -66,6 +66,7 @@ lsof -ti :5173   # client ready
 ```
 
 If a port is still not listening after 15 seconds:
+
 1. Kill any processes that did start: `kill <pid>` for each PID recorded above
 2. Remove `.pids`: `rm -f .pids`
 3. Report failure and show the last 20 lines of the relevant log file:
