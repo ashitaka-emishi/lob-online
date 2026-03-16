@@ -62,8 +62,8 @@ to check, and many steps include an explicit human control point.
 
 Skills compose freely. The `/dev-build` skill (owned by `devops`) runs format, lint, and
 build in order, stopping on the first failure. The `/issue-implement` skill (owned by
-`project-manager`) chains eight sub-skills in sequence — including `/dev-build`, `/dev-test`,
-`/pr-create`, and `/pr-review` — each owned by a different agent. Skill ownership records
+`project-manager`) chains nine sub-skills in sequence — including `/dev-build`, `/dev-test`,
+`/pr-create`, `/pr-review`, and `/issue-close` — each owned by a different agent. Skill ownership records
 accountability; cross-agent skill calls are normal and expected.
 
 This composability is the key distinction from agents. An agent defines a scope boundary.
@@ -121,6 +121,9 @@ Here is how all three layers cooperate in a typical feature implementation:
 
 5. **Merge** — `/pr-merge` runs a final CI check, presents **HCP 3**, and squash-merges only
    after the engineer says "merge."
+
+6. **Close** — `/issue-close` posts a merge summary comment and closes the GitHub issue,
+   gated by **HCP 4**. The engineer must say "close" explicitly.
 
 The entire session is recorded in a structured ailog file committed to the repository as a
 permanent audit trail.

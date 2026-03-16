@@ -5,7 +5,8 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 
 # /ecosystem-docs-generate
 
-Regenerate all ten files in `docs/claude-ecosystem/` from the ecosystem's source-of-truth inputs.
+Regenerate all ten files in `docs/claude-ecosystem/` and `docs/ecosystem-design.md` from the
+ecosystem's source-of-truth inputs.
 
 **Six reference files** are fully rebuilt from sources on every run:
 `README.md`, `agents.md`, `skills.md`, `network-diagram.md`, `guardrails-and-logging.md`,
@@ -62,7 +63,7 @@ ls docs/workflows/
 - `docs/workflows/<name>/<name>.states.md`
 
 **Existing docs** (for diffing and narrative updates) — read all ten files in
-`docs/claude-ecosystem/`.
+`docs/claude-ecosystem/` and `docs/ecosystem-design.md`.
 
 ---
 
@@ -167,6 +168,26 @@ New dedicated workflow engine reference. Must contain:
    `.workflow.json`, write `.states.md`, add registry entries, validate with Zod schemas,
    run `/dev-build`.
 
+### 2g — `docs/ecosystem-design.md`
+
+The top-level architecture and design reference for the entire ecosystem (renamed from
+`docs/architecture.md`). Must contain:
+
+1. **Overview paragraph** — what agents, skills, and orchestration are, and how they compose.
+2. **Agent ownership diagram** (`graph TD` Mermaid) — identical in structure to
+   `network-diagram.md §1`; derive from registry. This file is the standalone reference for
+   developers who do not navigate to `docs/claude-ecosystem/`.
+3. **Skill dependency graph** (`graph LR` Mermaid) — identical structure to
+   `network-diagram.md §2`; derive from skill command files.
+4. **SDLC sequence diagram** — full `issue-implement` flow; derive from
+   `issue-implement.workflow.json`. Identical in structure to `orchestration.md §SDLC
+   sequence`.
+5. **Key file index** — table of the most important files a developer needs to navigate the
+   ecosystem: agent definitions, registry, workflow JSON files, skill command files,
+   `docs/claude-ecosystem/` hub, this file.
+
+Add the auto-generated header immediately after the `# Title` line.
+
 ---
 
 ## Step 3 — Update the four narrative files
@@ -254,7 +275,8 @@ npx prettier --write \
   docs/claude-ecosystem/blog.md \
   docs/claude-ecosystem/tutorial-new-agent.md \
   docs/claude-ecosystem/tutorial-modify-agent.md \
-  docs/claude-ecosystem/tutorial-orchestration.md
+  docs/claude-ecosystem/tutorial-orchestration.md \
+  docs/ecosystem-design.md
 ```
 
 Report which files were written and how many lines changed in each.
