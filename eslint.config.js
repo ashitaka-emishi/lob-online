@@ -32,6 +32,7 @@ export default [
         console: 'readonly',
         URL: 'readonly',
         Buffer: 'readonly',
+        global: 'readonly',
       },
     },
     rules: {
@@ -77,6 +78,16 @@ export default [
     rules: {
       'vue/multi-word-component-names': 'off',
       'no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
+    },
+  },
+
+  // Root config files (vite.config.js, etc.) — Node.js environment
+  {
+    files: ['*.config.js', '*.config.ts', 'client/*.config.js'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+      },
     },
   },
 
