@@ -75,8 +75,8 @@ LOS, combat, morale, orders, artillery, or data models
 
 **Owned skills:**
 
-| Skill                                     | What it does             |
-| ----------------------------------------- | ------------------------ |
+| Skill                                     | What it does              |
+| ----------------------------------------- | ------------------------- |
 | [`/issue-intake`](skills.md#issue-intake) | Gather → HCP → file issue |
 
 **Design spec:** `docs/agents/issue-intake/design.md`
