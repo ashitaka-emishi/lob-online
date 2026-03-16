@@ -1,0 +1,118 @@
+# Agent Reference
+
+Five agents are configured for lob-online. Each is defined in `.claude/agents/<name>.md` with
+a YAML frontmatter block (`name`, `description`, `tools`) and a prose system prompt. The
+canonical source of truth for each agent's frontmatter is `docs/agents/<name>/design.md §4`.
+
+---
+
+## `devops`
+
+**Purpose:** Automate the four core development operations — build, start, stop, and test.
+Use this agent when asked to compile the project, spin up or shut down the dev environment,
+or run the test suite.
+
+**Allowed tools:** `Bash`, `Read`, `Glob`
+
+**Collaborators:** none
+
+**Owned skills:**
+
+| Skill | What it does |
+| ----- | ------------ |
+| [`/dev-build`](skills.md#dev-build) | Format → lint → Vite build |
+| [`/dev-start`](skills.md#dev-start) | Launch server (port 3000) + Vite client (port 5173) |
+| [`/dev-stop`](skills.md#dev-stop) | Graceful shutdown with 10 s SIGKILL fallback |
+| [`/dev-test`](skills.md#dev-test) | Run test suite; detect flaky tests; correlate failures with server logs |
+
+**Design spec:** `docs/agents/devops/design.md`
+
+---
+
+## `project-manager`
+
+**Purpose:** Manage the SDLC using GitHub as the source of truth. Own the pipeline from raw
+idea to milestone-assigned GitHub issue; audit that issues, documentation, and implementation
+status stay in sync. Use this agent when asked to plan a feature area, audit the backlog, or
+check that issues and docs are consistent.
+
+**Allowed tools:** `Bash`, `Read`, `Glob`, `Grep`
+
+**Collaborators:** delegates issue creation to `issue-intake`; consults `rules-lawyer` for
+game-logic issues before filing acceptance criteria
+
+**Owned skills:**
+
+| Skill | What it does |
+| ----- | ------------ |
+| [`/issue-start`](skills.md#issue-start) | Fetch issue, summarise ACs, present plan — HCP 1 |
+| [`/issue-branch`](skills.md#issue-branch) | Create `feat/{id}-{slug}` branch |
+| [`/issue-implement`](skills.md#issue-implement) | Full ticket-to-merge orchestrator (chains 7 sub-skills) |
+
+**Design spec:** `docs/agents/project-manager/design.md`
+
+---
+
+## `issue-intake`
+
+**Purpose:** Guide the creation of a well-formed, AI-actionable GitHub issue with a full
+branch/PR lifecycle. Opens an `intake/{slug}` branch, iteratively refines the draft with the
+engineer, files the issue, commits a documentation artifact, opens a PR, and merges. Only
+`docs/`, `.github/`, and `.claude/` paths may be modified — source code changes are
+explicitly prohibited.
+
+**Allowed tools:** `Bash`, `Read`, `Write`, `Edit`, `Glob`, `Grep`
+
+**Collaborators:** consults `rules-lawyer` when the issue touches game mechanics, movement,
+LOS, combat, morale, orders, artillery, or data models
+
+**Owned skills:**
+
+| Skill | What it does |
+| ----- | ------------ |
+| [`/issue-intake`](skills.md#issue-intake) | Full 6-step intake workflow |
+
+Also calls `/pr-create` and `/pr-merge` as part of the intake lifecycle.
+
+**Design spec:** `docs/agents/issue-intake/design.md`
+
+---
+
+## `code-review`
+
+**Purpose:** Perform quality-gate reviews. Inspect the current PR diff for defects, dead
+code, coverage gaps, and standards violations; or examine the full codebase for the same.
+Use this agent when asked to review a PR, assess code quality, or find dead/duplicate code.
+
+**Allowed tools:** `Bash`, `Read`, `Glob`, `Grep`
+
+**Collaborators:** calls `/dev-build` and `/dev-test` (owned by `devops`) as prerequisites
+before any analysis
+
+**Owned skills:**
+
+| Skill | What it does |
+| ----- | ------------ |
+| [`/pr-review`](skills.md#pr-review) | Build/test gate + PR diff analysis; posts structured findings |
+| [`/code-assess`](skills.md#code-assess) | Full source audit for dead/dup code and coverage gaps |
+
+**Design spec:** `docs/agents/code-review/design.md`
+
+---
+
+## `rules-lawyer`
+
+**Purpose:** Serve as the authoritative rules arbiter for the Line of Battle v2.0 wargame
+system and the South Mountain scenario. Render rulings on rules conflicts, translate game
+mechanics into software requirements, review data model designs for rules correctness, and
+flag SM-specific overrides and errata. Use this agent for any rules question before writing
+game-logic code.
+
+**Allowed tools:** `Read`, `Glob`, `Grep`
+
+**Collaborators:** consulted by `issue-intake` (rules gate) and `project-manager`; rulings
+are never overridden by other agents
+
+**Owned skills:** none
+
+**Design spec:** `docs/agents/rules-lawyer/design.md`
