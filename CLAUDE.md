@@ -31,12 +31,13 @@ All source material lives in `docs/`. The library is tracked in two parallel fil
 
 All four data files exist under `data/scenarios/south-mountain/` and are validated by Zod schemas in `server/src/schemas/`.
 
-| ID               | File                                          | Contents                                                                                                                                                                |
-| ---------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SM_MAP_DATA      | `data/scenarios/south-mountain/map.json`      | Hex terrain, gridSpec calibration, VP/entry hexes, type registries (hexsideTypes, hexFeatureTypes, edgeFeatureTypes) — partial, digitization in progress via map editor |
-| GS_OOB           | `data/scenarios/south-mountain/oob.json`      | 219 units, brigade/division hierarchy, wreck thresholds                                                                                                                 |
-| GS_LEADERS       | `data/scenarios/south-mountain/leaders.json`  | 48 leaders, ratings, special rule flags                                                                                                                                 |
-| SM_SCENARIO_DATA | `data/scenarios/south-mountain/scenario.json` | Turn structure, reinforcements, VP conditions, movement costs, random events                                                                                            |
+| ID                | File                                                       | Contents                                                                                                                                                                |
+| ----------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SM_MAP_DATA       | `data/scenarios/south-mountain/map.json`                   | Hex terrain, gridSpec calibration, VP/entry hexes, type registries (hexsideTypes, hexFeatureTypes, edgeFeatureTypes) — partial, digitization in progress via map editor |
+| GS_OOB            | `data/scenarios/south-mountain/oob.json`                   | 219 units, brigade/division hierarchy, wreck thresholds                                                                                                                 |
+| GS_LEADERS        | `data/scenarios/south-mountain/leaders.json`               | 48 leaders, ratings, special rule flags                                                                                                                                 |
+| SM_SCENARIO_DATA  | `data/scenarios/south-mountain/scenario.json`              | Turn structure, reinforcements, VP conditions, movement costs, random events                                                                                            |
+| SM_AUTODETECT_CFG | `data/scenarios/south-mountain/map-autodetect-config.json` | Auto-detect configuration: elevation color palette, confidence threshold, seed hex list (confirmed hexes used as few-shot examples for Vision API classification)       |
 
 ### Developer Tools
 
