@@ -56,8 +56,6 @@ graph TD
   end
 
   issue-intake -.->|consults| rl
-  issue-intake -->|calls| pr-create
-  issue-intake -->|calls| pr-merge
   pm -.->|delegates intake to| ii
   pm -.->|consults| rl
 ```
@@ -78,9 +76,6 @@ graph LR
   issue-implement --> pr-review
   issue-implement --> pr-merge
   issue-implement --> issue-close
-
-  issue-intake --> pr-create
-  issue-intake --> pr-merge
 
   pr-review --> dev-build
   pr-review --> dev-test

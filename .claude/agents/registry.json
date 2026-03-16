@@ -30,7 +30,7 @@
   {
     "id": "issue-intake",
     "name": "Issue Intake Agent",
-    "description": "Turn a raw requirement into a filed, milestone-assigned GitHub issue with branch/PR lifecycle",
+    "description": "Guide the creation of a well-formed, AI-actionable GitHub issue through interactive conversation — no branch, no artifact, no PR",
     "type": "agent",
     "path": ".claude/agents/issue-intake.md"
   },
