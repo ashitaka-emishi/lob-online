@@ -59,10 +59,14 @@ A `devops` agent and four skills automate the build/run/test cycle. See `docs/ag
 For rules questions, errata, and SM-specific overrides, use the `rules-lawyer` agent.
 See `docs/agents/rules-lawyer/design.md` for the full spec.
 
-A `project-manager` agent manages the SDLC: filing GitHub issues, assigning milestones, and
-auditing issue/HLD consistency. Use the `/issue-intake` skill to create a well-formed,
-AI-actionable GitHub issue. Use `/issue-implement <number>` to drive the full ticket-to-merge
-workflow with human control points. See `docs/agents/project-manager/design.md` for the full spec.
+A `project-manager` agent manages the SDLC: assigning milestones and auditing issue/HLD
+consistency. Use `/issue-implement <number>` to drive the full ticket-to-merge workflow with
+human control points. See `docs/agents/project-manager/design.md` for the full spec.
+
+An `issue-intake` agent handles the full issue-creation lifecycle: it opens an `intake/{slug}`
+branch, iteratively refines the draft with the engineer, files the GitHub issue (HCP), commits
+the intake artifact, opens a PR (HCP), and merges. Use `/issue-intake` to create a well-formed,
+AI-actionable GitHub issue. See `docs/agents/issue-intake/design.md` for the full spec.
 
 A `code-review` agent performs quality-gate reviews. See `docs/agents/code-review/design.md`
 for the full spec.
