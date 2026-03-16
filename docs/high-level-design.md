@@ -23,9 +23,9 @@
 
 ---
 
-> **Implementation Status (as of 2026-03-15)**
+> **Implementation Status (as of 2026-03-16)**
 >
-> **Completed:** tech stack selection, server scaffold (Express + Socket.io), data models (all four JSON files), Zod validation schemas, Vitest test suites (server + client), ESLint/Prettier configuration, GitHub Actions CI pipeline, map editor dev tool (terrain paint, elevation, edge features, slope, wedge elevations, layer system, LOS test panel, localStorage autosave, engine export).
+> **Completed:** tech stack selection, server scaffold (Express + Socket.io), data models (all four JSON files), Zod validation schemas, Vitest test suites (server + client), ESLint/Prettier configuration, GitHub Actions CI pipeline, map editor dev tool (terrain paint, elevation, edge features, slope, wedge elevations, layer system, LOS test panel, localStorage autosave, engine export, versioned server backups, offline fallback, push/pull sync UX with confirmation dialogs).
 >
 > **In progress:** terrain data digitization (ongoing field entry for South Mountain map hexes).
 >
