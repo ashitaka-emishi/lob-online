@@ -75,6 +75,15 @@ for the full spec.
 - `/code-assess` — performs a full codebase examination for duplicate code, dead code, and
   refactoring opportunities
 
+Two skills keep project documentation in sync after each implementation:
+
+- `/doc-sync` — updates `CLAUDE.md`, `docs/high-level-design.md`, and `docs/agents/*/design.md`
+  to match code changes on the current branch (diff-driven; edits stale facts directly)
+- `/ecosystem-docs-generate` — rebuilds the six reference files in `docs/claude-ecosystem/`
+  from source-of-truth inputs (full rebuild from registry, design docs, and workflow files)
+
+Both are invoked automatically by `/issue-implement` between implementation and build.
+
 All agent design documents and prompts live in `docs/agents/<name>/`. Three skills manage the
 agent layer:
 
@@ -91,7 +100,7 @@ human input via a CLI readline interface, and persists a `WorkflowInstance` JSON
 
 - `docs/workflows/sdlc-feature/` — full feature delivery pipeline
 - `docs/workflows/issue-intake/` — intake branch → refine → file → commit → PR → merge
-- `docs/workflows/issue-implement/` — full ticket-to-merge with three HCPs
+- `docs/workflows/issue-implement/` — full ticket-to-merge with five HCPs (plan, push, review, merge, close)
 
 AI execution logs for issue implementations are stored in `docs/ailog/YYYY_MM_DD-LOB-{####}.md`
 and committed as a permanent audit trail of AI planning and human approvals.

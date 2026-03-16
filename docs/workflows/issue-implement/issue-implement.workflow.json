@@ -1,7 +1,7 @@
 {
   "id": "issue-implement",
   "name": "Issue Implement Workflow",
-  "description": "Full ticket-to-merge workflow: issue start → branch → implement → build → test → PR → review → merge, with three human gate checkpoints.",
+  "description": "Full ticket-to-merge workflow: issue start → branch → implement → doc-sync → ecosystem-docs-generate → build → test → PR → review → merge, with five human gate checkpoints.",
   "steps": [
     {
       "id": "issue-start",
@@ -50,6 +50,20 @@
         "issueNumber": "$.issue-start.issueNumber"
       },
       "onError": "halt"
+    },
+    {
+      "id": "doc-sync",
+      "name": "Sync Project Docs",
+      "agentId": "doc-sync",
+      "inputMap": {},
+      "onError": "continue_with_warning"
+    },
+    {
+      "id": "ecosystem-docs-generate",
+      "name": "Regenerate Ecosystem Docs",
+      "agentId": "ecosystem-docs-generate",
+      "inputMap": {},
+      "onError": "continue_with_warning"
     },
     {
       "id": "build",

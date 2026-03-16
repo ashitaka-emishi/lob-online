@@ -3,8 +3,8 @@
 ## 1. Description
 
 The `issue-implement` workflow drives the full ticket-to-merge cycle for a GitHub issue.
-It sequences issue-start, branch creation, implementation, build, test, PR creation, code
-review, merge, and issue close, with four human gate checkpoints:
+It sequences issue-start, branch creation, implementation, doc-sync, ecosystem-docs-generate,
+build, test, PR creation, code review, merge, and issue close, with five human gate checkpoints:
 
 - **HCP 1** (gate-plan) — engineer approves the implementation plan before any code is written
 - **HCP 2** (gate-impl) — engineer approves build/test results before the branch is pushed
@@ -26,7 +26,9 @@ stateDiagram-v2
     gate_plan --> issue_start : revise
 
     branch --> implement : branch created
-    implement --> build : code written
+    implement --> doc_sync : code written
+    doc_sync --> ecosystem_docs : project docs synced
+    ecosystem_docs --> build : ecosystem docs regenerated
     build --> test : build passed
     test --> gate_impl : tests ran (HCP 2)
     gate_impl --> pr_create : push
