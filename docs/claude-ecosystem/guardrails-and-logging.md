@@ -20,13 +20,14 @@ not proceed — no code written, no issue filed, no PR merged — until it recei
 
 Derived from `docs/workflows/issue-implement/issue-implement.workflow.json`:
 
-| Gate ID       | Prompt summary                                     | Choices                     | Default |
-| ------------- | -------------------------------------------------- | --------------------------- | ------- |
-| `gate-plan`   | Plan + AC checklist shown; proceed or revise       | proceed, revise             | proceed |
-| `gate-impl`   | Build + test results shown; push or fix            | push, fix                   | push    |
-| `gate-review` | PR review findings; accept, fix-all, or fix-errors | accept, fix-all, fix-errors | accept  |
-| `gate-merged` | Final merge approval; merge or hold                | merge, hold                 | merge   |
-| `gate-close`  | PR merged; close the GitHub issue or skip          | close, skip                 | close   |
+| Gate ID       | Prompt summary                                      | Choices                     | Default |
+| ------------- | --------------------------------------------------- | --------------------------- | ------- |
+| `gate-plan`   | Plan + AC checklist shown; proceed or revise        | proceed, revise             | proceed |
+| `gate-editor` | Dev server running; approve or provide fix feedback | approve, fix                | approve |
+| `gate-impl`   | Doc-sync/build/test results shown; push or fix      | push, fix                   | push    |
+| `gate-review` | PR review findings; accept, fix-all, or fix-errors  | accept, fix-all, fix-errors | accept  |
+| `gate-merged` | Final merge approval; merge or hold                 | merge, hold                 | merge   |
+| `gate-close`  | PR merged; close the GitHub issue or skip           | close, skip                 | close   |
 
 ### Issue-intake workflow HCPs
 
