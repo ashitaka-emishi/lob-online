@@ -103,5 +103,12 @@
     "description": "Fetch a GitHub issue, summarise ACs, and confirm approach before any code is written",
     "type": "skill",
     "path": ".claude/commands/issue-start.md"
+  },
+  {
+    "id": "issue-close",
+    "name": "Issue Close Skill",
+    "description": "Close a GitHub issue with a merge summary comment after PR is merged",
+    "type": "skill",
+    "path": ".claude/commands/issue-close.md"
   }
 ]

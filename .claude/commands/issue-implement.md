@@ -87,11 +87,9 @@ the branch. The AI log is updated with the merge SHA.
 > If the user does not say "close", stop here and report the issue URL so the engineer
 > can close it manually.
 
-Once "close" is received, run:
-
-```bash
-gh issue close <number> --comment "Delivered in <merged-commit-sha>. All acceptance criteria met."
-```
+Once "close" is received, run `/issue-close <number>`, substituting the actual issue
+number (e.g., `36`) from the current branch. The skill resolves the merged commit SHA
+automatically and posts the closing comment.
 
 Report the closed issue URL.
 
