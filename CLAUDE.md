@@ -101,7 +101,7 @@ human input via a CLI readline interface, and persists a `WorkflowInstance` JSON
 
 - `docs/workflows/sdlc-feature/` — full feature delivery pipeline
 - `docs/workflows/issue-intake/` — intake branch → refine → file → commit → PR → merge
-- `docs/workflows/issue-implement/` — full ticket-to-merge with five HCPs (plan, push, review, merge, close)
+- `docs/workflows/issue-implement/` — full ticket-to-merge with six HCPs (plan, editor review, push, review, merge, close)
 
 AI execution logs for issue implementations are stored in `docs/ailog/YYYY_MM_DD-LOB-{####}.md`
 and committed as a permanent audit trail of AI planning and human approvals.
