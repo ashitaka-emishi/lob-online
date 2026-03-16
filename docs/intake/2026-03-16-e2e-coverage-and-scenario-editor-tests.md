@@ -26,18 +26,18 @@ The Cypress E2E suite currently covers only the map editor tool (push/pull sync,
 
 ## Files to Create / Modify
 
-| File | Action |
-| ---- | ------ |
-| `cypress/e2e/scenario-editor/sync.cy.js` | CREATE |
-| `cypress/e2e/scenario-editor/offline.cy.js` | CREATE |
-| `cypress/e2e/scenario-editor/backups.cy.js` | CREATE |
-| `cypress/fixtures/scenario-editor.js` | CREATE |
-| `cypress/support/e2e.js` | MODIFY — add coverage import |
-| `cypress.config.js` | MODIFY — add coverage task, vite-plugin-istanbul |
-| `client/vite.config.js` | MODIFY — add vite-plugin-istanbul (dev only) |
-| `server/src/server.js` | MODIFY — instrument routes when `CYPRESS_COVERAGE=true` |
-| `package.json` | MODIFY — add `test:e2e:coverage` script and new dev dependencies |
-| `.github/workflows/e2e.yml` | MODIFY — use `test:e2e:coverage`, upload artifact |
+| File                                        | Action                                                           |
+| ------------------------------------------- | ---------------------------------------------------------------- |
+| `cypress/e2e/scenario-editor/sync.cy.js`    | CREATE                                                           |
+| `cypress/e2e/scenario-editor/offline.cy.js` | CREATE                                                           |
+| `cypress/e2e/scenario-editor/backups.cy.js` | CREATE                                                           |
+| `cypress/fixtures/scenario-editor.js`       | CREATE                                                           |
+| `cypress/support/e2e.js`                    | MODIFY — add coverage import                                     |
+| `cypress.config.js`                         | MODIFY — add coverage task, vite-plugin-istanbul                 |
+| `client/vite.config.js`                     | MODIFY — add vite-plugin-istanbul (dev only)                     |
+| `server/src/server.js`                      | MODIFY — instrument routes when `CYPRESS_COVERAGE=true`          |
+| `package.json`                              | MODIFY — add `test:e2e:coverage` script and new dev dependencies |
+| `.github/workflows/e2e.yml`                 | MODIFY — use `test:e2e:coverage`, upload artifact                |
 
 ## Tests Required
 
