@@ -80,7 +80,8 @@ copy contains no credentials and is safe to commit).
 
 ## Documentation
 
-| Document                                                            | Purpose                                                                                                  |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| [`docs/architecture.md`](../docs/architecture.md)                   | Full agent/skill architecture with Mermaid diagrams, skill dependency graph, and issue-to-merge workflow |
-| [`docs/agents/SKILL_TEMPLATE.md`](../docs/agents/SKILL_TEMPLATE.md) | Template for authoring new skill files                                                                   |
+| Document                                                                | Purpose                                                                                                  |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| [`docs/claude-ecosystem/README.md`](../docs/claude-ecosystem/README.md) | Hub for the lob-online agent ecosystem: agent reference, skill reference, diagrams, guardrails guide     |
+| [`docs/architecture.md`](../docs/architecture.md)                       | Full agent/skill architecture with Mermaid diagrams, skill dependency graph, and issue-to-merge workflow |
+| [`docs/agents/SKILL_TEMPLATE.md`](../docs/agents/SKILL_TEMPLATE.md)     | Template for authoring new skill files                                                                   |
