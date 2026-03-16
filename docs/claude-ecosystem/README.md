@@ -48,9 +48,11 @@ Manual: open an `intake/{slug}` branch, draft the issue body following the templ
 /issue-implement <number>
 ```
 
-Manual: fetch the issue with `gh issue view`, create a `feat/{id}-{slug}` branch, implement
-all ACs, run `npm run lint && npm run format:check && npm test`, open a PR with
-`gh pr create`, and squash-merge when approved.
+Manual: run `gh issue view <number>` to read the issue and draft an implementation plan.
+Review the AC checklist and confirm your approach before writing any code. Create the branch
+with `git checkout -b feat/<number>-<slug>`. Implement all ACs, then run
+`npm run lint && npm run format:check && npm test`. Open a PR with `gh pr create`, get a
+review pass, and squash-merge with `gh pr merge --squash --delete-branch` when approved.
 
 ### Build, lint, and format check
 

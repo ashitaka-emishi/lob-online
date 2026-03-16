@@ -11,7 +11,7 @@ using other tooling.
 
 ## DevOps Skills
 
-### `/dev-build` {#dev-build}
+### `/dev-build`
 
 **Purpose:** Run Prettier, ESLint, and Vite build in sequence. Stop on first failure.
 
@@ -36,7 +36,7 @@ npm run build         # Vite compiles client/ into client/dist/
 
 ---
 
-### `/dev-start` {#dev-start}
+### `/dev-start`
 
 **Purpose:** Launch the Express server (port 3000) and Vite dev client (port 5173). Logs
 output to `logs/server/` and `logs/client/`. Persists PIDs to `.pids`.
@@ -58,7 +58,7 @@ npm run dev -w client &           # start Vite dev client in background
 
 ---
 
-### `/dev-stop` {#dev-stop}
+### `/dev-stop`
 
 **Purpose:** Gracefully terminate both processes using stored PIDs and port scan. Send
 SIGKILL after 10 s if graceful shutdown fails. Remove `.pids`.
@@ -80,7 +80,7 @@ rm -f .pids
 
 ---
 
-### `/dev-test` {#dev-test}
+### `/dev-test`
 
 **Purpose:** Run the full Vitest test suite. Capture logs to `logs/test/`. Detect flaky
 tests across runs. Correlate failures with server log excerpts.
@@ -105,7 +105,7 @@ npm run test:coverage
 
 ## Issue Workflow Skills
 
-### `/issue-intake` {#issue-intake}
+### `/issue-intake`
 
 **Purpose:** Guide the creation of a well-formed GitHub issue with a full branch/PR
 lifecycle: open `intake/{slug}` branch → gather and refine draft → file issue (HCP) →
@@ -138,7 +138,7 @@ git checkout master && git pull
 
 ---
 
-### `/issue-start` {#issue-start}
+### `/issue-start`
 
 **Purpose:** Fetch a GitHub issue, display a one-paragraph plan and AC checklist, create the
 AI log file, and wait for HCP 1 approval before any code is written.
@@ -161,7 +161,7 @@ gh issue view <number>
 
 ---
 
-### `/issue-branch` {#issue-branch}
+### `/issue-branch`
 
 **Purpose:** Create a `feat/{id}-{slug}` branch from the issue title. Append a branch-created
 entry to the AI log.
@@ -183,7 +183,7 @@ git checkout -b feat/<number>-<slug>
 
 ---
 
-### `/issue-implement` {#issue-implement}
+### `/issue-implement`
 
 **Purpose:** Orchestrate the full ticket-to-merge workflow. Sequences `/issue-start`,
 `/issue-branch`, implementation, `/dev-build`, `/dev-test`, `/pr-create`, `/pr-review`, and
@@ -211,7 +211,7 @@ the PR and plan skills below).
 
 ## PR and Plan Skills
 
-### `/pr-create` {#pr-create}
+### `/pr-create`
 
 **Purpose:** Write a devlog entry, run all three CI checks locally, and open a GitHub pull
 request.
@@ -234,7 +234,7 @@ gh pr create --title "..." --body "..."
 
 ---
 
-### `/pr-review` {#pr-review}
+### `/pr-review`
 
 **Purpose:** Build and test gate, then analyse the current PR diff for defects, dead code,
 coverage gaps, and standards violations. Posts structured findings with severity levels.
@@ -259,7 +259,7 @@ gh pr diff            # read the diff
 
 ---
 
-### `/pr-merge` {#pr-merge}
+### `/pr-merge`
 
 **Purpose:** Run final CI check, present HCP 3 for merge approval, squash-merge the PR, and
 delete the branch.
@@ -282,7 +282,7 @@ git checkout master && git pull
 
 ---
 
-### `/plan-wrap` {#plan-wrap}
+### `/plan-wrap`
 
 **Purpose:** Post-implementation wrap-up: verify build passes, write a devlog entry, review
 `CLAUDE.md` for needed updates, and assess whether `high-level-design.md` requires revision.
@@ -307,7 +307,7 @@ npm run lint && npm run format:check && npm test
 
 ## Code Review Skills
 
-### `/code-assess` {#code-assess}
+### `/code-assess`
 
 **Purpose:** Full source audit for duplicate code, dead code, test coverage gaps, and
 refactoring opportunities. Writes findings to `docs/assess-YYYY-MM-DD.md`.
@@ -333,7 +333,7 @@ npm run lint && npm test
 
 ## Agent Maintenance Skills
 
-### `/agent-sync` {#agent-sync}
+### `/agent-sync`
 
 **Purpose:** Read-only drift check. Compares frontmatter in `.claude/agents/*.md` against
 the `## 4. Agent Definition` block in each `docs/agents/<name>/design.md`. Reports any
@@ -356,7 +356,7 @@ mismatches. Never modifies files.
 
 ---
 
-### `/agent-regenerate` {#agent-regenerate}
+### `/agent-regenerate`
 
 **Purpose:** Rebuild `.claude/agents/*.md` from the `## 4. Agent Definition` block in each
 `design.md`. Runs `/dev-build` afterward to confirm no format issues.
@@ -380,7 +380,7 @@ mismatches. Never modifies files.
 
 ---
 
-### `/agent-standardize` {#agent-standardize}
+### `/agent-standardize`
 
 **Purpose:** Normalize `prompt.md` files against `PROMPT_TEMPLATE.md`; cascade changes
 through `design.md` and agent files; run `/dev-build` to verify.
