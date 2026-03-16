@@ -82,6 +82,17 @@ agent layer:
 - `/agent-regenerate` — rebuild agent files from `design.md` section 4
 - `/agent-standardize` — normalize prompt files and cascade changes through design and agent files
 
+An **orchestration agent runtime** (`server/src/orchestrator/`) provides a Node.js workflow
+engine that sequences registered agents and skills declaratively. It reads `WorkflowDefinition`
+JSON files from `docs/workflows/{name}/{name}.workflow.json`, executes steps by resolving
+agents from `.claude/agents/registry.json`, pauses at blocking `GateDef` checkpoints for
+human input via a CLI readline interface, and persists a `WorkflowInstance` JSON to
+`docs/ailog/YYYY_MM_DD-LOB-{####}-instance.json`. Three workflows are defined:
+
+- `docs/workflows/sdlc-feature/` — full feature delivery pipeline
+- `docs/workflows/issue-intake/` — intake branch → refine → file → commit → PR → merge
+- `docs/workflows/issue-implement/` — full ticket-to-merge with three HCPs
+
 AI execution logs for issue implementations are stored in `docs/ailog/YYYY_MM_DD-LOB-{####}.md`
 and committed as a permanent audit trail of AI planning and human approvals.
 

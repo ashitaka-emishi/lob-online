@@ -1,0 +1,93 @@
+[
+  {
+    "id": "devops",
+    "name": "DevOps Agent",
+    "description": "Build, start, stop, and test the lob-online system",
+    "type": "agent",
+    "path": ".claude/agents/devops.md"
+  },
+  {
+    "id": "project-manager",
+    "name": "Project Manager Agent",
+    "description": "Manage the lob-online SDLC using GitHub as the source of truth",
+    "type": "agent",
+    "path": ".claude/agents/project-manager.md"
+  },
+  {
+    "id": "code-review",
+    "name": "Code Review Agent",
+    "description": "Review code quality for lob-online",
+    "type": "agent",
+    "path": ".claude/agents/code-review.md"
+  },
+  {
+    "id": "rules-lawyer",
+    "name": "Rules Lawyer Agent",
+    "description": "Rules arbiter and wargame analyst for the lob-online project",
+    "type": "agent",
+    "path": ".claude/agents/rules-lawyer.md"
+  },
+  {
+    "id": "issue-intake",
+    "name": "Issue Intake Agent",
+    "description": "Turn a raw requirement into a filed, milestone-assigned GitHub issue with branch/PR lifecycle",
+    "type": "agent",
+    "path": ".claude/agents/issue-intake.md"
+  },
+  {
+    "id": "dev-build",
+    "name": "Dev Build Skill",
+    "description": "Format, lint, and build the lob-online project",
+    "type": "skill",
+    "path": ".claude/commands/dev-build.md"
+  },
+  {
+    "id": "dev-test",
+    "name": "Dev Test Skill",
+    "description": "Run the full test suite with result snapshots and flake detection",
+    "type": "skill",
+    "path": ".claude/commands/dev-test.md"
+  },
+  {
+    "id": "dev-start",
+    "name": "Dev Start Skill",
+    "description": "Launch server and Vite dev client with logging",
+    "type": "skill",
+    "path": ".claude/commands/dev-start.md"
+  },
+  {
+    "id": "dev-stop",
+    "name": "Dev Stop Skill",
+    "description": "Gracefully stop server and Vite dev client",
+    "type": "skill",
+    "path": ".claude/commands/dev-stop.md"
+  },
+  {
+    "id": "pr-create",
+    "name": "PR Create Skill",
+    "description": "Write a devlog entry then create the pull request on GitHub",
+    "type": "skill",
+    "path": ".claude/commands/pr-create.md"
+  },
+  {
+    "id": "pr-merge",
+    "name": "PR Merge Skill",
+    "description": "Squash-merge the current PR and delete the branch",
+    "type": "skill",
+    "path": ".claude/commands/pr-merge.md"
+  },
+  {
+    "id": "pr-review",
+    "name": "PR Review Skill",
+    "description": "Review the current PR for coding standards, test coverage, and common defects",
+    "type": "skill",
+    "path": ".claude/commands/pr-review.md"
+  },
+  {
+    "id": "issue-implement",
+    "name": "Issue Implement Skill",
+    "description": "Orchestrate the full ticket-to-merge workflow for a GitHub issue with human control points",
+    "type": "skill",
+    "path": ".claude/commands/issue-implement.md"
+  }
+]
