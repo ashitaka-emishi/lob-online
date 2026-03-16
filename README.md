@@ -65,15 +65,17 @@ Open `http://localhost:5173`. The Vite dev server proxies `/api`, `/auth`, and `
 
 Alternatively, use the Claude Code devops skills for a managed start/stop experience — see [.claude/README.md](.claude/README.md).
 
-## Developer Tools — Map Editor
+## Developer Tools
 
-The map editor is a dev-only tool for digitizing `docs/reference/sm-map.jpg` into `data/scenarios/south-mountain/map.json`. It is **not** part of the game itself.
-
-To enable it, set `MAP_EDITOR_ENABLED=true` in `.env`, then launch both processes with:
+Both tools require `MAP_EDITOR_ENABLED=true` in `.env`. Launch both with:
 
 ```bash
 npm run dev:map-editor
 ```
+
+### Map Editor
+
+A dev-only tool for digitizing `docs/reference/sm-map.jpg` into `data/scenarios/south-mountain/map.json`.
 
 Open `http://localhost:5173/tools/map-editor`. The editor supports:
 
@@ -84,7 +86,17 @@ Open `http://localhost:5173/tools/map-editor`. The editor supports:
 - Layer toggles: terrain fills, elevation labels, wedge shading, edge lines, slope arrows
 - localStorage autosave with draft restore banner; engine export as a downloadable JSON blob
 
-> The API endpoints are only mounted when `MAP_EDITOR_ENABLED=true`. The Vue route is always present in the router.
+### Scenario Editor
+
+A dev-only tool for editing `data/scenarios/south-mountain/scenario.json` — turn structure, lighting schedule, and rules fields.
+
+Open `http://localhost:5173/tools/scenario-editor`. The editor supports:
+
+- Turn structure fields: first/last turn, minutes per turn, total turns, first player, date
+- Lighting schedule: add/edit/delete rows (start turn + condition: day, twilight, night)
+- Rules fields: night visibility cap, fluke stoppage grace period, initiative system, loose cannon, loss recovery, random events
+
+> API endpoints for both tools are only mounted when `MAP_EDITOR_ENABLED=true`. Vue routes are always present in the router.
 
 ## Testing
 

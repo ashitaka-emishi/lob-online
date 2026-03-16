@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **lob-online** is an online game implementation of the _Line of Battle v2.0_ wargame system (Multi-Man Publishing). The first game being implemented is _South Mountain_ (RSS #4), chosen because it is a smaller, more tractable battle.
 
-**Current state:** Phase 1 scaffold complete. The tech stack is established (Node.js/Express/Socket.io server, Vue 3/Vite/Pinia client), and the following are all built and tested: four data JSON files with Zod schemas, a fully-featured hex map editor dev tool (terrain paint, elevation, edge features, slope, wedge elevations, layer toggles, localStorage autosave, versioned server backups, offline fallback, and push/pull sync UX), Vitest test suites for both server and client, ESLint/Prettier config, and a GitHub Actions CI pipeline. Game logic (rules engine, auth, multiplayer) is planned for subsequent phases.
+**Current state:** Phase 1 scaffold complete. The tech stack is established (Node.js/Express/Socket.io server, Vue 3/Vite/Pinia client), and the following are all built and tested: four data JSON files with Zod schemas, a fully-featured hex map editor dev tool (terrain paint, elevation, edge features, slope, wedge elevations, layer toggles, localStorage autosave, versioned server backups, offline fallback, and push/pull sync UX), a scenario editor dev tool (turn structure, lighting schedule, and rules fields with the same push/pull sync pattern), extended `scenario.json` with lighting schedule and rules fields, Vitest test suites for both server and client, ESLint/Prettier config, and a GitHub Actions CI pipeline. Game logic (rules engine, auth, multiplayer) is planned for subsequent phases.
 
 ## Reference Library
 
@@ -40,7 +40,11 @@ All four data files exist under `data/scenarios/south-mountain/` and are validat
 
 ### Developer Tools
 
-A hex map editor is available as a dev-only tool for digitizing `docs/reference/sm-map.jpg` into `map.json` terrain data.
+Two dev-only tools are available, both guarded by `MAP_EDITOR_ENABLED=true` in `.env`. Launch with `npm run dev:map-editor`.
+
+**Map editor** (`/tools/map-editor`) — digitize `docs/reference/sm-map.jpg` into `map.json` terrain data.
+
+**Scenario editor** (`/tools/scenario-editor`) — edit `scenario.json` fields: turn structure, lighting schedule (day/twilight/night by start turn), and rules fields (night visibility cap, fluke stoppage grace period, initiative system, loose cannon, loss recovery, random events). See `docs/scenario-editor-design.md` for the full spec.
 
 - **Enable:** set `MAP_EDITOR_ENABLED=true` in `.env`
 - **Launch:** `npm run dev:map-editor` (starts both server and client with the env flag set)
