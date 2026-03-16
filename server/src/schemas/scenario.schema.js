@@ -58,13 +58,36 @@ const RandomEventEntry = z.object({
   _reroll: z.boolean().optional(),
 });
 
+const LightingCondition = z.enum(['day', 'twilight', 'night']);
+
+const LightingEntry = z.object({
+  startTurn: z.number().int().positive(),
+  condition: LightingCondition,
+  _note: z.string().optional(),
+});
+
+const LossRecovery = z.object({
+  enabled: z.boolean(),
+  triggerTime: z.string().nullable(),
+  _note: z.string().optional(),
+});
+
 export const ScenarioSchema = z.object({
   _status: z.string(),
   _source: z.string(),
+  _savedAt: z.number().optional(),
   id: z.string(),
   name: z.string(),
   system: z.string(),
   publication: z.string(),
+  lightingSchedule: z.array(LightingEntry).optional(),
+  nightVisibilityCap: z.number().int().positive().optional(),
+  flukeStoppageGracePeriodTurns: z.number().int().nonnegative().optional(),
+  initiativeSystem: z.enum(['RSS', 'LoB']).optional(),
+  looseCannon: z.boolean().optional(),
+  lossRecovery: LossRecovery.optional(),
+  randomEventsEnabled: z.boolean().optional(),
+  randomEventsTiming: z.string().optional(),
   turnStructure: z.object({
     firstTurn: TimeStr,
     lastTurn: TimeStr,
