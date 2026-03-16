@@ -29,22 +29,22 @@ The existing SDLC pipeline has well-defined agents for issue intake (`issue-inta
 
 ## Files to Create / Modify
 
-| File | Action |
-| ---- | ------ |
-| `server/src/orchestrator/schemas.js` | CREATE — Zod schemas for all five domain types |
-| `server/src/orchestrator/runtime.js` | CREATE — step executor, gate handler, instance persistence |
-| `server/src/orchestrator/registry.js` | CREATE — loads and resolves `AgentManifest` entries from registry |
-| `server/src/orchestrator/schemas.test.js` | CREATE |
-| `server/src/orchestrator/runtime.test.js` | CREATE |
-| `.claude/agents/registry.json` | CREATE — programmatic `AgentManifest` registry |
-| `docs/workflows/sdlc-feature/sdlc-feature.workflow.json` | CREATE |
-| `docs/workflows/sdlc-feature/sdlc-feature.states.md` | CREATE |
-| `docs/workflows/issue-intake/issue-intake.workflow.json` | CREATE |
-| `docs/workflows/issue-intake/issue-intake.states.md` | CREATE |
-| `docs/workflows/issue-implement/issue-implement.workflow.json` | CREATE |
-| `docs/workflows/issue-implement/issue-implement.states.md` | CREATE |
-| `docs/architecture.md` | MODIFY — add Orchestration Agent to agent table and Mermaid diagram |
-| `CLAUDE.md` | MODIFY — document orchestration agent and workflow invocation |
+| File                                                           | Action                                                              |
+| -------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `server/src/orchestrator/schemas.js`                           | CREATE — Zod schemas for all five domain types                      |
+| `server/src/orchestrator/runtime.js`                           | CREATE — step executor, gate handler, instance persistence          |
+| `server/src/orchestrator/registry.js`                          | CREATE — loads and resolves `AgentManifest` entries from registry   |
+| `server/src/orchestrator/schemas.test.js`                      | CREATE                                                              |
+| `server/src/orchestrator/runtime.test.js`                      | CREATE                                                              |
+| `.claude/agents/registry.json`                                 | CREATE — programmatic `AgentManifest` registry                      |
+| `docs/workflows/sdlc-feature/sdlc-feature.workflow.json`       | CREATE                                                              |
+| `docs/workflows/sdlc-feature/sdlc-feature.states.md`           | CREATE                                                              |
+| `docs/workflows/issue-intake/issue-intake.workflow.json`       | CREATE                                                              |
+| `docs/workflows/issue-intake/issue-intake.states.md`           | CREATE                                                              |
+| `docs/workflows/issue-implement/issue-implement.workflow.json` | CREATE                                                              |
+| `docs/workflows/issue-implement/issue-implement.states.md`     | CREATE                                                              |
+| `docs/architecture.md`                                         | MODIFY — add Orchestration Agent to agent table and Mermaid diagram |
+| `CLAUDE.md`                                                    | MODIFY — document orchestration agent and workflow invocation       |
 
 ## Tests Required
 
