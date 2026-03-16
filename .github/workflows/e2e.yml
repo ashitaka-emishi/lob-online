@@ -1,0 +1,40 @@
+name: E2E Tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cypress:
+    name: Cypress E2E
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start server
+        run: npm run dev -w server &
+        env:
+          MAP_EDITOR_ENABLED: 'true'
+
+      - name: Start client
+        run: npm run dev -w client &
+
+      - name: Wait for servers
+        run: |
+          until curl -sf http://localhost:3000/api/health > /dev/null 2>&1; do sleep 0.5; done
+          until curl -sf http://localhost:5173 > /dev/null 2>&1; do sleep 0.5; done
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          MAP_EDITOR_ENABLED: 'true'

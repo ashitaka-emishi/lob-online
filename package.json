@@ -18,11 +18,13 @@
     "dev:client": "npm run dev -w client",
     "dev:map-editor": "bash scripts/map-editor.sh",
     "build": "npm run build -w client",
-    "validate-data": "node scripts/validate-data.js"
+    "validate-data": "node scripts/validate-data.js",
+    "test:e2e": "cypress run"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
     "@vitest/coverage-v8": "^4.0.18",
+    "cypress": "^15.12.0",
     "eslint": "^9.15.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.31.0",
