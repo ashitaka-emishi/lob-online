@@ -3,6 +3,7 @@ import { join } from 'path';
 import { fileURLToPath } from 'url';
 
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 
 import { MapSchema } from '../schemas/map.schema.js';
 
@@ -12,6 +13,15 @@ const BACKUP_DIR = join(__dirname, '../../../data/scenarios/south-mountain/backu
 const MAX_BACKUPS = 20;
 
 const router = Router();
+
+const mapEditorLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.use(mapEditorLimiter);
 
 router.get('/data', (_req, res) => {
   const data = JSON.parse(readFileSync(MAP_PATH, 'utf8'));
