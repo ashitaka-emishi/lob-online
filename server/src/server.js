@@ -32,7 +32,7 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true, uptime: process.uptime() });
 });
 
-// Map editor tool (dev only — guarded by env var)
+// Dev tools (map editor + scenario editor — guarded by env var)
 if (process.env.MAP_EDITOR_ENABLED === 'true') {
   const { default: mapEditorRouter } = await import('./routes/mapEditor.js');
   app.use(
@@ -41,6 +41,10 @@ if (process.env.MAP_EDITOR_ENABLED === 'true') {
   );
   app.use('/api/tools/map-editor', mapEditorRouter);
   console.log('[server] map editor enabled at /tools/map-editor');
+
+  const { default: scenarioEditorRouter } = await import('./routes/scenarioEditor.js');
+  app.use('/api/tools/scenario-editor', scenarioEditorRouter);
+  console.log('[server] scenario editor enabled at /tools/scenario-editor');
 }
 
 // Socket.io

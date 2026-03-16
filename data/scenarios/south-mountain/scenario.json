@@ -42,6 +42,35 @@
     "_flukeNote": "9 Corps cavalry units may NOT fulfill reserve requirement for Fluke Stoppage (SM rule)"
   },
 
+  "lightingSchedule": [
+    {
+      "startTurn": 1,
+      "condition": "day",
+      "_note": "Sep 14 1862 — sunrise well before 09:00 game start"
+    },
+    {
+      "startTurn": 28,
+      "condition": "twilight",
+      "_note": "Approx 18:20 local time (turn 28 = 09:00 + 27×20min = 18:00)"
+    },
+    {
+      "startTurn": 31,
+      "condition": "night",
+      "_note": "Full night begins turn 31 (approx 19:00 local time)"
+    }
+  ],
+  "nightVisibilityCap": 2,
+  "flukeStoppageGracePeriodTurns": 8,
+  "initiativeSystem": "RSS",
+  "looseCannon": true,
+  "lossRecovery": {
+    "enabled": false,
+    "triggerTime": null,
+    "_note": "SM ends at 20:00; midnight never arrives (LOB_RULES 9.3)"
+  },
+  "randomEventsEnabled": true,
+  "randomEventsTiming": "commandPhaseAfterOrderAcceptance",
+
   "movementCosts": {
     "_source": "SM_Rules.pdf — SM Special Terrain Effects on Movement chart",
     "_notes": {
