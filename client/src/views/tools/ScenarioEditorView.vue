@@ -32,6 +32,7 @@ const gameDuration = computed(() => {
   const [fh, fm] = ts.firstTurn.split(':').map(Number);
   const [lh, lm] = ts.lastTurn.split(':').map(Number);
   const totalMin = lh * 60 + lm - (fh * 60 + fm);
+  if (isNaN(totalMin) || totalMin < 0) return '';
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
   return m > 0 ? `${h}h ${m}m` : `${h}h`;
@@ -205,7 +206,6 @@ function addLightingRow() {
 }
 
 function deleteLightingRow(index) {
-  ensureLightingSchedule();
   scenarioData.value.lightingSchedule = scenarioData.value.lightingSchedule.filter(
     (_, i) => i !== index
   );
@@ -229,6 +229,9 @@ function updateField(path, value) {
     scenarioData.value[parts[0]] = value;
   } else if (parts.length === 2) {
     scenarioData.value[parts[0]] = { ...scenarioData.value[parts[0]], [parts[1]]: value };
+  } else {
+    console.warn(`[ScenarioEditorView] updateField: unsupported path depth — "${path}"`);
+    return;
   }
   markDirty();
 }

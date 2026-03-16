@@ -24,8 +24,12 @@ const scenarioEditorLimiter = rateLimit({
 router.use(scenarioEditorLimiter);
 
 router.get('/data', (_req, res) => {
-  const data = JSON.parse(readFileSync(SCENARIO_PATH, 'utf8'));
-  res.json(data);
+  try {
+    const data = JSON.parse(readFileSync(SCENARIO_PATH, 'utf8'));
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ ok: false, message: `Failed to read scenario: ${err.message}` });
+  }
 });
 
 router.put('/data', (req, res) => {

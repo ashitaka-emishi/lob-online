@@ -87,7 +87,7 @@ export const ScenarioSchema = z.object({
   looseCannon: z.boolean().optional(),
   lossRecovery: LossRecovery.optional(),
   randomEventsEnabled: z.boolean().optional(),
-  randomEventsTiming: z.string().optional(),
+  randomEventsTiming: z.enum(['commandPhaseAfterOrderAcceptance']).optional(),
   turnStructure: z.object({
     firstTurn: TimeStr,
     lastTurn: TimeStr,
