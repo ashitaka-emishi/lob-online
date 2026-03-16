@@ -38,6 +38,9 @@ const HexEntry = z.object({
   entryHex: z.boolean().optional(),
   side: z.enum(['union', 'confederate']).optional(),
   setupUnits: z.array(z.string()).optional(),
+  playable: z.boolean().optional(),
+  autoDetected: z.boolean().optional(),
+  detectionConfidence: z.number().min(0).max(1).optional(),
   _note: z.string().optional(),
 });
 
