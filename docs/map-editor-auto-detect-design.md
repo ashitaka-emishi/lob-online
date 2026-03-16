@@ -51,12 +51,12 @@ engineer reviews and confirms (or overrides) each suggestion before it becomes c
 
 ### Accuracy Expectations (Realistic V1)
 
-| Detection task                  | Expected accuracy | Notes                                    |
-| ------------------------------- | ----------------- | ---------------------------------------- |
-| Terrain type (woods/open/etc.)  | 60–70%            | Color overlap from overlaid features     |
-| Elevation band                  | 70–80%            | Depends on palette quality and scan      |
+| Detection task                  | Expected accuracy | Notes                                     |
+| ------------------------------- | ----------------- | ----------------------------------------- |
+| Terrain type (woods/open/etc.)  | 60–70%            | Color overlap from overlaid features      |
+| Elevation band                  | 70–80%            | Depends on palette quality and scan       |
 | Hex-centre features (buildings) | 40–60%            | Small features, easily missed by sampling |
-| Hexside linear features         | Not in v1         | Deferred                                 |
+| Hexside linear features         | Not in v1         | Deferred                                  |
 
 The editor treats all auto-detected values as suggestions. The workflow is: detect → review
 → confirm (or override) → save.
@@ -128,10 +128,10 @@ The palette is an ordered array of elevation bands, from lowest to highest:
 ```json
 [
   { "elevationFeet": 250, "colorName": "lowland blue-green", "rgb": [120, 160, 130] },
-  { "elevationFeet": 400, "colorName": "valley green",       "rgb": [100, 140, 90]  },
-  { "elevationFeet": 550, "colorName": "mid-slope tan",      "rgb": [160, 140, 100] },
-  { "elevationFeet": 700, "colorName": "high ground brown",  "rgb": [140, 110, 80]  },
-  { "elevationFeet": 900, "colorName": "ridge brown",        "rgb": [120, 90,  60]  }
+  { "elevationFeet": 400, "colorName": "valley green", "rgb": [100, 140, 90] },
+  { "elevationFeet": 550, "colorName": "mid-slope tan", "rgb": [160, 140, 100] },
+  { "elevationFeet": 700, "colorName": "high ground brown", "rgb": [140, 110, 80] },
+  { "elevationFeet": 900, "colorName": "ridge brown", "rgb": [120, 90, 60] }
 ]
 ```
 
@@ -141,6 +141,7 @@ local analysis, the nearest-neighbor match in RGB space determines the elevation
 ### Extraction Process
 
 The Claude Vision API is called with:
+
 - The full map image (already loaded in the editor)
 - A prompt asking it to identify the elevation color gradient and return structured JSON
 
@@ -160,13 +161,13 @@ call fails, the engineer can manually define the palette via a color-picker UI (
 The `gridSpec` object in `map.json` provides everything needed to compute the pixel region
 for any hex:
 
-| `gridSpec` field | Used for                                        |
-| ---------------- | ----------------------------------------------- |
-| `originX/Y`      | Pixel position of hex `(0, 0)` centre           |
-| `cellW`          | Horizontal distance between hex column centres  |
-| `cellH`          | Vertical distance between hex row centres       |
-| `offsetX/Y`      | Odd/even row stagger offset                     |
-| `rotation`       | Grid rotation in degrees (applied via transform)|
+| `gridSpec` field | Used for                                         |
+| ---------------- | ------------------------------------------------ |
+| `originX/Y`      | Pixel position of hex `(0, 0)` centre            |
+| `cellW`          | Horizontal distance between hex column centres   |
+| `cellH`          | Vertical distance between hex row centres        |
+| `offsetX/Y`      | Odd/even row stagger offset                      |
+| `rotation`       | Grid rotation in degrees (applied via transform) |
 
 For a hex at grid position `(col, row)`, the centre pixel is:
 
@@ -191,12 +192,12 @@ crop from the de-rotated canvas.
 
 ### Edge Cases
 
-| Case                           | Handling                                                      |
-| ------------------------------ | ------------------------------------------------------------- |
-| Crop extends beyond image edge | Clip to image bounds; flag as `partialCrop: true` in result  |
-| `playable: false` hex          | Skip entirely; do not crop or analyse                         |
-| `gridSpec.locked` is false     | Warn user that calibration is not finalised; allow but flag   |
-| `cellW` or `cellH` is zero     | Abort with error; gridSpec is invalid                         |
+| Case                           | Handling                                                    |
+| ------------------------------ | ----------------------------------------------------------- |
+| Crop extends beyond image edge | Clip to image bounds; flag as `partialCrop: true` in result |
+| `playable: false` hex          | Skip entirely; do not crop or analyse                       |
+| `gridSpec.locked` is false     | Warn user that calibration is not finalised; allow but flag |
+| `cellW` or `cellH` is zero     | Abort with error; gridSpec is invalid                       |
 
 ### Playable Flag
 
@@ -317,23 +318,23 @@ const AutoDetectResultSchema = z.object({
 
 ### Error Handling
 
-| Error condition            | Handling                                               |
-| -------------------------- | ------------------------------------------------------ |
-| API key missing            | Disable Vision buttons; show "API key not configured"  |
-| Network timeout            | Retry once; if still fails, mark hex as `needsReview`  |
-| Invalid JSON response      | Log raw response; mark hex as `needsReview`            |
-| Zod parse failure          | Log validation errors; mark hex as `needsReview`       |
-| Rate limit (429)           | Backoff 5s, retry; surface error after 3 failures      |
+| Error condition       | Handling                                              |
+| --------------------- | ----------------------------------------------------- |
+| API key missing       | Disable Vision buttons; show "API key not configured" |
+| Network timeout       | Retry once; if still fails, mark hex as `needsReview` |
+| Invalid JSON response | Log raw response; mark hex as `needsReview`           |
+| Zod parse failure     | Log validation errors; mark hex as `needsReview`      |
+| Rate limit (429)      | Backoff 5s, retry; surface error after 3 failures     |
 
 ### Cost Model
 
-| Use case                   | API calls         | Estimated cost             |
-| -------------------------- | ----------------- | -------------------------- |
-| Palette extraction         | 1                 | ~$0.05                     |
-| Seed hex collection (25)   | 0 (manual)        | $0.00                      |
-| Batch detect fallback pass | ~50–150 calls     | ~$0.50–$1.50               |
-| Full Vision pass (all hex) | ~150–200 calls    | ~$1.50–$2.50               |
-| **Typical full session**   | **~50–100 calls** | **~$0.50–$1.00**           |
+| Use case                   | API calls         | Estimated cost   |
+| -------------------------- | ----------------- | ---------------- |
+| Palette extraction         | 1                 | ~$0.05           |
+| Seed hex collection (25)   | 0 (manual)        | $0.00            |
+| Batch detect fallback pass | ~50–150 calls     | ~$0.50–$1.50     |
+| Full Vision pass (all hex) | ~150–200 calls    | ~$1.50–$2.50     |
+| **Typical full session**   | **~50–100 calls** | **~$0.50–$1.00** |
 
 Estimates assume ~10 hex crops per API call (batched), using claude-sonnet-4-6. Cost per
 1M input tokens: $3.00.
@@ -351,11 +352,11 @@ Vision API calls and as a ground truth baseline for calibrating local color anal
 
 To be effective, seed hexes must cover:
 
-| Dimension        | Values to cover                                      | Min examples |
-| ---------------- | ---------------------------------------------------- | ------------ |
-| Terrain type     | open, woods, town, orchard, rough                    | 2–3 each     |
-| Elevation band   | All 5 bands (bluish-green → green → tan → tan-brown → brown) | 2–3 each |
-| Hex-centre feat. | building, ford, fortification (at least one each)    | 1 each       |
+| Dimension        | Values to cover                                              | Min examples |
+| ---------------- | ------------------------------------------------------------ | ------------ |
+| Terrain type     | open, woods, town, orchard, rough                            | 2–3 each     |
+| Elevation band   | All 5 bands (bluish-green → green → tan → tan-brown → brown) | 2–3 each     |
+| Hex-centre feat. | building, ford, fortification (at least one each)            | 1 each       |
 
 Recommended minimum: **25 seed hexes**. More examples improve Vision accuracy but
 increase prompt token usage. 25 is the practical minimum for reasonable coverage.
@@ -552,17 +553,17 @@ No changes to `EdgeFeature`. Hexside playability is derived at runtime (see DL-0
 
 ### New Components
 
-| Component                 | Responsibility                                                                                |
-| ------------------------- | --------------------------------------------------------------------------------------------- |
-| `AutoDetectPanel.vue`     | Toolbar-level control: palette extraction button, batch detect button, review queue summary   |
-| `PaletteExtractModal.vue` | One-time palette extraction: shows Vision result for review before saving to scenario.json    |
-| `SeedHexManager.vue`      | Seed hex collection panel: coverage grid, "Mark as Seed" action, seed hex list with delete    |
-| `DetectionReviewQueue.vue`| Ordered list of amber (unconfirmed) hexes with hex crop preview and field-by-field confirm UI |
+| Component                  | Responsibility                                                                                |
+| -------------------------- | --------------------------------------------------------------------------------------------- |
+| `AutoDetectPanel.vue`      | Toolbar-level control: palette extraction button, batch detect button, review queue summary   |
+| `PaletteExtractModal.vue`  | One-time palette extraction: shows Vision result for review before saving to scenario.json    |
+| `SeedHexManager.vue`       | Seed hex collection panel: coverage grid, "Mark as Seed" action, seed hex list with delete    |
+| `DetectionReviewQueue.vue` | Ordered list of amber (unconfirmed) hexes with hex crop preview and field-by-field confirm UI |
 
 ### Modified Components
 
-| Component         | Changes                                                                                            |
-| ----------------- | -------------------------------------------------------------------------------------------------- |
+| Component           | Changes                                                                                            |
+| ------------------- | -------------------------------------------------------------------------------------------------- |
 | `MapEditorView.vue` | Mount offscreen crop canvas; integrate `AutoDetectPanel`; handle amber/confirmed hex visual states |
 | `HexEditPanel.vue`  | Add "Detect" button; show amber highlight + confidence badge on unconfirmed fields                 |
 | `EditorToolbar.vue` | Add "Mark non-playable" paint mode toggle; add auto-detect panel trigger button                    |
@@ -570,12 +571,12 @@ No changes to `EdgeFeature`. Hexside playability is derived at runtime (see DL-0
 
 ### New Composables
 
-| Composable           | Responsibility                                                                                     |
-| -------------------- | -------------------------------------------------------------------------------------------------- |
-| `useAutoDetect.js`   | Orchestrates palette extraction, crop extraction, local analysis, Vision API calls, batch queue    |
-| `useHexCrop.js`      | Offscreen canvas management; `cropHex(col, row)` → ImageData or base64 PNG                        |
-| `useColorAnalysis.js`| Local color analysis: hexagonal mask, sampling, k-means clustering, palette matching              |
-| `useVisionApi.js`    | Claude Vision API client: palette extraction prompt, hex classification prompt, Zod validation     |
+| Composable            | Responsibility                                                                                  |
+| --------------------- | ----------------------------------------------------------------------------------------------- |
+| `useAutoDetect.js`    | Orchestrates palette extraction, crop extraction, local analysis, Vision API calls, batch queue |
+| `useHexCrop.js`       | Offscreen canvas management; `cropHex(col, row)` → ImageData or base64 PNG                      |
+| `useColorAnalysis.js` | Local color analysis: hexagonal mask, sampling, k-means clustering, palette matching            |
+| `useVisionApi.js`     | Claude Vision API client: palette extraction prompt, hex classification prompt, Zod validation  |
 
 ---
 
@@ -583,12 +584,12 @@ No changes to `EdgeFeature`. Hexside playability is derived at runtime (see DL-0
 
 ### Unit Tests (Vitest)
 
-| Module               | What to test                                                                                       |
-| -------------------- | -------------------------------------------------------------------------------------------------- |
-| `useHexCrop.js`      | Bounding box calculation for various `gridSpec` values; edge cases (boundary hexes, rotation=0)    |
-| `useColorAnalysis.js`| Sampling mask correctness; palette nearest-neighbor matching with known RGB values; confidence calc |
-| `useVisionApi.js`    | Prompt construction with seed examples; Zod response validation; error handling for malformed JSON |
-| `AutoDetectConfigSchema` | Valid and invalid `autoDetectConfig` objects; missing optional fields; rgb tuple validation   |
+| Module                   | What to test                                                                                        |
+| ------------------------ | --------------------------------------------------------------------------------------------------- |
+| `useHexCrop.js`          | Bounding box calculation for various `gridSpec` values; edge cases (boundary hexes, rotation=0)     |
+| `useColorAnalysis.js`    | Sampling mask correctness; palette nearest-neighbor matching with known RGB values; confidence calc |
+| `useVisionApi.js`        | Prompt construction with seed examples; Zod response validation; error handling for malformed JSON  |
+| `AutoDetectConfigSchema` | Valid and invalid `autoDetectConfig` objects; missing optional fields; rgb tuple validation         |
 
 ### Mocking Constraints
 
@@ -610,18 +611,18 @@ No changes to `EdgeFeature`. Hexside playability is derived at runtime (see DL-0
 
 Suggested child issues, in dependency order:
 
-| # | Issue title                                      | Depends on | Notes                                           |
-| - | ------------------------------------------------ | ---------- | ----------------------------------------------- |
-| A | Add `playable` flag and auto-detect fields to `HexEntry` schema | — | Data model first; unblocks all others |
-| B | Add `autoDetectConfig` to `ScenarioSchema`        | A          | Zod schema + scenario editor display            |
-| C | `useHexCrop.js` — gridSpec-based crop extraction  | A          | Core utility; unit-testable in isolation        |
-| D | `useColorAnalysis.js` — local palette matching    | B, C       | Requires palette from B and crops from C        |
-| E | `PaletteExtractModal` + `useVisionApi.js` palette prompt | B   | One-time setup; can be built before C/D         |
-| F | `SeedHexManager` + seed hex persistence           | A, B       | Provides few-shot data for Vision calls         |
-| G | `useVisionApi.js` hex classification prompt       | E, F       | Requires seed data from F                       |
-| H | `useAutoDetect.js` orchestrator + batch queue     | D, G       | Wires together local and Vision paths           |
-| I | `AutoDetectPanel` + `DetectionReviewQueue` UX     | H          | Final UX integration                            |
-| J | `MapEditorView` integration + visual states       | I          | Amber/confirmed states, non-playable shading    |
+| #   | Issue title                                                     | Depends on | Notes                                        |
+| --- | --------------------------------------------------------------- | ---------- | -------------------------------------------- |
+| A   | Add `playable` flag and auto-detect fields to `HexEntry` schema | —          | Data model first; unblocks all others        |
+| B   | Add `autoDetectConfig` to `ScenarioSchema`                      | A          | Zod schema + scenario editor display         |
+| C   | `useHexCrop.js` — gridSpec-based crop extraction                | A          | Core utility; unit-testable in isolation     |
+| D   | `useColorAnalysis.js` — local palette matching                  | B, C       | Requires palette from B and crops from C     |
+| E   | `PaletteExtractModal` + `useVisionApi.js` palette prompt        | B          | One-time setup; can be built before C/D      |
+| F   | `SeedHexManager` + seed hex persistence                         | A, B       | Provides few-shot data for Vision calls      |
+| G   | `useVisionApi.js` hex classification prompt                     | E, F       | Requires seed data from F                    |
+| H   | `useAutoDetect.js` orchestrator + batch queue                   | D, G       | Wires together local and Vision paths        |
+| I   | `AutoDetectPanel` + `DetectionReviewQueue` UX                   | H          | Final UX integration                         |
+| J   | `MapEditorView` integration + visual states                     | I          | Amber/confirmed states, non-playable shading |
 
 Issues A and B can be filed and implemented immediately. Issues C–J should be filed after
 A and B are merged and the data model is stable.
