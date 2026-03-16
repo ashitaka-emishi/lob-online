@@ -33,10 +33,9 @@ Derived from `docs/workflows/issue-implement/issue-implement.workflow.json`:
 
 Derived from `docs/workflows/issue-intake/issue-intake.workflow.json`:
 
-| Gate ID      | Prompt summary                             | Choices      | Default |
-| ------------ | ------------------------------------------ | ------------ | ------- |
-| `gate-file`  | Full draft shown; file on GitHub or revise | file, revise | file    |
-| `gate-merge` | PR open; merge intake branch or hold       | merge, hold  | merge   |
+| Gate ID     | Prompt summary                             | Choices      | Default |
+| ----------- | ------------------------------------------ | ------------ | ------- |
+| `gate-file` | Full draft shown; file on GitHub or revise | file, revise | file    |
 
 ### SDLC-feature workflow HCPs
 

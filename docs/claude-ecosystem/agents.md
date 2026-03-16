@@ -63,24 +63,21 @@ game-logic issues before filing acceptance criteria
 
 ## `issue-intake`
 
-**Purpose:** Guide the creation of a well-formed, AI-actionable GitHub issue with a full
-branch/PR lifecycle. Opens an `intake/{slug}` branch, iteratively refines the draft with the
-engineer, files the issue, commits a documentation artifact, opens a PR, and merges. Only
-`docs/`, `.github/`, and `.claude/` paths may be modified — source code changes are
-explicitly prohibited.
+**Purpose:** Guide the creation of a well-formed, AI-actionable GitHub issue through
+interactive conversation. Gathers and refines the draft iteratively with the engineer, then
+files the issue after explicit approval (HCP). No branch is opened, no artifact is committed,
+and no PR is created — the filed issue is the authoritative record.
 
-**Allowed tools:** `Bash`, `Read`, `Write`, `Edit`, `Glob`, `Grep`
+**Allowed tools:** `Bash`, `Read`, `Glob`, `Grep`
 
 **Collaborators:** consults `rules-lawyer` when the issue touches game mechanics, movement,
 LOS, combat, morale, orders, artillery, or data models
 
 **Owned skills:**
 
-| Skill                                     | What it does                |
-| ----------------------------------------- | --------------------------- |
-| [`/issue-intake`](skills.md#issue-intake) | Full 6-step intake workflow |
-
-Also calls `/pr-create` and `/pr-merge` as part of the intake lifecycle.
+| Skill                                     | What it does              |
+| ----------------------------------------- | ------------------------- |
+| [`/issue-intake`](skills.md#issue-intake) | Gather → HCP → file issue |
 
 **Design spec:** `docs/agents/issue-intake/design.md`
 

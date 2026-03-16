@@ -108,34 +108,27 @@ failed / waiting_at_gate), `startedAt`, `updatedAt`, `stepResults` (stepId → o
 
 ## Workflow Definitions
 
-### `issue-intake` — 7 steps, 2 gates
+### `issue-intake` — 3 steps, 1 gate
 
-**Purpose:** Turn a raw requirement into a filed, milestone-assigned GitHub issue backed by
-a committed intake artifact on its own branch and pull request.
+**Purpose:** Turn a raw requirement into a filed, milestone-assigned GitHub issue through
+lightweight interactive conversation. No branch, no artifact, no PR.
 
 **Source:** `docs/workflows/issue-intake/issue-intake.workflow.json`
 
 ```mermaid
 stateDiagram-v2
-    [*] --> branch : start
+    [*] --> gather : start
 
-    branch --> gather : branch created
     gather --> gate_file : draft ready (HCP 1)
-    gate_file --> commit : file
+    gate_file --> create_issue : file
     gate_file --> gather : revise
 
-    commit --> pr_create : artifact committed
-    pr_create --> gate_merge : PR open (HCP 2)
-    gate_merge --> pr_merge : merge
-    gate_merge --> [*] : hold
-
-    pr_merge --> [*] : merged
+    create_issue --> [*] : done
 ```
 
-| Gate ID      | Prompt summary                             | Choices      | Default | Loop-back risk                 |
-| ------------ | ------------------------------------------ | ------------ | ------- | ------------------------------ |
-| `gate-file`  | Full draft shown; file on GitHub or revise | file, revise | file    | `revise` → returns to `gather` |
-| `gate-merge` | PR open; merge intake branch or hold       | merge, hold  | merge   | `hold` terminates; no loop     |
+| Gate ID     | Prompt summary                             | Choices      | Default | Loop-back risk                 |
+| ----------- | ------------------------------------------ | ------------ | ------- | ------------------------------ |
+| `gate-file` | Full draft shown; file on GitHub or revise | file, revise | file    | `revise` → returns to `gather` |
 
 ---
 
@@ -257,10 +250,7 @@ sequenceDiagram
   RL-->>II: ruling
   II-->>E: HCP 1 — approve issue draft?
   E-->>II: confirm
-  II->>II: gh issue create + commit artifact
-  II-->>E: HCP 2 — merge intake PR?
-  E-->>II: merge
-  II->>PM: /pr-merge
+  II->>II: gh issue create
 
   Note over E,PM: Phase 2 — Implement
   E->>IM: /issue-implement N
@@ -291,26 +281,17 @@ sequenceDiagram
 
 ## Intake Detail Flowchart
 
-The six steps inside `/issue-intake`, showing the two HCPs and the code-free scope
-constraint.
+The steps inside `/issue-intake`, showing the single HCP.
 
 ```mermaid
 flowchart TD
-  A([Start]) --> B["Step 1: git checkout -b intake/{slug}"]
-  B --> C["Step 2: Gather → classify → rules gate → draft → milestone check → refine loop"]
-  C --> D{Issue draft approved?}
-  D -- No --> C
-  D -- Yes --> E["HCP 1 — gh issue create"]
-  E --> F["Step 4: Write docs/intake/ artifact → git commit → git push"]
-  F --> G["Step 5: /pr-create"]
-  G --> H{Merge approved?}
-  H -- No --> H
-  H -- Yes --> I["Step 6: /pr-merge — retry on CI failure"]
-  I --> J([Done])
+  A([Start]) --> B["Step 1: Gather → classify → rules gate → draft → milestone check → refine loop"]
+  B --> C{Issue draft approved?}
+  C -- No --> B
+  C -- Yes --> D["HCP 1 — gh issue create"]
+  D --> E([Done])
 
-  style B fill:#f0f4ff
-  style E fill:#fff3cd
-  style H fill:#fff3cd
+  style D fill:#fff3cd
 ```
 
 ---

@@ -1,15 +1,8 @@
 {
   "id": "issue-intake",
   "name": "Issue Intake Workflow",
-  "description": "Turn a raw requirement into a filed, milestone-assigned GitHub issue backed by a committed intake artifact on its own branch and pull request. Two human gate checkpoints guard issue filing and PR merge.",
+  "description": "Turn a raw requirement into a filed, milestone-assigned GitHub issue. Gathers and refines the draft interactively, then gates on engineer approval before calling gh issue create. No branch, no artifact, no PR.",
   "steps": [
-    {
-      "id": "branch",
-      "name": "Open Intake Branch",
-      "agentId": "issue-intake",
-      "inputMap": {},
-      "onError": "halt"
-    },
     {
       "id": "gather",
       "name": "Gather and Refine Issue Draft",
@@ -41,48 +34,9 @@
       }
     },
     {
-      "id": "commit",
-      "name": "Commit Intake Artifact",
+      "id": "create-issue",
+      "name": "Create GitHub Issue",
       "agentId": "issue-intake",
-      "inputMap": {
-        "issueNumber": "$.gather.issueNumber"
-      },
-      "onError": "halt"
-    },
-    {
-      "id": "pr-create",
-      "name": "Open Pull Request",
-      "agentId": "pr-create",
-      "inputMap": {},
-      "onError": "halt"
-    },
-    {
-      "id": "gate-merge",
-      "name": "Gate: Merge PR (HCP 2)",
-      "agentId": null,
-      "inputMap": {},
-      "onError": "halt",
-      "gateConfig": {
-        "prompt": "The intake PR is open. Review the PR and choose an action.",
-        "choices": [
-          {
-            "label": "Merge — squash merge the intake branch",
-            "value": "merge",
-            "onChoice": { "nextStep": null }
-          },
-          {
-            "label": "Hold — leave PR open; stop here",
-            "value": "hold",
-            "onChoice": { "nextStep": null }
-          }
-        ],
-        "defaultChoice": "merge"
-      }
-    },
-    {
-      "id": "pr-merge",
-      "name": "Merge Pull Request",
-      "agentId": "pr-merge",
       "inputMap": {},
       "onError": "halt"
     }

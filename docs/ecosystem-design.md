@@ -33,13 +33,13 @@ quality gate.
 
 ## Agents
 
-| Agent             | Description                                                        | Primary Skills                                       | Collaborators                    |
-| ----------------- | ------------------------------------------------------------------ | ---------------------------------------------------- | -------------------------------- |
-| `devops`          | Build, run, and test the dev environment                           | `/dev-build`, `/dev-start`, `/dev-stop`, `/dev-test` | —                                |
-| `project-manager` | Manage SDLC: issues → milestones → backlog                         | `/issue-start`, `/issue-branch`, `/issue-implement`  | `issue-intake`, `rules-lawyer`   |
-| `issue-intake`    | Guide issue creation: branch → refine → file → commit → PR → merge | `/issue-intake`, `/pr-create`, `/pr-merge`           | `rules-lawyer` (rules gate)      |
-| `code-review`     | Quality-gate PR reviews and codebase audits                        | `/pr-review`, `/code-assess`                         | `devops` skills as prerequisites |
-| `rules-lawyer`    | Authoritative LoB v2.0 rules arbiter                               | none                                                 | Consulted by `issue-intake`      |
+| Agent             | Description                                                       | Primary Skills                                       | Collaborators                    |
+| ----------------- | ----------------------------------------------------------------- | ---------------------------------------------------- | -------------------------------- |
+| `devops`          | Build, run, and test the dev environment                          | `/dev-build`, `/dev-start`, `/dev-stop`, `/dev-test` | —                                |
+| `project-manager` | Manage SDLC: issues → milestones → backlog                        | `/issue-start`, `/issue-branch`, `/issue-implement`  | `issue-intake`, `rules-lawyer`   |
+| `issue-intake`    | Guide issue creation: gather → refine → file issue (no branch/PR) | `/issue-intake`                                      | `rules-lawyer` (rules gate)      |
+| `code-review`     | Quality-gate PR reviews and codebase audits                       | `/pr-review`, `/code-assess`                         | `devops` skills as prerequisites |
+| `rules-lawyer`    | Authoritative LoB v2.0 rules arbiter                              | none                                                 | Consulted by `issue-intake`      |
 
 ```mermaid
 graph TD
@@ -73,8 +73,6 @@ graph TD
     ecosystem-docs-generate
   end
   issue-intake -.->|consults| rl
-  issue-intake -->|calls| pr-create
-  issue-intake -->|calls| pr-merge
   pm -.->|delegates intake to| ii
   pm -.->|consults| rl
 ```
@@ -89,7 +87,7 @@ graph TD
 | `/dev-start`               | dev      | Launch server + Vite client                        | devops          | —                                                                                                                   |
 | `/dev-stop`                | dev      | Graceful shutdown, SIGKILL fallback                | devops          | —                                                                                                                   |
 | `/dev-test`                | dev      | Run suite, detect flakes, correlate errors         | devops          | —                                                                                                                   |
-| `/issue-intake`            | issue    | Branch/PR intake workflow: refine → file → PR      | issue-intake    | `rules-lawyer`, `/pr-create`, `/pr-merge`                                                                           |
+| `/issue-intake`            | issue    | Gather → refine → HCP → file issue (no branch/PR)  | issue-intake    | `rules-lawyer`                                                                                                      |
 | `/issue-start`             | issue    | Fetch issue, summarise ACs, HCP 1                  | project-manager | —                                                                                                                   |
 | `/issue-branch`            | issue    | Create feat branch, log update                     | project-manager | —                                                                                                                   |
 | `/issue-implement`         | issue    | Full ticket-to-merge orchestrator (9 sub-skills)   | project-manager | `/issue-start`, `/issue-branch`, `/dev-build`, `/dev-test`, `/pr-create`, `/pr-review`, `/pr-merge`, `/issue-close` |

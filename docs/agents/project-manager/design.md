@@ -109,7 +109,7 @@ tools: Bash, Read, Glob, Grep
 ### Agent Responsibilities
 
 - **Issue intake** — delegate to the `issue-intake` agent for all issue creation workflows;
-  the `issue-intake` agent handles drafting, filing, and the branch/PR lifecycle; consult
+  the `issue-intake` agent handles drafting and filing (no branch or PR); consult
   `rules-lawyer` whenever game mechanics are involved
 - **Milestone planning** — map new work to the correct HLD phase and milestone; create milestones
   via `gh api` if they do not exist yet; never create scope outside an existing phase without

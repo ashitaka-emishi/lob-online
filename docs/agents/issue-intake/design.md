@@ -2,39 +2,28 @@
 
 ## 1. Overview
 
-The `issue-intake` agent promotes issue creation from a flat skill into a fully documented,
-version-controlled workflow. It guides the engineer from a raw requirement through iterative
-refinement, GitHub issue filing, and a branch/PR lifecycle that persists every intake session
-as a committed artifact.
+The `issue-intake` agent turns a raw requirement into a filed, milestone-assigned GitHub
+issue through lightweight interactive conversation. It gathers and refines the issue draft
+with the engineer, then files the issue on GitHub after explicit approval (HCP 1).
+
+No branch is opened, no artifact is committed, and no PR is created. The filed GitHub issue
+is the authoritative record.
 
 ### Guiding Principles
 
-- **Branch-first** — every intake session opens an `intake/{slug}` branch before touching any
-  file, so the intake artifact is traceable and reviewable
-- **Code-free scope** — this agent writes only documentation and configuration files
-  (`docs/`, `.github/`, `.claude/` paths); source code changes are explicitly prohibited
+- **Conversation-only** — the agent holds the draft in memory during refinement; nothing is
+  written to disk until `gh issue create` is called
+- **Code-free** — this agent never modifies source code or data files
 - **Iterative refinement** — the issue draft is never filed until the engineer explicitly
   approves it; the agent loops as many times as needed
-- **Human control points** — two explicit gates: (1) issue creation via `gh issue create`, and
-  (2) PR merge via `/pr-merge`; the agent never advances past either gate without "proceed" /
-  "merge" from the engineer
+- **Single human control point** — one explicit gate: issue creation via `gh issue create`;
+  the agent never calls it without "proceed" / "yes" / "confirm" from the engineer
 
 ---
 
 ## 2. Workflow
 
-### Step 1 — Open intake branch
-
-Before any file is created, create branch `intake/{issue-slug}`:
-
-```bash
-git checkout -b intake/{slug}
-```
-
-The slug is a short kebab-case label derived from the issue title (e.g., `add-unit-morale-cap`).
-Only files under `docs/`, `.github/`, and `.claude/` may be committed on this branch.
-
-### Step 2 — Gather and refine
+### Step 1 — Gather and refine
 
 Collect the raw requirement (free text, HLD gap reference, or existing notes). Then:
 
@@ -67,7 +56,7 @@ gh api /repos/{owner}/{repo}/milestones --jq '.[].title'
 
 If it does not exist, stop and ask the engineer to confirm before creating it.
 
-### Step 3 — Create GitHub issue (HCP 1)
+### Step 2 — Create GitHub issue (HCP 1)
 
 ```bash
 gh issue create --title "TITLE" --body "BODY" --milestone "MILESTONE"
@@ -77,38 +66,13 @@ gh issue create --title "TITLE" --body "BODY" --milestone "MILESTONE"
 > calling `gh issue create`. Do not proceed until the engineer replies with "proceed", "yes",
 > "confirm", or equivalent. Report the issue URL after creation.
 
-### Step 4 — Commit and push documentation artifacts
-
-Write the intake artifact to `docs/intake/YYYY-MM-DD-{slug}.md` with the full issue body.
-If any HLD or design documents were updated during the session, stage those too.
-
-```bash
-git add docs/intake/YYYY-MM-DD-{slug}.md [other docs...]
-git commit -m "docs(intake): TITLE (#ISSUE_NUMBER)"
-git push -u origin intake/{slug}
-```
-
-### Step 5 — Open PR (HCP 2)
-
-Run `/pr-create` to write a devlog entry, run build checks, and open the pull request.
-Display the PR URL.
-
-> **HUMAN CONTROL POINT** — Wait for the engineer to say "merge" before continuing.
-
-### Step 6 — Merge PR
-
-Run `/pr-merge`. If CI fails, diagnose the failure, apply a fix, and re-run `/pr-merge`.
-Do not mark the intake complete until the branch is merged and deleted.
-
 ---
 
 ## 3. Skills
 
 This agent IS the skill. It owns no sub-skills of its own. It calls:
 
-- `/pr-create` — in Step 5 to open the pull request
-- `/pr-merge` — in Step 6 to merge the branch
-- `rules-lawyer` agent — in Step 2 when game mechanics are involved
+- `rules-lawyer` agent — in Step 1 when game mechanics are involved
 
 ---
 
@@ -123,33 +87,29 @@ This agent IS the skill. It owns no sub-skills of its own. It calls:
 ---
 name: issue-intake
 description: >
-  Guide the creation of a well-formed, AI-actionable GitHub issue with a full branch/PR
-  lifecycle. Opens an intake/{slug} branch, iteratively refines the issue draft with the
-  engineer, files the issue (HCP), commits documentation artifacts, opens a PR (HCP), and
-  merges. Code-file changes are prohibited — only docs/, .github/, and .claude/ paths.
-tools: Bash, Read, Write, Edit, Glob, Grep
+  Guide the creation of a well-formed, AI-actionable GitHub issue. Gathers and refines
+  the draft iteratively with the engineer, then files the issue (HCP). No branch is
+  opened, no artifact is committed, and no PR is created — the filed issue is the record.
+tools: Bash, Read, Glob, Grep
 ---
 ```
 
 ### Agent Responsibilities
 
-- **Branch management** — create `intake/{slug}` before any file is written; scope all changes
-  to `docs/`, `.github/`, `.claude/` only
 - **Issue drafting** — gather raw requirement; classify type; invoke `rules-lawyer` for game
   logic; produce a complete, AI-actionable issue body with all required template fields
 - **Iterative refinement** — loop with the engineer until the draft is approved
 - **Milestone check** — verify the milestone exists in GitHub before filing; ask for approval
   if it needs to be created
-- **Filing and tracking** — create the GitHub issue; report URL; write intake artifact to
-  `docs/intake/YYYY-MM-DD-{slug}.md`; commit and push
-- **PR lifecycle** — run `/pr-create` and await "merge"; run `/pr-merge`; handle CI failures
-  before retrying
+- **Filing** — create the GitHub issue; report URL
 
 ### What the Agent Does NOT Do
 
+- Open branches, commit files, or create pull requests
 - Modify source code files (`.js`, `.vue`, `.json` data files, etc.)
 - Override the `rules-lawyer`'s rulings on game mechanics
-- Skip human control points or auto-merge without explicit "merge" signal
+- Skip the human control point or auto-file without explicit engineer approval
+- Create GitHub milestones without explicit engineer approval
 
 ### Key Files
 
@@ -157,7 +117,6 @@ tools: Bash, Read, Write, Edit, Glob, Grep
 - `docs/agents/issue-intake/prompt.md` — design prompt used to author this agent
 - `.claude/commands/issue-intake.md` — skill file (this agent IS the skill)
 - `.github/ISSUE_TEMPLATE/feature.md` — required fields for AI-implementable tickets
-- `docs/intake/` — committed intake artifacts, one file per session
 
 ---
 
@@ -166,7 +125,7 @@ tools: Bash, Read, Write, Edit, Glob, Grep
 - [x] `docs/agents/issue-intake/design.md` — this file
 - [x] `docs/agents/issue-intake/prompt.md`
 - [x] `.claude/agents/issue-intake.md`
-- [x] `.claude/commands/issue-intake.md` — updated 6-step workflow
+- [x] `.claude/commands/issue-intake.md` — simplified 2-step workflow
 - [x] `docs/agents/project-manager/design.md` — issue-intake removed from §3 Skills
 - [x] `docs/agents/project-manager/prompt.md` — updated
 - [x] `.claude/agents/project-manager.md` — updated

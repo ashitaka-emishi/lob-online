@@ -195,16 +195,16 @@ Here is how each step applied:
 **Step 1 — Name and responsibility:**
 
 - Name: `issue-intake`
-- Purpose: "Guide creation of a well-formed GitHub issue with a full branch/PR lifecycle"
-- Tools: `Bash, Read, Write, Edit, Glob, Grep` (needs file writing for intake artifacts)
+- Purpose: "Guide creation of a well-formed GitHub issue through interactive conversation"
+- Tools: `Bash, Read, Glob, Grep` (no file writing needed — the issue IS the artifact)
 
 **Step 2 — `design.md`:**
-Created at `docs/agents/issue-intake/design.md`. §4 specified six tools and a multi-paragraph
-description covering the `intake/{slug}` branch requirement and the docs-only scope guard.
+Created at `docs/agents/issue-intake/design.md`. §4 specified four tools and a description
+covering the gather-refine-HCP-file flow with no branch or PR lifecycle.
 
 **Step 3 — `prompt.md`:**
-Created at `docs/agents/issue-intake/prompt.md`. The prompt defines the 6-step workflow in
-detail: branch → refine → HCP 1 → commit artifact → HCP 2 → merge.
+Created at `docs/agents/issue-intake/prompt.md`. The prompt defines the 2-step workflow:
+gather → HCP 1 → `gh issue create`.
 
 **Step 4 — Agent file:**
 `/agent-regenerate` wrote `.claude/agents/issue-intake.md` from §4.

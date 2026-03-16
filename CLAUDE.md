@@ -64,10 +64,10 @@ A `project-manager` agent manages the SDLC: assigning milestones and auditing is
 consistency. Use `/issue-implement <number>` to drive the full ticket-to-merge workflow with
 human control points. See `docs/agents/project-manager/design.md` for the full spec.
 
-An `issue-intake` agent handles the full issue-creation lifecycle: it opens an `intake/{slug}`
-branch, iteratively refines the draft with the engineer, files the GitHub issue (HCP), commits
-the intake artifact, opens a PR (HCP), and merges. Use `/issue-intake` to create a well-formed,
-AI-actionable GitHub issue. See `docs/agents/issue-intake/design.md` for the full spec.
+An `issue-intake` agent handles issue creation: it gathers the raw requirement, iteratively
+refines the draft with the engineer, and files the GitHub issue after explicit approval (HCP).
+No branch, artifact, or PR is created — the filed issue is the record. Use `/issue-intake` to
+create a well-formed, AI-actionable GitHub issue. See `docs/agents/issue-intake/design.md`.
 
 A `code-review` agent performs quality-gate reviews. See `docs/agents/code-review/design.md`
 for the full spec.
@@ -100,7 +100,7 @@ human input via a CLI readline interface, and persists a `WorkflowInstance` JSON
 `docs/ailog/YYYY_MM_DD-LOB-{####}-instance.json`. Three workflows are defined:
 
 - `docs/workflows/sdlc-feature/` — full feature delivery pipeline
-- `docs/workflows/issue-intake/` — intake branch → refine → file → commit → PR → merge
+- `docs/workflows/issue-intake/` — gather → refine → HCP → file issue
 - `docs/workflows/issue-implement/` — full ticket-to-merge with six HCPs (plan, editor review, push, review, merge, close)
 
 AI execution logs for issue implementations are stored in `docs/ailog/YYYY_MM_DD-LOB-{####}.md`

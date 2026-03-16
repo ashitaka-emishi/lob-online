@@ -319,25 +319,21 @@ lob-online workflows. Here is how each step of this tutorial applied:
 **Step 1 — Plan:**
 
 ```
-[issue-intake: branch] → [issue-intake: gather]
+[issue-intake: gather]
   → [gate: file-issue (HCP 1)]
-    → file: [issue-intake: commit] → [pr-create: pr-create]
-      → [gate: merge-pr (HCP 2)]
-        → merge: [pr-merge: pr-merge]
+    → file: [issue-intake: create-issue]
     → revise: back to gather
 ```
 
 **Step 2 — Directory:** `docs/workflows/issue-intake/`
 
-**Step 3 — `.workflow.json`:** 7 steps, 2 gates. The `commit` step uses
-`inputMap: { "issueNumber": "$.gather.issueNumber" }` to thread the filed issue number from
-the `gather` step's output into the commit message.
+**Step 3 — `.workflow.json`:** 3 steps, 1 gate. The `create-issue` step runs `gh issue create`
+after the engineer approves the draft at the gate.
 
-**Step 4 — `.states.md`:** Mermaid diagram with 7 states; gate checkpoint table with 2 rows
-noting that `revise` loops back to `gather` while preserving the `branch` step's output.
+**Step 4 — `.states.md`:** Mermaid diagram with 3 states; gate checkpoint table with 1 row
+noting that `revise` loops back to `gather`.
 
-**Step 5 — Registry:** `issue-intake`, `pr-create`, and `pr-merge` were already registered.
-No new entries needed.
+**Step 5 — Registry:** `issue-intake` was already registered. No new entries needed.
 
 **Step 6 — Validation:** `npm test` passes; schema validation in `schemas.test.js` covers
 the `WorkflowDefinitionSchema`.

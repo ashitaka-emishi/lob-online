@@ -39,15 +39,14 @@ relate to each other is the key to understanding how the whole thing holds toget
 An **agent** is a specialised AI subprocess with a defined responsibility boundary. The
 `devops` agent handles build, test, start, and stop operations. The `rules-lawyer` agent is
 the authoritative wargame rules arbiter — its rulings cannot be overridden by any other
-agent. The `issue-intake` agent manages the full lifecycle of creating a GitHub issue, from
-first draft to merged PR.
+agent. The `issue-intake` agent guides issue creation from first draft to filed GitHub issue.
 
 Each agent has two constraints baked in: an **allowed-tools list** (Bash, Read, Write, and
 so on) that limits what the subprocess can touch, and a **system prompt** that encodes its
 responsibilities and what it must not do. These constraints mean an agent cannot accidentally
 exceed its scope, even if the engineer asks it to. The `rules-lawyer` has no Bash access and
-cannot write files. The `issue-intake` agent may only commit to `docs/`, `.github/`, and
-`.claude/` paths — source code changes are explicitly prohibited.
+cannot write files. The `issue-intake` agent has no Write access — it never touches the
+filesystem, it only calls `gh issue create`.
 
 Agents answer the question: _what is this AI subprocess allowed to do, and what is it
 responsible for?_
@@ -104,10 +103,10 @@ the same Markdown prompts that engineers already invoke manually.
 Here is how all three layers cooperate in a typical feature implementation:
 
 1. **Issue intake** — The engineer invokes the `issue-intake` **agent** (layer 1), which
-   runs the `/issue-intake` **skill** (layer 2). The skill opens a branch, refines the draft,
-   consults `rules-lawyer` if the feature touches game mechanics, and waits for explicit
-   approval before filing the issue. The `issue-intake` **workflow definition** (layer 3)
-   formalises this same sequence as version-controlled JSON.
+   runs the `/issue-intake` **skill** (layer 2). The skill gathers the raw requirement,
+   refines the draft, consults `rules-lawyer` if the feature touches game mechanics, and
+   waits for explicit approval before calling `gh issue create`. The `issue-intake`
+   **workflow definition** (layer 3) formalises this same sequence as version-controlled JSON.
 
 2. **Implementation** — `/issue-implement` (a skill) is invoked. The `project-manager` agent
    fetches the issue, proposes a plan, and presents **HCP 1** — the workflow does not proceed
