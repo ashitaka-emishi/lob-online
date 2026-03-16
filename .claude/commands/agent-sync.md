@@ -1,4 +1,7 @@
-# Skill: sync-agents
+---
+description: Read-only drift check between design.md files and .claude/agents/*.md
+allowed-tools: Read, Glob
+---
 
 Read-only verification. Check that every `.claude/agents/<name>.md` matches its
 `docs/agents/<name>/design.md` section 4. Run any time to detect drift without modifying files.
@@ -28,7 +31,7 @@ Read-only verification. Check that every `.claude/agents/<name>.md` matches its
    - Print "All agents in sync" and exit
 5. If any agent has drift or missing files:
    - Print the structured report
-   - Print "Run /regenerate-agents to fix drift; create missing files manually"
+   - Print "Run /agent-regenerate to fix drift; create missing files manually"
    - Do NOT modify any files
 
 ## Notes

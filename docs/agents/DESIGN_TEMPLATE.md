@@ -30,7 +30,7 @@
 ## 4. Agent Definition
 
 <!-- KEY DESIGN RULE: This section heading must never be renamed.
-     The /regenerate-agents and /sync-agents skills locate content here. -->
+     The /agent-regenerate and /agent-sync skills locate content here. -->
 
 **File:** `.claude/agents/<name>.md`
 

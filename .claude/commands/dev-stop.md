@@ -9,7 +9,7 @@ Stop any running lob-online processes on ports 3000 (server) and 5173 (Vite clie
 
 Check two sources and union the results:
 
-**a) PIDs from the `.pids` file** (written by the `start` skill):
+**a) PIDs from the `.pids` file** (written by the `dev-start` skill):
 
 ```
 cat .pids 2>/dev/null

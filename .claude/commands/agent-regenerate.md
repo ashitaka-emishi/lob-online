@@ -1,4 +1,7 @@
-# Skill: regenerate-agents
+---
+description: Rebuild .claude/agents/*.md from design.md Section 4; verify with /dev-build
+allowed-tools: Read, Write, Edit, Glob, Bash
+---
 
 Rebuild all `.claude/agents/*.md` files from section 4 of each `docs/agents/<name>/design.md`.
 Use this after editing `design.md` files to sync the agent definitions without touching
@@ -18,7 +21,7 @@ Use this after editing `design.md` files to sync the agent definitions without t
    - Add a blank line, then the agent body: a first-person "You are the X agent" intro,
      followed by Responsibilities, What This Agent Does NOT Do, and Key Files as `##` sections
      e. Rewrite `.claude/agents/<name>.md` with the constructed content
-3. Run `/build`
+3. Run `/dev-build`
 4. Report which agent files were regenerated and which were skipped (with skip reason)
 
 ## Notes

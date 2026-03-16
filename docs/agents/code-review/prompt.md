@@ -25,11 +25,11 @@ invoked independently or composed by the agent.
 
 ## Skills / Operations
 
-### `/review`
+### `/pr-review`
 
 - Verify an open PR exists for the current branch (`gh pr view`)
-- Run `/build`; abort if it fails
-- Run `/test`; abort if any tests fail
+- Run `/dev-build`; abort if it fails
+- Run `/dev-test`; abort if any tests fail
 - Check coverage (`npm run test:coverage`); flag files below 70% line coverage
 - Fetch the PR diff (`gh pr diff`)
 - Analyse the diff for: dead code, duplicate logic, null/undefined risks, unreferenced variables,
@@ -38,10 +38,10 @@ invoked independently or composed by the agent.
 - Post findings as a PR comment (`gh pr comment`)
 - Report structured summary: build status, test status, coverage gaps, findings with severity/location
 
-### `/assess`
+### `/code-assess`
 
-- Run `/build`; abort if it fails
-- Run `/test` with coverage; abort if tests fail; capture coverage report
+- Run `/dev-build`; abort if it fails
+- Run `/dev-test` with coverage; abort if tests fail; capture coverage report
 - Log results to `logs/review/assess-TIMESTAMP.log`
 - Analyse full source tree (`server/src/`, `client/src/`) for: duplicate code, dead code,
   coverage gaps, refactoring opportunities, standards inconsistencies
@@ -50,7 +50,7 @@ invoked independently or composed by the agent.
 
 ## Guiding Principles
 
-- **Skills-first** — `/review` and `/assess` are named skills so they can be invoked independently
+- **Skills-first** — `/pr-review` and `/code-assess` are named skills so they can be invoked independently
 - **Build-then-test-then-analyse** — never analyse broken code
 - **npm run** — use `npm run` wherever a script exists
 - **Local logs** — all output goes to `logs/review/` (gitignored), one file per run, timestamped

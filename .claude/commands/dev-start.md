@@ -13,7 +13,7 @@ lsof -ti :3000
 lsof -ti :5173
 ```
 
-If either port is occupied, invoke the `stop` skill to clean up before continuing.
+If either port is occupied, invoke the `dev-stop` skill to clean up before continuing.
 
 ## Step 2 — Determine date and create log directories
 
@@ -45,8 +45,8 @@ Record the PID.
 
 ## Step 5 — Persist PIDs
 
-Write both PIDs to `.pids` at the project root so the `stop` skill can find them reliably.
-Also record the log paths so `stop` and `test` can reference today's logs:
+Write both PIDs to `.pids` at the project root so the `dev-stop` skill can find them reliably.
+Also record the log paths so `dev-stop` and `dev-test` can reference today's logs:
 
 ```
 cat > .pids <<EOF

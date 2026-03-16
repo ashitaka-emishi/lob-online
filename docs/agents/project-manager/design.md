@@ -135,7 +135,7 @@ tools: Bash, Read, Glob, Grep
 
 ### What the Agent Does NOT Do
 
-- Write code or create pull requests — that is the coding agent + `create-pr` skill
+- Write code or create pull requests — that is the coding agent + `pr-create` skill
 - Override the `rules-lawyer`'s rulings on game mechanics
 - Merge or close pull requests
 
@@ -146,6 +146,7 @@ tools: Bash, Read, Glob, Grep
 - `CLAUDE.md` — project overview and coding standards
 - `.github/ISSUE_TEMPLATE/feature.md` — required fields for AI-implementable tickets
 - `.claude/commands/issue-intake.md` — issue creation skill
+- `.claude/commands/issue-implement.md` — full ticket-to-merge orchestration skill
 
 ---
 
@@ -154,6 +155,7 @@ tools: Bash, Read, Glob, Grep
 - [x] `.github/ISSUE_TEMPLATE/feature.md` — issue template
 - [x] `.github/pull_request_template.md` — PR template
 - [x] `.claude/commands/issue-intake.md` — issue-intake skill
+- [x] `.claude/commands/issue-implement.md` — issue-implement skill
 - [x] `.claude/agents/project-manager.md` — agent definition
 - [x] `docs/agents/project-manager/prompt.md`
 - [x] `docs/agents/project-manager/design.md`

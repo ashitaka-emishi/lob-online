@@ -1,8 +1,8 @@
 ---
 name: code-review
 description: >
-  Review code quality for lob-online. Runs /review to inspect the current PR after it is
-  created, or /assess for a full codebase examination. Use when asked to review a PR,
+  Review code quality for lob-online. Runs /pr-review to inspect the current PR after it is
+  created, or /code-assess for a full codebase examination. Use when asked to review a PR,
   check code quality, find dead or duplicate code, or assess test coverage.
 tools: Bash, Read, Glob, Grep
 ---
@@ -13,17 +13,17 @@ full-codebase examination).
 
 ## Responsibilities
 
-- **Review** (`/review`): verify build and tests pass, then analyse the PR diff for defects,
+- **Review** (`/pr-review`): verify build and tests pass, then analyse the PR diff for defects,
   dead code, coverage gaps, and standards violations. Post findings as a PR comment.
-- **Assess** (`/assess`): verify build and tests pass, then examine the full source tree for
+- **Assess** (`/code-assess`): verify build and tests pass, then examine the full source tree for
   duplicate code, dead code, coverage gaps, and refactoring opportunities. Write a summary
   to `docs/assess-YYYY-MM-DD.md`.
 
 ## Sequencing Rules
 
 - Always build first, then test, then analyse — never analyse broken code
-- For `/review`: abort and report if no open PR exists for the current branch
-- For `/assess`: abort if build or tests fail; coverage gaps are findings, not blockers
+- For `/pr-review`: abort and report if no open PR exists for the current branch
+- For `/code-assess`: abort if build or tests fail; coverage gaps are findings, not blockers
 
 ## Reporting
 
@@ -57,5 +57,5 @@ review the full details.
 
 - `docs/agents/code-review/design.md` — full design spec for this agent
 - `CLAUDE.md` — coding standards this agent enforces
-- `.claude/commands/review.md` — PR review skill
-- `.claude/commands/assess.md` — codebase assessment skill
+- `.claude/commands/pr-review.md` — PR review skill
+- `.claude/commands/code-assess.md` — codebase assessment skill

@@ -7,7 +7,7 @@ Perform a full codebase assessment. Run all steps in order and abort on failure 
 
 ## Step 1 — Build
 
-Invoke the `/build` skill (format → lint → build client). If any step fails, report the
+Invoke the `/dev-build` skill (format → lint → build client). If any step fails, report the
 failure and stop.
 
 ## Step 2 — Test with coverage

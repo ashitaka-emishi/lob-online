@@ -29,35 +29,44 @@ step-by-step instructions that Claude executes, including allowed-tools declarat
 
 ### DevOps Skills
 
-| Skill    | File                | Purpose                                                                                                                     |
-| -------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `/build` | `commands/build.md` | Run Prettier, ESLint, and Vite build in sequence; stop on first failure                                                     |
-| `/start` | `commands/start.md` | Launch server (port 3000) and Vite dev client (port 5173); log output to `logs/<type>/YYYY_MM_DD/`; persist PIDs to `.pids` |
-| `/stop`  | `commands/stop.md`  | Gracefully terminate server and client using `.pids` and port scan; SIGKILL after 10 s; remove `.pids`                      |
-| `/test`  | `commands/test.md`  | Run full test suite; capture logs to `logs/test/YYYY_MM_DD/`; detect flaky tests; correlate failures with server logs       |
+| Skill        | File                    | Purpose                                                                                                                     |
+| ------------ | ----------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `/dev-build` | `commands/dev-build.md` | Run Prettier, ESLint, and Vite build in sequence; stop on first failure                                                     |
+| `/dev-start` | `commands/dev-start.md` | Launch server (port 3000) and Vite dev client (port 5173); log output to `logs/<type>/YYYY_MM_DD/`; persist PIDs to `.pids` |
+| `/dev-stop`  | `commands/dev-stop.md`  | Gracefully terminate server and client using `.pids` and port scan; SIGKILL after 10 s; remove `.pids`                      |
+| `/dev-test`  | `commands/dev-test.md`  | Run full test suite; capture logs to `logs/test/YYYY_MM_DD/`; detect flaky tests; correlate failures with server logs       |
 
-### Project Management Skills
+### Issue Workflow Skills
 
-| Skill           | File                       | Purpose                                                                                             |
-| --------------- | -------------------------- | --------------------------------------------------------------------------------------------------- |
-| `/issue-intake` | `commands/issue-intake.md` | Guide creation of an AI-actionable GitHub issue with two human control points before filing         |
-| `/create-pr`    | `commands/create-pr.md`    | Write devlog entry, run build checks, then open a GitHub pull request                               |
-| `/wrap-plan`    | `commands/wrap-plan.md`    | After a plan is implemented: verify lint/format/tests, write devlog entry, review CLAUDE.md and HLD |
+| Skill              | File                          | Purpose                                                                                            |
+| ------------------ | ----------------------------- | -------------------------------------------------------------------------------------------------- |
+| `/issue-intake`    | `commands/issue-intake.md`    | Guide creation of an AI-actionable GitHub issue with two human control points before filing        |
+| `/issue-start`     | `commands/issue-start.md`     | Read issue, summarise ACs, confirm approach — HCP 1                                                |
+| `/issue-branch`    | `commands/issue-branch.md`    | Create `feat/{id}-{slug}` branch; set commit prefix `#{id}`                                        |
+| `/issue-implement` | `commands/issue-implement.md` | Orchestrating macro-skill: sequences all sub-skills with human control points from ticket to merge |
+
+### PR and Plan Skills
+
+| Skill        | File                    | Purpose                                                                                             |
+| ------------ | ----------------------- | --------------------------------------------------------------------------------------------------- |
+| `/pr-create` | `commands/pr-create.md` | Write devlog entry, run build checks, then open a GitHub pull request                               |
+| `/pr-review` | `commands/pr-review.md` | Review the current PR for coding standards, test coverage, and common defects                       |
+| `/pr-merge`  | `commands/pr-merge.md`  | Squash-merge the current PR and delete the branch — HCP 3                                           |
+| `/plan-wrap` | `commands/plan-wrap.md` | After a plan is implemented: verify lint/format/tests, write devlog entry, review CLAUDE.md and HLD |
 
 ### Code Review Skills
 
-| Skill     | File                 | Purpose                                                                                |
-| --------- | -------------------- | -------------------------------------------------------------------------------------- |
-| `/review` | `commands/review.md` | Review the current PR for coding standards, test coverage, and common defects          |
-| `/assess` | `commands/assess.md` | Full codebase examination for duplicate code, dead code, and refactoring opportunities |
+| Skill          | File                      | Purpose                                                                                |
+| -------------- | ------------------------- | -------------------------------------------------------------------------------------- |
+| `/code-assess` | `commands/code-assess.md` | Full codebase examination for duplicate code, dead code, and refactoring opportunities |
 
 ### Agent Maintenance Skills
 
-| Skill                 | File                             | Purpose                                                                   |
-| --------------------- | -------------------------------- | ------------------------------------------------------------------------- |
-| `/sync-agents`        | `commands/sync-agents.md`        | Read-only drift check between `design.md` files and `.claude/agents/*.md` |
-| `/regenerate-agents`  | `commands/regenerate-agents.md`  | Rebuild agent files from the `design.md` Section 4 prompt block           |
-| `/standardize-agents` | `commands/standardize-agents.md` | Normalize prompt files and cascade changes through design and agent files |
+| Skill                | File                            | Purpose                                                                   |
+| -------------------- | ------------------------------- | ------------------------------------------------------------------------- |
+| `/agent-sync`        | `commands/agent-sync.md`        | Read-only drift check between `design.md` files and `.claude/agents/*.md` |
+| `/agent-regenerate`  | `commands/agent-regenerate.md`  | Rebuild agent files from the `design.md` Section 4 prompt block           |
+| `/agent-standardize` | `commands/agent-standardize.md` | Normalize prompt files and cascade changes through design and agent files |
 
 ---
 
@@ -65,3 +74,12 @@ step-by-step instructions that Claude executes, including allowed-tools declarat
 
 `settings.local.json` — local Claude Code settings (gitignored if it contains secrets; this
 copy contains no credentials and is safe to commit).
+
+---
+
+## Documentation
+
+| Document                                                            | Purpose                                                                                                  |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| [`docs/architecture.md`](../docs/architecture.md)                   | Full agent/skill architecture with Mermaid diagrams, skill dependency graph, and issue-to-merge workflow |
+| [`docs/agents/SKILL_TEMPLATE.md`](../docs/agents/SKILL_TEMPLATE.md) | Template for authoring new skill files                                                                   |

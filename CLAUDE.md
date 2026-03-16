@@ -47,31 +47,35 @@ A hex map editor is available as a dev-only tool for digitizing `docs/reference/
 
 A `devops` agent and four skills automate the build/run/test cycle. See `docs/agents/devops/design.md` for the full spec.
 
-- `/build` — format, lint, and build the client
-- `/start` — launch server (port 3000) and Vite dev client (port 5173), logging to `logs/`
-- `/stop` — graceful shutdown with 10 s SIGKILL fallback
-- `/test` — run suite, snapshot results to `test-results/`, detect flaky tests, correlate server errors
+- `/dev-build` — format, lint, and build the client
+- `/dev-start` — launch server (port 3000) and Vite dev client (port 5173), logging to `logs/`
+- `/dev-stop` — graceful shutdown with 10 s SIGKILL fallback
+- `/dev-test` — run suite, snapshot results to `test-results/`, detect flaky tests, correlate server errors
 
 For rules questions, errata, and SM-specific overrides, use the `rules-lawyer` agent.
 See `docs/agents/rules-lawyer/design.md` for the full spec.
 
 A `project-manager` agent manages the SDLC: filing GitHub issues, assigning milestones, and
 auditing issue/HLD consistency. Use the `/issue-intake` skill to create a well-formed,
-AI-actionable GitHub issue. See `docs/agents/project-manager/design.md` for the full spec.
+AI-actionable GitHub issue. Use `/issue-implement <number>` to drive the full ticket-to-merge
+workflow with human control points. See `docs/agents/project-manager/design.md` for the full spec.
 
 A `code-review` agent performs quality-gate reviews. See `docs/agents/code-review/design.md`
 for the full spec.
 
-- `/review` — reviews the current PR for coding standards, test coverage, and common defects
-- `/assess` — performs a full codebase examination for duplicate code, dead code, and
+- `/pr-review` — reviews the current PR for coding standards, test coverage, and common defects
+- `/code-assess` — performs a full codebase examination for duplicate code, dead code, and
   refactoring opportunities
 
 All agent design documents and prompts live in `docs/agents/<name>/`. Three skills manage the
 agent layer:
 
-- `/sync-agents` — read-only drift check between `design.md` and `.claude/agents/*.md`
-- `/regenerate-agents` — rebuild agent files from `design.md` section 4
-- `/standardize-agents` — normalize prompt files and cascade changes through design and agent files
+- `/agent-sync` — read-only drift check between `design.md` and `.claude/agents/*.md`
+- `/agent-regenerate` — rebuild agent files from `design.md` section 4
+- `/agent-standardize` — normalize prompt files and cascade changes through design and agent files
+
+AI execution logs for issue implementations are stored in `docs/ailog/YYYY_MM_DD-LOB-{####}.md`
+and committed as a permanent audit trail of AI planning and human approvals.
 
 ## Coding Standards
 
@@ -92,15 +96,15 @@ agent layer:
 - **Data validation:** Zod schemas in `server/src/schemas/` validate all JSON data files at
   load time. No TypeScript — runtime validation is the type safety strategy.
 - **CI gates:** `npm run lint`, `npm run format:check`, and `npm run test` must all pass before
-  merge. The `/build` skill runs these three checks locally in order.
+  merge. The `/dev-build` skill runs these three checks locally in order.
 
 ## Post-Plan Protocol
 
-After any plan is implemented, run `/wrap-plan` to verify lint, formatting, and tests pass; write
+After any plan is implemented, run `/plan-wrap` to verify lint, formatting, and tests pass; write
 a devlog entry; review CLAUDE.md for needed updates; and assess whether high-level-design.md requires
 architectural revision. Do not skip this step before ending a working session.
 
-When creating a pull request, run `/create-pr` instead of `gh pr create` directly. The command
+When creating a pull request, run `/pr-create` instead of `gh pr create` directly. The command
 writes a diary entry for the PR, runs the build checks, and then opens the PR.
 
 Devlog entries are appended to a per-day file in `docs/devlog/YYYY-MM-DD.md`. Each entry

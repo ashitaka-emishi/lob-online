@@ -17,12 +17,12 @@ proceed.
 
 ## Step 2 — Build
 
-Invoke the `/build` skill (format → lint → build client). If any step fails, report the
+Invoke the `/dev-build` skill (format → lint → build client). If any step fails, report the
 failure and stop.
 
 ## Step 3 — Test
 
-Invoke the `/test` skill. If any tests fail, report the failures and stop.
+Invoke the `/dev-test` skill. If any tests fail, report the failures and stop.
 
 ## Step 4 — Coverage check
 

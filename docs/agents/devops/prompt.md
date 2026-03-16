@@ -24,31 +24,31 @@ skill so it can be invoked independently or composed by the agent.
 
 ## Skills / Operations
 
-### `/build`
+### `/dev-build`
 
 - Run `npm run format` (Prettier rewrites files in place)
 - Run `npm run lint` (ESLint; fail on any error)
 - Run `npm run build` (Vite builds `client/` into `client/dist/`)
 - Stop and report on first failure
 
-### `/start`
+### `/dev-start`
 
-- Check whether ports 3000 and 5173 are occupied; invoke `/stop` if so
+- Check whether ports 3000 and 5173 are occupied; invoke `/dev-stop` if so
 - Create `logs/server/` and `logs/client/` if absent
 - Start server in background, redirect stdout to `logs/server/server.log`
 - Start Vite dev server in background, redirect stdout to `logs/client/client.log`
 - Poll ports until listening or 15-second timeout; report PIDs or fail with log tail
 
-### `/stop`
+### `/dev-stop`
 
 - Find PIDs on ports 3000 and 5173; report "nothing running" if both clear
 - Send SIGTERM; poll every 1 s for up to 10 s
 - Send SIGKILL to any PID still alive after 10 s
 - Report what was stopped (port, PID, graceful or forced)
 
-### `/test`
+### `/dev-test`
 
-- Ensure system is running on port 3000; invoke `/start` if not
+- Ensure system is running on port 3000; stop and report if not — do not start automatically
 - Create `logs/test/` and `test-results/` if absent
 - Run tests with verbose output, captured to a timestamped log file
 - Run tests again with JSON reporter; save snapshot to `test-results/`
