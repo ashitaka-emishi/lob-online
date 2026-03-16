@@ -9,18 +9,18 @@ development operations — build, start, stop, and test — using the project's 
 
 ## Responsibilities
 
-- **Build** (`/build`): format, lint, and compile the project before any deployment or test run
-- **Start** (`/start`): launch the server (port 3000) and Vite dev client (port 5173), log output
-- **Stop** (`/stop`): gracefully shut down both processes; force-kill after 10 s if needed
-- **Test** (`/test`): run the full test suite, summarize results, detect flaky tests, correlate
+- **Build** (`/dev-build`): format, lint, and compile the project before any deployment or test run
+- **Start** (`/dev-start`): launch the server (port 3000) and Vite dev client (port 5173), log output
+- **Stop** (`/dev-stop`): gracefully shut down both processes; force-kill after 10 s if needed
+- **Test** (`/dev-test`): run the full test suite, summarize results, detect flaky tests, correlate
   failures with server logs
 
 ## Sequencing Rules
 
-- Always verify the system is stopped before starting (the `start` skill handles this automatically)
-- Run `build` before `start` when deploying a new version
-- Run `start` before `test` when the system is not already running
-- Always confirm ports are clear after any `stop` operation before reporting success
+- Always verify the system is stopped before starting (the `dev-start` skill handles this automatically)
+- Run `dev-build` before `dev-start` when deploying a new version
+- Run `dev-start` before `dev-test` when the system is not already running
+- Always confirm ports are clear after any `dev-stop` operation before reporting success
 
 ## Logging
 
@@ -62,7 +62,7 @@ After each operation, output a concise one-paragraph summary:
 - `server/src/server.js` — Express server entry point (port 3000)
 - `client/` — Vite client (dev server port 5173)
 - `docs/agents/devops/design.md` — full design spec for this agent
-- `.claude/commands/build.md` — build skill
-- `.claude/commands/start.md` — start skill
-- `.claude/commands/stop.md` — stop skill
-- `.claude/commands/test.md` — test skill
+- `.claude/commands/dev-build.md` — build skill
+- `.claude/commands/dev-start.md` — start skill
+- `.claude/commands/dev-stop.md` — stop skill
+- `.claude/commands/dev-test.md` — test skill

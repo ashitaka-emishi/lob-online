@@ -9,7 +9,7 @@ or composed by the agent.
 
 ### Guiding Principles
 
-- **Skills-first** — frequent tasks are managed as named skills (`/review`, `/assess`)
+- **Skills-first** — frequent tasks are managed as named skills (`/pr-review`, `/code-assess`)
 - **Build-then-test-then-analyse** — build and tests must pass before any review analysis runs;
   no point analysing broken code
 - **npm run** — used wherever a script exists; raw commands are a fallback only
@@ -34,7 +34,7 @@ logs/
 
 ## 3. Skills
 
-### `review` — `.claude/commands/review.md`
+### `pr-review` — `.claude/commands/pr-review.md`
 
 **Purpose:** Inspect the current PR diff for coding standards compliance, test coverage gaps,
 and common defects. Intended to run immediately after a PR is created.
@@ -42,8 +42,8 @@ and common defects. Intended to run immediately after a PR is created.
 **Steps (abort on first failure in steps 1–4):**
 
 1. Verify a PR exists for the current branch: `gh pr view`; abort if no open PR found
-2. Run `/build` (format → lint → build); abort if it fails
-3. Run `/test`; abort if any tests fail
+2. Run `/dev-build` (format → lint → build); abort if it fails
+3. Run `/dev-test`; abort if any tests fail
 4. Check coverage: `npm run test:coverage`; flag files below 70% line coverage
 5. Fetch the PR diff: `gh pr diff`
 6. Analyse the diff for:
@@ -57,15 +57,15 @@ and common defects. Intended to run immediately after a PR is created.
 8. Report a structured summary: build status, test status, coverage gaps, findings with severity/location
 9. Post findings as a PR comment: `gh pr comment --body "$(cat logs/review/review-TIMESTAMP.log)"`
 
-### `assess` — `.claude/commands/assess.md`
+### `code-assess` — `.claude/commands/code-assess.md`
 
 **Purpose:** Examine the entire source tree for systemic quality issues. Intended for
 periodic audits or before major refactors.
 
 **Steps (abort on failure in steps 1–2):**
 
-1. Run `/build`; abort if it fails
-2. Run `/test` with coverage: `npm run test:coverage`; abort if tests fail; capture the report
+1. Run `/dev-build`; abort if it fails
+2. Run `/dev-test` with coverage: `npm run test:coverage`; abort if tests fail; capture the report
 3. Log results to `logs/review/assess-TIMESTAMP.log`
 4. Analyse the full source tree (`server/src/`, `client/src/`) for:
    - **Duplicate code** — similar functions or blocks across multiple files
@@ -90,8 +90,8 @@ periodic audits or before major refactors.
 ---
 name: code-review
 description: >
-  Review code quality for lob-online. Runs /review to inspect the current PR after it is
-  created, or /assess for a full codebase examination. Use when asked to review a PR,
+  Review code quality for lob-online. Runs /pr-review to inspect the current PR after it is
+  created, or /code-assess for a full codebase examination. Use when asked to review a PR,
   check code quality, find dead or duplicate code, or assess test coverage.
 tools: Bash, Read, Glob, Grep
 ---
@@ -101,8 +101,8 @@ tools: Bash, Read, Glob, Grep
 
 - Sequence skill calls correctly: always build first, then test, then analyse
 - Never modify source files — only report findings
-- After `/review`, post findings as a PR comment via `gh pr comment`
-- After `/assess`, write a summary to `docs/assess-YYYY-MM-DD.md`
+- After `/pr-review`, post findings as a PR comment via `gh pr comment`
+- After `/code-assess`, write a summary to `docs/assess-YYYY-MM-DD.md`
 - On every run, append full output to the appropriate `logs/review/` file
 
 ### What the Agent Does NOT Do
@@ -116,15 +116,15 @@ tools: Bash, Read, Glob, Grep
 
 - `docs/agents/code-review/design.md` — full design spec for this agent
 - `CLAUDE.md` — coding standards this agent enforces
-- `.claude/commands/review.md` — PR review skill
-- `.claude/commands/assess.md` — codebase assessment skill
+- `.claude/commands/pr-review.md` — PR review skill
+- `.claude/commands/code-assess.md` — codebase assessment skill
 
 ---
 
 ## 5. Implementation Checklist
 
-- [x] `.claude/commands/review.md` — PR review skill
-- [x] `.claude/commands/assess.md` — codebase assessment skill
+- [x] `.claude/commands/pr-review.md` — PR review skill
+- [x] `.claude/commands/code-assess.md` — codebase assessment skill
 - [x] `.claude/agents/code-review.md` — agent definition
 - [x] `docs/agents/code-review/prompt.md`
 - [x] `docs/agents/code-review/design.md`

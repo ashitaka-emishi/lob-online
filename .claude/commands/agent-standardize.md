@@ -1,4 +1,7 @@
-# Skill: standardize-agents
+---
+description: Normalize prompt.md files against template, regenerate design.md and agent files
+allowed-tools: Read, Write, Edit, Glob, Bash
+---
 
 Normalize all agent `prompt.md` files against the template, then regenerate `design.md` and
 `.claude/agents/<name>.md` for each agent. Run this when prompt files have drifted from the
@@ -30,12 +33,12 @@ standard structure or when template headings have changed.
 5. For each agent: extract `## 4. Agent Definition` from `design.md` and rewrite
    `.claude/agents/<name>.md` — the YAML frontmatter block followed by the agent body text
    derived from the Responsibilities and Key Files subsections
-6. Run `/build`
+6. Run `/dev-build`
 7. Report a per-agent summary: which sections were added, which files were regenerated
 
 ## Notes
 
-- Section 4 heading (`## 4. Agent Definition`) must never be renamed — `/regenerate-agents`
-  and `/sync-agents` locate content by this exact heading
+- Section 4 heading (`## 4. Agent Definition`) must never be renamed — `/agent-regenerate`
+  and `/agent-sync` locate content by this exact heading
 - If a `prompt.md` file is missing for an agent directory, warn and skip that agent
 - Do not remove existing detail from `design.md` — only add structure and normalize headings

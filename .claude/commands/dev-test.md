@@ -18,7 +18,7 @@ lsof -ti :3000
 ```
 
 > **HUMAN CONTROL POINT** — If the server is not running, **stop here** and report:
-> "The server is not running on port 3000. Start it first with `/start`, then re-run `/test`."
+> "The server is not running on port 3000. Start it first with `/dev-start`, then re-run `/dev-test`."
 > Do not start the server automatically.
 
 ## Step 2 — Determine date and timestamps, create output directories

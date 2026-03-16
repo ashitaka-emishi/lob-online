@@ -79,7 +79,7 @@ When asked to plan a new feature area or audit the backlog:
 
 ## What This Agent Does NOT Do
 
-- Write code or create pull requests (coding agent + `create-pr` skill)
+- Write code or create pull requests (coding agent + `pr-create` skill)
 - Override the `rules-lawyer`'s rulings on game mechanics
 - Merge or close pull requests
 
@@ -94,3 +94,4 @@ When asked to plan a new feature area or audit the backlog:
 - `.claude/README.md` — agent and skill directory; update when agents or skills are added/removed
 - `.github/ISSUE_TEMPLATE/feature.md` — required fields for AI-implementable tickets
 - `.claude/commands/issue-intake.md` — issue creation skill
+- `.claude/commands/issue-implement.md` — full ticket-to-merge orchestration skill

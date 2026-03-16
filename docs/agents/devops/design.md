@@ -55,9 +55,9 @@ test-results/
 ## 3. Skills
 
 Skills live in `.claude/commands/`. The agent invokes them by name; they can also be run
-directly with `/build`, `/start`, `/stop`, `/test`.
+directly with `/dev-build`, `/dev-start`, `/dev-stop`, `/dev-test`.
 
-### `build` — `.claude/commands/build.md`
+### `dev-build` — `.claude/commands/dev-build.md`
 
 **Purpose:** Format, lint, and compile the project. Always runs format and lint; the server
 has no compile step (plain ESM JavaScript); the client is built with Vite.
@@ -74,7 +74,7 @@ has no compile step (plain ESM JavaScript); the client is built with Vite.
 - Server source is validated by lint only; no transpilation needed
 - A successful build implies both server and client are deployable
 
-### `start` — `.claude/commands/start.md`
+### `dev-start` — `.claude/commands/dev-start.md`
 
 **Purpose:** Start the development server and Vite client dev server, capturing output to
 log files. Ensures a clean slate before launching.
@@ -87,7 +87,7 @@ log files. Ensures a clean slate before launching.
 **Steps:**
 
 1. Check whether ports 3000 and/or 5173 are already occupied: `lsof -ti :3000`, `lsof -ti :5173`
-2. If any port is occupied → invoke the `stop` skill before continuing
+2. If any port is occupied → invoke the `dev-stop` skill before continuing
 3. Create log directories if absent: `mkdir -p logs/server logs/client`
 4. Start server in background, redirecting output:
    `node server/src/server.js >> logs/server/server.log 2>&1 &`
@@ -99,7 +99,7 @@ log files. Ensures a clean slate before launching.
 8. On timeout failure: kill any already-started processes, remove `.pids`, report error with last
    20 lines of the relevant log file
 
-### `stop` — `.claude/commands/stop.md`
+### `dev-stop` — `.claude/commands/dev-stop.md`
 
 **Purpose:** Gracefully shut down the server and Vite dev server. Fall back to SIGKILL after
 a 10-second timeout.
@@ -115,7 +115,7 @@ a 10-second timeout.
 6. Remove `.pids`: `rm -f .pids`
 7. Report what was stopped (port, PID, graceful or forced)
 
-### `test` — `.claude/commands/test.md`
+### `dev-test` — `.claude/commands/dev-test.md`
 
 **Purpose:** Run the full test suite, capture output, summarize results, detect flaky tests,
 and correlate failures with server-side errors.
@@ -123,7 +123,7 @@ and correlate failures with server-side errors.
 **Steps:**
 
 1. Check whether the system is running on port 3000. **HUMAN CONTROL POINT:** if not running,
-   stop and ask the user to run `/start` first — do not start automatically
+   stop and ask the user to run `/dev-start` first — do not start automatically
 2. Create log and result directories if absent: `mkdir -p logs/test test-results`
 3. Determine a timestamp: `date +%Y%m%d-%H%M%S` → `TIMESTAMP`
 4. Run tests with verbose output: `npm test -- --reporter=verbose > logs/test/test-$TIMESTAMP.log 2>&1`
@@ -167,20 +167,20 @@ tools: Bash, Read, Glob
 - `server/src/server.js` — Express server entry point (port 3000)
 - `client/` — Vite client (dev server port 5173)
 - `docs/agents/devops/design.md` — full design spec for this agent
-- `.claude/commands/build.md` — build skill
-- `.claude/commands/start.md` — start skill
-- `.claude/commands/stop.md` — stop skill
-- `.claude/commands/test.md` — test skill
+- `.claude/commands/dev-build.md` — build skill
+- `.claude/commands/dev-start.md` — start skill
+- `.claude/commands/dev-stop.md` — stop skill
+- `.claude/commands/dev-test.md` — test skill
 
 ---
 
 ## 5. Implementation Checklist
 
 - [x] `.gitignore` — `test-results/` appended
-- [x] `.claude/commands/build.md` — build skill
-- [x] `.claude/commands/start.md` — start skill
-- [x] `.claude/commands/stop.md` — stop skill
-- [x] `.claude/commands/test.md` — test skill
+- [x] `.claude/commands/dev-build.md` — build skill
+- [x] `.claude/commands/dev-start.md` — start skill
+- [x] `.claude/commands/dev-stop.md` — stop skill
+- [x] `.claude/commands/dev-test.md` — test skill
 - [x] `.claude/agents/devops.md` — agent definition
 - [x] `docs/agents/devops/prompt.md`
 - [x] `docs/agents/devops/design.md`
