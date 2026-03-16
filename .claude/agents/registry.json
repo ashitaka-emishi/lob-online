@@ -124,5 +124,12 @@
     "description": "Sync CLAUDE.md, HLD, and agent design docs to match code changes on the current branch",
     "type": "skill",
     "path": ".claude/commands/doc-sync.md"
+  },
+  {
+    "id": "design",
+    "name": "Design Skill",
+    "description": "Collaboratively author a design document for a new or changed component (orchestrator, skill, or agent) before writing any issues",
+    "type": "skill",
+    "path": ".claude/commands/design.md"
   }
 ]

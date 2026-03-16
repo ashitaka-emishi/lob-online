@@ -64,6 +64,21 @@ A `project-manager` agent manages the SDLC: assigning milestones and auditing is
 consistency. Use `/issue-implement <number>` to drive the full ticket-to-merge workflow with
 human control points. See `docs/agents/project-manager/design.md` for the full spec.
 
+The **four-phase SDLC lifecycle** is:
+
+1. **Design** — run `/design` to collaboratively author `docs/designs/{slug}.md` for any new
+   or changed component (orchestrator, skill, or agent). The skill gathers intent, infers
+   the component type, drafts the doc using `docs/designs/TEMPLATE.md`, iterates via chat or
+   direct file edits, then commits on `design/{slug}` and opens a PR. After merge:
+2. **Issue intake** — run `/issue-intake` (one or more times) to break the design into
+   well-formed, milestone-assigned GitHub issues. Each issue maps to one acceptance-criteria
+   unit of the design.
+3. **Implementation loop** — for each issue: `/issue-implement <number>` drives the full
+   ticket-to-merge workflow. After merge, optionally update the design doc and create new
+   issues for any scope discovered during implementation.
+4. **After-action** — run `/plan-wrap` (or `/doc-sync` + `/ecosystem-docs-generate`) to
+   verify all docs reflect the delivered state and record a devlog entry.
+
 An `issue-intake` agent handles issue creation: it gathers the raw requirement, iteratively
 refines the draft with the engineer, and files the GitHub issue after explicit approval (HCP).
 No branch, artifact, or PR is created — the filed issue is the record. Use `/issue-intake` to
@@ -97,8 +112,9 @@ engine that sequences registered agents and skills declaratively. It reads `Work
 JSON files from `docs/workflows/{name}/{name}.workflow.json`, executes steps by resolving
 agents from `.claude/agents/registry.json`, pauses at blocking `GateDef` checkpoints for
 human input via a CLI readline interface, and persists a `WorkflowInstance` JSON to
-`docs/ailog/YYYY_MM_DD-LOB-{####}-instance.json`. Three workflows are defined:
+`docs/ailog/YYYY_MM_DD-LOB-{####}-instance.json`. Four workflows are defined:
 
+- `docs/workflows/design/` — gather intent → draft design doc → iterate → commit on design/{slug} branch and open PR
 - `docs/workflows/sdlc-feature/` — full feature delivery pipeline
 - `docs/workflows/issue-intake/` — gather → refine → HCP → file issue
 - `docs/workflows/issue-implement/` — full ticket-to-merge with six HCPs (plan, editor review, push, review, merge, close)
