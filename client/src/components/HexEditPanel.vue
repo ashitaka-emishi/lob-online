@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import WedgeEditor from './WedgeEditor.vue';
 import EdgeEditPanel from './EdgeEditPanel.vue';
 
@@ -20,9 +20,13 @@ const props = defineProps({
     type: Array,
     default: () => ['road', 'stream', 'stoneWall', 'slope', 'extremeSlope', 'verticalSlope'],
   },
+  isSeedHex: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-const emit = defineEmits(['hex-update']);
+const emit = defineEmits(['hex-update', 'seed-toggle']);
 
 const TERRAIN_TYPES = [
   'unknown',
@@ -158,6 +162,26 @@ function toggleWedgeEditor() {
   }
   showWedgeEditor.value = !showWedgeEditor.value;
 }
+
+const canMarkAsSeed = computed(
+  () =>
+    !!form.value &&
+    form.value.terrain !== 'unknown' &&
+    form.value.elevation !== '' &&
+    form.value.elevation != null
+);
+
+function toggleSeed() {
+  if (!props.hex || !form.value || !canMarkAsSeed.value) return;
+  emit('seed-toggle', {
+    hexId: props.hex.hex,
+    confirmedData: {
+      terrain: form.value.terrain,
+      elevation: Number(form.value.elevation),
+      features: (form.value.features ?? []).map((f) => f.type),
+    },
+  });
+}
 </script>
 
 <template>
@@ -285,6 +309,18 @@ function toggleWedgeEditor() {
         <div v-if="form.setupUnits.length" class="setup-units">
           <div class="setup-units-label">Setup Units</div>
           <div v-for="u in form.setupUnits" :key="u" class="unit-id">{{ u }}</div>
+        </div>
+
+        <div class="seed-toggle">
+          <button
+            class="seed-btn"
+            :class="{ 'seed-btn--active': isSeedHex }"
+            :disabled="!canMarkAsSeed"
+            @click="toggleSeed"
+          >
+            {{ isSeedHex ? '★ Seed Hex' : '☆ Mark as Seed Hex' }}
+          </button>
+          <span v-if="!canMarkAsSeed" class="seed-hint">Set terrain and elevation to enable</span>
         </div>
       </template>
     </template>
@@ -487,5 +523,43 @@ legend {
 
 .toggle-wedge-btn:hover {
   background: #3a3a3a;
+}
+
+.seed-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid #333;
+}
+
+.seed-btn {
+  padding: 0.3rem 0.6rem;
+  background: #2a3a2a;
+  border: 1px solid #4a7a4a;
+  color: #a0c8a0;
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.seed-btn:hover:not(:disabled) {
+  background: #3a4a3a;
+}
+
+.seed-btn--active {
+  background: #1a4a1a;
+  border-color: #6aaa6a;
+  color: #c0e8c0;
+}
+
+.seed-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.seed-hint {
+  font-size: 0.75rem;
+  color: #888;
 }
 </style>

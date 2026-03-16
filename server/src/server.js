@@ -53,6 +53,10 @@ if (process.env.MAP_EDITOR_ENABLED === 'true') {
   const { default: scenarioEditorRouter } = await import('./routes/scenarioEditor.js');
   app.use('/api/tools/scenario-editor', scenarioEditorRouter);
   console.log('[server] scenario editor enabled at /tools/scenario-editor');
+
+  const { default: autoDetectConfigRouter } = await import('./routes/autoDetectConfig.js');
+  app.use('/api/tools/map-autodetect-config', autoDetectConfigRouter);
+  console.log('[server] auto-detect config enabled at /api/tools/map-autodetect-config');
 }
 
 // Socket.io
