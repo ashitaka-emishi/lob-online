@@ -68,6 +68,8 @@ const VALID_MAP = {
   },
 };
 
+const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
+
 function mockFetch(data, ok = true, status = 200) {
   return vi.fn().mockResolvedValue({
     ok,
@@ -98,12 +100,22 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 
-  it('renders Save button', async () => {
+  it('renders Push to Server button', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_MAP));
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
     const saveBtn = wrapper.find('button.save-btn');
     expect(saveBtn.exists()).toBe(true);
+    expect(saveBtn.text()).toBe('Push to Server');
+    wrapper.unmount();
+  });
+
+  it('renders Pull from Server button', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+    const pullBtn = wrapper.find('button.pull-btn');
+    expect(pullBtn.exists()).toBe(true);
     wrapper.unmount();
   });
 
@@ -116,7 +128,7 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 
-  it('shows fetch error when API fails', async () => {
+  it('shows fetch error when API fails and no draft exists', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({ ok: false, status: 500, json: () => Promise.resolve({}) })
@@ -124,6 +136,73 @@ describe('MapEditorView', () => {
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
     expect(wrapper.text()).toContain('Failed to load');
+    wrapper.unmount();
+  });
+
+  it('shows offline banner when fetch throws and draft exists', async () => {
+    const draft = { ...VALID_MAP, _savedAt: Date.now() };
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key) => {
+        if (key === MAP_DRAFT_KEY) return JSON.stringify(draft);
+        return null;
+      }),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+    expect(wrapper.find('.offline-banner').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Server unreachable');
+    wrapper.unmount();
+  });
+
+  it('shows fetch error when fetch throws and no draft exists', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+    expect(wrapper.find('.offline-banner').exists()).toBe(false);
+    expect(wrapper.text()).toContain('Failed to load');
+    wrapper.unmount();
+  });
+
+  it('Push to Server button shows "Offline" when server unreachable', async () => {
+    const draft = { ...VALID_MAP, _savedAt: Date.now() };
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key) => {
+        if (key === MAP_DRAFT_KEY) return JSON.stringify(draft);
+        return null;
+      }),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+    const saveBtn = wrapper.find('button.save-btn');
+    expect(saveBtn.text()).toBe('Offline');
+    expect(saveBtn.attributes('disabled')).toBeDefined();
+    wrapper.unmount();
+  });
+
+  it('clicking Pull from Server when dirty shows confirmation dialog', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    // Make the editor dirty
+    const hexEditPanel = wrapper.findComponent(HexEditPanel);
+    if (hexEditPanel.exists()) {
+      hexEditPanel.vm.$emit('hex-update', { hex: '01.01', terrain: 'woods' });
+      await flushPromises();
+    }
+
+    const pullBtn = wrapper.find('button.pull-btn');
+    await pullBtn.trigger('click');
+    await flushPromises();
+
+    // ConfirmDialog should be visible
+    expect(wrapper.text()).toContain('Discard local changes');
     wrapper.unmount();
   });
 
@@ -154,7 +233,7 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 
-  it('localStorage.setItem called when map data is updated', async () => {
+  it('localStorage.setItem called with v2 key when map data is updated', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_MAP));
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
@@ -166,10 +245,7 @@ describe('MapEditorView', () => {
       await flushPromises();
     }
 
-    expect(localStorage.setItem).toHaveBeenCalledWith(
-      'lob-map-editor-mapdata-v1',
-      expect.any(String)
-    );
+    expect(localStorage.setItem).toHaveBeenCalledWith(MAP_DRAFT_KEY, expect.any(String));
     wrapper.unmount();
   });
 
@@ -178,7 +254,7 @@ describe('MapEditorView', () => {
     const draft = { ...VALID_MAP, _savedAt: futureTs };
     vi.stubGlobal('localStorage', {
       getItem: vi.fn((key) => {
-        if (key === 'lob-map-editor-mapdata-v1') return JSON.stringify(draft);
+        if (key === MAP_DRAFT_KEY) return JSON.stringify(draft);
         return null;
       }),
       setItem: vi.fn(),
@@ -199,11 +275,15 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 
-  it('save button calls PUT when mapData is loaded', async () => {
+  it('push button calls PUT when mapData is loaded', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(VALID_MAP) })
-      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({ ok: true }) });
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ ok: true, _savedAt: Date.now() }),
+      });
     vi.stubGlobal('fetch', fetchMock);
 
     const wrapper = mount(MapEditorView, { attachTo: document.body });
@@ -281,11 +361,105 @@ describe('MapEditorView', () => {
     });
   });
 
-  it('save success clears the localStorage draft', async () => {
+  it('v1→v2 migration: copies v1 draft to v2 key and removes v1 key on mount', async () => {
+    const v1Data = JSON.stringify({ ...VALID_MAP, _savedAt: 1000 });
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key) => {
+        if (key === 'lob-map-editor-mapdata-v1') return v1Data;
+        return null;
+      }),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    expect(localStorage.setItem).toHaveBeenCalledWith(MAP_DRAFT_KEY, v1Data);
+    expect(localStorage.removeItem).toHaveBeenCalledWith('lob-map-editor-mapdata-v1');
+    wrapper.unmount();
+  });
+
+  it('push confirmation dialog shown when server data is newer than local draft', async () => {
+    const serverMap = { ...VALID_MAP, _savedAt: 2000 };
+    const localDraft = { ...VALID_MAP, _savedAt: 1000 };
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key) => {
+        if (key === MAP_DRAFT_KEY) return JSON.stringify(localDraft);
+        return null;
+      }),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+    vi.stubGlobal('fetch', mockFetch(serverMap));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    const saveBtn = wrapper.find('button.save-btn');
+    await saveBtn.trigger('click');
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Server data is newer');
+    wrapper.unmount();
+  });
+
+  it('push confirmation → Overwrite → PUT fires', async () => {
+    const serverMap = { ...VALID_MAP, _savedAt: 2000 };
+    const localDraft = { ...VALID_MAP, _savedAt: 1000 };
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key) => {
+        if (key === MAP_DRAFT_KEY) return JSON.stringify(localDraft);
+        return null;
+      }),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(serverMap) })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ ok: true, _savedAt: Date.now() }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    await wrapper.find('button.save-btn').trigger('click');
+    await flushPromises();
+
+    const overwriteBtn = wrapper.findAll('button').find((b) => b.text() === 'Overwrite');
+    await overwriteBtn.trigger('click');
+    await flushPromises();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    wrapper.unmount();
+  });
+
+  it('pull when not dirty: no dialog, fetches directly', async () => {
+    const fetchMock = mockFetch(VALID_MAP);
+    vi.stubGlobal('fetch', fetchMock);
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    await wrapper.find('button.pull-btn').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain('Discard local changes');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    wrapper.unmount();
+  });
+
+  it('save success clears the v2 localStorage draft key', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(VALID_MAP) })
-      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({ ok: true }) });
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ ok: true, _savedAt: Date.now() }),
+      });
     vi.stubGlobal('fetch', fetchMock);
 
     const wrapper = mount(MapEditorView, { attachTo: document.body });
@@ -295,7 +469,7 @@ describe('MapEditorView', () => {
     await saveBtn.trigger('click');
     await flushPromises();
 
-    expect(localStorage.removeItem).toHaveBeenCalledWith('lob-map-editor-mapdata-v1');
+    expect(localStorage.removeItem).toHaveBeenCalledWith(MAP_DRAFT_KEY);
     wrapper.unmount();
   });
 });

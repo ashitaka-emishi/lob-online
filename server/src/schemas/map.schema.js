@@ -43,6 +43,7 @@ const HexEntry = z.object({
 
 export const MapSchema = z.object({
   _status: z.string(),
+  _savedAt: z.number().optional(),
   _description: z.string().optional(),
   _digitizationNote: z.string().optional(),
   scenario: z.string(),

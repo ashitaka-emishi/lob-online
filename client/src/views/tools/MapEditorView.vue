@@ -5,10 +5,12 @@ import HexEditPanel from '../../components/HexEditPanel.vue';
 import CalibrationControls from '../../components/CalibrationControls.vue';
 import LosTestPanel from '../../components/LosTestPanel.vue';
 import EditorToolbar from '../../components/EditorToolbar.vue';
+import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import { adjacentHexId } from '../../utils/hexGeometry.js';
 
 const STORAGE_KEY = 'lob-map-editor-calibration-v4';
-const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-v1';
+const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
+const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
 const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
 
 // ── Calibration ───────────────────────────────────────────────────────────────
@@ -133,6 +135,12 @@ const mapData = ref(null);
 const fetchError = ref('');
 const unsaved = ref(false);
 const saveStatus = ref(''); // '' | 'saving' | 'saved' | 'error'
+const isOffline = ref(false);
+const serverSavedAt = ref(0);
+const showPushConfirm = ref(false);
+const showPullConfirm = ref(false);
+const isPulling = ref(false);
+const pullError = ref('');
 
 function saveMapDraft() {
   if (!mapData.value) return;
@@ -162,18 +170,53 @@ function dismissDraft() {
   draftBannerVisible.value = false;
 }
 
+async function fetchServerData() {
+  const res = await fetch('/api/tools/map-editor/data');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+async function executePull() {
+  isPulling.value = true;
+  pullError.value = '';
+  try {
+    const serverData = await fetchServerData();
+    mapData.value = serverData;
+    serverSavedAt.value = serverData._savedAt ?? 0;
+    localStorage.removeItem(MAP_DRAFT_KEY);
+    unsaved.value = false;
+    isOffline.value = false;
+    if (serverData.gridSpec) {
+      calibration.value = { ...DEFAULT_CALIBRATION, ...serverData.gridSpec };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
+    }
+  } catch (err) {
+    pullError.value = err.message;
+  } finally {
+    isPulling.value = false;
+  }
+}
+
+async function pullFromServer() {
+  if (unsaved.value) {
+    showPullConfirm.value = true;
+    return;
+  }
+  await executePull();
+}
+
 async function fetchMapData() {
   try {
-    const res = await fetch('/api/tools/map-editor/data');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const serverData = await res.json();
+    const serverData = await fetchServerData();
+
+    serverSavedAt.value = serverData._savedAt ?? 0;
 
     // Check for a local draft newer than server data
     try {
       const draftStr = localStorage.getItem(MAP_DRAFT_KEY);
       if (draftStr) {
         const draft = JSON.parse(draftStr);
-        if ((draft._savedAt ?? 0) > (serverData._savedAt ?? 0)) {
+        if ((draft._savedAt ?? 0) > serverSavedAt.value) {
           draftBannerVisible.value = true;
         } else {
           localStorage.removeItem(MAP_DRAFT_KEY);
@@ -189,6 +232,21 @@ async function fetchMapData() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
     }
   } catch (err) {
+    // Offline fallback: try loading local draft
+    try {
+      const draftStr = localStorage.getItem(MAP_DRAFT_KEY);
+      if (draftStr) {
+        const draft = JSON.parse(draftStr);
+        mapData.value = draft;
+        if (draft.gridSpec) {
+          calibration.value = { ...DEFAULT_CALIBRATION, ...draft.gridSpec };
+        }
+        isOffline.value = true;
+        return;
+      }
+    } catch (_) {
+      /* ignore */
+    }
     fetchError.value = err.message;
   }
 }
@@ -358,21 +416,14 @@ function onKeyDown(e) {
   }
 }
 
-// ── Save ──────────────────────────────────────────────────────────────────────
+// ── Save / Push / Pull ────────────────────────────────────────────────────────
 
 const saveErrors = ref([]);
 
-async function save() {
+async function executePush() {
+  if (!mapData.value) return;
   saveStatus.value = 'saving';
   saveErrors.value = [];
-  if (!mapData.value) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
-    saveStatus.value = 'saved';
-    setTimeout(() => {
-      saveStatus.value = '';
-    }, 2000);
-    return;
-  }
   try {
     const res = await fetch('/api/tools/map-editor/data', {
       method: 'PUT',
@@ -381,6 +432,7 @@ async function save() {
     });
     const body = await res.json();
     if (res.ok) {
+      serverSavedAt.value = body._savedAt ?? Date.now();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
       unsaved.value = false;
       saveStatus.value = 'saved';
@@ -398,8 +450,46 @@ async function save() {
   }
 }
 
+async function save() {
+  if (isOffline.value) return;
+  saveErrors.value = [];
+  if (!mapData.value) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
+    saveStatus.value = 'saved';
+    setTimeout(() => {
+      saveStatus.value = '';
+    }, 2000);
+    return;
+  }
+
+  // Show confirmation if server has data newer than local draft
+  let localDraftSavedAt = 0;
+  try {
+    const draftStr = localStorage.getItem(MAP_DRAFT_KEY);
+    if (draftStr) localDraftSavedAt = JSON.parse(draftStr)._savedAt ?? 0;
+  } catch (_) {
+    /* ignore */
+  }
+  if (serverSavedAt.value > localDraftSavedAt) {
+    showPushConfirm.value = true;
+    return;
+  }
+
+  await executePush();
+}
+
 onMounted(() => {
   window.addEventListener('keydown', onKeyDown);
+  // Migrate v1 draft key to v2 (one-time)
+  try {
+    const v1 = localStorage.getItem(MAP_DRAFT_KEY_V1);
+    if (v1) {
+      localStorage.setItem(MAP_DRAFT_KEY, v1);
+      localStorage.removeItem(MAP_DRAFT_KEY_V1);
+    }
+  } catch (_) {
+    /* ignore */
+  }
   fetchMapData();
 });
 
@@ -421,13 +511,26 @@ onUnmounted(() => {
       <button class="export-btn" :disabled="!exportData" @click="showExportOverlay = true">
         Export
       </button>
-      <button class="save-btn" :disabled="saveStatus === 'saving'" @click="save">
-        {{ saveStatus === 'saving' ? 'Saving…' : 'Save' }}
+      <button
+        class="pull-btn"
+        :disabled="saveStatus === 'saving' || isPulling"
+        @click="pullFromServer"
+      >
+        {{ isPulling ? 'Pulling…' : 'Pull from Server' }}
+      </button>
+      <button class="save-btn" :disabled="isOffline || saveStatus === 'saving'" @click="save">
+        {{ isOffline ? 'Offline' : saveStatus === 'saving' ? 'Saving…' : 'Push to Server' }}
       </button>
     </header>
 
+    <!-- Offline banner -->
+    <div v-if="isOffline" class="offline-banner">
+      <span>Server unreachable — working from local draft</span>
+      <button @click="pullFromServer">Retry Connect</button>
+    </div>
+
     <!-- Draft restore banner -->
-    <div v-if="draftBannerVisible" class="draft-banner">
+    <div v-if="!isOffline && draftBannerVisible" class="draft-banner">
       <span>Unsaved draft found — restore it?</span>
       <button @click="restoreDraft">Restore</button>
       <button @click="dismissDraft">Dismiss</button>
@@ -456,6 +559,12 @@ onUnmounted(() => {
     <div v-if="saveErrors.length" class="errors">
       <div v-for="(issue, i) in saveErrors" :key="i" class="error-line">
         {{ issue.path?.join('.') ?? '' }}: {{ issue.message }}
+      </div>
+    </div>
+    <div v-if="pullError" class="errors">
+      <div class="error-line">
+        Pull failed: {{ pullError }}
+        <button class="error-dismiss" @click="pullError = ''">×</button>
       </div>
     </div>
 
@@ -562,6 +671,32 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
+    <!-- Push confirmation dialog -->
+    <ConfirmDialog
+      :show="showPushConfirm"
+      message="Server data is newer. Overwrite?"
+      confirm-label="Overwrite"
+      cancel-label="Cancel"
+      @confirm="
+        showPushConfirm = false;
+        executePush();
+      "
+      @cancel="showPushConfirm = false"
+    />
+
+    <!-- Pull confirmation dialog -->
+    <ConfirmDialog
+      :show="showPullConfirm"
+      message="Discard local changes and load server data?"
+      confirm-label="Discard & Pull"
+      cancel-label="Cancel"
+      @confirm="
+        showPullConfirm = false;
+        executePull();
+      "
+      @cancel="showPullConfirm = false"
+    />
+
     <!-- Export overlay -->
     <div v-if="showExportOverlay" class="export-overlay" @click.self="showExportOverlay = false">
       <div class="export-box">
@@ -656,6 +791,27 @@ onUnmounted(() => {
   cursor: default;
 }
 
+.offline-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 1rem;
+  background: #3a1a00;
+  border-bottom: 1px solid #883300;
+  color: #e88040;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.offline-banner button {
+  padding: 0.2rem 0.6rem;
+  background: #4a2200;
+  border: 1px solid #884422;
+  color: #e88040;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
 .draft-banner {
   display: flex;
   align-items: center;
@@ -677,12 +833,32 @@ onUnmounted(() => {
   font-size: 0.8rem;
 }
 
+.pull-btn {
+  padding: 0.3rem 0.9rem;
+  background: #2a3a4a;
+  border: 1px solid #3a6a8a;
+  color: #88c0d8;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
 .errors {
   padding: 0.4rem 1rem;
   background: #3a1a1a;
   border-bottom: 1px solid #663333;
   font-size: 0.8rem;
   color: #c06060;
+}
+
+.error-dismiss {
+  margin-left: 0.5rem;
+  padding: 0 0.3rem;
+  background: none;
+  border: 1px solid #c06060;
+  color: #c06060;
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1.2;
 }
 
 .editor-body {
