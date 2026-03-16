@@ -1,8 +1,20 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import istanbul from 'vite-plugin-istanbul';
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    ...(process.env.CYPRESS_COVERAGE === 'true'
+      ? [
+          istanbul({
+            include: ['src/**/*'],
+            exclude: ['node_modules', 'cypress/'],
+            extension: ['.js', '.vue'],
+          }),
+        ]
+      : []),
+  ],
   server: {
     proxy: {
       '/api': 'http://localhost:3000',
