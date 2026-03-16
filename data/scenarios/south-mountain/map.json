@@ -5,6 +5,18 @@
   "scenario": "south-mountain",
   "layout": "pointy-top",
   "hexIdFormat": "col.row",
+  "gridSpec": {
+    "cols": 64,
+    "rows": 35,
+    "dx": 39.75,
+    "dy": 36,
+    "hexWidth": 40.5,
+    "hexHeight": 40.7,
+    "imageScale": 1,
+    "strokeWidth": 2,
+    "orientation": "flat",
+    "evenColUp": false
+  },
   "terrainTypes": ["clear", "woods", "slopingGround", "woodedSloping", "orchard", "marsh"],
   "hexsideTypes": [
     "stream",
@@ -633,5 +645,6 @@
       "6. Update _status to 'available' when all hexes are populated"
     ],
     "priorityHexes": "VP hexes and setup hexes listed in this file — these must be correct before any rules engine work begins"
-  }
+  },
+  "_savedAt": 1773693938673
 }
