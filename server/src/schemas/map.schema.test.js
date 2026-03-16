@@ -205,6 +205,69 @@ describe('MapSchema — gridSpec rotation and locked', () => {
   });
 });
 
+describe('MapSchema — HexEntry playable and auto-detect fields', () => {
+  it('accepts HexEntry with playable: false', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '02.00', terrain: 'unknown', playable: false }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts HexEntry with all three new fields present', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [
+        {
+          hex: '10.10',
+          terrain: 'woods',
+          playable: true,
+          autoDetected: true,
+          detectionConfidence: 0.85,
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts HexEntry with all three new fields omitted', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '10.10', terrain: 'clear' }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects detectionConfidence above 1', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '10.10', terrain: 'clear', detectionConfidence: 1.5 }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects detectionConfidence below 0', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '10.10', terrain: 'clear', detectionConfidence: -0.1 }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts detectionConfidence at boundary values 0 and 1', () => {
+    const r0 = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '10.10', terrain: 'clear', detectionConfidence: 0 }],
+    });
+    const r1 = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '10.10', terrain: 'clear', detectionConfidence: 1 }],
+    });
+    expect(r0.success).toBe(true);
+    expect(r1.success).toBe(true);
+  });
+});
+
 describe('MapSchema — invalid documents', () => {
   it('rejects wrong layout value', () => {
     const result = MapSchema.safeParse({ ...MINIMAL_VALID, layout: 'flat-top' });

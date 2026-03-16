@@ -317,6 +317,286 @@
       "terrain": "unknown",
       "vpHex": true,
       "_note": "East edge VP hex"
+    },
+    {
+      "hex": "02.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "02.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "04.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "04.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "06.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "06.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "08.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "08.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "10.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "10.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "12.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "12.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "14.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "14.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "16.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "16.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "18.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "18.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "20.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "20.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "22.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "22.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "24.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "24.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "26.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "26.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "28.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "28.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "30.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "30.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "32.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "32.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "34.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "34.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "36.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "36.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "38.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "38.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "40.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "40.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "42.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "42.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "44.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "44.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "46.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "46.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "48.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "48.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "50.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "50.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "52.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "52.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "54.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "54.36",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "56.00",
+      "terrain": "unknown",
+      "playable": false
+    },
+    {
+      "hex": "56.36",
+      "terrain": "unknown",
+      "playable": false
     }
   ],
   "_todoHexes": {
