@@ -159,6 +159,39 @@
         ],
         "defaultChoice": "merge"
       }
+    },
+    {
+      "id": "gate-close",
+      "name": "Gate: Close Issue (HCP 4)",
+      "agentId": null,
+      "inputMap": {},
+      "onError": "halt",
+      "gateConfig": {
+        "prompt": "PR merged. Merged commit SHA and issue URL shown above. Close the GitHub issue?",
+        "choices": [
+          {
+            "label": "Close — run gh issue close with merge summary comment",
+            "value": "close",
+            "onChoice": { "nextStep": null }
+          },
+          {
+            "label": "Skip — leave issue open; engineer will close manually",
+            "value": "skip",
+            "onChoice": { "nextStep": null }
+          }
+        ],
+        "defaultChoice": "close"
+      }
+    },
+    {
+      "id": "close-issue",
+      "name": "Close GitHub Issue",
+      "agentId": "issue-close",
+      "inputMap": {
+        "issueNumber": "$.issue-start.issueNumber",
+        "mergeCommit": "$.pr-merge.mergeCommit"
+      },
+      "onError": "continue_with_warning"
     }
   ]
 }
