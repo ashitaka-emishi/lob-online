@@ -35,7 +35,9 @@ const coverage = computed(() =>
 );
 
 const elevationSeeds = computed(() =>
-  seedHexes.value.filter((s) => s.confirmedData?.elevation != null)
+  seedHexes.value
+    .filter((s) => s.confirmedData?.elevation != null)
+    .map((s) => ({ ...s, band: bandForElevation(s.confirmedData.elevation) }))
 );
 </script>
 
@@ -62,9 +64,7 @@ const elevationSeeds = computed(() =>
         <span class="seed-id">{{ seed.hexId }}</span>
         <span class="seed-detail">
           {{ seed.confirmedData.terrain }} · {{ seed.confirmedData.elevation }} ft
-          <em v-if="bandForElevation(seed.confirmedData.elevation)">
-            ({{ bandForElevation(seed.confirmedData.elevation).label }})
-          </em>
+          <em v-if="seed.band"> ({{ seed.band.label }}) </em>
         </span>
         <button class="delete-btn" @click="emit('seed-remove', seed.hexId)">Remove</button>
       </li>
