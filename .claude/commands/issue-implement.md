@@ -80,6 +80,19 @@ Run `/pr-merge`.
 This skill runs a final CI check and presents **HCP 3** before squashing and deleting
 the branch. The AI log is updated with the merge SHA.
 
+## Step 9 — Close issue
+
+> **HCP 4** — After `/pr-merge` completes, display the merged commit SHA and the issue
+> URL. Wait for the user to reply with an explicit **"close"** signal before proceeding.
+> If the user does not say "close", stop here and report the issue URL so the engineer
+> can close it manually.
+
+Once "close" is received, run `/issue-close <number>`, substituting the actual issue
+number (e.g., `36`) from the current branch. The skill resolves the merged commit SHA
+automatically and posts the closing comment.
+
+Report the closed issue URL.
+
 ## AI Log
 
 The log file at `docs/ailog/YYYY_MM_DD-LOB-{####}.md` is updated by the sub-skills at
