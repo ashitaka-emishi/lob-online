@@ -1298,9 +1298,9 @@ lob-online/
 
 This section describes the dev-only tooling required to prepare accurate game data. Non-trivial tooling is needed to ensure the map digitisation and unit statistics are correct before any game logic is implemented. The tools must cover:
 
-- **Map digitisation** — convert the paper map image to `map.json` hex terrain data *(Map Editor — implemented)*
-- **Scenario configuration** — edit turn structure, lighting schedule, visibility settings, and scenario-level rules overrides in `scenario.json` *(Scenario Editor — planned)*
-- **Order of battle editing** — inspect and correct unit stats, brigade/division hierarchy, wreck thresholds, and leader ratings across `oob.json` and `leaders.json` *(OOB Editor — planned)*
+- **Map digitisation** — convert the paper map image to `map.json` hex terrain data _(Map Editor — implemented)_
+- **Scenario configuration** — edit turn structure, lighting schedule, visibility settings, and scenario-level rules overrides in `scenario.json` _(Scenario Editor — planned)_
+- **Order of battle editing** — inspect and correct unit stats, brigade/division hierarchy, wreck thresholds, and leader ratings across `oob.json` and `leaders.json` _(OOB Editor — planned)_
 - **AI-generated data inspection** — review AI-produced datasets (tables, reinforcement schedules, terrain assignments) before committing them to the canonical data files
 
 ### Map Editor
