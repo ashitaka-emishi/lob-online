@@ -3,7 +3,7 @@
 ## 1. Description
 
 The `sdlc-feature` workflow orchestrates end-to-end delivery of a single feature from initial
-specification through deployment. It sequences four agents (`issue-intake`, `issue-implement`,
+specification through deployment. It sequences six agents/skills (`issue-intake`, `issue-implement`,
 `code-review`, `dev-test`, `pr-create`, `pr-merge`) separated by four blocking human gate
 checkpoints. Each gate pauses execution until an engineer provides an explicit decision;
 loop-back choices restart the pipeline from an earlier step without discarding accumulated

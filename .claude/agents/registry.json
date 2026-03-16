@@ -89,5 +89,19 @@
     "description": "Orchestrate the full ticket-to-merge workflow for a GitHub issue with human control points",
     "type": "skill",
     "path": ".claude/commands/issue-implement.md"
+  },
+  {
+    "id": "issue-branch",
+    "name": "Issue Branch Skill",
+    "description": "Create the feat/{id}-{slug} branch for the given issue number",
+    "type": "skill",
+    "path": ".claude/commands/issue-branch.md"
+  },
+  {
+    "id": "issue-start",
+    "name": "Issue Start Skill",
+    "description": "Fetch a GitHub issue, summarise ACs, and confirm approach before any code is written",
+    "type": "skill",
+    "path": ".claude/commands/issue-start.md"
   }
 ]

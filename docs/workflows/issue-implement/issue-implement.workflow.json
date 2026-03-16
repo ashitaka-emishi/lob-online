@@ -6,7 +6,7 @@
     {
       "id": "issue-start",
       "name": "Issue Start",
-      "agentId": "issue-implement",
+      "agentId": "issue-start",
       "inputMap": {},
       "onError": "halt"
     },
@@ -36,7 +36,7 @@
     {
       "id": "branch",
       "name": "Create Feature Branch",
-      "agentId": "issue-implement",
+      "agentId": "issue-branch",
       "inputMap": {
         "issueNumber": "$.issue-start.issueNumber"
       },

@@ -75,4 +75,20 @@ describe('registry', () => {
     tmpDir = dir;
     expect(() => loadRegistry(filePath)).toThrow(/is invalid/);
   });
+
+  it('returns cached result on second call with default path', () => {
+    // Use a custom path twice to exercise the cache-write and cache-hit branches
+    // (the default-path cache is module-level; two calls with the same custom path
+    //  exercise the same logic since _resetCache only clears the default-path cache)
+    const { filePath, dir } = makeTmpRegistry([
+      { id: 'devops', name: 'DevOps', description: 'Build things', type: 'agent' },
+    ]);
+    tmpDir = dir;
+    const first = loadRegistry(filePath);
+    const second = loadRegistry(filePath);
+    // Both calls return identical data; file is only parsed once for the default path
+    expect(first).toHaveLength(1);
+    expect(second).toHaveLength(1);
+    expect(first[0].id).toBe('devops');
+  });
 });

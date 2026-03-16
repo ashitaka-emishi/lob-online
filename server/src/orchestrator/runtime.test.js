@@ -5,7 +5,7 @@ import { tmpdir } from 'os';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { _resetCache } from './registry.js';
-import { resolveJsonPath, buildStepInput, runWorkflow } from './runtime.js';
+import { resolveJsonPath, buildStepInput, runWorkflow, presentGate } from './runtime.js';
 
 // ────────────────────────────────────────────────────────────
 // JSONPath helpers
@@ -60,6 +60,57 @@ describe('buildStepInput', () => {
 });
 
 // ────────────────────────────────────────────────────────────
+// presentGate
+// ────────────────────────────────────────────────────────────
+
+describe('presentGate', () => {
+  const GATE_CONFIG = {
+    prompt: 'Approve?',
+    choices: [
+      { label: 'Yes', value: 'yes', onChoice: { nextStep: null } },
+      { label: 'No', value: 'no', onChoice: { nextStep: 'step-a' } },
+    ],
+    defaultChoice: 'yes',
+  };
+
+  function makeMockRl(answers) {
+    const queue = [...answers];
+    return {
+      question: vi.fn((_q, cb) => cb(queue.shift() ?? '')),
+      close: vi.fn(),
+    };
+  }
+
+  it('returns the chosen value and note on first valid input', async () => {
+    const rl = makeMockRl(['yes', 'looks good']);
+    const result = await presentGate(GATE_CONFIG, 'gate-1', rl);
+    expect(result.choice).toBe('yes');
+    expect(result.note).toBe('looks good');
+    expect(result.nextStep).toBeNull();
+  });
+
+  it('retries on invalid input then accepts valid input', async () => {
+    // First answer is invalid, second is valid
+    const rl = makeMockRl(['maybe', 'no', '']);
+    const result = await presentGate(GATE_CONFIG, 'gate-1', rl);
+    expect(result.choice).toBe('no');
+    expect(result.nextStep).toBe('step-a');
+  });
+
+  it('uses defaultChoice when input is empty string', async () => {
+    const rl = makeMockRl(['', '']);
+    const result = await presentGate(GATE_CONFIG, 'gate-1', rl);
+    expect(result.choice).toBe('yes'); // defaultChoice
+  });
+
+  it('returns empty note when note input is empty', async () => {
+    const rl = makeMockRl(['yes', '']);
+    const result = await presentGate(GATE_CONFIG, 'gate-1', rl);
+    expect(result.note).toBe('');
+  });
+});
+
+// ────────────────────────────────────────────────────────────
 // runWorkflow
 // ────────────────────────────────────────────────────────────
 
@@ -104,6 +155,18 @@ describe('runWorkflow', () => {
 
   afterEach(() => {
     rmSync(ailogDir, { recursive: true, force: true });
+  });
+
+  it('throws for an invalid workflow definition', async () => {
+    const badDefinition = { id: 'x' /* missing name, description, steps */ };
+    await expect(
+      runWorkflow({
+        definition: badDefinition,
+        runId: '2026_03_16-LOB-0001',
+        dispatch: vi.fn(),
+        ailogDir,
+      })
+    ).rejects.toThrow(/Invalid workflow definition/);
   });
 
   it('executes two steps in declaration order', async () => {
