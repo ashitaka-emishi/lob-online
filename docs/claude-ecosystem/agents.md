@@ -4,6 +4,35 @@ Five agents are configured for lob-online. Each is defined in `.claude/agents/<n
 a YAML frontmatter block (`name`, `description`, `tools`) and a prose system prompt. The
 canonical source of truth for each agent's frontmatter is `docs/agents/<name>/design.md §4`.
 
+## Orchestration layer
+
+Beyond the Claude Code agent definitions, lob-online has a Node.js **workflow engine** in
+`server/src/orchestrator/` that can execute agent and skill sequences programmatically. Three
+declarative workflow definitions live in `docs/workflows/`:
+
+| Workflow                                                       | Steps | Gates | What it models                             |
+| -------------------------------------------------------------- | ----- | ----- | ------------------------------------------ |
+| `docs/workflows/sdlc-feature/sdlc-feature.workflow.json`       | 10    | 4     | Draft spec → generate → review → deploy    |
+| `docs/workflows/issue-intake/issue-intake.workflow.json`       | 7     | 2     | Intake branch → refine → file → PR → merge |
+| `docs/workflows/issue-implement/issue-implement.workflow.json` | 12    | 4     | Issue start → implement → review → merge   |
+
+Each definition is paired with a `.states.md` file containing a Mermaid `stateDiagram-v2`
+diagram and a gate checkpoint table.
+
+The **agent registry** at `.claude/agents/registry.json` is the programmatic single source of
+truth used by the runtime. It lists every agent and skill by `id`, `name`, `description`,
+`type` (`agent` or `skill`), and `path`. Workflow definitions reference agents by `id` only —
+the runtime resolves names through the registry.
+
+The orchestration runtime (`server/src/orchestrator/runtime.js`) supports:
+
+- **JSONPath `inputMap`** — pass prior step outputs as inputs to subsequent steps using
+  `$.stepId.field` expressions
+- **Loop-back routing** — gate choices can name an earlier step as `nextStep` to re-run part
+  of the workflow (e.g., return to `implement` after a review finding)
+- **`WorkflowInstance` persistence** — execution state is written to `docs/ailog/` as JSON
+  alongside the human-readable ailog Markdown files
+
 ---
 
 ## `devops`
