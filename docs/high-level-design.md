@@ -29,7 +29,7 @@
 >
 > **In progress:** terrain data digitization (ongoing field entry for South Mountain map hexes).
 >
-> **Planned:** Discord OAuth auth, game rules engine, DigitalOcean Spaces persistence, multiplayer coordination, frontend game UI.
+> **Planned:** Discord OAuth auth, game rules engine, DigitalOcean Spaces persistence, multiplayer coordination, frontend game UI; scenario editor dev tool (turn structure, lighting schedule, rules settings); OOB editor dev tool (unit stats, leader ratings, brigade hierarchy).
 >
 > Sections describing completed work are accurate to the implementation. Sections describing planned work reflect design intent and may evolve.
 
@@ -257,6 +257,14 @@ A session that starts live on Saturday, continues asynchronously via Discord not
   GET  /api/tools/map-editor/data          → read map.json
   PUT  /api/tools/map-editor/data          → write map.json (Zod-validated)
   GET  /tools/map-editor/assets/*          → static serve docs/ (map image, PDFs)
+
+/tools/scenario-editor            (mounted only when MAP_EDITOR_ENABLED=true) — planned
+  GET  /api/tools/scenario-editor/data     → read scenario.json
+  PUT  /api/tools/scenario-editor/data     → write scenario.json (Zod-validated)
+
+/tools/oob-editor                 (mounted only when MAP_EDITOR_ENABLED=true) — planned
+  GET  /api/tools/oob-editor/data          → read oob.json + leaders.json
+  PUT  /api/tools/oob-editor/data          → write oob.json / leaders.json (Zod-validated)
 ```
 
 > **Tool toggle pattern:** The map editor routes are guarded by a `MAP_EDITOR_ENABLED` environment variable. In `server.js`, if the flag is set, the router is imported with a dynamic `await import(...)` and mounted. This keeps the map editor completely absent from production bundles. The Vue route `/tools/map-editor` is always present in the client router but the API backing it requires the env flag.
@@ -1290,9 +1298,9 @@ lob-online/
 
 This section describes the dev-only tooling required to prepare accurate game data. Non-trivial tooling is needed to ensure the map digitisation and unit statistics are correct before any game logic is implemented. The tools must cover:
 
-- **Map digitisation** — convert the paper map image to `map.json` hex terrain data
-- **Unit data validation** — inspect and correct unit stats in `oob.json` and `leaders.json`
-- **Scenario editing** — set and adjust starting positions, orders, and reinforcement schedules in `scenario.json`
+- **Map digitisation** — convert the paper map image to `map.json` hex terrain data _(Map Editor — implemented)_
+- **Scenario configuration** — edit turn structure, lighting schedule, visibility settings, and scenario-level rules overrides in `scenario.json` _(Scenario Editor — planned)_
+- **Order of battle editing** — inspect and correct unit stats, brigade/division hierarchy, wreck thresholds, and leader ratings across `oob.json` and `leaders.json` _(OOB Editor — planned)_
 - **AI-generated data inspection** — review AI-produced datasets (tables, reinforcement schedules, terrain assignments) before committing them to the canonical data files
 
 ### Map Editor
@@ -1365,6 +1373,36 @@ See `docs/map-editor-design.md` for the full specification, including:
   wedge/edge/slope geometry formulas, and the `HexDir` 0–5 index reference.
 - **§6 Save Model** — three-tier save (localStorage autosave → server save → engine export)
   and the draft-restoration conflict flow.
+
+---
+
+### Scenario Editor
+
+The scenario editor is a dev-only tool for editing `data/scenarios/south-mountain/scenario.json`
+— the companion to the map editor. It covers fields that cannot be derived from the physical map:
+turn structure, lighting schedule (day/twilight/night turn ranges), visibility settings, and
+scenario-level rules flags (Fluke Stoppage grace period, initiative system, loss recovery,
+random events).
+
+Follows the same push/pull sync pattern as the map editor: versioned server backups, offline
+localStorage fallback, `_savedAt` staleness detection, and ConfirmDialog on overwrite/discard.
+Guarded by the same `MAP_EDITOR_ENABLED` env flag.
+
+Route: `/tools/scenario-editor` (client) · `GET/PUT /api/tools/scenario-editor/data` (server).
+
+---
+
+### OOB Editor
+
+The OOB editor is a dev-only tool for inspecting and correcting `oob.json` and `leaders.json`
+— the unit order-of-battle and leader data files. The primary use case is reviewing and adjusting
+AI-generated unit statistics (combat ratings, morale, wreck thresholds, brigade hierarchy) and
+leader ratings before the rules engine is built and relies on them.
+
+Design not yet specified. Will follow the same `MAP_EDITOR_ENABLED` guard and push/pull sync
+pattern as the map and scenario editors.
+
+Route: `/tools/oob-editor` (client) · `GET/PUT /api/tools/oob-editor/data` (server) — planned.
 
 ---
 
