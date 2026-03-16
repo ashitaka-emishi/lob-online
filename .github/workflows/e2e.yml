@@ -21,20 +21,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Start server
-        run: npm run dev -w server &
+      - name: Start server (with coverage instrumentation)
+        run: |
+          NODE_OPTIONS='--experimental-loader=@istanbuljs/esm-loader-hook' \
+            node server/src/server.js &
         env:
           MAP_EDITOR_ENABLED: 'true'
+          CYPRESS_COVERAGE: 'true'
 
-      - name: Start client
+      - name: Start client (with coverage instrumentation)
         run: npm run dev -w client &
+        env:
+          CYPRESS_COVERAGE: 'true'
 
       - name: Wait for servers
         run: |
           until curl -sf http://localhost:3000/api/health > /dev/null 2>&1; do sleep 0.5; done
           until curl -sf http://localhost:5173 > /dev/null 2>&1; do sleep 0.5; done
 
-      - name: Run E2E tests
-        run: npm run test:e2e
+      - name: Run E2E tests with coverage
+        run: npm run test:e2e:coverage
         env:
           MAP_EDITOR_ENABLED: 'true'
+          CYPRESS_COVERAGE: 'true'
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-coverage
+          path: coverage/

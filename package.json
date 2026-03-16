@@ -19,19 +19,37 @@
     "dev:map-editor": "bash scripts/map-editor.sh",
     "build": "npm run build -w client",
     "validate-data": "node scripts/validate-data.js",
-    "test:e2e": "cypress run"
+    "test:e2e": "cypress run",
+    "test:e2e:coverage": "cross-env CYPRESS_COVERAGE=true cypress run && node scripts/check-e2e-coverage.js"
+  },
+  "nyc": {
+    "reporter": [
+      "lcov",
+      "json",
+      "json-summary"
+    ],
+    "report-dir": "coverage",
+    "include": [
+      "server/src/routes/mapEditor.js",
+      "server/src/routes/scenarioEditor.js"
+    ]
   },
   "devDependencies": {
+    "@cypress/code-coverage": "^4.0.1",
     "@eslint/js": "^9.15.0",
+    "@istanbuljs/esm-loader-hook": "^0.3.0",
     "@vitest/coverage-v8": "^4.0.18",
+    "cross-env": "^10.1.0",
     "cypress": "^15.12.0",
     "eslint": "^9.15.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-n": "^17.13.0",
     "eslint-plugin-vue": "^9.30.0",
+    "nyc": "^18.0.0",
     "prettier": "^3.3.0",
     "supertest": "^7.2.2",
+    "vite-plugin-istanbul": "^8.0.0",
     "vitest": "^4.0.18"
   }
 }

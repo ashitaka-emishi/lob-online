@@ -32,6 +32,14 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true, uptime: process.uptime() });
 });
 
+// E2E coverage endpoint — returns Istanbul coverage collected via esm-loader-hook
+if (process.env.CYPRESS_COVERAGE === 'true') {
+  app.get('/__coverage__', (_req, res) => {
+    res.json({ coverage: global.__coverage__ || {} });
+  });
+  console.log('[server] coverage endpoint enabled at /__coverage__');
+}
+
 // Dev tools (map editor + scenario editor — guarded by env var)
 if (process.env.MAP_EDITOR_ENABLED === 'true') {
   const { default: mapEditorRouter } = await import('./routes/mapEditor.js');
