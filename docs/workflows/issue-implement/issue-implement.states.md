@@ -4,16 +4,23 @@
 
 The `issue-implement` workflow drives the full ticket-to-merge cycle for a GitHub issue.
 It sequences issue-start, branch creation, implementation, doc-sync, ecosystem-docs-generate,
-build, test, PR creation, code review, merge, and issue close, with five human gate checkpoints:
+build, test, dev-start, editor review, dev-stop, PR creation, code review, merge, and issue
+close, with six human gate checkpoints:
 
 - **HCP 1** (gate-plan) — engineer approves the implementation plan before any code is written
-- **HCP 2** (gate-impl) — engineer approves build/test results before the branch is pushed
+- **HCP 2a** (gate-editor) — engineer reviews the running editor and approves or provides fix feedback
+- **HCP 2** (gate-impl) — engineer approves doc-sync/build/test results before the branch is pushed
 - **HCP 2b** (gate-review) — engineer decides how to handle PR review findings
 - **HCP 3** (gate-merged) — engineer confirms the final squash merge
 - **HCP 4** (gate-close) — engineer confirms closing the GitHub issue after merge
 
 Loop-back choices at each gate return execution to the appropriate earlier step while
 preserving accumulated `WorkflowInstance` state (step outputs, prior gate decisions).
+
+On the **Fix** path at `gate-editor`, the engineer's note is stored as `$.gate-editor.note`
+and injected into the next `implement` invocation via `inputMap.editorFeedback`. The skill
+prompt instructs the AI to call `/dev-stop` before looping back so the server is never left
+running on the fix path.
 
 ## 2. State Diagram
 
@@ -30,7 +37,11 @@ stateDiagram-v2
     doc_sync --> ecosystem_docs : project docs synced
     ecosystem_docs --> build : ecosystem docs regenerated
     build --> test : build passed
-    test --> gate_impl : tests ran (HCP 2)
+    test --> dev_start : tests ran
+    dev_start --> gate_editor : server running (HCP 2a)
+    gate_editor --> dev_stop : approve
+    gate_editor --> implement : fix (after dev-stop in skill prompt)
+    dev_stop --> gate_impl : server stopped (HCP 2)
     gate_impl --> pr_create : push
     gate_impl --> implement : fix
 
@@ -50,10 +61,11 @@ stateDiagram-v2
 
 ## 3. Gate Checkpoint Table
 
-| Step ID       | Prompt summary                                      | Choices                     | Default | Loop-back risk                                |
-| ------------- | --------------------------------------------------- | --------------------------- | ------- | --------------------------------------------- |
-| `gate-plan`   | Plan + AC checklist shown; proceed or revise        | proceed, revise             | proceed | `revise` → re-runs `issue-start`              |
-| `gate-impl`   | Build + test results shown; push or fix             | push, fix                   | push    | `fix` → re-runs `implement`; may loop on test |
-| `gate-review` | PR review findings; accept, fix-all, or fix-errors  | accept, fix-all, fix-errors | accept  | `fix-*` → re-runs `implement`; may loop       |
-| `gate-merged` | Final merge approval; merge or hold                 | merge, hold                 | merge   | `hold` terminates; no loop                    |
-| `gate-close`  | Issue close confirmation after merge; close or skip | close, skip                 | close   | `skip` terminates; no loop                    |
+| Step ID        | Prompt summary                                               | Choices                     | Default | Loop-back risk                                              |
+| -------------- | ------------------------------------------------------------ | --------------------------- | ------- | ----------------------------------------------------------- |
+| `gate-plan`    | Plan + AC checklist shown; proceed or revise                 | proceed, revise             | proceed | `revise` → re-runs `issue-start`                            |
+| `gate-editor`  | Dev server running; approve or provide fix feedback          | approve, fix                | approve | `fix` → stops server (skill prompt), re-runs `implement`    |
+| `gate-impl`    | Doc-sync/build/test results shown; push or fix               | push, fix                   | push    | `fix` → re-runs `implement`; may loop on test               |
+| `gate-review`  | PR review findings; accept, fix-all, or fix-errors           | accept, fix-all, fix-errors | accept  | `fix-*` → re-runs `implement`; may loop                     |
+| `gate-merged`  | Final merge approval; merge or hold                          | merge, hold                 | merge   | `hold` terminates; no loop                                  |
+| `gate-close`   | Issue close confirmation after merge; close or skip          | close, skip                 | close   | `skip` terminates; no loop                                  |

@@ -61,6 +61,27 @@ Run `/dev-test`.
 If the server is not running, report that and stop — do not start the server automatically.
 If tests fail, fix them and re-run.
 
+## Step 5a — Launch Editor for Review
+
+Run `/dev-start` to launch the server and Vite dev client.
+
+> **HCP 2a** — Pause here. The dev server is running. Ask the engineer to open the editor
+> in their browser and review the implementation. Provide the local URLs (server: port 3000,
+> client: port 5173).
+>
+> Wait for the engineer to choose one of two options:
+>
+> - **Approve** — implementation looks correct. Run `/dev-stop` to shut down the server,
+>   then continue to HCP 2 below.
+> - **Fix** — implementation has issues. The engineer provides free-text feedback describing
+>   what is wrong. Run `/dev-stop` to shut down the server, then loop back to Step 3
+>   (Implement) with the engineer's feedback injected as explicit context. Begin the next
+>   implementation pass by summarising the feedback and describing how you will address each
+>   point before writing any code.
+>
+> **Always run `/dev-stop` before leaving this step** — on both the approve and fix paths —
+> so the dev server is never left running.
+
 > **HCP 2** — Report: (1) doc-sync results (which docs were updated or confirmed
 > consistent), (2) ecosystem-docs-generate results (which reference files were regenerated),
 > (3) build and test results, and (4) a brief summary of what was implemented. Wait for
