@@ -1,7 +1,7 @@
 {
   "id": "issue-implement",
   "name": "Issue Implement Workflow",
-  "description": "Full ticket-to-merge workflow: issue start → branch → implement → doc-sync → ecosystem-docs-generate → build → test → PR → review → merge, with five human gate checkpoints.",
+  "description": "Full ticket-to-merge workflow: issue start → branch → implement → doc-sync → ecosystem-docs-generate → build → test → dev-start → editor review gate → dev-stop → PR → review → merge, with six human gate checkpoints.",
   "steps": [
     {
       "id": "issue-start",
@@ -47,7 +47,8 @@
       "name": "Implement",
       "agentId": "issue-implement",
       "inputMap": {
-        "issueNumber": "$.issue-start.issueNumber"
+        "issueNumber": "$.issue-start.issueNumber",
+        "editorFeedback": "$.gate-editor.note"
       },
       "onError": "halt"
     },
@@ -80,13 +81,50 @@
       "onError": "continue_with_warning"
     },
     {
+      "id": "dev-start",
+      "name": "Launch Dev Server",
+      "agentId": "dev-start",
+      "inputMap": {},
+      "onError": "halt"
+    },
+    {
+      "id": "gate-editor",
+      "name": "Gate: Editor Review (HCP 2a)",
+      "agentId": null,
+      "inputMap": {},
+      "onError": "halt",
+      "gateConfig": {
+        "prompt": "The dev server is running. Review the editor in your browser, then choose an action. On Approve, the workflow stops the server automatically via the next dev-stop step. On Fix, you MUST call /dev-stop manually before the loop-back to implement takes effect — enter your feedback as a note and it will be injected into the next implementation pass.",
+        "choices": [
+          {
+            "label": "Approve — implementation looks good; server stops automatically, then continue to push",
+            "value": "approve",
+            "onChoice": { "nextStep": "dev-stop" }
+          },
+          {
+            "label": "Fix — call /dev-stop first, then enter feedback below; implementation will restart with your feedback",
+            "value": "fix",
+            "onChoice": { "nextStep": "implement" }
+          }
+        ],
+        "defaultChoice": "approve"
+      }
+    },
+    {
+      "id": "dev-stop",
+      "name": "Stop Dev Server",
+      "agentId": "dev-stop",
+      "inputMap": {},
+      "onError": "continue_with_warning"
+    },
+    {
       "id": "gate-impl",
       "name": "Gate: Implementation Accepted (HCP 2)",
       "agentId": null,
       "inputMap": {},
       "onError": "halt",
       "gateConfig": {
-        "prompt": "Build and test results are shown above. Review and choose an action.",
+        "prompt": "Editor review approved. Doc-sync, ecosystem-docs, build, and test results are shown above. Review and choose an action.",
         "choices": [
           {
             "label": "Push — approve and push to remote",

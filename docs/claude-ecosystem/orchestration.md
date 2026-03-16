@@ -139,10 +139,11 @@ stateDiagram-v2
 
 ---
 
-### `issue-implement` — 14 steps, 5 gates
+### `issue-implement` — 19 steps, 6 gates
 
-**Purpose:** Full ticket-to-merge workflow: issue start → branch → implement → build → test
-→ PR → review → merge → close issue, with five human gate checkpoints.
+**Purpose:** Full ticket-to-merge workflow: issue start → branch → implement → doc-sync →
+ecosystem-docs → build → test → dev-start → editor review → dev-stop → PR → review →
+merge → close issue, with six human gate checkpoints.
 
 **Source:** `docs/workflows/issue-implement/issue-implement.workflow.json`
 
@@ -155,9 +156,15 @@ stateDiagram-v2
     gate_plan --> issue_start : revise
 
     branch --> implement : branch created
-    implement --> build : code written
+    implement --> doc_sync : code written
+    doc_sync --> ecosystem_docs : project docs synced
+    ecosystem_docs --> build : ecosystem docs regenerated
     build --> test : build passed
-    test --> gate_impl : tests ran (HCP 2)
+    test --> dev_start : tests ran
+    dev_start --> gate_editor : server running (HCP 2a)
+    gate_editor --> dev_stop : approve
+    gate_editor --> implement : fix (after dev-stop in skill prompt)
+    dev_stop --> gate_impl : server stopped (HCP 2)
     gate_impl --> pr_create : push
     gate_impl --> implement : fix
 
@@ -175,13 +182,14 @@ stateDiagram-v2
     close_issue --> [*] : done
 ```
 
-| Step ID       | Prompt summary                                      | Choices                     | Default | Loop-back risk                                |
-| ------------- | --------------------------------------------------- | --------------------------- | ------- | --------------------------------------------- |
-| `gate-plan`   | Plan + AC checklist shown; proceed or revise        | proceed, revise             | proceed | `revise` → re-runs `issue-start`              |
-| `gate-impl`   | Build + test results shown; push or fix             | push, fix                   | push    | `fix` → re-runs `implement`; may loop on test |
-| `gate-review` | PR review findings; accept, fix-all, or fix-errors  | accept, fix-all, fix-errors | accept  | `fix-*` → re-runs `implement`; may loop       |
-| `gate-merged` | Final merge approval; merge or hold                 | merge, hold                 | merge   | `hold` terminates; no loop                    |
-| `gate-close`  | Issue close confirmation after merge; close or skip | close, skip                 | close   | `skip` terminates; no loop                    |
+| Step ID       | Prompt summary                                      | Choices                     | Default | Loop-back risk                                           |
+| ------------- | --------------------------------------------------- | --------------------------- | ------- | -------------------------------------------------------- |
+| `gate-plan`   | Plan + AC checklist shown; proceed or revise        | proceed, revise             | proceed | `revise` → re-runs `issue-start`                         |
+| `gate-editor` | Dev server running; approve or provide fix feedback | approve, fix                | approve | `fix` → stops server (skill prompt), re-runs `implement` |
+| `gate-impl`   | Doc-sync/build/test results shown; push or fix      | push, fix                   | push    | `fix` → re-runs `implement`; may loop on test            |
+| `gate-review` | PR review findings; accept, fix-all, or fix-errors  | accept, fix-all, fix-errors | accept  | `fix-*` → re-runs `implement`; may loop                  |
+| `gate-merged` | Final merge approval; merge or hold                 | merge, hold                 | merge   | `hold` terminates; no loop                               |
+| `gate-close`  | Issue close confirmation after merge; close or skip | close, skip                 | close   | `skip` terminates; no loop                               |
 
 ---
 
@@ -262,6 +270,10 @@ sequenceDiagram
   IM->>IB: /issue-branch
   Note over IM: Implement ACs
   IM->>DB: /dev-build then /dev-test
+  IM->>DB: /dev-start
+  DB-->>E: HCP 2a — approve editor review?
+  E-->>IM: approve (or fix with feedback)
+  IM->>DB: /dev-stop
   IM-->>E: HCP 2 — push?
   E-->>IM: push
   IM->>PC: /pr-create
