@@ -1,0 +1,90 @@
+{
+  "id": "issue-intake",
+  "name": "Issue Intake Workflow",
+  "description": "Turn a raw requirement into a filed, milestone-assigned GitHub issue backed by a committed intake artifact on its own branch and pull request. Two human gate checkpoints guard issue filing and PR merge.",
+  "steps": [
+    {
+      "id": "branch",
+      "name": "Open Intake Branch",
+      "agentId": "issue-intake",
+      "inputMap": {},
+      "onError": "halt"
+    },
+    {
+      "id": "gather",
+      "name": "Gather and Refine Issue Draft",
+      "agentId": "issue-intake",
+      "inputMap": {},
+      "onError": "halt"
+    },
+    {
+      "id": "gate-file",
+      "name": "Gate: File Issue (HCP 1)",
+      "agentId": null,
+      "inputMap": {},
+      "onError": "halt",
+      "gateConfig": {
+        "prompt": "The issue draft is ready. Review the full draft above and choose an action.",
+        "choices": [
+          {
+            "label": "File — create the GitHub issue",
+            "value": "file",
+            "onChoice": { "nextStep": null }
+          },
+          {
+            "label": "Revise — return to drafting",
+            "value": "revise",
+            "onChoice": { "nextStep": "gather" }
+          }
+        ],
+        "defaultChoice": "file"
+      }
+    },
+    {
+      "id": "commit",
+      "name": "Commit Intake Artifact",
+      "agentId": "issue-intake",
+      "inputMap": {
+        "issueNumber": "$.gather.issueNumber"
+      },
+      "onError": "halt"
+    },
+    {
+      "id": "pr-create",
+      "name": "Open Pull Request",
+      "agentId": "pr-create",
+      "inputMap": {},
+      "onError": "halt"
+    },
+    {
+      "id": "gate-merge",
+      "name": "Gate: Merge PR (HCP 2)",
+      "agentId": null,
+      "inputMap": {},
+      "onError": "halt",
+      "gateConfig": {
+        "prompt": "The intake PR is open. Review the PR and choose an action.",
+        "choices": [
+          {
+            "label": "Merge — squash merge the intake branch",
+            "value": "merge",
+            "onChoice": { "nextStep": null }
+          },
+          {
+            "label": "Hold — leave PR open; stop here",
+            "value": "hold",
+            "onChoice": { "nextStep": null }
+          }
+        ],
+        "defaultChoice": "merge"
+      }
+    },
+    {
+      "id": "pr-merge",
+      "name": "Merge Pull Request",
+      "agentId": "pr-merge",
+      "inputMap": {},
+      "onError": "halt"
+    }
+  ]
+}

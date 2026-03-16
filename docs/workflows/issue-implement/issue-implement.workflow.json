@@ -1,0 +1,164 @@
+{
+  "id": "issue-implement",
+  "name": "Issue Implement Workflow",
+  "description": "Full ticket-to-merge workflow: issue start → branch → implement → build → test → PR → review → merge, with three human gate checkpoints.",
+  "steps": [
+    {
+      "id": "issue-start",
+      "name": "Issue Start",
+      "agentId": "issue-start",
+      "inputMap": {},
+      "onError": "halt"
+    },
+    {
+      "id": "gate-plan",
+      "name": "Gate: Plan Accepted (HCP 1)",
+      "agentId": null,
+      "inputMap": {},
+      "onError": "halt",
+      "gateConfig": {
+        "prompt": "The implementation plan and AC checklist are shown above. Review and choose an action.",
+        "choices": [
+          {
+            "label": "Proceed — approve plan and create branch",
+            "value": "proceed",
+            "onChoice": { "nextStep": null }
+          },
+          {
+            "label": "Revise — return to issue start with adjustments",
+            "value": "revise",
+            "onChoice": { "nextStep": "issue-start" }
+          }
+        ],
+        "defaultChoice": "proceed"
+      }
+    },
+    {
+      "id": "branch",
+      "name": "Create Feature Branch",
+      "agentId": "issue-branch",
+      "inputMap": {
+        "issueNumber": "$.issue-start.issueNumber"
+      },
+      "onError": "halt"
+    },
+    {
+      "id": "implement",
+      "name": "Implement",
+      "agentId": "issue-implement",
+      "inputMap": {
+        "issueNumber": "$.issue-start.issueNumber"
+      },
+      "onError": "halt"
+    },
+    {
+      "id": "build",
+      "name": "Build",
+      "agentId": "dev-build",
+      "inputMap": {},
+      "onError": "halt"
+    },
+    {
+      "id": "test",
+      "name": "Test",
+      "agentId": "dev-test",
+      "inputMap": {},
+      "onError": "continue_with_warning"
+    },
+    {
+      "id": "gate-impl",
+      "name": "Gate: Implementation Accepted (HCP 2)",
+      "agentId": null,
+      "inputMap": {},
+      "onError": "halt",
+      "gateConfig": {
+        "prompt": "Build and test results are shown above. Review and choose an action.",
+        "choices": [
+          {
+            "label": "Push — approve and push to remote",
+            "value": "push",
+            "onChoice": { "nextStep": null }
+          },
+          {
+            "label": "Fix — return to implementation",
+            "value": "fix",
+            "onChoice": { "nextStep": "implement" }
+          }
+        ],
+        "defaultChoice": "push"
+      }
+    },
+    {
+      "id": "pr-create",
+      "name": "Create Pull Request",
+      "agentId": "pr-create",
+      "inputMap": {},
+      "onError": "halt"
+    },
+    {
+      "id": "pr-review",
+      "name": "Review Pull Request",
+      "agentId": "code-review",
+      "inputMap": {},
+      "onError": "continue_with_warning"
+    },
+    {
+      "id": "gate-review",
+      "name": "Gate: Review Accepted (HCP 2b)",
+      "agentId": null,
+      "inputMap": {},
+      "onError": "halt",
+      "gateConfig": {
+        "prompt": "PR review findings are shown above. Choose how to proceed.",
+        "choices": [
+          {
+            "label": "Accept — proceed to merge",
+            "value": "accept",
+            "onChoice": { "nextStep": null }
+          },
+          {
+            "label": "Fix all — return to implementation to address all findings",
+            "value": "fix-all",
+            "onChoice": { "nextStep": "implement" }
+          },
+          {
+            "label": "Fix errors — return to implementation for error-severity only",
+            "value": "fix-errors",
+            "onChoice": { "nextStep": "implement" }
+          }
+        ],
+        "defaultChoice": "accept"
+      }
+    },
+    {
+      "id": "pr-merge",
+      "name": "Merge Pull Request",
+      "agentId": "pr-merge",
+      "inputMap": {},
+      "onError": "halt"
+    },
+    {
+      "id": "gate-merged",
+      "name": "Gate: Merge Approved (HCP 3)",
+      "agentId": null,
+      "inputMap": {},
+      "onError": "halt",
+      "gateConfig": {
+        "prompt": "Final checks pass. The PR is ready to squash-merge. Confirm.",
+        "choices": [
+          {
+            "label": "Merge — squash merge and delete branch",
+            "value": "merge",
+            "onChoice": { "nextStep": null }
+          },
+          {
+            "label": "Hold — stop here; do not merge",
+            "value": "hold",
+            "onChoice": { "nextStep": null }
+          }
+        ],
+        "defaultChoice": "merge"
+      }
+    }
+  ]
+}

@@ -32,13 +32,14 @@ that needs a quality gate, which is a clear DRY violation.
 
 ## Agents
 
-| Agent             | Description                                                        | Primary Skills                                       | Collaborators                    |
-| ----------------- | ------------------------------------------------------------------ | ---------------------------------------------------- | -------------------------------- |
-| `devops`          | Build, run, and test the dev environment                           | `/dev-build`, `/dev-start`, `/dev-stop`, `/dev-test` | —                                |
-| `project-manager` | Manage SDLC: issues → milestones → backlog                         | `/issue-start`, `/issue-branch`, `/issue-implement`  | `issue-intake`, `rules-lawyer`   |
-| `issue-intake`    | Guide issue creation: branch → refine → file → commit → PR → merge | `/issue-intake`, `/pr-create`, `/pr-merge`           | `rules-lawyer` (via rules gate)  |
-| `code-review`     | Quality-gate PR reviews and codebase audits                        | `/pr-review`, `/code-assess`                         | `devops` skills as prerequisites |
-| `rules-lawyer`    | Authoritative LoB v2.0 rules arbiter                               | none                                                 | Consulted by `issue-intake`      |
+| Agent             | Description                                                                                                             | Primary Skills                                       | Collaborators                                            |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------- |
+| `devops`          | Build, run, and test the dev environment                                                                                | `/dev-build`, `/dev-start`, `/dev-stop`, `/dev-test` | —                                                        |
+| `project-manager` | Manage SDLC: issues → milestones → backlog                                                                              | `/issue-start`, `/issue-branch`, `/issue-implement`  | `issue-intake`, `rules-lawyer`                           |
+| `issue-intake`    | Guide issue creation: branch → refine → file → commit → PR → merge                                                      | `/issue-intake`, `/pr-create`, `/pr-merge`           | `rules-lawyer` (via rules gate)                          |
+| `code-review`     | Quality-gate PR reviews and codebase audits                                                                             | `/pr-review`, `/code-assess`                         | `devops` skills as prerequisites                         |
+| `rules-lawyer`    | Authoritative LoB v2.0 rules arbiter                                                                                    | none                                                 | Consulted by `issue-intake`                              |
+| `orchestrator`    | Declarative workflow engine: sequences agents/skills via `WorkflowDefinition` JSON with blocking human gate checkpoints | none (runtime, not a Claude agent)                   | All registered agents via `.claude/agents/registry.json` |
 
 ```mermaid
 graph TD
@@ -69,9 +70,20 @@ graph TD
     agent-regenerate
     agent-standardize
   end
+  subgraph orch[orchestrator runtime]
+    wf-sdlc-feature[sdlc-feature workflow]
+    wf-issue-intake[issue-intake workflow]
+    wf-issue-implement[issue-implement workflow]
+    registry[registry.json]
+  end
   issue-intake -.->|consults| rl
   issue-intake -->|calls| pr-create
   issue-intake -->|calls| pr-merge
+  orch -.->|resolves agents via| registry
+  orch -.->|invokes| devops
+  orch -.->|invokes| pm
+  orch -.->|invokes| ii
+  orch -.->|invokes| cr
 ```
 
 ---

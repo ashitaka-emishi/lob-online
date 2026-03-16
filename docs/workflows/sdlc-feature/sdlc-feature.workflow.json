@@ -1,0 +1,143 @@
+{
+  "id": "sdlc-feature",
+  "name": "SDLC Feature Workflow",
+  "description": "End-to-end feature delivery pipeline: spec → code → review → test → deploy, with blocking human gate checkpoints at each transition.",
+  "steps": [
+    {
+      "id": "draft-spec",
+      "name": "Draft Specification",
+      "agentId": "issue-intake",
+      "inputMap": {},
+      "onError": "halt"
+    },
+    {
+      "id": "gate-spec",
+      "name": "Gate: Spec Review",
+      "agentId": null,
+      "inputMap": {},
+      "onError": "halt",
+      "gateConfig": {
+        "prompt": "The specification draft is ready for review.\n\nPlease review the spec in docs/intake/ and choose an action.",
+        "choices": [
+          {
+            "label": "Approve — proceed to implementation",
+            "value": "approve",
+            "onChoice": { "nextStep": null }
+          },
+          {
+            "label": "Revise — return to spec drafting",
+            "value": "revise",
+            "onChoice": { "nextStep": "draft-spec" }
+          }
+        ],
+        "defaultChoice": "approve"
+      }
+    },
+    {
+      "id": "generate-code",
+      "name": "Generate Code",
+      "agentId": "issue-implement",
+      "inputMap": {
+        "issueNumber": "$.draft-spec.issueNumber"
+      },
+      "onError": "halt"
+    },
+    {
+      "id": "review-code",
+      "name": "Review Code",
+      "agentId": "code-review",
+      "inputMap": {},
+      "onError": "continue_with_warning"
+    },
+    {
+      "id": "gate-code-review",
+      "name": "Gate: Code Review",
+      "agentId": null,
+      "inputMap": {},
+      "onError": "halt",
+      "gateConfig": {
+        "prompt": "Code review is complete. Check the review findings in logs/review/ and choose an action.",
+        "choices": [
+          {
+            "label": "Accept — proceed to testing",
+            "value": "accept",
+            "onChoice": { "nextStep": null }
+          },
+          {
+            "label": "Fix errors — return to code generation for fixes",
+            "value": "fix",
+            "onChoice": { "nextStep": "generate-code" }
+          }
+        ],
+        "defaultChoice": "accept"
+      }
+    },
+    {
+      "id": "run-tests",
+      "name": "Run Tests",
+      "agentId": "dev-test",
+      "inputMap": {},
+      "onError": "continue_with_warning"
+    },
+    {
+      "id": "gate-test-results",
+      "name": "Gate: Test Results",
+      "agentId": null,
+      "inputMap": {},
+      "onError": "halt",
+      "gateConfig": {
+        "prompt": "Tests have run. Review the results in logs/test/ and choose an action.",
+        "choices": [
+          {
+            "label": "Pass — proceed to deploy preparation",
+            "value": "pass",
+            "onChoice": { "nextStep": null }
+          },
+          {
+            "label": "Fix — return to code generation to fix test failures",
+            "value": "fix",
+            "onChoice": { "nextStep": "generate-code" }
+          }
+        ],
+        "defaultChoice": "pass"
+      }
+    },
+    {
+      "id": "prepare-deploy",
+      "name": "Prepare Deploy",
+      "agentId": "pr-create",
+      "inputMap": {},
+      "onError": "halt"
+    },
+    {
+      "id": "gate-deploy",
+      "name": "Gate: Deploy Approval",
+      "agentId": null,
+      "inputMap": {},
+      "onError": "halt",
+      "gateConfig": {
+        "prompt": "The PR is open and all checks pass. Ready to merge and deploy?",
+        "choices": [
+          {
+            "label": "Merge — squash merge and deploy",
+            "value": "merge",
+            "onChoice": { "nextStep": null }
+          },
+          {
+            "label": "Hold — stop here; do not merge",
+            "value": "hold",
+            "onChoice": { "nextStep": null }
+          }
+        ],
+        "defaultChoice": "merge"
+      }
+    },
+    {
+      "id": "deploy-exec",
+      "name": "Execute Deploy",
+      "agentId": "pr-merge",
+      "inputMap": {},
+      "onError": "halt"
+    }
+  ]
+}
