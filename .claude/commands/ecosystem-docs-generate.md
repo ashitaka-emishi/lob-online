@@ -181,7 +181,7 @@ The top-level architecture and design reference for the entire ecosystem (rename
    `network-diagram.md §2`; derive from skill command files.
 4. **SDLC sequence diagram** — full `issue-implement` flow; derive from
    `issue-implement.workflow.json`. Identical in structure to `orchestration.md §SDLC
-   sequence`.
+sequence`.
 5. **Key file index** — table of the most important files a developer needs to navigate the
    ecosystem: agent definitions, registry, workflow JSON files, skill command files,
    `docs/claude-ecosystem/` hub, this file.
