@@ -21,17 +21,21 @@ executable by the `server/src/orchestrator/` runtime.
 
 ## How the SDLC Works
 
-A feature moves through three phases. **Intake:** the engineer invokes `issue-intake`, which
-gathers the raw requirement, refines the issue draft iteratively, consults `rules-lawyer`
-if the feature touches game mechanics, and waits for explicit approval before calling
-`gh issue create` (HCP 1). No branch or PR is created — the filed issue is the record.
-**Implementation:** `/issue-implement` is invoked. The `project-manager` agent fetches the
-issue, proposes a plan, and presents HCP 1 before any code is written. After implementation,
-`devops` runs build and tests, and the engineer approves the push (HCP 2). **Review and
-merge:** `/pr-review` runs inside `code-review` scope and surfaces findings (HCP 2b).
-`/pr-merge` runs a final CI check and squash-merges after explicit engineer approval (HCP 3).
-The issue is closed after a final confirmation (HCP 4). The entire session is recorded in a
-structured ailog file committed to the repository as a permanent audit trail.
+A feature moves through four phases. **Design:** for any new or changed component
+(orchestrator, skill, or agent), the engineer first runs `/design`. The skill gathers the
+intent, infers the component type, creates `docs/designs/{slug}.md` from the canonical
+template, iterates until the engineer approves, then commits on `design/{slug}` and opens a
+PR. **Intake:** the engineer invokes `/issue-intake`, which gathers the raw requirement,
+refines the issue draft iteratively, consults `rules-lawyer` if the feature touches game
+mechanics, and waits for explicit approval before calling `gh issue create` (HCP 1). No
+branch or PR is created — the filed issue is the record. **Implementation:** `/issue-implement`
+is invoked. The `project-manager` agent fetches the issue, proposes a plan, and presents HCP 1
+before any code is written. After implementation, `devops` runs build and tests, and the
+engineer approves the push (HCP 2). **Review and merge:** `/pr-review` runs inside
+`code-review` scope and surfaces findings (HCP 2b). `/pr-merge` runs a final CI check and
+squash-merges after explicit engineer approval (HCP 3). The issue is closed after a final
+confirmation (HCP 4). The entire session is recorded in a structured ailog file committed to
+the repository as a permanent audit trail.
 
 ---
 
@@ -52,6 +56,15 @@ structured ailog file committed to the repository as a permanent audit trail.
 ---
 
 ## Quick-Start: Common Workflows
+
+### Design a new component before writing issues
+
+```
+/design
+```
+
+Manual: create `docs/designs/{slug}.md` using `docs/designs/TEMPLATE.md`, iterate on the
+design in chat, then `git checkout -b design/{slug}` and open a PR.
 
 ### Create a new GitHub issue
 

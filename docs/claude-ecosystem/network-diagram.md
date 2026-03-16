@@ -45,6 +45,7 @@ graph TD
   rl[rules-lawyer agent — no skills]
 
   subgraph standalone[unowned skills]
+    design
     pr-create
     pr-merge
     plan-wrap

@@ -108,6 +108,32 @@ failed / waiting_at_gate), `startedAt`, `updatedAt`, `stepResults` (stepId → o
 
 ## Workflow Definitions
 
+### `design` — 4 steps, 1 gate
+
+**Purpose:** Collaboratively produce a design document for a new or changed component
+(orchestrator, skill, or agent) before any issues are written. Gather intent → draft design
+doc → iterate until approved → commit on `design/{slug}` branch and open PR.
+
+**Source:** `docs/workflows/design/design.workflow.json`
+
+```mermaid
+stateDiagram-v2
+    [*] --> gather : start
+
+    gather --> draft : intent captured
+    draft --> gate_design : draft ready (HCP 1)
+    gate_design --> commit : approve
+    gate_design --> draft : revise
+
+    commit --> [*] : done
+```
+
+| Gate ID       | Prompt summary                                 | Choices         | Default | Loop-back risk                |
+| ------------- | ---------------------------------------------- | --------------- | ------- | ----------------------------- |
+| `gate-design` | Design doc shown; approve to open PR or revise | approve, revise | approve | `revise` → returns to `draft` |
+
+---
+
 ### `issue-intake` — 3 steps, 1 gate
 
 **Purpose:** Turn a raw requirement into a filed, milestone-assigned GitHub issue through

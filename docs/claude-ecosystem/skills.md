@@ -111,6 +111,33 @@ npm run test:coverage
 
 ## Issue Workflow Skills
 
+### `/design`
+
+**Purpose:** Collaboratively author a design document for a new or changed component
+(orchestrator, skill, or agent) before writing any issues. Gather intent → draft
+`docs/designs/{slug}.md` → iterate → commit on `design/{slug}` branch and open PR.
+
+**Owning agent:** unowned
+
+**Claude Code:**
+
+```
+/design
+```
+
+**Manual equivalent:**
+
+```bash
+# Create docs/designs/{slug}.md using docs/designs/TEMPLATE.md
+git checkout -b design/{slug}
+git add docs/designs/{slug}.md
+git commit -m "design: add {slug} design doc"
+gh pr create --title "design: {component name}" --body "..."
+gh pr merge --squash --delete-branch
+```
+
+---
+
 ### `/issue-intake`
 
 **Purpose:** Guide the creation of a well-formed GitHub issue through interactive
