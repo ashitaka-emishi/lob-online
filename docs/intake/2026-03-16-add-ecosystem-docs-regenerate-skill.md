@@ -45,10 +45,10 @@ template for the generated output.
 
 ## Files to create/modify
 
-| File | Action |
-| ---- | ------ |
-| `.claude/commands/ecosystem-docs-generate.md` | CREATE — skill definition |
-| `.claude/agents/registry.json` | MODIFY — add `ecosystem-docs-generate` entry |
+| File                                          | Action                                       |
+| --------------------------------------------- | -------------------------------------------- |
+| `.claude/commands/ecosystem-docs-generate.md` | CREATE — skill definition                    |
+| `.claude/agents/registry.json`                | MODIFY — add `ecosystem-docs-generate` entry |
 
 ## Tests required
 
