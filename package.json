@@ -20,7 +20,7 @@
     "build": "npm run build -w client",
     "validate-data": "node scripts/validate-data.js",
     "test:e2e": "cypress run",
-    "test:e2e:coverage": "CYPRESS_COVERAGE=true cypress run && node scripts/check-e2e-coverage.js"
+    "test:e2e:coverage": "cross-env CYPRESS_COVERAGE=true cypress run && node scripts/check-e2e-coverage.js"
   },
   "nyc": {
     "reporter": [
@@ -39,6 +39,7 @@
     "@eslint/js": "^9.15.0",
     "@istanbuljs/esm-loader-hook": "^0.3.0",
     "@vitest/coverage-v8": "^4.0.18",
+    "cross-env": "^10.1.0",
     "cypress": "^15.12.0",
     "eslint": "^9.15.0",
     "eslint-config-prettier": "^9.1.0",
