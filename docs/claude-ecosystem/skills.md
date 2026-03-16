@@ -113,14 +113,12 @@ npm run test:coverage
 
 ### `/issue-intake`
 
-**Purpose:** Guide the creation of a well-formed GitHub issue with a full branch/PR
-lifecycle: open `intake/{slug}` branch → gather and refine draft → file issue (HCP) →
-commit `docs/intake/` artifact → open PR (HCP) → merge.
+**Purpose:** Guide the creation of a well-formed GitHub issue through interactive
+conversation: gather and refine draft → file issue (HCP). No branch, no artifact, no PR.
 
 **Owning agent:** `issue-intake`
 
-**Related skills:** calls `/pr-create`, `/pr-merge`; consults `rules-lawyer` agent for
-game-logic issues
+**Related skills:** consults `rules-lawyer` agent for game-logic issues
 
 **Claude Code:**
 
@@ -131,15 +129,8 @@ game-logic issues
 **Manual equivalent:**
 
 ```bash
-git checkout -b intake/{slug}
 # Draft issue body following .github/ISSUE_TEMPLATE/feature.md
 gh issue create --title "..." --body "..." --milestone "v1.0 — MVP"
-# Write docs/intake/YYYY-MM-DD-{slug}.md with the full issue body
-git add docs/intake/... && git commit -m "docs(intake): ... (#N)"
-git push -u origin intake/{slug}
-gh pr create ...      # open PR, get review, merge
-gh pr merge --squash --delete-branch
-git checkout master && git pull
 ```
 
 ---

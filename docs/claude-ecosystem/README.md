@@ -22,9 +22,9 @@ executable by the `server/src/orchestrator/` runtime.
 ## How the SDLC Works
 
 A feature moves through three phases. **Intake:** the engineer invokes `issue-intake`, which
-opens an `intake/{slug}` branch, refines the issue draft iteratively, consults `rules-lawyer`
+gathers the raw requirement, refines the issue draft iteratively, consults `rules-lawyer`
 if the feature touches game mechanics, and waits for explicit approval before calling
-`gh issue create` (HCP 1). The intake artifact is committed and merged via PR (HCP 2).
+`gh issue create` (HCP 1). No branch or PR is created — the filed issue is the record.
 **Implementation:** `/issue-implement` is invoked. The `project-manager` agent fetches the
 issue, proposes a plan, and presents HCP 1 before any code is written. After implementation,
 `devops` runs build and tests, and the engineer approves the push (HCP 2). **Review and
@@ -59,9 +59,8 @@ structured ailog file committed to the repository as a permanent audit trail.
 /issue-intake
 ```
 
-Manual: open an `intake/{slug}` branch, draft the issue body following the template in
-`.github/ISSUE_TEMPLATE/feature.md`, run `gh issue create`, commit the artifact to
-`docs/intake/`, and open a PR.
+Manual: draft the issue body following the template in `.github/ISSUE_TEMPLATE/feature.md`,
+then run `gh issue create`.
 
 ### Implement an issue end-to-end
 
