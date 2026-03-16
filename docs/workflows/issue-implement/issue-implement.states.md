@@ -48,10 +48,10 @@ stateDiagram-v2
 
 ## 3. Gate Checkpoint Table
 
-| Step ID       | Prompt summary                                     | Choices                     | Default | Loop-back risk                                |
-| ------------- | -------------------------------------------------- | --------------------------- | ------- | --------------------------------------------- |
-| `gate-plan`   | Plan + AC checklist shown; proceed or revise       | proceed, revise             | proceed | `revise` → re-runs `issue-start`              |
-| `gate-impl`   | Build + test results shown; push or fix            | push, fix                   | push    | `fix` → re-runs `implement`; may loop on test |
-| `gate-review` | PR review findings; accept, fix-all, or fix-errors | accept, fix-all, fix-errors | accept  | `fix-*` → re-runs `implement`; may loop       |
-| `gate-merged` | Final merge approval; merge or hold                | merge, hold                 | merge   | `hold` terminates; no loop                    |
-| `gate-close`  | Issue close confirmation after merge; close or skip | close, skip                | close   | `skip` terminates; no loop                    |
+| Step ID       | Prompt summary                                      | Choices                     | Default | Loop-back risk                                |
+| ------------- | --------------------------------------------------- | --------------------------- | ------- | --------------------------------------------- |
+| `gate-plan`   | Plan + AC checklist shown; proceed or revise        | proceed, revise             | proceed | `revise` → re-runs `issue-start`              |
+| `gate-impl`   | Build + test results shown; push or fix             | push, fix                   | push    | `fix` → re-runs `implement`; may loop on test |
+| `gate-review` | PR review findings; accept, fix-all, or fix-errors  | accept, fix-all, fix-errors | accept  | `fix-*` → re-runs `implement`; may loop       |
+| `gate-merged` | Final merge approval; merge or hold                 | merge, hold                 | merge   | `hold` terminates; no loop                    |
+| `gate-close`  | Issue close confirmation after merge; close or skip | close, skip                 | close   | `skip` terminates; no loop                    |
