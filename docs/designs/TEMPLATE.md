@@ -16,6 +16,7 @@ solve? What gap in the current system does it fill?}
 ## Proposed Solution
 
 {Describe the implementation approach. Cover:
+
 - Key behaviours and interactions
 - Input/output contract (for skills: trigger phrase, arguments, return value)
 - Files to create or modify

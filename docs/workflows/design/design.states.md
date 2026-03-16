@@ -25,6 +25,6 @@ stateDiagram-v2
 
 ## 3. Gate Checkpoint Table
 
-| Step ID        | Prompt summary                                       | Choices          | Default | Loop-back risk                    |
-| -------------- | ---------------------------------------------------- | ---------------- | ------- | --------------------------------- |
-| `gate-design`  | Design doc shown; approve to open PR or revise       | approve, revise  | approve | `revise` → returns to `draft`     |
+| Step ID       | Prompt summary                                 | Choices         | Default | Loop-back risk                |
+| ------------- | ---------------------------------------------- | --------------- | ------- | ----------------------------- |
+| `gate-design` | Design doc shown; approve to open PR or revise | approve, revise | approve | `revise` → returns to `draft` |
