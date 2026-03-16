@@ -3,7 +3,7 @@ name: Deploy
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
@@ -22,7 +22,7 @@ jobs:
             cd /opt/lob-online
 
             echo "→ Pulling latest code..."
-            git pull origin main
+            git pull origin master
 
             echo "→ Installing dependencies..."
             npm ci --omit=dev
@@ -41,4 +41,4 @@ jobs:
 #   DO_SSH_KEY     — Private SSH key with access to the Droplet
 #
 # Branch protection: configure GitHub to require CI to pass before
-# allowing merge to main, ensuring deploy only runs on green code.
+# allowing merge to master, ensuring deploy only runs on green code.

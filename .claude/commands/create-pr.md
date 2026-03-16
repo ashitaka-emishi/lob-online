@@ -9,7 +9,7 @@ You are about to create a pull request. Work through these two tasks in order.
 
 Run `date +%Y-%m-%d` to get today's date and `date +%H%M` for the current time.
 
-Run `git log main..HEAD --oneline` to see all commits on this branch. Run `git diff main...HEAD
+Run `git log master..HEAD --oneline` to see all commits on this branch. Run `git diff master...HEAD
 --stat` to see which files changed. Use this to understand the full scope of what the PR contains.
 
 The daily devlog file is `docs/devlog/YYYY-MM-DD.md`. Check whether it already exists:
@@ -61,7 +61,7 @@ git commit -m "docs: add diary entry for PR"
 
 ## Task 2 — Create the Pull Request
 
-Run `git log main..HEAD --oneline` to review the commits. Draft a PR title (under 70 characters)
+Run `git log master..HEAD --oneline` to review the commits. Draft a PR title (under 70 characters)
 and body. The body should follow this format:
 
 ```
