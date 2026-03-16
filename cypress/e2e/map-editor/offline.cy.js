@@ -1,24 +1,4 @@
-const FIXTURE = {
-  _savedAt: 0,
-  id: 'south-mountain',
-  hexes: [],
-  gridSpec: {
-    cols: 64,
-    rows: 35,
-    dx: 0,
-    dy: 0,
-    hexWidth: 35,
-    hexHeight: 35,
-    imageScale: 1,
-    orientation: 'flat',
-    strokeWidth: 0.5,
-    evenColUp: false,
-  },
-  terrainTypes: ['clear'],
-  edgeFeatureTypes: ['road'],
-  vpHexes: [],
-  entryHexes: [],
-};
+import { FIXTURE } from '../../fixtures/map-editor.js';
 
 const MAP_URL = '/tools/map-editor';
 const API_URL = '/api/tools/map-editor/data';

@@ -1,24 +1,4 @@
-const FIXTURE = {
-  _savedAt: 0,
-  id: 'south-mountain',
-  hexes: [],
-  gridSpec: {
-    cols: 64,
-    rows: 35,
-    dx: 0,
-    dy: 0,
-    hexWidth: 35,
-    hexHeight: 35,
-    imageScale: 1,
-    orientation: 'flat',
-    strokeWidth: 0.5,
-    evenColUp: false,
-  },
-  terrainTypes: ['clear'],
-  edgeFeatureTypes: ['road'],
-  vpHexes: [],
-  entryHexes: [],
-};
+import { FIXTURE } from '../../fixtures/map-editor.js';
 
 const MAP_URL = '/tools/map-editor';
 const API_URL = '/api/tools/map-editor/data';
@@ -71,9 +51,12 @@ describe('Map Editor — Push/Pull Sync', () => {
     cy.visit(MAP_URL);
     cy.wait('@fetchMap');
 
-    // Mark state as having unsaved changes via Vue 3 dev-mode component access
+    // Set unsaved = true via Vue 3 dev-mode component access.
+    // Only works against the Vite dev server (production builds omit __vueParentComponent).
     cy.get('.map-editor').then(($el) => {
-      $el[0].__vueParentComponent.setupState.unsaved.value = true;
+      const component = $el[0].__vueParentComponent;
+      if (!component) throw new Error('__vueParentComponent not found — run against dev server');
+      component.setupState.unsaved.value = true;
     });
     cy.get('.unsaved-marker').should('be.visible');
 
