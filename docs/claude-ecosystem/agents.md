@@ -18,12 +18,12 @@ or run the test suite.
 
 **Owned skills:**
 
-| Skill | What it does |
-| ----- | ------------ |
-| [`/dev-build`](skills.md#dev-build) | Format → lint → Vite build |
-| [`/dev-start`](skills.md#dev-start) | Launch server (port 3000) + Vite client (port 5173) |
-| [`/dev-stop`](skills.md#dev-stop) | Graceful shutdown with 10 s SIGKILL fallback |
-| [`/dev-test`](skills.md#dev-test) | Run test suite; detect flaky tests; correlate failures with server logs |
+| Skill                               | What it does                                                            |
+| ----------------------------------- | ----------------------------------------------------------------------- |
+| [`/dev-build`](skills.md#dev-build) | Format → lint → Vite build                                              |
+| [`/dev-start`](skills.md#dev-start) | Launch server (port 3000) + Vite client (port 5173)                     |
+| [`/dev-stop`](skills.md#dev-stop)   | Graceful shutdown with 10 s SIGKILL fallback                            |
+| [`/dev-test`](skills.md#dev-test)   | Run test suite; detect flaky tests; correlate failures with server logs |
 
 **Design spec:** `docs/agents/devops/design.md`
 
@@ -43,10 +43,10 @@ game-logic issues before filing acceptance criteria
 
 **Owned skills:**
 
-| Skill | What it does |
-| ----- | ------------ |
-| [`/issue-start`](skills.md#issue-start) | Fetch issue, summarise ACs, present plan — HCP 1 |
-| [`/issue-branch`](skills.md#issue-branch) | Create `feat/{id}-{slug}` branch |
+| Skill                                           | What it does                                            |
+| ----------------------------------------------- | ------------------------------------------------------- |
+| [`/issue-start`](skills.md#issue-start)         | Fetch issue, summarise ACs, present plan — HCP 1        |
+| [`/issue-branch`](skills.md#issue-branch)       | Create `feat/{id}-{slug}` branch                        |
 | [`/issue-implement`](skills.md#issue-implement) | Full ticket-to-merge orchestrator (chains 7 sub-skills) |
 
 **Design spec:** `docs/agents/project-manager/design.md`
@@ -68,8 +68,8 @@ LOS, combat, morale, orders, artillery, or data models
 
 **Owned skills:**
 
-| Skill | What it does |
-| ----- | ------------ |
+| Skill                                     | What it does                |
+| ----------------------------------------- | --------------------------- |
 | [`/issue-intake`](skills.md#issue-intake) | Full 6-step intake workflow |
 
 Also calls `/pr-create` and `/pr-merge` as part of the intake lifecycle.
@@ -91,10 +91,10 @@ before any analysis
 
 **Owned skills:**
 
-| Skill | What it does |
-| ----- | ------------ |
-| [`/pr-review`](skills.md#pr-review) | Build/test gate + PR diff analysis; posts structured findings |
-| [`/code-assess`](skills.md#code-assess) | Full source audit for dead/dup code and coverage gaps |
+| Skill                                   | What it does                                                  |
+| --------------------------------------- | ------------------------------------------------------------- |
+| [`/pr-review`](skills.md#pr-review)     | Build/test gate + PR diff analysis; posts structured findings |
+| [`/code-assess`](skills.md#code-assess) | Full source audit for dead/dup code and coverage gaps         |
 
 **Design spec:** `docs/agents/code-review/design.md`
 

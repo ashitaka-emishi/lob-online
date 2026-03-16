@@ -14,20 +14,20 @@ not proceed — no code written, no issue filed, no PR merged — until it recei
 
 ### Standard HCPs in the issue-to-merge workflow
 
-| HCP | Where | Trigger | Required signal |
-| --- | ----- | ------- | --------------- |
-| **HCP 0** (optional) | `/issue-start` | Significant architectural choice | explicit sign-off |
-| **HCP 1** | `/issue-start` | Implementation plan displayed | `proceed` |
-| **HCP 2** | `/issue-implement` | Build + test pass | `push` |
-| **HCP 2b** | `/pr-review` | Review findings displayed | `fix all` / `fix errors only` / `accept` |
-| **HCP 3** | `/pr-merge` | Final CI check passes | `merge` |
+| HCP                  | Where              | Trigger                          | Required signal                          |
+| -------------------- | ------------------ | -------------------------------- | ---------------------------------------- |
+| **HCP 0** (optional) | `/issue-start`     | Significant architectural choice | explicit sign-off                        |
+| **HCP 1**            | `/issue-start`     | Implementation plan displayed    | `proceed`                                |
+| **HCP 2**            | `/issue-implement` | Build + test pass                | `push`                                   |
+| **HCP 2b**           | `/pr-review`       | Review findings displayed        | `fix all` / `fix errors only` / `accept` |
+| **HCP 3**            | `/pr-merge`        | Final CI check passes            | `merge`                                  |
 
 ### Issue intake HCPs
 
-| HCP | Where | Trigger | Required signal |
-| --- | ----- | ------- | --------------- |
+| HCP       | Where           | Trigger               | Required signal                  |
+| --------- | --------------- | --------------------- | -------------------------------- |
 | **HCP 1** | `/issue-intake` | Issue draft displayed | `confirm` / `yes` / `looks good` |
-| **HCP 2** | `/issue-intake` | PR opened | `merge` |
+| **HCP 2** | `/issue-intake` | PR opened             | `merge`                          |
 
 ### What happens if an HCP is skipped?
 
@@ -91,18 +91,18 @@ Every issue implementation produces a permanent structured log in `docs/ailog/`.
 
 **What the log contains:**
 
-| Section | When written | Contents |
-| ------- | ------------ | -------- |
-| `## AI Plan` | `/issue-start` | Proposed implementation approach, files to change, test strategy |
-| `## HCP 1 — Plan Accepted` | after HCP 1 approval | Timestamp; any engineer modifications |
-| `## Branch Created` | `/issue-branch` | Branch name and timestamp |
-| `## Implementation Notes` | after HCP 2 | Non-obvious decisions made during coding |
-| `## Build & Test Results` | after HCP 2 | One-line summary from `/dev-build` and `/dev-test` |
-| `## HCP 2 — Implementation Accepted` | after HCP 2 approval | Timestamp; any engineer requests |
-| `## Review Findings` | `/pr-review` | Structured findings table from code review |
-| `## HCP 2b — Review Triaged` | after HCP 2b | Engineer's decision; fixes applied |
-| `## HCP 3 — Merge Approved` | `/pr-merge` | Timestamp |
-| `## Merge Complete` | after merge | Merged commit SHA |
+| Section                              | When written         | Contents                                                         |
+| ------------------------------------ | -------------------- | ---------------------------------------------------------------- |
+| `## AI Plan`                         | `/issue-start`       | Proposed implementation approach, files to change, test strategy |
+| `## HCP 1 — Plan Accepted`           | after HCP 1 approval | Timestamp; any engineer modifications                            |
+| `## Branch Created`                  | `/issue-branch`      | Branch name and timestamp                                        |
+| `## Implementation Notes`            | after HCP 2          | Non-obvious decisions made during coding                         |
+| `## Build & Test Results`            | after HCP 2          | One-line summary from `/dev-build` and `/dev-test`               |
+| `## HCP 2 — Implementation Accepted` | after HCP 2 approval | Timestamp; any engineer requests                                 |
+| `## Review Findings`                 | `/pr-review`         | Structured findings table from code review                       |
+| `## HCP 2b — Review Triaged`         | after HCP 2b         | Engineer's decision; fixes applied                               |
+| `## HCP 3 — Merge Approved`          | `/pr-merge`          | Timestamp                                                        |
+| `## Merge Complete`                  | after merge          | Merged commit SHA                                                |
 
 **Why it matters:** The ailog is the audit trail of every AI planning decision and human
 approval in the project. It answers "why was this implemented this way?" without requiring
@@ -139,10 +139,10 @@ different levels of detail and formality.
 
 ## Summary
 
-| Mechanism | Scope | Who it protects |
-| --------- | ----- | --------------- |
-| HCPs | Every consequential AI action | Engineer — ensures AI never takes irreversible action unilaterally |
-| CI gates | Every PR | Team — ensures no broken code reaches the main branch |
-| Rules-lawyer gate | Game-logic issues | Project — ensures implementation matches the published rules |
-| ailog | Every issue implementation | Project history — permanent record of AI planning and human approvals |
-| devlog | Every session | Team knowledge — narrative of design decisions over time |
+| Mechanism         | Scope                         | Who it protects                                                       |
+| ----------------- | ----------------------------- | --------------------------------------------------------------------- |
+| HCPs              | Every consequential AI action | Engineer — ensures AI never takes irreversible action unilaterally    |
+| CI gates          | Every PR                      | Team — ensures no broken code reaches the main branch                 |
+| Rules-lawyer gate | Game-logic issues             | Project — ensures implementation matches the published rules          |
+| ailog             | Every issue implementation    | Project history — permanent record of AI planning and human approvals |
+| devlog            | Every session                 | Team knowledge — narrative of design decisions over time              |

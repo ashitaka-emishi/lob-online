@@ -21,12 +21,12 @@ AI assistant you use.
 
 ## Contents
 
-| Document | What it covers |
-| -------- | -------------- |
-| [agents.md](agents.md) | Reference for each agent: purpose, collaborators, owned skills, allowed tools |
-| [skills.md](skills.md) | Reference for each skill: purpose, owning agent, Claude Code usage, manual equivalent |
-| [network-diagram.md](network-diagram.md) | Mermaid diagrams: agent ownership, skill dependencies, SDLC sequence |
-| [guardrails-and-logging.md](guardrails-and-logging.md) | How the ecosystem enforces quality and maintains an audit trail |
+| Document                                               | What it covers                                                                        |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| [agents.md](agents.md)                                 | Reference for each agent: purpose, collaborators, owned skills, allowed tools         |
+| [skills.md](skills.md)                                 | Reference for each skill: purpose, owning agent, Claude Code usage, manual equivalent |
+| [network-diagram.md](network-diagram.md)               | Mermaid diagrams: agent ownership, skill dependencies, SDLC sequence                  |
+| [guardrails-and-logging.md](guardrails-and-logging.md) | How the ecosystem enforces quality and maintains an audit trail                       |
 
 ---
 
