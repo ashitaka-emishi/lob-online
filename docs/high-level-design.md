@@ -1229,13 +1229,17 @@ lob-online/
 ├── docs/
 │   ├── reference/            ← source reference material (rules PDFs, map image)
 │   │   └── *.pdf / *.jpg
+│   ├── ailog/                ← AI execution logs (YYYY_MM_DD-LOB-{####}.md)
+│   ├── agents/               ← agent design docs and prompts
+│   ├── designs/              ← component design docs (TEMPLATE.md + {slug}.md)
 │   ├── devlog/               ← devlog entries (YYYY-MM-DD-HHMM-*.md)
 │   ├── devlog.md             ← devlog index
 │   ├── high-level-design.md  ← this document
 │   ├── high-level-design-prompt.md ← archived prompt used to generate high-level-design.md
 │   ├── library.md            ← human-readable reference library manifest
 │   ├── library.json          ← machine-readable catalog
-│   └── map-editor-design.md  ← map editor detailed design spec
+│   ├── map-editor-design.md  ← map editor detailed design spec
+│   └── workflows/            ← workflow definitions (design/, issue-intake/, issue-implement/, sdlc-feature/)
 │
 ├── data/
 │   └── scenarios/
@@ -1681,12 +1685,12 @@ skill that drives it conversationally.
 /design  →  /issue-intake (×N)  →  loop(/issue-implement)  →  /plan-wrap
 ```
 
-| Phase               | Skill                 | Workflow file                                  | Output                                       |
-| ------------------- | --------------------- | ---------------------------------------------- | -------------------------------------------- |
-| **Design**          | `/design`             | `docs/workflows/design/design.workflow.json`   | `docs/designs/{slug}.md` merged on PR        |
-| **Issue intake**    | `/issue-intake`       | `docs/workflows/issue-intake/`                 | GitHub issue filed, milestone assigned       |
-| **Implementation**  | `/issue-implement`    | `docs/workflows/issue-implement/`              | PR merged, issue closed, ailog committed     |
-| **After-action**    | `/plan-wrap`          | —                                              | Devlog entry, CLAUDE.md and HLD up to date   |
+| Phase              | Skill              | Workflow file                                | Output                                     |
+| ------------------ | ------------------ | -------------------------------------------- | ------------------------------------------ |
+| **Design**         | `/design`          | `docs/workflows/design/design.workflow.json` | `docs/designs/{slug}.md` merged on PR      |
+| **Issue intake**   | `/issue-intake`    | `docs/workflows/issue-intake/`               | GitHub issue filed, milestone assigned     |
+| **Implementation** | `/issue-implement` | `docs/workflows/issue-implement/`            | PR merged, issue closed, ailog committed   |
+| **After-action**   | `/plan-wrap`       | —                                            | Devlog entry, CLAUDE.md and HLD up to date |
 
 ### Design Phase Detail
 
@@ -1703,6 +1707,7 @@ and the right solution needs to be reasoned through before issues are written. T
 ### Implementation Loop
 
 After each `/issue-implement` merge:
+
 - If implementation revealed new scope → update the design doc and run `/issue-intake` again
 - If all design issues are closed → run `/plan-wrap` to close out the cycle
 
