@@ -361,6 +361,96 @@ describe('MapEditorView', () => {
     });
   });
 
+  it('v1→v2 migration: copies v1 draft to v2 key and removes v1 key on mount', async () => {
+    const v1Data = JSON.stringify({ ...VALID_MAP, _savedAt: 1000 });
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key) => {
+        if (key === 'lob-map-editor-mapdata-v1') return v1Data;
+        return null;
+      }),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    expect(localStorage.setItem).toHaveBeenCalledWith(MAP_DRAFT_KEY, v1Data);
+    expect(localStorage.removeItem).toHaveBeenCalledWith('lob-map-editor-mapdata-v1');
+    wrapper.unmount();
+  });
+
+  it('push confirmation dialog shown when server data is newer than local draft', async () => {
+    const serverMap = { ...VALID_MAP, _savedAt: 2000 };
+    const localDraft = { ...VALID_MAP, _savedAt: 1000 };
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key) => {
+        if (key === MAP_DRAFT_KEY) return JSON.stringify(localDraft);
+        return null;
+      }),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+    vi.stubGlobal('fetch', mockFetch(serverMap));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    const saveBtn = wrapper.find('button.save-btn');
+    await saveBtn.trigger('click');
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Server data is newer');
+    wrapper.unmount();
+  });
+
+  it('push confirmation → Overwrite → PUT fires', async () => {
+    const serverMap = { ...VALID_MAP, _savedAt: 2000 };
+    const localDraft = { ...VALID_MAP, _savedAt: 1000 };
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key) => {
+        if (key === MAP_DRAFT_KEY) return JSON.stringify(localDraft);
+        return null;
+      }),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(serverMap) })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ ok: true, _savedAt: Date.now() }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    await wrapper.find('button.save-btn').trigger('click');
+    await flushPromises();
+
+    const overwriteBtn = wrapper.findAll('button').find((b) => b.text() === 'Overwrite');
+    await overwriteBtn.trigger('click');
+    await flushPromises();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    wrapper.unmount();
+  });
+
+  it('pull when not dirty: no dialog, fetches directly', async () => {
+    const fetchMock = mockFetch(VALID_MAP);
+    vi.stubGlobal('fetch', fetchMock);
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    await wrapper.find('button.pull-btn').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain('Discard local changes');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    wrapper.unmount();
+  });
+
   it('save success clears the v2 localStorage draft key', async () => {
     const fetchMock = vi
       .fn()

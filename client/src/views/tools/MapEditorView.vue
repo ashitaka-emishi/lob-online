@@ -139,6 +139,8 @@ const isOffline = ref(false);
 const serverSavedAt = ref(0);
 const showPushConfirm = ref(false);
 const showPullConfirm = ref(false);
+const isPulling = ref(false);
+const pullError = ref('');
 
 function saveMapDraft() {
   if (!mapData.value) return;
@@ -168,11 +170,17 @@ function dismissDraft() {
   draftBannerVisible.value = false;
 }
 
+async function fetchServerData() {
+  const res = await fetch('/api/tools/map-editor/data');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
 async function executePull() {
+  isPulling.value = true;
+  pullError.value = '';
   try {
-    const res = await fetch('/api/tools/map-editor/data');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const serverData = await res.json();
+    const serverData = await fetchServerData();
     mapData.value = serverData;
     serverSavedAt.value = serverData._savedAt ?? 0;
     localStorage.removeItem(MAP_DRAFT_KEY);
@@ -183,7 +191,9 @@ async function executePull() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
     }
   } catch (err) {
-    fetchError.value = err.message;
+    pullError.value = err.message;
+  } finally {
+    isPulling.value = false;
   }
 }
 
@@ -197,9 +207,7 @@ async function pullFromServer() {
 
 async function fetchMapData() {
   try {
-    const res = await fetch('/api/tools/map-editor/data');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const serverData = await res.json();
+    const serverData = await fetchServerData();
 
     serverSavedAt.value = serverData._savedAt ?? 0;
 
@@ -413,6 +421,7 @@ function onKeyDown(e) {
 const saveErrors = ref([]);
 
 async function executePush() {
+  if (!mapData.value) return;
   saveStatus.value = 'saving';
   saveErrors.value = [];
   try {
@@ -502,7 +511,13 @@ onUnmounted(() => {
       <button class="export-btn" :disabled="!exportData" @click="showExportOverlay = true">
         Export
       </button>
-      <button class="pull-btn" @click="pullFromServer">Pull from Server</button>
+      <button
+        class="pull-btn"
+        :disabled="saveStatus === 'saving' || isPulling"
+        @click="pullFromServer"
+      >
+        {{ isPulling ? 'Pulling…' : 'Pull from Server' }}
+      </button>
       <button class="save-btn" :disabled="isOffline || saveStatus === 'saving'" @click="save">
         {{ isOffline ? 'Offline' : saveStatus === 'saving' ? 'Saving…' : 'Push to Server' }}
       </button>
@@ -544,6 +559,12 @@ onUnmounted(() => {
     <div v-if="saveErrors.length" class="errors">
       <div v-for="(issue, i) in saveErrors" :key="i" class="error-line">
         {{ issue.path?.join('.') ?? '' }}: {{ issue.message }}
+      </div>
+    </div>
+    <div v-if="pullError" class="errors">
+      <div class="error-line">
+        Pull failed: {{ pullError }}
+        <button class="error-dismiss" @click="pullError = ''">×</button>
       </div>
     </div>
 
@@ -827,6 +848,17 @@ onUnmounted(() => {
   border-bottom: 1px solid #663333;
   font-size: 0.8rem;
   color: #c06060;
+}
+
+.error-dismiss {
+  margin-left: 0.5rem;
+  padding: 0 0.3rem;
+  background: none;
+  border: 1px solid #c06060;
+  color: #c06060;
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1.2;
 }
 
 .editor-body {
