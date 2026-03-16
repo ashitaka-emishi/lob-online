@@ -94,15 +94,15 @@
       "inputMap": {},
       "onError": "halt",
       "gateConfig": {
-        "prompt": "The dev server is running. Review the editor in your browser, then choose an action. On Fix, enter your feedback as a note — it will be passed to the next implementation pass. The dev server will be stopped before continuing on either path.",
+        "prompt": "The dev server is running. Review the editor in your browser, then choose an action. On Approve, the workflow stops the server automatically via the next dev-stop step. On Fix, you MUST call /dev-stop manually before the loop-back to implement takes effect — enter your feedback as a note and it will be injected into the next implementation pass.",
         "choices": [
           {
-            "label": "Approve — implementation looks good; stop server and continue to push",
+            "label": "Approve — implementation looks good; server stops automatically, then continue to push",
             "value": "approve",
             "onChoice": { "nextStep": "dev-stop" }
           },
           {
-            "label": "Fix — enter feedback below; server will be stopped and implementation will restart",
+            "label": "Fix — call /dev-stop first, then enter feedback below; implementation will restart with your feedback",
             "value": "fix",
             "onChoice": { "nextStep": "implement" }
           }

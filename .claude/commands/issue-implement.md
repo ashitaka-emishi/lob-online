@@ -31,6 +31,10 @@ AC checklist item must be satisfied.
 
 Keep commits small and focused. First commit line format: `#{number} <type>: <description>`
 
+If `editorFeedback` is provided in your inputs (injected from a prior `gate-editor` Fix
+decision), begin by summarising the feedback and describing how you will address each point
+before writing any code. If `editorFeedback` is absent or empty, proceed normally.
+
 ## Step 3a — Sync project docs
 
 Run `/doc-sync`.
