@@ -29,80 +29,101 @@ authoritative one. Each individual error is small. Accumulated across a project,
 compound into a codebase where the rules are wrong, the history is opaque, and no one is
 quite sure why things are the way they are.
 
-## Agents vs. Skills: Two Levels of Responsibility
+## Three Layers: Agents, Skills, and Orchestration
 
-lob-online's ecosystem has two primitives: **agents** and **skills**.
+lob-online's ecosystem is built from three interlocking primitives. Understanding how they
+relate to each other is the key to understanding how the whole thing holds together.
 
-An **agent** is a specialised AI subprocess with a defined scope. The `devops` agent handles
-build, test, start, and stop operations. The `rules-lawyer` agent is the authoritative
-wargame rules arbiter — its rulings cannot be overridden by other agents. The `issue-intake`
-agent manages the full lifecycle of creating a GitHub issue, from first draft to merged PR.
-Agents have an explicit tool allowlist (Bash, Read, Write, etc.) and a system prompt that
-encodes their responsibilities and constraints.
+### Layer 1 — Agents: scope and responsibility
 
-A **skill** is a reusable Markdown prompt file that encodes a step-by-step procedure. Skills
-are simpler than agents — they do not have their own subprocess or tool allowlist. Instead,
-they run in the current context and can call agents and other skills. The `/dev-build` skill
-runs format, lint, and build in order and stops on the first failure. The `/issue-implement`
-skill sequences eight sub-skills from issue start to squash merge.
+An **agent** is a specialised AI subprocess with a defined responsibility boundary. The
+`devops` agent handles build, test, start, and stop operations. The `rules-lawyer` agent is
+the authoritative wargame rules arbiter — its rulings cannot be overridden by any other
+agent. The `issue-intake` agent manages the full lifecycle of creating a GitHub issue, from
+first draft to merged PR.
 
-The distinction matters for routing: when you say "review this PR," Claude Code invokes the
-`code-review` agent, which owns the `/pr-review` skill. The agent's scope ensures that PR
-review does not accidentally trigger a deployment or file a new issue.
+Each agent has two constraints baked in: an **allowed-tools list** (Bash, Read, Write, and
+so on) that limits what the subprocess can touch, and a **system prompt** that encodes its
+responsibilities and what it must not do. These constraints mean an agent cannot accidentally
+exceed its scope, even if the engineer asks it to. The `rules-lawyer` has no Bash access and
+cannot write files. The `issue-intake` agent may only commit to `docs/`, `.github/`, and
+`.claude/` paths — source code changes are explicitly prohibited.
+
+Agents answer the question: _what is this AI subprocess allowed to do, and what is it
+responsible for?_
+
+### Layer 2 — Skills: composable procedures
+
+A **skill** is a reusable Markdown prompt file that encodes a step-by-step procedure.
+Skills are lighter than agents — they run in the current context rather than a separate
+subprocess, and they have no tool allowlist of their own. What they do have is structure:
+each skill is a numbered sequence of steps, each step describes exactly what to run and what
+to check, and many steps include an explicit human control point.
+
+Skills compose freely. The `/dev-build` skill (owned by `devops`) runs format, lint, and
+build in order, stopping on the first failure. The `/issue-implement` skill (owned by
+`project-manager`) chains eight sub-skills in sequence — including `/dev-build`, `/dev-test`,
+`/pr-create`, and `/pr-review` — each owned by a different agent. Skill ownership records
+accountability; cross-agent skill calls are normal and expected.
+
+This composability is the key distinction from agents. An agent defines a scope boundary.
+A skill defines a procedure that can freely cross those boundaries to get a job done.
+Skills answer the question: _what steps, in what order, must be taken to complete this task?_
+
+### Layer 3 — Orchestration: declarative pipelines with gate checkpoints
+
+As the skill count grew, a third layer became useful: **workflow definitions** — JSON files
+in `docs/workflows/` that describe pipelines declaratively, as ordered step sequences with
+explicit gate checkpoints between them.
+
+Where a skill encodes its procedure in prose (Markdown), a workflow definition encodes the
+same pipeline as structured data: each step names an `agentId` (looked up in
+`.claude/agents/registry.json`), an `inputMap` that threads output from prior steps using
+`$.stepId.field` expressions, and an `onError` policy. Gate steps carry a `gateConfig`
+object describing the engineer's choices and which step to jump back to if they choose to
+revise rather than proceed.
+
+The `server/src/orchestrator/` Node.js runtime executes these definitions programmatically:
+it validates the definition against a Zod schema, iterates the step sequence, dispatches
+agent steps, presents CLI gate prompts, handles loop-back routing, and persists a
+`WorkflowInstance` JSON record to `docs/ailog/`.
+
+The relationship between the three layers: **agents** define what each subprocess is allowed
+to do; **skills** compose agents and other skills into procedures with human control points;
+**orchestration** sequences those procedures as version-controlled data, making the pipeline
+inspectable, testable, and eventually executable without manual skill invocation.
+
+Today the workflow definitions formalise what the skills already do — they are documentation
+as much as executable specifications. In a later phase, the runtime will drive the
+`issue-implement` pipeline directly. The architecture is designed so that transition requires
+no changes to skill files: the runtime's `dispatch` interface resolves the same agent ids to
+the same Markdown prompts that engineers already invoke manually.
 
 ## A Typical Session: From Idea to Merged PR
 
-Here is how the ecosystem handles a typical feature implementation end-to-end:
+Here is how all three layers cooperate in a typical feature implementation:
 
-1. **Issue intake** — The engineer describes the feature in plain language. The `issue-intake`
-   agent opens a branch, iteratively refines the draft with the engineer, consults the
-   `rules-lawyer` if the feature touches game mechanics, and waits for explicit approval
-   before filing the GitHub issue. The issue body is committed as a `docs/intake/` artifact.
+1. **Issue intake** — The engineer invokes the `issue-intake` **agent** (layer 1), which
+   runs the `/issue-intake` **skill** (layer 2). The skill opens a branch, refines the draft,
+   consults `rules-lawyer` if the feature touches game mechanics, and waits for explicit
+   approval before filing the issue. The `issue-intake` **workflow definition** (layer 3)
+   formalises this same sequence as version-controlled JSON.
 
-2. **Implementation** — The engineer runs `/issue-implement <number>`. The `project-manager`
-   agent fetches the issue, proposes an implementation plan, and presents **HCP 1**: the
-   workflow does not proceed until the engineer says "proceed."
+2. **Implementation** — `/issue-implement` (a skill) is invoked. The `project-manager` agent
+   fetches the issue, proposes a plan, and presents **HCP 1** — the workflow does not proceed
+   until the engineer says "proceed."
 
-3. **Build and test** — After coding, the agent runs `/dev-build` (format → lint → build)
-   and `/dev-test`. It presents the results and waits for **HCP 2**: the engineer says "push"
-   before any code reaches GitHub.
+3. **Build and test** — The skill calls `/dev-build` and `/dev-test` (both owned by `devops`),
+   then presents **HCP 2**. The engineer says "push" before any code reaches GitHub.
 
-4. **PR review** — The `code-review` agent examines the diff for dead code, coverage gaps,
-   and standards violations. It presents a structured findings table and waits for **HCP 2b**:
-   the engineer decides whether to fix everything, fix errors only, or accept as-is.
+4. **PR review** — `/pr-review` is invoked, running inside the `code-review` agent's scope.
+   It presents a structured findings table and waits for **HCP 2b**.
 
-5. **Merge** — `/pr-merge` runs a final CI check and presents **HCP 3**: the PR is not
-   squash-merged until the engineer says "merge."
+5. **Merge** — `/pr-merge` runs a final CI check, presents **HCP 3**, and squash-merges only
+   after the engineer says "merge."
 
-The entire session — from plan approval to merge SHA — is recorded in a structured ailog
-file (`docs/ailog/YYYY_MM_DD-LOB-{####}.md`) committed to the repository as a permanent
-audit trail.
-
-## The Declarative Workflow Layer
-
-Skills encode procedures as Markdown prompts. But as the skill count grew, a second
-representation became useful: **workflow definitions** — JSON files in `docs/workflows/`
-that describe the same pipelines declaratively, as ordered step sequences with gate
-checkpoints.
-
-Each workflow definition (`*.workflow.json`) lists steps with `agentId` references
-(resolved through `.claude/agents/registry.json`) and `inputMap` expressions
-(`$.stepId.field`) that thread output from one step into the next. Gate steps have
-`gateConfig` objects describing the choices and the loop-back target if the engineer
-chooses to revise rather than proceed.
-
-The `server/src/orchestrator/` Node.js runtime can execute these definitions
-programmatically: it validates the definition against a Zod schema, iterates the step
-sequence, dispatches agent steps via an injectable `dispatch` function, presents CLI gate
-prompts to the engineer, handles loop-back routing, and persists a `WorkflowInstance` JSON
-record to `docs/ailog/` alongside the human-readable ailog Markdown.
-
-Today the workflow definitions formalise what the skills already do — they are
-documentation as much as executable specifications. In a later phase, the runtime will drive
-the `issue-implement` pipeline directly, replacing the chained skill invocations with a
-single `runWorkflow` call. The architecture is designed so that transition requires no
-changes to the skill files: the runtime's `dispatch` interface maps the same agent ids to
-the same Markdown prompts.
+The entire session is recorded in a structured ailog file committed to the repository as a
+permanent audit trail.
 
 ## How the Guardrails Provide Confidence
 
