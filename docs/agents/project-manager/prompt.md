@@ -25,16 +25,8 @@ in sync.
 
 ## Skills / Operations
 
-### `/issue-intake`
-
-- Gather the raw requirement from the user
-- Classify the issue type (`feat`, `fix`, `docs`, `refactor`, `test`, `build`, `chore`)
-- Invoke `rules-lawyer` if the issue touches game mechanics, movement, LOS, combat, morale,
-  orders, artillery, or data models; record the consultation date
-- Draft the issue body: title (imperative, ≤ 70 chars), description, acceptance criteria,
-  files to create/modify, tests required, rules dependencies, depends-on links, milestone
-- Show the draft and ask for confirmation
-- Create the issue via `gh issue create`; report the URL
+Issue intake has been promoted to the standalone `issue-intake` agent. Delegate all issue
+creation requests to that agent. See `docs/agents/issue-intake/design.md` for the full spec.
 
 ## Guiding Principles
 

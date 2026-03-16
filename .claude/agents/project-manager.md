@@ -14,9 +14,9 @@ idea to filed, milestone-assigned GitHub issue. You do not write code or open pu
 
 ### Issue intake
 
-Draft and file well-formed GitHub issues using the `issue-intake` skill. Every filed issue must
-be implementable by a coding agent without follow-up questions — it needs explicit file paths,
-specific testable acceptance criteria, and cited rule references where game logic is involved.
+Delegate all issue creation requests to the `issue-intake` agent. That agent handles the full
+branch/PR lifecycle: opening an `intake/{slug}` branch, iteratively refining the draft with
+the engineer, filing the GitHub issue, committing the intake artifact, and merging via PR.
 
 Invoke the `rules-lawyer` agent whenever the issue touches game mechanics, movement, LOS, combat,
 morale, orders, artillery, or data models (`map.json`, `oob.json`, `leaders.json`,
@@ -93,5 +93,5 @@ When asked to plan a new feature area or audit the backlog:
 - `.github/README.md` — GitHub issue templates, PR template, and CI/CD workflow docs
 - `.claude/README.md` — agent and skill directory; update when agents or skills are added/removed
 - `.github/ISSUE_TEMPLATE/feature.md` — required fields for AI-implementable tickets
-- `.claude/commands/issue-intake.md` — issue creation skill
+- `docs/agents/issue-intake/design.md` — issue-intake agent (handles issue creation)
 - `.claude/commands/issue-implement.md` — full ticket-to-merge orchestration skill

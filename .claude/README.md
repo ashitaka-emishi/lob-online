@@ -11,12 +11,13 @@ by Claude Code; skills are reusable prompt files invoked with `/skill-name`.
 Each agent file defines a name, description, allowed tools, and a detailed system prompt. The
 main Claude Code session spawns agents using the `Agent` tool.
 
-| Agent             | File                        | Responsibilities                                                                  |
-| ----------------- | --------------------------- | --------------------------------------------------------------------------------- |
-| `devops`          | `agents/devops.md`          | Build, start, stop, and test the development environment via the four core skills |
-| `project-manager` | `agents/project-manager.md` | File well-formed GitHub issues, assign milestones, audit backlog against HLD      |
-| `code-review`     | `agents/code-review.md`     | Review PRs for coding standards, test coverage, dead code, and defects            |
-| `rules-lawyer`    | `agents/rules-lawyer.md`    | Authoritative rulings on LoB v2.0 rules, SM errata, and rule-source conflicts     |
+| Agent             | File                        | Responsibilities                                                                                 |
+| ----------------- | --------------------------- | ------------------------------------------------------------------------------------------------ |
+| `devops`          | `agents/devops.md`          | Build, start, stop, and test the development environment via the four core skills                |
+| `project-manager` | `agents/project-manager.md` | File well-formed GitHub issues, assign milestones, audit backlog against HLD                     |
+| `issue-intake`    | `agents/issue-intake.md`    | Guide issue creation with branch/PR lifecycle: open branch → refine → file → commit → PR → merge |
+| `code-review`     | `agents/code-review.md`     | Review PRs for coding standards, test coverage, dead code, and defects                           |
+| `rules-lawyer`    | `agents/rules-lawyer.md`    | Authoritative rulings on LoB v2.0 rules, SM errata, and rule-source conflicts                    |
 
 Full design specifications for each agent live in `docs/agents/<name>/design.md`.
 
@@ -38,12 +39,12 @@ step-by-step instructions that Claude executes, including allowed-tools declarat
 
 ### Issue Workflow Skills
 
-| Skill              | File                          | Purpose                                                                                            |
-| ------------------ | ----------------------------- | -------------------------------------------------------------------------------------------------- |
-| `/issue-intake`    | `commands/issue-intake.md`    | Guide creation of an AI-actionable GitHub issue with two human control points before filing        |
-| `/issue-start`     | `commands/issue-start.md`     | Read issue, summarise ACs, confirm approach — HCP 1                                                |
-| `/issue-branch`    | `commands/issue-branch.md`    | Create `feat/{id}-{slug}` branch; set commit prefix `#{id}`                                        |
-| `/issue-implement` | `commands/issue-implement.md` | Orchestrating macro-skill: sequences all sub-skills with human control points from ticket to merge |
+| Skill              | File                          | Purpose                                                                                                           |
+| ------------------ | ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `/issue-intake`    | `commands/issue-intake.md`    | Full branch/PR intake workflow — owned by `issue-intake` agent; open branch → refine → file → commit → PR → merge |
+| `/issue-start`     | `commands/issue-start.md`     | Read issue, summarise ACs, confirm approach — HCP 1                                                               |
+| `/issue-branch`    | `commands/issue-branch.md`    | Create `feat/{id}-{slug}` branch; set commit prefix `#{id}`                                                       |
+| `/issue-implement` | `commands/issue-implement.md` | Orchestrating macro-skill: sequences all sub-skills with human control points from ticket to merge                |
 
 ### PR and Plan Skills
 

@@ -85,25 +85,9 @@ Closes #
 
 ## 3. Skills
 
-### `issue-intake` — `.claude/commands/issue-intake.md`
-
-**Purpose:** Guide the agent (or user) through creating a well-formed, AI-actionable GitHub
-issue, with optional `rules-lawyer` consultation for game-logic features.
-
-**Steps:**
-
-1. Gather the raw requirement from the user (free text, existing notes, or a HLD gap)
-2. Classify the issue type: `feat`, `fix`, `docs`, `refactor`, `test`, `build`, `chore`
-3. **Rules gate** — if the issue touches game mechanics, movement, LOS, combat, morale,
-   orders, artillery, or data models: invoke `rules-lawyer`; record "rules-lawyer consulted on
-   YYYY-MM-DD" in the Rules/data dependencies field
-4. Draft the issue body using the feature template
-5. **HUMAN CONTROL POINT** — verify the milestone exists; if not, ask the user to confirm
-   before creating it; do not proceed until approved
-6. **HUMAN CONTROL POINT** — show the full draft and wait for explicit user approval before
-   filing; accept edits and redisplay if requested
-7. Create the issue: `gh issue create --title "..." --body "..." --milestone "v1.0 — MVP"`
-8. Report the issue URL
+Issue intake has been promoted to the standalone `issue-intake` agent. See
+`docs/agents/issue-intake/design.md` for the full spec. The `project-manager` agent
+delegates to `issue-intake` for all issue creation workflows.
 
 ---
 
@@ -124,9 +108,9 @@ tools: Bash, Read, Glob, Grep
 
 ### Agent Responsibilities
 
-- **Issue intake** — draft and file well-formed GitHub issues via `issue-intake` skill; consult
-  `rules-lawyer` whenever game mechanics are involved; every filed issue must be implementable
-  by a coding agent without follow-up questions
+- **Issue intake** — delegate to the `issue-intake` agent for all issue creation workflows;
+  the `issue-intake` agent handles drafting, filing, and the branch/PR lifecycle; consult
+  `rules-lawyer` whenever game mechanics are involved
 - **Milestone planning** — map new work to the correct HLD phase and milestone; create milestones
   via `gh api` if they do not exist yet; never create scope outside an existing phase without
   flagging it for human approval
@@ -145,7 +129,7 @@ tools: Bash, Read, Glob, Grep
 - `docs/agents/project-manager/design.md` — full design spec for this agent
 - `CLAUDE.md` — project overview and coding standards
 - `.github/ISSUE_TEMPLATE/feature.md` — required fields for AI-implementable tickets
-- `.claude/commands/issue-intake.md` — issue creation skill
+- `docs/agents/issue-intake/design.md` — issue-intake agent (handles issue creation)
 - `.claude/commands/issue-implement.md` — full ticket-to-merge orchestration skill
 
 ---

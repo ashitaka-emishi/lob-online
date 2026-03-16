@@ -32,12 +32,13 @@ that needs a quality gate, which is a clear DRY violation.
 
 ## Agents
 
-| Agent             | Description                                 | Primary Skills                                                       | Collaborators                        |
-| ----------------- | ------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------ |
-| `devops`          | Build, run, and test the dev environment    | `/dev-build`, `/dev-start`, `/dev-stop`, `/dev-test`                 | —                                    |
-| `project-manager` | Manage SDLC: issues → milestones → backlog  | `/issue-intake`, `/issue-start`, `/issue-branch`, `/issue-implement` | `rules-lawyer` (via `/issue-intake`) |
-| `code-review`     | Quality-gate PR reviews and codebase audits | `/pr-review`, `/code-assess`                                         | `devops` skills as prerequisites     |
-| `rules-lawyer`    | Authoritative LoB v2.0 rules arbiter        | none                                                                 | Consulted by `project-manager`       |
+| Agent             | Description                                                        | Primary Skills                                       | Collaborators                    |
+| ----------------- | ------------------------------------------------------------------ | ---------------------------------------------------- | -------------------------------- |
+| `devops`          | Build, run, and test the dev environment                           | `/dev-build`, `/dev-start`, `/dev-stop`, `/dev-test` | —                                |
+| `project-manager` | Manage SDLC: issues → milestones → backlog                         | `/issue-start`, `/issue-branch`, `/issue-implement`  | `issue-intake`, `rules-lawyer`   |
+| `issue-intake`    | Guide issue creation: branch → refine → file → commit → PR → merge | `/issue-intake`, `/pr-create`, `/pr-merge`           | `rules-lawyer` (via rules gate)  |
+| `code-review`     | Quality-gate PR reviews and codebase audits                        | `/pr-review`, `/code-assess`                         | `devops` skills as prerequisites |
+| `rules-lawyer`    | Authoritative LoB v2.0 rules arbiter                               | none                                                 | Consulted by `issue-intake`      |
 
 ```mermaid
 graph TD
@@ -48,10 +49,12 @@ graph TD
     dev-test
   end
   subgraph pm[project-manager agent]
-    issue-intake
     issue-start
     issue-branch
     issue-implement
+  end
+  subgraph ii[issue-intake agent]
+    issue-intake
   end
   subgraph cr[code-review agent]
     pr-review
@@ -67,30 +70,32 @@ graph TD
     agent-standardize
   end
   issue-intake -.->|consults| rl
+  issue-intake -->|calls| pr-create
+  issue-intake -->|calls| pr-merge
 ```
 
 ---
 
 ## Skills
 
-| Skill                | Category | Description                                        | Owning Agent    | Calls                     |
-| -------------------- | -------- | -------------------------------------------------- | --------------- | ------------------------- |
-| `/dev-build`         | dev      | Format → lint → Vite build                         | devops          | —                         |
-| `/dev-start`         | dev      | Launch server + Vite client                        | devops          | —                         |
-| `/dev-stop`          | dev      | Graceful shutdown, SIGKILL fallback                | devops          | —                         |
-| `/dev-test`          | dev      | Run suite, detect flakes, correlate errors         | devops          | —                         |
-| `/issue-intake`      | issue    | Draft and file AI-actionable GitHub issue          | project-manager | rules-lawyer agent        |
-| `/issue-start`       | issue    | Fetch issue, summarise ACs, HCP 1                  | project-manager | —                         |
-| `/issue-branch`      | issue    | Create feat branch, log update                     | project-manager | —                         |
-| `/issue-implement`   | issue    | Full ticket-to-merge orchestrator                  | project-manager | 7 sub-skills              |
-| `/pr-create`         | pr       | Devlog entry + CI checks + open PR                 | unowned         | —                         |
-| `/pr-review`         | pr       | Build/test gate + PR diff analysis                 | code-review     | `/dev-build`, `/dev-test` |
-| `/pr-merge`          | pr       | Squash-merge + branch delete, HCP 3                | unowned         | —                         |
-| `/plan-wrap`         | plan     | Post-plan: verify build, write devlog, update docs | unowned         | —                         |
-| `/code-assess`       | code     | Full source audit (dead/dup/coverage)              | code-review     | `/dev-build`, `/dev-test` |
-| `/agent-sync`        | agent    | Read-only drift check agents vs design.md          | unowned         | —                         |
-| `/agent-regenerate`  | agent    | Rebuild agent files from design.md §4              | unowned         | `/dev-build`              |
-| `/agent-standardize` | agent    | Normalize prompt.md, regenerate design + agents    | unowned         | `/dev-build`              |
+| Skill                | Category | Description                                        | Owning Agent    | Calls                                         |
+| -------------------- | -------- | -------------------------------------------------- | --------------- | --------------------------------------------- |
+| `/dev-build`         | dev      | Format → lint → Vite build                         | devops          | —                                             |
+| `/dev-start`         | dev      | Launch server + Vite client                        | devops          | —                                             |
+| `/dev-stop`          | dev      | Graceful shutdown, SIGKILL fallback                | devops          | —                                             |
+| `/dev-test`          | dev      | Run suite, detect flakes, correlate errors         | devops          | —                                             |
+| `/issue-intake`      | issue    | Branch/PR intake workflow: refine → file → PR      | issue-intake    | rules-lawyer agent, `/pr-create`, `/pr-merge` |
+| `/issue-start`       | issue    | Fetch issue, summarise ACs, HCP 1                  | project-manager | —                                             |
+| `/issue-branch`      | issue    | Create feat branch, log update                     | project-manager | —                                             |
+| `/issue-implement`   | issue    | Full ticket-to-merge orchestrator                  | project-manager | 7 sub-skills                                  |
+| `/pr-create`         | pr       | Devlog entry + CI checks + open PR                 | unowned         | —                                             |
+| `/pr-review`         | pr       | Build/test gate + PR diff analysis                 | code-review     | `/dev-build`, `/dev-test`                     |
+| `/pr-merge`          | pr       | Squash-merge + branch delete, HCP 3                | unowned         | —                                             |
+| `/plan-wrap`         | plan     | Post-plan: verify build, write devlog, update docs | unowned         | —                                             |
+| `/code-assess`       | code     | Full source audit (dead/dup/coverage)              | code-review     | `/dev-build`, `/dev-test`                     |
+| `/agent-sync`        | agent    | Read-only drift check agents vs design.md          | unowned         | —                                             |
+| `/agent-regenerate`  | agent    | Rebuild agent files from design.md §4              | unowned         | `/dev-build`                                  |
+| `/agent-standardize` | agent    | Normalize prompt.md, regenerate design + agents    | unowned         | `/dev-build`                                  |
 
 ---
 
@@ -105,6 +110,8 @@ graph LR
   issue-implement --> pr-create
   issue-implement --> pr-review
   issue-implement --> pr-merge
+  issue-intake --> pr-create
+  issue-intake --> pr-merge
   pr-review --> dev-build
   pr-review --> dev-test
   code-assess --> dev-build
