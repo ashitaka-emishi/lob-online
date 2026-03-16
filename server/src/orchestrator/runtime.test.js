@@ -373,7 +373,13 @@ describe('runWorkflow', () => {
     }));
 
     await expect(
-      runWorkflow({ definition, runId: '2026_03_16-LOB-9002', dispatch: vi.fn(), gateHandler, ailogDir })
+      runWorkflow({
+        definition,
+        runId: '2026_03_16-LOB-9002',
+        dispatch: vi.fn(),
+        gateHandler,
+        ailogDir,
+      })
     ).rejects.toThrow(/not found in workflow/);
   });
 });
