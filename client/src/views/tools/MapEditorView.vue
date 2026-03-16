@@ -508,6 +508,7 @@ onUnmounted(() => {
       <span v-if="saveStatus === 'saved'" class="save-flash">Saved</span>
       <span v-if="saveStatus === 'error'" class="save-error">Error</span>
       <span v-if="unsaved" class="unsaved-marker">* unsaved</span>
+      <a class="nav-link" href="/tools/scenario-editor">Scenario Editor</a>
       <button class="export-btn" :disabled="!exportData" @click="showExportOverlay = true">
         Export
       </button>
@@ -751,6 +752,16 @@ onUnmounted(() => {
 .unsaved-marker {
   color: #c8a840;
   font-size: 0.8rem;
+}
+
+.nav-link {
+  color: #a09880;
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  color: #e0d8c8;
 }
 
 .save-flash {
