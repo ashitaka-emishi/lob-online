@@ -86,7 +86,7 @@ Documentation and scoping only. No code exists. All source material (rulebooks, 
 | Reverse proxy      | nginx — terminates HTTPS, proxies to Node process                                 |
 | TLS                | Let's Encrypt via Certbot (auto-renewing)                                         |
 | Process management | PM2 — keeps Node process alive, handles restarts, log management                  |
-| CI/CD              | GitHub Actions — lint + test on every PR; deploy to Droplet on merge to `main`    |
+| CI/CD              | GitHub Actions — lint + test on every PR; deploy to Droplet on merge to `master`  |
 | Environment config | `dotenv` locally; environment variables set directly on the Droplet in production |
 | Request logging    | `morgan` (dev) / structured JSON log in production                                |
 
@@ -351,7 +351,7 @@ Design the full DevOps pipeline for deploying to a DigitalOcean Droplet.
 - Build: `vite build` (catch build errors before merge)
 - Show the complete `.github/workflows/ci.yml`
 
-**GitHub Actions — CD (runs on merge to `main`):**
+**GitHub Actions — CD (runs on merge to `master`):**
 
 - SSH into the Droplet
 - Pull latest code (`git pull`)

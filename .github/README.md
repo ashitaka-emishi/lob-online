@@ -36,12 +36,12 @@ checks locally, writes the devlog entry, and then opens the PR.
 
 ### `ci.yml`
 
-Runs on every push and pull request to `main`. Executes `npm run lint`,
+Runs on every push and pull request to `master`. Executes `npm run lint`,
 `npm run format:check`, and `npm run test` in a Node.js 20 environment. PRs cannot merge
 unless all three checks pass.
 
 ### `deploy.yml`
 
-Production deployment pipeline. Triggered on push to `main` after CI passes. Builds the
+Production deployment pipeline. Triggered on push to `master` after CI passes. Builds the
 Vite client (`npm run build`) and deploys the server and built assets to the DigitalOcean
 Droplet via PM2 (`ecosystem.config.cjs`).

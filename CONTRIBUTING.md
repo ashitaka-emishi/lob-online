@@ -55,7 +55,7 @@ See the **Coding Standards** section in `CLAUDE.md` for the full style guide.
 
 ## Branch and PR workflow
 
-1. Branch off `main`. Branch name prefix convention:
+1. Branch off `master`. Branch name prefix convention:
    - `feat/` — new feature
    - `fix/` — bug fix
    - `docs/` — documentation only
@@ -69,7 +69,7 @@ See the **Coding Standards** section in `CLAUDE.md` for the full style guide.
 3. Open a pull request using the `/create-pr` skill, which runs CI checks locally, writes the
    devlog entry, and calls `gh pr create`. Do not use `gh pr create` directly.
 
-4. PRs require CI to pass. Squash-merge is preferred to keep `main` history clean.
+4. PRs require CI to pass. Squash-merge is preferred to keep `master` history clean.
 
 ## Commit messages
 
