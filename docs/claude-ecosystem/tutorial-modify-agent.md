@@ -93,7 +93,26 @@ If it reports `DRIFT`, review the output to see which field still disagrees and 
 
 ---
 
-## Step 4 — Run `/dev-build` to confirm no breakage
+## Step 4 — Update `.claude/agents/registry.json` if needed
+
+The agent registry (`registry.json`) is used by the workflow orchestration runtime
+(`server/src/orchestrator/`) to resolve agents by `id`. If your change affects any of
+these fields, update the matching entry in `registry.json` too:
+
+- **`id`** changes — also update every `agentId` reference in `docs/workflows/*.workflow.json`
+- **`description`** changes — update the `description` field in `registry.json` to match
+- **`name`** changes — update the `name` field in `registry.json` to match
+
+If only the `tools` list or the system prompt changed, `registry.json` does not need updating.
+
+```bash
+# Find registry entry to update
+grep -n "\"id\": \"my-agent\"" .claude/agents/registry.json
+```
+
+---
+
+## Step 5 — Run `/dev-build` to confirm no breakage
 
 Even though agent files are Markdown (not compiled code), linting and format checks still
 run across the repository:
@@ -150,9 +169,10 @@ which would be lost if `.claude/agents/project-manager.md` had been edited direc
 
 ## Summary
 
-| Step | Action                | Claude Code         | Manual                            |
-| ---- | --------------------- | ------------------- | --------------------------------- |
-| 1    | Edit `design.md §4`   | edit manually       | edit manually                     |
-| 2    | Regenerate agent file | `/agent-regenerate` | update `.claude/agents/<name>.md` |
-| 3    | Verify sync           | `/agent-sync`       | diff frontmatter fields           |
-| 4    | Confirm build passes  | `/dev-build`        | `npm run format && npm run lint`  |
+| Step | Action                              | Claude Code         | Manual                               |
+| ---- | ----------------------------------- | ------------------- | ------------------------------------ |
+| 1    | Edit `design.md §4`                 | edit manually       | edit manually                        |
+| 2    | Regenerate agent file               | `/agent-regenerate` | update `.claude/agents/<name>.md`    |
+| 3    | Verify sync                         | `/agent-sync`       | diff frontmatter fields              |
+| 4    | Update `registry.json` (if id/desc) | edit manually       | grep registry, update matching entry |
+| 5    | Confirm build passes                | `/dev-build`        | `npm run format && npm run lint`     |

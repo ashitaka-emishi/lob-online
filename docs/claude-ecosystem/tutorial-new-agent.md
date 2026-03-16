@@ -133,9 +133,33 @@ Without this entry, Claude Code will prompt for permission every time the agent 
 
 ---
 
-## Step 6 — Verify with `/agent-sync`
+## Step 6 — Register in `.claude/agents/registry.json`
+
+If this agent will be used in declarative workflow definitions (`.workflow.json` files under
+`docs/workflows/`), add an entry to the agent registry so the orchestration runtime can
+resolve it by `id`:
+
+```json
+{
+  "id": "my-agent",
+  "name": "My Agent",
+  "description": "One-line description matching design.md §4",
+  "type": "agent",
+  "path": ".claude/agents/my-agent.md"
+}
+```
+
+The `id` field is what workflow definitions use in `agentId` — it must be unique across all
+agents and skills in the registry. If the agent is not used in any workflow definition, this
+step can be skipped.
+
+---
+
+## Step 7 — Verify with `/agent-sync`
 
 Run `/agent-sync` to confirm that `.claude/agents/<name>.md` matches `design.md §4` exactly.
+If you added a registry entry, also verify it manually — `/agent-sync` does not check
+`registry.json`.
 
 **Claude Code path:**
 
@@ -188,18 +212,23 @@ detail: branch → refine → HCP 1 → commit artifact → HCP 2 → merge.
 **Step 5 — Allow list:**
 Added `"Agent(issue-intake)"` to `.claude/settings.local.json`.
 
-**Step 6 — Verify:**
+**Step 6 — Registry:**
+An entry was added to `.claude/agents/registry.json` for the `issue-intake` id so the
+workflow runtime can dispatch it from `issue-intake.workflow.json`.
+
+**Step 7 — Verify:**
 `/agent-sync` reported `[issue-intake] IN SYNC`.
 
 ---
 
 ## Summary
 
-| Step | File(s)                        | Claude Code         | Manual                                 |
-| ---- | ------------------------------ | ------------------- | -------------------------------------- |
-| 1    | (planning only)                | —                   | —                                      |
-| 2    | `docs/agents/<name>/design.md` | author manually     | author manually                        |
-| 3    | `docs/agents/<name>/prompt.md` | author manually     | author manually                        |
-| 4    | `.claude/agents/<name>.md`     | `/agent-regenerate` | copy frontmatter from §4, paste prompt |
-| 5    | `.claude/settings.local.json`  | edit manually       | edit manually                          |
-| 6    | (verification)                 | `/agent-sync`       | diff frontmatter fields                |
+| Step | File(s)                        | Claude Code         | Manual                                  |
+| ---- | ------------------------------ | ------------------- | --------------------------------------- |
+| 1    | (planning only)                | —                   | —                                       |
+| 2    | `docs/agents/<name>/design.md` | author manually     | author manually                         |
+| 3    | `docs/agents/<name>/prompt.md` | author manually     | author manually                         |
+| 4    | `.claude/agents/<name>.md`     | `/agent-regenerate` | copy frontmatter from §4, paste prompt  |
+| 5    | `.claude/settings.local.json`  | edit manually       | edit manually                           |
+| 6    | `.claude/agents/registry.json` | edit manually       | edit manually (skip if no workflow use) |
+| 7    | (verification)                 | `/agent-sync`       | diff frontmatter fields                 |

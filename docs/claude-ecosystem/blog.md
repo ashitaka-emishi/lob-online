@@ -78,6 +78,32 @@ The entire session — from plan approval to merge SHA — is recorded in a stru
 file (`docs/ailog/YYYY_MM_DD-LOB-{####}.md`) committed to the repository as a permanent
 audit trail.
 
+## The Declarative Workflow Layer
+
+Skills encode procedures as Markdown prompts. But as the skill count grew, a second
+representation became useful: **workflow definitions** — JSON files in `docs/workflows/`
+that describe the same pipelines declaratively, as ordered step sequences with gate
+checkpoints.
+
+Each workflow definition (`*.workflow.json`) lists steps with `agentId` references
+(resolved through `.claude/agents/registry.json`) and `inputMap` expressions
+(`$.stepId.field`) that thread output from one step into the next. Gate steps have
+`gateConfig` objects describing the choices and the loop-back target if the engineer
+chooses to revise rather than proceed.
+
+The `server/src/orchestrator/` Node.js runtime can execute these definitions
+programmatically: it validates the definition against a Zod schema, iterates the step
+sequence, dispatches agent steps via an injectable `dispatch` function, presents CLI gate
+prompts to the engineer, handles loop-back routing, and persists a `WorkflowInstance` JSON
+record to `docs/ailog/` alongside the human-readable ailog Markdown.
+
+Today the workflow definitions formalise what the skills already do — they are
+documentation as much as executable specifications. In a later phase, the runtime will drive
+the `issue-implement` pipeline directly, replacing the chained skill invocations with a
+single `runWorkflow` call. The architecture is designed so that transition requires no
+changes to the skill files: the runtime's `dispatch` interface maps the same agent ids to
+the same Markdown prompts.
+
 ## How the Guardrails Provide Confidence
 
 The ecosystem's confidence model rests on five mechanisms working together:
