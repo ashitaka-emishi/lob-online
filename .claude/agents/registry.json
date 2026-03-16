@@ -110,5 +110,12 @@
     "description": "Close a GitHub issue with a merge summary comment after PR is merged",
     "type": "skill",
     "path": ".claude/commands/issue-close.md"
+  },
+  {
+    "id": "ecosystem-docs-generate",
+    "name": "Ecosystem Docs Generate Skill",
+    "description": "Regenerate the auto-generated files in docs/claude-ecosystem/ from source-of-truth inputs",
+    "type": "skill",
+    "path": ".claude/commands/ecosystem-docs-generate.md"
   }
 ]
