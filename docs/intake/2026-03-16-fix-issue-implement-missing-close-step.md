@@ -1,6 +1,6 @@
 ---
 issue: 36
-title: "fix(issue-implement): add explicit issue-close step with HCP"
+title: 'fix(issue-implement): add explicit issue-close step with HCP'
 date: 2026-03-16
 milestone: v1.0 — MVP
 ---
@@ -20,11 +20,11 @@ The `issue-implement` skill and `issue-implement` workflow definition do not rel
 
 ## Files to Create / Modify
 
-| File                                                           | Action                                            |
-| -------------------------------------------------------------- | ------------------------------------------------- |
-| `.claude/commands/issue-implement.md`                          | MODIFY — add Step 9 (HCP 4 + `gh issue close`)   |
-| `docs/workflows/issue-implement/issue-implement.workflow.json` | MODIFY — add `gate-close` + `close-issue` steps   |
-| `docs/workflows/issue-implement/issue-implement.states.md`     | MODIFY — update diagram and checkpoint table      |
+| File                                                           | Action                                          |
+| -------------------------------------------------------------- | ----------------------------------------------- |
+| `.claude/commands/issue-implement.md`                          | MODIFY — add Step 9 (HCP 4 + `gh issue close`)  |
+| `docs/workflows/issue-implement/issue-implement.workflow.json` | MODIFY — add `gate-close` + `close-issue` steps |
+| `docs/workflows/issue-implement/issue-implement.states.md`     | MODIFY — update diagram and checkpoint table    |
 
 ## Tests Required
 
