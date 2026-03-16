@@ -117,5 +117,12 @@
     "description": "Regenerate the auto-generated files in docs/claude-ecosystem/ from source-of-truth inputs",
     "type": "skill",
     "path": ".claude/commands/ecosystem-docs-generate.md"
+  },
+  {
+    "id": "doc-sync",
+    "name": "Doc Sync Skill",
+    "description": "Sync CLAUDE.md, HLD, and agent design docs to match code changes on the current branch",
+    "type": "skill",
+    "path": ".claude/commands/doc-sync.md"
   }
 ]

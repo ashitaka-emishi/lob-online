@@ -31,6 +31,23 @@ AC checklist item must be satisfied.
 
 Keep commits small and focused. First commit line format: `#{number} <type>: <description>`
 
+## Step 3a — Sync project docs
+
+Run `/doc-sync`.
+
+This skill reads `git diff --name-only origin/master...HEAD` and updates `CLAUDE.md`,
+`docs/high-level-design.md`, and `docs/agents/*/design.md` to reflect the implementation.
+It edits stale facts directly and removes duplication. If it makes changes, it commits
+them before continuing. Any findings are included in the HCP 2 report.
+
+## Step 3b — Regenerate ecosystem docs
+
+Run `/ecosystem-docs-generate`.
+
+This skill rebuilds the six reference files in `docs/claude-ecosystem/` from source-of-truth
+inputs (agent design docs, registry, skill command files, workflow definitions). It shows a
+diff before writing — confirm or skip. Any files written are committed before continuing.
+
 ## Step 4 — Build
 
 Run `/dev-build`.
@@ -44,8 +61,10 @@ Run `/dev-test`.
 If the server is not running, report that and stop — do not start the server automatically.
 If tests fail, fix them and re-run.
 
-> **HCP 2** — Report the build and test results. Show a brief summary of what was
-> implemented. Wait for the user to say "push" before continuing to Step 6.
+> **HCP 2** — Report: (1) doc-sync results (which docs were updated or confirmed
+> consistent), (2) ecosystem-docs-generate results (which reference files were regenerated),
+> (3) build and test results, and (4) a brief summary of what was implemented. Wait for
+> the user to say "push" before continuing to Step 6.
 >
 > Update the AI log with Implementation Notes and Build/Test Results sections before
 > waiting.
