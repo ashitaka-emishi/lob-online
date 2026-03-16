@@ -27,6 +27,9 @@ AI assistant you use.
 | [skills.md](skills.md)                                 | Reference for each skill: purpose, owning agent, Claude Code usage, manual equivalent |
 | [network-diagram.md](network-diagram.md)               | Mermaid diagrams: agent ownership, skill dependencies, SDLC sequence                  |
 | [guardrails-and-logging.md](guardrails-and-logging.md) | How the ecosystem enforces quality and maintains an audit trail                       |
+| [tutorial-new-agent.md](tutorial-new-agent.md)         | Step-by-step: create a new agent from scratch, with worked example                    |
+| [tutorial-modify-agent.md](tutorial-modify-agent.md)   | Step-by-step: modify an existing agent; why design.md §4 is the source of truth       |
+| [blog.md](blog.md)                                     | Introductory post: why lob-online uses an agent ecosystem and how the guardrails work |
 
 ---
 
