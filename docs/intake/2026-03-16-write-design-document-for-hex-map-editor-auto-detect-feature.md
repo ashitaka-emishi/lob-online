@@ -29,7 +29,7 @@ The hex map editor requires manual entry for every hex's terrain, elevation, and
 
 ## Files to create/modify
 
-- `docs/map-editor-auto-detect-design.md` *(new)*
+- `docs/map-editor-auto-detect-design.md` _(new)_
 
 ## Tests required
 
