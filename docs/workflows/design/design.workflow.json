@@ -1,0 +1,51 @@
+{
+  "id": "design",
+  "name": "Design Workflow",
+  "description": "Collaboratively produce a design document for a new or changed component (orchestrator, skill, or agent) before any issues are written. Gather intent → draft design doc → iterate until approved → commit on design/{slug} branch and open PR.",
+  "steps": [
+    {
+      "id": "gather",
+      "name": "Gather Intent",
+      "agentId": "design",
+      "inputMap": {},
+      "onError": "halt"
+    },
+    {
+      "id": "draft",
+      "name": "Draft Design Document",
+      "agentId": "design",
+      "inputMap": {},
+      "onError": "halt"
+    },
+    {
+      "id": "gate-design",
+      "name": "Gate: Design Review (HCP 1)",
+      "agentId": null,
+      "inputMap": {},
+      "onError": "halt",
+      "gateConfig": {
+        "prompt": "The design document draft is shown above. Review it and choose an action. You may also edit docs/designs/{slug}.md directly — the agent will re-read and confirm alignment on the next Revise loop.",
+        "choices": [
+          {
+            "label": "Approve — design is ready, open PR",
+            "value": "approve",
+            "onChoice": { "nextStep": null }
+          },
+          {
+            "label": "Revise — continue iterating",
+            "value": "revise",
+            "onChoice": { "nextStep": "draft" }
+          }
+        ],
+        "defaultChoice": "approve"
+      }
+    },
+    {
+      "id": "commit",
+      "name": "Commit Design and Open PR",
+      "agentId": "design",
+      "inputMap": {},
+      "onError": "halt"
+    }
+  ]
+}

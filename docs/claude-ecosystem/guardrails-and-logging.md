@@ -29,6 +29,14 @@ Derived from `docs/workflows/issue-implement/issue-implement.workflow.json`:
 | `gate-merged` | Final merge approval; merge or hold                 | merge, hold                 | merge   |
 | `gate-close`  | PR merged; close the GitHub issue or skip           | close, skip                 | close   |
 
+### Design workflow HCPs
+
+Derived from `docs/workflows/design/design.workflow.json`:
+
+| Gate ID       | Prompt summary                                 | Choices         | Default |
+| ------------- | ---------------------------------------------- | --------------- | ------- |
+| `gate-design` | Design doc shown; approve to open PR or revise | approve, revise | approve |
+
 ### Issue-intake workflow HCPs
 
 Derived from `docs/workflows/issue-intake/issue-intake.workflow.json`:

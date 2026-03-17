@@ -1229,13 +1229,17 @@ lob-online/
 ├── docs/
 │   ├── reference/            ← source reference material (rules PDFs, map image)
 │   │   └── *.pdf / *.jpg
+│   ├── ailog/                ← AI execution logs (YYYY_MM_DD-LOB-{####}.md)
+│   ├── agents/               ← agent design docs and prompts
+│   ├── designs/              ← component design docs (TEMPLATE.md + {slug}.md)
 │   ├── devlog/               ← devlog entries (YYYY-MM-DD-HHMM-*.md)
 │   ├── devlog.md             ← devlog index
 │   ├── high-level-design.md  ← this document
 │   ├── high-level-design-prompt.md ← archived prompt used to generate high-level-design.md
 │   ├── library.md            ← human-readable reference library manifest
 │   ├── library.json          ← machine-readable catalog
-│   └── map-editor-design.md  ← map editor detailed design spec
+│   ├── map-editor-design.md  ← map editor detailed design spec
+│   └── workflows/            ← workflow definitions (design/, issue-intake/, issue-implement/, sdlc-feature/)
 │
 ├── data/
 │   └── scenarios/
@@ -1667,3 +1671,48 @@ DISCORD_CALLBACK_URL=http://localhost:3000/auth/discord/callback
 | **Regression safety**       | Every bug found during playtesting gets a test case added before the fix is applied.                                                                                                                             |
 | **LOS / movement coverage** | Property-based tests (fast-check or similar) to fuzz hex coordinates and movement paths and check that the engine never throws unexpected errors.                                                                |
 | **API contract**            | Supertest integration tests for each route covering happy path, auth failure, rules violation, and not-found cases.                                                                                              |
+
+---
+
+## 13. SDLC Workflow
+
+The AI-assisted development lifecycle follows a four-phase cycle. Each phase has a dedicated
+skill that drives it conversationally.
+
+### Four-Phase Cycle
+
+```
+/design  →  /issue-intake (×N)  →  loop(/issue-implement)  →  /plan-wrap
+```
+
+| Phase              | Skill              | Workflow file                                | Output                                     |
+| ------------------ | ------------------ | -------------------------------------------- | ------------------------------------------ |
+| **Design**         | `/design`          | `docs/workflows/design/design.workflow.json` | `docs/designs/{slug}.md` merged on PR      |
+| **Issue intake**   | `/issue-intake`    | `docs/workflows/issue-intake/`               | GitHub issue filed, milestone assigned     |
+| **Implementation** | `/issue-implement` | `docs/workflows/issue-implement/`            | PR merged, issue closed, ailog committed   |
+| **After-action**   | `/plan-wrap`       | —                                            | Devlog entry, CLAUDE.md and HLD up to date |
+
+### Design Phase Detail
+
+Run `/design` when work involves a new or changed component (orchestrator, skill, or agent)
+and the right solution needs to be reasoned through before issues are written. The skill:
+
+1. Asks for the intent of the component in plain language
+2. Infers the component type (`orchestrator`, `skill`, or `agent`) and asks for confirmation
+3. Creates `docs/designs/{slug}.md` from `docs/designs/TEMPLATE.md`
+4. Iterates via chat (agent edits file) or direct file edits (agent re-reads and confirms)
+5. On approval: commits on `design/{slug}` branch, opens a PR, waits for "merge", then merges
+6. Reports: "Design merged. Run `/issue-intake` to begin breaking this design into issues."
+
+### Implementation Loop
+
+After each `/issue-implement` merge:
+
+- If implementation revealed new scope → update the design doc and run `/issue-intake` again
+- If all design issues are closed → run `/plan-wrap` to close out the cycle
+
+### Workflow Definitions
+
+Workflow JSON definitions live in `docs/workflows/{name}/{name}.workflow.json`. Registered
+agents and skills resolve from `.claude/agents/registry.json`. Human gate checkpoints (HCPs)
+pause execution for engineer approval before irreversible actions (file issue, push, merge).
