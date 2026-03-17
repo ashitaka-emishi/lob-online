@@ -113,8 +113,7 @@ git push -u origin design/{slug}
 ```bash
 gh pr create \
   --title "design: {component name}" \
-  --body "$(cat <<'EOF'
-## Summary
+  --body "## Summary
 
 - Adds \`docs/designs/{slug}.md\` design document for the {component name} {component type}
 - Covers intent, proposed solution, and open questions
@@ -124,9 +123,7 @@ gh pr create \
 
 After merging, run \`/issue-intake\` to break this design into actionable GitHub issues.
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
+🤖 Generated with [Claude Code](https://claude.com/claude-code)"
 ```
 
 Display the PR URL, then wait for the engineer to reply with **"merge"**.

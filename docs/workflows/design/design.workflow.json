@@ -14,11 +14,7 @@
       "id": "draft",
       "name": "Draft Design Document",
       "agentId": "design",
-      "inputMap": {
-        "intent": "$.gather.intent",
-        "componentType": "$.gather.componentType",
-        "slug": "$.gather.slug"
-      },
+      "inputMap": {},
       "onError": "halt"
     },
     {
@@ -48,9 +44,7 @@
       "id": "commit",
       "name": "Commit Design and Open PR",
       "agentId": "design",
-      "inputMap": {
-        "slug": "$.gather.slug"
-      },
+      "inputMap": {},
       "onError": "halt"
     }
   ]
