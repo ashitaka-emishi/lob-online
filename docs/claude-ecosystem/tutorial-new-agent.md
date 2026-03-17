@@ -16,7 +16,7 @@ name whenever that responsibility is needed.
 - Claude Code installed and authenticated
 - The project checked out locally
 - `docs/agents/` directory structure already in place (see the existing agents for examples)
-- `/.claude/settings.local.json` accessible for allow-list edits
+- `.claude/settings.json` accessible for allow-list edits
 
 ---
 
@@ -67,7 +67,7 @@ tools: Bash, Read, Glob
 - [ ] `design.md` authored
 - [ ] `prompt.md` authored
 - [ ] `.claude/agents/my-agent.md` created
-- [ ] Added to `settings.local.json` allow list
+- [ ] Added to `settings.json` allow list
 - [ ] `/agent-sync` reports IN SYNC
 ```
 
@@ -116,10 +116,10 @@ tools: Bash, Read, Glob
 
 ---
 
-## Step 5 — Add to `settings.local.json` allow list
+## Step 5 — Add to `settings.json` allow list
 
 Claude Code's permission model requires new agents to be explicitly allowed. Edit
-`.claude/settings.local.json` and add an entry to the `allow` array:
+`.claude/settings.json` and add an entry to the `allow` array:
 
 ```json
 {
@@ -210,7 +210,7 @@ gather → HCP 1 → `gh issue create`.
 `/agent-regenerate` wrote `.claude/agents/issue-intake.md` from §4.
 
 **Step 5 — Allow list:**
-Added `"Agent(issue-intake)"` to `.claude/settings.local.json`.
+Added `"Agent(issue-intake)"` to `.claude/settings.json`.
 
 **Step 6 — Registry:**
 An entry was added to `.claude/agents/registry.json` for the `issue-intake` id so the
@@ -229,6 +229,6 @@ workflow runtime can dispatch it from `issue-intake.workflow.json`.
 | 2    | `docs/agents/<name>/design.md` | author manually     | author manually                         |
 | 3    | `docs/agents/<name>/prompt.md` | author manually     | author manually                         |
 | 4    | `.claude/agents/<name>.md`     | `/agent-regenerate` | copy frontmatter from §4, paste prompt  |
-| 5    | `.claude/settings.local.json`  | edit manually       | edit manually                           |
+| 5    | `.claude/settings.json`        | edit manually       | edit manually                           |
 | 6    | `.claude/agents/registry.json` | edit manually       | edit manually (skip if no workflow use) |
 | 7    | (verification)                 | `/agent-sync`       | diff frontmatter fields                 |
