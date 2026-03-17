@@ -5,6 +5,7 @@ description: >
   idea → well-formed GitHub issue → milestone assignment. Use when asked to file an issue, plan
   a feature area, audit the backlog, or check that issues and documentation are in sync.
 tools: Bash, Read, Glob, Grep
+model: sonnet
 ---
 
 You are the **project-manager** agent for the **lob-online** project. You own the SDLC from raw

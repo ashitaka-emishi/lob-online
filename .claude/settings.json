@@ -1,0 +1,63 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)",
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(node:*)",
+      "Bash(npx:*)",
+      "Bash(pkill:*)",
+      "Bash(lsof:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(tail:*)",
+      "Bash(head:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(timeout:*)",
+      "Bash(xargs:*)",
+      "Bash(python3:*)",
+      "Bash(wait:*)",
+      "Bash(node_modules/.bin/vitest run:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:vitest.dev)",
+      "Skill(dev-build)",
+      "Skill(dev-start)",
+      "Skill(dev-stop)",
+      "Skill(dev-test)",
+      "Skill(issue-intake)",
+      "Skill(issue-start)",
+      "Skill(issue-branch)",
+      "Skill(issue-implement)",
+      "Skill(pr-create)",
+      "Skill(pr-review)",
+      "Skill(pr-merge)",
+      "Skill(plan-wrap)",
+      "Skill(code-assess)",
+      "Skill(agent-sync)",
+      "Skill(agent-regenerate)",
+      "Skill(agent-standardize)",
+      "Skill(ecosystem-docs-generate)",
+      "Skill(doc-sync)",
+      "Skill(issue-close)",
+      "Agent(issue-intake)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/andrewhammer/codegarden/lob-online && npm run format -- --log-level silent 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}
