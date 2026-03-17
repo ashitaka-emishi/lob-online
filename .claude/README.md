@@ -4,6 +4,10 @@ This directory contains the Claude Code agent definitions and slash-command skil
 automate development operations for lob-online. Agents are specialized subprocesses launched
 by Claude Code; skills are reusable prompt files invoked with `/skill-name`.
 
+The primary SDLC workflow layer is the **wshobson/agents** plugin (`conductor`,
+`agent-teams`). The lob-specific agents and skills below are extensions that have no plugin
+equivalent.
+
 ---
 
 ## Agents — `agents/`
@@ -11,13 +15,10 @@ by Claude Code; skills are reusable prompt files invoked with `/skill-name`.
 Each agent file defines a name, description, allowed tools, and a detailed system prompt. The
 main Claude Code session spawns agents using the `Agent` tool.
 
-| Agent             | File                        | Responsibilities                                                                                 |
-| ----------------- | --------------------------- | ------------------------------------------------------------------------------------------------ |
-| `devops`          | `agents/devops.md`          | Build, start, stop, and test the development environment via the four core skills                |
-| `project-manager` | `agents/project-manager.md` | File well-formed GitHub issues, assign milestones, audit backlog against HLD                     |
-| `issue-intake`    | `agents/issue-intake.md`    | Guide issue creation with branch/PR lifecycle: open branch → refine → file → commit → PR → merge |
-| `code-review`     | `agents/code-review.md`     | Review PRs for coding standards, test coverage, dead code, and defects                           |
-| `domain-expert`    | `agents/domain-expert.md`    | Authoritative rulings on LoB v2.0 rules, SM errata, and rule-source conflicts                    |
+| Agent           | File                      | Responsibilities                                                          |
+| --------------- | ------------------------- | ------------------------------------------------------------------------- |
+| `devops`        | `agents/devops.md`        | Build, start, stop, and test the development environment                  |
+| `domain-expert` | `agents/domain-expert.md` | Authoritative rulings on LoB v2.0 rules, SM errata, rule-source conflicts |
 
 Full design specifications for each agent live in `docs/agents/<name>/design.md`.
 
@@ -26,7 +27,7 @@ Full design specifications for each agent live in `docs/agents/<name>/design.md`
 ## Skills (Slash Commands) — `commands/`
 
 Skills are Markdown prompt files invoked as `/skill-name` in Claude Code. They contain
-step-by-step instructions that Claude executes, including allowed-tools declarations.
+step-by-step instructions that Claude executes.
 
 ### DevOps Skills
 
@@ -37,37 +38,22 @@ step-by-step instructions that Claude executes, including allowed-tools declarat
 | `/dev-stop`  | `commands/dev-stop.md`  | Gracefully terminate server and client using `.pids` and port scan; SIGKILL after 10 s; remove `.pids`                      |
 | `/dev-test`  | `commands/dev-test.md`  | Run full test suite; capture logs to `logs/test/YYYY_MM_DD/`; detect flaky tests; correlate failures with server logs       |
 
-### Issue Workflow Skills
-
-| Skill              | File                          | Purpose                                                                                                           |
-| ------------------ | ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `/issue-intake`    | `commands/issue-intake.md`    | Full branch/PR intake workflow — owned by `issue-intake` agent; open branch → refine → file → commit → PR → merge |
-| `/issue-start`     | `commands/issue-start.md`     | Read issue, summarise ACs, confirm approach — HCP 1                                                               |
-| `/issue-branch`    | `commands/issue-branch.md`    | Create `feat/{id}-{slug}` branch; set commit prefix `#{id}`                                                       |
-| `/issue-implement` | `commands/issue-implement.md` | Orchestrating macro-skill: sequences all sub-skills with human control points from ticket to merge                |
-
 ### PR and Plan Skills
 
-| Skill        | File                    | Purpose                                                                                             |
-| ------------ | ----------------------- | --------------------------------------------------------------------------------------------------- |
-| `/pr-create` | `commands/pr-create.md` | Write devlog entry, run build checks, then open a GitHub pull request                               |
-| `/pr-review` | `commands/pr-review.md` | Review the current PR for coding standards, test coverage, and common defects                       |
-| `/pr-merge`  | `commands/pr-merge.md`  | Squash-merge the current PR and delete the branch — HCP 3                                           |
-| `/plan-wrap` | `commands/plan-wrap.md` | After a plan is implemented: verify lint/format/tests, write devlog entry, review CLAUDE.md and HLD |
+| Skill          | File                      | Purpose                                                                                             |
+| -------------- | ------------------------- | --------------------------------------------------------------------------------------------------- |
+| `/pr-create`   | `commands/pr-create.md`   | Write devlog entry, run build checks, then open a GitHub pull request                               |
+| `/pr-merge`    | `commands/pr-merge.md`    | Squash-merge the current PR and delete the branch                                                   |
+| `/issue-close` | `commands/issue-close.md` | Close a GitHub issue with a merge summary comment after the PR is merged                            |
+| `/plan-wrap`   | `commands/plan-wrap.md`   | After a plan is implemented: verify lint/format/tests, write devlog entry, review CLAUDE.md and HLD |
 
-### Code Review Skills
+### Documentation Skills
 
-| Skill          | File                      | Purpose                                                                                |
-| -------------- | ------------------------- | -------------------------------------------------------------------------------------- |
-| `/code-assess` | `commands/code-assess.md` | Full codebase examination for duplicate code, dead code, and refactoring opportunities |
-
-### Agent Maintenance Skills
-
-| Skill                | File                            | Purpose                                                                   |
-| -------------------- | ------------------------------- | ------------------------------------------------------------------------- |
-| `/agent-sync`        | `commands/agent-sync.md`        | Read-only drift check between `design.md` files and `.claude/agents/*.md` |
-| `/agent-regenerate`  | `commands/agent-regenerate.md`  | Rebuild agent files from the `design.md` Section 4 prompt block           |
-| `/agent-standardize` | `commands/agent-standardize.md` | Normalize prompt files and cascade changes through design and agent files |
+| Skill                      | File                                  | Purpose                                                                           |
+| -------------------------- | ------------------------------------- | --------------------------------------------------------------------------------- |
+| `/doc-sync`                | `commands/doc-sync.md`                | Diff-driven sync of CLAUDE.md, HLD, and agent design docs to match branch changes |
+| `/ecosystem-docs-generate` | `commands/ecosystem-docs-generate.md` | Rebuild all files in `docs/claude-ecosystem/` from source-of-truth inputs         |
+| `/design`                  | `commands/design.md`                  | Collaboratively author a design doc for a new component before writing any issues |
 
 ---
 
@@ -80,8 +66,9 @@ copy contains no credentials and is safe to commit).
 
 ## Documentation
 
-| Document                                                                | Purpose                                                                                                  |
-| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| [`docs/claude-ecosystem/README.md`](../docs/claude-ecosystem/README.md) | Hub for the lob-online agent ecosystem: agent reference, skill reference, diagrams, guardrails guide     |
-| [`docs/architecture.md`](../docs/architecture.md)                       | Full agent/skill architecture with Mermaid diagrams, skill dependency graph, and issue-to-merge workflow |
-| [`docs/agents/SKILL_TEMPLATE.md`](../docs/agents/SKILL_TEMPLATE.md)     | Template for authoring new skill files                                                                   |
+| Document                                                                    | Purpose                                                                                             |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| [`docs/claude-ecosystem/README.md`](../docs/claude-ecosystem/README.md)     | Hub for the lob-online agent ecosystem: agent reference, skill reference, guardrails, orchestration |
+| [`docs/ecosystem-design.md`](../docs/ecosystem-design.md)                   | Full agent/skill architecture with Mermaid diagrams and skill dependency graph                      |
+| [`docs/migration-wshobson-agents.md`](../docs/migration-wshobson-agents.md) | Old-to-new command mapping from hand-rolled SDLC to wshobson/agents plugin layer                    |
+| [`docs/agents/SKILL_TEMPLATE.md`](../docs/agents/SKILL_TEMPLATE.md)         | Template for authoring new skill files                                                              |
