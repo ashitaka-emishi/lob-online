@@ -94,6 +94,77 @@ export function getEdgeLabels(northOffset) {
   return Array.from({ length: 6 }, (_, i) => COMPASS_12[(((i * 2 - northOffset) % 12) + 12) % 12]);
 }
 
+/**
+ * Return the nearest {hexId, dir} within `threshold` pixels, or null if none.
+ * Iterates only the provided cells (use getCellAndNeighbors for spatial pre-filtering).
+ *
+ * @param {number} localX - cursor x in grid-local coordinates
+ * @param {number} localY - cursor y in grid-local coordinates
+ * @param {Array<{id:string, corners:Array<{x:number,y:number}>}>} cells
+ * @param {number} [threshold=8] - maximum distance in pixels
+ * @returns {{hexId:string, dir:string}|null}
+ */
+export function findNearestEdge(localX, localY, cells, threshold = 8) {
+  let nearest = null;
+  let nearestDist = threshold;
+  for (const cell of cells) {
+    for (const dir of DIRS) {
+      const mid = edgeMidpoint(cell.corners, dir);
+      const ddx = mid.x - localX;
+      const ddy = mid.y - localY;
+      const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        nearest = { hexId: cell.id, dir };
+      }
+    }
+  }
+  return nearest;
+}
+
+/**
+ * Return the cell for `candidateHex` plus its valid neighbors, looked up via `cellByColRow`.
+ * Reduces edge-search candidates from the full grid to at most 7 cells.
+ *
+ * Uses pure ODD_Q offset math (offset: -1, flat-top) — no honeycomb-grid API call needed.
+ *
+ * @param {{col:number, row:number}} candidateHex - honeycomb Hex object (only .col/.row used)
+ * @param {Map<string,object>} cellByColRow - Map keyed by "${col},${row}" → cell object
+ * @returns {object[]} array of cell objects (0–7 items, no duplicates)
+ */
+export function getCellAndNeighbors(candidateHex, cellByColRow) {
+  const { col, row } = candidateHex;
+  const candidate = cellByColRow.get(`${col},${row}`);
+  const result = candidate ? [candidate] : [];
+
+  // ODD_Q offset neighbor deltas for flat-top hexes (honeycomb offset: -1)
+  // Even columns shift diagonals up by 1 row; odd columns shift diagonals down.
+  const isOdd = col & 1;
+  const deltas = isOdd
+    ? [
+        [0, -1],
+        [1, 0],
+        [1, 1],
+        [0, 1],
+        [-1, 1],
+        [-1, 0],
+      ]
+    : [
+        [0, -1],
+        [1, -1],
+        [1, 0],
+        [0, 1],
+        [-1, 0],
+        [-1, -1],
+      ];
+
+  for (const [dc, dr] of deltas) {
+    const nc = cellByColRow.get(`${col + dc},${row + dr}`);
+    if (nc) result.push(nc);
+  }
+  return result;
+}
+
 // Cube direction deltas for flat-top hexes (matching los.js convention)
 const DIR_CUBE_DELTAS = {
   N: { dq: 0, dr: -1 },

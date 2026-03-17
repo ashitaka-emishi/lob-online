@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { defineHex, Grid, rectangle, Orientation } from 'honeycomb-grid';
+import { defineHex, Grid, rectangle, Orientation } from 'honeycomb-grid'; // used in getCellAndNeighbors tests
 import {
   edgeMidpoint,
   edgeLine20_80,
@@ -252,36 +252,30 @@ describe('getCellAndNeighbors', () => {
   });
 
   it('returns the candidate cell itself', () => {
-    const hex = grid.getHex({ col: 1, row: 1 });
-    const result = getCellAndNeighbors(hex, grid, cellByColRow);
+    const result = getCellAndNeighbors({ col: 1, row: 1 }, cellByColRow);
     expect(result.some((c) => c.col === 1 && c.row === 1)).toBe(true);
   });
 
   it('returns up to 7 cells (candidate + 6 neighbors) for interior hex', () => {
-    const hex = grid.getHex({ col: 1, row: 1 });
-    const result = getCellAndNeighbors(hex, grid, cellByColRow);
+    const result = getCellAndNeighbors({ col: 1, row: 1 }, cellByColRow);
     expect(result.length).toBeGreaterThanOrEqual(4);
     expect(result.length).toBeLessThanOrEqual(7);
   });
 
   it('returns fewer cells for a corner hex (some neighbors out of bounds)', () => {
-    const hex = grid.getHex({ col: 0, row: 0 });
-    const interior = grid.getHex({ col: 1, row: 1 });
-    const cornerResult = getCellAndNeighbors(hex, grid, cellByColRow);
-    const interiorResult = getCellAndNeighbors(interior, grid, cellByColRow);
+    const cornerResult = getCellAndNeighbors({ col: 0, row: 0 }, cellByColRow);
+    const interiorResult = getCellAndNeighbors({ col: 1, row: 1 }, cellByColRow);
     expect(cornerResult.length).toBeLessThan(interiorResult.length);
   });
 
   it('contains no duplicates', () => {
-    const hex = grid.getHex({ col: 1, row: 1 });
-    const result = getCellAndNeighbors(hex, grid, cellByColRow);
+    const result = getCellAndNeighbors({ col: 1, row: 1 }, cellByColRow);
     const ids = result.map((c) => c.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
 
   it('returns empty array when candidate hex is not in cellByColRow', () => {
-    const hex = grid.getHex({ col: 1, row: 1 });
-    const result = getCellAndNeighbors(hex, grid, new Map());
+    const result = getCellAndNeighbors({ col: 1, row: 1 }, new Map());
     expect(result).toEqual([]);
   });
 });

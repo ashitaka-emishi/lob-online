@@ -47,16 +47,16 @@ Add or update Vitest tests for the new helpers before implementing them (TDD).
 
 ### Tasks
 
-- [ ] Task 3.1: Extract `findNearestEdge(localX, localY, cellsToSearch)` from the existing inline
+- [x] Task 3.1: Extract `findNearestEdge(localX, localY, cellsToSearch)` from the existing inline
       logic in `onSvgMouseMove` (and verify it still matches `onSvgClick` logic)
-- [ ] Task 3.2: Implement `getCellAndNeighbors(hex)` using `grid.pointToHex` neighborhood lookup
-- [ ] Task 3.3: Add `rafPending` flag and rAF throttle wrapper to `onSvgMouseMove`
-- [ ] Task 3.4: Update `onSvgMouseMove` to call `getCellAndNeighbors` + `findNearestEdge`
-- [ ] Task 3.5: Update `onSvgClick` to call `findNearestEdge` (removes duplication)
+- [x] Task 3.2: Implement `getCellAndNeighbors(hex)` using `grid.pointToHex` neighborhood lookup
+- [x] Task 3.3: Add `rafPending` flag and rAF throttle wrapper to `onSvgMouseMove`
+- [x] Task 3.4: Update `onSvgMouseMove` to call `getCellAndNeighbors` + `findNearestEdge`
+- [x] Task 3.5: Update `onSvgClick` to call `findNearestEdge` (removes duplication)
 
 ### Verification
 
-- [ ] `npm run test` green
+- [x] `npm run test` green (367/367)
 - [ ] Manual smoke test: hover over edges and click edges in map editor — both still highlight/select
       correctly
 
