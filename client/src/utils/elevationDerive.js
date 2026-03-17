@@ -4,7 +4,7 @@
  * Index i maps to direction DIRS[i] = ['N','NE','SE','S','SW','NW'][i].
  */
 
-const DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
+import { DIRS } from './hexGeometry.js';
 const ELEVATION_EDGE_TYPES = new Set(['slope', 'extremeSlope', 'verticalSlope']);
 
 /**
@@ -42,8 +42,11 @@ export function deriveEdgesAndSlope(hex) {
   const maxVal = Math.max(...wedges);
   const slope = minVal !== maxVal ? wedges.indexOf(minVal) : (hex.slope ?? null);
 
-  // Edges: deep-clone existing, then apply delta rule per side
-  const edges = hex.edges ? JSON.parse(JSON.stringify(hex.edges)) : {};
+  // Edges: shallow-clone existing arrays, then apply delta rule per side
+  const edges = {};
+  if (hex.edges) {
+    for (const [k, v] of Object.entries(hex.edges)) edges[k] = [...v];
+  }
 
   for (let i = 0; i < 6; i++) {
     const dir = DIRS[i];

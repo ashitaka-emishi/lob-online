@@ -6,7 +6,8 @@ import CalibrationControls from '../../components/CalibrationControls.vue';
 import LosTestPanel from '../../components/LosTestPanel.vue';
 import EditorToolbar from '../../components/EditorToolbar.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
-import { adjacentHexId } from '../../utils/hexGeometry.js';
+import { adjacentHexId, DIRS } from '../../utils/hexGeometry.js';
+import { deriveEdgesAndSlope } from '../../utils/elevationDerive.js';
 
 const PANEL_DISPLAY_NAMES = {
   calibration: 'Grid Calibration',
@@ -434,6 +435,44 @@ function onHexUpdate(updatedHex) {
   saveMapDraft();
 }
 
+function onDeriveWedges({ hexId, wedgeElevations, slope, edges }) {
+  if (!mapData.value) return;
+  const currentHex = mapData.value.hexes.find((h) => h.hex === hexId) ?? {
+    hex: hexId,
+    terrain: 'unknown',
+  };
+  onHexUpdate({ ...currentHex, wedgeElevations, slope, edges });
+
+  for (let i = 0; i < 6; i++) {
+    const neighborId = adjacentHexId(hexId, DIRS[i], calibration.value);
+    if (!neighborId) continue;
+
+    const oppIdx = (i + 3) % 6;
+    const neighborHex = mapData.value.hexes.find((h) => h.hex === neighborId) ?? {
+      hex: neighborId,
+      terrain: 'unknown',
+    };
+
+    const neighborWedges = neighborHex.wedgeElevations
+      ? [...neighborHex.wedgeElevations]
+      : [0, 0, 0, 0, 0, 0];
+    neighborWedges[oppIdx] = wedgeElevations[i];
+
+    const neighborDerived = deriveEdgesAndSlope({
+      wedgeElevations: neighborWedges,
+      slope: neighborHex.slope ?? null,
+      edges: neighborHex.edges ?? {},
+    });
+
+    onHexUpdate({
+      ...neighborHex,
+      wedgeElevations: neighborWedges,
+      slope: neighborDerived.slope,
+      edges: neighborDerived.edges,
+    });
+  }
+}
+
 // ── Keyboard listener ─────────────────────────────────────────────────────────
 
 function onKeyDown(e) {
@@ -671,10 +710,9 @@ onUnmounted(() => {
               :edge-feature-types="edgeFeatureTypes"
               :is-seed-hex="selectedHexId ? seedHexIds.has(selectedHexId) : false"
               :north-offset="calibration.northOffset ?? 0"
-              :hexes="mapData?.hexes ?? []"
-              :grid-spec="calibration"
               @hex-update="onHexUpdate"
               @seed-toggle="onSeedToggle"
+              @derive-wedges="onDeriveWedges"
             />
           </div>
         </div>

@@ -314,6 +314,24 @@ describe('HexEditPanel', () => {
     expect(labels).toEqual(['W', 'NW', 'NE', 'E', 'SE', 'SW']);
   });
 
+  it('clicking derive-btn emits derive-wedges event with hexId, wedgeElevations, slope, edges', async () => {
+    const wrapper = mount(HexEditPanel, {
+      props: {
+        hex: { hex: '05.10', terrain: 'clear', hexsides: {}, wedgeElevations: [2, 0, 0, 0, 0, 0] },
+        selectedHexId: '05.10',
+      },
+    });
+    const deriveBtn = wrapper.find('.derive-btn');
+    await deriveBtn.trigger('click');
+    const emitted = wrapper.emitted('derive-wedges');
+    expect(emitted).toBeTruthy();
+    const payload = emitted[0][0];
+    expect(payload.hexId).toBe('05.10');
+    expect(payload.wedgeElevations).toEqual([2, 0, 0, 0, 0, 0]);
+    expect(typeof payload.slope === 'number' || payload.slope === null).toBe(true);
+    expect(typeof payload.edges).toBe('object');
+  });
+
   it('northOffset=3 slope button click for index 0 emits slope=0 (geographic W)', async () => {
     const wrapper = mount(HexEditPanel, {
       props: {

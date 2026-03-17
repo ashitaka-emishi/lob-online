@@ -39,23 +39,23 @@ Move neighbor propagation to MapEditorView; deduplicate DIRS; fix deep-clone.
 
 ### Tasks
 
-- [ ] Task 2.1: Import `DIRS` from `hexGeometry.js` in `elevationDerive.js`; remove local
+- [x] Task 2.1: Import `DIRS` from `hexGeometry.js` in `elevationDerive.js`; remove local
       declaration
-- [ ] Task 2.2: Replace `JSON.parse(JSON.stringify(hex.edges))` in `elevationDerive.js`
+- [x] Task 2.2: Replace `JSON.parse(JSON.stringify(hex.edges))` in `elevationDerive.js`
       with a manual shallow clone:
       `for (const [k, v] of Object.entries(hex.edges)) edges[k] = [...v]`
-- [ ] Task 2.3: Refactor `HexEditPanel.autoDerive()` to emit a `derive-wedges` event with
+- [x] Task 2.3: Refactor `HexEditPanel.autoDerive()` to emit a `derive-wedges` event with
       payload `{ hexId, wedgeElevations, slope, edges }` instead of performing neighbor
       lookup; remove the neighbor propagation loop, the `DIRS` local constant, and the
       `adjacentHexId` import from `HexEditPanel.vue`
-- [ ] Task 2.4: Remove `hexes` and `gridSpec` props from `HexEditPanel.vue`
-- [ ] Task 2.5: Add `@derive-wedges="onDeriveWedges"` to the `<HexEditPanel>` binding in
+- [x] Task 2.4: Remove `hexes` and `gridSpec` props from `HexEditPanel.vue`
+- [x] Task 2.5: Add `@derive-wedges="onDeriveWedges"` to the `<HexEditPanel>` binding in
       `MapEditorView.vue`; remove `:hexes` and `:grid-spec` bindings
-- [ ] Task 2.6: Implement `onDeriveWedges({ hexId, wedgeElevations, slope, edges })` in
+- [x] Task 2.6: Implement `onDeriveWedges({ hexId, wedgeElevations, slope, edges })` in
       `MapEditorView.vue`: apply derived data to current hex via `onHexUpdate`, then loop
       6 directions using `adjacentHexId` + `(i+3)%6` to propagate wedge values and
       derived edge types to neighbors — mirroring the existing edge-mirroring pattern
-- [ ] Task 2.7: Import `DIRS` from `hexGeometry.js` in `HexEditPanel.vue` if still needed;
+- [x] Task 2.7: Import `DIRS` from `hexGeometry.js` in `HexEditPanel.vue` if still needed;
       remove any remaining local declaration
 
 ### Verification

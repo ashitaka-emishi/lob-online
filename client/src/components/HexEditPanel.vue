@@ -2,7 +2,7 @@
 import { ref, watch, computed } from 'vue';
 import WedgeEditor from './WedgeEditor.vue';
 import EdgeEditPanel from './EdgeEditPanel.vue';
-import { getEdgeLabels, adjacentHexId } from '../utils/hexGeometry.js';
+import { getEdgeLabels } from '../utils/hexGeometry.js';
 import { deriveEdgesAndSlope } from '../utils/elevationDerive.js';
 
 const props = defineProps({
@@ -30,17 +30,9 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
-  hexes: {
-    type: Array,
-    default: () => [],
-  },
-  gridSpec: {
-    type: Object,
-    default: null,
-  },
 });
 
-const emit = defineEmits(['hex-update', 'seed-toggle']);
+const emit = defineEmits(['hex-update', 'seed-toggle', 'derive-wedges']);
 
 const TERRAIN_TYPES = [
   'unknown',
@@ -160,12 +152,9 @@ function initWedgeElevations() {
   emitUpdate();
 }
 
-const DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
-
 function autoDerive() {
   if (!form.value || !props.hex || !form.value.wedgeElevations) return;
 
-  // Derive and apply to current hex
   const { slope, edges } = deriveEdgesAndSlope({
     wedgeElevations: form.value.wedgeElevations,
     slope: form.value.slope,
@@ -173,39 +162,13 @@ function autoDerive() {
   });
   form.value.slope = slope;
   form.value.edges = edges;
-  emitUpdate();
 
-  // Propagate to neighbors
-  if (!props.gridSpec) return;
-  for (let i = 0; i < 6; i++) {
-    const neighborId = adjacentHexId(props.hex.hex, DIRS[i], props.gridSpec);
-    if (!neighborId) continue;
-
-    const oppIdx = (i + 3) % 6;
-    const neighborHex = props.hexes.find((h) => h.hex === neighborId) ?? {
-      hex: neighborId,
-      terrain: 'unknown',
-    };
-
-    // Set neighbor's opposite wedge to match
-    const neighborWedges = neighborHex.wedgeElevations
-      ? [...neighborHex.wedgeElevations]
-      : [0, 0, 0, 0, 0, 0];
-    neighborWedges[oppIdx] = form.value.wedgeElevations[i];
-
-    const neighborDerived = deriveEdgesAndSlope({
-      wedgeElevations: neighborWedges,
-      slope: neighborHex.slope ?? null,
-      edges: neighborHex.edges ?? {},
-    });
-
-    emit('hex-update', {
-      ...neighborHex,
-      wedgeElevations: neighborWedges,
-      slope: neighborDerived.slope,
-      edges: neighborDerived.edges,
-    });
-  }
+  emit('derive-wedges', {
+    hexId: props.hex.hex,
+    wedgeElevations: form.value.wedgeElevations,
+    slope,
+    edges,
+  });
 }
 
 const canMarkAsSeed = computed(
