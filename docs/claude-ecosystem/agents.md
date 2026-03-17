@@ -47,6 +47,6 @@ question touching game mechanics, movement, LOS, combat, morale, orders, or arti
 
 **Collaborators:** none (read-only; never modifies files)
 
-**Owned skills:** none (invoked directly; consulted by the issue-intake workflow)
+**Owned skills:** none (invoked directly; consulted for game-logic tracks and design reviews)
 
 **Design spec:** `docs/agents/domain-expert/design.md`

@@ -137,10 +137,10 @@ different levels of detail and formality.
 
 ## Summary
 
-| Mechanism         | Scope                         | Who it protects                                                       |
-| ----------------- | ----------------------------- | --------------------------------------------------------------------- |
-| HCPs              | Every consequential AI action | Engineer — ensures AI never takes irreversible action unilaterally    |
-| CI gates          | Every PR                      | Team — ensures no broken code reaches the main branch                 |
-| Rules-lawyer gate | Game-logic issues             | Project — ensures implementation matches the published rules          |
-| ailog             | Every issue implementation    | Project history — permanent record of AI planning and human approvals |
-| devlog            | Every session                 | Team knowledge — narrative of design decisions over time              |
+| Mechanism          | Scope                         | Who it protects                                                       |
+| ------------------ | ----------------------------- | --------------------------------------------------------------------- |
+| HCPs               | Every consequential AI action | Engineer — ensures AI never takes irreversible action unilaterally    |
+| CI gates           | Every PR                      | Team — ensures no broken code reaches the main branch                 |
+| Domain-expert gate | Game-logic issues             | Project — ensures implementation matches the published rules          |
+| ailog              | Every issue implementation    | Project history — permanent record of AI planning and human approvals |
+| devlog             | Every session                 | Team knowledge — narrative of design decisions over time              |
