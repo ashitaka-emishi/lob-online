@@ -24,6 +24,7 @@
       "Bash(node_modules/.bin/vitest run:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:github.com)",
       "WebFetch(domain:vitest.dev)",
       "Skill(dev-build)",
       "Skill(dev-start)",
@@ -54,7 +55,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd /Users/andrewhammer/codegarden/lob-online && npm run format -- --log-level silent 2>/dev/null || true"
+            "command": "npm run format -- --log-level silent 2>/dev/null || true"
           }
         ]
       }

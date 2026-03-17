@@ -132,4 +132,4 @@ tools: Bash, Read, Glob, Grep
 - [x] `.claude/README.md` — issue-intake added as own agent row
 - [x] `docs/architecture.md` — issue-intake agent added
 - [x] `CLAUDE.md` — reference issue-intake agent
-- [x] `.claude/settings.local.json` — Agent(issue-intake) added
+- [x] `.claude/settings.json` — Agent(issue-intake) added

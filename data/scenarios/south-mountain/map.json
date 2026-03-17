@@ -1,5 +1,6 @@
 {
   "_status": "partial",
+  "_savedAt": 1773713554184,
   "_description": "Hex data for known/referenced hexes extracted from scenario data. Full terrain digitization requires SM_Map.jpg — use map-digitizer script to complete.",
   "_digitizationNote": "The full map is approximately 56 columns × 35 rows (pointy-top hex grid). All hexes listed here are confirmed from SM_Rules.pdf scenario text. Terrain type for non-confirmed hexes is 'unknown' and must be verified against SM_Map.jpg.",
   "scenario": "south-mountain",
@@ -609,6 +610,103 @@
       "hex": "56.36",
       "terrain": "unknown",
       "playable": false
+    },
+    {
+      "hex": "11.06",
+      "terrain": "clear",
+      "elevation": 2,
+      "slope": 2,
+      "wedgeElevations": [0, 0, 0, 0, 0, 0],
+      "edges": {
+        "NE": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "SE": [
+          {
+            "type": "road"
+          }
+        ],
+        "S": [
+          {
+            "type": "stream"
+          },
+          {
+            "type": "elevation"
+          }
+        ],
+        "SW": [
+          {
+            "type": "stream"
+          },
+          {
+            "type": "elevation"
+          }
+        ],
+        "N": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "NW": [
+          {
+            "type": "road"
+          },
+          {
+            "type": "elevation"
+          }
+        ]
+      }
+    },
+    {
+      "hex": "15.02",
+      "terrain": "clear",
+      "elevation": 1,
+      "edges": {
+        "NE": [
+          {
+            "type": "pike"
+          },
+          {
+            "type": "bridge"
+          },
+          {
+            "type": "stream"
+          },
+          {
+            "type": "elevation"
+          }
+        ],
+        "SE": [
+          {
+            "type": "stream"
+          },
+          {
+            "type": "elevation"
+          }
+        ],
+        "S": [
+          {
+            "type": "pike"
+          }
+        ],
+        "SW": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "NW": [
+          {
+            "type": "elevation"
+          }
+        ]
+      },
+      "features": [
+        {
+          "type": "building"
+        }
+      ]
     }
   ],
   "_todoHexes": {
@@ -645,6 +743,5 @@
       "6. Update _status to 'available' when all hexes are populated"
     ],
     "priorityHexes": "VP hexes and setup hexes listed in this file — these must be correct before any rules engine work begins"
-  },
-  "_savedAt": 1773693938673
+  }
 }

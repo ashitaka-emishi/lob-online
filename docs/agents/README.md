@@ -36,7 +36,7 @@ issue-to-merge workflow sequence, and the skill-sharing best practice decision â
    comments block
 3. Add the skill to `.claude/README.md` skills table under the appropriate category
 4. Add the skill to `docs/architecture.md` skills table
-5. Add `Skill(<name>)` to `.claude/settings.local.json` permissions
+5. Add `Skill(<name>)` to `.claude/settings.json` permissions
 6. Run `/dev-build` to confirm no lint/format issues
 
 ## How to Create a New Agent
