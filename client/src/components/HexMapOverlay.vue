@@ -7,6 +7,8 @@ import {
   edgeLine20_80,
   wedgePolygonPoints,
   getEdgeLabels,
+  findNearestEdge,
+  getCellAndNeighbors,
 } from '../utils/hexGeometry.js';
 
 const props = defineProps({
@@ -174,6 +176,8 @@ const gridData = computed(() => {
     const slopeArrowLabel = slopeDir ? (edgeLabels[slope] ?? null) : null;
     cells.push({
       id,
+      col: hex.col,
+      row: hex.row,
       points,
       cx,
       cy,
@@ -198,7 +202,8 @@ const gridData = computed(() => {
     });
   });
 
-  return { cells, grid, tx, ty };
+  const cellByColRow = new Map(cells.map((c) => [`${c.col},${c.row}`, c]));
+  return { cells, grid, tx, ty, cellByColRow };
 });
 
 const cells = computed(() => gridData.value.cells);
@@ -255,29 +260,15 @@ function onSvgClick(event) {
   pt.y = event.clientY;
   const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
 
-  const { grid, tx, ty } = gridData.value;
+  const { grid, tx, ty, cells, cellByColRow } = gridData.value;
   const localX = svgPt.x - tx;
   const localY = svgPt.y - ty;
 
   if (props.editorMode === 'edge') {
-    // Find nearest edge midpoint within 8px
-    let nearest = null;
-    let nearestDist = 8;
-    for (const cell of gridData.value.cells) {
-      for (const dir of DIRS) {
-        const mid = edgeMidpoint(cell.corners, dir);
-        const ddx = mid.x - localX;
-        const ddy = mid.y - localY;
-        const dist = Math.sqrt(ddx * ddx + ddy * ddy);
-        if (dist < nearestDist) {
-          nearestDist = dist;
-          nearest = { hexId: cell.id, dir };
-        }
-      }
-    }
-    if (nearest) {
-      emit('edge-click', nearest);
-    }
+    const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
+    const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : cells;
+    const nearest = findNearestEdge(localX, localY, searchCells);
+    if (nearest) emit('edge-click', nearest);
   } else {
     const hex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
     if (hex) {
@@ -290,32 +281,34 @@ function onSvgClick(event) {
   }
 }
 
+// Single boolean per component instance (dev tool — only one HexMapOverlay is mounted at a time).
+let rafPending = false;
+
 function onSvgMouseMove(event) {
   if (!props.layers?.edges) return;
+  if (rafPending) return;
+  rafPending = true;
+  // Capture event properties synchronously — event.currentTarget is nulled after handler returns.
   const svg = event.currentTarget;
-  const pt = svg.createSVGPoint();
-  pt.x = event.clientX;
-  pt.y = event.clientY;
-  const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
-  const { tx, ty } = gridData.value;
-  const localX = svgPt.x - tx;
-  const localY = svgPt.y - ty;
+  const clientX = event.clientX;
+  const clientY = event.clientY;
+  requestAnimationFrame(() => {
+    rafPending = false;
+    if (!svg) return;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+    const pt = svg.createSVGPoint();
+    pt.x = clientX;
+    pt.y = clientY;
+    const svgPt = pt.matrixTransform(ctm.inverse());
+    const { grid, tx, ty, cells, cellByColRow } = gridData.value;
+    const localX = svgPt.x - tx;
+    const localY = svgPt.y - ty;
 
-  let nearest = null;
-  let nearestDist = 8;
-  for (const cell of gridData.value.cells) {
-    for (const dir of DIRS) {
-      const mid = edgeMidpoint(cell.corners, dir);
-      const ddx = mid.x - localX;
-      const ddy = mid.y - localY;
-      const dist = Math.sqrt(ddx * ddx + ddy * ddy);
-      if (dist < nearestDist) {
-        nearestDist = dist;
-        nearest = { hexId: cell.id, dir };
-      }
-    }
-  }
-  emit('edge-hover', nearest ?? null);
+    const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
+    const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : cells;
+    emit('edge-hover', findNearestEdge(localX, localY, searchCells));
+  });
 }
 </script>
 
