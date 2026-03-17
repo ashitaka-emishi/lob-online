@@ -65,6 +65,7 @@ export const MapSchema = z.object({
       orientation: z.enum(['flat', 'pointy']),
       evenColUp: z.boolean(),
       rotation: z.number().min(-15).max(15).optional(),
+      northOffset: z.number().int().min(0).max(11).optional(),
       locked: z.boolean().optional(),
       _note: z.string().optional(),
     })
