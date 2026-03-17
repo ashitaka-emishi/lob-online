@@ -2,15 +2,15 @@
   "id": "elevation-model-refactor_20260317",
   "title": "Refactor Map Elevation Model",
   "type": "refactor",
-  "status": "in_progress",
+  "status": "complete",
   "created": "2026-03-17T00:00:00.000Z",
   "updated": "2026-03-17T00:00:00.000Z",
   "phases": {
     "total": 4,
-    "completed": 0
+    "completed": 4
   },
   "tasks": {
     "total": 17,
-    "completed": 0
+    "completed": 17
   }
 }
