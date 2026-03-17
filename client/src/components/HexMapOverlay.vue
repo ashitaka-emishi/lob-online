@@ -145,6 +145,7 @@ const gridData = computed(() => {
   const ty = props.imageHeight * imageScale - dy - anchorHex.y;
 
   const northOffset = props.calibration.northOffset ?? 0;
+  const edgeLabels = getEdgeLabels(northOffset);
 
   const cells = [];
   grid.forEach((hex) => {
@@ -167,10 +168,10 @@ const gridData = computed(() => {
     const isLosPath = losPathSet.value.has(id);
     const isLosBlocked = id === props.losBlockedHex;
     const slope = known?.slope ?? null;
-    const slopeDir = slope !== null && slope !== undefined ? SLOPE_DIRS[slope] : null;
+    const slopeDir = slope !== null && slope !== undefined ? DIRS[slope] : null;
     const slopeMid = slopeDir ? edgeMidpoint(corners, slopeDir) : null;
     const slopeArrowLine = slopeMid ? { x1: cx, y1: cy, x2: slopeMid.x, y2: slopeMid.y } : null;
-    const slopeArrowLabel = slopeDir ? (getEdgeLabels(northOffset)[slope] ?? null) : null;
+    const slopeArrowLabel = slopeDir ? (edgeLabels[slope] ?? null) : null;
     cells.push({
       id,
       points,
@@ -246,9 +247,6 @@ function strokeOpacityForCell(cell) {
     return 1;
   return 0.6;
 }
-
-// SLOPE_DIRS maps the geometric slope index to a direction string used by edgeMidpoint.
-const SLOPE_DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
 
 function onSvgClick(event) {
   const svg = event.currentTarget;
