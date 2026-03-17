@@ -2,6 +2,7 @@
 import { ref, watch, computed } from 'vue';
 import WedgeEditor from './WedgeEditor.vue';
 import EdgeEditPanel from './EdgeEditPanel.vue';
+import { getEdgeLabels } from '../utils/hexGeometry.js';
 
 const props = defineProps({
   hex: {
@@ -44,8 +45,9 @@ const TERRAIN_TYPES = [
 const HEXSIDE_DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
 
 const form = ref(null);
-const showWedgeEditor = ref(false);
 const addFeatureType = ref('');
+
+const edgeLabels = computed(() => getEdgeLabels(props.northOffset ?? 0));
 
 watch(
   () => props.hex,
@@ -68,7 +70,6 @@ watch(
       _note: hex._note ?? '',
       setupUnits: hex.setupUnits ?? [],
     };
-    showWedgeEditor.value = false;
   },
   { immediate: true }
 );
@@ -107,13 +108,9 @@ function emitUpdate() {
   emit('hex-update', updated);
 }
 
-function setSlope(dirOrNull) {
+function setSlope(idxOrNull) {
   if (!form.value) return;
-  if (dirOrNull === null) {
-    form.value.slope = null;
-  } else {
-    form.value.slope = HEXSIDE_DIRS.indexOf(dirOrNull);
-  }
+  form.value.slope = idxOrNull;
   emitUpdate();
 }
 
@@ -148,12 +145,10 @@ function onWedgeUpdate(newElev) {
   emitUpdate();
 }
 
-function toggleWedgeEditor() {
+function initWedgeElevations() {
   if (!form.value) return;
-  if (!showWedgeEditor.value && !form.value.wedgeElevations) {
-    form.value.wedgeElevations = [0, 0, 0, 0, 0, 0];
-  }
-  showWedgeEditor.value = !showWedgeEditor.value;
+  form.value.wedgeElevations = [0, 0, 0, 0, 0, 0];
+  emitUpdate();
 }
 
 const canMarkAsSeed = computed(
@@ -203,13 +198,13 @@ function toggleSeed() {
           <div class="section-label">Slope Direction</div>
           <div class="slope-buttons">
             <button
-              v-for="dir in HEXSIDE_DIRS"
-              :key="dir"
+              v-for="(label, i) in edgeLabels"
+              :key="i"
               class="slope-btn"
-              :class="{ active: form.slope === HEXSIDE_DIRS.indexOf(dir) }"
-              @click="setSlope(dir)"
+              :class="{ active: form.slope === i }"
+              @click="setSlope(i)"
             >
-              {{ dir }}
+              {{ label }}
             </button>
             <button
               class="slope-btn"
@@ -253,11 +248,15 @@ function toggleSeed() {
 
         <!-- Wedge elevations -->
         <div class="wedge-section">
-          <button class="toggle-wedge-btn" @click="toggleWedgeEditor">
-            {{ showWedgeEditor ? 'Hide Wedge Editor' : 'Show Wedge Editor' }}
+          <button
+            v-if="!form.wedgeElevations"
+            class="toggle-wedge-btn"
+            @click="initWedgeElevations"
+          >
+            Add Wedge Elevations
           </button>
           <WedgeEditor
-            v-if="showWedgeEditor && form.wedgeElevations"
+            v-if="form.wedgeElevations"
             :wedge-elevations="form.wedgeElevations"
             :north-offset="northOffset"
             @update:wedge-elevations="onWedgeUpdate"

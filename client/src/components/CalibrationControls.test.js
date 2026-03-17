@@ -153,33 +153,41 @@ describe('CalibrationControls', () => {
     expect(lockBtn.element.disabled).toBe(false);
   });
 
-  it('renders northOffset input (10th number input)', () => {
+  it('renders 12-position north picker circles', () => {
     const wrapper = mount(CalibrationControls, {
       props: { calibration: { ...BASE_CAL, northOffset: 0 } },
     });
-    const inputs = wrapper.findAll('input[type="number"]');
-    expect(inputs.length).toBeGreaterThanOrEqual(10);
+    const circles = wrapper.findAll('circle[data-north-offset]');
+    expect(circles).toHaveLength(12);
   });
 
-  it('northOffset input emits calibration-change with updated northOffset', async () => {
+  it('clicking north picker circle emits calibration-change with correct northOffset', async () => {
     const wrapper = mount(CalibrationControls, {
       props: { calibration: { ...BASE_CAL, northOffset: 0 } },
     });
-    const inputs = wrapper.findAll('input[type="number"]');
-    const northOffsetInput = inputs[9];
-    await northOffsetInput.setValue('3');
-    await northOffsetInput.trigger('input');
+    const circles = wrapper.findAll('circle[data-north-offset]');
+    await circles[3].trigger('click'); // position 3
     const emitted = wrapper.emitted('calibration-change');
     expect(emitted).toBeTruthy();
     expect(emitted[emitted.length - 1][0].northOffset).toBe(3);
   });
 
-  it('northOffset input is disabled when calibration.locked is true', () => {
+  it('selected north picker circle has yellow fill', () => {
+    const wrapper = mount(CalibrationControls, {
+      props: { calibration: { ...BASE_CAL, northOffset: 3 } },
+    });
+    const circles = wrapper.findAll('circle[data-north-offset]');
+    expect(circles[3].attributes('fill')).toBe('#ffdd00');
+    expect(circles[0].attributes('fill')).toBe('#444');
+  });
+
+  it('north picker does not emit when locked', async () => {
     const wrapper = mount(CalibrationControls, {
       props: { calibration: { ...BASE_CAL, northOffset: 0, locked: true } },
     });
-    const inputs = wrapper.findAll('input[type="number"]');
-    const northOffsetInput = inputs[9];
-    expect(northOffsetInput.element.disabled).toBe(true);
+    const circles = wrapper.findAll('circle[data-north-offset]');
+    await circles[3].trigger('click');
+    const emitted = wrapper.emitted('calibration-change');
+    expect(emitted).toBeFalsy();
   });
 });

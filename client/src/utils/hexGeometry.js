@@ -67,6 +67,33 @@ export function wedgePolygonPoints(corners, centre) {
   });
 }
 
+/**
+ * 12-point compass labels for the 12 30°-increment positions around a flat-top hex.
+ * Even indices (0,2,4,6,8,10) = edge midpoints; odd indices (1,3,5,7,9,11) = vertices.
+ * Going clockwise from position 0 (top / geometric-N edge):
+ *   0:N  1:NE  2:NE  3:E  4:SE  5:SE  6:S  7:SW  8:SW  9:W  10:NW  11:NW
+ */
+const COMPASS_12 = ['N', 'NE', 'NE', 'E', 'SE', 'SE', 'S', 'SW', 'SW', 'W', 'NW', 'NW'];
+
+/**
+ * Return the 6 geographic edge labels for a flat-top hex given a northOffset.
+ *
+ * northOffset (0–11) encodes which of the 12 hex positions geographic north points toward.
+ * 0 = top edge = N; 3 = right vertex = E (SM default, right vertex ≈ geographic N); etc.
+ *
+ * @param {number} northOffset - integer 0–11
+ * @returns {string[]} 6-element array of cardinal/intercardinal strings, one per hex edge
+ *   (edge 0 = geometric top/N, edge 1 = NE, …, edge 5 = NW, going clockwise)
+ *
+ * @example
+ * getEdgeLabels(0)  // ['N','NE','SE','S','SW','NW']  — standard flat-top
+ * getEdgeLabels(3)  // ['W','NW','NE','E','SE','SW']  — SM orientation
+ * getEdgeLabels(6)  // ['S','SW','NW','N','NE','SE']  — south at top
+ */
+export function getEdgeLabels(northOffset) {
+  return Array.from({ length: 6 }, (_, i) => COMPASS_12[(((i * 2 - northOffset) % 12) + 12) % 12]);
+}
+
 // Cube direction deltas for flat-top hexes (matching los.js convention)
 const DIR_CUBE_DELTAS = {
   N: { dq: 0, dr: -1 },

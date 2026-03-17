@@ -1,7 +1,13 @@
 <script setup>
 import { computed } from 'vue';
 import { defineHex, Grid, rectangle, Orientation } from 'honeycomb-grid';
-import { DIRS, edgeMidpoint, edgeLine20_80, wedgePolygonPoints } from '../utils/hexGeometry.js';
+import {
+  DIRS,
+  edgeMidpoint,
+  edgeLine20_80,
+  wedgePolygonPoints,
+  getEdgeLabels,
+} from '../utils/hexGeometry.js';
 
 const props = defineProps({
   calibration: {
@@ -232,7 +238,8 @@ function strokeOpacityForCell(cell) {
   return 0.6;
 }
 
-// Slope direction arrows: draw from centre toward the edge midpoint of the slope direction
+// Slope direction arrows: draw from centre toward the geometric edge midpoint of the slope index.
+// SLOPE_DIRS maps the geometric index to a geometric direction string used by edgeMidpoint.
 const SLOPE_DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
 
 function slopeArrowLine(cell) {
@@ -241,6 +248,12 @@ function slopeArrowLine(cell) {
   if (!dir) return null;
   const mid = edgeMidpoint(cell.corners, dir);
   return { x1: cell.cx, y1: cell.cy, x2: mid.x, y2: mid.y };
+}
+
+function slopeArrowLabel(cell) {
+  if (cell.slope === null || cell.slope === undefined) return null;
+  const northOffset = props.calibration.northOffset ?? 0;
+  return getEdgeLabels(northOffset)[cell.slope] ?? null;
 }
 
 function onSvgClick(event) {
@@ -428,6 +441,17 @@ function onSvgMouseMove(event) {
                 marker-end="url(#arrow)"
                 pointer-events="none"
               />
+              <text
+                v-if="slopeArrowLine(cell)"
+                :x="slopeArrowLine(cell).x2"
+                :y="slopeArrowLine(cell).y2 - 4"
+                text-anchor="middle"
+                font-size="8"
+                fill="#ffaa44"
+                pointer-events="none"
+              >
+                {{ slopeArrowLabel(cell) }}
+              </text>
             </template>
           </template>
         </g>

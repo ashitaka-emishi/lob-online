@@ -16,6 +16,41 @@ function update(field, value) {
   emit('calibration-change', { ...props.calibration, [field]: Number(value) });
 }
 
+// 12-position hex picker for northOffset
+// Positions 0–11 going clockwise from top (geometric-N edge).
+// Even positions = edge midpoints; odd positions = vertices.
+// Coordinates are relative to SVG centre (50, 45); R=28 circumradius.
+const R = 28;
+const Rin = (R * Math.sqrt(3)) / 2; // inradius ≈ 24.25
+const PICKER_POSITIONS = [
+  { x: 0, y: -Rin }, // 0: N edge (top)
+  { x: R / 2, y: (-R * Math.sqrt(3)) / 2 }, // 1: upper-right vertex
+  { x: (R * 3) / 4, y: -Rin / 2 }, // 2: NE edge
+  { x: R, y: 0 }, // 3: right vertex (E)
+  { x: (R * 3) / 4, y: Rin / 2 }, // 4: SE edge
+  { x: R / 2, y: Rin }, // 5: lower-right vertex
+  { x: 0, y: Rin }, // 6: S edge (bottom)
+  { x: -R / 2, y: Rin }, // 7: lower-left vertex
+  { x: (-R * 3) / 4, y: Rin / 2 }, // 8: SW edge
+  { x: -R, y: 0 }, // 9: left vertex (W)
+  { x: (-R * 3) / 4, y: -Rin / 2 }, // 10: NW edge
+  { x: -R / 2, y: -Rin }, // 11: upper-left vertex
+];
+const HEX_CORNERS = [
+  { x: R, y: 0 },
+  { x: R / 2, y: Rin },
+  { x: -R / 2, y: Rin },
+  { x: -R, y: 0 },
+  { x: -R / 2, y: -Rin },
+  { x: R / 2, y: -Rin },
+];
+const hexPoints = HEX_CORNERS.map((c) => `${c.x},${c.y}`).join(' ');
+
+function setNorthOffset(n) {
+  if (props.calibration.locked) return;
+  emit('calibration-change', { ...props.calibration, northOffset: n });
+}
+
 function toggleOrientation() {
   const next = props.calibration.orientation === 'pointy' ? 'flat' : 'pointy';
   emit('calibration-change', { ...props.calibration, orientation: next });
@@ -134,18 +169,38 @@ function toggleLocked() {
         @input="update('rotation', $event.target.value)"
       />
     </label>
-    <label>
-      North Offset (0–5)
-      <input
-        type="number"
-        step="1"
-        min="0"
-        max="5"
-        :value="calibration.northOffset ?? 0"
-        :disabled="calibration.locked ?? false"
-        @input="update('northOffset', $event.target.value)"
-      />
-    </label>
+    <div class="north-picker-label">North Offset (0–11)</div>
+    <div class="north-picker" :class="{ 'north-picker--locked': calibration.locked }">
+      <svg width="100" height="90" class="north-picker-svg">
+        <g transform="translate(50,45)">
+          <polygon :points="hexPoints" fill="none" stroke="#555" stroke-width="1" />
+          <circle
+            v-for="(pos, n) in PICKER_POSITIONS"
+            :key="n"
+            :cx="pos.x"
+            :cy="pos.y"
+            :r="n % 2 === 0 ? 5 : 4"
+            :fill="(calibration.northOffset ?? 0) === n ? '#ffdd00' : '#444'"
+            :stroke="(calibration.northOffset ?? 0) === n ? '#ffaa00' : '#666'"
+            stroke-width="1"
+            :style="calibration.locked ? 'cursor:default' : 'cursor:pointer'"
+            :data-north-offset="n"
+            @click="setNorthOffset(n)"
+          />
+          <text
+            x="0"
+            y="0"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            font-size="8"
+            fill="#888"
+            pointer-events="none"
+          >
+            N={{ calibration.northOffset ?? 0 }}
+          </text>
+        </g>
+      </svg>
+    </div>
     <button :class="{ active: calibration.locked }" @click="toggleLocked">
       {{ calibration.locked ? 'Locked 🔒' : 'Lock' }}
     </button>
@@ -185,6 +240,24 @@ input[type='number'] {
   padding: 0.2rem 0.3rem;
   font-size: 0.85rem;
   box-sizing: border-box;
+}
+
+.north-picker-label {
+  font-size: 0.75rem;
+  color: #a09880;
+}
+
+.north-picker {
+  display: flex;
+  justify-content: center;
+}
+
+.north-picker--locked .north-picker-svg {
+  opacity: 0.4;
+}
+
+.north-picker-svg {
+  display: block;
 }
 
 button {

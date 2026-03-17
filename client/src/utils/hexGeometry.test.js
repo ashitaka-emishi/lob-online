@@ -4,6 +4,7 @@ import {
   edgeLine20_80,
   wedgePolygonPoints,
   adjacentHexId,
+  getEdgeLabels,
   DIR_TO_CORNERS,
   DIRS,
 } from './hexGeometry.js';
@@ -170,5 +171,43 @@ describe('DIR_TO_CORNERS', () => {
       expect(DIR_TO_CORNERS[dir]).toBeDefined();
       expect(DIR_TO_CORNERS[dir]).toHaveLength(2);
     }
+  });
+});
+
+describe('getEdgeLabels', () => {
+  const VALID_LABELS = new Set(['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']);
+
+  it('northOffset=0: standard flat-top labels', () => {
+    expect(getEdgeLabels(0)).toEqual(['N', 'NE', 'SE', 'S', 'SW', 'NW']);
+  });
+
+  it('northOffset=3: SM orientation (right vertex = N)', () => {
+    expect(getEdgeLabels(3)).toEqual(['W', 'NW', 'NE', 'E', 'SE', 'SW']);
+  });
+
+  it('northOffset=6: south-at-top', () => {
+    expect(getEdgeLabels(6)).toEqual(['S', 'SW', 'NW', 'N', 'NE', 'SE']);
+  });
+
+  it('always returns exactly 6 labels', () => {
+    for (let n = 0; n < 12; n++) {
+      expect(getEdgeLabels(n)).toHaveLength(6);
+    }
+  });
+
+  it('all labels are valid cardinal/intercardinal strings for every northOffset', () => {
+    for (let n = 0; n < 12; n++) {
+      for (const label of getEdgeLabels(n)) {
+        expect(VALID_LABELS).toContain(label);
+      }
+    }
+  });
+
+  it('northOffset=1', () => {
+    expect(getEdgeLabels(1)).toEqual(['NW', 'NE', 'E', 'SE', 'SW', 'W']);
+  });
+
+  it('northOffset=9', () => {
+    expect(getEdgeLabels(9)).toEqual(['E', 'SE', 'SW', 'W', 'NW', 'NE']);
   });
 });

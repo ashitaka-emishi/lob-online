@@ -116,4 +116,35 @@ describe('WedgeEditor', () => {
     expect(fills).toContain('black');
     expect(fills).toContain('transparent');
   });
+
+  it('northOffset=3 shows SM cardinal labels W,NW,NE,E,SE,SW', () => {
+    const wrapper = mount(WedgeEditor, {
+      props: { wedgeElevations: DEFAULT_ELEVATIONS, northOffset: 3 },
+    });
+    const text = wrapper.text();
+    for (const label of ['W', 'NW', 'NE', 'E', 'SE', 'SW']) {
+      expect(text).toContain(label);
+    }
+  });
+
+  it('northOffset=0 shows standard labels N,NE,SE,S,SW,NW', () => {
+    const wrapper = mount(WedgeEditor, {
+      props: { wedgeElevations: DEFAULT_ELEVATIONS, northOffset: 0 },
+    });
+    const text = wrapper.text();
+    for (const label of ['N', 'NE', 'SE', 'S', 'SW', 'NW']) {
+      expect(text).toContain(label);
+    }
+  });
+
+  it('editing a wedge shows geographic direction label when northOffset=3', async () => {
+    const wrapper = mount(WedgeEditor, {
+      props: { wedgeElevations: DEFAULT_ELEVATIONS, northOffset: 3 },
+    });
+    const clickablePolygons = wrapper
+      .findAll('polygon')
+      .filter((p) => p.attributes('style')?.includes('cursor: pointer'));
+    await clickablePolygons[0].trigger('click'); // wedge 0 = 'W' when northOffset=3
+    expect(wrapper.find('.wedge-input-label').text()).toContain('W');
+  });
 });

@@ -452,4 +452,41 @@ describe('HexMapOverlay', () => {
     const hasRotate = innerGs.some((g) => g.attributes('transform')?.includes('rotate('));
     expect(hasRotate).toBe(false);
   });
+
+  it('slope arrow with northOffset=3 shows W geographic label for slope=0', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: { ...BASE_CAL, northOffset: 3 },
+        hexes: [{ hex: '02.02', terrain: 'clear', slope: 0 }],
+        layers: {
+          grid: false,
+          terrain: false,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: true,
+        },
+      },
+    });
+    // slope index 0 with northOffset=3 → geographic label 'W'
+    expect(wrapper.text()).toContain('W');
+  });
+
+  it('slope arrow with northOffset=0 shows N geographic label for slope=0', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: { ...BASE_CAL, northOffset: 0 },
+        hexes: [{ hex: '02.02', terrain: 'clear', slope: 0 }],
+        layers: {
+          grid: false,
+          terrain: false,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: true,
+        },
+      },
+    });
+    expect(wrapper.text()).toContain('N');
+  });
 });

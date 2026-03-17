@@ -205,6 +205,77 @@ describe('MapSchema — gridSpec rotation and locked', () => {
   });
 });
 
+describe('MapSchema — gridSpec northOffset', () => {
+  const BASE_GRIDSPEC = {
+    cols: 64,
+    rows: 35,
+    dx: 0,
+    dy: 0,
+    hexWidth: 35,
+    hexHeight: 35,
+    imageScale: 1,
+    strokeWidth: 0.5,
+    orientation: 'flat',
+    evenColUp: false,
+  };
+
+  it('accepts northOffset: 0 (lower boundary)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: { ...BASE_GRIDSPEC, northOffset: 0 },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts northOffset: 3 (SM default)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: { ...BASE_GRIDSPEC, northOffset: 3 },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts northOffset: 11 (upper boundary)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: { ...BASE_GRIDSPEC, northOffset: 11 },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts gridSpec without northOffset (optional)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: { ...BASE_GRIDSPEC },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects northOffset: 12 (above upper boundary)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: { ...BASE_GRIDSPEC, northOffset: 12 },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects northOffset: -1 (below lower boundary)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: { ...BASE_GRIDSPEC, northOffset: -1 },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects northOffset: 1.5 (non-integer)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: { ...BASE_GRIDSPEC, northOffset: 1.5 },
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
 describe('MapSchema — HexEntry playable and auto-detect fields', () => {
   it('accepts HexEntry with playable: false', () => {
     const result = MapSchema.safeParse({
