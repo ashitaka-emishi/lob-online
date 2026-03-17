@@ -40,12 +40,13 @@ All PDFs live in `docs/reference/`:
 
 Data files consulted for model reviews live in `data/scenarios/south-mountain/`:
 
-| File            | Contents                                                              |
-| --------------- | --------------------------------------------------------------------- |
-| `map.json`      | Hex terrain, gridSpec calibration, VP/entry hexes, type registries    |
-| `oob.json`      | 219 units, brigade/division hierarchy, wreck thresholds               |
-| `leaders.json`  | 48 leaders, ratings, special rule flags                               |
-| `scenario.json` | Turn structure, reinforcements, VP conditions, movement costs, events |
+| ID                | File                         | Contents                                                                                                                                                                |
+| ----------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SM_MAP_DATA       | `map.json`                   | Hex terrain, gridSpec calibration, VP/entry hexes, type registries (hexsideTypes, hexFeatureTypes, edgeFeatureTypes) — partial, digitization in progress via map editor |
+| GS_OOB            | `oob.json`                   | 219 units, brigade/division hierarchy, wreck thresholds                                                                                                                 |
+| GS_LEADERS        | `leaders.json`               | 48 leaders, ratings, special rule flags                                                                                                                                 |
+| SM_SCENARIO_DATA  | `scenario.json`              | Turn structure, reinforcements, VP conditions, movement costs, random events                                                                                            |
+| SM_AUTODETECT_CFG | `map-autodetect-config.json` | Auto-detect configuration: elevation color palette, confidence threshold, seed hex list (confirmed hexes used as few-shot examples for Vision API classification)       |
 
 ### Priority Hierarchy
 
