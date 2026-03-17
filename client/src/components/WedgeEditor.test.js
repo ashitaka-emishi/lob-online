@@ -64,41 +64,36 @@ describe('WedgeEditor', () => {
     expect(transparentPolygons.length).toBeGreaterThan(0);
   });
 
-  it('clicking a wedge polygon shows the inline edit input', async () => {
-    const wrapper = mount(WedgeEditor, {
-      props: { wedgeElevations: DEFAULT_ELEVATIONS },
-    });
-    expect(wrapper.find('.wedge-input-row').exists()).toBe(false);
-
-    // Click the first wedge polygon (index 0, after the outline polygon at index 0)
-    const clickablePolygons = wrapper
-      .findAll('polygon')
-      .filter((p) => p.attributes('style')?.includes('cursor: pointer'));
-    await clickablePolygons[0].trigger('click');
-
-    expect(wrapper.find('.wedge-input-row').exists()).toBe(true);
-    expect(wrapper.find('.wedge-input').exists()).toBe(true);
-  });
-
-  it('confirming edit emits update:wedgeElevations with updated index', async () => {
+  it('left-click on a wedge decrements that wedge by 1', async () => {
     const wrapper = mount(WedgeEditor, {
       props: { wedgeElevations: [0, 0, 0, 0, 0, 0] },
     });
-
     const clickablePolygons = wrapper
       .findAll('polygon')
       .filter((p) => p.attributes('style')?.includes('cursor: pointer'));
     await clickablePolygons[0].trigger('click');
 
-    const input = wrapper.find('.wedge-input');
-    await input.setValue('50');
-    await input.trigger('keyup.enter');
+    const emitted = wrapper.emitted('update:wedgeElevations');
+    expect(emitted).toBeTruthy();
+    expect(emitted[0][0][0]).toBe(-1);
+    // Other indices unchanged
+    expect(emitted[0][0][1]).toBe(0);
+  });
+
+  it('right-click on a wedge increments that wedge by 1', async () => {
+    const wrapper = mount(WedgeEditor, {
+      props: { wedgeElevations: [0, 0, 0, 0, 0, 0] },
+    });
+    const clickablePolygons = wrapper
+      .findAll('polygon')
+      .filter((p) => p.attributes('style')?.includes('cursor: pointer'));
+    await clickablePolygons[1].trigger('contextmenu');
 
     const emitted = wrapper.emitted('update:wedgeElevations');
     expect(emitted).toBeTruthy();
-    expect(emitted[0][0][0]).toBe(50);
+    expect(emitted[0][0][1]).toBe(1);
     // Other indices unchanged
-    expect(emitted[0][0][1]).toBe(0);
+    expect(emitted[0][0][0]).toBe(0);
   });
 
   it('defaults to all-zero elevations when wedgeElevations not provided', () => {
@@ -137,14 +132,14 @@ describe('WedgeEditor', () => {
     }
   });
 
-  it('editing a wedge shows geographic direction label when northOffset=3', async () => {
+  it('wedge value labels are visible in SVG text elements', () => {
     const wrapper = mount(WedgeEditor, {
-      props: { wedgeElevations: DEFAULT_ELEVATIONS, northOffset: 3 },
+      props: { wedgeElevations: [2, -1, 0, 3, 0, -2], northOffset: 3 },
     });
-    const clickablePolygons = wrapper
-      .findAll('polygon')
-      .filter((p) => p.attributes('style')?.includes('cursor: pointer'));
-    await clickablePolygons[0].trigger('click'); // wedge 0 = 'W' when northOffset=3
-    expect(wrapper.find('.wedge-input-label').text()).toContain('W');
+    const text = wrapper.text();
+    expect(text).toContain('2');
+    expect(text).toContain('-1');
+    expect(text).toContain('3');
+    expect(text).toContain('-2');
   });
 });
