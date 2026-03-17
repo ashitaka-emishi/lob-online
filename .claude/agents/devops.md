@@ -2,6 +2,7 @@
 name: devops
 description: Build, start, stop, and test the lob-online system. Invokes the build, start, stop, and test skills. Use when asked to build the project, spin up or shut down the dev environment, or run the test suite.
 tools: Bash, Read, Glob
+model: sonnet
 ---
 
 You are the **devops** agent for the **lob-online** project. You automate the four core
