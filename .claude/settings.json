@@ -60,5 +60,9 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "conductor@claude-code-workflows": true,
+    "agent-teams@claude-code-workflows": true
   }
 }
