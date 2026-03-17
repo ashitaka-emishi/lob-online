@@ -67,6 +67,10 @@ const props = defineProps({
     type: String,
     default: 'clear',
   },
+  seedHexIds: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const emit = defineEmits([
@@ -111,6 +115,7 @@ const hexIndex = computed(() => {
 
 const vpHexSet = computed(() => new Set(props.vpHexIds));
 const losPathSet = computed(() => new Set(props.losPathHexes));
+const seedHexSet = computed(() => new Set(props.seedHexIds));
 
 // Recompute grid whenever calibration or image size changes
 const gridData = computed(() => {
@@ -146,7 +151,9 @@ const gridData = computed(() => {
     const terrain = known?.terrain ?? 'unknown';
     const fill = TERRAIN_COLORS[terrain] ?? '#cccccc';
     const fillOpacity = terrain === 'unknown' ? 0.3 : 0.45;
+    const bottomCY = (corners[1].y + corners[2].y) / 2;
     const isVP = vpHexSet.value.has(id);
+    const isSeed = seedHexSet.value.has(id);
     const isLosA = id === props.losHexA;
     const isLosB = id === props.losHexB;
     const isLosPath = losPathSet.value.has(id);
@@ -165,7 +172,9 @@ const gridData = computed(() => {
       wedgeElevations: known?.wedgeElevations ?? null,
       edges: known?.edges ?? {},
       features: known?.features ?? [],
+      bottomCY,
       isVP,
+      isSeed,
       isLosA,
       isLosB,
       isLosPath,
@@ -192,6 +201,7 @@ function strokeForCell(cell) {
   if (cell.isLosB) return '#4488cc';
   if (cell.isLosPath) return '#cc8844';
   if (props.selectedHexId === cell.id) return '#ffdd00';
+  if (cell.isSeed) return '#cc44ee';
   if (cell.isVP) return '#cc3333';
   return '#88776644';
 }
@@ -202,6 +212,7 @@ function strokeWidthForCell(cell) {
     return Math.max(props.calibration.strokeWidth * 2.5, 2);
   }
   if (props.selectedHexId === cell.id) return Math.max(props.calibration.strokeWidth * 3, 2);
+  if (cell.isSeed) return Math.max(props.calibration.strokeWidth * 2, 1.5);
   if (cell.isVP) return Math.max(props.calibration.strokeWidth * 2, 1.5);
   return props.calibration.strokeWidth;
 }
@@ -214,6 +225,7 @@ function strokeOpacityForCell(cell) {
     cell.isLosB ||
     cell.isLosPath ||
     props.selectedHexId === cell.id ||
+    cell.isSeed ||
     cell.isVP
   )
     return 1;
@@ -370,12 +382,15 @@ function onSvgMouseMove(event) {
             v-for="cell in cells"
             :key="'elev-' + cell.id"
             :x="cell.cx"
-            :y="cell.cy + (calibrationMode ? 8 : 0)"
+            :y="cell.bottomCY - 2"
             text-anchor="middle"
-            dominant-baseline="middle"
-            font-size="8"
-            fill="#ffffff"
-            fill-opacity="0.9"
+            dominant-baseline="auto"
+            font-size="11"
+            fill="#1a6b2a"
+            stroke="rgba(255,255,255,0.55)"
+            stroke-width="2.5"
+            paint-order="stroke"
+            fill-opacity="1"
             pointer-events="none"
           >
             {{ cell.elevation !== null ? cell.elevation : '' }}

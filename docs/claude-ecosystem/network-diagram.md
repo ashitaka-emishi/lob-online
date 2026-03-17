@@ -46,6 +46,7 @@ graph TD
 
   subgraph standalone[unowned skills]
     design
+    doc-sync
     pr-create
     pr-merge
     plan-wrap
@@ -71,8 +72,12 @@ Which skills call other skills as prerequisites or sub-steps.
 graph LR
   issue-implement --> issue-start
   issue-implement --> issue-branch
+  issue-implement --> doc-sync
+  issue-implement --> ecosystem-docs-generate
   issue-implement --> dev-build
   issue-implement --> dev-test
+  issue-implement --> dev-start
+  issue-implement --> dev-stop
   issue-implement --> pr-create
   issue-implement --> pr-review
   issue-implement --> pr-merge

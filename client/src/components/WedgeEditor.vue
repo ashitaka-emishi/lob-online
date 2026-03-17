@@ -6,6 +6,10 @@ const props = defineProps({
     type: Array,
     default: () => [0, 0, 0, 0, 0, 0],
   },
+  northOffset: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const emit = defineEmits(['update:wedgeElevations']);
@@ -122,7 +126,7 @@ function cancelEdit() {
 
       <!-- Direction labels near perimeter -->
       <text
-        v-for="(dir, i) in WEDGE_DIRS"
+        v-for="(_, i) in WEDGE_DIRS"
         :key="'dir-' + i"
         :x="CX + (RADIUS + 12) * Math.cos((Math.PI / 3) * i + Math.PI / 6)"
         :y="CY + (RADIUS + 12) * Math.sin((Math.PI / 3) * i + Math.PI / 6)"
@@ -132,14 +136,14 @@ function cancelEdit() {
         fill="#888"
         pointer-events="none"
       >
-        {{ dir }}
+        {{ WEDGE_DIRS[(i + props.northOffset) % 6] }}
       </text>
     </svg>
 
     <!-- Inline edit form -->
     <div v-if="editingWedge !== null" class="wedge-input-row">
       <span class="wedge-input-label">
-        Wedge {{ WEDGE_DIRS[editingWedge] }} elevation offset:
+        Wedge {{ WEDGE_DIRS[(editingWedge + props.northOffset) % 6] }} elevation offset:
       </span>
       <input
         v-model="editValue"

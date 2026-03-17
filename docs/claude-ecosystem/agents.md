@@ -51,11 +51,11 @@ game-logic issues before filing acceptance criteria
 
 **Owned skills:**
 
-| Skill                                           | What it does                                            |
-| ----------------------------------------------- | ------------------------------------------------------- |
-| [`/issue-start`](skills.md#issue-start)         | Fetch issue, summarise ACs, present plan — HCP 1        |
-| [`/issue-branch`](skills.md#issue-branch)       | Create `feat/{id}-{slug}` branch                        |
-| [`/issue-implement`](skills.md#issue-implement) | Full ticket-to-merge orchestrator (chains 9 sub-skills) |
+| Skill                                           | What it does                                                                              |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [`/issue-start`](skills.md#issue-start)         | Fetch issue, summarise ACs, present plan — HCP 1                                          |
+| [`/issue-branch`](skills.md#issue-branch)       | Create `feat/{id}-{slug}` branch                                                          |
+| [`/issue-implement`](skills.md#issue-implement) | Full ticket-to-merge orchestrator (chains sub-skills including doc-sync, build, and test) |
 
 **Design spec:** `docs/agents/project-manager/design.md`
 

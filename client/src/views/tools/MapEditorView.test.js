@@ -21,6 +21,7 @@ vi.mock('../../components/HexMapOverlay.vue', () => ({
       'layers',
       'editorMode',
       'paintTerrain',
+      'seedHexIds',
     ],
     emits: ['hex-click', 'hex-mouseenter', 'hex-mouseleave', 'edge-click', 'edge-hover'],
   },
@@ -30,8 +31,15 @@ vi.mock('../../components/HexEditPanel.vue', () => ({
   default: {
     name: 'HexEditPanel',
     template: '<div class="hex-edit-panel-stub"></div>',
-    props: ['hex', 'selectedHexId', 'hexFeatureTypes', 'edgeFeatureTypes'],
-    emits: ['hex-update'],
+    props: [
+      'hex',
+      'selectedHexId',
+      'hexFeatureTypes',
+      'edgeFeatureTypes',
+      'isSeedHex',
+      'northOffset',
+    ],
+    emits: ['hex-update', 'seed-toggle'],
   },
 }));
 
@@ -380,39 +388,43 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 
-  it('push confirmation dialog shown when server data is newer than local draft', async () => {
+  it('no push confirmation dialog when no unsaved changes, even if server has newer timestamp', async () => {
     const serverMap = { ...VALID_MAP, _savedAt: 2000 };
-    const localDraft = { ...VALID_MAP, _savedAt: 1000 };
-    vi.stubGlobal('localStorage', {
-      getItem: vi.fn((key) => {
-        if (key === MAP_DRAFT_KEY) return JSON.stringify(localDraft);
-        return null;
-      }),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-    });
-    vi.stubGlobal('fetch', mockFetch(serverMap));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(serverMap) })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ ok: true, _savedAt: 3000 }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
 
-    const saveBtn = wrapper.find('button.save-btn');
-    await saveBtn.trigger('click');
+    await wrapper.find('button.save-btn').trigger('click');
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Server data is newer');
+    // No confirmation dialog — push proceeds directly when nothing is unsaved
+    expect(wrapper.text()).not.toContain('Server data is newer');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     wrapper.unmount();
   });
 
-  it('push confirmation → Overwrite → PUT fires', async () => {
+  it('push confirmation → Overwrite → PUT fires when unsaved and server is newer', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(1500); // Date.now() = 1500 < serverMap._savedAt=2000
+
     const serverMap = { ...VALID_MAP, _savedAt: 2000 };
-    const localDraft = { ...VALID_MAP, _savedAt: 1000 };
+    const store = {};
     vi.stubGlobal('localStorage', {
-      getItem: vi.fn((key) => {
-        if (key === MAP_DRAFT_KEY) return JSON.stringify(localDraft);
-        return null;
+      getItem: vi.fn((key) => store[key] ?? null),
+      setItem: vi.fn((key, val) => {
+        store[key] = val;
       }),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
+      removeItem: vi.fn((key) => {
+        delete store[key];
+      }),
     });
     const fetchMock = vi
       .fn()
@@ -420,11 +432,18 @@ describe('MapEditorView', () => {
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ ok: true, _savedAt: Date.now() }),
+        json: () => Promise.resolve({ ok: true, _savedAt: 3000 }),
       });
     vi.stubGlobal('fetch', fetchMock);
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
+    // serverSavedAt = 2000; Date.now() = 1500
+
+    // Emit a hex-update to set unsaved=true (saveMapDraft stores draft with _savedAt=1500)
+    const hexEditPanel = wrapper.findComponent({ name: 'HexEditPanel' });
+    await hexEditPanel.vm.$emit('hex-update', { hex: '01.01', terrain: 'woods' });
+    await flushPromises();
+    // unsaved=true, localDraftSavedAt=1500 < serverSavedAt=2000 → dialog should appear
 
     await wrapper.find('button.save-btn').trigger('click');
     await flushPromises();
@@ -434,6 +453,7 @@ describe('MapEditorView', () => {
     await flushPromises();
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
     wrapper.unmount();
   });
 

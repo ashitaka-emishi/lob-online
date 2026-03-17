@@ -63,6 +63,8 @@ graph TD
   end
   rl[rules-lawyer agent — no skills]
   subgraph standalone[unowned skills]
+    design
+    doc-sync
     pr-create
     pr-merge
     plan-wrap
@@ -81,26 +83,28 @@ graph TD
 
 ## Skills
 
-| Skill                      | Category | Description                                        | Owning Agent    | Calls                                                                                                               |
-| -------------------------- | -------- | -------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `/dev-build`               | dev      | Format → lint → Vite build                         | devops          | —                                                                                                                   |
-| `/dev-start`               | dev      | Launch server + Vite client                        | devops          | —                                                                                                                   |
-| `/dev-stop`                | dev      | Graceful shutdown, SIGKILL fallback                | devops          | —                                                                                                                   |
-| `/dev-test`                | dev      | Run suite, detect flakes, correlate errors         | devops          | —                                                                                                                   |
-| `/issue-intake`            | issue    | Gather → refine → HCP → file issue (no branch/PR)  | issue-intake    | `rules-lawyer`                                                                                                      |
-| `/issue-start`             | issue    | Fetch issue, summarise ACs, HCP 1                  | project-manager | —                                                                                                                   |
-| `/issue-branch`            | issue    | Create feat branch, log update                     | project-manager | —                                                                                                                   |
-| `/issue-implement`         | issue    | Full ticket-to-merge orchestrator (9 sub-skills)   | project-manager | `/issue-start`, `/issue-branch`, `/dev-build`, `/dev-test`, `/pr-create`, `/pr-review`, `/pr-merge`, `/issue-close` |
-| `/issue-close`             | issue    | Close GitHub issue with merge summary comment      | unowned         | —                                                                                                                   |
-| `/pr-create`               | pr       | Devlog entry + CI checks + open PR                 | unowned         | —                                                                                                                   |
-| `/pr-review`               | pr       | Build/test gate + PR diff analysis                 | code-review     | `/dev-build`, `/dev-test`                                                                                           |
-| `/pr-merge`                | pr       | Squash-merge + branch delete, HCP 3                | unowned         | —                                                                                                                   |
-| `/plan-wrap`               | plan     | Post-plan: verify build, write devlog, update docs | unowned         | —                                                                                                                   |
-| `/code-assess`             | review   | Full source audit (dead/dup/coverage)              | code-review     | `/dev-build`, `/dev-test`                                                                                           |
-| `/agent-sync`              | agent    | Read-only drift check agents vs design.md          | unowned         | —                                                                                                                   |
-| `/agent-regenerate`        | agent    | Rebuild agent files from design.md §4              | unowned         | `/dev-build`                                                                                                        |
-| `/agent-standardize`       | agent    | Normalize prompt.md, regenerate design + agents    | unowned         | `/dev-build`                                                                                                        |
-| `/ecosystem-docs-generate` | docs     | Regenerate all ecosystem docs from source inputs   | unowned         | —                                                                                                                   |
+| Skill                      | Category | Description                                        | Owning Agent    | Calls                                                                                                                                                                                   |
+| -------------------------- | -------- | -------------------------------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/dev-build`               | dev      | Format → lint → Vite build                         | devops          | —                                                                                                                                                                                       |
+| `/dev-start`               | dev      | Launch server + Vite client                        | devops          | —                                                                                                                                                                                       |
+| `/dev-stop`                | dev      | Graceful shutdown, SIGKILL fallback                | devops          | —                                                                                                                                                                                       |
+| `/dev-test`                | dev      | Run suite, detect flakes, correlate errors         | devops          | —                                                                                                                                                                                       |
+| `/design`                  | issue    | Gather intent → draft design doc → commit + PR     | unowned         | —                                                                                                                                                                                       |
+| `/issue-intake`            | issue    | Gather → refine → HCP → file issue (no branch/PR)  | issue-intake    | `rules-lawyer`                                                                                                                                                                          |
+| `/issue-start`             | issue    | Fetch issue, summarise ACs, HCP 1                  | project-manager | —                                                                                                                                                                                       |
+| `/issue-branch`            | issue    | Create feat branch, log update                     | project-manager | —                                                                                                                                                                                       |
+| `/issue-implement`         | issue    | Full ticket-to-merge orchestrator                  | project-manager | `/issue-start`, `/issue-branch`, `/doc-sync`, `/ecosystem-docs-generate`, `/dev-build`, `/dev-test`, `/dev-start`, `/dev-stop`, `/pr-create`, `/pr-review`, `/pr-merge`, `/issue-close` |
+| `/issue-close`             | issue    | Close GitHub issue with merge summary comment      | unowned         | —                                                                                                                                                                                       |
+| `/pr-create`               | pr       | Devlog entry + CI checks + open PR                 | unowned         | —                                                                                                                                                                                       |
+| `/pr-review`               | pr       | Build/test gate + PR diff analysis                 | code-review     | `/dev-build`, `/dev-test`                                                                                                                                                               |
+| `/pr-merge`                | pr       | Squash-merge + branch delete, HCP 3                | unowned         | —                                                                                                                                                                                       |
+| `/plan-wrap`               | plan     | Post-plan: verify build, write devlog, update docs | unowned         | —                                                                                                                                                                                       |
+| `/code-assess`             | review   | Full source audit (dead/dup/coverage)              | code-review     | `/dev-build`, `/dev-test`                                                                                                                                                               |
+| `/agent-sync`              | agent    | Read-only drift check agents vs design.md          | unowned         | —                                                                                                                                                                                       |
+| `/agent-regenerate`        | agent    | Rebuild agent files from design.md §4              | unowned         | `/dev-build`                                                                                                                                                                            |
+| `/agent-standardize`       | agent    | Normalize prompt.md, regenerate design + agents    | unowned         | `/dev-build`                                                                                                                                                                            |
+| `/doc-sync`                | docs     | Sync CLAUDE.md, HLD, and agent design docs         | unowned         | —                                                                                                                                                                                       |
+| `/ecosystem-docs-generate` | docs     | Regenerate all ecosystem docs from source inputs   | unowned         | —                                                                                                                                                                                       |
 
 ---
 
@@ -110,14 +114,16 @@ graph TD
 graph LR
   issue-implement --> issue-start
   issue-implement --> issue-branch
+  issue-implement --> doc-sync
+  issue-implement --> ecosystem-docs-generate
   issue-implement --> dev-build
   issue-implement --> dev-test
+  issue-implement --> dev-start
+  issue-implement --> dev-stop
   issue-implement --> pr-create
   issue-implement --> pr-review
   issue-implement --> pr-merge
   issue-implement --> issue-close
-  issue-intake --> pr-create
-  issue-intake --> pr-merge
   pr-review --> dev-build
   pr-review --> dev-test
   code-assess --> dev-build
@@ -136,7 +142,9 @@ sequenceDiagram
   participant IM as issue-implement
   participant IS as issue-start
   participant IB as issue-branch
+  participant DS as doc-sync / ecosystem-docs
   participant DB as dev-build / dev-test
+  participant DS2 as dev-start / dev-stop
   participant PC as pr-create
   participant PR as pr-review
   participant PM as pr-merge
@@ -148,13 +156,18 @@ sequenceDiagram
   E-->>IM: proceed
   IM->>IB: /issue-branch
   Note over IM: Implement ACs
+  IM->>DS: /doc-sync then /ecosystem-docs-generate
   IM->>DB: /dev-build then /dev-test
+  IM->>DS2: /dev-start
+  DS2-->>E: HCP 2a — approve editor review?
+  E-->>IM: approve (or fix with feedback)
+  IM->>DS2: /dev-stop
   IM-->>E: HCP 2 — push?
   E-->>IM: push
   IM->>PC: /pr-create
   IM->>PR: /pr-review
   PR-->>E: HCP 2b — triage findings
-  E-->>IM: fix all / accept
+  E-->>IM: fix all / fix errors only / accept
   IM->>PM: /pr-merge
   PM-->>E: HCP 3 — merge?
   E-->>PM: merge

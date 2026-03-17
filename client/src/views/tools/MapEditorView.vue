@@ -32,6 +32,7 @@ const DEFAULT_CALIBRATION = {
   orientation: 'flat',
   strokeWidth: 0.5,
   evenColUp: false,
+  northOffset: 0,
 };
 
 function loadCalibration() {
@@ -267,6 +268,18 @@ const vpHexIds = computed(() => {
   return (mapData.value.vpHexes ?? []).map((v) => v.hex);
 });
 
+// ── Seed hex IDs ──────────────────────────────────────────────────────────────
+
+const seedHexIds = ref(new Set());
+const seedHexIdsArray = computed(() => [...seedHexIds.value]);
+
+function onSeedToggle({ hexId }) {
+  const s = new Set(seedHexIds.value);
+  if (s.has(hexId)) s.delete(hexId);
+  else s.add(hexId);
+  seedHexIds.value = s;
+}
+
 // ── Terrain + edge feature type lists ────────────────────────────────────────
 
 const terrainTypes = computed(() => {
@@ -484,7 +497,7 @@ async function save() {
   } catch (_) {
     /* ignore */
   }
-  if (serverSavedAt.value > localDraftSavedAt) {
+  if (unsaved.value && serverSavedAt.value > localDraftSavedAt) {
     showPushConfirm.value = true;
     return;
   }
@@ -616,6 +629,7 @@ onUnmounted(() => {
             :layers="layers"
             :editor-mode="editorMode"
             :paint-terrain="paintTerrain"
+            :seed-hex-ids="seedHexIdsArray"
             @hex-click="onHexClick"
             @hex-mouseenter="onHexMouseenter"
             @edge-click="onEdgeClick"
@@ -655,7 +669,10 @@ onUnmounted(() => {
               :selected-hex-id="selectedHexId"
               :hex-feature-types="mapData?.hexFeatureTypes ?? []"
               :edge-feature-types="edgeFeatureTypes"
+              :is-seed-hex="selectedHexId ? seedHexIds.has(selectedHexId) : false"
+              :north-offset="calibration.northOffset ?? 0"
               @hex-update="onHexUpdate"
+              @seed-toggle="onSeedToggle"
             />
           </div>
         </div>

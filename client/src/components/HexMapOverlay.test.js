@@ -182,7 +182,7 @@ describe('HexMapOverlay', () => {
     expect(nonePoly).toBeTruthy();
   });
 
-  it('layers.elevation=true renders elevation text labels', () => {
+  it('layers.elevation=true renders elevation text labels with dark green fill', () => {
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
@@ -198,6 +198,9 @@ describe('HexMapOverlay', () => {
       },
     });
     expect(wrapper.text()).toContain('500');
+    const elevTexts = wrapper.findAll('text').filter((t) => t.text().trim() === '500');
+    expect(elevTexts.length).toBeGreaterThan(0);
+    expect(elevTexts[0].attributes('fill')).toBe('#1a6b2a');
   });
 
   it('layers.elevation=false does not render elevation text', () => {
@@ -368,6 +371,28 @@ describe('HexMapOverlay', () => {
     expect(labelTexts).not.toContain('02.03');
     // Odd column is unaffected: hex(col=0, row=0) → gameCol=1 (odd) → gameRow=3-0=3 → "01.03"
     expect(labelTexts).toContain('01.03');
+  });
+
+  it('seed hex polygon renders with purple (#cc44ee) stroke', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        calibrationMode: false,
+        vpHexIds: [],
+        seedHexIds: ['01.03'],
+        layers: {
+          grid: true,
+          terrain: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    const polygons = wrapper.findAll('polygon');
+    const seedPoly = polygons.find((p) => p.attributes('stroke') === '#cc44ee');
+    expect(seedPoly).toBeTruthy();
   });
 
   it('no rotation transform when calibration.rotation is absent', () => {

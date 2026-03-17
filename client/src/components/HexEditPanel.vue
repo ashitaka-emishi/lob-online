@@ -24,6 +24,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  northOffset: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const emit = defineEmits(['hex-update', 'seed-toggle']);
@@ -36,17 +40,6 @@ const TERRAIN_TYPES = [
   'woodedSloping',
   'orchard',
   'marsh',
-];
-const HEXSIDE_TYPES = [
-  '',
-  'stream',
-  'road',
-  'pike',
-  'trail',
-  'slope',
-  'extremeSlope',
-  'verticalSlope',
-  'stoneWall',
 ];
 const HEXSIDE_DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
 
@@ -266,21 +259,10 @@ function toggleSeed() {
           <WedgeEditor
             v-if="showWedgeEditor && form.wedgeElevations"
             :wedge-elevations="form.wedgeElevations"
+            :north-offset="northOffset"
             @update:wedge-elevations="onWedgeUpdate"
           />
         </div>
-
-        <fieldset>
-          <legend>Hexsides (legacy)</legend>
-          <div class="hexsides-grid">
-            <label v-for="dir in HEXSIDE_DIRS" :key="dir">
-              {{ dir }}
-              <select v-model="form.hexsides[dir]" @change="emitUpdate">
-                <option v-for="t in HEXSIDE_TYPES" :key="t" :value="t">{{ t || '—' }}</option>
-              </select>
-            </label>
-          </div>
-        </fieldset>
 
         <label class="checkbox-label">
           <input v-model="form.vpHex" type="checkbox" @change="emitUpdate" />
@@ -291,6 +273,19 @@ function toggleSeed() {
           <input v-model="form.entryHex" type="checkbox" @change="emitUpdate" />
           Entry Hex
         </label>
+
+        <label class="checkbox-label" :class="{ 'checkbox-disabled': !canMarkAsSeed }">
+          <input
+            type="checkbox"
+            :checked="isSeedHex"
+            :disabled="!canMarkAsSeed"
+            @change="toggleSeed"
+          />
+          Seed Hex
+        </label>
+        <span v-if="!canMarkAsSeed && selectedHexId" class="seed-hint"
+          >Set terrain and elevation to enable</span
+        >
 
         <label v-if="form.entryHex">
           Side
@@ -309,18 +304,6 @@ function toggleSeed() {
         <div v-if="form.setupUnits.length" class="setup-units">
           <div class="setup-units-label">Setup Units</div>
           <div v-for="u in form.setupUnits" :key="u" class="unit-id">{{ u }}</div>
-        </div>
-
-        <div class="seed-toggle">
-          <button
-            class="seed-btn"
-            :class="{ 'seed-btn--active': isSeedHex }"
-            :disabled="!canMarkAsSeed"
-            @click="toggleSeed"
-          >
-            {{ isSeedHex ? '★ Seed Hex' : '☆ Mark as Seed Hex' }}
-          </button>
-          <span v-if="!canMarkAsSeed" class="seed-hint">Set terrain and elevation to enable</span>
         </div>
       </template>
     </template>
@@ -376,33 +359,15 @@ textarea {
   resize: vertical;
 }
 
-fieldset {
-  border: 1px solid #444;
-  padding: 0.4rem 0.5rem;
-  color: #a09880;
-}
-
-legend {
-  font-size: 0.75rem;
-  padding: 0 0.3rem;
-}
-
-.hexsides-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.4rem;
-  margin-top: 0.3rem;
-}
-
-.hexsides-grid label {
-  font-size: 0.75rem;
-}
-
 .checkbox-label {
   flex-direction: row;
   align-items: center;
   gap: 0.5rem;
   color: #e0d8c8;
+}
+
+.checkbox-disabled {
+  opacity: 0.5;
 }
 
 .setup-units-label {
@@ -523,39 +488,6 @@ legend {
 
 .toggle-wedge-btn:hover {
   background: #3a3a3a;
-}
-
-.seed-toggle {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding-top: 0.4rem;
-  border-top: 1px solid #333;
-}
-
-.seed-btn {
-  padding: 0.3rem 0.6rem;
-  background: #2a3a2a;
-  border: 1px solid #4a7a4a;
-  color: #a0c8a0;
-  cursor: pointer;
-  font-size: 0.85rem;
-  text-align: left;
-}
-
-.seed-btn:hover:not(:disabled) {
-  background: #3a4a3a;
-}
-
-.seed-btn--active {
-  background: #1a4a1a;
-  border-color: #6aaa6a;
-  color: #c0e8c0;
-}
-
-.seed-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
 }
 
 .seed-hint {
