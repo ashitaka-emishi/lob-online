@@ -42,9 +42,9 @@ committed to the repository as a permanent audit trail.
 | ------------------------------------------------------ | ----------------------------------------------------------------------------- |
 | [agents.md](agents.md)                                 | Reference for each agent: purpose, collaborators, owned skills, allowed tools |
 | [skills.md](skills.md)                                 | Reference for each skill: purpose, owning agent, Claude Code usage            |
-| [network-diagram.md](network-diagram.md)               | Mermaid diagrams: agent/skill ownership and skill dependency graph            |
 | [orchestration.md](orchestration.md)                   | Orchestration layer: conductor and agent-teams plugin reference               |
 | [guardrails-and-logging.md](guardrails-and-logging.md) | How the ecosystem enforces quality and maintains an audit trail               |
+| [tutorial-orchestration.md](tutorial-orchestration.md) | Step-by-step: create a conductor track and use agent-teams                    |
 
 ---
 
