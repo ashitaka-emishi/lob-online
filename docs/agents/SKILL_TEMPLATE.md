@@ -39,6 +39,6 @@ AUTHORING RULES (remove this block before committing):
 - After creating the skill:
     1. Add it to `.claude/README.md` skills table under the appropriate category.
     2. Add it to `docs/architecture.md` skills table.
-    3. Add `Skill(<name>)` to `.claude/settings.local.json` permissions.
+    3. Add `Skill(<name>)` to `.claude/settings.json` permissions.
     4. Run `/dev-build` to confirm no lint/format issues.
 -->
