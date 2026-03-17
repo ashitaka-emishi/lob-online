@@ -64,20 +64,20 @@ Add or update Vitest tests for the new helpers before implementing them (TDD).
 
 ### Tasks
 
-- [ ] Task 4.1: Remove any dead code left over from the refactor
-- [ ] Task 4.2: Run `npm run format` and `npm run lint` — fix any issues
+- [x] Task 4.1: Remove any dead code left over from the refactor
+- [x] Task 4.2: Run `npm run format` and `npm run lint` — fix any issues
 
 ### Verification
 
-- [ ] `npm run lint` clean
-- [ ] `npm run format:check` clean
+- [x] `npm run lint` clean
+- [x] `npm run format:check` clean
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met
-- [ ] `npm run test` passes
+- [x] All acceptance criteria in spec.md met
+- [x] `npm run test` passes (367/367)
 - [ ] No regressions in edge click or edge hover in map editor
-- [ ] Ready for `/pr-create`
+- [x] Ready for `/pr-create`
 
 ---
 
