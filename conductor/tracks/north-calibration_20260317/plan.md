@@ -1,0 +1,95 @@
+# Implementation Plan: North Calibration — gridSpec northOffset + Cardinal Edge Labels
+
+**Track ID:** north-calibration_20260317
+**Spec:** [spec.md](./spec.md)
+**Created:** 2026-03-17
+**Status:** [x] Complete
+
+## Overview
+
+Four phases: (1) schema + data foundation, (2) core `getEdgeLabels` utility with tests, (3) `CalibrationControls` visual picker + state propagation, (4) label propagation through `WedgeEditor`, `HexEditPanel`, and `HexMapOverlay`.
+
+---
+
+## Phase 1: Schema & Data Foundation
+
+Add `northOffset` to the gridSpec Zod schema and set the correct value in `map.json`.
+
+### Tasks
+
+- [x] Task 1.1: Add `northOffset: z.number().int().min(0).max(11).optional()` to the `gridSpec` object in `server/src/schemas/map.schema.js`
+- [x] Task 1.2: Add schema tests in `server/src/schemas/map.schema.test.js` covering: `northOffset: 0` valid, `northOffset: 11` valid, `northOffset: 12` rejected, `northOffset: -1` rejected, `northOffset` absent (optional default)
+- [x] Task 1.3: Set `"northOffset": 3` in `gridSpec` in `data/scenarios/south-mountain/map.json`
+
+### Verification
+
+- [x] `npm run test` passes with new schema tests green
+- [x] `npm run validate-data` passes against updated map.json
+
+---
+
+## Phase 2: getEdgeLabels Utility
+
+Implement and test the core geometry utility that maps a northOffset value to a 6-element cardinal direction array for hex edges.
+
+### Tasks
+
+- [x] Task 2.1: Add `export function getEdgeLabels(northOffset)` to `client/src/utils/hexGeometry.js` — base array `['N','NE','SE','S','SW','NW']` for northOffset=0; rotate by deriving the starting edge index from northOffset (each 2 steps = 1 edge, with vertex positions interpolated)
+- [x] Task 2.2: Add unit tests in `client/src/utils/hexGeometry.test.js`: `getEdgeLabels(0)` → `['N','NE','SE','S','SW','NW']`, `getEdgeLabels(3)` → `['W','NW','NE','E','SE','SW']`, `getEdgeLabels(6)` → `['S','SW','NW','N','NE','SE']`; also test all 12 positions produce valid 6-element arrays of known cardinal strings
+
+### Verification
+
+- [x] All `getEdgeLabels` tests pass
+- [x] `npm run test` still green
+
+---
+
+## Phase 3: CalibrationControls Visual Picker
+
+Replace the plain northOffset number input with a visual 12-position hex diagram picker. Ensure the value flows through `calibration-change` and is persisted by `MapEditorView`.
+
+### Tasks
+
+- [x] Task 3.1: In `CalibrationControls.vue`, replace the northOffset `<input type="number">` with a visual SVG or CSS hex picker showing 12 selectable positions (6 edge midpoints + 6 vertices); highlight the currently selected position
+- [x] Task 3.2: Ensure the picker emits northOffset changes via the existing `calibration-change` event with the correct payload shape
+- [x] Task 3.3: Verify `MapEditorView.vue` already handles northOffset in its `calibration-change` handler — add persistence to localStorage and prop propagation to child components if not already present
+- [x] Task 3.4: Add/update tests in `CalibrationControls.test.js`: picker renders 12 positions, clicking a position emits `calibration-change` with correct northOffset value, selected position is highlighted
+
+### Verification
+
+- [x] Visual picker renders and is interactive in the map editor (`npm run dev:map-editor`)
+- [x] Selecting a position updates the value and persists across page reload
+- [x] Component tests pass
+
+---
+
+## Phase 4: Label Propagation
+
+Update `WedgeEditor`, `HexEditPanel`, and `HexMapOverlay` to consume `getEdgeLabels(northOffset)` for all direction labels, and remove the wedge editor toggle from `HexEditPanel`.
+
+### Tasks
+
+- [x] Task 4.1: In `WedgeEditor.vue`, replace fixed `WEDGE_DIRS` array with `getEdgeLabels(northOffset)` (receive `northOffset` as a prop); update `WedgeEditor.test.js` to assert wedge labels show `['W','NW','NE','E','SE','SW']` when northOffset=3
+- [x] Task 4.2: In `HexEditPanel.vue`, replace fixed direction arrays for hexside buttons and slope direction selector with `getEdgeLabels(northOffset)` (receive `northOffset` as a prop); remove the "Show/Hide Wedge Editor" toggle and always render `WedgeEditor` when the selected hex has wedge elevations; update `HexEditPanel.test.js` with cardinal label tests and always-visible wedge editor test
+- [x] Task 4.3: In `HexMapOverlay.vue`, resolve slope direction index through `getEdgeLabels(northOffset)` before rendering slope arrows (receive `northOffset` as a prop); update `HexMapOverlay.test.js` to assert slope index 0 with northOffset=3 renders an arrow toward the W edge
+
+### Verification
+
+- [x] All component tests pass
+- [x] `npm run test` fully green
+- [x] In map editor with northOffset=3: wedge labels, hexside labels, slope labels all show correct SM cardinals (W/NW/NE/E/SE/SW)
+
+---
+
+## Final Verification
+
+- [x] All acceptance criteria in spec.md met
+- [x] `npm run lint` passes
+- [x] `npm run format:check` passes
+- [x] `npm run test` passes with ≥70% coverage (76.77%)
+- [x] `npm run validate-data` passes
+- [x] Ready for `/team-review`
+
+---
+
+_Generated by Conductor. Tasks will be marked [~] in progress and [x] complete._

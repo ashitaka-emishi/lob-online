@@ -23,9 +23,9 @@
 
 ---
 
-> **Implementation Status (as of 2026-03-16)**
+> **Implementation Status (as of 2026-03-17)**
 >
-> **Completed:** tech stack selection, server scaffold (Express + Socket.io), data models (all four JSON files), Zod validation schemas, Vitest test suites (server + client), ESLint/Prettier configuration, GitHub Actions CI pipeline, map editor dev tool (terrain paint, elevation, edge features, slope, wedge elevations, layer system, LOS test panel, localStorage autosave, engine export, versioned server backups, offline fallback, push/pull sync UX with confirmation dialogs), scenario editor dev tool (turn structure, lighting schedule, rules fields — same push/pull sync pattern), extended `scenario.json` with lighting schedule and rules fields.
+> **Completed:** tech stack selection, server scaffold (Express + Socket.io), data models (all four JSON files), Zod validation schemas, Vitest test suites (server + client), ESLint/Prettier configuration, GitHub Actions CI pipeline, map editor dev tool (terrain paint, elevation, edge features, slope, wedge elevations, layer system, LOS test panel, localStorage autosave, engine export, versioned server backups, offline fallback, push/pull sync UX with confirmation dialogs, northOffset calibration with 12-position visual picker and cardinal edge labels), scenario editor dev tool (turn structure, lighting schedule, rules fields — same push/pull sync pattern), extended `scenario.json` with lighting schedule and rules fields.
 >
 > **In progress:** terrain data digitization (ongoing field entry for South Mountain map hexes).
 >
