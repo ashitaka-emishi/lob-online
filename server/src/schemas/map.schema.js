@@ -26,10 +26,17 @@ const EdgeFeature = z.object({
 const HexEntry = z.object({
   hex: HexId,
   terrain: TerrainType,
-  elevation: z.number().optional(),
+  elevation: z.number().int().min(0).max(21).optional(),
   slope: z.number().int().min(0).max(5).optional(),
   wedgeElevations: z
-    .tuple([z.number(), z.number(), z.number(), z.number(), z.number(), z.number()])
+    .tuple([
+      z.number().int(),
+      z.number().int(),
+      z.number().int(),
+      z.number().int(),
+      z.number().int(),
+      z.number().int(),
+    ])
     .optional(),
   hexsides: z.record(z.string(), z.string()).optional(),
   edges: z.record(z.enum(['N', 'NE', 'SE', 'S', 'SW', 'NW']), z.array(EdgeFeature)).optional(),
@@ -76,6 +83,8 @@ export const MapSchema = z.object({
   edgeFeatureTypes: z.array(z.string()).optional(),
   elevationSystem: z
     .object({
+      baseElevation: z.number(),
+      elevationLevels: z.number().int().positive(),
       contourInterval: z.number(),
       unit: z.string(),
       verticalSlopesImpassable: z.boolean(),
