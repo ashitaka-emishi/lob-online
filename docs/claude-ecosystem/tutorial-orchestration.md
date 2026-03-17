@@ -139,7 +139,7 @@ Gracefully signals all agents to wrap up, collects final results, and cleans up 
 **Scenario:** Implement movement cost lookup for RSS trails.
 
 1. Check if the feature touches game rules:
-   - Yes — invoke `rules-lawyer` first: "What movement cost does LOB_RULES assign to RSS
+   - Yes — invoke `domain-expert` first: "What movement cost does LOB_RULES assign to RSS
      trail hexsides? Do SM_RULES or errata override this?"
    - Record the ruling in your notes.
 
@@ -149,7 +149,7 @@ Gracefully signals all agents to wrap up, collects final results, and cleans up 
    /conductor:new-track
    ```
 
-   Describe the feature; paste the rules-lawyer ruling into the spec when prompted.
+   Describe the feature; paste the domain-expert ruling into the spec when prompted.
 
 3. Implement:
 

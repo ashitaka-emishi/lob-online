@@ -36,10 +36,10 @@ quality gate.
 | Agent             | Description                                                       | Primary Skills                                       | Collaborators                    |
 | ----------------- | ----------------------------------------------------------------- | ---------------------------------------------------- | -------------------------------- |
 | `devops`          | Build, run, and test the dev environment                          | `/dev-build`, `/dev-start`, `/dev-stop`, `/dev-test` | —                                |
-| `project-manager` | Manage SDLC: issues → milestones → backlog                        | `/issue-start`, `/issue-branch`, `/issue-implement`  | `issue-intake`, `rules-lawyer`   |
-| `issue-intake`    | Guide issue creation: gather → refine → file issue (no branch/PR) | `/issue-intake`                                      | `rules-lawyer` (rules gate)      |
+| `project-manager` | Manage SDLC: issues → milestones → backlog                        | `/issue-start`, `/issue-branch`, `/issue-implement`  | `issue-intake`, `domain-expert`   |
+| `issue-intake`    | Guide issue creation: gather → refine → file issue (no branch/PR) | `/issue-intake`                                      | `domain-expert` (rules gate)      |
 | `code-review`     | Quality-gate PR reviews and codebase audits                       | `/pr-review`, `/code-assess`                         | `devops` skills as prerequisites |
-| `rules-lawyer`    | Authoritative LoB v2.0 rules arbiter                              | none                                                 | Consulted by `issue-intake`      |
+| `domain-expert`    | Authoritative LoB v2.0 rules arbiter                              | none                                                 | Consulted by `issue-intake`      |
 
 ```mermaid
 graph TD
@@ -61,7 +61,7 @@ graph TD
     pr-review
     code-assess
   end
-  rl[rules-lawyer agent — no skills]
+  rl[domain-expert agent — no skills]
   subgraph standalone[unowned skills]
     design
     doc-sync
@@ -90,7 +90,7 @@ graph TD
 | `/dev-stop`                | dev      | Graceful shutdown, SIGKILL fallback                | devops          | —                                                                                                                                                                                       |
 | `/dev-test`                | dev      | Run suite, detect flakes, correlate errors         | devops          | —                                                                                                                                                                                       |
 | `/design`                  | issue    | Gather intent → draft design doc → commit + PR     | unowned         | —                                                                                                                                                                                       |
-| `/issue-intake`            | issue    | Gather → refine → HCP → file issue (no branch/PR)  | issue-intake    | `rules-lawyer`                                                                                                                                                                          |
+| `/issue-intake`            | issue    | Gather → refine → HCP → file issue (no branch/PR)  | issue-intake    | `domain-expert`                                                                                                                                                                          |
 | `/issue-start`             | issue    | Fetch issue, summarise ACs, HCP 1                  | project-manager | —                                                                                                                                                                                       |
 | `/issue-branch`            | issue    | Create feat branch, log update                     | project-manager | —                                                                                                                                                                                       |
 | `/issue-implement`         | issue    | Full ticket-to-merge orchestrator                  | project-manager | `/issue-start`, `/issue-branch`, `/doc-sync`, `/ecosystem-docs-generate`, `/dev-build`, `/dev-test`, `/dev-start`, `/dev-stop`, `/pr-create`, `/pr-review`, `/pr-merge`, `/issue-close` |

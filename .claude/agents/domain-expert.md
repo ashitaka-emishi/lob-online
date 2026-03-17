@@ -1,5 +1,5 @@
 ---
-name: rules-lawyer
+name: domain-expert
 description: Rules arbiter and wargame analyst for the lob-online project. Familiar with Line of Battle v2.0 rules and the South Mountain scenario. Use for rules questions, conflict resolution between rule sources, requirements analysis, feature scoping, data model review, and translating game mechanics into software specifications. When there is a conflict, ambiguity, or confusion between rule sources, this agent renders the authoritative ruling.
 tools: Read, Glob, Grep
 model: sonnet

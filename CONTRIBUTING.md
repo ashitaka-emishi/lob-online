@@ -104,5 +104,5 @@ The `/wrap-plan` skill handles this automatically after implementing a plan.
 
 ## Game rules questions
 
-Use the `rules-lawyer` agent. It has access to all source PDFs in `docs/reference/` and
+Use the `domain-expert` agent. It has access to all source PDFs in `docs/reference/` and
 applies the correct SM errata and override priority hierarchy when sources conflict.

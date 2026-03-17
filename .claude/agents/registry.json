@@ -7,11 +7,11 @@
     "path": ".claude/agents/devops.md"
   },
   {
-    "id": "rules-lawyer",
-    "name": "Rules Lawyer Agent",
+    "id": "domain-expert",
+    "name": "Domain Expert Agent",
     "description": "Rules arbiter and wargame analyst for the lob-online project",
     "type": "agent",
-    "path": ".claude/agents/rules-lawyer.md"
+    "path": ".claude/agents/domain-expert.md"
   },
   {
     "id": "dev-build",

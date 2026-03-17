@@ -57,8 +57,8 @@ A `devops` agent and four skills automate the build/run/test cycle. See `docs/ag
 - `/dev-stop` — graceful shutdown with 10 s SIGKILL fallback
 - `/dev-test` — run suite, snapshot results to `test-results/`, detect flaky tests, correlate server errors
 
-For rules questions, errata, and SM-specific overrides, use the `rules-lawyer` agent.
-See `docs/agents/rules-lawyer/design.md` for the full spec.
+For rules questions, errata, and SM-specific overrides, use the `domain-expert` agent.
+See `docs/agents/domain-expert/design.md` for the full spec.
 
 The **four-phase SDLC lifecycle** is documented in `.claude/rules/sdlc.md`.
 
@@ -112,7 +112,7 @@ Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `.env` (or your shell) to enable
 | Parallel dev        | `/team-feature`                          |
 
 **Lob-specific extensions** (retained; no plugin equivalent):
-`rules-lawyer`, `devops`, `/dev-build`, `/dev-start`, `/dev-stop`, `/dev-test`,
+`domain-expert`, `devops`, `/dev-build`, `/dev-start`, `/dev-stop`, `/dev-test`,
 `/pr-create`, `/pr-merge`, `/issue-close`,
 `/doc-sync`, `/ecosystem-docs-generate`, `/design`, `/plan-wrap`.
 

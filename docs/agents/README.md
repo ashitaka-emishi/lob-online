@@ -13,7 +13,7 @@ the lob-online project. Each agent has its own subdirectory with two files:
 | `devops`          | [design.md](devops/design.md)          | Build, start, stop, and test the lob-online system              |
 | `project-manager` | [design.md](project-manager/design.md) | Manage the SDLC via GitHub issues and milestones                |
 | `code-review`     | [design.md](code-review/design.md)     | Quality-gate PR reviews and full codebase assessments           |
-| `rules-lawyer`    | [design.md](rules-lawyer/design.md)    | Rules arbiter and wargame analyst for LoB v2.0 / South Mountain |
+| `domain-expert`    | [design.md](domain-expert/design.md)    | Rules arbiter and wargame analyst for LoB v2.0 / South Mountain |
 
 ## Templates
 

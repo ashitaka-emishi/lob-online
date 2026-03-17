@@ -17,7 +17,7 @@ main Claude Code session spawns agents using the `Agent` tool.
 | `project-manager` | `agents/project-manager.md` | File well-formed GitHub issues, assign milestones, audit backlog against HLD                     |
 | `issue-intake`    | `agents/issue-intake.md`    | Guide issue creation with branch/PR lifecycle: open branch → refine → file → commit → PR → merge |
 | `code-review`     | `agents/code-review.md`     | Review PRs for coding standards, test coverage, dead code, and defects                           |
-| `rules-lawyer`    | `agents/rules-lawyer.md`    | Authoritative rulings on LoB v2.0 rules, SM errata, and rule-source conflicts                    |
+| `domain-expert`    | `agents/domain-expert.md`    | Authoritative rulings on LoB v2.0 rules, SM errata, and rule-source conflicts                    |
 
 Full design specifications for each agent live in `docs/agents/<name>/design.md`.
 

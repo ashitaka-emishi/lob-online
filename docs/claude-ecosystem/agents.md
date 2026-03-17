@@ -36,7 +36,7 @@ or run the test suite.
 
 ---
 
-## `rules-lawyer`
+## `domain-expert`
 
 **Purpose:** Read-only rules arbiter and wargame analyst for lob-online. Consult source
 PDFs, apply the priority hierarchy, and render authoritative rulings on rules questions,
@@ -49,4 +49,4 @@ question touching game mechanics, movement, LOS, combat, morale, orders, or arti
 
 **Owned skills:** none (invoked directly; consulted by the issue-intake workflow)
 
-**Design spec:** `docs/agents/rules-lawyer/design.md`
+**Design spec:** `docs/agents/domain-expert/design.md`

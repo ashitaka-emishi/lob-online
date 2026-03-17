@@ -1,8 +1,8 @@
-# Rules-Lawyer Agent Design
+# Domain-Expert Agent Design
 
 ## 1. Overview
 
-The `rules-lawyer` agent is the read-only rules arbiter and wargame analyst for lob-online. It
+The `domain-expert` agent is the read-only rules arbiter and wargame analyst for lob-online. It
 consults the primary source documents, applies the priority hierarchy, and renders authoritative
 rulings on rules questions, source conflicts, data model correctness, and feature scope.
 
@@ -104,11 +104,11 @@ an opinion; check field presence, types, enum values, errata application, and SM
 
 ## 4. Agent Definition
 
-**File:** `.claude/agents/rules-lawyer.md`
+**File:** `.claude/agents/domain-expert.md`
 
 ```yaml
 ---
-name: rules-lawyer
+name: domain-expert
 description: Rules arbiter and wargame analyst for the lob-online project. Familiar with Line of Battle v2.0 rules and the South Mountain scenario. Use for rules questions, conflict resolution between rule sources, requirements analysis, feature scoping, data model review, and translating game mechanics into software specifications. When there is a conflict, ambiguity, or confusion between rule sources, this agent renders the authoritative ruling.
 tools: Read, Glob, Grep
 ---
@@ -138,13 +138,13 @@ tools: Read, Glob, Grep
 - `docs/reference/sm-rules.pdf` — South Mountain scenario rules
 - `docs/reference/sm-errata.pdf` — official corrections
 - `data/scenarios/south-mountain/` — all four data files
-- `docs/agents/rules-lawyer/design.md` — full design spec for this agent
+- `docs/agents/domain-expert/design.md` — full design spec for this agent
 
 ---
 
 ## 5. Implementation Checklist
 
-- [x] `.claude/agents/rules-lawyer.md` — agent definition
-- [x] `docs/agents/rules-lawyer/prompt.md`
-- [x] `docs/agents/rules-lawyer/design.md`
+- [x] `.claude/agents/domain-expert.md` — agent definition
+- [x] `docs/agents/domain-expert/prompt.md`
+- [x] `docs/agents/domain-expert/design.md`
 - [x] `CLAUDE.md` updated

@@ -55,18 +55,18 @@ locally before pushing catches failures in seconds rather than waiting for CI to
 
 ---
 
-## 3. Rules-Lawyer Gate
+## 3. Domain-Expert Gate
 
 Any GitHub issue that touches game mechanics, movement, line of sight (LOS), combat, morale,
 orders, artillery, or the four data model files (`map.json`, `oob.json`, `leaders.json`,
-`scenario.json`) must be reviewed by the `rules-lawyer` agent before acceptance criteria are
+`scenario.json`) must be reviewed by the `domain-expert` agent before acceptance criteria are
 finalised.
 
 The `/issue-intake` skill (now superseded by `/conductor:new-track`) enforced this gate;
-when using conductor, the engineer should manually invoke the `rules-lawyer` agent before
+when using conductor, the engineer should manually invoke the `domain-expert` agent before
 finalising acceptance criteria on any game-logic track.
 
-The record looks like: _"rules-lawyer consulted on 2026-03-14: SM_RULES §4.2 takes precedence
+The record looks like: _"domain-expert consulted on 2026-03-14: SM_RULES §4.2 takes precedence
 over LOB_RULES §7.1 for trail movement costs."_
 
 **Why?** lob-online implements a published board wargame. Getting the rules wrong in the

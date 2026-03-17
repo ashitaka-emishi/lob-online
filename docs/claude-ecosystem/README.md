@@ -25,7 +25,7 @@ engineer runs `/design`. The skill gathers the intent, infers the component type
 `docs/designs/{slug}.md` from the canonical template, iterates until the engineer approves,
 then commits on `design/{slug}` and opens a PR. **Track creation:** the engineer invokes
 `/conductor:new-track` to scope the work into a tracked implementation plan with a spec and
-phased tasks. The `rules-lawyer` agent is consulted automatically if the feature touches
+phased tasks. The `domain-expert` agent is consulted automatically if the feature touches
 game mechanics. **Implementation:** `/conductor:implement` executes tasks within the track,
 following TDD workflow. After implementation, `/doc-sync` and `/ecosystem-docs-generate`
 update project documentation, then `devops` runs build and tests. **Review and merge:**
