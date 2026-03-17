@@ -38,17 +38,13 @@ committed to the repository as a permanent audit trail.
 
 ## Contents
 
-| Document                                               | What it covers                                                                  |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| [agents.md](agents.md)                                 | Reference for each agent: purpose, collaborators, owned skills, allowed tools   |
-| [skills.md](skills.md)                                 | Reference for each skill: purpose, owning agent, Claude Code usage              |
-| [network-diagram.md](network-diagram.md)               | Mermaid diagrams: agent/skill ownership and skill dependency graph              |
-| [orchestration.md](orchestration.md)                   | Orchestration layer: conductor and agent-teams plugin reference                 |
-| [guardrails-and-logging.md](guardrails-and-logging.md) | How the ecosystem enforces quality and maintains an audit trail                 |
-| [blog.md](blog.md)                                     | Introductory post: why lob-online uses an agent ecosystem                       |
-| [tutorial-new-agent.md](tutorial-new-agent.md)         | Step-by-step: create a new agent from scratch, with worked example              |
-| [tutorial-modify-agent.md](tutorial-modify-agent.md)   | Step-by-step: modify an existing agent; why design.md §4 is the source of truth |
-| [tutorial-orchestration.md](tutorial-orchestration.md) | Step-by-step: create a conductor track and use agent-teams                      |
+| Document                                               | What it covers                                                                |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| [agents.md](agents.md)                                 | Reference for each agent: purpose, collaborators, owned skills, allowed tools |
+| [skills.md](skills.md)                                 | Reference for each skill: purpose, owning agent, Claude Code usage            |
+| [network-diagram.md](network-diagram.md)               | Mermaid diagrams: agent/skill ownership and skill dependency graph            |
+| [orchestration.md](orchestration.md)                   | Orchestration layer: conductor and agent-teams plugin reference               |
+| [guardrails-and-logging.md](guardrails-and-logging.md) | How the ecosystem enforces quality and maintains an audit trail               |
 
 ---
 
