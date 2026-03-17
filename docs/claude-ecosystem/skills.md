@@ -210,15 +210,17 @@ git checkout -b feat/<number>-<slug>
 ### `/issue-implement`
 
 **Purpose:** Orchestrate the full ticket-to-merge workflow. Sequences `/issue-start`,
-`/issue-branch`, implementation, `/dev-build`, `/dev-test`, `/pr-create`, `/pr-review`,
-`/pr-merge`, and `/issue-close` with human control points at each consequential gate.
+`/issue-branch`, implementation, `/doc-sync`, `/ecosystem-docs-generate`, `/dev-build`,
+`/dev-test`, `/dev-start`, `/dev-stop`, `/pr-create`, `/pr-review`, `/pr-merge`, and
+`/issue-close` with human control points at each consequential gate.
 
 **Owning agent:** `project-manager`
 
 **Human control points:**
 
 - **HCP 1** — approve implementation plan before branch creation
-- **HCP 2** — approve push after build + test pass
+- **HCP 2a** — review the running editor in the browser; approve or provide fix feedback
+- **HCP 2** — approve doc-sync/build/test results before push
 - **HCP 2b** — triage PR review findings (fix all / fix errors only / accept)
 - **HCP 3** — approve final merge
 - **HCP 4** — confirm closing the GitHub issue after merge
@@ -452,6 +454,30 @@ through `design.md` and agent files; run `/dev-build` to verify.
 ---
 
 ## Documentation Skills
+
+### `/doc-sync`
+
+**Purpose:** Sync `CLAUDE.md`, `docs/high-level-design.md`, and `docs/agents/*/design.md`
+to match code changes on the current branch. Diff-driven: only inspects and updates docs
+relevant to what changed.
+
+**Owning agent:** unowned
+
+**Claude Code:**
+
+```
+/doc-sync
+```
+
+**Manual equivalent:**
+
+```bash
+git diff --name-only origin/master...HEAD
+# For each changed file, grep doc files for stale references
+# Apply targeted edits; run npx prettier --write on modified docs
+```
+
+---
 
 ### `/ecosystem-docs-generate`
 

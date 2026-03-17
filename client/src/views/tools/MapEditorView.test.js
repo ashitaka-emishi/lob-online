@@ -21,6 +21,7 @@ vi.mock('../../components/HexMapOverlay.vue', () => ({
       'layers',
       'editorMode',
       'paintTerrain',
+      'seedHexIds',
     ],
     emits: ['hex-click', 'hex-mouseenter', 'hex-mouseleave', 'edge-click', 'edge-hover'],
   },
@@ -30,8 +31,15 @@ vi.mock('../../components/HexEditPanel.vue', () => ({
   default: {
     name: 'HexEditPanel',
     template: '<div class="hex-edit-panel-stub"></div>',
-    props: ['hex', 'selectedHexId', 'hexFeatureTypes', 'edgeFeatureTypes'],
-    emits: ['hex-update'],
+    props: [
+      'hex',
+      'selectedHexId',
+      'hexFeatureTypes',
+      'edgeFeatureTypes',
+      'isSeedHex',
+      'northOffset',
+    ],
+    emits: ['hex-update', 'seed-toggle'],
   },
 }));
 
@@ -380,39 +388,43 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 
-  it('push confirmation dialog shown when server data is newer than local draft', async () => {
+  it('no push confirmation dialog when no unsaved changes, even if server has newer timestamp', async () => {
     const serverMap = { ...VALID_MAP, _savedAt: 2000 };
-    const localDraft = { ...VALID_MAP, _savedAt: 1000 };
-    vi.stubGlobal('localStorage', {
-      getItem: vi.fn((key) => {
-        if (key === MAP_DRAFT_KEY) return JSON.stringify(localDraft);
-        return null;
-      }),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-    });
-    vi.stubGlobal('fetch', mockFetch(serverMap));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(serverMap) })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ ok: true, _savedAt: 3000 }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
 
-    const saveBtn = wrapper.find('button.save-btn');
-    await saveBtn.trigger('click');
+    await wrapper.find('button.save-btn').trigger('click');
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Server data is newer');
+    // No confirmation dialog — push proceeds directly when nothing is unsaved
+    expect(wrapper.text()).not.toContain('Server data is newer');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     wrapper.unmount();
   });
 
-  it('push confirmation → Overwrite → PUT fires', async () => {
+  it('push confirmation → Overwrite → PUT fires when unsaved and server is newer', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(1500); // Date.now() = 1500 < serverMap._savedAt=2000
+
     const serverMap = { ...VALID_MAP, _savedAt: 2000 };
-    const localDraft = { ...VALID_MAP, _savedAt: 1000 };
+    const store = {};
     vi.stubGlobal('localStorage', {
-      getItem: vi.fn((key) => {
-        if (key === MAP_DRAFT_KEY) return JSON.stringify(localDraft);
-        return null;
+      getItem: vi.fn((key) => store[key] ?? null),
+      setItem: vi.fn((key, val) => {
+        store[key] = val;
       }),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
+      removeItem: vi.fn((key) => {
+        delete store[key];
+      }),
     });
     const fetchMock = vi
       .fn()
@@ -420,11 +432,18 @@ describe('MapEditorView', () => {
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ ok: true, _savedAt: Date.now() }),
+        json: () => Promise.resolve({ ok: true, _savedAt: 3000 }),
       });
     vi.stubGlobal('fetch', fetchMock);
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
+    // serverSavedAt = 2000; Date.now() = 1500
+
+    // Emit a hex-update to set unsaved=true (saveMapDraft stores draft with _savedAt=1500)
+    const hexEditPanel = wrapper.findComponent({ name: 'HexEditPanel' });
+    await hexEditPanel.vm.$emit('hex-update', { hex: '01.01', terrain: 'woods' });
+    await flushPromises();
+    // unsaved=true, localDraftSavedAt=1500 < serverSavedAt=2000 → dialog should appear
 
     await wrapper.find('button.save-btn').trigger('click');
     await flushPromises();
@@ -434,6 +453,7 @@ describe('MapEditorView', () => {
     await flushPromises();
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
     wrapper.unmount();
   });
 
@@ -448,6 +468,75 @@ describe('MapEditorView', () => {
 
     expect(wrapper.text()).not.toContain('Discard local changes');
     expect(fetchMock).toHaveBeenCalledTimes(2);
+    wrapper.unmount();
+  });
+
+  it('opening one accordion panel closes any previously open panel', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    // hexEdit is open by default — HexEditPanel stub should be rendered
+    expect(wrapper.find('.hex-edit-panel-stub').exists()).toBe(true);
+
+    // Click the Grid Calibration header to open it
+    const headers = wrapper.findAll('button.accordion-header');
+    const calHeader = headers.find((h) => h.text().includes('Grid Calibration'));
+    await calHeader.trigger('click');
+    await flushPromises();
+
+    // hexEdit panel should now be closed
+    expect(wrapper.find('.hex-edit-panel-stub').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it('top bar displays active tool name when a panel is open', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    // hexEdit is open by default
+    const activeTool = wrapper.find('.active-tool');
+    expect(activeTool.exists()).toBe(true);
+    expect(activeTool.text()).toContain('Hex Edit');
+    wrapper.unmount();
+  });
+
+  it('Hex Edit accordion header always reads "Hex Edit"', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    const headers = wrapper.findAll('button.accordion-header');
+    const hexEditHeader = headers.find((h) => h.text().includes('Hex Edit'));
+    expect(hexEditHeader).toBeTruthy();
+    // Should not contain a dynamic hex ID — just the fixed label
+    expect(hexEditHeader.text()).not.toMatch(/Hex \d{2}\.\d{2}/);
+    wrapper.unmount();
+  });
+
+  it('onSeedToggle toggles a seed hex off when already in the set', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    const hexEditPanel = wrapper.findComponent({ name: 'HexEditPanel' });
+    // Toggle on
+    await hexEditPanel.vm.$emit('seed-toggle', {
+      hexId: '01.01',
+      confirmedData: { terrain: 'clear', elevation: 1 },
+    });
+    await flushPromises();
+    // Toggle off
+    await hexEditPanel.vm.$emit('seed-toggle', {
+      hexId: '01.01',
+      confirmedData: { terrain: 'clear', elevation: 1 },
+    });
+    await flushPromises();
+
+    // After toggling off, seed-hex-ids prop passed to HexMapOverlay should not contain '01.01'
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    expect(overlay.props('seedHexIds')).not.toContain('01.01');
     wrapper.unmount();
   });
 

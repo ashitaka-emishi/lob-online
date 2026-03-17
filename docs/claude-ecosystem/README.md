@@ -28,14 +28,17 @@ template, iterates until the engineer approves, then commits on `design/{slug}` 
 PR. **Intake:** the engineer invokes `/issue-intake`, which gathers the raw requirement,
 refines the issue draft iteratively, consults `rules-lawyer` if the feature touches game
 mechanics, and waits for explicit approval before calling `gh issue create` (HCP 1). No
-branch or PR is created — the filed issue is the record. **Implementation:** `/issue-implement`
-is invoked. The `project-manager` agent fetches the issue, proposes a plan, and presents HCP 1
-before any code is written. After implementation, `devops` runs build and tests, and the
-engineer approves the push (HCP 2). **Review and merge:** `/pr-review` runs inside
-`code-review` scope and surfaces findings (HCP 2b). `/pr-merge` runs a final CI check and
-squash-merges after explicit engineer approval (HCP 3). The issue is closed after a final
-confirmation (HCP 4). The entire session is recorded in a structured ailog file committed to
-the repository as a permanent audit trail.
+branch or PR is created — the filed issue is the record.
+
+**Implementation:** `/issue-implement` is invoked. The `/issue-start` skill fetches the
+issue, proposes a plan, and presents HCP 1 before any code is written. After implementation,
+`/doc-sync` and `/ecosystem-docs-generate` update project documentation, then `devops` runs
+build and tests. The engineer reviews the running editor (HCP 2a) and approves the push
+(HCP 2). **Review and merge:** `/pr-review` runs inside `code-review` scope and surfaces
+findings (HCP 2b). `/pr-merge` runs a final CI check and squash-merges after explicit
+engineer approval (HCP 3). The issue is closed after a final confirmation (HCP 4). The
+entire session is recorded in a structured ailog file committed to the repository as a
+permanent audit trail.
 
 ---
 
@@ -46,12 +49,12 @@ the repository as a permanent audit trail.
 | [agents.md](agents.md)                                 | Reference for each agent: purpose, collaborators, owned skills, allowed tools         |
 | [skills.md](skills.md)                                 | Reference for each skill: purpose, owning agent, Claude Code usage, manual equivalent |
 | [network-diagram.md](network-diagram.md)               | Mermaid diagrams: agent/skill ownership and skill dependency graph                    |
-| [orchestration.md](orchestration.md)                   | Workflow engine reference: schemas, runtime, all three workflow definitions           |
+| [orchestration.md](orchestration.md)                   | Workflow engine reference: schemas, runtime, all four workflow definitions            |
 | [guardrails-and-logging.md](guardrails-and-logging.md) | How the ecosystem enforces quality and maintains an audit trail                       |
+| [blog.md](blog.md)                                     | Introductory post: why lob-online uses an agent ecosystem and how the guardrails work |
 | [tutorial-new-agent.md](tutorial-new-agent.md)         | Step-by-step: create a new agent from scratch, with worked example                    |
 | [tutorial-modify-agent.md](tutorial-modify-agent.md)   | Step-by-step: modify an existing agent; why design.md §4 is the source of truth       |
 | [tutorial-orchestration.md](tutorial-orchestration.md) | Step-by-step: create a workflow definition, states doc, and registry entries          |
-| [blog.md](blog.md)                                     | Introductory post: why lob-online uses an agent ecosystem and how the guardrails work |
 
 ---
 
@@ -83,9 +86,10 @@ then run `gh issue create`.
 
 Manual: run `gh issue view <number>` to read the issue and draft an implementation plan.
 Review the AC checklist and confirm your approach before writing any code. Create the branch
-with `git checkout -b feat/<number>-<slug>`. Implement all ACs, then run
-`npm run lint && npm run format:check && npm test`. Open a PR with `gh pr create`, get a
-review pass, and squash-merge with `gh pr merge --squash --delete-branch` when approved.
+with `git checkout -b feat/<number>-<slug>`. Implement all ACs, then run `/doc-sync` and
+`/ecosystem-docs-generate`. Run `npm run lint && npm run format:check && npm test`. Open a PR
+with `gh pr create`, get a review pass, and squash-merge with
+`gh pr merge --squash --delete-branch` when approved.
 
 ### Build, lint, and format check
 

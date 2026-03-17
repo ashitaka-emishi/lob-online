@@ -313,7 +313,7 @@ the new files.
 ## Worked Example: `issue-intake` workflow
 
 The `issue-intake` workflow at
-`docs/workflows/issue-intake/issue-intake.workflow.json` is the simplest of the three
+`docs/workflows/issue-intake/issue-intake.workflow.json` is the simplest of the four
 lob-online workflows. Here is how each step of this tutorial applied:
 
 **Step 1 — Plan:**

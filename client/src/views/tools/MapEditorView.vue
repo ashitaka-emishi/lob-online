@@ -8,6 +8,12 @@ import EditorToolbar from '../../components/EditorToolbar.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import { adjacentHexId } from '../../utils/hexGeometry.js';
 
+const PANEL_DISPLAY_NAMES = {
+  calibration: 'Grid Calibration',
+  hexEdit: 'Hex Edit',
+  losTest: 'LOS Test',
+};
+
 const STORAGE_KEY = 'lob-map-editor-calibration-v4';
 const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
 const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
@@ -26,6 +32,7 @@ const DEFAULT_CALIBRATION = {
   orientation: 'flat',
   strokeWidth: 0.5,
   evenColUp: false,
+  northOffset: 0,
 };
 
 function loadCalibration() {
@@ -44,6 +51,9 @@ const showExportOverlay = ref(false);
 
 // Accordion: only one panel open at a time
 const openPanel = ref('hexEdit'); // 'calibration' | 'hexEdit' | 'losTest' | null
+const activeToolName = computed(() =>
+  openPanel.value ? (PANEL_DISPLAY_NAMES[openPanel.value] ?? openPanel.value) : null
+);
 
 function togglePanel(name) {
   openPanel.value = openPanel.value === name ? null : name;
@@ -258,6 +268,18 @@ const vpHexIds = computed(() => {
   return (mapData.value.vpHexes ?? []).map((v) => v.hex);
 });
 
+// ── Seed hex IDs ──────────────────────────────────────────────────────────────
+
+const seedHexIds = ref(new Set());
+const seedHexIdsArray = computed(() => [...seedHexIds.value]);
+
+function onSeedToggle({ hexId }) {
+  const s = new Set(seedHexIds.value);
+  if (s.has(hexId)) s.delete(hexId);
+  else s.add(hexId);
+  seedHexIds.value = s;
+}
+
 // ── Terrain + edge feature type lists ────────────────────────────────────────
 
 const terrainTypes = computed(() => {
@@ -276,7 +298,12 @@ const selectedHexId = ref(null);
 
 const selectedHex = computed(() => {
   if (!selectedHexId.value || !mapData.value) return null;
-  return mapData.value.hexes.find((h) => h.hex === selectedHexId.value) ?? null;
+  return (
+    mapData.value.hexes.find((h) => h.hex === selectedHexId.value) ?? {
+      hex: selectedHexId.value,
+      terrain: 'unknown',
+    }
+  );
 });
 
 // ── LOS pick mode ─────────────────────────────────────────────────────────────
@@ -470,7 +497,7 @@ async function save() {
   } catch (_) {
     /* ignore */
   }
-  if (serverSavedAt.value > localDraftSavedAt) {
+  if (unsaved.value && serverSavedAt.value > localDraftSavedAt) {
     showPushConfirm.value = true;
     return;
   }
@@ -504,6 +531,7 @@ onUnmounted(() => {
     <header class="editor-header">
       <span class="title">Map Editor</span>
       <span v-if="selectedHexId" class="selected-hex">Hex: {{ selectedHexId }}</span>
+      <span v-if="activeToolName" class="active-tool">| Tool: {{ activeToolName }}</span>
       <span class="spacer" />
       <span v-if="saveStatus === 'saved'" class="save-flash">Saved</span>
       <span v-if="saveStatus === 'error'" class="save-error">Error</span>
@@ -545,12 +573,10 @@ onUnmounted(() => {
       :layers="layers"
       :terrain-types="terrainTypes"
       :edge-feature-types="edgeFeatureTypes"
-      :has-map-data="!!mapData"
       @mode-change="editorMode = $event"
       @terrain-change="paintTerrain = $event"
       @edge-feature-change="paintEdgeFeature = $event"
       @layer-change="layers = $event"
-      @export-click="showExportOverlay = true"
     />
 
     <!-- Load / validation errors -->
@@ -603,6 +629,7 @@ onUnmounted(() => {
             :layers="layers"
             :editor-mode="editorMode"
             :paint-terrain="paintTerrain"
+            :seed-hex-ids="seedHexIdsArray"
             @hex-click="onHexClick"
             @hex-mouseenter="onHexMouseenter"
             @edge-click="onEdgeClick"
@@ -633,7 +660,7 @@ onUnmounted(() => {
           :class="{ 'accordion-flex': openPanel === 'hexEdit' }"
         >
           <button class="accordion-header" @click="togglePanel('hexEdit')">
-            <span>{{ selectedHexId ? `Hex ${selectedHexId}` : 'Hex Edit' }}</span>
+            <span>Hex Edit</span>
             <span class="accordion-chevron">{{ openPanel === 'hexEdit' ? '▾' : '▸' }}</span>
           </button>
           <div v-if="openPanel === 'hexEdit'" class="accordion-hex-content">
@@ -642,7 +669,10 @@ onUnmounted(() => {
               :selected-hex-id="selectedHexId"
               :hex-feature-types="mapData?.hexFeatureTypes ?? []"
               :edge-feature-types="edgeFeatureTypes"
+              :is-seed-hex="selectedHexId ? seedHexIds.has(selectedHexId) : false"
+              :north-offset="calibration.northOffset ?? 0"
               @hex-update="onHexUpdate"
+              @seed-toggle="onSeedToggle"
             />
           </div>
         </div>
@@ -742,6 +772,11 @@ onUnmounted(() => {
 
 .selected-hex {
   color: #ffdd00;
+  font-size: 0.85rem;
+}
+
+.active-tool {
+  color: #a0c8e0;
   font-size: 0.85rem;
 }
 

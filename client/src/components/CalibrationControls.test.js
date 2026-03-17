@@ -152,4 +152,34 @@ describe('CalibrationControls', () => {
     const lockBtn = wrapper.findAll('button')[0];
     expect(lockBtn.element.disabled).toBe(false);
   });
+
+  it('renders northOffset input (10th number input)', () => {
+    const wrapper = mount(CalibrationControls, {
+      props: { calibration: { ...BASE_CAL, northOffset: 0 } },
+    });
+    const inputs = wrapper.findAll('input[type="number"]');
+    expect(inputs.length).toBeGreaterThanOrEqual(10);
+  });
+
+  it('northOffset input emits calibration-change with updated northOffset', async () => {
+    const wrapper = mount(CalibrationControls, {
+      props: { calibration: { ...BASE_CAL, northOffset: 0 } },
+    });
+    const inputs = wrapper.findAll('input[type="number"]');
+    const northOffsetInput = inputs[9];
+    await northOffsetInput.setValue('3');
+    await northOffsetInput.trigger('input');
+    const emitted = wrapper.emitted('calibration-change');
+    expect(emitted).toBeTruthy();
+    expect(emitted[emitted.length - 1][0].northOffset).toBe(3);
+  });
+
+  it('northOffset input is disabled when calibration.locked is true', () => {
+    const wrapper = mount(CalibrationControls, {
+      props: { calibration: { ...BASE_CAL, northOffset: 0, locked: true } },
+    });
+    const inputs = wrapper.findAll('input[type="number"]');
+    const northOffsetInput = inputs[9];
+    expect(northOffsetInput.element.disabled).toBe(true);
+  });
 });

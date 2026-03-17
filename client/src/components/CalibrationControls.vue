@@ -134,6 +134,18 @@ function toggleLocked() {
         @input="update('rotation', $event.target.value)"
       />
     </label>
+    <label>
+      North Offset (0–5)
+      <input
+        type="number"
+        step="1"
+        min="0"
+        max="5"
+        :value="calibration.northOffset ?? 0"
+        :disabled="calibration.locked ?? false"
+        @input="update('northOffset', $event.target.value)"
+      />
+    </label>
     <button :class="{ active: calibration.locked }" @click="toggleLocked">
       {{ calibration.locked ? 'Locked 🔒' : 'Lock' }}
     </button>

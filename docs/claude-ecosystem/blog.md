@@ -61,9 +61,10 @@ to check, and many steps include an explicit human control point.
 
 Skills compose freely. The `/dev-build` skill (owned by `devops`) runs format, lint, and
 build in order, stopping on the first failure. The `/issue-implement` skill (owned by
-`project-manager`) chains nine sub-skills in sequence — including `/dev-build`, `/dev-test`,
-`/pr-create`, `/pr-review`, and `/issue-close` — each owned by a different agent. Skill ownership records
-accountability; cross-agent skill calls are normal and expected.
+`project-manager`) chains multiple sub-skills in sequence — including `/doc-sync`,
+`/ecosystem-docs-generate`, `/dev-build`, `/dev-test`, `/dev-start`, `/dev-stop`,
+`/pr-create`, `/pr-review`, and `/issue-close` — each owned by a different agent. Skill
+ownership records accountability; cross-agent skill calls are normal and expected.
 
 This composability is the key distinction from agents. An agent defines a scope boundary.
 A skill defines a procedure that can freely cross those boundaries to get a job done.

@@ -216,6 +216,62 @@ describe('HexEditPanel', () => {
     expect(updated.features[0].type).toBe('ford');
   });
 
+  it('seed hex checkbox is rendered and disabled when canMarkAsSeed is false', () => {
+    const wrapper = mount(HexEditPanel, {
+      props: {
+        hex: { hex: '05.10', terrain: 'unknown', hexsides: {} },
+        selectedHexId: '05.10',
+        isSeedHex: false,
+      },
+    });
+    const checkboxes = wrapper.findAll('input[type="checkbox"]');
+    // seed is 3rd checkbox (index 2)
+    const seedCheckbox = checkboxes[2];
+    expect(seedCheckbox.element.disabled).toBe(true);
+  });
+
+  it('seed hex checkbox is enabled when terrain and elevation are set', () => {
+    const wrapper = mount(HexEditPanel, {
+      props: {
+        hex: { hex: '05.10', terrain: 'clear', elevation: 2, hexsides: {} },
+        selectedHexId: '05.10',
+        isSeedHex: false,
+      },
+    });
+    const checkboxes = wrapper.findAll('input[type="checkbox"]');
+    const seedCheckbox = checkboxes[2];
+    expect(seedCheckbox.element.disabled).toBe(false);
+  });
+
+  it('checking seed checkbox emits seed-toggle with hexId and confirmedData', async () => {
+    const wrapper = mount(HexEditPanel, {
+      props: {
+        hex: { hex: '05.10', terrain: 'clear', elevation: 2, hexsides: {} },
+        selectedHexId: '05.10',
+        isSeedHex: false,
+      },
+    });
+    const checkboxes = wrapper.findAll('input[type="checkbox"]');
+    const seedCheckbox = checkboxes[2];
+    await seedCheckbox.trigger('change');
+    const emitted = wrapper.emitted('seed-toggle');
+    expect(emitted).toBeTruthy();
+    expect(emitted[0][0].hexId).toBe('05.10');
+    expect(emitted[0][0].confirmedData.terrain).toBe('clear');
+    expect(emitted[0][0].confirmedData.elevation).toBe(2);
+  });
+
+  it('renders terrain and elevation fields when a minimal default hex (no hexsides) is passed', () => {
+    const wrapper = mount(HexEditPanel, {
+      props: {
+        hex: { hex: '03.05', terrain: 'unknown' },
+        selectedHexId: '03.05',
+      },
+    });
+    expect(wrapper.find('select').exists()).toBe(true);
+    expect(wrapper.find('input[type="number"]').exists()).toBe(true);
+  });
+
   it('wedge editor update emits hex-update with wedgeElevations', async () => {
     const wrapper = mount(HexEditPanel, {
       props: {

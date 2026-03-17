@@ -182,7 +182,7 @@ describe('HexMapOverlay', () => {
     expect(nonePoly).toBeTruthy();
   });
 
-  it('layers.elevation=true renders elevation text labels', () => {
+  it('layers.elevation=true renders elevation text labels with dark green fill', () => {
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
@@ -198,6 +198,9 @@ describe('HexMapOverlay', () => {
       },
     });
     expect(wrapper.text()).toContain('500');
+    const elevTexts = wrapper.findAll('text').filter((t) => t.text().trim() === '500');
+    expect(elevTexts.length).toBeGreaterThan(0);
+    expect(elevTexts[0].attributes('fill')).toBe('#1a6b2a');
   });
 
   it('layers.elevation=false does not render elevation text', () => {
@@ -304,6 +307,140 @@ describe('HexMapOverlay', () => {
     });
     const html = wrapper.html();
     expect(html).toContain('rotate(5)');
+  });
+
+  it('hex ID labels are dark blue (#00008b) and use 0.78rem font size', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        layers: {
+          grid: true,
+          terrain: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    const labels = wrapper.findAll('text');
+    expect(labels.length).toBeGreaterThan(0);
+    const label = labels[0];
+    expect(label.attributes('fill')).toBe('#00008b');
+    expect(label.attributes('font-size')).toBe('0.78rem');
+  });
+
+  it('labels hidden when layers.grid is false', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        layers: {
+          grid: false,
+          terrain: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    // No layer-labels group rendered
+    const labelGroup = wrapper.find('.layer-labels');
+    expect(labelGroup.exists()).toBe(false);
+  });
+
+  it('even-column hex IDs display row value decremented by one', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        layers: {
+          grid: true,
+          terrain: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    // BASE_CAL: rows=3, cols=4
+    // hex(col=1, row=0) → gameCol=2 (even) → with fix: gameRow = 3-0-1 = 2 → "02.02"
+    // Without fix it would be "02.03"
+    const labelTexts = wrapper.findAll('text').map((el) => el.text());
+    expect(labelTexts).toContain('02.02');
+    expect(labelTexts).not.toContain('02.03');
+    // Odd column is unaffected: hex(col=0, row=0) → gameCol=1 (odd) → gameRow=3-0=3 → "01.03"
+    expect(labelTexts).toContain('01.03');
+  });
+
+  it('seed hex polygon renders with purple (#cc44ee) stroke', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        calibrationMode: false,
+        vpHexIds: [],
+        seedHexIds: ['01.03'],
+        layers: {
+          grid: true,
+          terrain: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    const polygons = wrapper.findAll('polygon');
+    const seedPoly = polygons.find((p) => p.attributes('stroke') === '#cc44ee');
+    expect(seedPoly).toBeTruthy();
+  });
+
+  it('seed hex polygon has wider stroke-width than default', () => {
+    const cal = { ...BASE_CAL, strokeWidth: 0.5 };
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: cal,
+        calibrationMode: false,
+        vpHexIds: [],
+        seedHexIds: ['01.03'],
+        layers: {
+          grid: true,
+          terrain: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    const polygons = wrapper.findAll('polygon');
+    const seedPoly = polygons.find((p) => p.attributes('stroke') === '#cc44ee');
+    expect(seedPoly).toBeTruthy();
+    // strokeWidth for seed = max(0.5*2, 1.5) = 1.5
+    expect(Number(seedPoly.attributes('stroke-width'))).toBeGreaterThanOrEqual(1.5);
+  });
+
+  it('seed hex polygon has full stroke-opacity (1)', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        calibrationMode: false,
+        vpHexIds: [],
+        seedHexIds: ['01.03'],
+        layers: {
+          grid: true,
+          terrain: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    const polygons = wrapper.findAll('polygon');
+    const seedPoly = polygons.find((p) => p.attributes('stroke') === '#cc44ee');
+    expect(seedPoly).toBeTruthy();
+    expect(Number(seedPoly.attributes('stroke-opacity'))).toBe(1);
   });
 
   it('no rotation transform when calibration.rotation is absent', () => {
