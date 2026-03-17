@@ -2,7 +2,8 @@
 import { ref, watch, computed } from 'vue';
 import WedgeEditor from './WedgeEditor.vue';
 import EdgeEditPanel from './EdgeEditPanel.vue';
-import { getEdgeLabels } from '../utils/hexGeometry.js';
+import { getEdgeLabels, adjacentHexId } from '../utils/hexGeometry.js';
+import { deriveEdgesAndSlope } from '../utils/elevationDerive.js';
 
 const props = defineProps({
   hex: {
@@ -28,6 +29,14 @@ const props = defineProps({
   northOffset: {
     type: Number,
     default: 0,
+  },
+  hexes: {
+    type: Array,
+    default: () => [],
+  },
+  gridSpec: {
+    type: Object,
+    default: null,
   },
 });
 
@@ -151,6 +160,54 @@ function initWedgeElevations() {
   emitUpdate();
 }
 
+const DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
+
+function autoDerive() {
+  if (!form.value || !props.hex || !form.value.wedgeElevations) return;
+
+  // Derive and apply to current hex
+  const { slope, edges } = deriveEdgesAndSlope({
+    wedgeElevations: form.value.wedgeElevations,
+    slope: form.value.slope,
+    edges: form.value.edges,
+  });
+  form.value.slope = slope;
+  form.value.edges = edges;
+  emitUpdate();
+
+  // Propagate to neighbors
+  if (!props.gridSpec) return;
+  for (let i = 0; i < 6; i++) {
+    const neighborId = adjacentHexId(props.hex.hex, DIRS[i], props.gridSpec);
+    if (!neighborId) continue;
+
+    const oppIdx = (i + 3) % 6;
+    const neighborHex = props.hexes.find((h) => h.hex === neighborId) ?? {
+      hex: neighborId,
+      terrain: 'unknown',
+    };
+
+    // Set neighbor's opposite wedge to match
+    const neighborWedges = neighborHex.wedgeElevations
+      ? [...neighborHex.wedgeElevations]
+      : [0, 0, 0, 0, 0, 0];
+    neighborWedges[oppIdx] = form.value.wedgeElevations[i];
+
+    const neighborDerived = deriveEdgesAndSlope({
+      wedgeElevations: neighborWedges,
+      slope: neighborHex.slope ?? null,
+      edges: neighborHex.edges ?? {},
+    });
+
+    emit('hex-update', {
+      ...neighborHex,
+      wedgeElevations: neighborWedges,
+      slope: neighborDerived.slope,
+      edges: neighborDerived.edges,
+    });
+  }
+}
+
 const canMarkAsSeed = computed(
   () =>
     !!form.value &&
@@ -261,6 +318,9 @@ function toggleSeed() {
             :north-offset="northOffset"
             @update:wedge-elevations="onWedgeUpdate"
           />
+          <button v-if="form.wedgeElevations" class="derive-btn" @click="autoDerive">
+            Auto-derive edges &amp; slope
+          </button>
         </div>
 
         <label class="checkbox-label">
@@ -487,6 +547,22 @@ textarea {
 
 .toggle-wedge-btn:hover {
   background: #3a3a3a;
+}
+
+.derive-btn {
+  margin-top: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  background: #2a3a1a;
+  border: 1px solid #4a7a2a;
+  color: #90c060;
+  cursor: pointer;
+  font-size: 0.78rem;
+  width: 100%;
+  text-align: left;
+}
+
+.derive-btn:hover {
+  background: #344a22;
 }
 
 .seed-hint {

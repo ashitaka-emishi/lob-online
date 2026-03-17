@@ -671,6 +671,8 @@ onUnmounted(() => {
               :edge-feature-types="edgeFeatureTypes"
               :is-seed-hex="selectedHexId ? seedHexIds.has(selectedHexId) : false"
               :north-offset="calibration.northOffset ?? 0"
+              :hexes="mapData?.hexes ?? []"
+              :grid-spec="calibration"
               @hex-update="onHexUpdate"
               @seed-toggle="onSeedToggle"
             />
