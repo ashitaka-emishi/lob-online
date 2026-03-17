@@ -10,34 +10,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Reference Library
 
-All source material lives in `docs/`. The library is tracked in two parallel files that must stay in sync:
+All source material lives in `docs/reference/`. The library is tracked in two parallel files that must stay in sync:
 
 - `docs/library.md` — human-readable manifest with status indicators (✅ available, ⬜ needed, 🔧 to be built)
 - `docs/library.json` — machine-readable catalog (`"available"`, `"missing"`, `"todo"`)
 
-### Available Source Documents
-
-| ID               | File                            | Contents                                                                  |
-| ---------------- | ------------------------------- | ------------------------------------------------------------------------- |
-| LOB_RULES        | `lob-rules.pdf`                 | Complete 36-page LoB v2.0 series rulebook                                 |
-| LOB_CHARTS       | `lob-tables.pdf`                | 6-page combat/morale/terrain tables                                       |
-| LOB_GAME_UPDATES | `lob-game-specific-updates.pdf` | RSS-to-LoB conversions + SM-specific rule overrides                       |
-| SM_RULES         | `sm-rules.pdf`                  | 28-page South Mountain scenario rules, terrain, reinforcements, VP system |
-| SM_ROSTER        | `sm-regimental-roster.pdf`      | All unit statistics for both sides                                        |
-| SM_ERRATA        | `sm-errata.pdf`                 | 5 official corrections (all applied to canonical data)                    |
-| SM_MAP           | `sm-map.jpg`                    | South Mountain hex map (high-resolution image)                            |
-
-### Data Models
-
-All five data files exist under `data/scenarios/south-mountain/` and are validated by Zod schemas in `server/src/schemas/`.
-
-| ID                | File                                                       | Contents                                                                                                                                                                |
-| ----------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SM_MAP_DATA       | `data/scenarios/south-mountain/map.json`                   | Hex terrain, gridSpec calibration, VP/entry hexes, type registries (hexsideTypes, hexFeatureTypes, edgeFeatureTypes) — partial, digitization in progress via map editor |
-| GS_OOB            | `data/scenarios/south-mountain/oob.json`                   | 219 units, brigade/division hierarchy, wreck thresholds                                                                                                                 |
-| GS_LEADERS        | `data/scenarios/south-mountain/leaders.json`               | 48 leaders, ratings, special rule flags                                                                                                                                 |
-| SM_SCENARIO_DATA  | `data/scenarios/south-mountain/scenario.json`              | Turn structure, reinforcements, VP conditions, movement costs, random events                                                                                            |
-| SM_AUTODETECT_CFG | `data/scenarios/south-mountain/map-autodetect-config.json` | Auto-detect configuration: elevation color palette, confidence threshold, seed hex list (confirmed hexes used as few-shot examples for Vision API classification)       |
+For the full source-document inventory and data-file manifest, see
+`docs/agents/domain-expert/design.md` § 2 (Source Library).
 
 ### Developer Tools
 
