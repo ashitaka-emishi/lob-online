@@ -64,20 +64,9 @@ A `project-manager` agent manages the SDLC: assigning milestones and auditing is
 consistency. Use `/issue-implement <number>` to drive the full ticket-to-merge workflow with
 human control points. See `docs/agents/project-manager/design.md` for the full spec.
 
-The **four-phase SDLC lifecycle** is:
+The **four-phase SDLC lifecycle** is documented in `.claude/rules/sdlc.md`.
 
-1. **Design** — run `/design` to collaboratively author `docs/designs/{slug}.md` for any new
-   or changed component (orchestrator, skill, or agent). The skill gathers intent, infers
-   the component type, drafts the doc using `docs/designs/TEMPLATE.md`, iterates via chat or
-   direct file edits, then commits on `design/{slug}` and opens a PR. After merge:
-2. **Issue intake** — run `/issue-intake` (one or more times) to break the design into
-   well-formed, milestone-assigned GitHub issues. Each issue maps to one acceptance-criteria
-   unit of the design.
-3. **Implementation loop** — for each issue: `/issue-implement <number>` drives the full
-   ticket-to-merge workflow. After merge, optionally update the design doc and create new
-   issues for any scope discovered during implementation.
-4. **After-action** — run `/plan-wrap` (or `/doc-sync` + `/ecosystem-docs-generate`) to
-   verify all docs reflect the delivered state and record a devlog entry.
+@.claude/rules/sdlc.md
 
 An `issue-intake` agent handles issue creation: it gathers the raw requirement, iteratively
 refines the draft with the engineer, and files the GitHub issue after explicit approval (HCP).
@@ -124,24 +113,31 @@ and committed as a permanent audit trail of AI planning and human approvals.
 
 ## Coding Standards
 
-- **Runtime:** Node.js 20; ES modules (`"type": "module"`) throughout — the only CommonJS file
-  is `ecosystem.config.cjs` (PM2 requires it)
-- **Formatting:** Prettier enforced — 100-char print width, 2-space indent, single quotes,
-  semicolons, trailing commas (ES5), LF line endings. Run `npm run format` to auto-fix.
-- **Linting:** ESLint 9 flat config. Node plugin for `server/`, Vue plugin for `client/`.
-  Prefix unused variables with `_` to suppress warnings. Import order:
-  builtin → external → internal (blank line between groups).
-- **Server:** Express, plain JavaScript (no TypeScript). Structured console prefixes:
-  `[server]`, `[route]`, `[socket]`, etc. `console.log` is permitted in server code.
-- **Client:** Vue 3 with `<script setup>` Composition API only — no Options API, no Vuex.
-  Pinia for state management. Vue Router for navigation. Scoped CSS in SFCs.
-- **Testing:** Vitest. Server tests run in the Node environment; client tests in jsdom.
-  Co-locate test files as `feature.test.js` next to source. 70% line coverage threshold
-  (enforced in CI). Run `npm run test:coverage` to check locally.
-- **Data validation:** Zod schemas in `server/src/schemas/` validate all JSON data files at
-  load time. No TypeScript — runtime validation is the type safety strategy.
-- **CI gates:** `npm run lint`, `npm run format:check`, and `npm run test` must all pass before
-  merge. The `/dev-build` skill runs these three checks locally in order.
+@.claude/rules/coding-standards.md
+
+## Plugin Ecosystem
+
+This project uses the [wshobson/agents](https://github.com/wshobson/agents) plugin marketplace
+alongside the custom lob-online skill set. To install on a new machine:
+
+```
+/plugin marketplace add wshobson/agents
+/plugin install conductor
+/plugin install agent-teams
+```
+
+Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `.env` (or your shell) to enable agent-teams.
+
+**Two parallel workflow layers:**
+
+| Task                  | Native lob-online skill | wshobson/agents plugin |
+| --------------------- | ----------------------- | ---------------------- |
+| SDLC feature delivery | `/issue-implement <n>`  | `/conductor:new-track` |
+| Code review           | `/pr-review`            | `/team-review`         |
+| Parallel debugging    | —                       | `/team-debug`          |
+
+The lob-specific skills (`/issue-implement`, `/pr-review`, etc.) are the primary workflow.
+Plugin commands are available as supplementary tools.
 
 ## Post-Plan Protocol
 
