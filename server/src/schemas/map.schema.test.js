@@ -405,6 +405,152 @@ describe('MapSchema — wedgeElevations integer validation', () => {
     });
     expect(result.success).toBe(true);
   });
+
+  it('rejects wedgeElevations with value 22 (above max 21)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '01.01', terrain: 'clear', wedgeElevations: [22, 0, 0, 0, 0, 0] }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects wedgeElevations with value -22 (below min -21)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '01.01', terrain: 'clear', wedgeElevations: [0, 0, 0, -22, 0, 0] }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts wedgeElevations at boundary values ±21', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '01.01', terrain: 'clear', wedgeElevations: [21, -21, 0, 0, 0, 0] }],
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('MapSchema — elevationSystem bounds', () => {
+  it('rejects baseElevation: -1 (below min 0)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: {
+        baseElevation: -1,
+        elevationLevels: 22,
+        contourInterval: 50,
+        unit: 'feet',
+        verticalSlopesImpassable: true,
+      },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects baseElevation: 10000 (above max 9999)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: {
+        baseElevation: 10000,
+        elevationLevels: 22,
+        contourInterval: 50,
+        unit: 'feet',
+        verticalSlopesImpassable: true,
+      },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts baseElevation at boundary values 0 and 9999', () => {
+    const r0 = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: {
+        baseElevation: 0,
+        elevationLevels: 22,
+        contourInterval: 50,
+        unit: 'feet',
+        verticalSlopesImpassable: true,
+      },
+    });
+    const r9999 = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: {
+        baseElevation: 9999,
+        elevationLevels: 22,
+        contourInterval: 50,
+        unit: 'feet',
+        verticalSlopesImpassable: true,
+      },
+    });
+    expect(r0.success).toBe(true);
+    expect(r9999.success).toBe(true);
+  });
+
+  it('rejects baseElevation: 500.5 (non-integer)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: {
+        baseElevation: 500.5,
+        elevationLevels: 22,
+        contourInterval: 50,
+        unit: 'feet',
+        verticalSlopesImpassable: true,
+      },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects elevationLevels: 0 (below min 1)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: {
+        baseElevation: 500,
+        elevationLevels: 0,
+        contourInterval: 50,
+        unit: 'feet',
+        verticalSlopesImpassable: true,
+      },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects elevationLevels: 100 (above max 99)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: {
+        baseElevation: 500,
+        elevationLevels: 100,
+        contourInterval: 50,
+        unit: 'feet',
+        verticalSlopesImpassable: true,
+      },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts elevationLevels at boundary values 1 and 99', () => {
+    const r1 = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: {
+        baseElevation: 500,
+        elevationLevels: 1,
+        contourInterval: 50,
+        unit: 'feet',
+        verticalSlopesImpassable: true,
+      },
+    });
+    const r99 = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: {
+        baseElevation: 500,
+        elevationLevels: 99,
+        contourInterval: 50,
+        unit: 'feet',
+        verticalSlopesImpassable: true,
+      },
+    });
+    expect(r1.success).toBe(true);
+    expect(r99.success).toBe(true);
+  });
 });
 
 describe('MapSchema — elevationSystem with new fields', () => {

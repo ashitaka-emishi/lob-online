@@ -3,7 +3,7 @@
 **Track ID:** pr91-review-fixes_20260317
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-03-17
-**Status:** [ ] Not Started
+**Status:** [~] In Progress
 
 ## Overview
 
@@ -18,15 +18,15 @@ Add numeric bounds to wedgeElevations, baseElevation, and elevationLevels in Map
 
 ### Tasks
 
-- [ ] Task 1.1: Write tests — wedgeElevations rejects values outside [-21, 21]; baseElevation
+- [x] Task 1.1: Write tests — wedgeElevations rejects values outside [-21, 21]; baseElevation
       rejects negative and >9999; elevationLevels rejects 0 and >99
-- [ ] Task 1.2: Add `.min(-21).max(21)` to each wedgeElevations tuple element in
+- [x] Task 1.2: Add `.min(-21).max(21)` to each wedgeElevations tuple element in
       `server/src/schemas/map.schema.js`
-- [ ] Task 1.3: Add `.int().min(0).max(9999)` to `elevationSystem.baseElevation`
-- [ ] Task 1.4: Add `.int().min(1).max(99)` to `elevationSystem.elevationLevels`
-- [ ] Task 1.5: Add comment on `elevation: z.number().int().min(0).max(21)` documenting
+- [x] Task 1.3: Add `.int().min(0).max(9999)` to `elevationSystem.baseElevation`
+- [x] Task 1.4: Add `.int().min(1).max(99)` to `elevationSystem.elevationLevels`
+- [x] Task 1.5: Add comment on `elevation: z.number().int().min(0).max(21)` documenting
       that 21 is SM-specific (22 levels − 1), pending #92 for runtime derivation
-- [ ] Task 1.6: Add JSDoc comment on `wedgeElevations` tuple documenting index-to-direction
+- [x] Task 1.6: Add JSDoc comment on `wedgeElevations` tuple documenting index-to-direction
       mapping: `[0]=N, [1]=NE, [2]=SE, [3]=S, [4]=SW, [5]=NW`
 
 ### Verification

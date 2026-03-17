@@ -26,16 +26,18 @@ const EdgeFeature = z.object({
 const HexEntry = z.object({
   hex: HexId,
   terrain: TerrainType,
+  // max(21) = SM-specific (22 levels − 1); pending #92 for runtime derivation from elevationLevels
   elevation: z.number().int().min(0).max(21).optional(),
   slope: z.number().int().min(0).max(5).optional(),
+  // [0]=N, [1]=NE, [2]=SE, [3]=S, [4]=SW, [5]=NW — integer level offsets relative to hex elevation
   wedgeElevations: z
     .tuple([
-      z.number().int(),
-      z.number().int(),
-      z.number().int(),
-      z.number().int(),
-      z.number().int(),
-      z.number().int(),
+      z.number().int().min(-21).max(21),
+      z.number().int().min(-21).max(21),
+      z.number().int().min(-21).max(21),
+      z.number().int().min(-21).max(21),
+      z.number().int().min(-21).max(21),
+      z.number().int().min(-21).max(21),
     ])
     .optional(),
   hexsides: z.record(z.string(), z.string()).optional(),
@@ -83,8 +85,8 @@ export const MapSchema = z.object({
   edgeFeatureTypes: z.array(z.string()).optional(),
   elevationSystem: z
     .object({
-      baseElevation: z.number(),
-      elevationLevels: z.number().int().positive(),
+      baseElevation: z.number().int().min(0).max(9999),
+      elevationLevels: z.number().int().min(1).max(99),
       contourInterval: z.number(),
       unit: z.string(),
       verticalSlopesImpassable: z.boolean(),
