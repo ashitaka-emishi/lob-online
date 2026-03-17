@@ -13,7 +13,7 @@
 ## 2. [Domain-Specific Section]
 
 <!-- devops: Directory Layout; project-manager: GitHub Environment;
-     code-review: Directory Layout; rules-lawyer: Source Library -->
+     code-review: Directory Layout; domain-expert: Source Library -->
 
 ---
 

@@ -1239,7 +1239,7 @@ lob-online/
 │   ├── library.md            ← human-readable reference library manifest
 │   ├── library.json          ← machine-readable catalog
 │   ├── map-editor-design.md  ← map editor detailed design spec
-│   └── workflows/            ← workflow definitions (design/, issue-intake/, issue-implement/, sdlc-feature/)
+│   └── migration-wshobson-agents.md ← old-to-new command mapping (LOB-0082)
 │
 ├── data/
 │   └── scenarios/
@@ -1682,15 +1682,15 @@ skill that drives it conversationally.
 ### Four-Phase Cycle
 
 ```
-/design  →  /issue-intake (×N)  →  loop(/issue-implement)  →  /plan-wrap
+/design  →  /conductor:new-track (×N)  →  loop(/conductor:implement)  →  /plan-wrap
 ```
 
-| Phase              | Skill              | Workflow file                                | Output                                     |
-| ------------------ | ------------------ | -------------------------------------------- | ------------------------------------------ |
-| **Design**         | `/design`          | `docs/workflows/design/design.workflow.json` | `docs/designs/{slug}.md` merged on PR      |
-| **Issue intake**   | `/issue-intake`    | `docs/workflows/issue-intake/`               | GitHub issue filed, milestone assigned     |
-| **Implementation** | `/issue-implement` | `docs/workflows/issue-implement/`            | PR merged, issue closed, ailog committed   |
-| **After-action**   | `/plan-wrap`       | —                                            | Devlog entry, CLAUDE.md and HLD up to date |
+| Phase              | Command                | Output                                                                  |
+| ------------------ | ---------------------- | ----------------------------------------------------------------------- |
+| **Design**         | `/design`              | `docs/designs/{slug}.md` merged on PR                                   |
+| **Track creation** | `/conductor:new-track` | Track spec + phased plan; replaces `/issue-intake` + `/issue-implement` |
+| **Implementation** | `/conductor:implement` | PR merged, issue closed, ailog committed                                |
+| **After-action**   | `/plan-wrap`           | Devlog entry, CLAUDE.md and HLD up to date                              |
 
 ### Design Phase Detail
 
@@ -1702,17 +1702,11 @@ and the right solution needs to be reasoned through before issues are written. T
 3. Creates `docs/designs/{slug}.md` from `docs/designs/TEMPLATE.md`
 4. Iterates via chat (agent edits file) or direct file edits (agent re-reads and confirms)
 5. On approval: commits on `design/{slug}` branch, opens a PR, waits for "merge", then merges
-6. Reports: "Design merged. Run `/issue-intake` to begin breaking this design into issues."
+6. Reports: "Design merged. Run `/conductor:new-track` to create an implementation track."
 
 ### Implementation Loop
 
-After each `/issue-implement` merge:
+After each `/conductor:implement` merge:
 
-- If implementation revealed new scope → update the design doc and run `/issue-intake` again
-- If all design issues are closed → run `/plan-wrap` to close out the cycle
-
-### Workflow Definitions
-
-Workflow JSON definitions live in `docs/workflows/{name}/{name}.workflow.json`. Registered
-agents and skills resolve from `.claude/agents/registry.json`. Human gate checkpoints (HCPs)
-pause execution for engineer approval before irreversible actions (file issue, push, merge).
+- If implementation revealed new scope → update the design doc and run `/conductor:new-track` again
+- If all track tasks are closed → run `/plan-wrap` to close out the cycle

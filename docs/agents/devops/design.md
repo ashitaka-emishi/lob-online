@@ -159,8 +159,8 @@ tools: Bash, Read, Glob
 ### What the Agent Does NOT Do
 
 - Modify source files — that is the coding agent's domain
-- Review code quality — use the `code-review` agent for that
-- Manage GitHub issues or PRs — use the `project-manager` agent for that
+- Review code quality — use `/team-review` (agent-teams plugin) for that
+- Manage GitHub issues or PRs — use `/conductor:manage` or `gh` CLI directly
 
 ### Key Files
 
