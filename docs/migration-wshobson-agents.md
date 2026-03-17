@@ -24,7 +24,7 @@ These skills are lob-online extensions and are **not** replaced by wshobson/agen
 
 | Skill                      | Purpose                                               |
 | -------------------------- | ----------------------------------------------------- |
-| `domain-expert` agent       | Domain-specific wargame rules arbiter — irreplaceable |
+| `domain-expert` agent      | Domain-specific wargame rules arbiter — irreplaceable |
 | `devops` agent             | Project-specific build/run/test orchestration         |
 | `/dev-build`               | Format, lint, and build                               |
 | `/dev-start`               | Launch server + Vite dev client                       |
