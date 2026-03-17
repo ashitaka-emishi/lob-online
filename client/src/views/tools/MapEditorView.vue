@@ -153,14 +153,20 @@ const showPullConfirm = ref(false);
 const isPulling = ref(false);
 const pullError = ref('');
 
+const _saveMapDraftTimer = ref(null);
+
 function saveMapDraft() {
-  if (!mapData.value) return;
-  try {
-    const draft = { ...mapData.value, _savedAt: Date.now() };
-    localStorage.setItem(MAP_DRAFT_KEY, JSON.stringify(draft));
-  } catch (_) {
-    /* ignore storage errors */
-  }
+  if (_saveMapDraftTimer.value !== null) clearTimeout(_saveMapDraftTimer.value);
+  _saveMapDraftTimer.value = setTimeout(() => {
+    _saveMapDraftTimer.value = null;
+    if (!mapData.value) return;
+    try {
+      const draft = { ...mapData.value, _savedAt: Date.now() };
+      localStorage.setItem(MAP_DRAFT_KEY, JSON.stringify(draft));
+    } catch (_) {
+      /* ignore storage errors */
+    }
+  }, 500);
 }
 
 function restoreDraft() {
@@ -561,6 +567,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeyDown);
+  if (_saveMapDraftTimer.value !== null) clearTimeout(_saveMapDraftTimer.value);
 });
 </script>
 

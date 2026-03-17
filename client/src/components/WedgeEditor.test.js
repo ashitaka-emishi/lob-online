@@ -132,6 +132,34 @@ describe('WedgeEditor', () => {
     }
   });
 
+  it('left-click clamps at -21 when current is already -21', async () => {
+    const wrapper = mount(WedgeEditor, {
+      props: { wedgeElevations: [-21, 0, 0, 0, 0, 0] },
+    });
+    const clickablePolygons = wrapper
+      .findAll('polygon')
+      .filter((p) => p.attributes('style')?.includes('cursor: pointer'));
+    await clickablePolygons[0].trigger('click');
+
+    const emitted = wrapper.emitted('update:wedgeElevations');
+    expect(emitted).toBeTruthy();
+    expect(emitted[0][0][0]).toBe(-21); // clamped, not -22
+  });
+
+  it('right-click clamps at 21 when current is already 21', async () => {
+    const wrapper = mount(WedgeEditor, {
+      props: { wedgeElevations: [0, 21, 0, 0, 0, 0] },
+    });
+    const clickablePolygons = wrapper
+      .findAll('polygon')
+      .filter((p) => p.attributes('style')?.includes('cursor: pointer'));
+    await clickablePolygons[1].trigger('contextmenu');
+
+    const emitted = wrapper.emitted('update:wedgeElevations');
+    expect(emitted).toBeTruthy();
+    expect(emitted[0][0][1]).toBe(21); // clamped, not 22
+  });
+
   it('wedge value labels are visible in SVG text elements', () => {
     const wrapper = mount(WedgeEditor, {
       props: { wedgeElevations: [2, -1, 0, 3, 0, -2], northOffset: 3 },

@@ -68,7 +68,7 @@ function wedgeCentre(i) {
 
 function adjustWedge(i, delta) {
   const newElev = [...props.wedgeElevations];
-  newElev[i] = (newElev[i] ?? 0) + delta;
+  newElev[i] = Math.max(-21, Math.min(21, (newElev[i] ?? 0) + delta));
   emit('update:wedgeElevations', newElev);
 }
 </script>

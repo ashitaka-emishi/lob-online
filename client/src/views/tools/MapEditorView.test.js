@@ -242,6 +242,7 @@ describe('MapEditorView', () => {
   });
 
   it('localStorage.setItem called with v2 key when map data is updated', async () => {
+    vi.useFakeTimers();
     vi.stubGlobal('fetch', mockFetch(VALID_MAP));
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
@@ -253,8 +254,11 @@ describe('MapEditorView', () => {
       await flushPromises();
     }
 
+    // saveMapDraft is debounced 500ms — advance timers to trigger the write
+    vi.runAllTimers();
     expect(localStorage.setItem).toHaveBeenCalledWith(MAP_DRAFT_KEY, expect.any(String));
     wrapper.unmount();
+    vi.useRealTimers();
   });
 
   it('draft banner is shown when localStorage has newer draft', async () => {

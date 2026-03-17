@@ -69,10 +69,10 @@ Clamp wedge values in WedgeEditor; debounce saveMapDraft in MapEditorView.
 
 ### Tasks
 
-- [ ] Task 3.1: Write test — `adjustWedge` emits clamped value when click would exceed ±21
-- [ ] Task 3.2: Update `adjustWedge` in `WedgeEditor.vue` to clamp result:
+- [x] Task 3.1: Write test — `adjustWedge` emits clamped value when click would exceed ±21
+- [x] Task 3.2: Update `adjustWedge` in `WedgeEditor.vue` to clamp result:
       `Math.max(-21, Math.min(21, current + delta))`
-- [ ] Task 3.3: Debounce `saveMapDraft` in `MapEditorView.vue` with a 500ms trailing delay
+- [x] Task 3.3: Debounce `saveMapDraft` in `MapEditorView.vue` with a 500ms trailing delay
       using a local `setTimeout`/`clearTimeout` ref; cancel on component unmount
       (`onUnmounted`)
 
