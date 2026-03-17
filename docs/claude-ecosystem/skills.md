@@ -81,27 +81,6 @@ delete the branch.
 
 ## Issue lifecycle skills (unowned)
 
-### `/issue-branch`
-
-**Purpose:** Create the `feat/{id}-{slug}` branch for a given issue number.
-**Owning agent:** unowned
-**Related skills:** none
-**Claude Code:** `/issue-branch <number>`
-**Manual equivalent:** `git checkout -b feat/<n>-<slug>`
-
----
-
-### `/issue-start`
-
-**Purpose:** Fetch a GitHub issue, summarise acceptance criteria, and confirm approach
-before any code is written.
-**Owning agent:** unowned
-**Related skills:** none
-**Claude Code:** `/issue-start <number>`
-**Manual equivalent:** `gh issue view <number>` then draft a plan in chat
-
----
-
 ### `/issue-close`
 
 **Purpose:** Close a GitHub issue with a merge summary comment after the PR is merged.
@@ -153,10 +132,6 @@ iterate in chat, commit on `design/{slug}` branch, open PR
 These files exist in `.claude/commands/` but are not in `registry.json`. They are fully
 functional but not formally catalogued.
 
-| Skill                | Purpose                                                                                 |
-| -------------------- | --------------------------------------------------------------------------------------- |
-| `/agent-regenerate`  | Rebuild `.claude/agents/*.md` from `design.md` §4; verify with `/dev-build`             |
-| `/agent-standardize` | Normalize prompt files against template; cascade changes through design and agent files |
-| `/agent-sync`        | Read-only drift check between `design.md` files and `.claude/agents/*.md`               |
-| `/code-assess`       | Full codebase examination for duplicate code, dead code, and refactoring opportunities  |
-| `/plan-wrap`         | Write a devlog entry and update documentation after a plan is implemented               |
+| Skill        | Purpose                                                                   |
+| ------------ | ------------------------------------------------------------------------- |
+| `/plan-wrap` | Write a devlog entry and update documentation after a plan is implemented |

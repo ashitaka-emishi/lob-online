@@ -32,16 +32,11 @@ These skills are lob-online extensions and are **not** replaced by wshobson/agen
 | `/dev-test`                | Run test suite with flake detection                   |
 | `/pr-create`               | Write devlog entry and open PR                        |
 | `/pr-merge`                | Squash-merge and delete branch                        |
-| `/issue-branch`            | Create `feat/{id}-{slug}` branch                      |
-| `/issue-start`             | Fetch issue and confirm approach before coding        |
 | `/issue-close`             | Close issue with merge summary comment                |
 | `/doc-sync`                | Sync CLAUDE.md, HLD, and agent design docs            |
 | `/ecosystem-docs-generate` | Rebuild `docs/claude-ecosystem/` reference files      |
 | `/design`                  | Author design documents before writing issues         |
 | `/plan-wrap`               | Post-implementation doc and devlog wrap-up            |
-| `/agent-sync`              | Drift check between design.md and agent files         |
-| `/agent-regenerate`        | Rebuild agent files from design.md §4                 |
-| `/agent-standardize`       | Normalize prompt files and cascade changes            |
 
 ## Plugin Installation
 

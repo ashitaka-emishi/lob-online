@@ -78,12 +78,7 @@ Two skills keep project documentation in sync after each implementation:
 - `/ecosystem-docs-generate` — rebuilds the reference files in `docs/claude-ecosystem/`
   from source-of-truth inputs (full rebuild from registry and design docs)
 
-All agent design documents and prompts live in `docs/agents/<name>/`. Three skills manage the
-agent layer:
-
-- `/agent-sync` — read-only drift check between `design.md` and `.claude/agents/*.md`
-- `/agent-regenerate` — rebuild agent files from `design.md` section 4
-- `/agent-standardize` — normalize prompt files and cascade changes through design and agent files
+All agent design documents and prompts live in `docs/agents/<name>/`.
 
 AI execution logs for issue implementations are stored in `docs/ailog/YYYY_MM_DD-LOB-{####}.md`
 and committed as a permanent audit trail of AI planning and human approvals.
@@ -118,9 +113,8 @@ Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `.env` (or your shell) to enable
 
 **Lob-specific extensions** (retained; no plugin equivalent):
 `rules-lawyer`, `devops`, `/dev-build`, `/dev-start`, `/dev-stop`, `/dev-test`,
-`/pr-create`, `/pr-merge`, `/issue-branch`, `/issue-start`, `/issue-close`,
-`/doc-sync`, `/ecosystem-docs-generate`, `/design`, `/plan-wrap`,
-`/agent-sync`, `/agent-regenerate`, `/agent-standardize`.
+`/pr-create`, `/pr-merge`, `/issue-close`,
+`/doc-sync`, `/ecosystem-docs-generate`, `/design`, `/plan-wrap`.
 
 See `docs/migration-wshobson-agents.md` for the full old-to-new command mapping.
 

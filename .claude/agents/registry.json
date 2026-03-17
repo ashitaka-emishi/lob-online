@@ -56,20 +56,6 @@
     "path": ".claude/commands/pr-merge.md"
   },
   {
-    "id": "issue-branch",
-    "name": "Issue Branch Skill",
-    "description": "Create the feat/{id}-{slug} branch for the given issue number",
-    "type": "skill",
-    "path": ".claude/commands/issue-branch.md"
-  },
-  {
-    "id": "issue-start",
-    "name": "Issue Start Skill",
-    "description": "Fetch a GitHub issue, summarise ACs, and confirm approach before any code is written",
-    "type": "skill",
-    "path": ".claude/commands/issue-start.md"
-  },
-  {
     "id": "issue-close",
     "name": "Issue Close Skill",
     "description": "Close a GitHub issue with a merge summary comment after PR is merged",

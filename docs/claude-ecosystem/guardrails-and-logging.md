@@ -22,7 +22,6 @@ transitions, and merge approval. Lob-specific skills retain HCPs at the followin
 
 | Skill          | HCP                | Signal required | Action gated                |
 | -------------- | ------------------ | --------------- | --------------------------- |
-| `/issue-start` | Plan review        | "proceed"       | Any code written            |
 | `/pr-create`   | Pre-push review    | "push"          | `git push` + `gh pr create` |
 | `/pr-merge`    | Merge approval     | "merge"         | `gh pr merge`               |
 | `/issue-close` | Close confirmation | "close"         | `gh issue close`            |
@@ -87,9 +86,9 @@ Every issue implementation produces a permanent structured log in `docs/ailog/`.
 
 | Section                              | When written         | Contents                                                         |
 | ------------------------------------ | -------------------- | ---------------------------------------------------------------- |
-| `## AI Plan`                         | `/issue-start`       | Proposed implementation approach, files to change, test strategy |
+| `## AI Plan`                         | session start        | Proposed implementation approach, files to change, test strategy |
 | `## HCP 1 — Plan Accepted`           | after plan approval  | Timestamp; any engineer modifications                            |
-| `## Branch Created`                  | `/issue-branch`      | Branch name and timestamp                                        |
+| `## Branch Created`                  | branch creation      | Branch name and timestamp                                        |
 | `## Implementation Notes`            | after implementation | Non-obvious decisions made during coding                         |
 | `## Build & Test Results`            | after build/test     | One-line summary from `/dev-build` and `/dev-test`               |
 | `## HCP 2 — Implementation Accepted` | after push approval  | Timestamp; any engineer requests                                 |
