@@ -128,7 +128,7 @@ export function findNearestEdge(localX, localY, cells, threshold = 8) {
  *
  * Uses pure ODD_Q offset math (offset: -1, flat-top) — no honeycomb-grid API call needed.
  *
- * @param {{col:number, row:number}} candidateHex - honeycomb Hex object (only .col/.row used)
+ * @param {{col:number, row:number}} candidateHex - object with col/row offset coordinates
  * @param {Map<string,object>} cellByColRow - Map keyed by "${col},${row}" → cell object
  * @returns {object[]} array of cell objects (0–7 items, no duplicates)
  */

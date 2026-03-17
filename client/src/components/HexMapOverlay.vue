@@ -281,20 +281,26 @@ function onSvgClick(event) {
   }
 }
 
+// Single boolean per component instance (dev tool — only one HexMapOverlay is mounted at a time).
 let rafPending = false;
 
 function onSvgMouseMove(event) {
   if (!props.layers?.edges) return;
   if (rafPending) return;
   rafPending = true;
+  // Capture event properties synchronously — event.currentTarget is nulled after handler returns.
+  const svg = event.currentTarget;
+  const clientX = event.clientX;
+  const clientY = event.clientY;
   requestAnimationFrame(() => {
     rafPending = false;
-    const svg = event.currentTarget;
     if (!svg) return;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
     const pt = svg.createSVGPoint();
-    pt.x = event.clientX;
-    pt.y = event.clientY;
-    const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+    pt.x = clientX;
+    pt.y = clientY;
+    const svgPt = pt.matrixTransform(ctm.inverse());
     const { grid, tx, ty, cells, cellByColRow } = gridData.value;
     const localX = svgPt.x - tx;
     const localY = svgPt.y - ty;
