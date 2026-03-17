@@ -135,9 +135,7 @@ Without this entry, Claude Code will prompt for permission every time the agent 
 
 ## Step 6 — Register in `.claude/agents/registry.json`
 
-If this agent will be used in declarative workflow definitions (`.workflow.json` files under
-`docs/workflows/`), add an entry to the agent registry so the orchestration runtime can
-resolve it by `id`:
+Add an entry to the agent registry so conductor and other tools can resolve it by `id`:
 
 ```json
 {
@@ -149,9 +147,7 @@ resolve it by `id`:
 }
 ```
 
-The `id` field is what workflow definitions use in `agentId` — it must be unique across all
-agents and skills in the registry. If the agent is not used in any workflow definition, this
-step can be skipped.
+The `id` field must be unique across all agents and skills in the registry.
 
 ---
 
@@ -186,38 +182,36 @@ If you see `DRIFT`, the fields diverged — fix `.claude/agents/<name>.md` to ma
 
 ---
 
-## Worked Example: `issue-intake` agent
+## Worked Example: `devops` agent
 
-The `issue-intake` agent was created during the [PR #21 session](../devlog/2026-03-16.md)
-to promote issue creation from a flat skill into a standalone, version-controlled workflow.
-Here is how each step applied:
+The `devops` agent was created to centralise build, start, stop, and test operations. Here
+is how each step applied:
 
 **Step 1 — Name and responsibility:**
 
-- Name: `issue-intake`
-- Purpose: "Guide creation of a well-formed GitHub issue through interactive conversation"
-- Tools: `Bash, Read, Glob, Grep` (no file writing needed — the issue IS the artifact)
+- Name: `devops`
+- Purpose: "Automate the four core development operations — build, start, stop, and test"
+- Tools: `Bash, Read, Glob`
 
 **Step 2 — `design.md`:**
-Created at `docs/agents/issue-intake/design.md`. §4 specified four tools and a description
-covering the gather-refine-HCP-file flow with no branch or PR lifecycle.
+Created at `docs/agents/devops/design.md`. §4 specified three tools and a description
+covering the four operations.
 
 **Step 3 — `prompt.md`:**
-Created at `docs/agents/issue-intake/prompt.md`. The prompt defines the 2-step workflow:
-gather → HCP 1 → `gh issue create`.
+Created at `docs/agents/devops/prompt.md`. The prompt defines when to invoke each of the
+four owned skills.
 
 **Step 4 — Agent file:**
-`/agent-regenerate` wrote `.claude/agents/issue-intake.md` from §4.
+`/agent-regenerate` wrote `.claude/agents/devops.md` from §4.
 
 **Step 5 — Allow list:**
-Added `"Agent(issue-intake)"` to `.claude/settings.json`.
+Added `"Agent(devops)"` to `.claude/settings.json`.
 
 **Step 6 — Registry:**
-An entry was added to `.claude/agents/registry.json` for the `issue-intake` id so the
-workflow runtime can dispatch it from `issue-intake.workflow.json`.
+An entry was added to `.claude/agents/registry.json` for the `devops` id.
 
 **Step 7 — Verify:**
-`/agent-sync` reported `[issue-intake] IN SYNC`.
+`/agent-sync` reported `[devops] IN SYNC`.
 
 ---
 

@@ -39,14 +39,13 @@ relate to each other is the key to understanding how the whole thing holds toget
 An **agent** is a specialised AI subprocess with a defined responsibility boundary. The
 `devops` agent handles build, test, start, and stop operations. The `rules-lawyer` agent is
 the authoritative wargame rules arbiter — its rulings cannot be overridden by any other
-agent. The `issue-intake` agent guides issue creation from first draft to filed GitHub issue.
+agent.
 
 Each agent has two constraints baked in: an **allowed-tools list** (Bash, Read, Write, and
 so on) that limits what the subprocess can touch, and a **system prompt** that encodes its
 responsibilities and what it must not do. These constraints mean an agent cannot accidentally
 exceed its scope, even if the engineer asks it to. The `rules-lawyer` has no Bash access and
-cannot write files. The `issue-intake` agent has no Write access — it never touches the
-filesystem, it only calls `gh issue create`.
+cannot write files.
 
 Agents answer the question: _what is this AI subprocess allowed to do, and what is it
 responsible for?_
@@ -60,70 +59,53 @@ each skill is a numbered sequence of steps, each step describes exactly what to 
 to check, and many steps include an explicit human control point.
 
 Skills compose freely. The `/dev-build` skill (owned by `devops`) runs format, lint, and
-build in order, stopping on the first failure. The `/issue-implement` skill (owned by
-`project-manager`) chains multiple sub-skills in sequence — including `/doc-sync`,
-`/ecosystem-docs-generate`, `/dev-build`, `/dev-test`, `/dev-start`, `/dev-stop`,
-`/pr-create`, `/pr-review`, and `/issue-close` — each owned by a different agent. Skill
-ownership records accountability; cross-agent skill calls are normal and expected.
+build in order, stopping on the first failure. The `/pr-create` skill chains `/dev-build`
+as a prerequisite before opening a PR. Skill ownership records accountability; cross-agent
+skill calls are normal and expected.
 
 This composability is the key distinction from agents. An agent defines a scope boundary.
 A skill defines a procedure that can freely cross those boundaries to get a job done.
 Skills answer the question: _what steps, in what order, must be taken to complete this task?_
 
-### Layer 3 — Orchestration: declarative pipelines with gate checkpoints
+### Layer 3 — Orchestration: plugins with gate checkpoints
 
-As the skill count grew, a third layer became useful: **workflow definitions** — JSON files
-in `docs/workflows/` that describe pipelines declaratively, as ordered step sequences with
-explicit gate checkpoints between them.
+The orchestration layer sequences agents and skills into pipelines. lob-online uses the
+[wshobson/agents](https://github.com/wshobson/agents) plugin marketplace for this layer —
+specifically the `conductor` plugin (SDLC track management) and `agent-teams` plugin
+(parallel multi-agent workflows).
 
-Where a skill encodes its procedure in prose (Markdown), a workflow definition encodes the
-same pipeline as structured data: each step names an `agentId` (looked up in
-`.claude/agents/registry.json`), an `inputMap` that threads output from prior steps using
-`$.stepId.field` expressions, and an `onError` policy. Gate steps carry a `gateConfig`
-object describing the engineer's choices and which step to jump back to if they choose to
-revise rather than proceed.
-
-The `server/src/orchestrator/` Node.js runtime executes these definitions programmatically:
-it validates the definition against a Zod schema, iterates the step sequence, dispatches
-agent steps, presents CLI gate prompts, handles loop-back routing, and persists a
-`WorkflowInstance` JSON record to `docs/ailog/`.
+`conductor` organises work into **tracks**: a spec document, a phased implementation plan,
+and TDD task execution with checkpoints at phase boundaries. `/conductor:new-track` replaces
+the old `/issue-intake` + `/issue-implement` pair. `agent-teams` spawns multiple specialised
+reviewer or implementer agents in parallel; `/team-review` replaces the old `/pr-review`.
 
 The relationship between the three layers: **agents** define what each subprocess is allowed
-to do; **skills** compose agents and other skills into procedures with human control points;
-**orchestration** sequences those procedures as version-controlled data, making the pipeline
-inspectable, testable, and eventually executable without manual skill invocation.
-
-Today the workflow definitions formalise what the skills already do — they are documentation
-as much as executable specifications. In a later phase, the runtime will drive the
-`issue-implement` pipeline directly. The architecture is designed so that transition requires
-no changes to skill files: the runtime's `dispatch` interface resolves the same agent ids to
-the same Markdown prompts that engineers already invoke manually.
+to do; **skills** compose agents into procedures with human control points; **orchestration**
+sequences those procedures with gate checkpoints, making pipelines inspectable and driving
+them with minimal manual invocation.
 
 ## A Typical Session: From Idea to Merged PR
 
 Here is how all three layers cooperate in a typical feature implementation:
 
-1. **Issue intake** — The engineer invokes the `issue-intake` **agent** (layer 1), which
-   runs the `/issue-intake` **skill** (layer 2). The skill gathers the raw requirement,
-   refines the draft, consults `rules-lawyer` if the feature touches game mechanics, and
-   waits for explicit approval before calling `gh issue create`. The `issue-intake`
-   **workflow definition** (layer 3) formalises this same sequence as version-controlled JSON.
+1. **Track creation** — The engineer runs `/conductor:new-track`. Conductor gathers the
+   intent, consults `rules-lawyer` if the feature touches game mechanics, and writes a spec
+   and phased implementation plan. A checkpoint gate stops before any code is written.
 
-2. **Implementation** — `/issue-implement` (a skill) is invoked. The `project-manager` agent
-   fetches the issue, proposes a plan, and presents **HCP 1** — the workflow does not proceed
-   until the engineer says "proceed."
+2. **Implementation** — `/conductor:implement` is invoked. Conductor works through the
+   track's tasks in TDD order, pausing at phase boundaries for engineer approval.
 
-3. **Build and test** — The skill calls `/dev-build` and `/dev-test` (both owned by `devops`),
-   then presents **HCP 2**. The engineer says "push" before any code reaches GitHub.
+3. **Build and test** — After implementation, `/dev-build` and `/dev-test` (both owned by
+   `devops`) run. The engineer says "push" before any code reaches GitHub.
 
-4. **PR review** — `/pr-review` is invoked, running inside the `code-review` agent's scope.
-   It presents a structured findings table and waits for **HCP 2b**.
+4. **PR review** — `/team-review` is invoked, spawning parallel reviewers across security,
+   performance, architecture, and testing dimensions. Findings are presented and triaged.
 
-5. **Merge** — `/pr-merge` runs a final CI check, presents **HCP 3**, and squash-merges only
-   after the engineer says "merge."
+5. **Merge** — `/pr-merge` runs a final CI check and squash-merges only after the engineer
+   says "merge."
 
-6. **Close** — `/issue-close` posts a merge summary comment and closes the GitHub issue,
-   gated by **HCP 4**. The engineer must say "close" explicitly.
+6. **Close** — `/issue-close` posts a merge summary comment and closes the GitHub issue;
+   the engineer must say "close" explicitly.
 
 The entire session is recorded in a structured ailog file committed to the repository as a
 permanent audit trail.
@@ -153,15 +135,15 @@ on.
 ## What We Would Do Differently
 
 The ecosystem was built incrementally over multiple sessions, and a few decisions required
-revision. The most important: we initially had `issue-intake` as a flat skill owned by the
-`project-manager` agent. When we needed the intake workflow to have its own branch/PR
-lifecycle, we had to promote it to a first-class agent — a refactor that touched eight files.
-If we had modelled intake as a standalone agent from the start, that work would not have been
-needed.
+revision. The most important: we initially built a hand-rolled Node.js orchestrator runtime
+and four JSON workflow definitions to sequence agents and skills. When the wshobson/agents
+plugin marketplace matured, we migrated to `conductor` and `agent-teams` — removing ~3000
+lines of bespoke orchestration code and gaining parallel debugging, parallel review, and
+track-based SDLC management in exchange.
 
-The lesson is to be generous with agent scope when the workflow is genuinely distinct. Skills
-are great for procedures that compose naturally with other skills. Agents are better when a
-workflow needs its own branch, its own set of constraints, or its own collaborator graph.
+The lesson is to defer building orchestration infrastructure until you have concrete evidence
+that existing tools cannot solve the problem. The lob-specific orchestrator was a useful
+learning exercise, but the plugin layer proved more capable and maintainable.
 
 ## Using This Pattern in Your Own Project
 

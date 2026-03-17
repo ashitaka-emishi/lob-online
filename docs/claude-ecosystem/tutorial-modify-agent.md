@@ -95,11 +95,10 @@ If it reports `DRIFT`, review the output to see which field still disagrees and 
 
 ## Step 4 — Update `.claude/agents/registry.json` if needed
 
-The agent registry (`registry.json`) is used by the workflow orchestration runtime
-(`server/src/orchestrator/`) to resolve agents by `id`. If your change affects any of
-these fields, update the matching entry in `registry.json` too:
+The agent registry (`registry.json`) is used by conductor and other tools to resolve agents
+by `id`. If your change affects any of these fields, update the matching entry in
+`registry.json` too:
 
-- **`id`** changes — also update every `agentId` reference in `docs/workflows/*.workflow.json`
 - **`description`** changes — update the `description` field in `registry.json` to match
 - **`name`** changes — update the `name` field in `registry.json` to match
 
@@ -126,11 +125,10 @@ and ensures the build is clean before opening a PR.
 
 ---
 
-## Worked Example: Adding a tool to `project-manager`
+## Worked Example: Adding a tool to `devops`
 
-During the skill rename session (PR #14), the `project-manager` agent gained the `Grep` tool
-because the new `/issue-start` skill needed to search issue bodies for keywords. Here is how
-the change flowed:
+If the `devops` agent needed a new tool (e.g. `Grep` to search log files), here is how the
+change would flow:
 
 **Before (design.md §4):**
 
@@ -145,14 +143,13 @@ tools: Bash, Read, Glob, Grep
 ```
 
 1. `design.md §4` updated — `Grep` added to the `tools:` line
-2. A note added to the Implementation Checklist: "Added Grep — required by /issue-start
-   keyword search"
-3. `/agent-regenerate` ran — `.claude/agents/project-manager.md` frontmatter updated
-4. `/agent-sync` confirmed `[project-manager] IN SYNC`
+2. A note added to the Implementation Checklist explaining why
+3. `/agent-regenerate` ran — `.claude/agents/devops.md` frontmatter updated
+4. `/agent-sync` confirmed `[devops] IN SYNC`
 5. `/dev-build` passed — format clean, lint clean, build succeeded
 
-The key point: `design.md` now has a permanent record of _when_ `Grep` was added and _why_,
-which would be lost if `.claude/agents/project-manager.md` had been edited directly.
+The key point: `design.md` now has a permanent record of _when_ the tool was added and
+_why_, which would be lost if `.claude/agents/devops.md` had been edited directly.
 
 ---
 
