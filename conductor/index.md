@@ -17,6 +17,7 @@ Navigation hub for project context.
 | [north-calibration_20260317](./tracks/north-calibration_20260317/index.md)               | North Calibration — gridSpec northOffset + Cardinal Edge Labels | Complete |
 | [slope-arrow-geometry_20260317](./tracks/slope-arrow-geometry_20260317/index.md)         | Move Slope Arrow Geometry into gridData Computed                | Complete |
 | [elevation-model-refactor_20260317](./tracks/elevation-model-refactor_20260317/index.md) | Refactor Map Elevation Model                                    | Complete |
+| [pr91-review-fixes_20260317](./tracks/pr91-review-fixes_20260317/index.md)               | Address PR #91 Team-Review Findings                             | Pending  |
 
 ## Getting Started
 
