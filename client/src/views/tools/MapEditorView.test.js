@@ -515,6 +515,31 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 
+  it('onSeedToggle toggles a seed hex off when already in the set', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    const hexEditPanel = wrapper.findComponent({ name: 'HexEditPanel' });
+    // Toggle on
+    await hexEditPanel.vm.$emit('seed-toggle', {
+      hexId: '01.01',
+      confirmedData: { terrain: 'clear', elevation: 1 },
+    });
+    await flushPromises();
+    // Toggle off
+    await hexEditPanel.vm.$emit('seed-toggle', {
+      hexId: '01.01',
+      confirmedData: { terrain: 'clear', elevation: 1 },
+    });
+    await flushPromises();
+
+    // After toggling off, seed-hex-ids prop passed to HexMapOverlay should not contain '01.01'
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    expect(overlay.props('seedHexIds')).not.toContain('01.01');
+    wrapper.unmount();
+  });
+
   it('save success clears the v2 localStorage draft key', async () => {
     const fetchMock = vi
       .fn()

@@ -395,6 +395,54 @@ describe('HexMapOverlay', () => {
     expect(seedPoly).toBeTruthy();
   });
 
+  it('seed hex polygon has wider stroke-width than default', () => {
+    const cal = { ...BASE_CAL, strokeWidth: 0.5 };
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: cal,
+        calibrationMode: false,
+        vpHexIds: [],
+        seedHexIds: ['01.03'],
+        layers: {
+          grid: true,
+          terrain: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    const polygons = wrapper.findAll('polygon');
+    const seedPoly = polygons.find((p) => p.attributes('stroke') === '#cc44ee');
+    expect(seedPoly).toBeTruthy();
+    // strokeWidth for seed = max(0.5*2, 1.5) = 1.5
+    expect(Number(seedPoly.attributes('stroke-width'))).toBeGreaterThanOrEqual(1.5);
+  });
+
+  it('seed hex polygon has full stroke-opacity (1)', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        calibrationMode: false,
+        vpHexIds: [],
+        seedHexIds: ['01.03'],
+        layers: {
+          grid: true,
+          terrain: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    const polygons = wrapper.findAll('polygon');
+    const seedPoly = polygons.find((p) => p.attributes('stroke') === '#cc44ee');
+    expect(seedPoly).toBeTruthy();
+    expect(Number(seedPoly.attributes('stroke-opacity'))).toBe(1);
+  });
+
   it('no rotation transform when calibration.rotation is absent', () => {
     const wrapper = mount(HexMapOverlay, {
       props: { calibration: BASE_CAL },

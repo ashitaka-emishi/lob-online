@@ -1,11 +1,5 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-
-const PANEL_DISPLAY_NAMES = {
-  calibration: 'Grid Calibration',
-  hexEdit: 'Hex Edit',
-  losTest: 'LOS Test',
-};
 import HexMapOverlay from '../../components/HexMapOverlay.vue';
 import HexEditPanel from '../../components/HexEditPanel.vue';
 import CalibrationControls from '../../components/CalibrationControls.vue';
@@ -13,6 +7,12 @@ import LosTestPanel from '../../components/LosTestPanel.vue';
 import EditorToolbar from '../../components/EditorToolbar.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import { adjacentHexId } from '../../utils/hexGeometry.js';
+
+const PANEL_DISPLAY_NAMES = {
+  calibration: 'Grid Calibration',
+  hexEdit: 'Hex Edit',
+  losTest: 'LOS Test',
+};
 
 const STORAGE_KEY = 'lob-map-editor-calibration-v4';
 const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
