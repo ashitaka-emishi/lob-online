@@ -7,32 +7,11 @@
     "path": ".claude/agents/devops.md"
   },
   {
-    "id": "project-manager",
-    "name": "Project Manager Agent",
-    "description": "Manage the lob-online SDLC using GitHub as the source of truth",
-    "type": "agent",
-    "path": ".claude/agents/project-manager.md"
-  },
-  {
-    "id": "code-review",
-    "name": "Code Review Agent",
-    "description": "Review code quality for lob-online",
-    "type": "agent",
-    "path": ".claude/agents/code-review.md"
-  },
-  {
     "id": "rules-lawyer",
     "name": "Rules Lawyer Agent",
     "description": "Rules arbiter and wargame analyst for the lob-online project",
     "type": "agent",
     "path": ".claude/agents/rules-lawyer.md"
-  },
-  {
-    "id": "issue-intake",
-    "name": "Issue Intake Agent",
-    "description": "Guide the creation of a well-formed, AI-actionable GitHub issue through interactive conversation — no branch, no artifact, no PR",
-    "type": "agent",
-    "path": ".claude/agents/issue-intake.md"
   },
   {
     "id": "dev-build",
@@ -75,20 +54,6 @@
     "description": "Squash-merge the current PR and delete the branch",
     "type": "skill",
     "path": ".claude/commands/pr-merge.md"
-  },
-  {
-    "id": "pr-review",
-    "name": "PR Review Skill",
-    "description": "Review the current PR for coding standards, test coverage, and common defects",
-    "type": "skill",
-    "path": ".claude/commands/pr-review.md"
-  },
-  {
-    "id": "issue-implement",
-    "name": "Issue Implement Skill",
-    "description": "Orchestrate the full ticket-to-merge workflow for a GitHub issue with human control points",
-    "type": "skill",
-    "path": ".claude/commands/issue-implement.md"
   },
   {
     "id": "issue-branch",
