@@ -153,12 +153,12 @@ const showPullConfirm = ref(false);
 const isPulling = ref(false);
 const pullError = ref('');
 
-const _saveMapDraftTimer = ref(null);
+let saveMapDraftTimer = null;
 
 function saveMapDraft() {
-  if (_saveMapDraftTimer.value !== null) clearTimeout(_saveMapDraftTimer.value);
-  _saveMapDraftTimer.value = setTimeout(() => {
-    _saveMapDraftTimer.value = null;
+  if (saveMapDraftTimer !== null) clearTimeout(saveMapDraftTimer);
+  saveMapDraftTimer = setTimeout(() => {
+    saveMapDraftTimer = null;
     if (!mapData.value) return;
     try {
       const draft = { ...mapData.value, _savedAt: Date.now() };
@@ -443,26 +443,30 @@ function onHexUpdate(updatedHex) {
 
 function onDeriveWedges({ hexId, wedgeElevations, slope, edges }) {
   if (!mapData.value) return;
-  const currentHex = mapData.value.hexes.find((h) => h.hex === hexId) ?? {
-    hex: hexId,
-    terrain: 'unknown',
-  };
-  onHexUpdate({ ...currentHex, wedgeElevations, slope, edges });
+
+  // Build a lookup map so each neighbor resolve is O(1) instead of O(n).
+  const hexIndex = new Map(mapData.value.hexes.map((h, i) => [h.hex, i]));
+
+  // Collect all updated hex objects before writing anything.
+  const updates = [];
+
+  const currentIdx = hexIndex.get(hexId);
+  const currentHex =
+    currentIdx !== undefined ? mapData.value.hexes[currentIdx] : { hex: hexId, terrain: 'unknown' };
+  updates.push({ ...currentHex, wedgeElevations, slope, edges });
 
   for (let i = 0; i < 6; i++) {
     const neighborId = adjacentHexId(hexId, DIRS[i], calibration.value);
     if (!neighborId) continue;
 
-    const oppIdx = (i + 3) % 6;
-    const neighborHex = mapData.value.hexes.find((h) => h.hex === neighborId) ?? {
-      hex: neighborId,
-      terrain: 'unknown',
-    };
+    const nIdx = hexIndex.get(neighborId);
+    const neighborHex =
+      nIdx !== undefined ? mapData.value.hexes[nIdx] : { hex: neighborId, terrain: 'unknown' };
 
     const neighborWedges = neighborHex.wedgeElevations
       ? [...neighborHex.wedgeElevations]
       : [0, 0, 0, 0, 0, 0];
-    neighborWedges[oppIdx] = wedgeElevations[i];
+    neighborWedges[(i + 3) % 6] = wedgeElevations[i];
 
     const neighborDerived = deriveEdgesAndSlope({
       wedgeElevations: neighborWedges,
@@ -470,13 +474,25 @@ function onDeriveWedges({ hexId, wedgeElevations, slope, edges }) {
       edges: neighborHex.edges ?? {},
     });
 
-    onHexUpdate({
+    updates.push({
       ...neighborHex,
       wedgeElevations: neighborWedges,
       slope: neighborDerived.slope,
       edges: neighborDerived.edges,
     });
   }
+
+  // Apply all updates in a single pass — one reactive write per hex.
+  for (const updatedHex of updates) {
+    const idx = hexIndex.get(updatedHex.hex);
+    if (idx !== undefined) {
+      mapData.value.hexes[idx] = updatedHex;
+    } else {
+      mapData.value.hexes.push(updatedHex);
+    }
+  }
+  unsaved.value = true;
+  saveMapDraft();
 }
 
 // ── Keyboard listener ─────────────────────────────────────────────────────────
@@ -567,7 +583,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeyDown);
-  if (_saveMapDraftTimer.value !== null) clearTimeout(_saveMapDraftTimer.value);
+  if (saveMapDraftTimer !== null) clearTimeout(saveMapDraftTimer);
 });
 </script>
 

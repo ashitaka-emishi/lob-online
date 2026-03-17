@@ -162,6 +162,7 @@ function autoDerive() {
   });
   form.value.slope = slope;
   form.value.edges = edges;
+  emitUpdate();
 
   emit('derive-wedges', {
     hexId: props.hex.hex,
