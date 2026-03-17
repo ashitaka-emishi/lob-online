@@ -1,0 +1,20 @@
+{
+  "id": "slope-arrow-geometry_20260317",
+  "title": "Move Slope Arrow Geometry into gridData Computed",
+  "type": "refactor",
+  "status": "complete",
+  "created": "2026-03-17T00:00:00.000Z",
+  "updated": "2026-03-17T14:51:00.000Z",
+  "githubIssue": 87,
+  "phases": {
+    "total": 2,
+    "completed": 2
+  },
+  "tasks": {
+    "total": 5,
+    "completed": 5
+  },
+  "commits": [
+    "057052c: refactor(HexMapOverlay): move slope arrow geometry into gridData computed (#87)"
+  ]
+}

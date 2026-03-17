@@ -12,9 +12,10 @@ Navigation hub for project context.
 
 ## Active Tracks
 
-| Track ID                                                                   | Title                                                           | Status  |
-| -------------------------------------------------------------------------- | --------------------------------------------------------------- | ------- |
-| [north-calibration_20260317](./tracks/north-calibration_20260317/index.md) | North Calibration — gridSpec northOffset + Cardinal Edge Labels | Pending |
+| Track ID                                                                         | Title                                                           | Status   |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------- |
+| [north-calibration_20260317](./tracks/north-calibration_20260317/index.md)       | North Calibration — gridSpec northOffset + Cardinal Edge Labels | Complete |
+| [slope-arrow-geometry_20260317](./tracks/slope-arrow-geometry_20260317/index.md) | Move Slope Arrow Geometry into gridData Computed                | Complete |
 
 ## Getting Started
 

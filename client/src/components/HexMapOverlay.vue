@@ -144,6 +144,9 @@ const gridData = computed(() => {
   const tx = dx - anchorHex.x;
   const ty = props.imageHeight * imageScale - dy - anchorHex.y;
 
+  const northOffset = props.calibration.northOffset ?? 0;
+  const edgeLabels = getEdgeLabels(northOffset);
+
   const cells = [];
   grid.forEach((hex) => {
     const corners = hex.corners;
@@ -164,6 +167,11 @@ const gridData = computed(() => {
     const isLosB = id === props.losHexB;
     const isLosPath = losPathSet.value.has(id);
     const isLosBlocked = id === props.losBlockedHex;
+    const slope = known?.slope ?? null;
+    const slopeDir = slope !== null && slope !== undefined ? DIRS[slope] : null;
+    const slopeMid = slopeDir ? edgeMidpoint(corners, slopeDir) : null;
+    const slopeArrowLine = slopeMid ? { x1: cx, y1: cy, x2: slopeMid.x, y2: slopeMid.y } : null;
+    const slopeArrowLabel = slopeDir ? (edgeLabels[slope] ?? null) : null;
     cells.push({
       id,
       points,
@@ -174,7 +182,7 @@ const gridData = computed(() => {
       fillOpacity,
       terrain,
       elevation: known?.elevation ?? null,
-      slope: known?.slope ?? null,
+      slope,
       wedgeElevations: known?.wedgeElevations ?? null,
       edges: known?.edges ?? {},
       features: known?.features ?? [],
@@ -185,6 +193,8 @@ const gridData = computed(() => {
       isLosB,
       isLosPath,
       isLosBlocked,
+      slopeArrowLine,
+      slopeArrowLabel,
     });
   });
 
@@ -236,24 +246,6 @@ function strokeOpacityForCell(cell) {
   )
     return 1;
   return 0.6;
-}
-
-// Slope direction arrows: draw from centre toward the geometric edge midpoint of the slope index.
-// SLOPE_DIRS maps the geometric index to a geometric direction string used by edgeMidpoint.
-const SLOPE_DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
-
-function slopeArrowLine(cell) {
-  if (cell.slope === null || cell.slope === undefined) return null;
-  const dir = SLOPE_DIRS[cell.slope];
-  if (!dir) return null;
-  const mid = edgeMidpoint(cell.corners, dir);
-  return { x1: cell.cx, y1: cell.cy, x2: mid.x, y2: mid.y };
-}
-
-function slopeArrowLabel(cell) {
-  if (cell.slope === null || cell.slope === undefined) return null;
-  const northOffset = props.calibration.northOffset ?? 0;
-  return getEdgeLabels(northOffset)[cell.slope] ?? null;
 }
 
 function onSvgClick(event) {
@@ -432,25 +424,23 @@ function onSvgMouseMove(event) {
         <!-- 6. Slope arrows -->
         <g v-if="layers.slopeArrows" class="layer-slope-arrows">
           <template v-for="cell in cells" :key="'slope-' + cell.id">
-            <template v-if="cell.slope !== null && cell.slope !== undefined">
+            <template v-if="cell.slopeArrowLine">
               <line
-                v-if="slopeArrowLine(cell)"
-                v-bind="slopeArrowLine(cell)"
+                v-bind="cell.slopeArrowLine"
                 stroke="#ffaa44"
                 stroke-width="1.5"
                 marker-end="url(#arrow)"
                 pointer-events="none"
               />
               <text
-                v-if="slopeArrowLine(cell)"
-                :x="slopeArrowLine(cell).x2"
-                :y="slopeArrowLine(cell).y2 - 4"
+                :x="cell.slopeArrowLine.x2"
+                :y="cell.slopeArrowLine.y2 - 4"
                 text-anchor="middle"
                 font-size="8"
                 fill="#ffaa44"
                 pointer-events="none"
               >
-                {{ slopeArrowLabel(cell) }}
+                {{ cell.slopeArrowLabel }}
               </text>
             </template>
           </template>
