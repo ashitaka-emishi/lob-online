@@ -1,0 +1,17 @@
+{
+  "id": "hex-mousemove-perf_20260317",
+  "title": "Throttle HexMapOverlay onSvgMouseMove with rAF + Spatial Index",
+  "type": "bug",
+  "status": "pending",
+  "created": "2026-03-17T00:00:00.000Z",
+  "updated": "2026-03-17T00:00:00.000Z",
+  "githubIssue": 88,
+  "phases": {
+    "total": 4,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 12,
+    "completed": 0
+  }
+}

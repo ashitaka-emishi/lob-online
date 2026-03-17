@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { defineHex, Grid, rectangle, Orientation } from 'honeycomb-grid';
 import {
   edgeMidpoint,
   edgeLine20_80,
@@ -7,6 +8,8 @@ import {
   getEdgeLabels,
   DIR_TO_CORNERS,
   DIRS,
+  findNearestEdge,
+  getCellAndNeighbors,
 } from './hexGeometry.js';
 
 // Simple synthetic corners for a flat-top hex centred at (0,0) with radius 2.
@@ -171,6 +174,115 @@ describe('DIR_TO_CORNERS', () => {
       expect(DIR_TO_CORNERS[dir]).toBeDefined();
       expect(DIR_TO_CORNERS[dir]).toHaveLength(2);
     }
+  });
+});
+
+describe('findNearestEdge', () => {
+  // Re-use the CORNERS fixture (flat-top hex centred at origin, radius 2).
+  // Edge midpoints:
+  //   N  → (0, -2)   S  → (0, 2)
+  //   NE → (1.5, -1) SW → (-1.5, 1)
+  //   SE → (1.5, 1)  NW → (-1.5, -1)
+  const cell = { id: 'A', corners: CORNERS };
+
+  it('returns nearest edge when cursor is exactly on N midpoint', () => {
+    const result = findNearestEdge(0, -2, [cell]);
+    expect(result).toEqual({ hexId: 'A', dir: 'N' });
+  });
+
+  it('returns nearest edge when cursor is exactly on S midpoint', () => {
+    const result = findNearestEdge(0, 2, [cell]);
+    expect(result).toEqual({ hexId: 'A', dir: 'S' });
+  });
+
+  it('returns nearest edge when cursor is exactly on SE midpoint', () => {
+    const result = findNearestEdge(1.5, 1, [cell]);
+    expect(result).toEqual({ hexId: 'A', dir: 'SE' });
+  });
+
+  it('returns null when cursor is far from all edges (custom threshold)', () => {
+    // All edge midpoints are ≥ ~1.73 from (0,0); use threshold=1 to force null
+    const result = findNearestEdge(0, 0, [cell], 1);
+    expect(result).toBeNull();
+  });
+
+  it('returns null when cursor is far away (default threshold)', () => {
+    const result = findNearestEdge(0, -100, [cell]);
+    expect(result).toBeNull();
+  });
+
+  it('returns null for empty cell list', () => {
+    expect(findNearestEdge(0, -2, [])).toBeNull();
+  });
+
+  it('picks the closer edge when two cells are present', () => {
+    // Second cell shifted 10 units right: same corners + 10 on x
+    const shifted = CORNERS.map((c) => ({ x: c.x + 10, y: c.y }));
+    const cellB = { id: 'B', corners: shifted };
+    // Cursor at (10, -2) = N midpoint of cellB; N midpoint of cellA is at (0, -2), dist=10
+    const result = findNearestEdge(10, -2, [cell, cellB]);
+    expect(result).toEqual({ hexId: 'B', dir: 'N' });
+  });
+
+  it('uses custom threshold — excludes edges beyond it', () => {
+    // N midpoint at (0, -2); cursor at (0, -9) → dist=7, within default threshold=8 but not 6
+    expect(findNearestEdge(0, -9, [cell], 6)).toBeNull();
+    expect(findNearestEdge(0, -9, [cell], 8)).toEqual({ hexId: 'A', dir: 'N' });
+  });
+});
+
+describe('getCellAndNeighbors', () => {
+  // Build a real 4×3 flat-top honeycomb-grid (same params as HexMapOverlay BASE_CAL).
+  const Hex = defineHex({
+    dimensions: { xRadius: 35, yRadius: 35 },
+    orientation: Orientation.FLAT,
+    origin: { x: 0, y: 0 },
+    offset: -1,
+  });
+  const grid = new Grid(Hex, rectangle({ width: 4, height: 3 }));
+
+  // Build a cellByColRow map of minimal cell objects { col, row }
+  const cellByColRow = new Map();
+  grid.forEach((hex) => {
+    cellByColRow.set(`${hex.col},${hex.row}`, {
+      id: `${hex.col},${hex.row}`,
+      col: hex.col,
+      row: hex.row,
+    });
+  });
+
+  it('returns the candidate cell itself', () => {
+    const hex = grid.getHex({ col: 1, row: 1 });
+    const result = getCellAndNeighbors(hex, grid, cellByColRow);
+    expect(result.some((c) => c.col === 1 && c.row === 1)).toBe(true);
+  });
+
+  it('returns up to 7 cells (candidate + 6 neighbors) for interior hex', () => {
+    const hex = grid.getHex({ col: 1, row: 1 });
+    const result = getCellAndNeighbors(hex, grid, cellByColRow);
+    expect(result.length).toBeGreaterThanOrEqual(4);
+    expect(result.length).toBeLessThanOrEqual(7);
+  });
+
+  it('returns fewer cells for a corner hex (some neighbors out of bounds)', () => {
+    const hex = grid.getHex({ col: 0, row: 0 });
+    const interior = grid.getHex({ col: 1, row: 1 });
+    const cornerResult = getCellAndNeighbors(hex, grid, cellByColRow);
+    const interiorResult = getCellAndNeighbors(interior, grid, cellByColRow);
+    expect(cornerResult.length).toBeLessThan(interiorResult.length);
+  });
+
+  it('contains no duplicates', () => {
+    const hex = grid.getHex({ col: 1, row: 1 });
+    const result = getCellAndNeighbors(hex, grid, cellByColRow);
+    const ids = result.map((c) => c.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('returns empty array when candidate hex is not in cellByColRow', () => {
+    const hex = grid.getHex({ col: 1, row: 1 });
+    const result = getCellAndNeighbors(hex, grid, new Map());
+    expect(result).toEqual([]);
   });
 });
 
