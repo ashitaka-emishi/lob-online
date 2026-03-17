@@ -127,7 +127,7 @@ describe('HexEditPanel', () => {
     expect(emitted[emitted.length - 1][0].slope).toBeUndefined();
   });
 
-  it('renders "Show Wedge Editor" toggle button', () => {
+  it('renders "Add Wedge Elevations" button when hex has no wedge elevations', () => {
     const wrapper = mount(HexEditPanel, {
       props: {
         hex: { hex: '05.10', terrain: 'clear', hexsides: {} },
@@ -135,22 +135,29 @@ describe('HexEditPanel', () => {
       },
     });
     expect(wrapper.find('.toggle-wedge-btn').exists()).toBe(true);
-    expect(wrapper.find('.toggle-wedge-btn').text()).toContain('Show Wedge Editor');
+    expect(wrapper.find('.toggle-wedge-btn').text()).toContain('Add Wedge Elevations');
   });
 
-  it('clicking "Show Wedge Editor" reveals the WedgeEditor component', async () => {
+  it('WedgeEditor renders automatically when hex has wedgeElevations (no click required)', async () => {
+    const wrapper = mount(HexEditPanel, {
+      props: {
+        hex: { hex: '05.10', terrain: 'clear', hexsides: {}, wedgeElevations: [0, 0, 0, 0, 0, 0] },
+        selectedHexId: '05.10',
+      },
+    });
+    const { default: WedgeEditor } = await import('./WedgeEditor.vue');
+    expect(wrapper.findComponent(WedgeEditor).exists()).toBe(true);
+  });
+
+  it('WedgeEditor is NOT rendered when hex has no wedgeElevations', async () => {
     const wrapper = mount(HexEditPanel, {
       props: {
         hex: { hex: '05.10', terrain: 'clear', hexsides: {} },
         selectedHexId: '05.10',
       },
     });
-    // Initially hidden
     const { default: WedgeEditor } = await import('./WedgeEditor.vue');
     expect(wrapper.findComponent(WedgeEditor).exists()).toBe(false);
-
-    await wrapper.find('.toggle-wedge-btn').trigger('click');
-    expect(wrapper.findComponent(WedgeEditor).exists()).toBe(true);
   });
 
   it('renders EdgeEditPanel for the edges section', () => {
@@ -284,7 +291,6 @@ describe('HexEditPanel', () => {
         selectedHexId: '05.10',
       },
     });
-    await wrapper.find('.toggle-wedge-btn').trigger('click');
 
     const { default: WedgeEditor } = await import('./WedgeEditor.vue');
     const wedge = wrapper.findComponent(WedgeEditor);
@@ -293,5 +299,33 @@ describe('HexEditPanel', () => {
     const emitted = wrapper.emitted('hex-update');
     expect(emitted).toBeTruthy();
     expect(emitted[emitted.length - 1][0].wedgeElevations).toEqual([10, 0, 0, 0, 0, 0]);
+  });
+
+  it('northOffset=3 slope buttons show SM cardinal labels W,NW,NE,E,SE,SW', () => {
+    const wrapper = mount(HexEditPanel, {
+      props: {
+        hex: { hex: '05.10', terrain: 'clear', hexsides: {} },
+        selectedHexId: '05.10',
+        northOffset: 3,
+      },
+    });
+    const slopeBtns = wrapper.findAll('.slope-btn');
+    const labels = slopeBtns.map((b) => b.text()).filter((t) => t !== 'None');
+    expect(labels).toEqual(['W', 'NW', 'NE', 'E', 'SE', 'SW']);
+  });
+
+  it('northOffset=3 slope button click for index 0 emits slope=0 (geographic W)', async () => {
+    const wrapper = mount(HexEditPanel, {
+      props: {
+        hex: { hex: '05.10', terrain: 'clear', hexsides: {} },
+        selectedHexId: '05.10',
+        northOffset: 3,
+      },
+    });
+    const wBtn = wrapper.findAll('.slope-btn').find((b) => b.text() === 'W');
+    await wBtn.trigger('click');
+    const emitted = wrapper.emitted('hex-update');
+    expect(emitted).toBeTruthy();
+    expect(emitted[emitted.length - 1][0].slope).toBe(0);
   });
 });

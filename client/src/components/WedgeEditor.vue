@@ -1,5 +1,7 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+
+import { getEdgeLabels } from '../utils/hexGeometry.js';
 
 const props = defineProps({
   wedgeElevations: {
@@ -18,7 +20,8 @@ const SIZE = 200;
 const CX = SIZE / 2;
 const CY = SIZE / 2;
 const RADIUS = 80;
-const WEDGE_DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
+
+const dirLabels = computed(() => getEdgeLabels(props.northOffset));
 
 // Compute 6 corners for a flat-top hexagon centred at (CX, CY) with RADIUS.
 // Corner i is at angle i*60° (starting East=0°).
@@ -126,7 +129,7 @@ function cancelEdit() {
 
       <!-- Direction labels near perimeter -->
       <text
-        v-for="(_, i) in WEDGE_DIRS"
+        v-for="(label, i) in dirLabels"
         :key="'dir-' + i"
         :x="CX + (RADIUS + 12) * Math.cos((Math.PI / 3) * i + Math.PI / 6)"
         :y="CY + (RADIUS + 12) * Math.sin((Math.PI / 3) * i + Math.PI / 6)"
@@ -136,15 +139,13 @@ function cancelEdit() {
         fill="#888"
         pointer-events="none"
       >
-        {{ WEDGE_DIRS[(i + props.northOffset) % 6] }}
+        {{ label }}
       </text>
     </svg>
 
     <!-- Inline edit form -->
     <div v-if="editingWedge !== null" class="wedge-input-row">
-      <span class="wedge-input-label">
-        Wedge {{ WEDGE_DIRS[(editingWedge + props.northOffset) % 6] }} elevation offset:
-      </span>
+      <span class="wedge-input-label"> Wedge {{ dirLabels[editingWedge] }} elevation offset: </span>
       <input
         v-model="editValue"
         type="number"
