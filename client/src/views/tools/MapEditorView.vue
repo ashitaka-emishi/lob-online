@@ -1,5 +1,11 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+
+const PANEL_DISPLAY_NAMES = {
+  calibration: 'Grid Calibration',
+  hexEdit: 'Hex Edit',
+  losTest: 'LOS Test',
+};
 import HexMapOverlay from '../../components/HexMapOverlay.vue';
 import HexEditPanel from '../../components/HexEditPanel.vue';
 import CalibrationControls from '../../components/CalibrationControls.vue';
@@ -44,6 +50,9 @@ const showExportOverlay = ref(false);
 
 // Accordion: only one panel open at a time
 const openPanel = ref('hexEdit'); // 'calibration' | 'hexEdit' | 'losTest' | null
+const activeToolName = computed(() =>
+  openPanel.value ? (PANEL_DISPLAY_NAMES[openPanel.value] ?? openPanel.value) : null
+);
 
 function togglePanel(name) {
   openPanel.value = openPanel.value === name ? null : name;
@@ -276,7 +285,12 @@ const selectedHexId = ref(null);
 
 const selectedHex = computed(() => {
   if (!selectedHexId.value || !mapData.value) return null;
-  return mapData.value.hexes.find((h) => h.hex === selectedHexId.value) ?? null;
+  return (
+    mapData.value.hexes.find((h) => h.hex === selectedHexId.value) ?? {
+      hex: selectedHexId.value,
+      terrain: 'unknown',
+    }
+  );
 });
 
 // ── LOS pick mode ─────────────────────────────────────────────────────────────
@@ -504,6 +518,7 @@ onUnmounted(() => {
     <header class="editor-header">
       <span class="title">Map Editor</span>
       <span v-if="selectedHexId" class="selected-hex">Hex: {{ selectedHexId }}</span>
+      <span v-if="activeToolName" class="active-tool">| Tool: {{ activeToolName }}</span>
       <span class="spacer" />
       <span v-if="saveStatus === 'saved'" class="save-flash">Saved</span>
       <span v-if="saveStatus === 'error'" class="save-error">Error</span>
@@ -545,12 +560,10 @@ onUnmounted(() => {
       :layers="layers"
       :terrain-types="terrainTypes"
       :edge-feature-types="edgeFeatureTypes"
-      :has-map-data="!!mapData"
       @mode-change="editorMode = $event"
       @terrain-change="paintTerrain = $event"
       @edge-feature-change="paintEdgeFeature = $event"
       @layer-change="layers = $event"
-      @export-click="showExportOverlay = true"
     />
 
     <!-- Load / validation errors -->
@@ -633,7 +646,7 @@ onUnmounted(() => {
           :class="{ 'accordion-flex': openPanel === 'hexEdit' }"
         >
           <button class="accordion-header" @click="togglePanel('hexEdit')">
-            <span>{{ selectedHexId ? `Hex ${selectedHexId}` : 'Hex Edit' }}</span>
+            <span>Hex Edit</span>
             <span class="accordion-chevron">{{ openPanel === 'hexEdit' ? '▾' : '▸' }}</span>
           </button>
           <div v-if="openPanel === 'hexEdit'" class="accordion-hex-content">
@@ -742,6 +755,11 @@ onUnmounted(() => {
 
 .selected-hex {
   color: #ffdd00;
+  font-size: 0.85rem;
+}
+
+.active-tool {
+  color: #a0c8e0;
   font-size: 0.85rem;
 }
 

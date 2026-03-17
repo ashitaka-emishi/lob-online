@@ -140,7 +140,7 @@ const gridData = computed(() => {
     const cx = hex.x;
     const cy = hex.y;
     const gameCol = hex.col + 1;
-    const gameRow = gridRows - hex.row;
+    const gameRow = gridRows - hex.row - (gameCol % 2 === 0 ? 1 : 0);
     const id = `${String(gameCol).padStart(2, '0')}.${String(gameRow).padStart(2, '0')}`;
     const known = hexIndex.value[id];
     const terrain = known?.terrain ?? 'unknown';
@@ -266,7 +266,7 @@ function onSvgClick(event) {
     if (hex) {
       const gridRows = props.calibration.rows > 0 ? props.calibration.rows : 35;
       const gameCol = hex.col + 1;
-      const gameRow = gridRows - hex.row;
+      const gameRow = gridRows - hex.row - (gameCol % 2 === 0 ? 1 : 0);
       const id = `${String(gameCol).padStart(2, '0')}.${String(gameRow).padStart(2, '0')}`;
       emit('hex-click', id, event);
     }
@@ -346,8 +346,8 @@ function onSvgMouseMove(event) {
         </g>
 
         <!-- 3. Grid (polygon outlines only — already rendered via terrain stroke above) -->
-        <!-- Labels (calibration mode) -->
-        <g v-if="calibrationMode" class="layer-labels">
+        <!-- Labels (shown when grid layer is on) -->
+        <g v-if="layers.grid" class="layer-labels">
           <text
             v-for="cell in cells"
             :key="'lbl-' + cell.id"
@@ -355,8 +355,8 @@ function onSvgMouseMove(event) {
             :y="cell.cy"
             text-anchor="middle"
             dominant-baseline="middle"
-            font-size="7"
-            fill="#ffdd00"
+            font-size="0.78rem"
+            fill="#00008b"
             fill-opacity="0.85"
             pointer-events="none"
           >

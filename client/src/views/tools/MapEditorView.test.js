@@ -451,6 +451,50 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 
+  it('opening one accordion panel closes any previously open panel', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    // hexEdit is open by default — HexEditPanel stub should be rendered
+    expect(wrapper.find('.hex-edit-panel-stub').exists()).toBe(true);
+
+    // Click the Grid Calibration header to open it
+    const headers = wrapper.findAll('button.accordion-header');
+    const calHeader = headers.find((h) => h.text().includes('Grid Calibration'));
+    await calHeader.trigger('click');
+    await flushPromises();
+
+    // hexEdit panel should now be closed
+    expect(wrapper.find('.hex-edit-panel-stub').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it('top bar displays active tool name when a panel is open', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    // hexEdit is open by default
+    const activeTool = wrapper.find('.active-tool');
+    expect(activeTool.exists()).toBe(true);
+    expect(activeTool.text()).toContain('Hex Edit');
+    wrapper.unmount();
+  });
+
+  it('Hex Edit accordion header always reads "Hex Edit"', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    const headers = wrapper.findAll('button.accordion-header');
+    const hexEditHeader = headers.find((h) => h.text().includes('Hex Edit'));
+    expect(hexEditHeader).toBeTruthy();
+    // Should not contain a dynamic hex ID — just the fixed label
+    expect(hexEditHeader.text()).not.toMatch(/Hex \d{2}\.\d{2}/);
+    wrapper.unmount();
+  });
+
   it('save success clears the v2 localStorage draft key', async () => {
     const fetchMock = vi
       .fn()

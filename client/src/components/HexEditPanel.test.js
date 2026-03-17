@@ -216,6 +216,17 @@ describe('HexEditPanel', () => {
     expect(updated.features[0].type).toBe('ford');
   });
 
+  it('renders terrain and elevation fields when a minimal default hex (no hexsides) is passed', () => {
+    const wrapper = mount(HexEditPanel, {
+      props: {
+        hex: { hex: '03.05', terrain: 'unknown' },
+        selectedHexId: '03.05',
+      },
+    });
+    expect(wrapper.find('select').exists()).toBe(true);
+    expect(wrapper.find('input[type="number"]').exists()).toBe(true);
+  });
+
   it('wedge editor update emits hex-update with wedgeElevations', async () => {
     const wrapper = mount(HexEditPanel, {
       props: {

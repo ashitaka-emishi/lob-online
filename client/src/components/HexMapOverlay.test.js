@@ -306,6 +306,70 @@ describe('HexMapOverlay', () => {
     expect(html).toContain('rotate(5)');
   });
 
+  it('hex ID labels are dark blue (#00008b) and use 0.78rem font size', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        layers: {
+          grid: true,
+          terrain: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    const labels = wrapper.findAll('text');
+    expect(labels.length).toBeGreaterThan(0);
+    const label = labels[0];
+    expect(label.attributes('fill')).toBe('#00008b');
+    expect(label.attributes('font-size')).toBe('0.78rem');
+  });
+
+  it('labels hidden when layers.grid is false', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        layers: {
+          grid: false,
+          terrain: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    // No layer-labels group rendered
+    const labelGroup = wrapper.find('.layer-labels');
+    expect(labelGroup.exists()).toBe(false);
+  });
+
+  it('even-column hex IDs display row value decremented by one', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        layers: {
+          grid: true,
+          terrain: true,
+          elevation: false,
+          wedges: false,
+          edges: false,
+          slopeArrows: false,
+        },
+      },
+    });
+    // BASE_CAL: rows=3, cols=4
+    // hex(col=1, row=0) → gameCol=2 (even) → with fix: gameRow = 3-0-1 = 2 → "02.02"
+    // Without fix it would be "02.03"
+    const labelTexts = wrapper.findAll('text').map((el) => el.text());
+    expect(labelTexts).toContain('02.02');
+    expect(labelTexts).not.toContain('02.03');
+    // Odd column is unaffected: hex(col=0, row=0) → gameCol=1 (odd) → gameRow=3-0=3 → "01.03"
+    expect(labelTexts).toContain('01.03');
+  });
+
   it('no rotation transform when calibration.rotation is absent', () => {
     const wrapper = mount(HexMapOverlay, {
       props: { calibration: BASE_CAL },

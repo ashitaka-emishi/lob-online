@@ -31,19 +31,9 @@ defineProps({
     type: Array,
     default: () => [],
   },
-  hasMapData: {
-    type: Boolean,
-    default: false,
-  },
 });
 
-const emit = defineEmits([
-  'mode-change',
-  'terrain-change',
-  'edge-feature-change',
-  'layer-change',
-  'export-click',
-]);
+const emit = defineEmits(['mode-change', 'terrain-change', 'edge-feature-change', 'layer-change']);
 
 const MODES = ['select', 'paint', 'elevation', 'edge'];
 const LAYER_KEYS = ['grid', 'terrain', 'elevation', 'wedges', 'edges', 'slopeArrows'];
@@ -97,8 +87,6 @@ const LAYER_KEYS = ['grid', 'terrain', 'elevation', 'wedges', 'edges', 'slopeArr
         {{ key }}
       </label>
     </div>
-
-    <button class="export-btn" :disabled="!hasMapData" @click="emit('export-click')">Export</button>
   </div>
 </template>
 
@@ -161,20 +149,5 @@ const LAYER_KEYS = ['grid', 'terrain', 'elevation', 'wedges', 'edges', 'slopeArr
   gap: 0.2rem;
   color: #a09880;
   cursor: pointer;
-}
-
-.export-btn {
-  padding: 0.2rem 0.6rem;
-  background: #2a3a4a;
-  border: 1px solid #3a6a8a;
-  color: #88c0d8;
-  cursor: pointer;
-  font-size: 0.78rem;
-  margin-left: auto;
-}
-
-.export-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
 }
 </style>

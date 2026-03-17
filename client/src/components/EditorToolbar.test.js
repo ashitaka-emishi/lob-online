@@ -128,25 +128,10 @@ describe('EditorToolbar', () => {
     expect(emitted[0][0].elevation).toBe(true);
   });
 
-  it('Export button is disabled when hasMapData=false', () => {
+  it('Export button is not rendered in toolbar (moved to header)', () => {
     const wrapper = mount(EditorToolbar, {
-      props: { editorMode: 'select', layers: BASE_LAYERS, hasMapData: false },
+      props: { editorMode: 'select', layers: BASE_LAYERS },
     });
-    expect(wrapper.find('.export-btn').element.disabled).toBe(true);
-  });
-
-  it('Export button is enabled when hasMapData=true', () => {
-    const wrapper = mount(EditorToolbar, {
-      props: { editorMode: 'select', layers: BASE_LAYERS, hasMapData: true },
-    });
-    expect(wrapper.find('.export-btn').element.disabled).toBe(false);
-  });
-
-  it('clicking Export emits export-click', async () => {
-    const wrapper = mount(EditorToolbar, {
-      props: { editorMode: 'select', layers: BASE_LAYERS, hasMapData: true },
-    });
-    await wrapper.find('.export-btn').trigger('click');
-    expect(wrapper.emitted('export-click')).toBeTruthy();
+    expect(wrapper.find('.export-btn').exists()).toBe(false);
   });
 });
