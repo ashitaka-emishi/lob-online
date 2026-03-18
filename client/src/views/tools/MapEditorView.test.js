@@ -53,8 +53,36 @@ vi.mock('../../components/LosTestPanel.vue', () => ({
 }));
 
 import MapEditorView from './MapEditorView.vue';
+import CalibrationControls from '../../components/CalibrationControls.vue';
 import HexEditPanel from '../../components/HexEditPanel.vue';
 import LosTestPanel from '../../components/LosTestPanel.vue';
+
+const VALID_MAP_WITH_ELEVATION = {
+  _status: 'draft',
+  scenario: 'south-mountain',
+  layout: 'pointy-top',
+  vpHexes: [{ hex: '10.10', unionVP: 3, confederateVP: 2 }],
+  hexes: [{ hex: '01.01', terrain: 'clear', hexsides: {} }],
+  gridSpec: {
+    cols: 4,
+    rows: 3,
+    dx: 100,
+    dy: 50,
+    hexWidth: 35,
+    hexHeight: 35,
+    imageScale: 1,
+    orientation: 'flat',
+    strokeWidth: 0.5,
+    evenColUp: false,
+  },
+  elevationSystem: {
+    baseElevation: 500,
+    elevationLevels: 22,
+    contourInterval: 50,
+    unit: 'feet',
+    verticalSlopesImpassable: true,
+  },
+};
 
 const VALID_MAP = {
   _status: 'draft',
@@ -546,6 +574,67 @@ describe('MapEditorView', () => {
     // After toggling off, seed-hex-ids prop passed to HexMapOverlay should not contain '01.01'
     const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
     expect(overlay.props('seedHexIds')).not.toContain('01.01');
+    wrapper.unmount();
+  });
+
+  it('calibration-extra div is not in the DOM (removed in #92)', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+    expect(wrapper.find('.calibration-extra').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it('elevation-system-change from CalibrationControls merges into mapData.elevationSystem', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('fetch', mockFetch(JSON.parse(JSON.stringify(VALID_MAP_WITH_ELEVATION))));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    // Open Grid Calibration accordion
+    const headers = wrapper.findAll('button.accordion-header');
+    const calHeader = headers.find((h) => h.text().includes('Grid Calibration'));
+    await calHeader.trigger('click');
+    await flushPromises();
+
+    // Emit elevation-system-change from CalibrationControls
+    const calControls = wrapper.findComponent(CalibrationControls);
+    calControls.vm.$emit('elevation-system-change', {
+      baseElevation: 600,
+      elevationLevels: 25,
+      contourInterval: 50,
+      unit: 'feet',
+      verticalSlopesImpassable: true,
+    });
+    await flushPromises();
+
+    // Advance debounce timer and confirm draft saved with updated values
+    vi.runAllTimers();
+    const calls = localStorage.setItem.mock.calls.filter(([key]) => key === MAP_DRAFT_KEY);
+    expect(calls.length).toBeGreaterThan(0);
+    const saved = JSON.parse(calls[calls.length - 1][1]);
+    expect(saved.elevationSystem.baseElevation).toBe(600);
+    expect(saved.elevationSystem.elevationLevels).toBe(25);
+    wrapper.unmount();
+    vi.useRealTimers();
+  });
+
+  it('CalibrationControls receives elevationSystem prop from mapData', async () => {
+    // Use a deep copy so prior test mutations to VALID_MAP_WITH_ELEVATION don't bleed in
+    vi.stubGlobal('fetch', mockFetch(JSON.parse(JSON.stringify(VALID_MAP_WITH_ELEVATION))));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    // Open Grid Calibration accordion
+    const headers = wrapper.findAll('button.accordion-header');
+    const calHeader = headers.find((h) => h.text().includes('Grid Calibration'));
+    await calHeader.trigger('click');
+    await flushPromises();
+
+    const calControls = wrapper.findComponent(CalibrationControls);
+    expect(calControls.props('elevationSystem')).toEqual(
+      expect.objectContaining({ baseElevation: 500, elevationLevels: 22 })
+    );
     wrapper.unmount();
   });
 
