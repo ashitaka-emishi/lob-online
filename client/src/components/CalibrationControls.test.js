@@ -181,9 +181,10 @@ describe('CalibrationControls', () => {
     expect(circles[0].attributes('fill')).toBe('#444');
   });
 
-  it('cardinal labels show all 6 compass directions exactly once for every northOffset 0-11', () => {
-    const COMPASS = new Set(['N', 'NE', 'SE', 'S', 'SW', 'NW']);
-    for (let offset = 0; offset < 12; offset++) {
+  it.each([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])(
+    'cardinal labels: all 6 compass directions appear exactly once for northOffset=%i',
+    (offset) => {
+      const COMPASS = new Set(['N', 'NE', 'SE', 'S', 'SW', 'NW']);
       const wrapper = mount(CalibrationControls, {
         props: { calibration: { ...BASE_CAL, northOffset: offset } },
       });
@@ -191,13 +192,10 @@ describe('CalibrationControls', () => {
         .findAll('text')
         .map((t) => t.text().trim())
         .filter((t) => COMPASS.has(t));
-      expect(labels, `northOffset=${offset} should have 6 unique compass labels`).toHaveLength(6);
-      expect(
-        new Set(labels).size,
-        `northOffset=${offset} should have no duplicate compass labels`
-      ).toBe(6);
+      expect(labels).toHaveLength(6);
+      expect(new Set(labels).size).toBe(6);
     }
-  });
+  );
 
   it('north picker does not emit when locked', async () => {
     const wrapper = mount(CalibrationControls, {
