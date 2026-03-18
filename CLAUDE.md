@@ -87,12 +87,16 @@ Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `.env` (or your shell) to enable
 | Implement a track   | `/conductor:implement`                   |
 | SDLC status         | `/conductor:status`, `/conductor:manage` |
 | PR code review      | `/team-review`                           |
+| Score deferred debt | `/tech-debt-report`                      |
 | Parallel debugging  | `/team-debug`                            |
 | Parallel dev        | `/team-feature`                          |
 
+After resolving review findings from `/team-review`, run `/tech-debt-report` to score any
+deferred items and update the technical debt register in `docs/tech-debt/`.
+
 **Lob-specific extensions** (retained; no plugin equivalent):
 `domain-expert`, `devops`, `/dev-build`, `/dev-start`, `/dev-stop`, `/dev-test`,
-`/pr-create`, `/pr-merge`, `/issue-close`,
+`/pr-create`, `/pr-merge`, `/issue-close`, `/tech-debt-report`,
 `/doc-sync`, `/ecosystem-docs-generate`, `/design`, `/plan-wrap`.
 
 See `docs/migration-wshobson-agents.md` for the full old-to-new command mapping.
