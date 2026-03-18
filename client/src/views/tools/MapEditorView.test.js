@@ -57,32 +57,18 @@ import CalibrationControls from '../../components/CalibrationControls.vue';
 import HexEditPanel from '../../components/HexEditPanel.vue';
 import LosTestPanel from '../../components/LosTestPanel.vue';
 
-const VALID_MAP_WITH_ELEVATION = {
-  _status: 'draft',
-  scenario: 'south-mountain',
-  layout: 'pointy-top',
-  vpHexes: [{ hex: '10.10', unionVP: 3, confederateVP: 2 }],
-  hexes: [{ hex: '01.01', terrain: 'clear', hexsides: {} }],
-  gridSpec: {
-    cols: 4,
-    rows: 3,
-    dx: 100,
-    dy: 50,
-    hexWidth: 35,
-    hexHeight: 35,
-    imageScale: 1,
-    orientation: 'flat',
-    strokeWidth: 0.5,
-    evenColUp: false,
-  },
-  elevationSystem: {
-    baseElevation: 500,
-    elevationLevels: 22,
-    contourInterval: 50,
-    unit: 'feet',
-    verticalSlopesImpassable: true,
-  },
-};
+function makeElevationMap() {
+  return {
+    ...VALID_MAP,
+    elevationSystem: {
+      baseElevation: 500,
+      elevationLevels: 22,
+      contourInterval: 50,
+      unit: 'feet',
+      verticalSlopesImpassable: true,
+    },
+  };
+}
 
 const VALID_MAP = {
   _status: 'draft',
@@ -587,7 +573,7 @@ describe('MapEditorView', () => {
 
   it('elevation-system-change from CalibrationControls merges into mapData.elevationSystem', async () => {
     vi.useFakeTimers();
-    vi.stubGlobal('fetch', mockFetch(JSON.parse(JSON.stringify(VALID_MAP_WITH_ELEVATION))));
+    vi.stubGlobal('fetch', mockFetch(makeElevationMap()));
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
 
@@ -620,8 +606,7 @@ describe('MapEditorView', () => {
   });
 
   it('CalibrationControls receives elevationSystem prop from mapData', async () => {
-    // Use a deep copy so prior test mutations to VALID_MAP_WITH_ELEVATION don't bleed in
-    vi.stubGlobal('fetch', mockFetch(JSON.parse(JSON.stringify(VALID_MAP_WITH_ELEVATION))));
+    vi.stubGlobal('fetch', mockFetch(makeElevationMap()));
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
 

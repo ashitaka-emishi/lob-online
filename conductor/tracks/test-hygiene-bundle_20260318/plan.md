@@ -3,7 +3,7 @@
 **Track ID:** test-hygiene-bundle_20260318
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-03-18
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -74,7 +74,7 @@ Replace the mutable module-level `VALID_MAP_WITH_ELEVATION` object with a factor
 
 ### Tasks
 
-- [ ] Task 3.1: In `MapEditorView.test.js`, convert `const VALID_MAP_WITH_ELEVATION = {...}`
+- [x] Task 3.1: In `MapEditorView.test.js`, convert `const VALID_MAP_WITH_ELEVATION = {...}`
       to `function makeElevationMap() { return { ...VALID_MAP, elevationSystem: { ... } }; }`.
       Update all call sites that reference `VALID_MAP_WITH_ELEVATION` to call `makeElevationMap()`
       instead. Remove any `JSON.parse(JSON.stringify(...))` workarounds that guarded against
@@ -82,17 +82,17 @@ Replace the mutable module-level `VALID_MAP_WITH_ELEVATION` object with a factor
 
 ### Verification
 
-- [ ] `npm run test -- MapEditorView` passes
-- [ ] No lint or format errors
+- [x] `npm run test -- MapEditorView` passes
+- [x] No lint or format errors
 
 ---
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met
-- [ ] `npm run lint` passes
-- [ ] `npm run format:check` passes
-- [ ] `npm run test` passes (coverage ≥ 70%)
+- [x] All acceptance criteria in spec.md met
+- [x] `npm run lint` passes
+- [x] `npm run format:check` passes
+- [x] `npm run test` passes (445/445, coverage ≥ 70%)
 - [ ] Ready for PR via `/pr-create`
 
 ---
