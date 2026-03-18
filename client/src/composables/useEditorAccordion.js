@@ -26,7 +26,9 @@ export const TOOL_PANEL_MODES = Object.freeze({
  */
 export function useEditorAccordion({ onClearSelection } = {}) {
   const openPanel = ref('hexEdit');
-  const editorMode = ref('select');
+
+  // L5: editorMode as computed — derives from openPanel reactively, no imperative assignment needed
+  const editorMode = computed(() => TOOL_PANEL_MODES[openPanel.value] ?? 'select');
 
   const activeToolName = computed(() =>
     openPanel.value ? (PANEL_DISPLAY_NAMES[openPanel.value] ?? openPanel.value) : null
@@ -36,9 +38,6 @@ export function useEditorAccordion({ onClearSelection } = {}) {
     const prevPanel = openPanel.value;
     const wasOpen = prevPanel === name;
     openPanel.value = wasOpen ? null : name;
-
-    // Derive editorMode from the now-open panel
-    editorMode.value = TOOL_PANEL_MODES[openPanel.value] ?? 'select';
 
     // Clear selection when a tool panel closes
     if (TOOL_PANEL_MODES[prevPanel] && !TOOL_PANEL_MODES[openPanel.value]) {

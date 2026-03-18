@@ -5,12 +5,10 @@ import { useMapPersistence } from './useMapPersistence.js';
 const DRAFT_KEY = 'test-draft-v2';
 const DRAFT_KEY_V1 = 'test-draft-v1';
 const STORAGE_KEY = 'test-calibration';
-const DEFAULT_CAL = { cols: 10, rows: 10, northOffset: 0 };
-
 function makeArgs(overrides = {}) {
   return {
-    calibration: ref({ ...DEFAULT_CAL }),
-    defaultCalibration: DEFAULT_CAL,
+    calibration: ref({ cols: 10, rows: 10, northOffset: 0 }),
+    onCalibrationLoaded: vi.fn(),
     storageKey: STORAGE_KEY,
     draftKey: DRAFT_KEY,
     draftKeyV1: DRAFT_KEY_V1,
@@ -128,13 +126,13 @@ describe('useMapPersistence', () => {
       expect(mapData.value.hexes).toHaveLength(1);
     });
 
-    it('applies gridSpec to calibration when present', async () => {
+    it('calls onCalibrationLoaded with gridSpec when present', async () => {
       const args = makeArgs();
-      mockFetch({ hexes: [], gridSpec: { cols: 64, rows: 35, northOffset: 3 }, _savedAt: 500 });
+      const gridSpec = { cols: 64, rows: 35, northOffset: 3 };
+      mockFetch({ hexes: [], gridSpec, _savedAt: 500 });
       const { fetchMapData } = useMapPersistence(args);
       await fetchMapData();
-      expect(args.calibration.value.cols).toBe(64);
-      expect(args.calibration.value.northOffset).toBe(3);
+      expect(args.onCalibrationLoaded).toHaveBeenCalledWith(gridSpec);
     });
 
     it('shows draft banner when local draft is newer than server', async () => {

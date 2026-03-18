@@ -16,6 +16,7 @@ import { useHexInteraction } from '../../composables/useHexInteraction.js';
 import { useEditorAccordion, TOOL_PANEL_MODES } from '../../composables/useEditorAccordion.js';
 import { useMapPersistence } from '../../composables/useMapPersistence.js';
 import { useLosTest } from '../../composables/useLosTest.js';
+import { useEdgeToggle } from '../../composables/useEdgeToggle.js';
 import { useWedgeEditor } from '../../composables/useWedgeEditor.js';
 
 const STORAGE_KEY = 'lob-map-editor-calibration-v4';
@@ -42,7 +43,19 @@ const DEFAULT_CALIBRATION = {
 function loadCalibration() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return { ...DEFAULT_CALIBRATION, ...JSON.parse(stored) };
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // L2: guard numeric fields against tampered localStorage values
+      const safeNumeric = (val, fallback) => (Number.isFinite(val) ? val : fallback);
+      return {
+        ...DEFAULT_CALIBRATION,
+        ...parsed,
+        cols: safeNumeric(parsed.cols, DEFAULT_CALIBRATION.cols),
+        rows: safeNumeric(parsed.rows, DEFAULT_CALIBRATION.rows),
+        hexWidth: safeNumeric(parsed.hexWidth, DEFAULT_CALIBRATION.hexWidth),
+        hexHeight: safeNumeric(parsed.hexHeight, DEFAULT_CALIBRATION.hexHeight),
+      };
+    }
   } catch (_) {
     /* ignore */
   }
@@ -80,10 +93,14 @@ const {
   cancelSave,
 } = useMapPersistence({
   calibration,
-  defaultCalibration: DEFAULT_CALIBRATION,
   storageKey: STORAGE_KEY,
   draftKey: MAP_DRAFT_KEY,
   draftKeyV1: MAP_DRAFT_KEY_V1,
+  // M4: caller owns calibration writes — composable notifies via callback
+  onCalibrationLoaded: (gridSpec) => {
+    calibration.value = { ...DEFAULT_CALIBRATION, ...gridSpec };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
+  },
 });
 
 // ── Selection (H2: owned here so accordion's onClearSelection can reference it directly) ──
@@ -111,9 +128,8 @@ const layers = ref({
 
 // ── Export ────────────────────────────────────────────────────────────────────
 
-const exportData = computed(() =>
-  mapData.value ? { ...mapData.value, gridSpec: calibration.value } : null
-);
+// L3: boolean guard replaces the expensive spread computed that ran on every paint
+const hasMapData = computed(() => !!mapData.value);
 
 function stripPrivateFields(obj) {
   if (Array.isArray(obj)) return obj.map(stripPrivateFields);
@@ -130,8 +146,8 @@ function stripPrivateFields(obj) {
 // Called on-demand when the export overlay opens or when copy/download is triggered.
 // Not a reactive computed — the deep-walk is expensive and only needed at export time.
 function getEngineExport() {
-  if (!exportData.value) return null;
-  return stripPrivateFields(exportData.value);
+  if (!mapData.value) return null;
+  return stripPrivateFields({ ...mapData.value, gridSpec: calibration.value });
 }
 
 // Cache the export snapshot for the template. Computed once when the overlay opens,
@@ -290,19 +306,27 @@ const {
 
 // ── Hex interaction (composable) ──────────────────────────────────────────────
 
-const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter, onEdgeClick } =
+const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter } =
   useHexInteraction({
     mapData,
     hexIndex,
     selectedHexIds,
     editorMode,
     paintTerrain,
-    paintEdgeFeature,
     elevationMax,
-    calibration,
     tryPickLosHex,
     onHexUpdate,
   });
+
+// ── Edge feature toggle (M2: extracted from useHexInteraction) ─────────────────
+
+const { onEdgeClick } = useEdgeToggle({
+  mapData,
+  hexIndex,
+  paintEdgeFeature,
+  calibration,
+  onHexUpdate,
+});
 
 // ── Bulk operations ───────────────────────────────────────────────────────────
 
@@ -365,7 +389,7 @@ onUnmounted(() => {
       <span v-if="saveStatus === 'error'" class="save-error">Error</span>
       <span v-if="unsaved" class="unsaved-marker">* unsaved</span>
       <a class="nav-link" href="/tools/scenario-editor">Scenario Editor</a>
-      <button class="export-btn" :disabled="!exportData" @click="showExportOverlay = true">
+      <button class="export-btn" :disabled="!hasMapData" @click="showExportOverlay = true">
         Export
       </button>
       <button

@@ -14,9 +14,7 @@ function makeArgs(overrides = {}) {
   const hexIndex = computed(() => new Map(mapData.value.hexes.map((h, i) => [h.hex, i])));
   const editorMode = ref('select');
   const paintTerrain = ref('clear');
-  const paintEdgeFeature = ref('road');
   const elevationMax = computed(() => 21);
-  const calibration = ref({ cols: 10, rows: 10, northOffset: 0, orientation: 'pointy' });
   const tryPickLosHex = vi.fn().mockReturnValue(false);
   const onHexUpdate = vi.fn();
   return {
@@ -25,9 +23,7 @@ function makeArgs(overrides = {}) {
     hexIndex,
     editorMode,
     paintTerrain,
-    paintEdgeFeature,
     elevationMax,
-    calibration,
     tryPickLosHex,
     onHexUpdate,
     ...overrides,

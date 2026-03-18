@@ -234,3 +234,17 @@ export function adjacentHexId(hexId, dir, gridSpec) {
 
   return formatGameId(ncol, nrow);
 }
+
+/**
+ * Look up a hex by id in an index map, returning a stub object for unknown hexes.
+ * Centralises the repeated "find index → get entry or create stub" pattern.
+ *
+ * @param {Array<object>} hexes - the map's hex array
+ * @param {Map<string, number>} indexMap - hexId → array index
+ * @param {string} hexId
+ * @returns {object} the existing hex entry, or `{ hex: hexId, terrain: 'unknown' }`
+ */
+export function resolveHex(hexes, indexMap, hexId) {
+  const idx = indexMap.get(hexId);
+  return idx !== undefined ? hexes[idx] : { hex: hexId, terrain: 'unknown' };
+}

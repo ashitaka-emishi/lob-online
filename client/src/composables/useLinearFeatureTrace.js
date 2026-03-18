@@ -49,6 +49,9 @@ export function useLinearFeatureTrace({ mapData, paintEdgeFeature, hexIndex, onM
       }
       updates.push({ hexIdx, updated: { ...hex, edges } });
     }
+    // L4: applyTrace writes directly to mapData.hexes rather than going through onHexUpdate.
+    // This is intentional: the batch write is followed by a single onMutated() call so that
+    // hexIndex is invalidated only once and the draft debounce fires only once per trace.
     // Single reactive write pass — invalidates hexIndex once instead of once per hex.
     for (const { hexIdx, updated } of updates) {
       if (hexIdx !== undefined) {

@@ -1,3 +1,5 @@
+import { resolveHex } from '../utils/hexGeometry.js';
+
 /**
  * Wedge elevation update and initialization for the selected hex.
  *
@@ -12,22 +14,15 @@
 export function useWedgeEditor({ mapData, hexIndex, selectedHexId, onHexUpdate }) {
   function onWedgeUpdate(newElev) {
     if (!selectedHexId.value || !mapData.value) return;
-    const idx = hexIndex.value.get(selectedHexId.value);
-    const existing = idx !== undefined ? mapData.value.hexes[idx] : undefined;
-    const updated = existing
-      ? { ...existing, wedgeElevations: newElev }
-      : { hex: selectedHexId.value, terrain: 'unknown', wedgeElevations: newElev };
-    onHexUpdate(updated);
+    // M3: use resolveHex to eliminate the repeated find-or-stub pattern
+    const existing = resolveHex(mapData.value.hexes, hexIndex.value, selectedHexId.value);
+    onHexUpdate({ ...existing, wedgeElevations: newElev });
   }
 
   function initWedgeElevations() {
     if (!selectedHexId.value || !mapData.value) return;
-    const idx = hexIndex.value.get(selectedHexId.value);
-    const existing = idx !== undefined ? mapData.value.hexes[idx] : undefined;
-    const updated = existing
-      ? { ...existing, wedgeElevations: [0, 0, 0, 0, 0, 0] }
-      : { hex: selectedHexId.value, terrain: 'unknown', wedgeElevations: [0, 0, 0, 0, 0, 0] };
-    onHexUpdate(updated);
+    const existing = resolveHex(mapData.value.hexes, hexIndex.value, selectedHexId.value);
+    onHexUpdate({ ...existing, wedgeElevations: [0, 0, 0, 0, 0, 0] });
   }
 
   return { onWedgeUpdate, initWedgeElevations };

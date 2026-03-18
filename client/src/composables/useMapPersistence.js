@@ -7,18 +7,19 @@ import { ref } from 'vue';
  * Call fetchMapData() in the caller's onMounted hook.
  *
  * @param {object} args
- * @param {import('vue').Ref} args.calibration - writable calibration ref (updated on load/pull)
- * @param {object} args.defaultCalibration - default calibration values
+ * @param {import('vue').Ref} args.calibration - calibration ref (read for push; write via callback)
  * @param {string} args.storageKey - localStorage key for calibration
  * @param {string} args.draftKey - localStorage key for map draft
  * @param {string} args.draftKeyV1 - legacy v1 draft key (migrated on first load)
+ * @param {function} [args.onCalibrationLoaded] - called with raw gridSpec when server/draft data
+ *   contains a gridSpec; caller owns the calibration write and localStorage update (M4)
  */
 export function useMapPersistence({
   calibration,
-  defaultCalibration,
   storageKey,
   draftKey,
   draftKeyV1,
+  onCalibrationLoaded,
 }) {
   // L4: guard against accidental empty/missing key args
   if (!storageKey || !draftKey) {
@@ -73,9 +74,15 @@ export function useMapPersistence({
     }, 1000);
   }
 
-  // M1: validate that a parsed localStorage object has the expected map shape
+  // L1: validate that a parsed localStorage object has the expected map shape,
+  // including that each hex entry has a hex string property (defense against tampered storage)
   function isValidDraft(obj) {
-    return obj !== null && typeof obj === 'object' && Array.isArray(obj.hexes);
+    return (
+      obj !== null &&
+      typeof obj === 'object' &&
+      Array.isArray(obj.hexes) &&
+      obj.hexes.every((h) => h !== null && typeof h === 'object' && typeof h.hex === 'string')
+    );
   }
 
   function restoreDraft() {
@@ -118,8 +125,8 @@ export function useMapPersistence({
       unsaved.value = false;
       isOffline.value = false;
       if (serverData.gridSpec) {
-        calibration.value = { ...defaultCalibration, ...serverData.gridSpec };
-        localStorage.setItem(storageKey, JSON.stringify(calibration.value));
+        // M4: caller owns the calibration write via onCalibrationLoaded callback
+        onCalibrationLoaded?.(serverData.gridSpec);
       }
     } catch (err) {
       // M2: log full error to console; show safe message in UI
@@ -185,8 +192,8 @@ export function useMapPersistence({
 
       mapData.value = serverData;
       if (mapData.value.gridSpec) {
-        calibration.value = { ...defaultCalibration, ...mapData.value.gridSpec };
-        localStorage.setItem(storageKey, JSON.stringify(calibration.value));
+        // M4: caller owns the calibration write via onCalibrationLoaded callback
+        onCalibrationLoaded?.(mapData.value.gridSpec);
       }
     } catch (err) {
       // Offline fallback: try loading local draft
@@ -198,7 +205,8 @@ export function useMapPersistence({
           if (isValidDraft(draft)) {
             mapData.value = draft;
             if (draft.gridSpec) {
-              calibration.value = { ...defaultCalibration, ...draft.gridSpec };
+              // M4: caller owns the calibration write via onCalibrationLoaded callback
+              onCalibrationLoaded?.(draft.gridSpec);
             }
             isOffline.value = true;
             return;
