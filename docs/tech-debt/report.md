@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-03-18 after PR #99._
+_Last updated: 2026-03-18 after PR #107._
 
 ---
 
@@ -11,16 +11,17 @@ _Last updated: 2026-03-18 after PR #99._
 | Open debt items                  | 7                                           |
 | Cumulative debt score (net open) | 12                                          |
 | Highest-risk item                | Extract `ElevationSystemControls` component |
-| PRs tracked                      | 2                                           |
+| PRs tracked                      | 3                                           |
 
 ---
 
 ## Debt Over Time
 
-| Date       | PR     | Debt Added (this PR) | Cumulative Added (gross) |
-| ---------- | ------ | -------------------- | ------------------------ |
-| 2026-03-18 | PR #98 | 0                    | 0                        |
-| 2026-03-18 | PR #99 | 12                   | 12                       |
+| Date       | PR      | Debt Added (this PR) | Cumulative Added (gross) |
+| ---------- | ------- | -------------------- | ------------------------ |
+| 2026-03-18 | PR #98  | 0                    | 0                        |
+| 2026-03-18 | PR #99  | 12                   | 12                       |
+| 2026-03-18 | PR #107 | 0                    | 12                       |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
