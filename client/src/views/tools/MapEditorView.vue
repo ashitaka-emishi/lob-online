@@ -11,6 +11,7 @@ import TerrainToolPanel from '../../components/TerrainToolPanel.vue';
 import LinearFeaturePanel from '../../components/LinearFeaturePanel.vue';
 import WedgeEditor from '../../components/WedgeEditor.vue';
 import { adjacentHexId } from '../../utils/hexGeometry.js';
+import { useBulkOperations } from '../../composables/useBulkOperations.js';
 
 const PANEL_DISPLAY_NAMES = {
   calibration: 'Grid Calibration',
@@ -531,50 +532,15 @@ function onHexUpdate(updatedHex) {
 
 // ── Bulk operations ───────────────────────────────────────────────────────────
 
-function clearAllElevations() {
-  if (!mapData.value) return;
-  mapData.value.hexes = mapData.value.hexes.map(({ elevation: _elevation, ...rest }) => rest);
-  unsaved.value = true;
-  saveMapDraft();
-}
-
-function raiseAll() {
-  if (!mapData.value) return;
-  const max = elevationMax.value;
-  mapData.value.hexes = mapData.value.hexes.map((h) => ({
-    ...h,
-    elevation: Math.min(max, (h.elevation ?? 0) + 1),
-  }));
-  unsaved.value = true;
-  saveMapDraft();
-}
-
-function lowerAll() {
-  if (!mapData.value) return;
-  mapData.value.hexes = mapData.value.hexes.map((h) => ({
-    ...h,
-    elevation: Math.max(0, (h.elevation ?? 0) - 1),
-  }));
-  unsaved.value = true;
-  saveMapDraft();
-}
-
-function clearAllTerrain() {
-  if (!mapData.value) return;
-  mapData.value.hexes = mapData.value.hexes.map((h) => ({ ...h, terrain: 'clear' }));
-  unsaved.value = true;
-  saveMapDraft();
-}
-
-function clearAllWedges() {
-  if (!mapData.value) return;
-  mapData.value.hexes = mapData.value.hexes.map((h) => {
-    if (!h.wedgeElevations) return h;
-    return { ...h, wedgeElevations: [0, 0, 0, 0, 0, 0] };
+const { clearAllElevations, raiseAll, lowerAll, clearAllTerrain, clearAllWedges } =
+  useBulkOperations({
+    mapData,
+    elevationMax,
+    onMutated() {
+      unsaved.value = true;
+      saveMapDraft();
+    },
   });
-  unsaved.value = true;
-  saveMapDraft();
-}
 
 function onWedgeUpdate(newElev) {
   if (!selectedHexId.value || !mapData.value) return;
