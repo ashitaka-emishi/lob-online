@@ -1,0 +1,17 @@
+{
+  "id": "trace-highlight-perf_20260318",
+  "title": "Trace Highlight Layer — O(traceEdges) Render",
+  "type": "refactor",
+  "status": "complete",
+  "created": "2026-03-18T00:00:00.000Z",
+  "updated": "2026-03-18T12:00:00.000Z",
+  "githubIssue": 96,
+  "phases": {
+    "total": 1,
+    "completed": 1
+  },
+  "tasks": {
+    "total": 3,
+    "completed": 3
+  }
+}
