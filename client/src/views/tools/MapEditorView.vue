@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import HexMapOverlay from '../../components/HexMapOverlay.vue';
 import HexEditPanel from '../../components/HexEditPanel.vue';
 import CalibrationControls from '../../components/CalibrationControls.vue';
@@ -120,12 +120,19 @@ function stripPrivateFields(obj) {
   return obj;
 }
 
-// Called on-demand when the export overlay opens — not a reactive computed,
-// because the deep-walk over all hexes is expensive and only needed at export time.
+// Called on-demand when the export overlay opens or when copy/download is triggered.
+// Not a reactive computed — the deep-walk is expensive and only needed at export time.
 function getEngineExport() {
   if (!exportData.value) return null;
   return stripPrivateFields(exportData.value);
 }
+
+// Cache the export snapshot for the template. Computed once when the overlay opens,
+// not on every render, so unrelated reactive changes don't re-run the deep-walk.
+const exportSnapshot = ref(null);
+watch(showExportOverlay, (open) => {
+  exportSnapshot.value = open ? getEngineExport() : null;
+});
 
 function copyMapData() {
   navigator.clipboard.writeText(JSON.stringify(getEngineExport(), null, 2));
@@ -352,7 +359,7 @@ const edgeFeatureTypes = computed(() => {
 
 const selectedHexId = ref(null);
 
-// Persistent O(1) index: hexId → array index. Recomputed only when hexes array changes.
+// O(1) index: hexId → array index. Recomputed when hexes array or any element is mutated.
 const hexIndex = computed(() => new Map(mapData.value?.hexes.map((h, i) => [h.hex, i]) ?? []));
 
 const selectedHex = computed(() => {
@@ -432,7 +439,8 @@ function onHexClick(hexId, nativeEvent) {
       adjustHexElevation(hexId, +1);
     }
   } else if (editorMode.value === 'paint') {
-    const existing = mapData.value ? mapData.value.hexes[hexIndex.value.get(hexId)] : undefined;
+    const existingIdx = hexIndex.value.get(hexId);
+    const existing = existingIdx !== undefined ? mapData.value.hexes[existingIdx] : undefined;
     const updated = existing
       ? { ...existing, terrain: paintTerrain.value }
       : { hex: hexId, terrain: paintTerrain.value };
@@ -460,7 +468,8 @@ function onHexRightClick(hexId) {
 
 function onHexMouseenter(hexId) {
   if (editorMode.value === 'paint') {
-    const existing = mapData.value ? mapData.value.hexes[hexIndex.value.get(hexId)] : undefined;
+    const existingIdx = hexIndex.value.get(hexId);
+    const existing = existingIdx !== undefined ? mapData.value.hexes[existingIdx] : undefined;
     const updatedHex = existing
       ? { ...existing, terrain: paintTerrain.value }
       : { hex: hexId, terrain: paintTerrain.value };
@@ -487,19 +496,23 @@ function onEdgeClick({ hexId, dir }) {
     return { ...hex, edges };
   }
 
-  // Update this hex
+  // Read both hex objects before any mutation so hexIndex is only accessed once.
   const thisIdx = hexIndex.value.get(hexId);
   const thisHex =
     thisIdx !== undefined ? mapData.value.hexes[thisIdx] : { hex: hexId, terrain: 'unknown' };
-  onHexUpdate(toggleEdgeFeature(thisHex, dir, featureType));
 
-  // Mirror on adjacent hex
   const adjId = adjacentHexId(hexId, dir, calibration.value);
-  if (adjId) {
+  const adjIdx = adjId !== null ? hexIndex.value.get(adjId) : undefined;
+  const adjHex = adjId
+    ? adjIdx !== undefined
+      ? mapData.value.hexes[adjIdx]
+      : { hex: adjId, terrain: 'unknown' }
+    : null;
+
+  // Apply both updates after all reads
+  onHexUpdate(toggleEdgeFeature(thisHex, dir, featureType));
+  if (adjHex) {
     const oppDir = OPPOSITE_DIR[dir];
-    const adjIdx = hexIndex.value.get(adjId);
-    const adjHex =
-      adjIdx !== undefined ? mapData.value.hexes[adjIdx] : { hex: adjId, terrain: 'unknown' };
     onHexUpdate(toggleEdgeFeature(adjHex, oppDir, featureType));
   }
 }
@@ -607,8 +620,13 @@ function applyTrace() {
     if (!byHex.has(hexId)) byHex.set(hexId, []);
     byHex.get(hexId).push(dir);
   }
+  // Snapshot the index once before any mutations so that each iteration does not
+  // force an O(n) recompute of hexIndex. All trace hexes are expected to already
+  // exist in the array; new hexes are pushed after the read pass.
+  const idx = hexIndex.value;
+  const updates = [];
   for (const [hexId, dirs] of byHex) {
-    const hexIdx = hexIndex.value.get(hexId);
+    const hexIdx = idx.get(hexId);
     const hex =
       hexIdx !== undefined ? mapData.value.hexes[hexIdx] : { hex: hexId, terrain: 'unknown' };
     const edges = hex.edges ? { ...hex.edges } : {};
@@ -619,8 +637,18 @@ function applyTrace() {
       }
       edges[dir] = features;
     }
-    onHexUpdate({ ...hex, edges });
+    updates.push({ hexIdx, updated: { ...hex, edges } });
   }
+  // Single reactive write pass — invalidates hexIndex once instead of once per hex.
+  for (const { hexIdx, updated } of updates) {
+    if (hexIdx !== undefined) {
+      mapData.value.hexes[hexIdx] = updated;
+    } else {
+      mapData.value.hexes.push(updated);
+    }
+  }
+  unsaved.value = true;
+  saveMapDraft();
   pendingTraceEdges.value = [];
   showTraceConfirm.value = false;
 }
@@ -1037,7 +1065,7 @@ onUnmounted(() => {
           <button @click="downloadExport">Download</button>
           <button @click="showExportOverlay = false">✕</button>
         </div>
-        <pre class="export-pre">{{ JSON.stringify(getEngineExport(), null, 2) }}</pre>
+        <pre class="export-pre">{{ JSON.stringify(exportSnapshot, null, 2) }}</pre>
       </div>
     </div>
   </div>
