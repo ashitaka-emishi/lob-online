@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { defineHex, Grid, rectangle, Orientation } from 'honeycomb-grid';
 import {
   DIRS,
@@ -83,11 +83,23 @@ const props = defineProps({
 
 const emit = defineEmits([
   'hex-click',
+  'hex-right-click',
   'hex-mouseenter',
   'hex-mouseleave',
   'edge-click',
   'edge-hover',
+  'trace-complete',
+  'trace-progress',
 ]);
+
+// Force elevation layer visible when elevation tool is active
+const showElevation = computed(() => props.layers.elevation || props.editorMode === 'elevation');
+
+// Drag trace state for linearFeature mode
+const isDrawing = ref(false);
+const traceEdgeSet = ref(new Set()); // keys: "hexId:dir"
+const traceEdges = ref([]); // [{hexId, dir}]
+const traceEdgeCount = computed(() => traceEdges.value.length);
 
 const TERRAIN_COLORS = {
   clear: '#c8d4a0',
@@ -285,13 +297,13 @@ function onSvgClick(event) {
 let rafPending = false;
 
 function onSvgMouseMove(event) {
-  if (!props.layers?.edges) return;
   if (rafPending) return;
   rafPending = true;
   // Capture event properties synchronously — event.currentTarget is nulled after handler returns.
   const svg = event.currentTarget;
   const clientX = event.clientX;
   const clientY = event.clientY;
+  const drawingNow = isDrawing.value;
   requestAnimationFrame(() => {
     rafPending = false;
     if (!svg) return;
@@ -307,9 +319,64 @@ function onSvgMouseMove(event) {
 
     const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
     const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : cells;
-    emit('edge-hover', findNearestEdge(localX, localY, searchCells));
+    const nearest = findNearestEdge(localX, localY, searchCells);
+
+    if (props.layers?.edges) {
+      emit('edge-hover', nearest);
+    }
+
+    // During a linearFeature drag trace, collect nearest edges
+    if (drawingNow && props.editorMode === 'linearFeature' && nearest) {
+      const key = `${nearest.hexId}:${nearest.dir}`;
+      if (!traceEdgeSet.value.has(key)) {
+        traceEdgeSet.value.add(key);
+        traceEdges.value.push({ hexId: nearest.hexId, dir: nearest.dir });
+        emit('trace-progress', traceEdges.value.length);
+      }
+    }
   });
 }
+
+function onSvgContextMenu(event) {
+  event.preventDefault();
+  const svg = event.currentTarget;
+  const pt = svg.createSVGPoint();
+  pt.x = event.clientX;
+  pt.y = event.clientY;
+  const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+  const { grid, tx, ty } = gridData.value;
+  const localX = svgPt.x - tx;
+  const localY = svgPt.y - ty;
+
+  const hex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
+  if (hex) {
+    const gridRows = props.calibration.rows > 0 ? props.calibration.rows : 35;
+    const gameCol = hex.col + 1;
+    const gameRow = gridRows - hex.row - (gameCol % 2 === 0 ? 1 : 0);
+    const id = `${String(gameCol).padStart(2, '0')}.${String(gameRow).padStart(2, '0')}`;
+    emit('hex-right-click', id, event);
+  }
+}
+
+function onSvgMouseDown(_event) {
+  if (props.editorMode !== 'linearFeature') return;
+  isDrawing.value = true;
+  traceEdgeSet.value = new Set();
+  traceEdges.value = [];
+}
+
+function onSvgMouseUp() {
+  if (!isDrawing.value) return;
+  isDrawing.value = false;
+  if (traceEdges.value.length > 0) {
+    emit('trace-complete', [...traceEdges.value]);
+  }
+  traceEdgeSet.value = new Set();
+  traceEdges.value = [];
+}
+
+defineExpose({ traceEdgeCount });
 </script>
 
 <template>
@@ -318,6 +385,10 @@ function onSvgMouseMove(event) {
     :height="imageHeight * calibration.imageScale"
     style="position: absolute; top: 0; left: 0; cursor: crosshair"
     @click="onSvgClick"
+    @contextmenu="onSvgContextMenu"
+    @mousedown="onSvgMouseDown"
+    @mouseup="onSvgMouseUp"
+    @mouseleave="onSvgMouseUp"
     @mousemove="onSvgMouseMove"
   >
     <g :transform="`translate(${gridData.tx},${gridData.ty})`">
@@ -375,7 +446,7 @@ function onSvgMouseMove(event) {
         </g>
 
         <!-- 4. Elevation labels -->
-        <g v-if="layers.elevation" class="layer-elevation">
+        <g v-if="showElevation" class="layer-elevation">
           <text
             v-for="cell in cells"
             :key="'elev-' + cell.id"
@@ -410,6 +481,52 @@ function onSvgMouseMove(event) {
                   pointer-events="none"
                 />
               </template>
+            </template>
+          </template>
+        </g>
+
+        <!-- 6a. Terrain icons (shown when terrain paint tool active) -->
+        <g v-if="editorMode === 'paint'" class="layer-terrain-icons">
+          <text
+            v-for="cell in cells"
+            :key="'icon-' + cell.id"
+            :x="cell.cx"
+            :y="cell.cy + 6"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            font-size="10"
+            fill="#ffffffbb"
+            stroke="rgba(0,0,0,0.5)"
+            stroke-width="1.5"
+            paint-order="stroke"
+            pointer-events="none"
+          >
+            {{
+              cell.terrain === 'woods' || cell.terrain === 'woodedSloping'
+                ? '▲'
+                : cell.terrain === 'slopingGround'
+                  ? '╱'
+                  : cell.terrain === 'orchard'
+                    ? '⬡'
+                    : cell.terrain === 'marsh'
+                      ? '≈'
+                      : ''
+            }}
+          </text>
+        </g>
+
+        <!-- 6b. Linear feature trace highlights -->
+        <g v-if="isDrawing" class="layer-trace">
+          <template v-for="cell in cells" :key="'trace-' + cell.id">
+            <template v-for="dir in DIRS" :key="dir">
+              <line
+                v-if="traceEdgeSet.has(cell.id + ':' + dir)"
+                v-bind="edgeLine20_80(cell.corners, dir)"
+                stroke="#00eeff"
+                stroke-width="3"
+                stroke-linecap="round"
+                pointer-events="none"
+              />
             </template>
           </template>
         </g>

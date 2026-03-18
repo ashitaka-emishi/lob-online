@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue';
+
 const props = defineProps({
   calibration: {
     type: Object,
@@ -45,6 +47,18 @@ const HEX_CORNERS = [
   { x: R / 2, y: -Rin },
 ];
 const hexPoints = HEX_CORNERS.map((c) => `${c.x},${c.y}`).join(' ');
+
+const CARD_LABELS_HEX = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
+const LABEL_SCALE = 1.65;
+
+const cardinalLabelPositions = computed(() => {
+  const n = props.calibration.northOffset ?? 0;
+  return PICKER_POSITIONS.filter((_, i) => i % 2 === 0).map((pos, idx) => {
+    const p = idx * 2;
+    const steps = Math.round(((p - n + 12) % 12) / 2) % 6;
+    return { x: pos.x * LABEL_SCALE, y: pos.y * LABEL_SCALE, label: CARD_LABELS_HEX[steps] };
+  });
+});
 
 function setNorthOffset(n) {
   if (props.calibration.locked) return;
@@ -187,6 +201,19 @@ function toggleLocked() {
             :data-north-offset="n"
             @click="setNorthOffset(n)"
           />
+          <text
+            v-for="(lp, i) in cardinalLabelPositions"
+            :key="'cardinal-' + i"
+            :x="lp.x"
+            :y="lp.y"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            font-size="7"
+            fill="#6aaa88"
+            pointer-events="none"
+          >
+            {{ lp.label }}
+          </text>
           <text
             x="0"
             y="0"

@@ -214,30 +214,35 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 
-  it('default editorMode is "select" (mode button active)', async () => {
+  it('EditorToolbar renders layer checkboxes (mode buttons removed)', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_MAP));
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
-    const selectBtn = wrapper.findAll('.mode-btn').find((b) => b.text() === 'select');
-    expect(selectBtn?.classes()).toContain('active');
+    expect(wrapper.findAll('.mode-btn').length).toBe(0);
+    expect(wrapper.findAll('input[type="checkbox"]').length).toBeGreaterThan(0);
     wrapper.unmount();
   });
 
-  it('renders EditorToolbar with 4 mode buttons', async () => {
+  it('opening Elevation Tool accordion sets editorMode to elevation', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_MAP));
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
-    expect(wrapper.findAll('.mode-btn').length).toBe(4);
+    const headers = wrapper.findAll('button.accordion-header');
+    const elevHeader = headers.find((h) => h.text().includes('Elevation Tool'));
+    await elevHeader.trigger('click');
+    // ElevationToolPanel should be visible
+    expect(wrapper.text()).toContain('Raise all');
     wrapper.unmount();
   });
 
-  it('clicking mode button changes active mode', async () => {
+  it('opening Terrain Tool accordion renders TerrainToolPanel', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_MAP));
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
-    const paintBtn = wrapper.findAll('.mode-btn').find((b) => b.text() === 'paint');
-    await paintBtn.trigger('click');
-    expect(paintBtn.classes()).toContain('active');
+    const headers = wrapper.findAll('button.accordion-header');
+    const terrainHeader = headers.find((h) => h.text().includes('Terrain Tool'));
+    await terrainHeader.trigger('click');
+    expect(wrapper.text()).toContain('Clear all terrain');
     wrapper.unmount();
   });
 

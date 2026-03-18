@@ -127,37 +127,15 @@ describe('HexEditPanel', () => {
     expect(emitted[emitted.length - 1][0].slope).toBeUndefined();
   });
 
-  it('renders "Add Wedge Elevations" button when hex has no wedge elevations', () => {
-    const wrapper = mount(HexEditPanel, {
-      props: {
-        hex: { hex: '05.10', terrain: 'clear', hexsides: {} },
-        selectedHexId: '05.10',
-      },
-    });
-    expect(wrapper.find('.toggle-wedge-btn').exists()).toBe(true);
-    expect(wrapper.find('.toggle-wedge-btn').text()).toContain('Add Wedge Elevations');
-  });
-
-  it('WedgeEditor renders automatically when hex has wedgeElevations (no click required)', async () => {
+  it('wedge section is removed — no WedgeEditor or toggle-wedge-btn in HexEditPanel', async () => {
     const wrapper = mount(HexEditPanel, {
       props: {
         hex: { hex: '05.10', terrain: 'clear', hexsides: {}, wedgeElevations: [0, 0, 0, 0, 0, 0] },
         selectedHexId: '05.10',
       },
     });
-    const { default: WedgeEditor } = await import('./WedgeEditor.vue');
-    expect(wrapper.findComponent(WedgeEditor).exists()).toBe(true);
-  });
-
-  it('WedgeEditor is NOT rendered when hex has no wedgeElevations', async () => {
-    const wrapper = mount(HexEditPanel, {
-      props: {
-        hex: { hex: '05.10', terrain: 'clear', hexsides: {} },
-        selectedHexId: '05.10',
-      },
-    });
-    const { default: WedgeEditor } = await import('./WedgeEditor.vue');
-    expect(wrapper.findComponent(WedgeEditor).exists()).toBe(false);
+    expect(wrapper.find('.toggle-wedge-btn').exists()).toBe(false);
+    expect(wrapper.find('.derive-btn').exists()).toBe(false);
   });
 
   it('renders EdgeEditPanel for the edges section', () => {
@@ -279,26 +257,25 @@ describe('HexEditPanel', () => {
     expect(wrapper.find('input[type="number"]').exists()).toBe(true);
   });
 
-  it('wedge editor update emits hex-update with wedgeElevations', async () => {
+  it('hex with wedgeElevations still emits wedgeElevations in hex-update when terrain changes', async () => {
     const wrapper = mount(HexEditPanel, {
       props: {
         hex: {
           hex: '05.10',
           terrain: 'clear',
           hexsides: {},
-          wedgeElevations: [0, 0, 0, 0, 0, 0],
+          wedgeElevations: [3, 1, 0, 0, 0, 0],
         },
         selectedHexId: '05.10',
       },
     });
-
-    const { default: WedgeEditor } = await import('./WedgeEditor.vue');
-    const wedge = wrapper.findComponent(WedgeEditor);
-    await wedge.vm.$emit('update:wedgeElevations', [10, 0, 0, 0, 0, 0]);
-
+    const select = wrapper.find('select');
+    await select.setValue('woods');
+    await select.trigger('change');
     const emitted = wrapper.emitted('hex-update');
     expect(emitted).toBeTruthy();
-    expect(emitted[emitted.length - 1][0].wedgeElevations).toEqual([10, 0, 0, 0, 0, 0]);
+    // wedgeElevations preserved through HexEditPanel form passthrough
+    expect(emitted[emitted.length - 1][0].wedgeElevations).toEqual([3, 1, 0, 0, 0, 0]);
   });
 
   it('northOffset=3 slope buttons show SM cardinal labels W,NW,NE,E,SE,SW', () => {
@@ -312,24 +289,6 @@ describe('HexEditPanel', () => {
     const slopeBtns = wrapper.findAll('.slope-btn');
     const labels = slopeBtns.map((b) => b.text()).filter((t) => t !== 'None');
     expect(labels).toEqual(['W', 'NW', 'NE', 'E', 'SE', 'SW']);
-  });
-
-  it('clicking derive-btn emits derive-wedges event with hexId, wedgeElevations, slope, edges', async () => {
-    const wrapper = mount(HexEditPanel, {
-      props: {
-        hex: { hex: '05.10', terrain: 'clear', hexsides: {}, wedgeElevations: [2, 0, 0, 0, 0, 0] },
-        selectedHexId: '05.10',
-      },
-    });
-    const deriveBtn = wrapper.find('.derive-btn');
-    await deriveBtn.trigger('click');
-    const emitted = wrapper.emitted('derive-wedges');
-    expect(emitted).toBeTruthy();
-    const payload = emitted[0][0];
-    expect(payload.hexId).toBe('05.10');
-    expect(payload.wedgeElevations).toEqual([2, 0, 0, 0, 0, 0]);
-    expect(typeof payload.slope === 'number' || payload.slope === null).toBe(true);
-    expect(typeof payload.edges).toBe('object');
   });
 
   it('northOffset=3 slope button click for index 0 emits slope=0 (geographic W)', async () => {
