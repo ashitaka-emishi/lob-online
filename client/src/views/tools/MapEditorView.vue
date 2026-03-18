@@ -120,18 +120,21 @@ function stripPrivateFields(obj) {
   return obj;
 }
 
-const computedEngineExport = computed(() => {
+// Called on-demand when the export overlay opens — not a reactive computed,
+// because the deep-walk over all hexes is expensive and only needed at export time.
+function getEngineExport() {
   if (!exportData.value) return null;
   return stripPrivateFields(exportData.value);
-});
+}
 
 function copyMapData() {
-  navigator.clipboard.writeText(JSON.stringify(computedEngineExport.value, null, 2));
+  navigator.clipboard.writeText(JSON.stringify(getEngineExport(), null, 2));
 }
 
 function downloadExport() {
-  if (!computedEngineExport.value) return;
-  const blob = new Blob([JSON.stringify(computedEngineExport.value, null, 2)], {
+  const data = getEngineExport();
+  if (!data) return;
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
     type: 'application/json',
   });
   const url = URL.createObjectURL(blob);
@@ -1034,7 +1037,7 @@ onUnmounted(() => {
           <button @click="downloadExport">Download</button>
           <button @click="showExportOverlay = false">✕</button>
         </div>
-        <pre class="export-pre">{{ JSON.stringify(computedEngineExport, null, 2) }}</pre>
+        <pre class="export-pre">{{ JSON.stringify(getEngineExport(), null, 2) }}</pre>
       </div>
     </div>
   </div>
