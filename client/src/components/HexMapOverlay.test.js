@@ -349,7 +349,13 @@ describe('HexMapOverlay', () => {
     expect(labelGroup.exists()).toBe(false);
   });
 
-  it('even-column hex IDs display row value decremented by one', () => {
+  // --- hex ID coordinate-system consistency tests (#114) ---
+
+  it('cell IDs are consistent with los.js adjacentHexId — SE neighbor of 01.03 is 02.03', () => {
+    // With evenColUp:false (offset:-1, ODD_Q), hex(col=1,row=0) is at the same visual row
+    // as hex(col=0,row=0) but shifted down by half a hex — game row must stay 3, not 2.
+    // adjacentHexId('01.03','SE',{rows:3,cols:4}) === '02.03'
+    // Before the fix the formula subtracts 1 for even game cols → labels it '02.02' instead.
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
@@ -363,14 +369,14 @@ describe('HexMapOverlay', () => {
         },
       },
     });
-    // BASE_CAL: rows=3, cols=4
-    // hex(col=1, row=0) → gameCol=2 (even) → with fix: gameRow = 3-0-1 = 2 → "02.02"
-    // Without fix it would be "02.03"
     const labelTexts = wrapper.findAll('text').map((el) => el.text());
-    expect(labelTexts).toContain('02.02');
-    expect(labelTexts).not.toContain('02.03');
-    // Odd column is unaffected: hex(col=0, row=0) → gameCol=1 (odd) → gameRow=3-0=3 → "01.03"
+    // Odd game column (col=1, hex.col=0): top hex should be row 3 — this must always hold.
     expect(labelTexts).toContain('01.03');
+    // Even game column (col=2, hex.col=1): top-most rendered hex should be row 3 as well,
+    // because adjacentHexId('01.03','SE') === '02.03'.
+    // This assertion FAILS before the fix (formula gives '02.02' instead).
+    expect(labelTexts).toContain('02.03');
+    expect(labelTexts).not.toContain('02.02');
   });
 
   it('seed hex polygon renders with purple (#cc44ee) stroke', () => {

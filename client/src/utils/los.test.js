@@ -59,6 +59,31 @@ describe('colRowToCube / cubeToColRow round-trip', () => {
     const { q, r, s } = colRowToCube(4, 7, GRID);
     expect(q + r + s).toBe(0);
   });
+
+  // Parity-specific round-trip coverage (odd and even game columns)
+  it('round-trips an odd game column hex (col 7)', () => {
+    const cube = colRowToCube(7, 4, GRID);
+    const back = cubeToColRow(cube, GRID);
+    expect(back).toEqual({ col: 7, row: 4 });
+  });
+
+  it('round-trips an even game column hex (col 8)', () => {
+    const cube = colRowToCube(8, 4, GRID);
+    const back = cubeToColRow(cube, GRID);
+    expect(back).toEqual({ col: 8, row: 4 });
+  });
+
+  it('round-trips top-row odd game column (col 9, row 10)', () => {
+    const cube = colRowToCube(9, 10, GRID);
+    const back = cubeToColRow(cube, GRID);
+    expect(back).toEqual({ col: 9, row: 10 });
+  });
+
+  it('round-trips top-row even game column (col 4, row 10)', () => {
+    const cube = colRowToCube(4, 10, GRID);
+    const back = cubeToColRow(cube, GRID);
+    expect(back).toEqual({ col: 4, row: 10 });
+  });
 });
 
 describe('cubeRound', () => {
