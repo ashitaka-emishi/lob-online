@@ -79,4 +79,40 @@ describe('ElevationSystemControls', () => {
     await input.trigger('input');
     expect(wrapper.emitted('elevation-system-change')).toBeFalsy();
   });
+
+  it('does not emit when locked is true and input fires', async () => {
+    const wrapper = mount(ElevationSystemControls, {
+      props: { elevationSystem: ELEV_SYS, locked: true },
+    });
+    const input = wrapper.find('[data-testid="base-elevation-input"]');
+    await input.setValue('999');
+    await input.trigger('input');
+    expect(wrapper.emitted('elevation-system-change')).toBeFalsy();
+  });
+
+  it('emits baseElevation: 0 when input value is empty string', async () => {
+    const wrapper = mount(ElevationSystemControls, {
+      props: { elevationSystem: ELEV_SYS, locked: false },
+    });
+    const input = wrapper.find('[data-testid="base-elevation-input"]');
+    await input.setValue('');
+    await input.trigger('input');
+    const emitted = wrapper.emitted('elevation-system-change');
+    expect(emitted).toBeTruthy();
+    expect(emitted[emitted.length - 1][0].baseElevation).toBe(0);
+  });
+
+  it('emits baseElevation: 0 when input value is non-numeric (number input sanitizes to empty)', async () => {
+    const wrapper = mount(ElevationSystemControls, {
+      props: { elevationSystem: ELEV_SYS, locked: false },
+    });
+    const input = wrapper.find('[data-testid="base-elevation-input"]');
+    // type="number" inputs sanitize non-numeric strings to '' before the handler fires;
+    // Number('') === 0, so the emitted value is 0, never NaN.
+    await input.setValue('abc');
+    await input.trigger('input');
+    const emitted = wrapper.emitted('elevation-system-change');
+    expect(emitted).toBeTruthy();
+    expect(emitted[emitted.length - 1][0].baseElevation).toBe(0);
+  });
 });

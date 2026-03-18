@@ -13,7 +13,7 @@ const props = defineProps({
 const emit = defineEmits(['elevation-system-change']);
 
 function update(field, value) {
-  if (!props.elevationSystem) return;
+  if (!props.elevationSystem || props.locked) return;
   emit('elevation-system-change', { ...props.elevationSystem, [field]: Number(value) });
 }
 </script>

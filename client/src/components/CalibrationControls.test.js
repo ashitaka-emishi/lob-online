@@ -194,77 +194,32 @@ describe('CalibrationControls', () => {
   describe('Elevation System section', () => {
     const ELEV_SYS = { baseElevation: 500, elevationLevels: 22 };
 
-    it('renders baseElevation and elevationLevels inputs when elevationSystem prop provided', () => {
+    it('passes elevationSystem and locked props to ElevationSystemControls', () => {
       const wrapper = mount(CalibrationControls, {
         props: { calibration: BASE_CAL, elevationSystem: ELEV_SYS },
       });
-      const inputs = wrapper.findAll('input[type="number"]');
-      // 9 gridSpec inputs + 2 elevation system inputs = 11
-      expect(inputs.length).toBe(11);
+      const child = wrapper.findComponent({ name: 'ElevationSystemControls' });
+      expect(child.props('elevationSystem')).toEqual(ELEV_SYS);
+      expect(child.props('locked')).toBe(false);
     });
 
-    it('baseElevation input shows correct value from prop', () => {
-      const wrapper = mount(CalibrationControls, {
-        props: { calibration: BASE_CAL, elevationSystem: ELEV_SYS },
-      });
-      const inputs = wrapper.findAll('input[type="number"]');
-      const baseElevInput = inputs[9];
-      expect(baseElevInput.element.value).toBe('500');
-    });
-
-    it('elevationLevels input shows correct value from prop', () => {
-      const wrapper = mount(CalibrationControls, {
-        props: { calibration: BASE_CAL, elevationSystem: ELEV_SYS },
-      });
-      const inputs = wrapper.findAll('input[type="number"]');
-      const elevLevelsInput = inputs[10];
-      expect(elevLevelsInput.element.value).toBe('22');
-    });
-
-    it('changing baseElevation emits elevation-system-change with updated value', async () => {
-      const wrapper = mount(CalibrationControls, {
-        props: { calibration: BASE_CAL, elevationSystem: ELEV_SYS },
-      });
-      const inputs = wrapper.findAll('input[type="number"]');
-      await inputs[9].setValue('600');
-      await inputs[9].trigger('input');
-      const emitted = wrapper.emitted('elevation-system-change');
-      expect(emitted).toBeTruthy();
-      expect(emitted[emitted.length - 1][0].baseElevation).toBe(600);
-      expect(emitted[emitted.length - 1][0].elevationLevels).toBe(22);
-    });
-
-    it('changing elevationLevels emits elevation-system-change with updated value', async () => {
-      const wrapper = mount(CalibrationControls, {
-        props: { calibration: BASE_CAL, elevationSystem: ELEV_SYS },
-      });
-      const inputs = wrapper.findAll('input[type="number"]');
-      await inputs[10].setValue('30');
-      await inputs[10].trigger('input');
-      const emitted = wrapper.emitted('elevation-system-change');
-      expect(emitted).toBeTruthy();
-      expect(emitted[emitted.length - 1][0].elevationLevels).toBe(30);
-      expect(emitted[emitted.length - 1][0].baseElevation).toBe(500);
-    });
-
-    it('elevation inputs are disabled when elevationSystem prop is absent', () => {
-      const wrapper = mount(CalibrationControls, {
-        props: { calibration: BASE_CAL },
-      });
-      const inputs = wrapper.findAll('input[type="number"]');
-      // When elevationSystem is absent, both new inputs are still rendered but disabled
-      expect(inputs.length).toBe(11);
-      expect(inputs[9].element.disabled).toBe(true);
-      expect(inputs[10].element.disabled).toBe(true);
-    });
-
-    it('elevation inputs are disabled when calibration is locked', () => {
+    it('passes locked: true when calibration is locked', () => {
       const wrapper = mount(CalibrationControls, {
         props: { calibration: { ...BASE_CAL, locked: true }, elevationSystem: ELEV_SYS },
       });
-      const inputs = wrapper.findAll('input[type="number"]');
-      expect(inputs[9].element.disabled).toBe(true);
-      expect(inputs[10].element.disabled).toBe(true);
+      const child = wrapper.findComponent({ name: 'ElevationSystemControls' });
+      expect(child.props('locked')).toBe(true);
+    });
+
+    it('forwards elevation-system-change from ElevationSystemControls', async () => {
+      const wrapper = mount(CalibrationControls, {
+        props: { calibration: BASE_CAL, elevationSystem: ELEV_SYS },
+      });
+      const child = wrapper.findComponent({ name: 'ElevationSystemControls' });
+      await child.vm.$emit('elevation-system-change', { baseElevation: 600, elevationLevels: 22 });
+      const emitted = wrapper.emitted('elevation-system-change');
+      expect(emitted).toBeTruthy();
+      expect(emitted[emitted.length - 1][0]).toEqual({ baseElevation: 600, elevationLevels: 22 });
     });
   });
 });
