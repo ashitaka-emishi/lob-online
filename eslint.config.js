@@ -10,6 +10,7 @@ export default [
     ignores: [
       '**/dist/**',
       '**/node_modules/**',
+      '.claude/**',
       'docs/**',
       'coverage/**',
       'ecosystem.config.cjs',
