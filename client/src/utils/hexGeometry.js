@@ -166,15 +166,24 @@ export function getCellAndNeighbors(candidateHex, cellByColRow) {
 }
 
 /**
+ * Format 1-based game col/row integers into a "CC.RR" hex ID string.
+ * This is the single source of truth for the hex ID format.
+ * @param {number} gameCol - 1-based column
+ * @param {number} gameRow - 1-based row
+ * @returns {string} e.g. "01.03"
+ */
+export function formatGameId(gameCol, gameRow) {
+  return `${String(gameCol).padStart(2, '0')}.${String(gameRow).padStart(2, '0')}`;
+}
+
+/**
  * Convert a honeycomb-grid offset hex to a game hex ID string "CC.RR".
  * @param {{col:number, row:number}} hex - honeycomb-grid offset coordinates (0-based)
  * @param {number} gridRows - total number of rows in the grid
  * @returns {string} e.g. "01.03"
  */
 export function hexToGameId(hex, gridRows) {
-  const gameCol = hex.col + 1;
-  const gameRow = gridRows - hex.row;
-  return `${String(gameCol).padStart(2, '0')}.${String(gameRow).padStart(2, '0')}`;
+  return formatGameId(hex.col + 1, gridRows - hex.row);
 }
 
 // Cube direction deltas for flat-top hexes (matching los.js convention)
@@ -223,5 +232,5 @@ export function adjacentHexId(hexId, dir, gridSpec) {
   // Bounds check
   if (ncol < 1 || ncol > gridSpec.cols || nrow < 1 || nrow > gridSpec.rows) return null;
 
-  return `${String(ncol).padStart(2, '0')}.${String(nrow).padStart(2, '0')}`;
+  return formatGameId(ncol, nrow);
 }

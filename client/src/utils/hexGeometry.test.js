@@ -10,6 +10,7 @@ import {
   DIRS,
   findNearestEdge,
   getCellAndNeighbors,
+  formatGameId,
   hexToGameId,
 } from './hexGeometry.js';
 
@@ -316,6 +317,16 @@ describe('getEdgeLabels', () => {
 
   it('northOffset=9', () => {
     expect(getEdgeLabels(9)).toEqual(['E', 'SE', 'SW', 'W', 'NW', 'NE']);
+  });
+});
+
+describe('formatGameId', () => {
+  it('pads single-digit col and row', () => {
+    expect(formatGameId(1, 3)).toBe('01.03');
+  });
+
+  it('passes double-digit values through unchanged', () => {
+    expect(formatGameId(12, 34)).toBe('12.34');
   });
 });
 
