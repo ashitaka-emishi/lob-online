@@ -89,6 +89,7 @@ const emit = defineEmits([
   'edge-click',
   'edge-hover',
   'trace-complete',
+  'trace-progress',
 ]);
 
 // Force elevation layer visible when elevation tool is active
@@ -329,7 +330,8 @@ function onSvgMouseMove(event) {
       const key = `${nearest.hexId}:${nearest.dir}`;
       if (!traceEdgeSet.value.has(key)) {
         traceEdgeSet.value.add(key);
-        traceEdges.value = [...traceEdges.value, { hexId: nearest.hexId, dir: nearest.dir }];
+        traceEdges.value.push({ hexId: nearest.hexId, dir: nearest.dir });
+        emit('trace-progress', traceEdges.value.length);
       }
     }
   });

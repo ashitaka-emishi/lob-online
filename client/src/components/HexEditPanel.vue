@@ -89,8 +89,8 @@ function emitUpdate() {
   if (form.value.edges && Object.keys(form.value.edges).length) {
     updated.edges = form.value.edges;
   }
-  if (form.value.wedgeElevations) {
-    updated.wedgeElevations = form.value.wedgeElevations;
+  if (props.hex.wedgeElevations) {
+    updated.wedgeElevations = props.hex.wedgeElevations;
   }
   const hexsides = {};
   for (const dir of HEXSIDE_DIRS) {

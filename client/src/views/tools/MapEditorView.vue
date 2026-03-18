@@ -572,30 +572,48 @@ function initWedgeElevations() {
 
 const showTraceConfirm = ref(false);
 const pendingTraceEdges = ref([]);
+const liveTraceCount = ref(0);
+
+function onTraceProgress(count) {
+  liveTraceCount.value = count;
+}
 
 function onTraceComplete(edges) {
   if (!edges.length) return;
   pendingTraceEdges.value = edges;
+  liveTraceCount.value = 0;
   showTraceConfirm.value = true;
 }
 
 function applyTrace() {
   const featureType = paintEdgeFeature.value ?? 'road';
+  const byHex = new Map();
   for (const { hexId, dir } of pendingTraceEdges.value) {
+    if (!byHex.has(hexId)) byHex.set(hexId, []);
+    byHex.get(hexId).push(dir);
+  }
+  for (const [hexId, dirs] of byHex) {
     const hex = mapData.value?.hexes.find((h) => h.hex === hexId) ?? {
       hex: hexId,
       terrain: 'unknown',
     };
     const edges = hex.edges ? { ...hex.edges } : {};
-    const features = edges[dir] ? [...edges[dir]] : [];
-    if (!features.some((f) => f.type === featureType)) {
-      features.push({ type: featureType });
+    for (const dir of dirs) {
+      const features = edges[dir] ? [...edges[dir]] : [];
+      if (!features.some((f) => f.type === featureType)) {
+        features.push({ type: featureType });
+      }
+      edges[dir] = features;
     }
-    edges[dir] = features;
     onHexUpdate({ ...hex, edges });
   }
   pendingTraceEdges.value = [];
   showTraceConfirm.value = false;
+}
+
+function cancelTrace() {
+  showTraceConfirm.value = false;
+  pendingTraceEdges.value = [];
 }
 
 // ── Keyboard listener ─────────────────────────────────────────────────────────
@@ -792,6 +810,7 @@ onUnmounted(() => {
             @hex-mouseenter="onHexMouseenter"
             @edge-click="onEdgeClick"
             @trace-complete="onTraceComplete"
+            @trace-progress="onTraceProgress"
           />
         </div>
       </div>
@@ -883,6 +902,7 @@ onUnmounted(() => {
             <LinearFeaturePanel
               :edge-feature-types="edgeFeatureTypes"
               :paint-edge-feature="paintEdgeFeature"
+              :trace-edge-count="liveTraceCount"
               @feature-change="paintEdgeFeature = $event"
             />
           </div>
@@ -1003,10 +1023,7 @@ onUnmounted(() => {
       confirm-label="Apply"
       cancel-label="Cancel"
       @confirm="applyTrace"
-      @cancel="
-        showTraceConfirm = false;
-        pendingTraceEdges = [];
-      "
+      @cancel="cancelTrace"
     />
 
     <!-- Export overlay -->
