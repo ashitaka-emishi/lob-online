@@ -6,13 +6,28 @@ import CalibrationControls from '../../components/CalibrationControls.vue';
 import LosTestPanel from '../../components/LosTestPanel.vue';
 import EditorToolbar from '../../components/EditorToolbar.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
-import { adjacentHexId, DIRS } from '../../utils/hexGeometry.js';
-import { deriveEdgesAndSlope } from '../../utils/elevationDerive.js';
+import ElevationToolPanel from '../../components/ElevationToolPanel.vue';
+import TerrainToolPanel from '../../components/TerrainToolPanel.vue';
+import LinearFeaturePanel from '../../components/LinearFeaturePanel.vue';
+import WedgeEditor from '../../components/WedgeEditor.vue';
+import { adjacentHexId } from '../../utils/hexGeometry.js';
 
 const PANEL_DISPLAY_NAMES = {
   calibration: 'Grid Calibration',
+  elevation: 'Elevation Tool',
+  terrain: 'Terrain Tool',
+  linearFeature: 'Linear Feature',
   hexEdit: 'Hex Edit',
+  wedge: 'Wedge Editor',
   losTest: 'LOS Test',
+};
+
+// Which panels activate a tool mode when opened
+const TOOL_PANEL_MODES = {
+  elevation: 'elevation',
+  terrain: 'paint',
+  linearFeature: 'linearFeature',
+  wedge: 'wedge',
 };
 
 const STORAGE_KEY = 'lob-map-editor-calibration-v4';
@@ -51,13 +66,23 @@ const calibrationMode = ref(false);
 const showExportOverlay = ref(false);
 
 // Accordion: only one panel open at a time
-const openPanel = ref('hexEdit'); // 'calibration' | 'hexEdit' | 'losTest' | null
+const openPanel = ref('hexEdit');
 const activeToolName = computed(() =>
   openPanel.value ? (PANEL_DISPLAY_NAMES[openPanel.value] ?? openPanel.value) : null
 );
 
 function togglePanel(name) {
-  openPanel.value = openPanel.value === name ? null : name;
+  const prevPanel = openPanel.value;
+  const wasOpen = prevPanel === name;
+  openPanel.value = wasOpen ? null : name;
+
+  // Derive editorMode from the now-open panel
+  editorMode.value = TOOL_PANEL_MODES[openPanel.value] ?? 'select';
+
+  // Clear selection when a tool panel closes
+  if (TOOL_PANEL_MODES[prevPanel] && !TOOL_PANEL_MODES[openPanel.value]) {
+    selectedHexId.value = null;
+  }
 }
 
 // ── Editor modes and layers ───────────────────────────────────────────────────
@@ -115,6 +140,17 @@ function downloadExport() {
   a.download = 'map-export.json';
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function onElevationLevelsChange(val) {
+  if (!mapData.value || !Number.isInteger(val) || val < 1 || val > 99) return;
+  if (!mapData.value.elevationSystem) {
+    mapData.value.elevationSystem = { baseElevation: 0, elevationLevels: val };
+  } else {
+    mapData.value.elevationSystem = { ...mapData.value.elevationSystem, elevationLevels: val };
+  }
+  unsaved.value = true;
+  saveMapDraft();
 }
 
 function onCalibrationChange(val) {
@@ -348,9 +384,21 @@ const losBlockedHex = computed(() => {
 
 // ── Hex interaction ───────────────────────────────────────────────────────────
 
-const CONTOUR_INTERVAL = 50;
-
 const OPPOSITE_DIR = { N: 'S', S: 'N', NE: 'SW', SW: 'NE', NW: 'SE', SE: 'NW' };
+
+const elevationLevels = computed(() => mapData.value?.elevationSystem?.elevationLevels ?? 22);
+const elevationMax = computed(() => elevationLevels.value - 1);
+
+function adjustHexElevation(hexId, delta) {
+  if (!mapData.value) return;
+  const existing = mapData.value.hexes.find((h) => h.hex === hexId);
+  const current = existing?.elevation ?? 0;
+  const clamped = Math.max(0, Math.min(elevationMax.value, current + delta));
+  const updated = existing
+    ? { ...existing, elevation: clamped }
+    : { hex: hexId, terrain: 'unknown', elevation: clamped };
+  onHexUpdate(updated);
+}
 
 function onHexClick(hexId, nativeEvent) {
   if (losSelectingHex.value === 'A') {
@@ -362,13 +410,21 @@ function onHexClick(hexId, nativeEvent) {
     losSelectingHex.value = null;
     openPanel.value = 'losTest';
   } else if (editorMode.value === 'elevation') {
+    if (selectedHexId.value === hexId) {
+      selectedHexId.value = null; // deselect on re-click
+    } else {
+      selectedHexId.value = hexId;
+      adjustHexElevation(hexId, +1);
+    }
+  } else if (editorMode.value === 'paint') {
     const existing = mapData.value?.hexes.find((h) => h.hex === hexId);
-    const currentElev = existing?.elevation ?? 0;
-    const delta = nativeEvent?.shiftKey ? -CONTOUR_INTERVAL : CONTOUR_INTERVAL;
-    const updatedHex = existing
-      ? { ...existing, elevation: currentElev + delta }
-      : { hex: hexId, terrain: 'unknown', elevation: currentElev + delta };
-    onHexUpdate(updatedHex);
+    const updated = existing
+      ? { ...existing, terrain: paintTerrain.value }
+      : { hex: hexId, terrain: paintTerrain.value };
+    onHexUpdate(updated);
+    selectedHexId.value = hexId;
+  } else if (editorMode.value === 'wedge') {
+    selectedHexId.value = hexId === selectedHexId.value ? null : hexId;
   } else if (editorMode.value === 'select') {
     if (nativeEvent?.shiftKey) {
       const ids = new Set(selectedHexIds.value);
@@ -378,6 +434,12 @@ function onHexClick(hexId, nativeEvent) {
     } else {
       selectedHexId.value = hexId;
     }
+  }
+}
+
+function onHexRightClick(hexId) {
+  if (editorMode.value === 'elevation') {
+    adjustHexElevation(hexId, -1);
   }
 }
 
@@ -441,64 +503,108 @@ function onHexUpdate(updatedHex) {
   saveMapDraft();
 }
 
-function onDeriveWedges({ hexId, wedgeElevations, slope, edges }) {
+// ── Bulk operations ───────────────────────────────────────────────────────────
+
+function clearAllElevations() {
   if (!mapData.value) return;
-
-  // Build a lookup map so each neighbor resolve is O(1) instead of O(n).
-  const hexIndex = new Map(mapData.value.hexes.map((h, i) => [h.hex, i]));
-
-  // Collect all updated hex objects before writing anything.
-  const updates = [];
-
-  const currentIdx = hexIndex.get(hexId);
-  const currentHex =
-    currentIdx !== undefined ? mapData.value.hexes[currentIdx] : { hex: hexId, terrain: 'unknown' };
-  updates.push({ ...currentHex, wedgeElevations, slope, edges });
-
-  for (let i = 0; i < 6; i++) {
-    const neighborId = adjacentHexId(hexId, DIRS[i], calibration.value);
-    if (!neighborId) continue;
-
-    const nIdx = hexIndex.get(neighborId);
-    const neighborHex =
-      nIdx !== undefined ? mapData.value.hexes[nIdx] : { hex: neighborId, terrain: 'unknown' };
-
-    const neighborWedges = neighborHex.wedgeElevations
-      ? [...neighborHex.wedgeElevations]
-      : [0, 0, 0, 0, 0, 0];
-    neighborWedges[(i + 3) % 6] = wedgeElevations[i];
-
-    const neighborDerived = deriveEdgesAndSlope({
-      wedgeElevations: neighborWedges,
-      slope: neighborHex.slope ?? null,
-      edges: neighborHex.edges ?? {},
-    });
-
-    updates.push({
-      ...neighborHex,
-      wedgeElevations: neighborWedges,
-      slope: neighborDerived.slope,
-      edges: neighborDerived.edges,
-    });
-  }
-
-  // Apply all updates in a single pass — one reactive write per hex.
-  for (const updatedHex of updates) {
-    const idx = hexIndex.get(updatedHex.hex);
-    if (idx !== undefined) {
-      mapData.value.hexes[idx] = updatedHex;
-    } else {
-      mapData.value.hexes.push(updatedHex);
-    }
-  }
+  mapData.value.hexes = mapData.value.hexes.map(({ elevation: _elevation, ...rest }) => rest);
   unsaved.value = true;
   saveMapDraft();
+}
+
+function raiseAll() {
+  if (!mapData.value) return;
+  const max = elevationMax.value;
+  mapData.value.hexes = mapData.value.hexes.map((h) => ({
+    ...h,
+    elevation: Math.min(max, (h.elevation ?? 0) + 1),
+  }));
+  unsaved.value = true;
+  saveMapDraft();
+}
+
+function lowerAll() {
+  if (!mapData.value) return;
+  mapData.value.hexes = mapData.value.hexes.map((h) => ({
+    ...h,
+    elevation: Math.max(0, (h.elevation ?? 0) - 1),
+  }));
+  unsaved.value = true;
+  saveMapDraft();
+}
+
+function clearAllTerrain() {
+  if (!mapData.value) return;
+  mapData.value.hexes = mapData.value.hexes.map((h) => ({ ...h, terrain: 'clear' }));
+  unsaved.value = true;
+  saveMapDraft();
+}
+
+function clearAllWedges() {
+  if (!mapData.value) return;
+  mapData.value.hexes = mapData.value.hexes.map((h) => {
+    if (!h.wedgeElevations) return h;
+    return { ...h, wedgeElevations: [0, 0, 0, 0, 0, 0] };
+  });
+  unsaved.value = true;
+  saveMapDraft();
+}
+
+function onWedgeUpdate(newElev) {
+  if (!selectedHexId.value || !mapData.value) return;
+  const existing = mapData.value.hexes.find((h) => h.hex === selectedHexId.value);
+  const updated = existing
+    ? { ...existing, wedgeElevations: newElev }
+    : { hex: selectedHexId.value, terrain: 'unknown', wedgeElevations: newElev };
+  onHexUpdate(updated);
+}
+
+function initWedgeElevations() {
+  if (!selectedHexId.value || !mapData.value) return;
+  const existing = mapData.value.hexes.find((h) => h.hex === selectedHexId.value);
+  const updated = existing
+    ? { ...existing, wedgeElevations: [0, 0, 0, 0, 0, 0] }
+    : { hex: selectedHexId.value, terrain: 'unknown', wedgeElevations: [0, 0, 0, 0, 0, 0] };
+  onHexUpdate(updated);
+}
+
+// ── Linear feature trace ──────────────────────────────────────────────────────
+
+const showTraceConfirm = ref(false);
+const pendingTraceEdges = ref([]);
+
+function onTraceComplete(edges) {
+  if (!edges.length) return;
+  pendingTraceEdges.value = edges;
+  showTraceConfirm.value = true;
+}
+
+function applyTrace() {
+  const featureType = paintEdgeFeature.value ?? 'road';
+  for (const { hexId, dir } of pendingTraceEdges.value) {
+    const hex = mapData.value?.hexes.find((h) => h.hex === hexId) ?? {
+      hex: hexId,
+      terrain: 'unknown',
+    };
+    const edges = hex.edges ? { ...hex.edges } : {};
+    const features = edges[dir] ? [...edges[dir]] : [];
+    if (!features.some((f) => f.type === featureType)) {
+      features.push({ type: featureType });
+    }
+    edges[dir] = features;
+    onHexUpdate({ ...hex, edges });
+  }
+  pendingTraceEdges.value = [];
+  showTraceConfirm.value = false;
 }
 
 // ── Keyboard listener ─────────────────────────────────────────────────────────
 
 function onKeyDown(e) {
   if (e.key === 'Escape') {
+    if (openPanel.value && TOOL_PANEL_MODES[openPanel.value]) {
+      togglePanel(openPanel.value); // close the active tool panel
+    }
     selectedHexIds.value = new Set();
     losSelectingHex.value = null;
   }
@@ -627,19 +733,8 @@ onUnmounted(() => {
       <button @click="dismissDraft">Dismiss</button>
     </div>
 
-    <!-- Editor toolbar -->
-    <EditorToolbar
-      :editor-mode="editorMode"
-      :paint-terrain="paintTerrain"
-      :paint-edge-feature="paintEdgeFeature"
-      :layers="layers"
-      :terrain-types="terrainTypes"
-      :edge-feature-types="edgeFeatureTypes"
-      @mode-change="editorMode = $event"
-      @terrain-change="paintTerrain = $event"
-      @edge-feature-change="paintEdgeFeature = $event"
-      @layer-change="layers = $event"
-    />
+    <!-- Editor toolbar (layer toggles only) -->
+    <EditorToolbar :layers="layers" @layer-change="layers = $event" />
 
     <!-- Load / validation errors -->
     <div v-if="fetchError" class="errors">
@@ -693,8 +788,10 @@ onUnmounted(() => {
             :paint-terrain="paintTerrain"
             :seed-hex-ids="seedHexIdsArray"
             @hex-click="onHexClick"
+            @hex-right-click="onHexRightClick"
             @hex-mouseenter="onHexMouseenter"
             @edge-click="onEdgeClick"
+            @trace-complete="onTraceComplete"
           />
         </div>
       </div>
@@ -702,20 +799,95 @@ onUnmounted(() => {
       <!-- Right: accordion panels -->
       <div class="panel-pane">
         <!-- Grid Calibration -->
-        <div class="accordion-section">
+        <div
+          class="accordion-section accordion-hex"
+          :class="{ 'accordion-flex': openPanel === 'calibration' }"
+        >
           <button class="accordion-header" @click="togglePanel('calibration')">
             <span>Grid Calibration</span>
             <span class="accordion-chevron">{{ openPanel === 'calibration' ? '▾' : '▸' }}</span>
           </button>
-          <div v-if="openPanel === 'calibration'">
+          <div v-if="openPanel === 'calibration'" class="accordion-hex-content">
             <CalibrationControls
               :calibration="calibration"
               :calibration-mode="calibrationMode"
               @calibration-change="onCalibrationChange"
               @toggle-calibration-mode="toggleCalibrationMode"
             />
+            <div class="calibration-extra">
+              <label class="calibration-label">
+                Elevation Levels (1–99)
+                <input
+                  type="number"
+                  step="1"
+                  min="1"
+                  max="99"
+                  :value="elevationLevels"
+                  :disabled="!mapData"
+                  @input="onElevationLevelsChange(Number($event.target.value))"
+                />
+              </label>
+            </div>
           </div>
         </div>
+
+        <!-- Elevation Tool -->
+        <div
+          class="accordion-section accordion-hex"
+          :class="{ 'accordion-flex': openPanel === 'elevation' }"
+        >
+          <button class="accordion-header" @click="togglePanel('elevation')">
+            <span>Elevation Tool</span>
+            <span class="accordion-chevron">{{ openPanel === 'elevation' ? '▾' : '▸' }}</span>
+          </button>
+          <div v-if="openPanel === 'elevation'" class="accordion-hex-content">
+            <ElevationToolPanel
+              :selected-hex="selectedHex"
+              :elevation-levels="elevationLevels"
+              @clear-all-elevations="clearAllElevations"
+              @raise-all="raiseAll"
+              @lower-all="lowerAll"
+            />
+          </div>
+        </div>
+
+        <!-- Terrain Tool -->
+        <div
+          class="accordion-section accordion-hex"
+          :class="{ 'accordion-flex': openPanel === 'terrain' }"
+        >
+          <button class="accordion-header" @click="togglePanel('terrain')">
+            <span>Terrain Tool</span>
+            <span class="accordion-chevron">{{ openPanel === 'terrain' ? '▾' : '▸' }}</span>
+          </button>
+          <div v-if="openPanel === 'terrain'" class="accordion-hex-content">
+            <TerrainToolPanel
+              :terrain-types="terrainTypes"
+              :paint-terrain="paintTerrain"
+              @terrain-change="paintTerrain = $event"
+              @clear-all-terrain="clearAllTerrain"
+            />
+          </div>
+        </div>
+
+        <!-- Linear Feature Tool -->
+        <div
+          class="accordion-section accordion-hex"
+          :class="{ 'accordion-flex': openPanel === 'linearFeature' }"
+        >
+          <button class="accordion-header" @click="togglePanel('linearFeature')">
+            <span>Linear Feature</span>
+            <span class="accordion-chevron">{{ openPanel === 'linearFeature' ? '▾' : '▸' }}</span>
+          </button>
+          <div v-if="openPanel === 'linearFeature'" class="accordion-hex-content">
+            <LinearFeaturePanel
+              :edge-feature-types="edgeFeatureTypes"
+              :paint-edge-feature="paintEdgeFeature"
+              @feature-change="paintEdgeFeature = $event"
+            />
+          </div>
+        </div>
+
         <!-- Hex Edit -->
         <div
           class="accordion-section accordion-hex"
@@ -735,10 +907,43 @@ onUnmounted(() => {
               :north-offset="calibration.northOffset ?? 0"
               @hex-update="onHexUpdate"
               @seed-toggle="onSeedToggle"
-              @derive-wedges="onDeriveWedges"
             />
           </div>
         </div>
+
+        <!-- Wedge Editor -->
+        <div
+          class="accordion-section accordion-hex"
+          :class="{ 'accordion-flex': openPanel === 'wedge' }"
+        >
+          <button class="accordion-header" @click="togglePanel('wedge')">
+            <span>Wedge Editor</span>
+            <span class="accordion-chevron">{{ openPanel === 'wedge' ? '▾' : '▸' }}</span>
+          </button>
+          <div v-if="openPanel === 'wedge'" class="accordion-hex-content">
+            <div class="wedge-panel">
+              <div v-if="!selectedHexId" class="wedge-empty">Click a hex to edit its wedges</div>
+              <template v-else>
+                <div class="wedge-hex-id">Hex {{ selectedHexId }}</div>
+                <button
+                  v-if="!selectedHex?.wedgeElevations"
+                  class="wedge-init-btn"
+                  @click="initWedgeElevations"
+                >
+                  Add Wedge Elevations
+                </button>
+                <WedgeEditor
+                  v-if="selectedHex?.wedgeElevations"
+                  :wedge-elevations="selectedHex.wedgeElevations"
+                  :north-offset="calibration.northOffset ?? 0"
+                  @update:wedge-elevations="onWedgeUpdate"
+                />
+              </template>
+              <button class="wedge-clear-btn" @click="clearAllWedges">Clear all wedges</button>
+            </div>
+          </div>
+        </div>
+
         <!-- LOS Test -->
         <div
           class="accordion-section accordion-hex"
@@ -789,6 +994,19 @@ onUnmounted(() => {
         executePull();
       "
       @cancel="showPullConfirm = false"
+    />
+
+    <!-- Trace confirmation dialog -->
+    <ConfirmDialog
+      :show="showTraceConfirm"
+      :message="`Apply '${paintEdgeFeature ?? 'road'}' to ${pendingTraceEdges.length} edge(s)?`"
+      confirm-label="Apply"
+      cancel-label="Cancel"
+      @confirm="applyTrace"
+      @cancel="
+        showTraceConfirm = false;
+        pendingTraceEdges = [];
+      "
     />
 
     <!-- Export overlay -->
@@ -1005,6 +1223,8 @@ onUnmounted(() => {
 .accordion-section {
   border-bottom: 1px solid #444;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .accordion-hex {
@@ -1106,5 +1326,83 @@ onUnmounted(() => {
   color: #b0d880;
   font-family: monospace;
   line-height: 1.4;
+}
+
+.calibration-extra {
+  padding: 0.5rem 0.6rem;
+  background: #2a2a2a;
+  border-top: 1px solid #333;
+}
+
+.calibration-label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.75rem;
+  color: #a09880;
+  gap: 0.15rem;
+}
+
+.calibration-label input[type='number'] {
+  width: 100%;
+  background: #1a1a1a;
+  border: 1px solid #555;
+  color: #e0d8c8;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+}
+
+.wedge-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #222;
+}
+
+.wedge-empty {
+  color: #666;
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.wedge-hex-id {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #ffdd00;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #333;
+}
+
+.wedge-init-btn {
+  padding: 0.3rem 0.6rem;
+  background: #333;
+  border: 1px solid #555;
+  color: #c8b88a;
+  cursor: pointer;
+  font-size: 0.8rem;
+  width: 100%;
+  text-align: left;
+}
+
+.wedge-init-btn:hover {
+  background: #3a3a3a;
+}
+
+.wedge-clear-btn {
+  margin-top: 0.3rem;
+  padding: 0.3rem 0.6rem;
+  background: #3a1a1a;
+  border: 1px solid #7a3333;
+  color: #c08080;
+  cursor: pointer;
+  font-size: 0.8rem;
+  width: 100%;
+  text-align: left;
+}
+
+.wedge-clear-btn:hover {
+  background: #4a2020;
 }
 </style>
