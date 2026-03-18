@@ -10,6 +10,7 @@ import {
   DIRS,
   findNearestEdge,
   getCellAndNeighbors,
+  hexToGameId,
 } from './hexGeometry.js';
 
 // Simple synthetic corners for a flat-top hex centred at (0,0) with radius 2.
@@ -315,5 +316,28 @@ describe('getEdgeLabels', () => {
 
   it('northOffset=9', () => {
     expect(getEdgeLabels(9)).toEqual(['E', 'SE', 'SW', 'W', 'NW', 'NE']);
+  });
+});
+
+describe('hexToGameId', () => {
+  it('col=0, row=0, gridRows=3 → "01.03" (top-left corner)', () => {
+    expect(hexToGameId({ col: 0, row: 0 }, 3)).toBe('01.03');
+  });
+
+  it('col=1, row=0, gridRows=3 → "02.03" (top of second column)', () => {
+    // Must match adjacentHexId('01.03', 'SE', {rows:3, cols:4}) === '02.03'
+    expect(hexToGameId({ col: 1, row: 0 }, 3)).toBe('02.03');
+  });
+
+  it('col=3, row=2, gridRows=3 → "04.01" (bottom-right corner)', () => {
+    expect(hexToGameId({ col: 3, row: 2 }, 3)).toBe('04.01');
+  });
+
+  it('col=0, row=1, gridRows=35 → "01.34" (mid-grid, full game dimensions)', () => {
+    expect(hexToGameId({ col: 0, row: 1 }, 35)).toBe('01.34');
+  });
+
+  it('pads single-digit col and row with leading zeros', () => {
+    expect(hexToGameId({ col: 4, row: 30 }, 35)).toBe('05.05');
   });
 });

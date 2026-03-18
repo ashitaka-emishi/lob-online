@@ -165,6 +165,18 @@ export function getCellAndNeighbors(candidateHex, cellByColRow) {
   return result;
 }
 
+/**
+ * Convert a honeycomb-grid offset hex to a game hex ID string "CC.RR".
+ * @param {{col:number, row:number}} hex - honeycomb-grid offset coordinates (0-based)
+ * @param {number} gridRows - total number of rows in the grid
+ * @returns {string} e.g. "01.03"
+ */
+export function hexToGameId(hex, gridRows) {
+  const gameCol = hex.col + 1;
+  const gameRow = gridRows - hex.row;
+  return `${String(gameCol).padStart(2, '0')}.${String(gameRow).padStart(2, '0')}`;
+}
+
 // Cube direction deltas for flat-top hexes (matching los.js convention)
 const DIR_CUBE_DELTAS = {
   N: { dq: 0, dr: -1 },
