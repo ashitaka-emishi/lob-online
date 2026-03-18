@@ -610,6 +610,76 @@ describe('MapSchema — elevationSystem with new fields', () => {
   });
 });
 
+describe('MapSchema — elevation runtime validation against elevationLevels', () => {
+  const ELEV_SYS = {
+    baseElevation: 500,
+    elevationLevels: 22,
+    contourInterval: 50,
+    unit: 'feet',
+    verticalSlopesImpassable: true,
+  };
+
+  it('rejects elevation: 22 when elevationLevels is 22 (max is 21)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: ELEV_SYS,
+      hexes: [{ hex: '01.01', terrain: 'clear', elevation: 22 }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts elevation: 21 when elevationLevels is 22 (boundary)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: ELEV_SYS,
+      hexes: [{ hex: '01.01', terrain: 'clear', elevation: 21 }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts elevation: 22 when elevationLevels is 23 (max is 22)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: { ...ELEV_SYS, elevationLevels: 23 },
+      hexes: [{ hex: '01.01', terrain: 'clear', elevation: 22 }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects elevation: 21 when elevationLevels is 1 (max is 0)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: { ...ELEV_SYS, elevationLevels: 1 },
+      hexes: [{ hex: '01.01', terrain: 'clear', elevation: 21 }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('uses default max of 21 when elevationSystem is absent', () => {
+    // elevation: 21 should pass (within default 22 levels)
+    const r21 = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '01.01', terrain: 'clear', elevation: 21 }],
+    });
+    // elevation: 22 should fail (above default max 21)
+    const r22 = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '01.01', terrain: 'clear', elevation: 22 }],
+    });
+    expect(r21.success).toBe(true);
+    expect(r22.success).toBe(false);
+  });
+
+  it('SM map.json values validate cleanly: elevationLevels 22, elevation 21', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: ELEV_SYS,
+      hexes: [{ hex: '01.01', terrain: 'clear', elevation: 21 }],
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
 describe('MapSchema — invalid documents', () => {
   it('rejects wrong layout value', () => {
     const result = MapSchema.safeParse({ ...MINIMAL_VALID, layout: 'flat-top' });
