@@ -37,7 +37,8 @@ function edgeTypeForDelta(delta) {
 export function deriveEdgesAndSlope(hex) {
   const wedges = hex.wedgeElevations ?? [0, 0, 0, 0, 0, 0];
 
-  // Slope: index of minimum value; unchanged if all equal
+  // Slope: index of minimum value; unchanged if all equal.
+  // indexOf picks the first minimum (N before NE, etc.) — intentional game-rule tie-break.
   const minVal = Math.min(...wedges);
   const maxVal = Math.max(...wedges);
   const slope = minVal !== maxVal ? wedges.indexOf(minVal) : (hex.slope ?? null);

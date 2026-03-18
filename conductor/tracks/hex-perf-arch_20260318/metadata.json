@@ -1,0 +1,17 @@
+{
+  "id": "hex-perf-arch_20260318",
+  "title": "Hex Index Perf + Architecture Cleanup (PR #91 Deferred Findings)",
+  "type": "refactor",
+  "status": "pending",
+  "created": "2026-03-18T00:00:00.000Z",
+  "updated": "2026-03-18T00:00:00.000Z",
+  "githubIssue": 93,
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 12,
+    "completed": 0
+  }
+}
