@@ -6,9 +6,10 @@ import { ref } from 'vue';
  * @param {object} args
  * @param {import('vue').Ref} args.mapData - ref to the loaded map object
  * @param {import('vue').Ref<string|null>} args.paintEdgeFeature - currently selected edge feature type
+ * @param {import('vue').Ref<Map>} [args.hexIndex] - optional hexId→index map; falls back to building locally
  * @param {function} args.onMutated - called after applyTrace to set unsaved and save draft
  */
-export function useLinearFeatureTrace({ mapData, paintEdgeFeature, onMutated }) {
+export function useLinearFeatureTrace({ mapData, paintEdgeFeature, hexIndex, onMutated }) {
   const showTraceConfirm = ref(false);
   const pendingTraceEdges = ref([]);
   const liveTraceCount = ref(0);
@@ -31,8 +32,8 @@ export function useLinearFeatureTrace({ mapData, paintEdgeFeature, onMutated }) 
       if (!byHex.has(hexId)) byHex.set(hexId, []);
       byHex.get(hexId).push(dir);
     }
-    // Snapshot the index once before mutations to avoid repeated O(n) scans.
-    const idx = new Map(mapData.value.hexes.map((h, i) => [h.hex, i]));
+    // L2: use caller-provided hexIndex when available to avoid redundant O(n) build.
+    const idx = hexIndex ? hexIndex.value : new Map(mapData.value.hexes.map((h, i) => [h.hex, i]));
     const updates = [];
     for (const [hexId, dirs] of byHex) {
       const hexIdx = idx.get(hexId);

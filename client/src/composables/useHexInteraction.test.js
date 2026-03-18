@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useHexInteraction } from './useHexInteraction.js';
 
 function makeArgs(overrides = {}) {
+  const selectedHexIds = ref(new Set());
   const mapData = ref({
     hexes: [
       { hex: '01.01', terrain: 'clear', elevation: 3 },
@@ -16,9 +17,10 @@ function makeArgs(overrides = {}) {
   const paintEdgeFeature = ref('road');
   const elevationMax = computed(() => 21);
   const calibration = ref({ cols: 10, rows: 10, northOffset: 0, orientation: 'pointy' });
-  const openPanel = ref(null);
+  const tryPickLosHex = vi.fn().mockReturnValue(false);
   const onHexUpdate = vi.fn();
   return {
+    selectedHexIds,
     mapData,
     hexIndex,
     editorMode,
@@ -26,7 +28,7 @@ function makeArgs(overrides = {}) {
     paintEdgeFeature,
     elevationMax,
     calibration,
-    openPanel,
+    tryPickLosHex,
     onHexUpdate,
     ...overrides,
   };
@@ -36,56 +38,78 @@ describe('useHexInteraction', () => {
   describe('selection unification — selectedHexId is a computed alias for selectedHexIds', () => {
     it('selectedHexId is null when selectedHexIds is empty', () => {
       const args = makeArgs();
-      const { selectedHexId, selectedHexIds } = useHexInteraction(args);
-      expect(selectedHexIds.value.size).toBe(0);
+      const { selectedHexId } = useHexInteraction(args);
+      expect(args.selectedHexIds.value.size).toBe(0);
       expect(selectedHexId.value).toBeNull();
     });
 
     it('selectedHexId returns the single id when selectedHexIds has exactly one element', () => {
       const args = makeArgs();
-      const { selectedHexId, selectedHexIds } = useHexInteraction(args);
-      selectedHexIds.value = new Set(['01.01']);
+      const { selectedHexId } = useHexInteraction(args);
+      args.selectedHexIds.value = new Set(['01.01']);
       expect(selectedHexId.value).toBe('01.01');
     });
 
     it('selectedHexId is null when selectedHexIds has more than one element', () => {
       const args = makeArgs();
-      const { selectedHexId, selectedHexIds } = useHexInteraction(args);
-      selectedHexIds.value = new Set(['01.01', '01.02']);
+      const { selectedHexId } = useHexInteraction(args);
+      args.selectedHexIds.value = new Set(['01.01', '01.02']);
       expect(selectedHexId.value).toBeNull();
+    });
+  });
+
+  describe('onHexClick — LOS pick mode', () => {
+    it('calls tryPickLosHex and returns when consumed', () => {
+      const args = makeArgs({ tryPickLosHex: vi.fn().mockReturnValue(true) });
+      const { onHexClick } = useHexInteraction(args);
+      onHexClick('01.01', {});
+      expect(args.tryPickLosHex).toHaveBeenCalledWith('01.01');
+      // No selection side-effects
+      expect(args.selectedHexIds.value.size).toBe(0);
+      expect(args.onHexUpdate).not.toHaveBeenCalled();
+    });
+
+    it('falls through to select mode when tryPickLosHex returns false', () => {
+      const args = makeArgs({
+        tryPickLosHex: vi.fn().mockReturnValue(false),
+        editorMode: ref('select'),
+      });
+      const { onHexClick } = useHexInteraction(args);
+      onHexClick('01.01', {});
+      expect(args.selectedHexIds.value.has('01.01')).toBe(true);
     });
   });
 
   describe('onHexClick — select mode', () => {
     it('non-shift click sets selectedHexIds to {hexId}', () => {
       const args = makeArgs({ editorMode: ref('select') });
-      const { selectedHexIds, onHexClick } = useHexInteraction(args);
+      const { onHexClick } = useHexInteraction(args);
       onHexClick('01.01', {});
-      expect(selectedHexIds.value).toEqual(new Set(['01.01']));
+      expect(args.selectedHexIds.value).toEqual(new Set(['01.01']));
     });
 
     it('non-shift click on a new hex replaces previous selection', () => {
       const args = makeArgs({ editorMode: ref('select') });
-      const { selectedHexIds, onHexClick } = useHexInteraction(args);
+      const { onHexClick } = useHexInteraction(args);
       onHexClick('01.01', {});
       onHexClick('01.02', {});
-      expect(selectedHexIds.value).toEqual(new Set(['01.02']));
+      expect(args.selectedHexIds.value).toEqual(new Set(['01.02']));
     });
 
     it('shift-click adds to selection', () => {
       const args = makeArgs({ editorMode: ref('select') });
-      const { selectedHexIds, onHexClick } = useHexInteraction(args);
+      const { onHexClick } = useHexInteraction(args);
       onHexClick('01.01', {});
       onHexClick('01.02', { shiftKey: true });
-      expect(selectedHexIds.value).toEqual(new Set(['01.01', '01.02']));
+      expect(args.selectedHexIds.value).toEqual(new Set(['01.01', '01.02']));
     });
 
     it('shift-click on already-selected hex removes it', () => {
       const args = makeArgs({ editorMode: ref('select') });
-      const { selectedHexIds, onHexClick } = useHexInteraction(args);
+      const { onHexClick } = useHexInteraction(args);
       onHexClick('01.01', {});
       onHexClick('01.01', { shiftKey: true });
-      expect(selectedHexIds.value.has('01.01')).toBe(false);
+      expect(args.selectedHexIds.value.has('01.01')).toBe(false);
     });
   });
 
@@ -136,27 +160,6 @@ describe('useHexInteraction', () => {
       expect(args.onHexUpdate).toHaveBeenCalledWith(
         expect.objectContaining({ hex: '01.01', terrain: 'woods' })
       );
-    });
-  });
-
-  describe('onHexClick — LOS pick mode', () => {
-    it('while picking A, sets losHexA and clears losSelectingHex', () => {
-      const args = makeArgs();
-      const { losSelectingHex, losHexA, onHexClick } = useHexInteraction(args);
-      losSelectingHex.value = 'A';
-      onHexClick('01.01', {});
-      expect(losHexA.value).toBe('01.01');
-      expect(losSelectingHex.value).toBeNull();
-      expect(args.openPanel.value).toBe('losTest');
-    });
-
-    it('while picking B, sets losHexB and clears losSelectingHex', () => {
-      const args = makeArgs();
-      const { losSelectingHex, losHexB, onHexClick } = useHexInteraction(args);
-      losSelectingHex.value = 'B';
-      onHexClick('01.02', {});
-      expect(losHexB.value).toBe('01.02');
-      expect(losSelectingHex.value).toBeNull();
     });
   });
 
@@ -220,45 +223,6 @@ describe('useHexInteraction', () => {
       const { adjustHexElevation } = useHexInteraction(args);
       adjustHexElevation('01.01', -1);
       expect(args.onHexUpdate).toHaveBeenCalledWith(expect.objectContaining({ elevation: 0 }));
-    });
-  });
-
-  describe('LOS helpers', () => {
-    it('onLosPickStart sets losSelectingHex', () => {
-      const args = makeArgs();
-      const { losSelectingHex, onLosPickStart } = useHexInteraction(args);
-      onLosPickStart('A');
-      expect(losSelectingHex.value).toBe('A');
-    });
-
-    it('onLosPickCancel clears losSelectingHex', () => {
-      const args = makeArgs();
-      const { losSelectingHex, onLosPickCancel } = useHexInteraction(args);
-      losSelectingHex.value = 'B';
-      onLosPickCancel();
-      expect(losSelectingHex.value).toBeNull();
-    });
-
-    it('losPathHexes extracts intermediate steps', () => {
-      const args = makeArgs();
-      const { losResult, losPathHexes } = useHexInteraction(args);
-      losResult.value = {
-        steps: [
-          { hexId: '01.01', role: 'start' },
-          { hexId: '01.02', role: 'intermediate' },
-          { hexId: '01.03', role: 'end' },
-        ],
-      };
-      expect(losPathHexes.value).toEqual(['01.02']);
-    });
-
-    it('losBlockedHex returns the first blocked step hexId', () => {
-      const args = makeArgs();
-      const { losResult, losBlockedHex } = useHexInteraction(args);
-      losResult.value = {
-        steps: [{ hexId: '01.02', blocked: true, role: 'intermediate' }],
-      };
-      expect(losBlockedHex.value).toBe('01.02');
     });
   });
 

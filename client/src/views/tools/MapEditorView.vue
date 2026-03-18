@@ -15,6 +15,8 @@ import { useLinearFeatureTrace } from '../../composables/useLinearFeatureTrace.j
 import { useHexInteraction } from '../../composables/useHexInteraction.js';
 import { useEditorAccordion, TOOL_PANEL_MODES } from '../../composables/useEditorAccordion.js';
 import { useMapPersistence } from '../../composables/useMapPersistence.js';
+import { useLosTest } from '../../composables/useLosTest.js';
+import { useWedgeEditor } from '../../composables/useWedgeEditor.js';
 
 const STORAGE_KEY = 'lob-map-editor-calibration-v4';
 const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
@@ -71,9 +73,11 @@ const {
   dismissDraft,
   fetchMapData,
   pullFromServer,
-  executePull,
+  confirmPull,
+  cancelPull,
   save,
-  executePush,
+  confirmSave,
+  cancelSave,
 } = useMapPersistence({
   calibration,
   defaultCalibration: DEFAULT_CALIBRATION,
@@ -82,12 +86,16 @@ const {
   draftKeyV1: MAP_DRAFT_KEY_V1,
 });
 
+// ── Selection (H2: owned here so accordion's onClearSelection can reference it directly) ──
+
+const selectedHexIds = ref(new Set());
+
 // ── Editor accordion + modes ──────────────────────────────────────────────────
 
-// Lazy callback: wired after useHexInteraction so selectedHexIds is available.
-let _clearSelection = null;
 const { openPanel, editorMode, activeToolName, togglePanel } = useEditorAccordion({
-  onClearSelection: () => _clearSelection?.(),
+  onClearSelection: () => {
+    selectedHexIds.value = new Set();
+  },
 });
 
 const paintTerrain = ref('clear');
@@ -226,11 +234,28 @@ const edgeFeatureTypes = computed(() => {
   return ['road', 'stream', 'stoneWall', 'slope', 'extremeSlope', 'verticalSlope'];
 });
 
-// O(1) index: hexId → array index. Recomputed when hexes array or any element is mutated.
-const hexIndex = computed(() => new Map(mapData.value?.hexes.map((h, i) => [h.hex, i]) ?? []));
+// M3: watch-based hexIndex — only rebuilds on structural changes (length / full load),
+// not on in-place property mutations (terrain, elevation paints). This avoids O(n)
+// Map rebuilds on every paint stroke while still rebuilding when hexes are added/removed.
+const hexIndex = ref(new Map());
+watch(
+  () => [mapData.value, mapData.value?.hexes.length],
+  () => {
+    hexIndex.value = mapData.value
+      ? new Map(mapData.value.hexes.map((h, i) => [h.hex, i]))
+      : new Map();
+  },
+  { immediate: true }
+);
 
 const elevationLevels = computed(() => mapData.value?.elevationSystem?.elevationLevels ?? 22);
 const elevationMax = computed(() => elevationLevels.value - 1);
+
+// M7: single onMutated used by bulk ops and trace (avoids duplicating the same two lines).
+function onMutated() {
+  unsaved.value = true;
+  saveMapDraft();
+}
 
 function onHexUpdate(updatedHex) {
   if (!mapData.value) return;
@@ -240,78 +265,58 @@ function onHexUpdate(updatedHex) {
   } else {
     mapData.value.hexes.push(updatedHex);
   }
-  unsaved.value = true;
-  saveMapDraft();
+  onMutated();
 }
 
-// ── Hex interaction (composable) ──────────────────────────────────────────────
+// ── LOS test (H1: extracted from useHexInteraction) ───────────────────────────
 
 const {
-  selectedHexIds,
-  selectedHexId,
-  selectedHex,
   losHexA,
   losHexB,
   losSelectingHex,
   losPathHexes,
   losBlockedHex,
-  onHexClick,
-  onHexRightClick,
-  onHexMouseenter,
-  onEdgeClick,
+  tryPickLosHex,
   onLosPickStart,
   onLosPickCancel,
   onLosSetHexA,
   onLosSetHexB,
   onLosResult,
-} = useHexInteraction({
-  mapData,
-  hexIndex,
-  editorMode,
-  paintTerrain,
-  paintEdgeFeature,
-  elevationMax,
-  calibration,
-  openPanel,
-  onHexUpdate,
+} = useLosTest({
+  onLosPanelOpen: () => {
+    openPanel.value = 'losTest';
+  },
 });
 
-// Wire accordion's clear-selection callback now that selectedHexIds is available.
-_clearSelection = () => {
-  selectedHexIds.value = new Set();
-};
+// ── Hex interaction (composable) ──────────────────────────────────────────────
+
+const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter, onEdgeClick } =
+  useHexInteraction({
+    mapData,
+    hexIndex,
+    selectedHexIds,
+    editorMode,
+    paintTerrain,
+    paintEdgeFeature,
+    elevationMax,
+    calibration,
+    tryPickLosHex,
+    onHexUpdate,
+  });
 
 // ── Bulk operations ───────────────────────────────────────────────────────────
 
 const { clearAllElevations, raiseAll, lowerAll, clearAllTerrain, clearAllWedges } =
-  useBulkOperations({
-    mapData,
-    elevationMax,
-    onMutated() {
-      unsaved.value = true;
-      saveMapDraft();
-    },
-  });
+  useBulkOperations({ mapData, elevationMax, onMutated });
 
-function onWedgeUpdate(newElev) {
-  if (!selectedHexId.value || !mapData.value) return;
-  const idx = hexIndex.value.get(selectedHexId.value);
-  const existing = idx !== undefined ? mapData.value.hexes[idx] : undefined;
-  const updated = existing
-    ? { ...existing, wedgeElevations: newElev }
-    : { hex: selectedHexId.value, terrain: 'unknown', wedgeElevations: newElev };
-  onHexUpdate(updated);
-}
+// ── Wedge editor (L7: extracted from MapEditorView inline functions) ───────────
 
-function initWedgeElevations() {
-  if (!selectedHexId.value || !mapData.value) return;
-  const idx = hexIndex.value.get(selectedHexId.value);
-  const existing = idx !== undefined ? mapData.value.hexes[idx] : undefined;
-  const updated = existing
-    ? { ...existing, wedgeElevations: [0, 0, 0, 0, 0, 0] }
-    : { hex: selectedHexId.value, terrain: 'unknown', wedgeElevations: [0, 0, 0, 0, 0, 0] };
-  onHexUpdate(updated);
-}
+const { onWedgeUpdate, initWedgeElevations } = useWedgeEditor({
+  mapData,
+  hexIndex,
+  selectedHexId,
+  onHexUpdate,
+});
 
 // ── Linear feature trace ──────────────────────────────────────────────────────
 
@@ -323,14 +328,7 @@ const {
   onTraceComplete,
   applyTrace,
   cancelTrace,
-} = useLinearFeatureTrace({
-  mapData,
-  paintEdgeFeature,
-  onMutated() {
-    unsaved.value = true;
-    saveMapDraft();
-  },
-});
+} = useLinearFeatureTrace({ mapData, paintEdgeFeature, hexIndex, onMutated });
 
 // ── Keyboard listener ─────────────────────────────────────────────────────────
 
@@ -628,11 +626,8 @@ onUnmounted(() => {
       message="Server data is newer. Overwrite?"
       confirm-label="Overwrite"
       cancel-label="Cancel"
-      @confirm="
-        showPushConfirm = false;
-        executePush();
-      "
-      @cancel="showPushConfirm = false"
+      @confirm="confirmSave"
+      @cancel="cancelSave"
     />
 
     <!-- Pull confirmation dialog -->
@@ -641,11 +636,8 @@ onUnmounted(() => {
       message="Discard local changes and load server data?"
       confirm-label="Discard & Pull"
       cancel-label="Cancel"
-      @confirm="
-        showPullConfirm = false;
-        executePull();
-      "
-      @cancel="showPullConfirm = false"
+      @confirm="confirmPull"
+      @cancel="cancelPull"
     />
 
     <!-- Trace confirmation dialog -->

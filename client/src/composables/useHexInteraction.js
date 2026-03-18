@@ -4,40 +4,44 @@ import { adjacentHexId } from '../utils/hexGeometry.js';
 const OPPOSITE_DIR = { N: 'S', S: 'N', NE: 'SW', SW: 'NE', NW: 'SE', SE: 'NW' };
 
 /**
- * Hex interaction handlers, selection state (unified), and LOS pick state.
+ * Hex interaction handlers and selection state derivations.
  *
- * Selection is unified: `selectedHexIds` (Set ref) is canonical.
- * `selectedHexId` is a computed alias returning the single element when size === 1.
+ * `selectedHexIds` (Set ref) is the canonical selection — owned by the caller and passed in
+ * so the accordion's onClearSelection callback can be wired before this composable is
+ * constructed (H2: eliminates the lazy-callback workaround).
+ *
+ * LOS pick state is handled by useLosTest. Pass its `tryPickLosHex` here so click events
+ * are routed correctly without coupling this composable to LOS internals (M8).
  *
  * @param {object} args
  * @param {import('vue').Ref} args.mapData
- * @param {import('vue').ComputedRef<Map>} args.hexIndex
+ * @param {import('vue').Ref<Map>} args.hexIndex
+ * @param {import('vue').Ref<Set>} args.selectedHexIds - canonical selection, owned by caller
  * @param {import('vue').Ref<string>} args.editorMode
  * @param {import('vue').Ref<string>} args.paintTerrain
  * @param {import('vue').Ref<string|null>} args.paintEdgeFeature
  * @param {import('vue').ComputedRef<number>} args.elevationMax
  * @param {import('vue').Ref} args.calibration
- * @param {import('vue').Ref<string|null>} args.openPanel - writable; set to 'losTest' on LOS pick
+ * @param {function} [args.tryPickLosHex] - from useLosTest; returns true if click consumed by LOS
  * @param {function} args.onHexUpdate - single-hex mutation handler
  */
 export function useHexInteraction({
   mapData,
   hexIndex,
+  selectedHexIds,
   editorMode,
   paintTerrain,
   paintEdgeFeature,
   elevationMax,
   calibration,
-  openPanel,
+  tryPickLosHex,
   onHexUpdate,
 }) {
-  // ── Selection (unified) ────────────────────────────────────────────────────
-  const selectedHexIds = ref(new Set());
   const selectedEdge = ref(null);
 
-  // Canonical single-selection alias: non-null only when exactly one hex is selected.
+  // M5: use .values().next().value — avoids spreading the entire Set into an array
   const selectedHexId = computed(() =>
-    selectedHexIds.value.size === 1 ? [...selectedHexIds.value][0] : null
+    selectedHexIds.value.size === 1 ? selectedHexIds.value.values().next().value : null
   );
 
   const selectedHex = computed(() => {
@@ -47,38 +51,6 @@ export function useHexInteraction({
       ? mapData.value.hexes[idx]
       : { hex: selectedHexId.value, terrain: 'unknown' };
   });
-
-  // ── LOS pick state ─────────────────────────────────────────────────────────
-  const losHexA = ref(null);
-  const losHexB = ref(null);
-  const losSelectingHex = ref(null); // 'A' | 'B' | null
-  const losResult = ref(null);
-
-  const losPathHexes = computed(() => {
-    if (!losResult.value) return [];
-    return losResult.value.steps.filter((s) => s.role === 'intermediate').map((s) => s.hexId);
-  });
-
-  const losBlockedHex = computed(() => {
-    if (!losResult.value) return null;
-    return losResult.value.steps.find((s) => s.blocked)?.hexId ?? null;
-  });
-
-  function onLosPickStart(side) {
-    losSelectingHex.value = side;
-  }
-  function onLosPickCancel() {
-    losSelectingHex.value = null;
-  }
-  function onLosSetHexA(id) {
-    losHexA.value = id;
-  }
-  function onLosSetHexB(id) {
-    losHexB.value = id;
-  }
-  function onLosResult(r) {
-    losResult.value = r;
-  }
 
   // ── Elevation adjustment ───────────────────────────────────────────────────
   function adjustHexElevation(hexId, delta) {
@@ -95,15 +67,10 @@ export function useHexInteraction({
 
   // ── Click / mouseenter / edge handlers ────────────────────────────────────
   function onHexClick(hexId, nativeEvent) {
-    if (losSelectingHex.value === 'A') {
-      losHexA.value = hexId;
-      losSelectingHex.value = null;
-      openPanel.value = 'losTest';
-    } else if (losSelectingHex.value === 'B') {
-      losHexB.value = hexId;
-      losSelectingHex.value = null;
-      openPanel.value = 'losTest';
-    } else if (editorMode.value === 'elevation') {
+    // M8: LOS picking delegated to useLosTest; returns true if consumed.
+    if (tryPickLosHex?.(hexId)) return;
+
+    if (editorMode.value === 'elevation') {
       if (selectedHexId.value === hexId) {
         selectedHexIds.value = new Set(); // deselect on re-click
       } else {
@@ -189,25 +156,13 @@ export function useHexInteraction({
   }
 
   return {
-    selectedHexIds,
     selectedHexId,
     selectedEdge,
     selectedHex,
-    losHexA,
-    losHexB,
-    losSelectingHex,
-    losResult,
-    losPathHexes,
-    losBlockedHex,
     adjustHexElevation,
     onHexClick,
     onHexRightClick,
     onHexMouseenter,
     onEdgeClick,
-    onLosPickStart,
-    onLosPickCancel,
-    onLosSetHexA,
-    onLosSetHexB,
-    onLosResult,
   };
 }

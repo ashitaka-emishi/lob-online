@@ -20,6 +20,11 @@ export function useMapPersistence({
   draftKey,
   draftKeyV1,
 }) {
+  // L4: guard against accidental empty/missing key args
+  if (!storageKey || !draftKey) {
+    throw new Error('useMapPersistence: storageKey and draftKey are required non-empty strings');
+  }
+
   const mapData = ref(null);
   const fetchError = ref('');
   const unsaved = ref(false);
@@ -34,13 +39,28 @@ export function useMapPersistence({
   const draftBannerVisible = ref(false);
 
   let saveMapDraftTimer = null;
+  // L1: track save-flash timers so they can be cleared on unmount
+  const pendingTimers = new Set();
 
   function cleanup() {
     if (saveMapDraftTimer !== null) clearTimeout(saveMapDraftTimer);
+    for (const t of pendingTimers) clearTimeout(t);
+    pendingTimers.clear();
+  }
+
+  // L1: wrapper to track and auto-remove timeouts
+  function trackedTimeout(fn, ms) {
+    const t = setTimeout(() => {
+      pendingTimers.delete(t);
+      fn();
+    }, ms);
+    pendingTimers.add(t);
+    return t;
   }
 
   function saveMapDraft() {
     if (saveMapDraftTimer !== null) clearTimeout(saveMapDraftTimer);
+    // L5: 1000ms debounce (draft is a safety net, not real-time)
     saveMapDraftTimer = setTimeout(() => {
       saveMapDraftTimer = null;
       if (!mapData.value) return;
@@ -50,7 +70,12 @@ export function useMapPersistence({
       } catch (_) {
         /* ignore storage errors */
       }
-    }, 500);
+    }, 1000);
+  }
+
+  // M1: validate that a parsed localStorage object has the expected map shape
+  function isValidDraft(obj) {
+    return obj !== null && typeof obj === 'object' && Array.isArray(obj.hexes);
   }
 
   function restoreDraft() {
@@ -58,6 +83,11 @@ export function useMapPersistence({
       const draftStr = localStorage.getItem(draftKey);
       if (!draftStr) return;
       const draft = JSON.parse(draftStr);
+      // M1: validate shape before assigning to application state
+      if (!isValidDraft(draft)) {
+        localStorage.removeItem(draftKey);
+        return;
+      }
       delete draft._savedAt;
       mapData.value = draft;
       draftBannerVisible.value = false;
@@ -77,7 +107,7 @@ export function useMapPersistence({
     return res.json();
   }
 
-  async function executePull() {
+  async function _executePull() {
     isPulling.value = true;
     pullError.value = '';
     try {
@@ -92,7 +122,9 @@ export function useMapPersistence({
         localStorage.setItem(storageKey, JSON.stringify(calibration.value));
       }
     } catch (err) {
-      pullError.value = err.message;
+      // M2: log full error to console; show safe message in UI
+      console.error('[useMapPersistence] pull error:', err);
+      pullError.value = 'Failed to pull from server. Check console for details.';
     } finally {
       isPulling.value = false;
     }
@@ -103,7 +135,17 @@ export function useMapPersistence({
       showPullConfirm.value = true;
       return;
     }
-    await executePull();
+    await _executePull();
+  }
+
+  // M6: expose confirmPull/cancelPull instead of executePull directly
+  async function confirmPull() {
+    showPullConfirm.value = false;
+    await _executePull();
+  }
+
+  function cancelPull() {
+    showPullConfirm.value = false;
   }
 
   async function fetchMapData() {
@@ -128,7 +170,10 @@ export function useMapPersistence({
         const draftStr = localStorage.getItem(draftKey);
         if (draftStr) {
           const draft = JSON.parse(draftStr);
-          if ((draft._savedAt ?? 0) > serverSavedAt.value) {
+          // M1: validate shape before comparing timestamps
+          if (!isValidDraft(draft)) {
+            localStorage.removeItem(draftKey);
+          } else if ((draft._savedAt ?? 0) > serverSavedAt.value) {
             draftBannerVisible.value = true;
           } else {
             localStorage.removeItem(draftKey);
@@ -149,25 +194,33 @@ export function useMapPersistence({
         const draftStr = localStorage.getItem(draftKey);
         if (draftStr) {
           const draft = JSON.parse(draftStr);
-          mapData.value = draft;
-          if (draft.gridSpec) {
-            calibration.value = { ...defaultCalibration, ...draft.gridSpec };
+          // M1: validate shape before assigning to application state
+          if (isValidDraft(draft)) {
+            mapData.value = draft;
+            if (draft.gridSpec) {
+              calibration.value = { ...defaultCalibration, ...draft.gridSpec };
+            }
+            isOffline.value = true;
+            return;
           }
-          isOffline.value = true;
-          return;
+          localStorage.removeItem(draftKey);
         }
       } catch (_) {
         /* ignore */
       }
-      fetchError.value = err.message;
+      // M2: log full error; show safe message in UI
+      console.error('[useMapPersistence] fetchMapData error:', err);
+      fetchError.value = 'Failed to load map data. Check console for details.';
     }
   }
 
-  async function executePush() {
+  async function _executePush() {
     if (!mapData.value) return;
     saveStatus.value = 'saving';
     saveErrors.value = [];
     try {
+      // L3: PUT to same-origin dev-only endpoint (MAP_EDITOR_ENABLED guard on server).
+      // Content-Type: application/json triggers CORS preflight for cross-origin requests.
       const res = await fetch('/api/tools/map-editor/data', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -180,7 +233,8 @@ export function useMapPersistence({
         unsaved.value = false;
         saveStatus.value = 'saved';
         localStorage.removeItem(draftKey);
-        setTimeout(() => {
+        // L1: track timeout so it can be cleared on unmount
+        trackedTimeout(() => {
           saveStatus.value = '';
         }, 2000);
       } else {
@@ -188,8 +242,10 @@ export function useMapPersistence({
         saveErrors.value = body.issues ?? [];
       }
     } catch (err) {
+      // M2: log full error; show safe message in UI
+      console.error('[useMapPersistence] push error:', err);
       saveStatus.value = 'error';
-      saveErrors.value = [{ message: err.message }];
+      saveErrors.value = [{ message: 'Failed to push to server. Check console for details.' }];
     }
   }
 
@@ -199,7 +255,8 @@ export function useMapPersistence({
     if (!mapData.value) {
       localStorage.setItem(storageKey, JSON.stringify(calibration.value));
       saveStatus.value = 'saved';
-      setTimeout(() => {
+      // L1: track timeout so it can be cleared on unmount
+      trackedTimeout(() => {
         saveStatus.value = '';
       }, 2000);
       return;
@@ -218,7 +275,17 @@ export function useMapPersistence({
       return;
     }
 
-    await executePush();
+    await _executePush();
+  }
+
+  // M6: expose confirmSave/cancelSave instead of executePush directly
+  async function confirmSave() {
+    showPushConfirm.value = false;
+    await _executePush();
+  }
+
+  function cancelSave() {
+    showPushConfirm.value = false;
   }
 
   return {
@@ -240,8 +307,10 @@ export function useMapPersistence({
     dismissDraft,
     fetchMapData,
     pullFromServer,
-    executePull,
+    confirmPull,
+    cancelPull,
     save,
-    executePush,
+    confirmSave,
+    cancelSave,
   };
 }

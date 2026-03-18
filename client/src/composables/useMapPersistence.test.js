@@ -166,7 +166,7 @@ describe('useMapPersistence', () => {
       vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
       const { fetchError, fetchMapData } = useMapPersistence(makeArgs());
       await fetchMapData();
-      expect(fetchError.value).toBe('Network error');
+      expect(fetchError.value).toBe('Failed to load map data. Check console for details.');
     });
 
     it('migrates v1 draft key to current key', async () => {
@@ -195,14 +195,14 @@ describe('useMapPersistence', () => {
     });
   });
 
-  describe('executePull', () => {
+  describe('confirmPull', () => {
     it('loads server data, clears draft, resets unsaved', async () => {
       mockFetch({ hexes: [], _savedAt: 42 });
       localStorage.setItem(DRAFT_KEY, 'something');
-      const { mapData, unsaved, serverSavedAt, isOffline, executePull } =
+      const { mapData, unsaved, serverSavedAt, isOffline, confirmPull } =
         useMapPersistence(makeArgs());
       unsaved.value = true;
-      await executePull();
+      await confirmPull();
       expect(mapData.value).toBeDefined();
       expect(unsaved.value).toBe(false);
       expect(serverSavedAt.value).toBe(42);
@@ -210,41 +210,41 @@ describe('useMapPersistence', () => {
       expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
     });
 
-    it('sets pullError when fetch fails', async () => {
+    it('sets pullError with safe message when fetch fails', async () => {
       vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('oops')));
-      const { pullError, executePull } = useMapPersistence(makeArgs());
-      await executePull();
-      expect(pullError.value).toBe('oops');
+      const { pullError, confirmPull } = useMapPersistence(makeArgs());
+      await confirmPull();
+      expect(pullError.value).toBe('Failed to pull from server. Check console for details.');
     });
 
     it('clears isPulling after error', async () => {
       vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('oops')));
-      const { isPulling, executePull } = useMapPersistence(makeArgs());
-      await executePull();
+      const { isPulling, confirmPull } = useMapPersistence(makeArgs());
+      await confirmPull();
       expect(isPulling.value).toBe(false);
     });
   });
 
-  describe('executePush', () => {
+  describe('confirmSave', () => {
     it('is a no-op when mapData is null', async () => {
-      const { saveStatus, executePush } = useMapPersistence(makeArgs());
-      await executePush();
+      const { saveStatus, confirmSave } = useMapPersistence(makeArgs());
+      await confirmSave();
       expect(saveStatus.value).toBe('');
     });
 
     it('sets saveStatus to saved on success', async () => {
       mockFetch({ _savedAt: 999 });
-      const { mapData, saveStatus, executePush } = useMapPersistence(makeArgs());
+      const { mapData, saveStatus, confirmSave } = useMapPersistence(makeArgs());
       mapData.value = { hexes: [] };
-      await executePush();
+      await confirmSave();
       expect(saveStatus.value).toBe('saved');
     });
 
     it('resets saveStatus to empty after timeout', async () => {
       mockFetch({ _savedAt: 999 });
-      const { mapData, saveStatus, executePush } = useMapPersistence(makeArgs());
+      const { mapData, saveStatus, confirmSave } = useMapPersistence(makeArgs());
       mapData.value = { hexes: [] };
-      await executePush();
+      await confirmSave();
       expect(saveStatus.value).toBe('saved');
       vi.runAllTimers();
       expect(saveStatus.value).toBe('');
@@ -252,18 +252,18 @@ describe('useMapPersistence', () => {
 
     it('sets saveStatus to error on HTTP error', async () => {
       mockFetch({ issues: [{ message: 'bad' }] }, { ok: false, status: 422 });
-      const { mapData, saveStatus, saveErrors, executePush } = useMapPersistence(makeArgs());
+      const { mapData, saveStatus, saveErrors, confirmSave } = useMapPersistence(makeArgs());
       mapData.value = { hexes: [] };
-      await executePush();
+      await confirmSave();
       expect(saveStatus.value).toBe('error');
       expect(saveErrors.value).toHaveLength(1);
     });
 
     it('sets saveStatus to error on network failure', async () => {
       vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')));
-      const { mapData, saveStatus, executePush } = useMapPersistence(makeArgs());
+      const { mapData, saveStatus, confirmSave } = useMapPersistence(makeArgs());
       mapData.value = { hexes: [] };
-      await executePush();
+      await confirmSave();
       expect(saveStatus.value).toBe('error');
     });
   });

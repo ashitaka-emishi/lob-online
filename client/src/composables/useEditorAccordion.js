@@ -11,12 +11,12 @@ const PANEL_DISPLAY_NAMES = {
 };
 
 // Which panels activate a tool mode when opened
-export const TOOL_PANEL_MODES = {
+export const TOOL_PANEL_MODES = Object.freeze({
   elevation: 'elevation',
   terrain: 'paint',
   linearFeature: 'linearFeature',
   wedge: 'wedge',
-};
+});
 
 /**
  * Accordion panel state, editor mode derivation, and panel toggle logic.
