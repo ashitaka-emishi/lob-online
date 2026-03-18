@@ -3,7 +3,7 @@
 **Track ID:** wave1-quick-wins_20260318
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-03-18
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -15,11 +15,11 @@ Add an explicit ignore entry for the Conductor worktrees directory.
 
 ### Tasks
 
-- [ ] Task 1.1: In `eslint.config.js`, add `'.claude/worktrees/**'` to the global ignores array (after the existing `.claude/**` line)
+- [x] Task 1.1: In `eslint.config.js`, add `'.claude/worktrees/**'` to the global ignores array (after the existing `.claude/**` line)
 
 ### Verification
 
-- [ ] `npm run lint` exits 0 with no new warnings
+- [x] `npm run lint` exits 0 with no new warnings
 
 ## Phase 2: North Calibration Label Fix (#116)
 
@@ -27,19 +27,19 @@ Replace `Math.round` with `Math.floor` in `cardinalLabelPositions`.
 
 ### Tasks
 
-- [ ] Task 2.1: In `CalibrationControls.vue` line ~67, change `Math.round(...)` to `Math.floor(...)` in the `steps` computation
-- [ ] Task 2.2: In `CalibrationControls.test.js`, add boundary test cases: for each odd northOffset (1, 3, 5, 7, 9, 11), assert that the label at the position one CCW half-step from north is 'NW' (or the correct prior label) not 'N'
+- [x] Task 2.1: In `CalibrationControls.vue` line ~67, change `Math.round(...)` to `Math.floor(...)` in the `steps` computation
+- [x] Task 2.2: In `CalibrationControls.test.js`, add boundary test cases: for each odd northOffset (1, 3, 5, 7, 9, 11), assert that the label at the position one CCW half-step from north is 'NW' (or the correct prior label) not 'N'
 
 ### Verification
 
-- [ ] `npm run test` passes with the new boundary assertions
+- [x] `npm run test` passes with the new boundary assertions (21/21)
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met
-- [ ] `npm run lint` passes
-- [ ] `npm run format:check` passes
-- [ ] `npm run test` passes (coverage ≥ 70%)
+- [x] All acceptance criteria in spec.md met
+- [x] `npm run lint` passes
+- [ ] `npm run format:check` passes — pending `/dev-build`
+- [x] `npm run test` passes (21/21, coverage ≥ 70%)
 - [ ] Ready for `/pr-create`
 
 ---
