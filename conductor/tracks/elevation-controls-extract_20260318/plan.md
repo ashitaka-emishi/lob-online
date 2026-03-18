@@ -3,7 +3,7 @@
 **Track ID:** elevation-controls-extract_20260318
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-03-18
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -41,30 +41,30 @@ Replace the inline elevation markup in `CalibrationControls` with the new child 
 
 ### Tasks
 
-- [ ] Task 2.1: Import and register `ElevationSystemControls` in `CalibrationControls.vue`; replace
+- [x] Task 2.1: Import and register `ElevationSystemControls` in `CalibrationControls.vue`; replace
       the `<div class="elevation-system-label">` block and both elevation `<label>` elements with
       `<ElevationSystemControls :elevation-system="elevationSystem" :locked="calibration.locked ?? false"
 @elevation-system-change="$emit('elevation-system-change', $event)" />`.
-- [ ] Task 2.2: Remove the `updateElevationSystem` function from `CalibrationControls.vue`
+- [x] Task 2.2: Remove the `updateElevationSystem` function from `CalibrationControls.vue`
       (now internal to the child). Keep the `elevationSystem` prop and `elevation-system-change` emit
       declaration on `CalibrationControls` (MapEditorView still passes/listens at this level).
-- [ ] Task 2.3: Remove the `.elevation-system-label` scoped style from `CalibrationControls.vue`
+- [x] Task 2.3: Remove the `.elevation-system-label` scoped style from `CalibrationControls.vue`
       (it now lives in `ElevationSystemControls`).
 
 ### Verification
 
-- [ ] `CalibrationControls.test.js` passes unchanged (`npm run test -- CalibrationControls`)
-- [ ] Full test suite passes (`npm run test`)
-- [ ] No lint or format errors
+- [x] `CalibrationControls.test.js` passes unchanged (`npm run test -- CalibrationControls`)
+- [x] Full test suite passes (`npm run test`)
+- [x] No lint or format errors
 
 ---
 
 ## Final Verification
 
 - [ ] All acceptance criteria in spec.md met
-- [ ] `npm run lint` passes
-- [ ] `npm run format:check` passes
-- [ ] `npm run test` passes (coverage ≥ 70%)
+- [x] `npm run lint` passes
+- [x] `npm run format:check` passes
+- [x] `npm run test` passes (441/441, coverage ≥ 70%)
 - [ ] Manual smoke-check: map editor loads, elevation inputs visible and functional
 - [ ] Ready for PR via `/pr-create`
 
