@@ -4,6 +4,16 @@
 
 **Strict** — tests are written before or alongside implementation. For new utility functions and Vue components, tests must be created in the same task as the implementation. For schema changes, schema tests are required in the same commit.
 
+## Branching Strategy
+
+**Never commit directly to `master`.** All implementation work must happen on a feature branch:
+
+```
+git checkout -b feat/{issue-number}-{short-slug}
+```
+
+Create the branch at the start of `/conductor:implement`, before writing any code. Open a PR with `/pr-create` when the track is complete.
+
 ## Commit Strategy
 
 Conventional Commits format:
