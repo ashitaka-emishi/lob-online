@@ -87,6 +87,7 @@ function toggleLocked() {
 }
 
 function updateElevationSystem(field, value) {
+  if (!props.elevationSystem) return;
   emit('elevation-system-change', { ...props.elevationSystem, [field]: Number(value) });
 }
 </script>

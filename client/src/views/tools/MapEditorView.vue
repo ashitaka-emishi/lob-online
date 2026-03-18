@@ -144,7 +144,21 @@ function downloadExport() {
 
 function onElevationSystemChange(val) {
   if (!mapData.value) return;
-  mapData.value.elevationSystem = { ...mapData.value.elevationSystem, ...val };
+  const { baseElevation, elevationLevels } = val;
+  if (!Number.isFinite(baseElevation) || !Number.isInteger(baseElevation) || baseElevation < 0)
+    return;
+  if (
+    !Number.isFinite(elevationLevels) ||
+    !Number.isInteger(elevationLevels) ||
+    elevationLevels < 1 ||
+    elevationLevels > 99
+  )
+    return;
+  mapData.value.elevationSystem = {
+    ...mapData.value.elevationSystem,
+    baseElevation,
+    elevationLevels,
+  };
   unsaved.value = true;
   saveMapDraft();
 }
