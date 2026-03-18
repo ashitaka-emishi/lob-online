@@ -1,0 +1,17 @@
+{
+  "id": "elevation-controls-extract_20260318",
+  "title": "Extract ElevationSystemControls Component",
+  "type": "refactor",
+  "githubIssue": 100,
+  "status": "in_progress",
+  "created": "2026-03-18T00:00:00.000Z",
+  "updated": "2026-03-18T00:00:00.000Z",
+  "phases": {
+    "total": 2,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 5,
+    "completed": 0
+  }
+}
