@@ -12,4 +12,6 @@
 
 | [x] | elevation-system-ui_20260318 | Elevation System UI — baseElevation + elevationLevels Inputs | 2026-03-18 | 2026-03-18 |
 
+| [x] | hex-perf-arch_20260318 | Hex Index Perf + Architecture Cleanup (PR #91 Deferred Findings) | 2026-03-18 | 2026-03-18 |
+
 <!-- Tracks registered by /conductor:new-track -->
