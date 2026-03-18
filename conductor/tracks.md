@@ -24,4 +24,6 @@
 
 | [x] | hex-to-game-id_20260318 | Extract hexToGameId Helper (Tech Debt #118 + #119) | 2026-03-18 | 2026-03-18 |
 
+| [ ] | wave1-quick-wins_20260318 | Wave 1 Quick Wins — ESLint Worktree Ignore + North Label Bug (#110, #116) | 2026-03-18 | 2026-03-18 |
+
 <!-- Tracks registered by /conductor:new-track -->

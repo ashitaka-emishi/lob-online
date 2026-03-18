@@ -11,6 +11,7 @@ export default [
       '**/dist/**',
       '**/node_modules/**',
       '.claude/**',
+      '.claude/worktrees/**', // explicit: Conductor worktrees dir (also covered by .claude/**)
       'docs/**',
       'coverage/**',
       'ecosystem.config.cjs',
