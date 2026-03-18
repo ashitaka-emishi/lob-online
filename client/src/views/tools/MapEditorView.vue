@@ -349,14 +349,15 @@ const edgeFeatureTypes = computed(() => {
 
 const selectedHexId = ref(null);
 
+// Persistent O(1) index: hexId → array index. Recomputed only when hexes array changes.
+const hexIndex = computed(() => new Map(mapData.value?.hexes.map((h, i) => [h.hex, i]) ?? []));
+
 const selectedHex = computed(() => {
   if (!selectedHexId.value || !mapData.value) return null;
-  return (
-    mapData.value.hexes.find((h) => h.hex === selectedHexId.value) ?? {
-      hex: selectedHexId.value,
-      terrain: 'unknown',
-    }
-  );
+  const idx = hexIndex.value.get(selectedHexId.value);
+  return idx !== undefined
+    ? mapData.value.hexes[idx]
+    : { hex: selectedHexId.value, terrain: 'unknown' };
 });
 
 // ── LOS pick mode ─────────────────────────────────────────────────────────────
@@ -401,7 +402,8 @@ const elevationMax = computed(() => elevationLevels.value - 1);
 
 function adjustHexElevation(hexId, delta) {
   if (!mapData.value) return;
-  const existing = mapData.value.hexes.find((h) => h.hex === hexId);
+  const idx = hexIndex.value.get(hexId);
+  const existing = idx !== undefined ? mapData.value.hexes[idx] : undefined;
   const current = existing?.elevation ?? 0;
   const clamped = Math.max(0, Math.min(elevationMax.value, current + delta));
   const updated = existing
@@ -427,7 +429,7 @@ function onHexClick(hexId, nativeEvent) {
       adjustHexElevation(hexId, +1);
     }
   } else if (editorMode.value === 'paint') {
-    const existing = mapData.value?.hexes.find((h) => h.hex === hexId);
+    const existing = mapData.value ? mapData.value.hexes[hexIndex.value.get(hexId)] : undefined;
     const updated = existing
       ? { ...existing, terrain: paintTerrain.value }
       : { hex: hexId, terrain: paintTerrain.value };
@@ -455,7 +457,7 @@ function onHexRightClick(hexId) {
 
 function onHexMouseenter(hexId) {
   if (editorMode.value === 'paint') {
-    const existing = mapData.value?.hexes.find((h) => h.hex === hexId);
+    const existing = mapData.value ? mapData.value.hexes[hexIndex.value.get(hexId)] : undefined;
     const updatedHex = existing
       ? { ...existing, terrain: paintTerrain.value }
       : { hex: hexId, terrain: paintTerrain.value };
@@ -483,27 +485,25 @@ function onEdgeClick({ hexId, dir }) {
   }
 
   // Update this hex
-  const thisHex = mapData.value.hexes.find((h) => h.hex === hexId) ?? {
-    hex: hexId,
-    terrain: 'unknown',
-  };
+  const thisIdx = hexIndex.value.get(hexId);
+  const thisHex =
+    thisIdx !== undefined ? mapData.value.hexes[thisIdx] : { hex: hexId, terrain: 'unknown' };
   onHexUpdate(toggleEdgeFeature(thisHex, dir, featureType));
 
   // Mirror on adjacent hex
   const adjId = adjacentHexId(hexId, dir, calibration.value);
   if (adjId) {
     const oppDir = OPPOSITE_DIR[dir];
-    const adjHex = mapData.value.hexes.find((h) => h.hex === adjId) ?? {
-      hex: adjId,
-      terrain: 'unknown',
-    };
+    const adjIdx = hexIndex.value.get(adjId);
+    const adjHex =
+      adjIdx !== undefined ? mapData.value.hexes[adjIdx] : { hex: adjId, terrain: 'unknown' };
     onHexUpdate(toggleEdgeFeature(adjHex, oppDir, featureType));
   }
 }
 
 function onHexUpdate(updatedHex) {
   if (!mapData.value) return;
-  const idx = mapData.value.hexes.findIndex((h) => h.hex === updatedHex.hex);
+  const idx = hexIndex.value.get(updatedHex.hex) ?? -1;
   if (idx >= 0) {
     mapData.value.hexes[idx] = updatedHex;
   } else {
@@ -562,7 +562,8 @@ function clearAllWedges() {
 
 function onWedgeUpdate(newElev) {
   if (!selectedHexId.value || !mapData.value) return;
-  const existing = mapData.value.hexes.find((h) => h.hex === selectedHexId.value);
+  const idx = hexIndex.value.get(selectedHexId.value);
+  const existing = idx !== undefined ? mapData.value.hexes[idx] : undefined;
   const updated = existing
     ? { ...existing, wedgeElevations: newElev }
     : { hex: selectedHexId.value, terrain: 'unknown', wedgeElevations: newElev };
@@ -571,7 +572,8 @@ function onWedgeUpdate(newElev) {
 
 function initWedgeElevations() {
   if (!selectedHexId.value || !mapData.value) return;
-  const existing = mapData.value.hexes.find((h) => h.hex === selectedHexId.value);
+  const idx = hexIndex.value.get(selectedHexId.value);
+  const existing = idx !== undefined ? mapData.value.hexes[idx] : undefined;
   const updated = existing
     ? { ...existing, wedgeElevations: [0, 0, 0, 0, 0, 0] }
     : { hex: selectedHexId.value, terrain: 'unknown', wedgeElevations: [0, 0, 0, 0, 0, 0] };
@@ -603,10 +605,9 @@ function applyTrace() {
     byHex.get(hexId).push(dir);
   }
   for (const [hexId, dirs] of byHex) {
-    const hex = mapData.value?.hexes.find((h) => h.hex === hexId) ?? {
-      hex: hexId,
-      terrain: 'unknown',
-    };
+    const hexIdx = hexIndex.value.get(hexId);
+    const hex =
+      hexIdx !== undefined ? mapData.value.hexes[hexIdx] : { hex: hexId, terrain: 'unknown' };
     const edges = hex.edges ? { ...hex.edges } : {};
     for (const dir of dirs) {
       const features = edges[dir] ? [...edges[dir]] : [];
