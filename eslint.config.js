@@ -11,6 +11,7 @@ export default [
       '**/dist/**',
       '**/node_modules/**',
       '.claude/**',
+      '.claude/worktrees/**',
       'docs/**',
       'coverage/**',
       'ecosystem.config.cjs',
