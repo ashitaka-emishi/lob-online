@@ -194,40 +194,29 @@ describe('CalibrationControls', () => {
   describe('Elevation System section', () => {
     const ELEV_SYS = { baseElevation: 500, elevationLevels: 22 };
 
-    it('renders baseElevation and elevationLevels inputs when elevationSystem prop provided', () => {
-      const wrapper = mount(CalibrationControls, {
-        props: { calibration: BASE_CAL, elevationSystem: ELEV_SYS },
-      });
-      const inputs = wrapper.findAll('input[type="number"]');
-      // 9 gridSpec inputs + 2 elevation system inputs = 11
-      expect(inputs.length).toBe(11);
-    });
-
     it('baseElevation input shows correct value from prop', () => {
       const wrapper = mount(CalibrationControls, {
         props: { calibration: BASE_CAL, elevationSystem: ELEV_SYS },
       });
-      const inputs = wrapper.findAll('input[type="number"]');
-      const baseElevInput = inputs[9];
-      expect(baseElevInput.element.value).toBe('500');
+      const input = wrapper.find('[data-testid="base-elevation-input"]');
+      expect(input.element.value).toBe('500');
     });
 
     it('elevationLevels input shows correct value from prop', () => {
       const wrapper = mount(CalibrationControls, {
         props: { calibration: BASE_CAL, elevationSystem: ELEV_SYS },
       });
-      const inputs = wrapper.findAll('input[type="number"]');
-      const elevLevelsInput = inputs[10];
-      expect(elevLevelsInput.element.value).toBe('22');
+      const input = wrapper.find('[data-testid="elevation-levels-input"]');
+      expect(input.element.value).toBe('22');
     });
 
     it('changing baseElevation emits elevation-system-change with updated value', async () => {
       const wrapper = mount(CalibrationControls, {
         props: { calibration: BASE_CAL, elevationSystem: ELEV_SYS },
       });
-      const inputs = wrapper.findAll('input[type="number"]');
-      await inputs[9].setValue('600');
-      await inputs[9].trigger('input');
+      const input = wrapper.find('[data-testid="base-elevation-input"]');
+      await input.setValue('600');
+      await input.trigger('input');
       const emitted = wrapper.emitted('elevation-system-change');
       expect(emitted).toBeTruthy();
       expect(emitted[emitted.length - 1][0].baseElevation).toBe(600);
@@ -238,9 +227,9 @@ describe('CalibrationControls', () => {
       const wrapper = mount(CalibrationControls, {
         props: { calibration: BASE_CAL, elevationSystem: ELEV_SYS },
       });
-      const inputs = wrapper.findAll('input[type="number"]');
-      await inputs[10].setValue('30');
-      await inputs[10].trigger('input');
+      const input = wrapper.find('[data-testid="elevation-levels-input"]');
+      await input.setValue('30');
+      await input.trigger('input');
       const emitted = wrapper.emitted('elevation-system-change');
       expect(emitted).toBeTruthy();
       expect(emitted[emitted.length - 1][0].elevationLevels).toBe(30);
@@ -251,20 +240,16 @@ describe('CalibrationControls', () => {
       const wrapper = mount(CalibrationControls, {
         props: { calibration: BASE_CAL },
       });
-      const inputs = wrapper.findAll('input[type="number"]');
-      // When elevationSystem is absent, both new inputs are still rendered but disabled
-      expect(inputs.length).toBe(11);
-      expect(inputs[9].element.disabled).toBe(true);
-      expect(inputs[10].element.disabled).toBe(true);
+      expect(wrapper.find('[data-testid="base-elevation-input"]').element.disabled).toBe(true);
+      expect(wrapper.find('[data-testid="elevation-levels-input"]').element.disabled).toBe(true);
     });
 
     it('elevation inputs are disabled when calibration is locked', () => {
       const wrapper = mount(CalibrationControls, {
         props: { calibration: { ...BASE_CAL, locked: true }, elevationSystem: ELEV_SYS },
       });
-      const inputs = wrapper.findAll('input[type="number"]');
-      expect(inputs[9].element.disabled).toBe(true);
-      expect(inputs[10].element.disabled).toBe(true);
+      expect(wrapper.find('[data-testid="base-elevation-input"]').element.disabled).toBe(true);
+      expect(wrapper.find('[data-testid="elevation-levels-input"]').element.disabled).toBe(true);
     });
   });
 });

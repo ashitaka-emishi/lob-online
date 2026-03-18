@@ -1,0 +1,17 @@
+{
+  "id": "test-hygiene-bundle_20260318",
+  "title": "Test Hygiene Bundle",
+  "type": "refactor",
+  "githubIssues": [101, 102, 103, 104, 105, 106],
+  "status": "in_progress",
+  "created": "2026-03-18T00:00:00.000Z",
+  "updated": "2026-03-18T00:00:00.000Z",
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 7,
+    "completed": 0
+  }
+}
