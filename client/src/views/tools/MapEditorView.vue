@@ -142,13 +142,23 @@ function downloadExport() {
   URL.revokeObjectURL(url);
 }
 
-function onElevationLevelsChange(val) {
-  if (!mapData.value || !Number.isInteger(val) || val < 1 || val > 99) return;
-  if (!mapData.value.elevationSystem) {
-    mapData.value.elevationSystem = { baseElevation: 0, elevationLevels: val };
-  } else {
-    mapData.value.elevationSystem = { ...mapData.value.elevationSystem, elevationLevels: val };
-  }
+function onElevationSystemChange(val) {
+  if (!mapData.value) return;
+  const { baseElevation, elevationLevels } = val;
+  if (!Number.isFinite(baseElevation) || !Number.isInteger(baseElevation) || baseElevation < 0)
+    return;
+  if (
+    !Number.isFinite(elevationLevels) ||
+    !Number.isInteger(elevationLevels) ||
+    elevationLevels < 1 ||
+    elevationLevels > 99
+  )
+    return;
+  mapData.value.elevationSystem = {
+    ...mapData.value.elevationSystem,
+    baseElevation,
+    elevationLevels,
+  };
   unsaved.value = true;
   saveMapDraft();
 }
@@ -830,23 +840,11 @@ onUnmounted(() => {
             <CalibrationControls
               :calibration="calibration"
               :calibration-mode="calibrationMode"
+              :elevation-system="mapData?.elevationSystem ?? null"
               @calibration-change="onCalibrationChange"
               @toggle-calibration-mode="toggleCalibrationMode"
+              @elevation-system-change="onElevationSystemChange"
             />
-            <div class="calibration-extra">
-              <label class="calibration-label">
-                Elevation Levels (1–99)
-                <input
-                  type="number"
-                  step="1"
-                  min="1"
-                  max="99"
-                  :value="elevationLevels"
-                  :disabled="!mapData"
-                  @input="onElevationLevelsChange(Number($event.target.value))"
-                />
-              </label>
-            </div>
           </div>
         </div>
 
@@ -1343,30 +1341,6 @@ onUnmounted(() => {
   color: #b0d880;
   font-family: monospace;
   line-height: 1.4;
-}
-
-.calibration-extra {
-  padding: 0.5rem 0.6rem;
-  background: #2a2a2a;
-  border-top: 1px solid #333;
-}
-
-.calibration-label {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.75rem;
-  color: #a09880;
-  gap: 0.15rem;
-}
-
-.calibration-label input[type='number'] {
-  width: 100%;
-  background: #1a1a1a;
-  border: 1px solid #555;
-  color: #e0d8c8;
-  padding: 0.2rem 0.3rem;
-  font-size: 0.85rem;
-  box-sizing: border-box;
 }
 
 .wedge-panel {

@@ -1,0 +1,16 @@
+{
+  "id": "elevation-system-ui_20260318",
+  "title": "Elevation System UI — baseElevation + elevationLevels Inputs",
+  "type": "feature",
+  "status": "pending",
+  "created": "2026-03-18T00:00:00.000Z",
+  "updated": "2026-03-18T00:00:00.000Z",
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 11,
+    "completed": 0
+  }
+}

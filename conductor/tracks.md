@@ -10,4 +10,6 @@
 
 | [x] | tech-debt-tracking_20260318 | Technical Debt Tracking System | 2026-03-18 | 2026-03-18 |
 
+| [x] | elevation-system-ui_20260318 | Elevation System UI — baseElevation + elevationLevels Inputs | 2026-03-18 | 2026-03-18 |
+
 <!-- Tracks registered by /conductor:new-track -->
