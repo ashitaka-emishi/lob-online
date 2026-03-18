@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 
 import { getEdgeLabels } from '../utils/hexGeometry.js';
 
@@ -66,25 +66,10 @@ function wedgeCentre(i) {
   };
 }
 
-const editingWedge = ref(null);
-const editValue = ref('');
-
-function startEdit(i) {
-  editingWedge.value = i;
-  editValue.value = String(props.wedgeElevations[i] ?? 0);
-}
-
-function confirmEdit(i) {
+function adjustWedge(i, delta) {
   const newElev = [...props.wedgeElevations];
-  newElev[i] = Number(editValue.value);
+  newElev[i] = Math.max(-21, Math.min(21, (newElev[i] ?? 0) + delta));
   emit('update:wedgeElevations', newElev);
-  editingWedge.value = null;
-  editValue.value = '';
-}
-
-function cancelEdit() {
-  editingWedge.value = null;
-  editValue.value = '';
 }
 </script>
 
@@ -99,7 +84,7 @@ function cancelEdit() {
         stroke-width="1"
       />
 
-      <!-- Wedge fills (6 triangles) -->
+      <!-- Wedge fills (6 triangles): left-click = −1, right-click = +1 -->
       <polygon
         v-for="i in 6"
         :key="'wedge-' + (i - 1)"
@@ -109,7 +94,8 @@ function cancelEdit() {
         stroke="#555"
         stroke-width="0.5"
         style="cursor: pointer"
-        @click="startEdit(i - 1)"
+        @click="adjustWedge(i - 1, -1)"
+        @contextmenu.prevent="adjustWedge(i - 1, 1)"
       />
 
       <!-- Wedge labels -->
@@ -142,19 +128,6 @@ function cancelEdit() {
         {{ label }}
       </text>
     </svg>
-
-    <!-- Inline edit form -->
-    <div v-if="editingWedge !== null" class="wedge-input-row">
-      <span class="wedge-input-label"> Wedge {{ dirLabels[editingWedge] }} elevation offset: </span>
-      <input
-        v-model="editValue"
-        type="number"
-        class="wedge-input"
-        @blur="confirmEdit(editingWedge)"
-        @keyup.enter="confirmEdit(editingWedge)"
-        @keyup.escape="cancelEdit"
-      />
-    </div>
   </div>
 </template>
 
@@ -169,26 +142,5 @@ function cancelEdit() {
 
 .wedge-svg {
   display: block;
-}
-
-.wedge-input-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: #a09880;
-}
-
-.wedge-input-label {
-  white-space: nowrap;
-}
-
-.wedge-input {
-  width: 70px;
-  background: #1a1a1a;
-  border: 1px solid #555;
-  color: #e0d8c8;
-  padding: 0.2rem 0.4rem;
-  font-size: 0.85rem;
 }
 </style>

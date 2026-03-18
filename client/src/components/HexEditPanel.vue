@@ -3,6 +3,7 @@ import { ref, watch, computed } from 'vue';
 import WedgeEditor from './WedgeEditor.vue';
 import EdgeEditPanel from './EdgeEditPanel.vue';
 import { getEdgeLabels } from '../utils/hexGeometry.js';
+import { deriveEdgesAndSlope } from '../utils/elevationDerive.js';
 
 const props = defineProps({
   hex: {
@@ -31,7 +32,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['hex-update', 'seed-toggle']);
+const emit = defineEmits(['hex-update', 'seed-toggle', 'derive-wedges']);
 
 const TERRAIN_TYPES = [
   'unknown',
@@ -151,6 +152,26 @@ function initWedgeElevations() {
   emitUpdate();
 }
 
+function autoDerive() {
+  if (!form.value || !props.hex || !form.value.wedgeElevations) return;
+
+  const { slope, edges } = deriveEdgesAndSlope({
+    wedgeElevations: form.value.wedgeElevations,
+    slope: form.value.slope,
+    edges: form.value.edges,
+  });
+  form.value.slope = slope;
+  form.value.edges = edges;
+  emitUpdate();
+
+  emit('derive-wedges', {
+    hexId: props.hex.hex,
+    wedgeElevations: form.value.wedgeElevations,
+    slope,
+    edges,
+  });
+}
+
 const canMarkAsSeed = computed(
   () =>
     !!form.value &&
@@ -261,6 +282,9 @@ function toggleSeed() {
             :north-offset="northOffset"
             @update:wedge-elevations="onWedgeUpdate"
           />
+          <button v-if="form.wedgeElevations" class="derive-btn" @click="autoDerive">
+            Auto-derive edges &amp; slope
+          </button>
         </div>
 
         <label class="checkbox-label">
@@ -487,6 +511,22 @@ textarea {
 
 .toggle-wedge-btn:hover {
   background: #3a3a3a;
+}
+
+.derive-btn {
+  margin-top: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  background: #2a3a1a;
+  border: 1px solid #4a7a2a;
+  color: #90c060;
+  cursor: pointer;
+  font-size: 0.78rem;
+  width: 100%;
+  text-align: left;
+}
+
+.derive-btn:hover {
+  background: #344a22;
 }
 
 .seed-hint {

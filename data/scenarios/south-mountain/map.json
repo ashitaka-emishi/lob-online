@@ -46,10 +46,12 @@
     "bridge"
   ],
   "elevationSystem": {
+    "baseElevation": 500,
+    "elevationLevels": 22,
     "contourInterval": 50,
     "unit": "feet",
     "verticalSlopesImpassable": true,
-    "_note": "SM Special Slope rule (1.1): 50-foot contour interval. Vertical slopes are impassable to all units."
+    "_note": "elevation is the contour level at hex center (zero-based); wedgeElevations[i] is the offset at hexside i (highest point); feet = (elevation + wedgeElevations[i]) * contourInterval + baseElevation. SM Special Slope rule (1.1): 50-foot contour interval. Vertical slopes are impassable to all units."
   },
   "vpHexes": [
     {

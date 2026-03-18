@@ -6,7 +6,8 @@ import CalibrationControls from '../../components/CalibrationControls.vue';
 import LosTestPanel from '../../components/LosTestPanel.vue';
 import EditorToolbar from '../../components/EditorToolbar.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
-import { adjacentHexId } from '../../utils/hexGeometry.js';
+import { adjacentHexId, DIRS } from '../../utils/hexGeometry.js';
+import { deriveEdgesAndSlope } from '../../utils/elevationDerive.js';
 
 const PANEL_DISPLAY_NAMES = {
   calibration: 'Grid Calibration',
@@ -152,14 +153,20 @@ const showPullConfirm = ref(false);
 const isPulling = ref(false);
 const pullError = ref('');
 
+let saveMapDraftTimer = null;
+
 function saveMapDraft() {
-  if (!mapData.value) return;
-  try {
-    const draft = { ...mapData.value, _savedAt: Date.now() };
-    localStorage.setItem(MAP_DRAFT_KEY, JSON.stringify(draft));
-  } catch (_) {
-    /* ignore storage errors */
-  }
+  if (saveMapDraftTimer !== null) clearTimeout(saveMapDraftTimer);
+  saveMapDraftTimer = setTimeout(() => {
+    saveMapDraftTimer = null;
+    if (!mapData.value) return;
+    try {
+      const draft = { ...mapData.value, _savedAt: Date.now() };
+      localStorage.setItem(MAP_DRAFT_KEY, JSON.stringify(draft));
+    } catch (_) {
+      /* ignore storage errors */
+    }
+  }, 500);
 }
 
 function restoreDraft() {
@@ -434,6 +441,60 @@ function onHexUpdate(updatedHex) {
   saveMapDraft();
 }
 
+function onDeriveWedges({ hexId, wedgeElevations, slope, edges }) {
+  if (!mapData.value) return;
+
+  // Build a lookup map so each neighbor resolve is O(1) instead of O(n).
+  const hexIndex = new Map(mapData.value.hexes.map((h, i) => [h.hex, i]));
+
+  // Collect all updated hex objects before writing anything.
+  const updates = [];
+
+  const currentIdx = hexIndex.get(hexId);
+  const currentHex =
+    currentIdx !== undefined ? mapData.value.hexes[currentIdx] : { hex: hexId, terrain: 'unknown' };
+  updates.push({ ...currentHex, wedgeElevations, slope, edges });
+
+  for (let i = 0; i < 6; i++) {
+    const neighborId = adjacentHexId(hexId, DIRS[i], calibration.value);
+    if (!neighborId) continue;
+
+    const nIdx = hexIndex.get(neighborId);
+    const neighborHex =
+      nIdx !== undefined ? mapData.value.hexes[nIdx] : { hex: neighborId, terrain: 'unknown' };
+
+    const neighborWedges = neighborHex.wedgeElevations
+      ? [...neighborHex.wedgeElevations]
+      : [0, 0, 0, 0, 0, 0];
+    neighborWedges[(i + 3) % 6] = wedgeElevations[i];
+
+    const neighborDerived = deriveEdgesAndSlope({
+      wedgeElevations: neighborWedges,
+      slope: neighborHex.slope ?? null,
+      edges: neighborHex.edges ?? {},
+    });
+
+    updates.push({
+      ...neighborHex,
+      wedgeElevations: neighborWedges,
+      slope: neighborDerived.slope,
+      edges: neighborDerived.edges,
+    });
+  }
+
+  // Apply all updates in a single pass — one reactive write per hex.
+  for (const updatedHex of updates) {
+    const idx = hexIndex.get(updatedHex.hex);
+    if (idx !== undefined) {
+      mapData.value.hexes[idx] = updatedHex;
+    } else {
+      mapData.value.hexes.push(updatedHex);
+    }
+  }
+  unsaved.value = true;
+  saveMapDraft();
+}
+
 // ── Keyboard listener ─────────────────────────────────────────────────────────
 
 function onKeyDown(e) {
@@ -522,6 +583,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeyDown);
+  if (saveMapDraftTimer !== null) clearTimeout(saveMapDraftTimer);
 });
 </script>
 
@@ -673,6 +735,7 @@ onUnmounted(() => {
               :north-offset="calibration.northOffset ?? 0"
               @hex-update="onHexUpdate"
               @seed-toggle="onSeedToggle"
+              @derive-wedges="onDeriveWedges"
             />
           </div>
         </div>
