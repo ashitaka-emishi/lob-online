@@ -497,10 +497,12 @@ describe('HexMapOverlay', () => {
       props: { calibration: BASE_CAL },
     });
     // Set internal trace state directly via defineExpose (auto-unwrapped on vm)
+    // line values are pre-computed coords (matching the {hexId,dir,line} shape from onSvgMouseMove)
+    const mockLine = { x1: 0, y1: 0, x2: 10, y2: 10 };
     wrapper.vm.isDrawing = true;
     wrapper.vm.traceEdges = [
-      { hexId: '01.03', dir: 'N' },
-      { hexId: '01.03', dir: 'NE' },
+      { hexId: '01.03', dir: 'N', line: mockLine },
+      { hexId: '01.03', dir: 'NE', line: mockLine },
     ];
     await wrapper.vm.$nextTick();
 

@@ -97,8 +97,8 @@ const showElevation = computed(() => props.layers.elevation || props.editorMode 
 
 // Drag trace state for linearFeature mode
 const isDrawing = ref(false);
-const traceEdgeSet = ref(new Set()); // keys: "hexId:dir"
-const traceEdges = ref([]); // [{hexId, dir}]
+let traceEdgeSet = new Set(); // deduplication guard — not reactive, not rendered
+const traceEdges = ref([]); // [{hexId, dir, line}]
 const traceEdgeCount = computed(() => traceEdges.value.length);
 
 const TERRAIN_COLORS = {
@@ -215,7 +215,8 @@ const gridData = computed(() => {
   });
 
   const cellByColRow = new Map(cells.map((c) => [`${c.col},${c.row}`, c]));
-  return { cells, grid, tx, ty, cellByColRow };
+  const cellById = new Map(cells.map((c) => [c.id, c]));
+  return { cells, grid, tx, ty, cellByColRow, cellById };
 });
 
 const cells = computed(() => gridData.value.cells);
@@ -313,7 +314,7 @@ function onSvgMouseMove(event) {
     pt.x = clientX;
     pt.y = clientY;
     const svgPt = pt.matrixTransform(ctm.inverse());
-    const { grid, tx, ty, cells, cellByColRow } = gridData.value;
+    const { grid, tx, ty, cells, cellByColRow, cellById } = gridData.value;
     const localX = svgPt.x - tx;
     const localY = svgPt.y - ty;
 
@@ -328,9 +329,11 @@ function onSvgMouseMove(event) {
     // During a linearFeature drag trace, collect nearest edges
     if (drawingNow && props.editorMode === 'linearFeature' && nearest) {
       const key = `${nearest.hexId}:${nearest.dir}`;
-      if (!traceEdgeSet.value.has(key)) {
-        traceEdgeSet.value.add(key);
-        traceEdges.value.push({ hexId: nearest.hexId, dir: nearest.dir });
+      if (!traceEdgeSet.has(key)) {
+        traceEdgeSet.add(key);
+        const cell = cellById.get(nearest.hexId);
+        const line = cell ? edgeLine20_80(cell.corners, nearest.dir) : null;
+        traceEdges.value.push({ hexId: nearest.hexId, dir: nearest.dir, line });
         emit('trace-progress', traceEdges.value.length);
       }
     }
@@ -362,7 +365,7 @@ function onSvgContextMenu(event) {
 function onSvgMouseDown(_event) {
   if (props.editorMode !== 'linearFeature') return;
   isDrawing.value = true;
-  traceEdgeSet.value = new Set();
+  traceEdgeSet = new Set();
   traceEdges.value = [];
 }
 
@@ -372,13 +375,13 @@ function onSvgMouseUp() {
   if (traceEdges.value.length > 0) {
     emit('trace-complete', [...traceEdges.value]);
   }
-  traceEdgeSet.value = new Set();
+  traceEdgeSet = new Set();
   traceEdges.value = [];
 }
 
-// cellMap: O(1) lookup from hexId → cell object
-const cellMap = computed(() => new Map(cells.value.map((c) => [c.id, c])));
+// cellById is built inside gridData computed — access via gridData.value.cellById
 
+// isDrawing and traceEdges are exposed for test instrumentation only; do not mutate from parent components
 defineExpose({ traceEdgeCount, isDrawing, traceEdges });
 </script>
 
@@ -522,8 +525,8 @@ defineExpose({ traceEdgeCount, isDrawing, traceEdges });
         <g v-if="isDrawing" class="layer-trace">
           <template v-for="edge in traceEdges" :key="edge.hexId + ':' + edge.dir">
             <line
-              v-if="cellMap.get(edge.hexId)"
-              v-bind="edgeLine20_80(cellMap.get(edge.hexId).corners, edge.dir)"
+              v-if="edge.line"
+              v-bind="edge.line"
               stroke="#00eeff"
               stroke-width="3"
               stroke-linecap="round"
