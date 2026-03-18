@@ -20,4 +20,6 @@
 
 | [x] | test-hygiene-bundle_20260318 | Test Hygiene Bundle (#101 #102 #103 #104 #105 #106) | 2026-03-18 | 2026-03-18 |
 
+| [x] | los-offset-fix_20260318 | LOS Display Off-by-One — Hex Column Offset | 2026-03-18 | 2026-03-18 |
+
 <!-- Tracks registered by /conductor:new-track -->

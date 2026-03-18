@@ -1,0 +1,17 @@
+{
+  "id": "los-offset-fix_20260318",
+  "title": "LOS Display Off-by-One — Hex Column Offset",
+  "type": "bug",
+  "status": "pending",
+  "created": "2026-03-18T00:00:00.000Z",
+  "updated": "2026-03-18T00:00:00.000Z",
+  "githubIssue": 114,
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 11,
+    "completed": 0
+  }
+}
