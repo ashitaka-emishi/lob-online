@@ -64,7 +64,7 @@ const cardinalLabelPositions = computed(() => {
   const n = props.calibration.northOffset ?? 0;
   return PICKER_POSITIONS.filter((_, i) => i % 2 === 0).map((pos, idx) => {
     const p = idx * 2;
-    const steps = Math.round(((p - n + 12) % 12) / 2) % 6;
+    const steps = Math.floor(((p - n + 12) % 12) / 2) % 6;
     return { x: pos.x * LABEL_SCALE, y: pos.y * LABEL_SCALE, label: CARD_LABELS_HEX[steps] };
   });
 });
