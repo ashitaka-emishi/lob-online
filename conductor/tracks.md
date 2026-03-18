@@ -14,4 +14,6 @@
 
 | [x] | hex-perf-arch_20260318 | Hex Index Perf + Architecture Cleanup (PR #91 Deferred Findings) | 2026-03-18 | 2026-03-18 |
 
+| [x] | trace-highlight-perf_20260318 | Trace Highlight Layer — O(traceEdges) Render | 2026-03-18 | 2026-03-18 |
+
 <!-- Tracks registered by /conductor:new-track -->

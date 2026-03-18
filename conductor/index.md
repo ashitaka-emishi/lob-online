@@ -22,6 +22,7 @@ Navigation hub for project context.
 | [tech-debt-tracking_20260318](./tracks/tech-debt-tracking_20260318/index.md) | Technical Debt Tracking System | Complete |
 | [elevation-system-ui_20260318](./tracks/elevation-system-ui_20260318/index.md) | Elevation System UI — baseElevation + elevationLevels Inputs | Complete |
 | [hex-perf-arch_20260318](./tracks/hex-perf-arch_20260318/index.md) | Hex Index Perf + Architecture Cleanup (PR #91 Deferred Findings) | Complete |
+| [trace-highlight-perf_20260318](./tracks/trace-highlight-perf_20260318/index.md) | Trace Highlight Layer — O(traceEdges) Render | Complete |
 
 ## Getting Started
 
