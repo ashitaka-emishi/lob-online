@@ -22,4 +22,6 @@
 
 | [x] | los-offset-fix_20260318 | LOS Display Off-by-One — Hex Column Offset | 2026-03-18 | 2026-03-18 |
 
+| [x] | hex-to-game-id_20260318 | Extract hexToGameId Helper (Tech Debt #118 + #119) | 2026-03-18 | 2026-03-18 |
+
 <!-- Tracks registered by /conductor:new-track -->
