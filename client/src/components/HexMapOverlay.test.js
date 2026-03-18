@@ -370,13 +370,16 @@ describe('HexMapOverlay', () => {
       },
     });
     const labelTexts = wrapper.findAll('text').map((el) => el.text());
-    // Odd game column (col=1, hex.col=0): top hex should be row 3 — this must always hold.
+    // Odd game column (col=1, hex.col=0): top hex should be row 3 — always holds.
     expect(labelTexts).toContain('01.03');
-    // Even game column (col=2, hex.col=1): top-most rendered hex should be row 3 as well,
-    // because adjacentHexId('01.03','SE') === '02.03'.
-    // This assertion FAILS before the fix (formula gives '02.02' instead).
+    // Even game column (col=2, hex.col=1): top-most rendered hex must be row 3 as well,
+    // because adjacentHexId('01.03','SE',{rows:3,cols:4}) === '02.03'.
+    // Before the fix, the formula subtracted 1 for even game cols → top hex got '02.02'
+    // instead of '02.03', shifting the entire column's labels one row down.
     expect(labelTexts).toContain('02.03');
-    expect(labelTexts).not.toContain('02.02');
+    // The column starts at row 3, so row 4 must NOT appear (would indicate an off-by-one
+    // in the other direction).
+    expect(labelTexts).not.toContain('02.04');
   });
 
   it('seed hex polygon renders with purple (#cc44ee) stroke', () => {

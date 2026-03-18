@@ -168,7 +168,7 @@ const gridData = computed(() => {
     const cx = hex.x;
     const cy = hex.y;
     const gameCol = hex.col + 1;
-    const gameRow = gridRows - hex.row - (gameCol % 2 === 0 ? 1 : 0);
+    const gameRow = gridRows - hex.row;
     const id = `${String(gameCol).padStart(2, '0')}.${String(gameRow).padStart(2, '0')}`;
     const known = hexIndex.value[id];
     const terrain = known?.terrain ?? 'unknown';
@@ -287,7 +287,7 @@ function onSvgClick(event) {
     if (hex) {
       const gridRows = props.calibration.rows > 0 ? props.calibration.rows : 35;
       const gameCol = hex.col + 1;
-      const gameRow = gridRows - hex.row - (gameCol % 2 === 0 ? 1 : 0);
+      const gameRow = gridRows - hex.row;
       const id = `${String(gameCol).padStart(2, '0')}.${String(gameRow).padStart(2, '0')}`;
       emit('hex-click', id, event);
     }
@@ -356,7 +356,7 @@ function onSvgContextMenu(event) {
   if (hex) {
     const gridRows = props.calibration.rows > 0 ? props.calibration.rows : 35;
     const gameCol = hex.col + 1;
-    const gameRow = gridRows - hex.row - (gameCol % 2 === 0 ? 1 : 0);
+    const gameRow = gridRows - hex.row;
     const id = `${String(gameCol).padStart(2, '0')}.${String(gameRow).padStart(2, '0')}`;
     emit('hex-right-click', id, event);
   }
