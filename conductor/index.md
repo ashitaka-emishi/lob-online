@@ -20,6 +20,7 @@ Navigation hub for project context.
 | [pr91-review-fixes_20260317](./tracks/pr91-review-fixes_20260317/index.md)               | Address PR #91 Team-Review Findings                             | Complete |
 
 | [tech-debt-tracking_20260318](./tracks/tech-debt-tracking_20260318/index.md) | Technical Debt Tracking System | Complete |
+| [elevation-system-ui_20260318](./tracks/elevation-system-ui_20260318/index.md) | Elevation System UI — baseElevation + elevationLevels Inputs | Complete |
 
 ## Getting Started
 
