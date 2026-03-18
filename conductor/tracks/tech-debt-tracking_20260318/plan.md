@@ -34,14 +34,14 @@ Build the skill that a developer runs after completing PR review resolution. The
 
 ### Tasks
 
-- [ ] Task 2.1: Create `.claude/skills/tech-debt-report.md` — the skill prompt. The skill should:
+- [x] Task 2.1: Create `.claude/commands/tech-debt-report.md` — the skill prompt. The skill should:
   - Accept optional PR number argument (prompts if not supplied).
   - Enumerate deferred findings from the review (user provides or pastes them).
   - For each deferred item: prompt for linked issue number, debt score (1–5 with scale reminder), and a 1–3 sentence assessment summary.
   - Generate the per-PR report in `docs/tech-debt/reports/pr-{number}_{YYYY-MM-DD}.md` using the template from Task 2.2.
   - Read existing `docs/tech-debt/report.md`, append new debt items to the open items table, update the debt-over-time section, recalculate the executive summary, and write the updated file.
-- [ ] Task 2.2: Define the per-PR report template (embedded in the skill or as a reference in `docs/tech-debt/README.md`). Template sections: PR reference, review date, reviewer, list of fixed findings (count only), deferred findings table (issue | title | score | assessment), total debt added this PR.
-- [ ] Task 2.3: Define the aggregated report update rules in the skill: open items ordered by score descending (ties broken by date, newest first); executive summary recalculates total open items, total debt score sum, and highest-risk item; debt-over-time appends one row per PR run with date and cumulative score.
+- [x] Task 2.2: Define the per-PR report template (embedded in the skill or as a reference in `docs/tech-debt/README.md`). Template sections: PR reference, review date, reviewer, list of fixed findings (count only), deferred findings table (issue | title | score | assessment), total debt added this PR.
+- [x] Task 2.3: Define the aggregated report update rules in the skill: open items ordered by score descending (ties broken by date, newest first); executive summary recalculates total open items, total debt score sum, and highest-risk item; debt-over-time appends one row per PR run with date and cumulative score.
 
 ### Verification
 
