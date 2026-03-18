@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import ElevationSystemControls from './ElevationSystemControls.vue';
 
 const props = defineProps({
   calibration: {
@@ -84,11 +85,6 @@ function toggleEvenColUp() {
 
 function toggleLocked() {
   emit('calibration-change', { ...props.calibration, locked: !props.calibration.locked });
-}
-
-function updateElevationSystem(field, value) {
-  if (!props.elevationSystem) return;
-  emit('elevation-system-change', { ...props.elevationSystem, [field]: Number(value) });
 }
 </script>
 
@@ -241,30 +237,11 @@ function updateElevationSystem(field, value) {
         </g>
       </svg>
     </div>
-    <div class="elevation-system-label">Elevation System</div>
-    <label>
-      Base Elevation (ft)
-      <input
-        type="number"
-        step="1"
-        min="0"
-        :value="elevationSystem?.baseElevation ?? ''"
-        :disabled="!elevationSystem || (calibration.locked ?? false)"
-        @input="updateElevationSystem('baseElevation', $event.target.value)"
-      />
-    </label>
-    <label>
-      Elevation Levels (1–99)
-      <input
-        type="number"
-        step="1"
-        min="1"
-        max="99"
-        :value="elevationSystem?.elevationLevels ?? ''"
-        :disabled="!elevationSystem || (calibration.locked ?? false)"
-        @input="updateElevationSystem('elevationLevels', $event.target.value)"
-      />
-    </label>
+    <ElevationSystemControls
+      :elevation-system="elevationSystem"
+      :locked="calibration.locked ?? false"
+      @elevation-system-change="$emit('elevation-system-change', $event)"
+    />
     <button :class="{ active: calibration.locked }" @click="toggleLocked">
       {{ calibration.locked ? 'Locked 🔒' : 'Lock' }}
     </button>
@@ -304,14 +281,6 @@ input[type='number'] {
   padding: 0.2rem 0.3rem;
   font-size: 0.85rem;
   box-sizing: border-box;
-}
-
-.elevation-system-label {
-  font-size: 0.75rem;
-  color: #a09880;
-  border-top: 1px solid #3a3a3a;
-  padding-top: 0.4rem;
-  margin-top: 0.2rem;
 }
 
 .north-picker-label {

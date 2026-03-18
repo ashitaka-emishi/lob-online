@@ -16,4 +16,6 @@
 
 | [x] | trace-highlight-perf_20260318 | Trace Highlight Layer — O(traceEdges) Render | 2026-03-18 | 2026-03-18 |
 
+| [x] | elevation-controls-extract_20260318 | Extract ElevationSystemControls Component | 2026-03-18 | 2026-03-18 |
+
 <!-- Tracks registered by /conductor:new-track -->
