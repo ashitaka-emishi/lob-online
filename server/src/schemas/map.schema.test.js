@@ -464,6 +464,38 @@ describe('MapSchema — wedgeElevations integer validation', () => {
     });
     expect(result.success).toBe(true);
   });
+
+  it('rejects negative wedge offset below −(elevationLevels−1) when levels < 22 (#103)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: {
+        baseElevation: 0,
+        elevationLevels: 5,
+        contourInterval: 50,
+        unit: 'feet',
+        verticalSlopesImpassable: true,
+      },
+      hexes: [{ hex: '01.01', terrain: 'clear', wedgeElevations: [-5, 0, 0, 0, 0, 0] }],
+    });
+    expect(result.success).toBe(false);
+    expect(result.error.issues[0].code).toBe('custom');
+    expect(result.error.issues[0].path).toEqual(['hexes', 0, 'wedgeElevations', 0]);
+  });
+
+  it('accepts negative wedge offset at −(elevationLevels−1) when levels < 22 (#103)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: {
+        baseElevation: 0,
+        elevationLevels: 5,
+        contourInterval: 50,
+        unit: 'feet',
+        verticalSlopesImpassable: true,
+      },
+      hexes: [{ hex: '01.01', terrain: 'clear', wedgeElevations: [-4, 0, 0, 0, 0, 0] }],
+    });
+    expect(result.success).toBe(true);
+  });
 });
 
 describe('MapSchema — elevationSystem bounds', () => {

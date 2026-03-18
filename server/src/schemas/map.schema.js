@@ -31,12 +31,12 @@ const HexEntry = z.object({
   // [0]=N, [1]=NE, [2]=SE, [3]=S, [4]=SW, [5]=NW — integer level offsets relative to hex elevation
   wedgeElevations: z
     .tuple([
-      z.number().int().min(-21).max(21),
-      z.number().int().min(-21).max(21),
-      z.number().int().min(-21).max(21),
-      z.number().int().min(-21).max(21),
-      z.number().int().min(-21).max(21),
-      z.number().int().min(-21).max(21),
+      z.number().int().min(-98).max(98),
+      z.number().int().min(-98).max(98),
+      z.number().int().min(-98).max(98),
+      z.number().int().min(-98).max(98),
+      z.number().int().min(-98).max(98),
+      z.number().int().min(-98).max(98),
     ])
     .optional(),
   hexsides: z.record(z.string(), z.string()).optional(),

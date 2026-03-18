@@ -57,19 +57,6 @@ import CalibrationControls from '../../components/CalibrationControls.vue';
 import HexEditPanel from '../../components/HexEditPanel.vue';
 import LosTestPanel from '../../components/LosTestPanel.vue';
 
-function makeElevationMap() {
-  return {
-    ...VALID_MAP,
-    elevationSystem: {
-      baseElevation: 500,
-      elevationLevels: 22,
-      contourInterval: 50,
-      unit: 'feet',
-      verticalSlopesImpassable: true,
-    },
-  };
-}
-
 const VALID_MAP = {
   _status: 'draft',
   scenario: 'south-mountain',
@@ -89,6 +76,19 @@ const VALID_MAP = {
     evenColUp: false,
   },
 };
+
+function makeElevationMap() {
+  return {
+    ...VALID_MAP,
+    elevationSystem: {
+      baseElevation: 500,
+      elevationLevels: 22,
+      contourInterval: 50,
+      unit: 'feet',
+      verticalSlopesImpassable: true,
+    },
+  };
+}
 
 const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
 
