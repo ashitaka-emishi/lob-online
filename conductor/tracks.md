@@ -8,4 +8,6 @@
 | [x]    | elevation-model-refactor_20260317 | Refactor Map Elevation Model                                    | 2026-03-17 | 2026-03-17 |
 | [x]    | pr91-review-fixes_20260317        | Address PR #91 Team-Review Findings                             | 2026-03-17 | 2026-03-17 |
 
+| [x] | tech-debt-tracking_20260318 | Technical Debt Tracking System | 2026-03-18 | 2026-03-18 |
+
 <!-- Tracks registered by /conductor:new-track -->

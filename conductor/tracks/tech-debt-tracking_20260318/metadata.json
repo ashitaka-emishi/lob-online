@@ -1,0 +1,16 @@
+{
+  "id": "tech-debt-tracking_20260318",
+  "title": "Technical Debt Tracking System",
+  "type": "feature",
+  "status": "pending",
+  "created": "2026-03-18T00:00:00.000Z",
+  "updated": "2026-03-18T00:00:00.000Z",
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 10,
+    "completed": 0
+  }
+}
