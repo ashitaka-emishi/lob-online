@@ -23,8 +23,8 @@ Establish the file structure, report templates, and debt score reference so Phas
 
 ### Verification
 
-- [ ] `docs/tech-debt/README.md`, `docs/tech-debt/report.md`, and `docs/tech-debt/reports/.gitkeep` exist and are committed.
-- [ ] Debt score scale and filename convention are clearly documented and consistent with the spec.
+- [x] `docs/tech-debt/README.md`, `docs/tech-debt/report.md`, and `docs/tech-debt/reports/.gitkeep` exist and are committed.
+- [x] Debt score scale and filename convention are clearly documented and consistent with the spec.
 
 ---
 
@@ -45,10 +45,10 @@ Build the skill that a developer runs after completing PR review resolution. The
 
 ### Verification
 
-- [ ] Skill file exists at `.claude/skills/tech-debt-report.md`.
-- [ ] Dry-run the skill manually against a synthetic PR with 2 deferred items: confirm per-PR report is generated correctly and aggregated report is updated correctly.
-- [ ] Per-PR report filename matches convention.
-- [ ] Aggregated report open items are ordered most-impactful first.
+- [x] Skill file exists at `.claude/commands/tech-debt-report.md`.
+- [x] Dry-run the skill manually against a synthetic PR with 2 deferred items: confirm per-PR report is generated correctly and aggregated report is updated correctly.
+- [x] Per-PR report filename matches convention.
+- [x] Aggregated report open items are ordered most-impactful first.
 
 ---
 
@@ -65,20 +65,20 @@ Hook the skill into the established development workflow so it runs naturally af
 
 ### Verification
 
-- [ ] All three workflow docs (`CLAUDE.md`, `conductor/workflow.md`, `.claude/rules/sdlc.md`) reference `/tech-debt-report`.
-- [ ] `docs/tech-debt/README.md` is complete and accurate.
-- [ ] Full end-to-end walkthrough: simulate a PR with one deferred item, run `/tech-debt-report`, confirm both reports are correct and docs are consistent.
+- [x] All three workflow docs (`CLAUDE.md`, `conductor/workflow.md`, `.claude/rules/sdlc.md`) reference `/tech-debt-report`.
+- [x] `docs/tech-debt/README.md` is complete and accurate.
+- [x] Full end-to-end walkthrough: simulate a PR with one deferred item, run `/tech-debt-report`, confirm both reports are correct and docs are consistent.
 
 ---
 
 ## Final Verification
 
-- [ ] All acceptance criteria in `spec.md` are met.
-- [ ] `docs/tech-debt/` directory structure is correct and all files are committed.
-- [ ] `/tech-debt-report` skill is usable from a clean context.
-- [ ] Aggregated report reflects the synthetic test run from Phase 2.
-- [ ] SDLC docs updated and consistent.
-- [ ] Ready for review.
+- [x] All acceptance criteria in `spec.md` are met.
+- [x] `docs/tech-debt/` directory structure is correct and all files are committed.
+- [x] `/tech-debt-report` skill is usable from a clean context.
+- [x] Aggregated report reflects the synthetic test run from Phase 2.
+- [x] SDLC docs updated and consistent.
+- [x] Ready for review.
 
 ---
 

@@ -87,7 +87,6 @@ Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `.env` (or your shell) to enable
 | Implement a track   | `/conductor:implement`                   |
 | SDLC status         | `/conductor:status`, `/conductor:manage` |
 | PR code review      | `/team-review`                           |
-| Score deferred debt | `/tech-debt-report`                      |
 | Parallel debugging  | `/team-debug`                            |
 | Parallel dev        | `/team-feature`                          |
 

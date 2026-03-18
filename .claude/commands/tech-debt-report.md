@@ -7,13 +7,15 @@ You are running the technical debt report workflow. Work through the steps below
 
 ## Debt Score Scale (reference)
 
-| Score | Label       | Description                                                                      |
-| ----- | ----------- | -------------------------------------------------------------------------------- |
-| 1     | Trivial     | Style, naming, minor clarity. No functional risk.                                |
-| 2     | Minor       | Duplicated logic, small inconsistency. Low coupling risk.                        |
-| 3     | Moderate    | Missing abstraction, workaround, sub-optimal pattern. Slows future work.         |
-| 4     | Significant | Architectural compromise, risky coupling. Can cause cascading failures.          |
-| 5     | Critical    | Security risk, correctness hazard, or blocks future work / production stability. |
+See `docs/tech-debt/README.md` for full descriptions and examples. Quick reference:
+
+| Score | Label       | Description                                                                                                               |
+| ----- | ----------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Trivial     | Style, naming, minor clarity issue. No functional risk.                                                                   |
+| 2     | Minor       | Duplicated logic, missing comment, small inconsistency. Low coupling risk.                                                |
+| 3     | Moderate    | Missing abstraction, workaround, sub-optimal pattern. Slows future work.                                                  |
+| 4     | Significant | Architectural compromise, risky coupling, missing error boundary. Can cause cascading failures or block future phases.    |
+| 5     | Critical    | Security risk, correctness hazard, or structural flaw that actively blocks future work or threatens production stability. |
 
 When in doubt, score higher — it's easier to downgrade than discover under-reported debt later.
 
@@ -30,6 +32,16 @@ What PR number does this debt report cover?
 Get today's date by running `date +%Y-%m-%d`. The per-PR report filename will be:
 `docs/tech-debt/reports/pr-{number}_{YYYY-MM-DD}.md`
 
+**Check for duplicate run:** Run `ls docs/tech-debt/reports/pr-{number}_*.md 2>/dev/null`. If a file already exists for this PR number, warn the user:
+
+```
+A debt report for PR #{number} already exists: {filename}
+Continuing will overwrite it and add a duplicate row to the Debt Over Time table.
+Proceed? (yes / no / show existing)
+```
+
+Abort if the user says no.
+
 Also ask (or confirm from context):
 
 ```
@@ -40,17 +52,26 @@ Who performed the review? (reviewer name(s))
 
 ## Step 2 — Inventory the Review Findings
 
-Ask the user to provide the list of all findings from the review (they may paste from the team-review output or summarize):
+Run `gh pr view {number} --comments 2>/dev/null | head -100` to pull a candidate list of review comments. Present this to the user as a starting point, then ask them to confirm, edit, or replace it with their own list:
 
 ```
-Please list the findings from this PR review. For each finding, indicate:
-- Was it FIXED in place (resolved in this PR)?
-- Or DEFERRED (filed as a GitHub issue)?
+Here are the review comments I found for PR #{number} (from gh). Please confirm,
+edit, or replace this list. For each finding indicate:
+- FIXED in place (resolved in this PR)
+- DEFERRED (filed as a GitHub issue)
 
 Format:
 1. [FIXED] Brief description
 2. [DEFERRED] Brief description — Issue #NNN (or "no issue yet")
 ```
+
+**If the review produced zero findings** (no issues at all — neither fixed nor deferred), skip directly to Step 7 and print:
+
+```
+No findings recorded for PR #{number}. No debt report generated.
+```
+
+Do not create a per-PR report file. Do not update the aggregated report.
 
 Count the fixed findings. For any deferred item without a linked issue, require one before proceeding:
 
@@ -70,6 +91,7 @@ Deferred finding: "{title}" (Issue #{number})
 
 1. Debt score (1–5):
    1 = Trivial  |  2 = Minor  |  3 = Moderate  |  4 = Significant  |  5 = Critical
+   (See docs/tech-debt/README.md for examples at each level)
 
 2. Assessment (1–3 sentences describing the debt and its risk to the codebase):
 ```
@@ -131,23 +153,25 @@ Remove the placeholder `| — | — | — | — | — |` row if it is still pres
 Append one row:
 
 ```
-| {YYYY-MM-DD} | PR #{number} | {debt added this PR} | {new cumulative score} |
+| {YYYY-MM-DD} | PR #{number} | {debt added this PR} | {new cumulative added} |
 ```
 
-Calculate the new cumulative score by summing the "Debt Added" column across all rows (including the new one). Remove the placeholder `| — | — | — | 0 |` row if still present.
+The "Cumulative Added" column is a running total of all debt ever added across all PRs — it only increases and represents gross debt added, not current outstanding debt. Append a row even when debt added is 0 (to maintain a complete audit trail of every PR cycle). Remove the placeholder `| — | — | — | 0 |` row if still present.
+
+Note: The Executive Summary's "Cumulative debt score" reflects _net open_ debt (sum of Open Debt Items) and will be lower than Cumulative Added once any items are resolved. This is intentional — the two metrics measure different things.
 
 ### Executive Summary table
 
 Recalculate and update:
 
 - **Open debt items** — count rows in the Open Debt Items table (excluding header and placeholder).
-- **Cumulative debt score** — sum of all scores in the Open Debt Items table.
+- **Cumulative debt score** — sum of all scores in the Open Debt Items table (net open debt).
 - **Highest-risk item** — title of the row with the highest score (first if tied).
 - **PRs tracked** — count rows in the Debt Over Time table (excluding header and placeholder).
 
 ### Risk Assessment section
 
-Replace the current Risk Assessment prose with an updated paragraph. Base it on the current open items:
+Replace the current Risk Assessment prose with an updated paragraph. Base it on the current **net open** cumulative score (from Executive Summary):
 
 - If cumulative score is 0: "No debt items recorded. Risk level: **None**."
 - If cumulative score 1–5: "Low risk. Minor deferred items with no functional impact."
@@ -176,6 +200,8 @@ git add docs/tech-debt/reports/pr-{number}_{YYYY-MM-DD}.md docs/tech-debt/report
 git commit -m "docs(tech-debt): add debt report for PR #{number} ({YYYY-MM-DD})"
 ```
 
+Note: CI gates (lint, format:check, test) are not required for this commit because only markdown files are modified.
+
 ---
 
 ## Step 7 — Summary
@@ -192,6 +218,26 @@ PR #{number} — {date}
 Per-PR report:  docs/tech-debt/reports/pr-{number}_{date}.md
 Aggregated:     docs/tech-debt/report.md
 
-Cumulative project debt score: {total}
+Net open debt score: {Executive Summary cumulative}
 Open items: {count}
+Gross debt added (all-time): {Debt Over Time cumulative}
 ```
+
+---
+
+## Resolving Debt Items
+
+When a deferred debt item's linked GitHub issue is closed, remove it from the register by:
+
+1. Delete its row from the **Open Debt Items** table in `docs/tech-debt/report.md`.
+2. Append a resolution row to the **Debt Over Time** table:
+   ```
+   | {YYYY-MM-DD} | PR #{closing_pr} (resolved #issue) | -{score} | {unchanged cumulative added} |
+   ```
+   The "Cumulative Added" column does not change — it is a historical gross total. Only the Executive Summary net score decreases.
+3. Recalculate the **Executive Summary** (open items count, net cumulative score, highest-risk item).
+4. Update the **Risk Assessment** prose.
+5. Update the **Last updated** line.
+6. Commit: `git commit -m "docs(tech-debt): resolve debt item #issue (PR #{closing_pr})"`
+
+This can be done manually or by running `/tech-debt-report` and choosing "resolve" when prompted (future enhancement).
