@@ -112,7 +112,9 @@ export const MapSchema = z
     _digitizationPlan: z.unknown().optional(),
   })
   .superRefine((data, ctx) => {
-    const maxElevation = (data.elevationSystem?.elevationLevels ?? 22) - 1;
+    const elevationLevels = data.elevationSystem?.elevationLevels ?? 22;
+    const maxElevation = elevationLevels - 1;
+    const maxWedgeOffset = elevationLevels - 1;
     for (let i = 0; i < data.hexes.length; i++) {
       const hex = data.hexes[i];
       if (hex.elevation !== undefined && hex.elevation > maxElevation) {
@@ -121,9 +123,21 @@ export const MapSchema = z
           maximum: maxElevation,
           type: 'number',
           inclusive: true,
-          message: `Hex ${hex.hex}: elevation ${hex.elevation} exceeds max ${maxElevation} (elevationLevels: ${data.elevationSystem?.elevationLevels ?? 22})`,
+          message: `Hex ${hex.hex}: elevation ${hex.elevation} exceeds max ${maxElevation} (elevationLevels: ${elevationLevels})`,
           path: ['hexes', i, 'elevation'],
         });
+      }
+      if (hex.wedgeElevations) {
+        for (let w = 0; w < hex.wedgeElevations.length; w++) {
+          const offset = hex.wedgeElevations[w];
+          if (Math.abs(offset) > maxWedgeOffset) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Hex ${hex.hex}: wedgeElevations[${w}] offset ${offset} exceeds ±${maxWedgeOffset} (elevationLevels: ${elevationLevels})`,
+              path: ['hexes', i, 'wedgeElevations', w],
+            });
+          }
+        }
       }
     }
   });

@@ -47,24 +47,24 @@ Fix the static ±21 wedge offset bound and tighten the superRefine rejection tes
 
 ### Tasks
 
-- [ ] Task 2.1: In `server/src/schemas/map.schema.js`, update the `superRefine` wedge
+- [x] Task 2.1: In `server/src/schemas/map.schema.js`, update the `superRefine` wedge
       offset check: derive `maxOffset` from
       `data.elevationSystem?.elevationLevels - 1 ?? 21` and replace the hardcoded `21`
       bounds check with `Math.abs(offset) <= maxOffset`. Add a descriptive error message
       that includes the dynamic max value.
-- [ ] Task 2.2: In `map.schema.test.js` "wedgeElevations integer validation" describe block,
+- [x] Task 2.2: In `map.schema.test.js` "wedgeElevations integer validation" describe block,
       add two tests for #103: (a) a map with `elevationSystem.elevationLevels: 5` rejects
       `wedgeElevations: [5, 0, 0, 0, 0, 0]` (offset equals elevationLevels, not levels−1);
       (b) accepts `wedgeElevations: [4, 0, 0, 0, 0, 0]` for the same elevationSystem.
-- [ ] Task 2.3: In `map.schema.test.js`, for each existing `superRefine` rejection test (#106),
+- [x] Task 2.3: In `map.schema.test.js`, for each existing `superRefine` rejection test (#106),
       add an assertion on `result.error.issues[0].path` (should contain `['hexes', 0,
 'wedgeElevations']` or similar) or `result.error.issues[0].code === 'custom'`.
 
 ### Verification
 
-- [ ] `npm run test -- map.schema` passes
-- [ ] Existing wedge offset boundary tests still pass (±21 with `elevationLevels: 22` default)
-- [ ] No lint or format errors
+- [x] `npm run test -- map.schema` passes (67/67)
+- [x] Existing wedge offset boundary tests still pass (±21 with `elevationLevels: 22` default)
+- [x] No lint or format errors
 
 ---
 

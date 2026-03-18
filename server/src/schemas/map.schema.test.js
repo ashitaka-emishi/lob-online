@@ -388,6 +388,7 @@ describe('MapSchema — wedgeElevations integer validation', () => {
       hexes: [{ hex: '01.01', terrain: 'clear', wedgeElevations: [0.5, 0, 0, 0, 0, 0] }],
     });
     expect(result.success).toBe(false);
+    expect(result.error.issues[0].path).toEqual(['hexes', 0, 'wedgeElevations', 0]);
   });
 
   it('accepts wedgeElevations with all integer values (including negatives)', () => {
@@ -412,6 +413,7 @@ describe('MapSchema — wedgeElevations integer validation', () => {
       hexes: [{ hex: '01.01', terrain: 'clear', wedgeElevations: [22, 0, 0, 0, 0, 0] }],
     });
     expect(result.success).toBe(false);
+    expect(result.error.issues[0].path).toEqual(['hexes', 0, 'wedgeElevations', 0]);
   });
 
   it('rejects wedgeElevations with value -22 (below min -21)', () => {
@@ -420,12 +422,45 @@ describe('MapSchema — wedgeElevations integer validation', () => {
       hexes: [{ hex: '01.01', terrain: 'clear', wedgeElevations: [0, 0, 0, -22, 0, 0] }],
     });
     expect(result.success).toBe(false);
+    expect(result.error.issues[0].path).toEqual(['hexes', 0, 'wedgeElevations', 3]);
   });
 
   it('accepts wedgeElevations at boundary values ±21', () => {
     const result = MapSchema.safeParse({
       ...MINIMAL_VALID,
       hexes: [{ hex: '01.01', terrain: 'clear', wedgeElevations: [21, -21, 0, 0, 0, 0] }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects wedgeElevations offset equal to elevationLevels when levels < 22 (#103)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: {
+        baseElevation: 0,
+        elevationLevels: 5,
+        contourInterval: 50,
+        unit: 'feet',
+        verticalSlopesImpassable: true,
+      },
+      hexes: [{ hex: '01.01', terrain: 'clear', wedgeElevations: [5, 0, 0, 0, 0, 0] }],
+    });
+    expect(result.success).toBe(false);
+    expect(result.error.issues[0].code).toBe('custom');
+    expect(result.error.issues[0].path).toEqual(['hexes', 0, 'wedgeElevations', 0]);
+  });
+
+  it('accepts wedgeElevations offset at elevationLevels−1 when levels < 22 (#103)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      elevationSystem: {
+        baseElevation: 0,
+        elevationLevels: 5,
+        contourInterval: 50,
+        unit: 'feet',
+        verticalSlopesImpassable: true,
+      },
+      hexes: [{ hex: '01.01', terrain: 'clear', wedgeElevations: [4, 0, 0, 0, 0, 0] }],
     });
     expect(result.success).toBe(true);
   });
@@ -626,6 +661,8 @@ describe('MapSchema — elevation runtime validation against elevationLevels', (
       hexes: [{ hex: '01.01', terrain: 'clear', elevation: 22 }],
     });
     expect(result.success).toBe(false);
+    expect(result.error.issues[0].code).toBe('too_big');
+    expect(result.error.issues[0].path).toEqual(['hexes', 0, 'elevation']);
   });
 
   it('accepts elevation: 21 when elevationLevels is 22 (boundary)', () => {
@@ -653,6 +690,8 @@ describe('MapSchema — elevation runtime validation against elevationLevels', (
       hexes: [{ hex: '01.01', terrain: 'clear', elevation: 21 }],
     });
     expect(result.success).toBe(false);
+    expect(result.error.issues[0].code).toBe('too_big');
+    expect(result.error.issues[0].path).toEqual(['hexes', 0, 'elevation']);
   });
 
   it('uses default max of 21 when elevationSystem is absent', () => {
