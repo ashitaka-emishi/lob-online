@@ -7,6 +7,8 @@
  * Game IDs are "CC.RR" (1-indexed, row 1 = bottom).
  */
 
+import { formatGameId } from './hexGeometry.js';
+
 // Terrain LOS height bonuses.
 // Woods/orchard/woodedSloping use the configurable treeLosHeight (SM override: +1, not +3).
 const TERRAIN_HEIGHT = {
@@ -35,13 +37,6 @@ const DIR_DELTAS = [
 export function parseHexId(id) {
   const [col, row] = id.split('.').map(Number);
   return { col, row };
-}
-
-/**
- * Format { col, row } → "CC.RR" (zero-padded to 2 digits)
- */
-function formatHexId(col, row) {
-  return `${String(col).padStart(2, '0')}.${String(row).padStart(2, '0')}`;
 }
 
 /**
@@ -126,7 +121,7 @@ export function hexLine(hexAId, hexBId, gridSpec) {
     const frac = { q: lerp(aq, bq, t), r: lerp(ar, br, t), s: lerp(as_, bs, t) };
     const rounded = cubeRound(frac);
     const { col, row } = cubeToColRow(rounded, gridSpec);
-    results.push(formatHexId(col, row));
+    results.push(formatGameId(col, row));
   }
   return results;
 }

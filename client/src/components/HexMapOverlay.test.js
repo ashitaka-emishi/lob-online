@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { defineHex, Grid, rectangle, Orientation } from 'honeycomb-grid';
+import { hexToGameId } from '../utils/hexGeometry.js';
 import HexMapOverlay from './HexMapOverlay.vue';
 
 const BASE_CAL = {
@@ -460,6 +462,59 @@ describe('HexMapOverlay', () => {
     const innerGs = wrapper.findAll('g');
     const hasRotate = innerGs.some((g) => g.attributes('transform')?.includes('rotate('));
     expect(hasRotate).toBe(false);
+  });
+
+  // --- click/context-menu hex ID emit tests (#119) ---
+
+  // Replicate HexMapOverlay's internal tx/ty computation so we can construct
+  // SVG coordinates that land exactly on a known hex centre.
+  function makeSvgPoint(hexCol, hexRow, cal = BASE_CAL, imageHeight = 900) {
+    const Hex = defineHex({
+      dimensions: { xRadius: cal.hexWidth, yRadius: cal.hexHeight },
+      orientation: Orientation.FLAT,
+      origin: { x: 0, y: 0 },
+      offset: cal.evenColUp ? 1 : -1,
+    });
+    const gridRows = cal.rows > 0 ? cal.rows : 35;
+    const gridCols = cal.cols > 0 ? cal.cols : 64;
+    const grid = new Grid(Hex, rectangle({ width: gridCols, height: gridRows }));
+    const anchorHex = grid.getHex({ col: 0, row: gridRows - 1 });
+    const tx = cal.dx - anchorHex.x;
+    const ty = imageHeight * cal.imageScale - cal.dy - anchorHex.y;
+    const targetHex = grid.getHex({ col: hexCol, row: hexRow });
+    return {
+      svgX: targetHex.x + tx,
+      svgY: targetHex.y + ty,
+      expectedId: hexToGameId(targetHex, gridRows),
+    };
+  }
+
+  it('onSvgClick emits hex-click with hex ID matching hexToGameId formula', async () => {
+    const { svgX, svgY, expectedId } = makeSvgPoint(0, 0);
+    const wrapper = mount(HexMapOverlay, { props: { calibration: BASE_CAL } });
+    const svgEl = wrapper.find('svg').element;
+    svgEl.createSVGPoint = () => ({ x: 0, y: 0, matrixTransform: () => ({ x: svgX, y: svgY }) });
+    svgEl.getScreenCTM = () => ({ inverse: () => ({}) });
+
+    await wrapper.trigger('click');
+
+    const emitted = wrapper.emitted('hex-click');
+    expect(emitted).toBeTruthy();
+    expect(emitted[0][0]).toBe(expectedId);
+  });
+
+  it('onSvgContextMenu emits hex-right-click with hex ID matching hexToGameId formula', async () => {
+    const { svgX, svgY, expectedId } = makeSvgPoint(0, 0);
+    const wrapper = mount(HexMapOverlay, { props: { calibration: BASE_CAL } });
+    const svgEl = wrapper.find('svg').element;
+    svgEl.createSVGPoint = () => ({ x: 0, y: 0, matrixTransform: () => ({ x: svgX, y: svgY }) });
+    svgEl.getScreenCTM = () => ({ inverse: () => ({}) });
+
+    await wrapper.trigger('contextmenu');
+
+    const emitted = wrapper.emitted('hex-right-click');
+    expect(emitted).toBeTruthy();
+    expect(emitted[0][0]).toBe(expectedId);
   });
 
   it('slope arrow with northOffset=3 shows W geographic label for slope=0', () => {

@@ -9,6 +9,7 @@ import {
   getEdgeLabels,
   findNearestEdge,
   getCellAndNeighbors,
+  hexToGameId,
 } from '../utils/hexGeometry.js';
 
 const props = defineProps({
@@ -167,9 +168,7 @@ const gridData = computed(() => {
     const points = corners.map((c) => `${c.x},${c.y}`).join(' ');
     const cx = hex.x;
     const cy = hex.y;
-    const gameCol = hex.col + 1;
-    const gameRow = gridRows - hex.row;
-    const id = `${String(gameCol).padStart(2, '0')}.${String(gameRow).padStart(2, '0')}`;
+    const id = hexToGameId(hex, gridRows);
     const known = hexIndex.value[id];
     const terrain = known?.terrain ?? 'unknown';
     const fill = TERRAIN_COLORS[terrain] ?? '#cccccc';
@@ -286,9 +285,7 @@ function onSvgClick(event) {
     const hex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
     if (hex) {
       const gridRows = props.calibration.rows > 0 ? props.calibration.rows : 35;
-      const gameCol = hex.col + 1;
-      const gameRow = gridRows - hex.row;
-      const id = `${String(gameCol).padStart(2, '0')}.${String(gameRow).padStart(2, '0')}`;
+      const id = hexToGameId(hex, gridRows);
       emit('hex-click', id, event);
     }
   }
@@ -355,9 +352,7 @@ function onSvgContextMenu(event) {
   const hex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
   if (hex) {
     const gridRows = props.calibration.rows > 0 ? props.calibration.rows : 35;
-    const gameCol = hex.col + 1;
-    const gameRow = gridRows - hex.row;
-    const id = `${String(gameCol).padStart(2, '0')}.${String(gameRow).padStart(2, '0')}`;
+    const id = hexToGameId(hex, gridRows);
     emit('hex-right-click', id, event);
   }
 }

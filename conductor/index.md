@@ -24,6 +24,8 @@ Navigation hub for project context.
 | [hex-perf-arch_20260318](./tracks/hex-perf-arch_20260318/index.md) | Hex Index Perf + Architecture Cleanup (PR #91 Deferred Findings) | Complete |
 | [trace-highlight-perf_20260318](./tracks/trace-highlight-perf_20260318/index.md) | Trace Highlight Layer — O(traceEdges) Render | Complete |
 
+| [hex-to-game-id_20260318](./tracks/hex-to-game-id_20260318/index.md) | Extract hexToGameId Helper (Tech Debt #118 + #119) | Complete |
+
 ## Getting Started
 
 Run `/conductor:new-track` to create a new feature track.
