@@ -376,7 +376,10 @@ function onSvgMouseUp() {
   traceEdges.value = [];
 }
 
-defineExpose({ traceEdgeCount });
+// cellMap: O(1) lookup from hexId → cell object
+const cellMap = computed(() => new Map(cells.value.map((c) => [c.id, c])));
+
+defineExpose({ traceEdgeCount, isDrawing, traceEdges });
 </script>
 
 <template>
@@ -517,17 +520,15 @@ defineExpose({ traceEdgeCount });
 
         <!-- 6b. Linear feature trace highlights -->
         <g v-if="isDrawing" class="layer-trace">
-          <template v-for="cell in cells" :key="'trace-' + cell.id">
-            <template v-for="dir in DIRS" :key="dir">
-              <line
-                v-if="traceEdgeSet.has(cell.id + ':' + dir)"
-                v-bind="edgeLine20_80(cell.corners, dir)"
-                stroke="#00eeff"
-                stroke-width="3"
-                stroke-linecap="round"
-                pointer-events="none"
-              />
-            </template>
+          <template v-for="edge in traceEdges" :key="edge.hexId + ':' + edge.dir">
+            <line
+              v-if="cellMap.get(edge.hexId)"
+              v-bind="edgeLine20_80(cellMap.get(edge.hexId).corners, edge.dir)"
+              stroke="#00eeff"
+              stroke-width="3"
+              stroke-linecap="round"
+              pointer-events="none"
+            />
           </template>
         </g>
 

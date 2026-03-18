@@ -489,4 +489,37 @@ describe('HexMapOverlay', () => {
     });
     expect(wrapper.text()).toContain('N');
   });
+
+  // --- Trace highlight layer tests ---
+
+  it('trace highlight renders exactly traceEdges.length lines (not cells × 6)', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL },
+    });
+    // Set internal trace state directly via defineExpose (auto-unwrapped on vm)
+    wrapper.vm.isDrawing = true;
+    wrapper.vm.traceEdges = [
+      { hexId: '01.03', dir: 'N' },
+      { hexId: '01.03', dir: 'NE' },
+    ];
+    await wrapper.vm.$nextTick();
+
+    const traceGroup = wrapper.find('.layer-trace');
+    expect(traceGroup.exists()).toBe(true);
+    // Must render exactly 2 lines — one per traceEdge, not one per cell×dir
+    expect(traceGroup.findAll('line').length).toBe(2);
+  });
+
+  it('trace highlight renders 0 lines when traceEdges is empty', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL },
+    });
+    wrapper.vm.isDrawing = true;
+    wrapper.vm.traceEdges = [];
+    await wrapper.vm.$nextTick();
+
+    const traceGroup = wrapper.find('.layer-trace');
+    expect(traceGroup.exists()).toBe(true);
+    expect(traceGroup.findAll('line').length).toBe(0);
+  });
 });
