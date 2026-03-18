@@ -25,6 +25,7 @@ Navigation hub for project context.
 | [trace-highlight-perf_20260318](./tracks/trace-highlight-perf_20260318/index.md) | Trace Highlight Layer — O(traceEdges) Render | Complete |
 
 | [hex-to-game-id_20260318](./tracks/hex-to-game-id_20260318/index.md) | Extract hexToGameId Helper (Tech Debt #118 + #119) | Complete |
+| [wave1-quick-wins_20260318](./tracks/wave1-quick-wins_20260318/index.md) | Wave 1 Quick Wins — ESLint Worktree Ignore + North Label Bug (#110, #116) | Pending |
 
 ## Getting Started
 
