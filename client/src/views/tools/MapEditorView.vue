@@ -13,7 +13,7 @@ import WedgeEditor from '../../components/WedgeEditor.vue';
 import { useBulkOperations } from '../../composables/useBulkOperations.js';
 import { useLinearFeatureTrace } from '../../composables/useLinearFeatureTrace.js';
 import { useHexInteraction } from '../../composables/useHexInteraction.js';
-import { useEditorAccordion, TOOL_PANEL_MODES } from '../../composables/useEditorAccordion.js';
+import { useEditorAccordion } from '../../composables/useEditorAccordion.js';
 import { useMapPersistence } from '../../composables/useMapPersistence.js';
 import { useLosTest } from '../../composables/useLosTest.js';
 import { useEdgeToggle } from '../../composables/useEdgeToggle.js';
@@ -122,7 +122,7 @@ const selectedHexIds = ref(new Set());
 
 // ── Editor accordion + modes ──────────────────────────────────────────────────
 
-const { openPanel, editorMode, activeToolName, togglePanel } = useEditorAccordion({
+const { openPanel, editorMode, activeToolName, togglePanel, isToolPanel } = useEditorAccordion({
   onClearSelection: () => {
     selectedHexIds.value = new Set();
     paintMode.value = 'click'; // L3: reset when switching away from paintable panels
@@ -401,7 +401,7 @@ const {
 
 function onKeyDown(e) {
   if (e.key === 'Escape') {
-    if (openPanel.value && TOOL_PANEL_MODES[openPanel.value]) {
+    if (openPanel.value && isToolPanel(openPanel.value)) {
       togglePanel(openPanel.value); // close the active tool panel
     }
     selectedHexIds.value = new Set();
