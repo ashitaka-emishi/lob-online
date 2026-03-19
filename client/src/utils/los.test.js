@@ -19,8 +19,8 @@ const DIR_DELTAS = [
   { name: 'NW', dq: -1, dr: 0 },
 ];
 
-// Minimal gridSpec for tests (10×10 flat-top, evenColUp: false = ODD_Q)
-const GRID = { cols: 10, rows: 10, evenColUp: false };
+// Minimal gridSpec for tests (10×10 flat-top, evenColUp: true = EVEN_Q)
+const GRID = { cols: 10, rows: 10, evenColUp: true };
 
 // Build a minimal mapData object from a hex array
 function makeMap(hexes = [], gridSpec = GRID) {

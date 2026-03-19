@@ -16,7 +16,7 @@
     "imageScale": 1,
     "strokeWidth": 2,
     "orientation": "flat",
-    "evenColUp": false,
+    "evenColUp": true,
     "northOffset": 3
   },
   "terrainTypes": ["clear", "woods", "slopingGround", "woodedSloping", "orchard", "marsh"],
