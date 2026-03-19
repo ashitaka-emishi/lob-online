@@ -517,6 +517,41 @@ describe('HexMapOverlay', () => {
     expect(emitted[0][0]).toBe(expectedId);
   });
 
+  // Even-column coverage to guard against the parity off-by-one fixed in PR #117
+  it('onSvgClick emits correct hex ID for an even game column (hexCol=1)', async () => {
+    // hexCol=1 → gameCol=2 (even); before the PR #117 fix, gameRow was off by one for even cols
+    const { svgX, svgY, expectedId } = makeSvgPoint(1, 0);
+    const wrapper = mount(HexMapOverlay, { props: { calibration: BASE_CAL } });
+    const svgEl = wrapper.find('svg').element;
+    svgEl.createSVGPoint = () => ({ x: 0, y: 0, matrixTransform: () => ({ x: svgX, y: svgY }) });
+    svgEl.getScreenCTM = () => ({ inverse: () => ({}) });
+
+    await wrapper.trigger('click');
+
+    const emitted = wrapper.emitted('hex-click');
+    expect(emitted).toBeTruthy();
+    expect(emitted[0][0]).toBe(expectedId);
+    // Displayed label must match emitted ID (regression guard for coordinate-formula parity)
+    const labelTexts = wrapper.findAll('text').map((el) => el.text());
+    expect(labelTexts).toContain(expectedId);
+  });
+
+  it('onSvgContextMenu emits correct hex ID for an even game column (hexCol=1)', async () => {
+    const { svgX, svgY, expectedId } = makeSvgPoint(1, 0);
+    const wrapper = mount(HexMapOverlay, { props: { calibration: BASE_CAL } });
+    const svgEl = wrapper.find('svg').element;
+    svgEl.createSVGPoint = () => ({ x: 0, y: 0, matrixTransform: () => ({ x: svgX, y: svgY }) });
+    svgEl.getScreenCTM = () => ({ inverse: () => ({}) });
+
+    await wrapper.trigger('contextmenu');
+
+    const emitted = wrapper.emitted('hex-right-click');
+    expect(emitted).toBeTruthy();
+    expect(emitted[0][0]).toBe(expectedId);
+    const labelTexts = wrapper.findAll('text').map((el) => el.text());
+    expect(labelTexts).toContain(expectedId);
+  });
+
   it('slope arrow with northOffset=3 shows W geographic label for slope=0', () => {
     const wrapper = mount(HexMapOverlay, {
       props: {
