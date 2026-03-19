@@ -125,11 +125,16 @@ const selectedHexIds = ref(new Set());
 const { openPanel, editorMode, activeToolName, togglePanel } = useEditorAccordion({
   onClearSelection: () => {
     selectedHexIds.value = new Set();
+    paintMode.value = 'click'; // L3: reset when switching away from paintable panels
   },
 });
 
 const paintTerrain = ref('clear');
 const paintEdgeFeature = ref(null);
+// click/paint mode toggle — shared across terrain and elevation panels (only one open at a time)
+const paintMode = ref('click');
+// True while a paint stroke is in progress; suppresses per-hex saveMapDraft calls
+const paintStrokeActive = ref(false);
 const layers = ref({
   grid: true,
   terrain: true,
@@ -281,9 +286,23 @@ const elevationLevels = computed(() => mapData.value?.elevationSystem?.elevation
 const elevationMax = computed(() => elevationLevels.value - 1);
 
 // M7: single onMutated used by bulk ops and trace (avoids duplicating the same two lines).
+// During a paint stroke, suppress per-hex saveMapDraft; flush once on stroke end.
 function onMutated() {
-  unsaved.value = true;
-  saveMapDraft();
+  if (!unsaved.value) unsaved.value = true; // guard redundant reactive writes during drag
+  if (!paintStrokeActive.value) {
+    saveMapDraft();
+  }
+}
+
+function onPaintStrokeStart() {
+  paintStrokeActive.value = true;
+}
+
+function onPaintStrokeDone() {
+  paintStrokeActive.value = false;
+  if (unsaved.value) {
+    saveMapDraft();
+  }
 }
 
 function onHexUpdate(updatedHex) {
@@ -319,6 +338,16 @@ const {
 
 // ── Hex interaction (composable) ──────────────────────────────────────────────
 
+// Two-layer hex-mouseenter gate:
+//   Layer 1 (HexMapOverlay): emits hex-mouseenter only when isPaintMouseDown (mouse-button held).
+//   Layer 2 (useHexInteraction): acts on hex-mouseenter only when paintMode === 'paint'.
+// Both layers must pass for a drag stroke to paint. dragPaintEnabled activates layer 1;
+// paintMode activates layer 2. paintStrokeActive is set on paint-stroke-start (mousedown)
+// so even the first hex click in a stroke is batched correctly.
+const dragPaintEnabled = computed(
+  () => editorMode.value === 'paint' || editorMode.value === 'elevation'
+);
+
 const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter } =
   useHexInteraction({
     mapData,
@@ -327,6 +356,7 @@ const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter
     editorMode,
     paintTerrain,
     elevationMax,
+    paintMode,
     tryPickLosHex,
     onHexUpdate,
   });
@@ -482,6 +512,7 @@ onUnmounted(() => {
             :los-blocked-hex="losBlockedHex"
             :layers="layers"
             :editor-mode="editorMode"
+            :drag-paint-enabled="dragPaintEnabled"
             :paint-terrain="paintTerrain"
             :seed-hex-ids="seedHexIdsArray"
             @hex-click="onHexClick"
@@ -490,6 +521,8 @@ onUnmounted(() => {
             @edge-click="onEdgeClick"
             @trace-complete="onTraceComplete"
             @trace-progress="onTraceProgress"
+            @paint-stroke-start="onPaintStrokeStart"
+            @paint-stroke-done="onPaintStrokeDone"
           />
         </div>
       </div>
@@ -530,9 +563,11 @@ onUnmounted(() => {
             <ElevationToolPanel
               :selected-hex="selectedHex"
               :elevation-levels="elevationLevels"
+              :paint-mode="paintMode"
               @clear-all-elevations="clearAllElevations"
               @raise-all="raiseAll"
               @lower-all="lowerAll"
+              @paint-mode-change="paintMode = $event"
             />
           </div>
         </div>
@@ -550,8 +585,10 @@ onUnmounted(() => {
             <TerrainToolPanel
               :terrain-types="terrainTypes"
               :paint-terrain="paintTerrain"
+              :paint-mode="paintMode"
               @terrain-change="paintTerrain = $event"
               @clear-all-terrain="clearAllTerrain"
+              @paint-mode-change="paintMode = $event"
             />
           </div>
         </div>

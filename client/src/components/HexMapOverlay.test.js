@@ -588,4 +588,109 @@ describe('HexMapOverlay', () => {
     expect(traceGroup.exists()).toBe(true);
     expect(traceGroup.findAll('line').length).toBe(0);
   });
+
+  // --- paint-mode mousedown gate tests (#115) ---
+
+  it('hex-mouseenter is NOT emitted on polygon hover alone when dragPaintEnabled (no mousedown)', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: true },
+    });
+    const polygons = wrapper.findAll('polygon');
+    expect(polygons.length).toBeGreaterThan(0);
+    await polygons[0].trigger('mouseenter');
+    expect(wrapper.emitted('hex-mouseenter')).toBeFalsy();
+  });
+
+  it('hex-mouseenter IS emitted on hover after mousedown when dragPaintEnabled', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: true },
+    });
+    await wrapper.trigger('mousedown');
+    const polygons = wrapper.findAll('polygon');
+    await polygons[0].trigger('mouseenter');
+    expect(wrapper.emitted('hex-mouseenter')).toBeTruthy();
+  });
+
+  it('hex-mouseenter stops firing after mouseup when dragPaintEnabled', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: true },
+    });
+    await wrapper.trigger('mousedown');
+    await wrapper.trigger('mouseup');
+    const polygons = wrapper.findAll('polygon');
+    await polygons[0].trigger('mouseenter');
+    expect(wrapper.emitted('hex-mouseenter')).toBeFalsy();
+  });
+
+  it('hex-mouseenter is NOT emitted on hover alone in elevation mode when dragPaintEnabled (no mousedown)', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, editorMode: 'elevation', dragPaintEnabled: true },
+    });
+    const polygons = wrapper.findAll('polygon');
+    await polygons[0].trigger('mouseenter');
+    expect(wrapper.emitted('hex-mouseenter')).toBeFalsy();
+  });
+
+  it('hex-mouseenter IS emitted on hover after mousedown in elevation mode when dragPaintEnabled', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, editorMode: 'elevation', dragPaintEnabled: true },
+    });
+    await wrapper.trigger('mousedown');
+    const polygons = wrapper.findAll('polygon');
+    await polygons[0].trigger('mouseenter');
+    expect(wrapper.emitted('hex-mouseenter')).toBeTruthy();
+  });
+
+  it('paint-stroke-start is emitted on mousedown when dragPaintEnabled', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: true },
+    });
+    await wrapper.trigger('mousedown');
+    expect(wrapper.emitted('paint-stroke-start')).toBeTruthy();
+  });
+
+  it('paint-stroke-start is NOT emitted on mousedown when dragPaintEnabled is false', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: false },
+    });
+    await wrapper.trigger('mousedown');
+    expect(wrapper.emitted('paint-stroke-start')).toBeFalsy();
+  });
+
+  it('paint-stroke-done is emitted on mouseup after a paint stroke', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: true },
+    });
+    await wrapper.trigger('mousedown');
+    await wrapper.trigger('mouseup');
+    expect(wrapper.emitted('paint-stroke-done')).toBeTruthy();
+  });
+
+  it('paint-stroke-done is NOT emitted on mouseup when no mousedown occurred', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: true },
+    });
+    await wrapper.trigger('mouseup');
+    expect(wrapper.emitted('paint-stroke-done')).toBeFalsy();
+  });
+
+  it('isPaintMouseDown is false initially and true after mousedown when dragPaintEnabled', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: true },
+    });
+    expect(wrapper.vm.isPaintMouseDown).toBe(false);
+    await wrapper.trigger('mousedown');
+    expect(wrapper.vm.isPaintMouseDown).toBe(true);
+    await wrapper.trigger('mouseup');
+    expect(wrapper.vm.isPaintMouseDown).toBe(false);
+  });
+
+  it('hex-mouseenter still emits unconditionally when dragPaintEnabled is false (e.g. select mode)', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, editorMode: 'select' },
+    });
+    const polygons = wrapper.findAll('polygon');
+    await polygons[0].trigger('mouseenter');
+    expect(wrapper.emitted('hex-mouseenter')).toBeTruthy();
+  });
 });

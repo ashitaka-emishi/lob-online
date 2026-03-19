@@ -16,9 +16,13 @@ defineProps({
     type: String,
     default: 'clear',
   },
+  paintMode: {
+    type: String,
+    default: 'click',
+  },
 });
 
-const emit = defineEmits(['terrain-change', 'clear-all-terrain']);
+const emit = defineEmits(['terrain-change', 'clear-all-terrain', 'paint-mode-change']);
 
 const TERRAIN_ICONS = {
   clear: '○',
@@ -33,7 +37,26 @@ const TERRAIN_ICONS = {
 
 <template>
   <div class="terrain-tool-panel">
-    <div class="tool-hint">Click hex to paint selected terrain. Drag to paint multiple.</div>
+    <div class="mode-toggle">
+      <button
+        class="mode-btn"
+        :class="{ active: paintMode === 'click' }"
+        @click="emit('paint-mode-change', 'click')"
+      >
+        Click
+      </button>
+      <button
+        class="mode-btn"
+        :class="{ active: paintMode === 'paint' }"
+        @click="emit('paint-mode-change', 'paint')"
+      >
+        Paint
+      </button>
+    </div>
+    <div class="tool-hint">
+      <template v-if="paintMode === 'paint'">Hold and drag to paint multiple hexes.</template>
+      <template v-else>Click a hex to paint selected terrain.</template>
+    </div>
 
     <div class="terrain-palette">
       <button
@@ -60,6 +83,32 @@ const TERRAIN_ICONS = {
   padding: 0.75rem;
   background: #222;
   font-size: 0.85rem;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 0.25rem 0.4rem;
+  background: #333;
+  border: 1px solid #555;
+  color: #a09880;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-family: inherit;
+}
+
+.mode-btn:hover {
+  background: #3a3a3a;
+}
+
+.mode-btn.active {
+  background: #3a5a2a;
+  border-color: #7aab3e;
+  color: #b0d880;
 }
 
 .tool-hint {

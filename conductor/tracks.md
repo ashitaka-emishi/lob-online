@@ -28,4 +28,6 @@
 
 | [ ] | map-composables_20260318 | Extract Composables from MapEditorView + Unify Selection State (#97) | 2026-03-18 | 2026-03-18 |
 
+| [x] | click-paint-modes_20260318 | Click / Paint Modes for Terrain & Elevation Editor (#115) | 2026-03-18 | 2026-03-18 |
+
 <!-- Tracks registered by /conductor:new-track -->

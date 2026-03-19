@@ -8,14 +8,39 @@ defineProps({
     type: Number,
     default: 22,
   },
+  paintMode: {
+    type: String,
+    default: 'click',
+  },
 });
 
-const emit = defineEmits(['clear-all-elevations', 'raise-all', 'lower-all']);
+const emit = defineEmits(['clear-all-elevations', 'raise-all', 'lower-all', 'paint-mode-change']);
 </script>
 
 <template>
   <div class="elevation-tool-panel">
-    <div class="tool-hint">Click hex to raise (+1). Right-click to lower (−1).</div>
+    <div class="mode-toggle">
+      <button
+        class="mode-btn"
+        :class="{ active: paintMode === 'click' }"
+        @click="emit('paint-mode-change', 'click')"
+      >
+        Click
+      </button>
+      <button
+        class="mode-btn"
+        :class="{ active: paintMode === 'paint' }"
+        @click="emit('paint-mode-change', 'paint')"
+      >
+        Paint
+      </button>
+    </div>
+    <div class="tool-hint">
+      <template v-if="paintMode === 'paint'"
+        >Drag to raise (+1) continuously. Right-click to lower (−1).</template
+      >
+      <template v-else>Click to raise (+1). Right-click to lower (−1).</template>
+    </div>
 
     <div v-if="selectedHex" class="selected-hex-info">
       <span class="hex-id">{{ selectedHex.hex }}</span>
@@ -42,6 +67,32 @@ const emit = defineEmits(['clear-all-elevations', 'raise-all', 'lower-all']);
   padding: 0.75rem;
   background: #222;
   font-size: 0.85rem;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 0.25rem 0.4rem;
+  background: #333;
+  border: 1px solid #555;
+  color: #a09880;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-family: inherit;
+}
+
+.mode-btn:hover {
+  background: #3a3a3a;
+}
+
+.mode-btn.active {
+  background: #3a5a2a;
+  border-color: #7aab3e;
+  color: #b0d880;
 }
 
 .tool-hint {
