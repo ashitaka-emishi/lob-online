@@ -45,15 +45,24 @@ function loadCalibration() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      // L2: guard numeric fields against tampered localStorage values
+      // L1/L2: destructure only known keys so unexpected properties from tampered
+      // localStorage cannot flow into the calibration object; guard all numerics.
       const safeNumeric = (val, fallback) => (Number.isFinite(val) ? val : fallback);
+      const safeBoolean = (val, fallback) => (typeof val === 'boolean' ? val : fallback);
+      const safeString = (val, fallback) => (typeof val === 'string' ? val : fallback);
+      const D = DEFAULT_CALIBRATION;
       return {
-        ...DEFAULT_CALIBRATION,
-        ...parsed,
-        cols: safeNumeric(parsed.cols, DEFAULT_CALIBRATION.cols),
-        rows: safeNumeric(parsed.rows, DEFAULT_CALIBRATION.rows),
-        hexWidth: safeNumeric(parsed.hexWidth, DEFAULT_CALIBRATION.hexWidth),
-        hexHeight: safeNumeric(parsed.hexHeight, DEFAULT_CALIBRATION.hexHeight),
+        cols: safeNumeric(parsed.cols, D.cols),
+        rows: safeNumeric(parsed.rows, D.rows),
+        dx: safeNumeric(parsed.dx, D.dx),
+        dy: safeNumeric(parsed.dy, D.dy),
+        hexWidth: safeNumeric(parsed.hexWidth, D.hexWidth),
+        hexHeight: safeNumeric(parsed.hexHeight, D.hexHeight),
+        imageScale: safeNumeric(parsed.imageScale, D.imageScale),
+        strokeWidth: safeNumeric(parsed.strokeWidth, D.strokeWidth),
+        northOffset: safeNumeric(parsed.northOffset, D.northOffset),
+        orientation: safeString(parsed.orientation, D.orientation),
+        evenColUp: safeBoolean(parsed.evenColUp, D.evenColUp),
       };
     }
   } catch (_) {
@@ -65,6 +74,10 @@ function loadCalibration() {
 const calibration = ref(loadCalibration());
 const calibrationMode = ref(false);
 const showExportOverlay = ref(false);
+
+// ── Composable dependency order (must not be rearranged) ─────────────────────
+// Persistence → selectedHexIds → Accordion → LOS → Interaction → EdgeToggle / Bulk / Wedge / Trace
+// Each composable receives refs from those above it; init order encodes the dependency graph.
 
 // ── Map persistence (composable) ──────────────────────────────────────────────
 

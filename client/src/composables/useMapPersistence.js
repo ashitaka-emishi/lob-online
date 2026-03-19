@@ -119,6 +119,10 @@ export function useMapPersistence({
     pullError.value = '';
     try {
       const serverData = await fetchServerData();
+      // L8: validate server response shape for consistency with draft validation
+      if (!isValidDraft(serverData)) {
+        throw new Error('Server returned an invalid map data shape');
+      }
       mapData.value = serverData;
       serverSavedAt.value = serverData._savedAt ?? 0;
       localStorage.removeItem(draftKey);
@@ -190,6 +194,10 @@ export function useMapPersistence({
         /* ignore */
       }
 
+      // L8: validate server response shape for consistency with draft validation
+      if (!isValidDraft(serverData)) {
+        throw new Error('Server returned an invalid map data shape');
+      }
       mapData.value = serverData;
       if (mapData.value.gridSpec) {
         // M4: caller owns the calibration write via onCalibrationLoaded callback

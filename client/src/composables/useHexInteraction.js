@@ -4,9 +4,11 @@ import { resolveHex } from '../utils/hexGeometry.js';
 /**
  * Hex interaction handlers and selection state derivations.
  *
- * `selectedHexIds` (Set ref) is the canonical selection — owned by the caller and passed in
- * so the accordion's onClearSelection callback can be wired before this composable is
- * constructed (H2: eliminates the lazy-callback workaround).
+ * `selectedHexIds` (Set ref) is the canonical selection. The ref is owned by the caller, but
+ * this composable has write access — it reassigns `.value` directly by contract. The caller
+ * wires the ref and may observe it, but selection changes are not interceptable.
+ * Passed in so the accordion's onClearSelection callback can be wired before this composable
+ * is constructed (H2: eliminates the lazy-callback workaround).
  *
  * LOS pick state is handled by useLosTest. Pass its `tryPickLosHex` here so click events
  * are routed correctly without coupling this composable to LOS internals (M8).
@@ -16,7 +18,7 @@ import { resolveHex } from '../utils/hexGeometry.js';
  * @param {object} args
  * @param {import('vue').Ref} args.mapData
  * @param {import('vue').Ref<Map>} args.hexIndex
- * @param {import('vue').Ref<Set>} args.selectedHexIds - canonical selection, owned by caller
+ * @param {import('vue').Ref<Set>} args.selectedHexIds - composable has write access by contract
  * @param {import('vue').Ref<string>} args.editorMode
  * @param {import('vue').Ref<string>} args.paintTerrain
  * @param {import('vue').ComputedRef<number>} args.elevationMax
@@ -54,6 +56,19 @@ export function useHexInteraction({
   }
 
   // ── Click / mouseenter handlers ────────────────────────────────────────────
+
+  // M2: shared paint helper — eliminates identical blocks in onHexClick and onHexMouseenter
+  function applyPaint(hexId) {
+    const existingIdx = hexIndex.value.get(hexId);
+    if (existingIdx !== undefined) {
+      // M1: mutate in-place to avoid object allocation on every paint stroke
+      mapData.value.hexes[existingIdx].terrain = paintTerrain.value;
+      onHexUpdate(mapData.value.hexes[existingIdx]);
+    } else {
+      onHexUpdate({ hex: hexId, terrain: paintTerrain.value });
+    }
+  }
+
   function onHexClick(hexId, nativeEvent) {
     // M8: LOS picking delegated to useLosTest; returns true if consumed.
     if (tryPickLosHex?.(hexId)) return;
@@ -66,14 +81,7 @@ export function useHexInteraction({
         adjustHexElevation(hexId, +1);
       }
     } else if (editorMode.value === 'paint') {
-      const existingIdx = hexIndex.value.get(hexId);
-      if (existingIdx !== undefined) {
-        // M1: mutate in-place to avoid object allocation on every paint click
-        mapData.value.hexes[existingIdx].terrain = paintTerrain.value;
-        onHexUpdate(mapData.value.hexes[existingIdx]);
-      } else {
-        onHexUpdate({ hex: hexId, terrain: paintTerrain.value });
-      }
+      applyPaint(hexId);
       selectedHexIds.value = new Set([hexId]);
     } else if (editorMode.value === 'wedge') {
       selectedHexIds.value = selectedHexId.value === hexId ? new Set() : new Set([hexId]);
@@ -97,14 +105,7 @@ export function useHexInteraction({
 
   function onHexMouseenter(hexId) {
     if (editorMode.value === 'paint') {
-      const existingIdx = hexIndex.value.get(hexId);
-      if (existingIdx !== undefined) {
-        // M1: mutate in-place to avoid object allocation on every mousemove
-        mapData.value.hexes[existingIdx].terrain = paintTerrain.value;
-        onHexUpdate(mapData.value.hexes[existingIdx]);
-      } else {
-        onHexUpdate({ hex: hexId, terrain: paintTerrain.value });
-      }
+      applyPaint(hexId);
     }
   }
 

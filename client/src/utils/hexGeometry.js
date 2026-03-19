@@ -5,6 +5,16 @@
 
 export const DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
 
+/** Maps each direction to its opposite (shared edge on the adjacent hex). */
+export const OPPOSITE_DIR = Object.freeze({
+  N: 'S',
+  S: 'N',
+  NE: 'SW',
+  SW: 'NE',
+  NW: 'SE',
+  SE: 'NW',
+});
+
 /**
  * Maps each compass direction to the [i, j] corner indices that form that edge.
  * For flat-top hexes (Orientation.FLAT), honeycomb-grid corners start at 0° (East/right)

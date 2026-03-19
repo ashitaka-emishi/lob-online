@@ -9,6 +9,7 @@ import {
   getEdgeLabels,
   DIR_TO_CORNERS,
   DIRS,
+  OPPOSITE_DIR,
   findNearestEdge,
   getCellAndNeighbors,
   formatGameId,
@@ -372,5 +373,20 @@ describe('resolveHex', () => {
   it('stub has the correct hexId', () => {
     const result = resolveHex(hexes, indexMap, '03.05');
     expect(result.hex).toBe('03.05');
+  });
+});
+
+describe('OPPOSITE_DIR', () => {
+  it('maps each direction to its opposite', () => {
+    expect(OPPOSITE_DIR.N).toBe('S');
+    expect(OPPOSITE_DIR.S).toBe('N');
+    expect(OPPOSITE_DIR.NE).toBe('SW');
+    expect(OPPOSITE_DIR.SW).toBe('NE');
+    expect(OPPOSITE_DIR.NW).toBe('SE');
+    expect(OPPOSITE_DIR.SE).toBe('NW');
+  });
+
+  it('is frozen', () => {
+    expect(Object.isFrozen(OPPOSITE_DIR)).toBe(true);
   });
 });

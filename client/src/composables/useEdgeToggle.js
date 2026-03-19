@@ -1,6 +1,4 @@
-import { adjacentHexId, resolveHex } from '../utils/hexGeometry.js';
-
-const OPPOSITE_DIR = { N: 'S', S: 'N', NE: 'SW', SW: 'NE', NW: 'SE', SE: 'NW' };
+import { adjacentHexId, resolveHex, OPPOSITE_DIR } from '../utils/hexGeometry.js';
 
 /**
  * Edge feature toggle handler — extracted from useHexInteraction (M2).
