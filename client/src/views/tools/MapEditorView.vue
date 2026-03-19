@@ -147,7 +147,11 @@ const layerFlags = ref({
 
 // ── overlayConfig bridge ────────────────────────────────────────────────────
 // Builds the declarative overlayConfig for HexMapOverlay from the current
-// layer flags and editor mode. Tool panels will own this directly once migrated.
+// layer flags and editor mode. Tool panels emit their own config via overlay-config;
+// when a panel is active its config replaces the base config (tool-owns-its-overlays).
+
+// Config received from ElevationToolPanel via @overlay-config.
+const elevationPanelOverlayConfig = ref(null);
 
 // L5: Stable function references lifted out of the computed so overlayConfig
 // does not create new closure objects on every reactive dependency change.
@@ -171,15 +175,17 @@ const interactionEnabled = computed(() => INTERACTIVE_PANELS.has(openPanel.value
 const edgeInteraction = computed(() => EDGE_PANELS.has(openPanel.value));
 
 const overlayConfig = computed(() => {
+  // When the elevation tool is active, use its own config (tool-owns-its-overlays).
+  if (openPanel.value === 'elevation' && elevationPanelOverlayConfig.value) {
+    return elevationPanelOverlayConfig.value;
+  }
+
   const cfg = {};
   if (layerFlags.value.grid) {
     cfg.hexLabel = { alwaysOn: true, labelFn: hexLabelFn };
   }
   if (layerFlags.value.terrain) {
     cfg.hexFill = { alwaysOn: true, fillFn: hexFillFn };
-  }
-  if (layerFlags.value.elevation || editorMode.value === 'elevation') {
-    cfg.elevationLabel = { alwaysOn: true };
   }
   if (editorMode.value === 'paint') {
     cfg.hexIcon = { alwaysOn: true, iconFn: hexIconFn };
@@ -588,6 +594,7 @@ onUnmounted(() => {
               @raise-all="raiseAll"
               @lower-all="lowerAll"
               @paint-mode-change="paintMode = $event"
+              @overlay-config="elevationPanelOverlayConfig = $event"
             />
           </div>
         </div>
