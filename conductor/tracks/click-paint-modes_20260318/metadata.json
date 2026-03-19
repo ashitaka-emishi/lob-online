@@ -1,0 +1,22 @@
+{
+  "id": "click-paint-modes_20260318",
+  "title": "Click / Paint Modes for Terrain & Elevation Editor",
+  "type": "feature",
+  "status": "complete",
+  "created": "2026-03-18T00:00:00.000Z",
+  "updated": "2026-03-18T00:00:00.000Z",
+  "githubIssue": 115,
+  "phases": {
+    "total": 3,
+    "completed": 3
+  },
+  "tasks": {
+    "total": 12,
+    "completed": 12
+  },
+  "commits": [
+    "ca766f4: feat(HexMapOverlay): gate hex-mouseenter on isPaintMouseDown for paint/elevation modes (#115)",
+    "f3e75fc: feat(useHexInteraction): accept paintMode param; gate hover paint; add elevation drag-paint (#115)",
+    "452e365: feat(TerrainToolPanel,ElevationToolPanel,MapEditorView): click/paint mode toggle + stroke debounce (#115)"
+  ]
+}
