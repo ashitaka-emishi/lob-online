@@ -130,6 +130,10 @@ const { openPanel, editorMode, activeToolName, togglePanel } = useEditorAccordio
 
 const paintTerrain = ref('clear');
 const paintEdgeFeature = ref(null);
+// click/paint mode toggle — shared across terrain and elevation panels (only one open at a time)
+const paintMode = ref('click');
+// True while a paint stroke is in progress; suppresses per-hex saveMapDraft calls
+const paintStrokeActive = ref(false);
 const layers = ref({
   grid: true,
   terrain: true,
@@ -281,9 +285,19 @@ const elevationLevels = computed(() => mapData.value?.elevationSystem?.elevation
 const elevationMax = computed(() => elevationLevels.value - 1);
 
 // M7: single onMutated used by bulk ops and trace (avoids duplicating the same two lines).
+// During a paint stroke, suppress per-hex saveMapDraft; flush once on stroke end.
 function onMutated() {
   unsaved.value = true;
-  saveMapDraft();
+  if (!paintStrokeActive.value) {
+    saveMapDraft();
+  }
+}
+
+function onPaintStrokeDone() {
+  paintStrokeActive.value = false;
+  if (unsaved.value) {
+    saveMapDraft();
+  }
 }
 
 function onHexUpdate(updatedHex) {
@@ -327,9 +341,17 @@ const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter
     editorMode,
     paintTerrain,
     elevationMax,
+    paintMode,
     tryPickLosHex,
     onHexUpdate,
   });
+
+function onHexMouseenterWithStroke(hexId) {
+  if (paintMode.value === 'paint') {
+    paintStrokeActive.value = true;
+  }
+  onHexMouseenter(hexId);
+}
 
 // ── Edge feature toggle (M2: extracted from useHexInteraction) ─────────────────
 
@@ -486,10 +508,11 @@ onUnmounted(() => {
             :seed-hex-ids="seedHexIdsArray"
             @hex-click="onHexClick"
             @hex-right-click="onHexRightClick"
-            @hex-mouseenter="onHexMouseenter"
+            @hex-mouseenter="onHexMouseenterWithStroke"
             @edge-click="onEdgeClick"
             @trace-complete="onTraceComplete"
             @trace-progress="onTraceProgress"
+            @paint-stroke-done="onPaintStrokeDone"
           />
         </div>
       </div>
@@ -530,9 +553,11 @@ onUnmounted(() => {
             <ElevationToolPanel
               :selected-hex="selectedHex"
               :elevation-levels="elevationLevels"
+              :paint-mode="paintMode"
               @clear-all-elevations="clearAllElevations"
               @raise-all="raiseAll"
               @lower-all="lowerAll"
+              @paint-mode-change="paintMode = $event"
             />
           </div>
         </div>
@@ -550,8 +575,10 @@ onUnmounted(() => {
             <TerrainToolPanel
               :terrain-types="terrainTypes"
               :paint-terrain="paintTerrain"
+              :paint-mode="paintMode"
               @terrain-change="paintTerrain = $event"
               @clear-all-terrain="clearAllTerrain"
+              @paint-mode-change="paintMode = $event"
             />
           </div>
         </div>

@@ -3,7 +3,7 @@
 **Track ID:** click-paint-modes_20260318
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-03-18
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -51,10 +51,10 @@ Add the toggle button to both panels and wire `paintMode` through the view.
 
 ### Tasks
 
-- [ ] Task 3.1: `TerrainToolPanel` — add `paintMode` prop (`'click'|'paint'`, default `'click'`) and emit `paint-mode-change`. Replace the `.tool-hint` text with dynamic text based on `paintMode`. Add a Click / Paint toggle button (two-button segmented control styled like the active terrain button).
-- [ ] Task 3.2: `ElevationToolPanel` — same treatment: `paintMode` prop, `paint-mode-change` emit, dynamic hint text, Click / Paint toggle button.
-- [ ] Task 3.3: `MapEditorView` — add `paintMode = ref('click')`. Pass to `TerrainToolPanel` and `ElevationToolPanel`; handle `paint-mode-change` to update `paintMode`. Pass `paintMode` to `useHexInteraction`. On SVG `mouseup` / stroke end (listen via a watcher or a new `onPaintStrokeDone` handler wired from `HexMapOverlay`'s `@mouseup`), call the stroke-flush callback from Task 2.3.
-- [ ] Task 3.4: Update `TerrainToolPanel` and `ElevationToolPanel` tests: toggle renders, emits correct events, hint text updates.
+- [x] Task 3.1: `TerrainToolPanel` — add `paintMode` prop (`'click'|'paint'`, default `'click'`) and emit `paint-mode-change`. Replace the `.tool-hint` text with dynamic text based on `paintMode`. Add a Click / Paint toggle button (two-button segmented control styled like the active terrain button).
+- [x] Task 3.2: `ElevationToolPanel` — same treatment: `paintMode` prop, `paint-mode-change` emit, dynamic hint text, Click / Paint toggle button.
+- [x] Task 3.3: `MapEditorView` — add `paintMode = ref('click')`. Pass to `TerrainToolPanel` and `ElevationToolPanel`; handle `paint-mode-change` to update `paintMode`. Pass `paintMode` to `useHexInteraction`. On SVG `mouseup` / stroke end (listen via a watcher or a new `onPaintStrokeDone` handler wired from `HexMapOverlay`'s `@mouseup`), call the stroke-flush callback from Task 2.3.
+- [x] Task 3.4: Update `TerrainToolPanel` and `ElevationToolPanel` tests: toggle renders, emits correct events, hint text updates.
 
 ### Verification
 
