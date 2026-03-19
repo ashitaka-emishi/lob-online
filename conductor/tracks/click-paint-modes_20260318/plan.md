@@ -34,10 +34,10 @@ Update the composable to accept `paintMode` and to debounce draft saves during a
 
 ### Tasks
 
-- [ ] Task 2.1: Add `paintMode` param to `useHexInteraction` (default `'click'`). Gate `onHexMouseenter` terrain paint on `paintMode.value === 'paint'` (already gated on `editorMode === 'paint'`; the new condition ANDs with it so hover alone in click mode is fully suppressed).
-- [ ] Task 2.2: Add elevation paint to `onHexMouseenter`: when `editorMode === 'elevation'` and `paintMode.value === 'paint'`, call `adjustHexElevation(hexId, +1)`. (Right-click to lower stays click-only.)
-- [ ] Task 2.3: Stroke-scoped draft debounce — accept an optional `onStrokeDone` callback. `MapEditorView` passes a callback that flushes `saveMapDraft` once. Inside `onHexUpdate` (called by `applyPaint` / `adjustHexElevation`), when `paintMode === 'paint'`, skip the immediate `saveMapDraft` call inside `onMutated` and instead set a `strokeDirty` flag. `MapEditorView` fires `onStrokeDone` on `mouseup` to flush.
-- [ ] Task 2.4: Update `useHexInteraction` tests: click mode suppresses hover paint; elevation paint mode raises on mouseenter; stroke debounce — `saveMapDraft` called once on flush, not per-hex.
+- [x] Task 2.1: Add `paintMode` param to `useHexInteraction` (default `'click'`). Gate `onHexMouseenter` terrain paint on `paintMode.value === 'paint'` (already gated on `editorMode === 'paint'`; the new condition ANDs with it so hover alone in click mode is fully suppressed).
+- [x] Task 2.2: Add elevation paint to `onHexMouseenter`: when `editorMode === 'elevation'` and `paintMode.value === 'paint'`, call `adjustHexElevation(hexId, +1)`. (Right-click to lower stays click-only.)
+- [x] Task 2.3: Stroke-scoped draft debounce — accept an optional `onStrokeDone` callback. `MapEditorView` passes a callback that flushes `saveMapDraft` once. Inside `onHexUpdate` (called by `applyPaint` / `adjustHexElevation`), when `paintMode === 'paint'`, skip the immediate `saveMapDraft` call inside `onMutated` and instead set a `strokeDirty` flag. `MapEditorView` fires `onStrokeDone` on `mouseup` to flush.
+- [x] Task 2.4: Update `useHexInteraction` tests: click mode suppresses hover paint; elevation paint mode raises on mouseenter; stroke debounce — `saveMapDraft` called once on flush, not per-hex.
 
 ### Verification
 

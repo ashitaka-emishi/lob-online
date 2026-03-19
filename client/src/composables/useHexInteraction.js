@@ -22,6 +22,7 @@ import { resolveHex } from '../utils/hexGeometry.js';
  * @param {import('vue').Ref<string>} args.editorMode
  * @param {import('vue').Ref<string>} args.paintTerrain
  * @param {import('vue').ComputedRef<number>} args.elevationMax
+ * @param {import('vue').Ref<string>} [args.paintMode] - 'click'|'paint'; defaults to 'paint'
  * @param {function} [args.tryPickLosHex] - from useLosTest; returns true if click consumed by LOS
  * @param {function} args.onHexUpdate - single-hex mutation handler
  */
@@ -32,9 +33,12 @@ export function useHexInteraction({
   editorMode,
   paintTerrain,
   elevationMax,
+  paintMode,
   tryPickLosHex,
   onHexUpdate,
 }) {
+  // Default paintMode to 'paint' to preserve backward compat with callers that don't pass it
+  const _paintMode = paintMode ?? { value: 'paint' };
   // M5: use .values().next().value — avoids spreading the entire Set into an array
   const selectedHexId = computed(() =>
     selectedHexIds.value.size === 1 ? selectedHexIds.value.values().next().value : null
@@ -104,8 +108,11 @@ export function useHexInteraction({
   }
 
   function onHexMouseenter(hexId) {
+    if (_paintMode.value !== 'paint') return;
     if (editorMode.value === 'paint') {
       applyPaint(hexId);
+    } else if (editorMode.value === 'elevation') {
+      adjustHexElevation(hexId, +1);
     }
   }
 

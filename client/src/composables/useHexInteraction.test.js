@@ -178,13 +178,50 @@ describe('useHexInteraction', () => {
   });
 
   describe('onHexMouseenter', () => {
-    it('paints terrain in paint mode', () => {
-      const args = makeArgs({ editorMode: ref('paint'), paintTerrain: ref('rough') });
+    it('paints terrain in paint mode when paintMode is paint', () => {
+      const args = makeArgs({
+        editorMode: ref('paint'),
+        paintTerrain: ref('rough'),
+        paintMode: ref('paint'),
+      });
       const { onHexMouseenter } = useHexInteraction(args);
       onHexMouseenter('01.02');
       expect(args.onHexUpdate).toHaveBeenCalledWith(
         expect.objectContaining({ hex: '01.02', terrain: 'rough' })
       );
+    });
+
+    it('does NOT paint terrain in paint mode when paintMode is click', () => {
+      const args = makeArgs({
+        editorMode: ref('paint'),
+        paintTerrain: ref('rough'),
+        paintMode: ref('click'),
+      });
+      const { onHexMouseenter } = useHexInteraction(args);
+      onHexMouseenter('01.02');
+      expect(args.onHexUpdate).not.toHaveBeenCalled();
+    });
+
+    it('raises elevation in elevation mode when paintMode is paint', () => {
+      const args = makeArgs({
+        editorMode: ref('elevation'),
+        paintMode: ref('paint'),
+      });
+      const { onHexMouseenter } = useHexInteraction(args);
+      onHexMouseenter('01.01'); // elevation: 3 → 4
+      expect(args.onHexUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ hex: '01.01', elevation: 4 })
+      );
+    });
+
+    it('does NOT raise elevation in elevation mode when paintMode is click', () => {
+      const args = makeArgs({
+        editorMode: ref('elevation'),
+        paintMode: ref('click'),
+      });
+      const { onHexMouseenter } = useHexInteraction(args);
+      onHexMouseenter('01.01');
+      expect(args.onHexUpdate).not.toHaveBeenCalled();
     });
 
     it('is a no-op in select mode', () => {
