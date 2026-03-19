@@ -91,6 +91,7 @@ const emit = defineEmits([
   'edge-hover',
   'trace-complete',
   'trace-progress',
+  'paint-stroke-done',
 ]);
 
 // Force elevation layer visible when elevation tool is active
@@ -101,6 +102,9 @@ const isDrawing = ref(false);
 let traceEdgeSet = new Set(); // deduplication guard — not reactive, not rendered
 const traceEdges = ref([]); // [{hexId, dir, line}]
 const traceEdgeCount = computed(() => traceEdges.value.length);
+
+// Paint/elevation mousedown gate — true while the mouse button is held in paint or elevation mode
+const isPaintMouseDown = ref(false);
 
 const TERRAIN_COLORS = {
   clear: '#c8d4a0',
@@ -358,26 +362,44 @@ function onSvgContextMenu(event) {
 }
 
 function onSvgMouseDown(_event) {
-  if (props.editorMode !== 'linearFeature') return;
-  isDrawing.value = true;
-  traceEdgeSet = new Set();
-  traceEdges.value = [];
+  if (props.editorMode === 'linearFeature') {
+    isDrawing.value = true;
+    traceEdgeSet = new Set();
+    traceEdges.value = [];
+  } else if (props.editorMode === 'paint' || props.editorMode === 'elevation') {
+    isPaintMouseDown.value = true;
+  }
 }
 
 function onSvgMouseUp() {
-  if (!isDrawing.value) return;
-  isDrawing.value = false;
-  if (traceEdges.value.length > 0) {
-    emit('trace-complete', [...traceEdges.value]);
+  if (isDrawing.value) {
+    isDrawing.value = false;
+    if (traceEdges.value.length > 0) {
+      emit('trace-complete', [...traceEdges.value]);
+    }
+    traceEdgeSet = new Set();
+    traceEdges.value = [];
   }
-  traceEdgeSet = new Set();
-  traceEdges.value = [];
+  if (isPaintMouseDown.value) {
+    isPaintMouseDown.value = false;
+    emit('paint-stroke-done');
+  }
+}
+
+// Gate hex-mouseenter for paint/elevation modes on isPaintMouseDown;
+// in all other modes emit unconditionally (existing behaviour).
+function onHexMouseenter(hexId) {
+  if (props.editorMode === 'paint' || props.editorMode === 'elevation') {
+    if (!isPaintMouseDown.value) return;
+  }
+  emit('hex-mouseenter', hexId);
 }
 
 // cellById is built inside gridData computed — access via gridData.value.cellById
 
-// isDrawing and traceEdges are exposed for test instrumentation only; do not mutate from parent components
-defineExpose({ traceEdgeCount, isDrawing, traceEdges });
+// isDrawing, traceEdges, and isPaintMouseDown are exposed for test instrumentation only;
+// do not mutate from parent components
+defineExpose({ traceEdgeCount, isDrawing, traceEdges, isPaintMouseDown });
 </script>
 
 <template>
@@ -405,7 +427,7 @@ defineExpose({ traceEdgeCount, isDrawing, traceEdges });
             :stroke="strokeForCell(cell)"
             :stroke-width="strokeWidthForCell(cell)"
             :stroke-opacity="strokeOpacityForCell(cell)"
-            @mouseenter="emit('hex-mouseenter', cell.id)"
+            @mouseenter="onHexMouseenter(cell.id)"
             @mouseleave="emit('hex-mouseleave', cell.id)"
           />
         </g>
