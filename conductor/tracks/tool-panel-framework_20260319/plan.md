@@ -96,12 +96,12 @@ Wire MapEditorView to the new architecture and confirm everything passes.
 
 ### Tasks
 
-- [ ] Task 5.1: Update `MapEditorView.vue` to remove all old accordion panel state; wire
+- [x] Task 5.1: Update `MapEditorView.vue` to remove all old accordion panel state; wire
       `openPanel` tracking for the interaction gate
-- [ ] Task 5.2: Add a stub `ElevationToolPanel.vue` using `BaseToolPanel` so the editor has
+- [x] Task 5.2: Add a stub `ElevationToolPanel.vue` using `BaseToolPanel` so the editor has
       at least one working tool (unblocks #137 which can replace the stub)
-- [ ] Task 5.3: Run full test suite; fix any coverage gaps to maintain ≥ 70%
-- [ ] Task 5.4: Run `npm run lint` and `npm run format:check`
+- [x] Task 5.3: Run full test suite; fix any coverage gaps to maintain ≥ 70%
+- [x] Task 5.4: Run `npm run lint` and `npm run format:check`
 
 ## Final Verification
 

@@ -4,18 +4,20 @@ const PANEL_DISPLAY_NAMES = {
   calibration: 'Grid Calibration',
   elevation: 'Elevation Tool',
   terrain: 'Terrain Tool',
-  linearFeature: 'Linear Feature',
-  hexEdit: 'Hex Edit',
-  wedge: 'Wedge Editor',
+  road: 'Road Tool',
+  stream: 'Stream & Stone Wall Tool',
+  contour: 'Contour Line Tool',
   losTest: 'LOS Test',
 };
 
-// Which panels activate a tool mode when opened
+// Panels that activate a data-editing tool mode when opened.
+// These are the same panels that enable HexMapOverlay's interaction gate.
 const TOOL_PANEL_MODES = Object.freeze({
   elevation: 'elevation',
   terrain: 'paint',
-  linearFeature: 'linearFeature',
-  wedge: 'wedge',
+  road: 'edge',
+  stream: 'edge',
+  contour: 'edge',
 });
 
 /**
@@ -25,9 +27,9 @@ const TOOL_PANEL_MODES = Object.freeze({
  * @param {function} [args.onClearSelection] - called when closing an active tool panel
  */
 export function useEditorAccordion({ onClearSelection } = {}) {
-  const openPanel = ref('hexEdit');
+  const openPanel = ref(null);
 
-  // L5: editorMode as computed — derives from openPanel reactively, no imperative assignment needed
+  // editorMode derives from openPanel reactively — no imperative assignment needed
   const editorMode = computed(() => TOOL_PANEL_MODES[openPanel.value] ?? 'select');
 
   const activeToolName = computed(() =>
