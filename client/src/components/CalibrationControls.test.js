@@ -12,7 +12,7 @@ const BASE_CAL = {
   imageScale: 1,
   orientation: 'flat',
   strokeWidth: 0.5,
-  evenColUp: false,
+  evenColUp: true,
 };
 
 describe('CalibrationControls', () => {
@@ -48,14 +48,14 @@ describe('CalibrationControls', () => {
 
   it('clicking evenColUp button emits calibration-change with flipped evenColUp', async () => {
     const wrapper = mount(CalibrationControls, {
-      props: { calibration: { ...BASE_CAL, evenColUp: false } },
+      props: { calibration: { ...BASE_CAL, evenColUp: true } },
     });
     // Even Col ↑ is the 4th button (after Lock, Orientation, Labels)
     const btn = wrapper.findAll('button')[3];
     await btn.trigger('click');
     const emitted = wrapper.emitted('calibration-change');
     expect(emitted).toBeTruthy();
-    expect(emitted[0][0].evenColUp).toBe(true);
+    expect(emitted[0][0].evenColUp).toBe(false);
   });
 
   it('input event on dx field emits calibration-change with updated value', async () => {

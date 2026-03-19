@@ -136,7 +136,7 @@ export function findNearestEdge(localX, localY, cells, threshold = 8) {
  * Return the cell for `candidateHex` plus its valid neighbors, looked up via `cellByColRow`.
  * Reduces edge-search candidates from the full grid to at most 7 cells.
  *
- * Uses pure ODD_Q offset math (offset: -1, flat-top) — no honeycomb-grid API call needed.
+ * Uses pure EVEN_Q offset math (offset: +1, flat-top) — no honeycomb-grid API call needed.
  *
  * @param {{col:number, row:number}} candidateHex - object with col/row offset coordinates
  * @param {Map<string,object>} cellByColRow - Map keyed by "${col},${row}" → cell object

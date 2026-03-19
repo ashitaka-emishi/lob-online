@@ -73,7 +73,7 @@ const VALID_MAP = {
     imageScale: 1,
     orientation: 'flat',
     strokeWidth: 0.5,
-    evenColUp: false,
+    evenColUp: true,
   },
 };
 

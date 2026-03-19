@@ -170,6 +170,39 @@ describe('adjacentHexId', () => {
   it('returns null for an unknown direction', () => {
     expect(adjacentHexId('03.03', 'INVALID', GRID)).toBeNull();
   });
+
+  // Parity test: even game column (col=4, hcCol=3, odd 0-based) exercises the other
+  // EVEN_Q branch. All 6 neighbors from "04.03" (hcCol=3 odd) must be verified.
+  describe('from even game column "04.03" (odd hcCol — EVEN_Q odd branch)', () => {
+    // hcCol=3(odd), hcRow=2; EVEN_Q: q=3, r=2-floor(4/2)=0, s=-3
+    it('N neighbor', () => {
+      // N: nq=3, nr=-1; nhcCol=3(odd), nhcRow=-1+floor(4/2)=1; ncol=4, nrow=4 → "04.04"
+      expect(adjacentHexId('04.03', 'N', GRID)).toBe('04.04');
+    });
+    it('S neighbor', () => {
+      // S: nq=3, nr=1; nhcRow=1+2=3; nrow=2 → "04.02"
+      expect(adjacentHexId('04.03', 'S', GRID)).toBe('04.02');
+    });
+    it('NE neighbor', () => {
+      // NE: nq=4, nr=-1; nhcCol=4(even), nhcRow=-1+floor(4/2)=1; ncol=5, nrow=4 → "05.04"
+      expect(adjacentHexId('04.03', 'NE', GRID)).toBe('05.04');
+    });
+    it('SE neighbor', () => {
+      // SE: nq=4, nr=0; nhcRow=0+2=2; nrow=3 → "05.03"
+      expect(adjacentHexId('04.03', 'SE', GRID)).toBe('05.03');
+    });
+    it('SW neighbor', () => {
+      // SW: nq=2, nr=1; nhcCol=2(even), nhcRow=1+floor(2/2)=2; ncol=3, nrow=3 → "03.03"
+      expect(adjacentHexId('04.03', 'SW', GRID)).toBe('03.03');
+    });
+    it('NW neighbor', () => {
+      // NW: nq=2, nr=0; nhcRow=0+1=1; nrow=4 → "03.04"
+      expect(adjacentHexId('04.03', 'NW', GRID)).toBe('03.04');
+    });
+    it('NE returns null at east boundary', () => {
+      expect(adjacentHexId('05.03', 'NE', GRID)).toBeNull();
+    });
+  });
 });
 
 describe('DIR_TO_CORNERS', () => {
