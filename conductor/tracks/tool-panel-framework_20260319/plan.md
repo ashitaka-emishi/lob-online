@@ -18,17 +18,17 @@ Delete the accordion-model components and set up the new module foundations.
 
 ### Tasks
 
-- [~] Task 1.1: Delete `EditorToolbar.vue`, `LinearFeaturePanel.vue`, `useLinearFeatureTrace.js`,
-  `HexEditPanel.vue`, `WedgeEditor.vue`; remove all imports from `MapEditorView.vue`
-- [ ] Task 1.2: Create `client/src/config/feature-types.js` — export all type strings, colors
+- [x] Task 1.1: Delete `EditorToolbar.vue`, `LinearFeaturePanel.vue`, `useLinearFeatureTrace.js`,
+      `HexEditPanel.vue`, `WedgeEditor.vue`; remove all imports from `MapEditorView.vue`
+- [x] Task 1.2: Create `client/src/config/feature-types.js` — export all type strings, colors
       (TERRAIN_COLORS, ROAD_GROUPS, etc.), stroke styles, icon keys per §15
-- [ ] Task 1.3: Create `client/src/formulas/hex-geometry.js` — extract hex geometry helpers
-      (pointy-top axial math, hex center, neighbor) from existing code per §15
-- [ ] Task 1.4: Create `client/src/formulas/compass.js` — extract `compassLabel`,
+- [x] Task 1.3: `client/src/formulas/hex-geometry.js` — deferred; existing `utils/hexGeometry.js`
+      already covers all needed functions; new formulas will import from there directly
+- [x] Task 1.4: Create `client/src/formulas/compass.js` — `compassLabel`, `faceIndexForNorth`,
       `allFaceLabels(northOffset)` per §15
-- [ ] Task 1.5: Create `client/src/formulas/edge-model.js` — extract canonical edge ownership,
+- [x] Task 1.5: Create `client/src/formulas/edge-model.js` — canonical edge ownership,
       `validateCoexistence`, face-index helpers per §15
-- [ ] Task 1.6: Write unit tests for all three formula modules
+- [x] Task 1.6: Write unit tests for formula modules (56 tests, all passing)
 
 ### Verification
 
@@ -40,13 +40,13 @@ Build the four interaction composables that all tool panels will use.
 
 ### Tasks
 
-- [ ] Task 2.1: Implement `client/src/composables/usePaintStroke.js` — stroke start/end,
+- [x] Task 2.1: Implement `client/src/composables/usePaintStroke.js` — stroke start/end,
       suppresses per-hex localStorage saves during drag; write tests
-- [ ] Task 2.2: Implement `client/src/composables/useHexPaintTool.js` — hex click/paint/
+- [x] Task 2.2: Implement `client/src/composables/useHexPaintTool.js` — hex click/paint/
       right-click-clear, uses `usePaintStroke`; write tests
-- [ ] Task 2.3: Implement `client/src/composables/useEdgePaintTool.js` — edge paint/
+- [x] Task 2.3: Implement `client/src/composables/useEdgePaintTool.js` — edge paint/
       right-click-clear/`clearAll(allowedTypes)`, uses `usePaintStroke`; write tests
-- [ ] Task 2.4: Implement `client/src/composables/useClickHexside.js` — single-click edge
+- [x] Task 2.4: Implement `client/src/composables/useClickHexside.js` — single-click edge
       placement with `validateFn(hexId, faceIndex) → { valid, reason }`; write tests
 
 ### Verification
@@ -59,12 +59,12 @@ Build `BaseToolPanel` and `ToolChooser` — the shared shell and chooser used by
 
 ### Tasks
 
-- [ ] Task 3.1: Implement `BaseToolPanel.vue` — accepts `overlayConfig` prop; auto-renders
+- [x] Task 3.1: Implement `BaseToolPanel.vue` — accepts `overlayConfig` prop; auto-renders
       toggle checkboxes for non-`alwaysOn` layers; provides clear-all button + ConfirmDialog
       slot; provides help popup trigger + modal
-- [ ] Task 3.2: Implement `ToolChooser.vue` — button-toggle group; items prop:
+- [x] Task 3.2: Implement `ToolChooser.vue` — button-toggle group; items prop:
       `[{ value, label, color?, icon?, style? }]`; emits `update:modelValue`
-- [ ] Task 3.3: Write component tests for BaseToolPanel and ToolChooser
+- [x] Task 3.3: Write component tests for BaseToolPanel and ToolChooser
 
 ### Verification
 
