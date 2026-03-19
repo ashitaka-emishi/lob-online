@@ -3,19 +3,19 @@ import { useEditorAccordion } from './useEditorAccordion.js';
 
 describe('useEditorAccordion', () => {
   describe('initial state', () => {
-    it('openPanel defaults to hexEdit', () => {
+    it('openPanel defaults to null (no panel open)', () => {
       const { openPanel } = useEditorAccordion();
-      expect(openPanel.value).toBe('hexEdit');
+      expect(openPanel.value).toBeNull();
     });
 
-    it('editorMode defaults to select', () => {
+    it('editorMode defaults to select when no panel is open', () => {
       const { editorMode } = useEditorAccordion();
       expect(editorMode.value).toBe('select');
     });
 
-    it('activeToolName reflects the open panel display name', () => {
+    it('activeToolName is null when no panel is open', () => {
       const { activeToolName } = useEditorAccordion();
-      expect(activeToolName.value).toBe('Hex Edit');
+      expect(activeToolName.value).toBeNull();
     });
   });
 
@@ -54,16 +54,22 @@ describe('useEditorAccordion', () => {
       expect(editorMode.value).toBe('paint');
     });
 
-    it('sets editorMode to linearFeature when linearFeature panel opens', () => {
+    it('sets editorMode to edge when road panel opens', () => {
       const { editorMode, togglePanel } = useEditorAccordion();
-      togglePanel('linearFeature');
-      expect(editorMode.value).toBe('linearFeature');
+      togglePanel('road');
+      expect(editorMode.value).toBe('edge');
     });
 
-    it('sets editorMode to wedge when wedge panel opens', () => {
+    it('sets editorMode to edge when stream panel opens', () => {
       const { editorMode, togglePanel } = useEditorAccordion();
-      togglePanel('wedge');
-      expect(editorMode.value).toBe('wedge');
+      togglePanel('stream');
+      expect(editorMode.value).toBe('edge');
+    });
+
+    it('sets editorMode to edge when contour panel opens', () => {
+      const { editorMode, togglePanel } = useEditorAccordion();
+      togglePanel('contour');
+      expect(editorMode.value).toBe('edge');
     });
 
     it('resets editorMode to select when closing a tool panel', () => {
@@ -73,7 +79,7 @@ describe('useEditorAccordion', () => {
       expect(editorMode.value).toBe('select');
     });
 
-    it('non-tool panels (calibration) set editorMode to select', () => {
+    it('non-tool panels (calibration) keep editorMode as select', () => {
       const { editorMode, togglePanel } = useEditorAccordion();
       togglePanel('calibration');
       expect(editorMode.value).toBe('select');
@@ -82,8 +88,7 @@ describe('useEditorAccordion', () => {
 
   describe('activeToolName', () => {
     it('returns null when no panel is open', () => {
-      const { activeToolName, togglePanel } = useEditorAccordion();
-      togglePanel('hexEdit'); // close it (it's already open by default)
+      const { activeToolName } = useEditorAccordion();
       expect(activeToolName.value).toBeNull();
     });
 
@@ -142,17 +147,17 @@ describe('useEditorAccordion', () => {
   });
 
   describe('isToolPanel', () => {
-    it('returns true for tool panels (elevation, terrain, linearFeature, wedge)', () => {
+    it('returns true for data-editing tool panels', () => {
       const { isToolPanel } = useEditorAccordion();
       expect(isToolPanel('elevation')).toBe(true);
       expect(isToolPanel('terrain')).toBe(true);
-      expect(isToolPanel('linearFeature')).toBe(true);
-      expect(isToolPanel('wedge')).toBe(true);
+      expect(isToolPanel('road')).toBe(true);
+      expect(isToolPanel('stream')).toBe(true);
+      expect(isToolPanel('contour')).toBe(true);
     });
 
-    it('returns false for non-tool panels (hexEdit, calibration, losTest)', () => {
+    it('returns false for non-tool panels', () => {
       const { isToolPanel } = useEditorAccordion();
-      expect(isToolPanel('hexEdit')).toBe(false);
       expect(isToolPanel('calibration')).toBe(false);
       expect(isToolPanel('losTest')).toBe(false);
       expect(isToolPanel('unknown')).toBe(false);

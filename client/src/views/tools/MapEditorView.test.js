@@ -18,28 +18,13 @@ vi.mock('../../components/HexMapOverlay.vue', () => ({
       'losHexB',
       'losPathHexes',
       'losBlockedHex',
-      'layers',
-      'editorMode',
-      'paintTerrain',
+      'overlayConfig',
+      'interactionEnabled',
+      'edgeInteraction',
+      'dragPaintEnabled',
       'seedHexIds',
     ],
-    emits: ['hex-click', 'hex-mouseenter', 'hex-mouseleave', 'edge-click', 'edge-hover'],
-  },
-}));
-
-vi.mock('../../components/HexEditPanel.vue', () => ({
-  default: {
-    name: 'HexEditPanel',
-    template: '<div class="hex-edit-panel-stub"></div>',
-    props: [
-      'hex',
-      'selectedHexId',
-      'hexFeatureTypes',
-      'edgeFeatureTypes',
-      'isSeedHex',
-      'northOffset',
-    ],
-    emits: ['hex-update', 'seed-toggle'],
+    emits: ['hex-click', 'hex-mouseenter', 'hex-mouseleave', 'edge-click'],
   },
 }));
 
@@ -54,8 +39,8 @@ vi.mock('../../components/LosTestPanel.vue', () => ({
 
 import MapEditorView from './MapEditorView.vue';
 import CalibrationControls from '../../components/CalibrationControls.vue';
-import HexEditPanel from '../../components/HexEditPanel.vue';
 import LosTestPanel from '../../components/LosTestPanel.vue';
+import ElevationToolPanel from '../../components/ElevationToolPanel.vue';
 
 const VALID_MAP = {
   _status: 'draft',
@@ -98,6 +83,15 @@ function mockFetch(data, ok = true, status = 200) {
     status,
     json: () => Promise.resolve(data),
   });
+}
+
+/** Open the elevation panel and return the ElevationToolPanel component. */
+async function openElevationPanel(wrapper) {
+  const headers = wrapper.findAll('button.accordion-header');
+  const elevHeader = headers.find((h) => h.text().includes('Elevation Tool'));
+  await elevHeader.trigger('click');
+  await flushPromises();
+  return wrapper.findComponent(ElevationToolPanel);
 }
 
 describe('MapEditorView', () => {
@@ -212,28 +206,28 @@ describe('MapEditorView', () => {
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
 
-    // Make the editor dirty
-    const hexEditPanel = wrapper.findComponent(HexEditPanel);
-    if (hexEditPanel.exists()) {
-      hexEditPanel.vm.$emit('hex-update', { hex: '01.01', terrain: 'woods' });
-      await flushPromises();
-    }
+    // Make the editor dirty via ElevationToolPanel raise-all
+    const elevPanel = await openElevationPanel(wrapper);
+    elevPanel.vm.$emit('raise-all');
+    await flushPromises();
 
     const pullBtn = wrapper.find('button.pull-btn');
     await pullBtn.trigger('click');
     await flushPromises();
 
-    // ConfirmDialog should be visible
     expect(wrapper.text()).toContain('Discard local changes');
     wrapper.unmount();
   });
 
-  it('EditorToolbar renders layer checkboxes (mode buttons removed)', async () => {
+  it('EditorToolbar is no longer rendered (removed in framework refactor)', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_MAP));
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
-    expect(wrapper.findAll('.mode-btn').length).toBe(0);
-    expect(wrapper.findAll('input[type="checkbox"]').length).toBeGreaterThan(0);
+    // No EditorToolbar — no global layer checkbox row above the body
+    const allCheckboxes = wrapper.findAll('input[type="checkbox"]');
+    // Any checkboxes present are inside open panel content, not a toolbar row
+    expect(wrapper.find('.editor-toolbar').exists()).toBe(false);
+    expect(allCheckboxes.length).toBe(0); // no panel open at mount
     wrapper.unmount();
   });
 
@@ -244,7 +238,6 @@ describe('MapEditorView', () => {
     const headers = wrapper.findAll('button.accordion-header');
     const elevHeader = headers.find((h) => h.text().includes('Elevation Tool'));
     await elevHeader.trigger('click');
-    // ElevationToolPanel should be visible
     expect(wrapper.text()).toContain('Raise all');
     wrapper.unmount();
   });
@@ -266,12 +259,10 @@ describe('MapEditorView', () => {
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
 
-    // Emit hex-update from HexEditPanel child component
-    const hexEditPanel = wrapper.findComponent(HexEditPanel);
-    if (hexEditPanel.exists()) {
-      hexEditPanel.vm.$emit('hex-update', { hex: '01.01', terrain: 'woods' });
-      await flushPromises();
-    }
+    // Open elevation panel and trigger a mutation via raise-all
+    const elevPanel = await openElevationPanel(wrapper);
+    elevPanel.vm.$emit('raise-all');
+    await flushPromises();
 
     // saveMapDraft is debounced 500ms — advance timers to trigger the write
     vi.runAllTimers();
@@ -385,8 +376,6 @@ describe('MapEditorView', () => {
       const fakeResult = { clear: true, steps: [] };
       panel.vm.$emit('los-result', fakeResult);
       await flushPromises();
-      // No public prop for losResult, but the emit should not throw
-      // and the component should remain stable
       expect(wrapper.findComponent(LosTestPanel).exists()).toBe(true);
       wrapper.unmount();
     });
@@ -428,7 +417,6 @@ describe('MapEditorView', () => {
     await wrapper.find('button.save-btn').trigger('click');
     await flushPromises();
 
-    // No confirmation dialog — push proceeds directly when nothing is unsaved
     expect(wrapper.text()).not.toContain('Server data is newer');
     expect(fetchMock).toHaveBeenCalledTimes(2);
     wrapper.unmount();
@@ -460,11 +448,10 @@ describe('MapEditorView', () => {
     vi.stubGlobal('fetch', fetchMock);
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
-    // serverSavedAt = 2000; Date.now() = 1500
 
-    // Emit a hex-update to set unsaved=true (saveMapDraft stores draft with _savedAt=1500)
-    const hexEditPanel = wrapper.findComponent({ name: 'HexEditPanel' });
-    await hexEditPanel.vm.$emit('hex-update', { hex: '01.01', terrain: 'woods' });
+    // Make unsaved=true via ElevationToolPanel raise-all
+    const elevPanel = await openElevationPanel(wrapper);
+    elevPanel.vm.$emit('raise-all');
     await flushPromises();
     // unsaved=true, localDraftSavedAt=1500 < serverSavedAt=2000 → dialog should appear
 
@@ -499,17 +486,21 @@ describe('MapEditorView', () => {
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
 
-    // hexEdit is open by default — HexEditPanel stub should be rendered
-    expect(wrapper.find('.hex-edit-panel-stub').exists()).toBe(true);
+    // No panel open by default
+    expect(wrapper.text()).not.toContain('Raise all');
 
-    // Click the Grid Calibration header to open it
+    // Open Elevation panel
     const headers = wrapper.findAll('button.accordion-header');
+    const elevHeader = headers.find((h) => h.text().includes('Elevation Tool'));
+    await elevHeader.trigger('click');
+    await flushPromises();
+    expect(wrapper.text()).toContain('Raise all');
+
+    // Click Grid Calibration to open it — Elevation should close
     const calHeader = headers.find((h) => h.text().includes('Grid Calibration'));
     await calHeader.trigger('click');
     await flushPromises();
-
-    // hexEdit panel should now be closed
-    expect(wrapper.find('.hex-edit-panel-stub').exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('Raise all');
     wrapper.unmount();
   });
 
@@ -518,48 +509,15 @@ describe('MapEditorView', () => {
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
 
-    // hexEdit is open by default
+    // Open elevation panel
+    const headers = wrapper.findAll('button.accordion-header');
+    const elevHeader = headers.find((h) => h.text().includes('Elevation Tool'));
+    await elevHeader.trigger('click');
+    await flushPromises();
+
     const activeTool = wrapper.find('.active-tool');
     expect(activeTool.exists()).toBe(true);
-    expect(activeTool.text()).toContain('Hex Edit');
-    wrapper.unmount();
-  });
-
-  it('Hex Edit accordion header always reads "Hex Edit"', async () => {
-    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
-    const wrapper = mount(MapEditorView, { attachTo: document.body });
-    await flushPromises();
-
-    const headers = wrapper.findAll('button.accordion-header');
-    const hexEditHeader = headers.find((h) => h.text().includes('Hex Edit'));
-    expect(hexEditHeader).toBeTruthy();
-    // Should not contain a dynamic hex ID — just the fixed label
-    expect(hexEditHeader.text()).not.toMatch(/Hex \d{2}\.\d{2}/);
-    wrapper.unmount();
-  });
-
-  it('onSeedToggle toggles a seed hex off when already in the set', async () => {
-    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
-    const wrapper = mount(MapEditorView, { attachTo: document.body });
-    await flushPromises();
-
-    const hexEditPanel = wrapper.findComponent({ name: 'HexEditPanel' });
-    // Toggle on
-    await hexEditPanel.vm.$emit('seed-toggle', {
-      hexId: '01.01',
-      confirmedData: { terrain: 'clear', elevation: 1 },
-    });
-    await flushPromises();
-    // Toggle off
-    await hexEditPanel.vm.$emit('seed-toggle', {
-      hexId: '01.01',
-      confirmedData: { terrain: 'clear', elevation: 1 },
-    });
-    await flushPromises();
-
-    // After toggling off, seed-hex-ids prop passed to HexMapOverlay should not contain '01.01'
-    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
-    expect(overlay.props('seedHexIds')).not.toContain('01.01');
+    expect(activeTool.text()).toContain('Elevation');
     wrapper.unmount();
   });
 
@@ -594,7 +552,6 @@ describe('MapEditorView', () => {
     });
     await flushPromises();
 
-    // Advance debounce timer and confirm draft saved with updated values
     vi.runAllTimers();
     const calls = localStorage.setItem.mock.calls.filter(([key]) => key === MAP_DRAFT_KEY);
     expect(calls.length).toBeGreaterThan(0);
@@ -624,7 +581,7 @@ describe('MapEditorView', () => {
   });
 
   // onMutated guard (#123): unsaved.value = true is written only once across multiple mutations
-  it('marks unsaved on first hex-update and stays marked on subsequent updates', async () => {
+  it('marks unsaved on first mutation and stays marked on subsequent updates', async () => {
     vi.useFakeTimers();
     vi.stubGlobal('fetch', mockFetch(VALID_MAP));
     const wrapper = mount(MapEditorView, { attachTo: document.body });
@@ -632,13 +589,12 @@ describe('MapEditorView', () => {
 
     expect(wrapper.text()).not.toContain('* unsaved');
 
-    const hexEditPanel = wrapper.findComponent({ name: 'HexEditPanel' });
-    await hexEditPanel.vm.$emit('hex-update', { hex: '01.01', terrain: 'woods' });
+    const elevPanel = await openElevationPanel(wrapper);
+    elevPanel.vm.$emit('raise-all');
     await wrapper.vm.$nextTick();
     expect(wrapper.text()).toContain('* unsaved');
 
-    // A second mutation should not break the unsaved state
-    await hexEditPanel.vm.$emit('hex-update', { hex: '01.01', terrain: 'clear' });
+    elevPanel.vm.$emit('lower-all');
     await wrapper.vm.$nextTick();
     expect(wrapper.text()).toContain('* unsaved');
 

@@ -36,10 +36,14 @@ describe('ElevationToolPanel', () => {
     expect(wrapper.emitted('lower-all')).toBeTruthy();
   });
 
-  it('clicking clear-all-elevations button emits clear-all-elevations', async () => {
+  it('clicking Clear all and confirming emits clear-all-elevations', async () => {
     const wrapper = mount(ElevationToolPanel);
-    const btn = wrapper.findAll('button').find((b) => b.text().includes('Clear all'));
-    await btn.trigger('click');
+    // BaseToolPanel renders a "Clear all" button that shows a confirm dialog first
+    const clearBtn = wrapper.findAll('button').find((b) => b.text() === 'Clear all');
+    await clearBtn.trigger('click');
+    // Confirm dialog should now be visible; click the "Clear" confirm button
+    const confirmBtn = wrapper.findAll('button').find((b) => b.text() === 'Clear');
+    await confirmBtn.trigger('click');
     expect(wrapper.emitted('clear-all-elevations')).toBeTruthy();
   });
 

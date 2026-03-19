@@ -57,34 +57,40 @@ const props = defineProps({
     type: String,
     default: null,
   },
-  layers: {
-    type: Object,
-    default: () => ({
-      grid: true,
-      terrain: true,
-      elevation: false,
-      wedges: false,
-      edges: true,
-      slopeArrows: false,
-    }),
-  },
-  editorMode: {
-    type: String,
-    default: 'select',
-  },
-  // True when the active tool supports drag-paint (terrain or elevation mode).
-  // Computed by the parent so HexMapOverlay does not interpret mode string values directly.
-  dragPaintEnabled: {
-    type: Boolean,
-    default: false,
-  },
-  paintTerrain: {
-    type: String,
-    default: 'clear',
-  },
   seedHexIds: {
     type: Array,
     default: () => [],
+  },
+  // ── New declarative config ─────────────────────────────────────────────────
+  // overlayConfig shape (all keys optional):
+  //   grid:           { alwaysOn, weight: 'faint'|'diagnostic' }
+  //   hexFill:        { alwaysOn, toggleLabel?, fillFn: (cell) => cssColor|null }
+  //   hexLabel:       { alwaysOn, toggleLabel?, labelFn: (cell) => string|null, size? }
+  //   elevationLabel: { alwaysOn }           — elevation number at bottom of each hex
+  //   hexIcon:        { alwaysOn, iconFn: (cell) => string|null }
+  //   edgeLine:       { alwaysOn, featureGroups: [{types, color, strokeWidth, dash?}] }
+  //   highlight:      { alwaysOn, hexIds: string[], strokeColor }
+  //   wedges:         { alwaysOn }           — wedge shading from wedgeElevations
+  //   slopeArrows:    { alwaysOn }           — slope direction arrows
+  overlayConfig: {
+    type: Object,
+    default: () => ({}),
+  },
+  // True when a data-editing tool panel is open — gates all interaction events.
+  // Computed by the parent so this component does not need to know tool panel names.
+  interactionEnabled: {
+    type: Boolean,
+    default: false,
+  },
+  // True when the active tool snaps clicks to edges rather than hexes.
+  edgeInteraction: {
+    type: Boolean,
+    default: false,
+  },
+  // True when the active tool supports drag-paint. Gates hex-mouseenter to mousedown-only.
+  dragPaintEnabled: {
+    type: Boolean,
+    default: false,
   },
 });
 
@@ -94,54 +100,17 @@ const emit = defineEmits([
   'hex-mouseenter',
   'hex-mouseleave',
   'edge-click',
-  'edge-hover',
-  'trace-complete',
-  'trace-progress',
   'paint-stroke-done',
   'paint-stroke-start',
 ]);
 
-// Force elevation layer visible when elevation tool is active
-const showElevation = computed(() => props.layers.elevation || props.editorMode === 'elevation');
-
-// Drag trace state for linearFeature mode
-const isDrawing = ref(false);
-let traceEdgeSet = new Set(); // deduplication guard — not reactive, not rendered
-const traceEdges = ref([]); // [{hexId, dir, line}]
-const traceEdgeCount = computed(() => traceEdges.value.length);
-
-// Paint/elevation mousedown gate — true while the mouse button is held in paint or elevation mode
+// Paint mousedown gate — true while the mouse button is held during drag-paint.
 const isPaintMouseDown = ref(false);
 
-const TERRAIN_COLORS = {
-  clear: '#c8d4a0',
-  woods: '#4a7c4e',
-  slopingGround: '#c8b88a',
-  woodedSloping: '#5a7a3a',
-  orchard: '#8fbb6d',
-  marsh: '#7aab9e',
-  unknown: '#cccccc',
-};
-
-const EDGE_COLORS = {
-  road: '#8B6914',
-  stream: '#4488aa',
-  stoneWall: '#888',
-  slope: '#cc8844',
-  extremeSlope: '#aa5500',
-  verticalSlope: '#cc2222',
-};
-
-function edgeColor(type) {
-  return EDGE_COLORS[type] ?? '#999';
-}
-
-// Index known hexes by id for O(1) lookup
+// ── Derived sets ──────────────────────────────────────────────────────────────
 const hexIndex = computed(() => {
   const idx = {};
-  for (const h of props.hexes) {
-    idx[h.hex] = h;
-  }
+  for (const h of props.hexes) idx[h.hex] = h;
   return idx;
 });
 
@@ -149,7 +118,7 @@ const vpHexSet = computed(() => new Set(props.vpHexIds));
 const losPathSet = computed(() => new Set(props.losPathHexes));
 const seedHexSet = computed(() => new Set(props.seedHexIds));
 
-// Recompute grid whenever calibration or image size changes
+// ── Grid computation ──────────────────────────────────────────────────────────
 const gridData = computed(() => {
   const { dx, dy, hexWidth, hexHeight, imageScale, orientation, evenColUp, cols, rows } =
     props.calibration;
@@ -165,7 +134,6 @@ const gridData = computed(() => {
   });
 
   const grid = new Grid(Hex, rectangle({ width: gridCols, height: gridRows }));
-
   const anchorHex = grid.getHex({ col: 0, row: gridRows - 1 });
   const tx = dx - anchorHex.x;
   const ty = props.imageHeight * imageScale - dy - anchorHex.y;
@@ -182,8 +150,6 @@ const gridData = computed(() => {
     const id = hexToGameId(hex, gridRows);
     const known = hexIndex.value[id];
     const terrain = known?.terrain ?? 'unknown';
-    const fill = TERRAIN_COLORS[terrain] ?? '#cccccc';
-    const fillOpacity = terrain === 'unknown' ? 0.3 : 0.45;
     const bottomCY = (corners[1].y + corners[2].y) / 2;
     const isVP = vpHexSet.value.has(id);
     const isSeed = seedHexSet.value.has(id);
@@ -204,8 +170,6 @@ const gridData = computed(() => {
       cx,
       cy,
       corners,
-      fill,
-      fillOpacity,
       terrain,
       elevation: known?.elevation ?? null,
       slope,
@@ -231,12 +195,30 @@ const gridData = computed(() => {
 
 const cells = computed(() => gridData.value.cells);
 
-// SVG rotation transform (applied inside the translate group)
 const rotationTransform = computed(() => {
   const deg = props.calibration.rotation;
-  if (!deg) return '';
-  return `rotate(${deg})`;
+  return deg ? `rotate(${deg})` : '';
 });
+
+// ── HexFillLayer helpers ───────────────────────────────────────────────────────
+
+function hexFillColor(cell) {
+  // LOS blocked fill overrides everything
+  if (cell.isLosBlocked) return '#cc4444';
+  const cfg = props.overlayConfig.hexFill;
+  if (!cfg) return 'none';
+  return cfg.fillFn?.(cell) ?? 'none';
+}
+
+function hexFillOpacity(cell) {
+  if (cell.isLosBlocked) return 0.5;
+  const cfg = props.overlayConfig.hexFill;
+  if (!cfg) return 0;
+  const color = cfg.fillFn?.(cell) ?? 'none';
+  return color !== 'none' ? 0.45 : 0;
+}
+
+// ── HexGridLayer / HexHighlightLayer helpers ──────────────────────────────────
 
 function strokeForCell(cell) {
   if (props.calibrationMode) return '#cc88ff';
@@ -247,7 +229,8 @@ function strokeForCell(cell) {
   if (props.selectedHexId === cell.id) return '#ffdd00';
   if (cell.isSeed) return '#cc44ee';
   if (cell.isVP) return '#cc3333';
-  return '#88776644';
+  const gridCfg = props.overlayConfig.grid;
+  return gridCfg?.weight === 'diagnostic' ? '#cc88ff' : '#88776644';
 }
 
 function strokeWidthForCell(cell) {
@@ -276,20 +259,48 @@ function strokeOpacityForCell(cell) {
   return 0.6;
 }
 
+// ── HexLabelLayer helper ──────────────────────────────────────────────────────
+
+function hexLabelText(cell) {
+  const cfg = props.overlayConfig.hexLabel;
+  if (cfg) return cfg.labelFn?.(cell) ?? null;
+  // calibrationMode fallback: show hex ID without needing overlayConfig
+  if (props.calibrationMode) return cell.id;
+  return null;
+}
+
+// ── HexIconLayer helper ───────────────────────────────────────────────────────
+
+function hexIconText(cell) {
+  const cfg = props.overlayConfig.hexIcon;
+  return cfg?.iconFn?.(cell) ?? null;
+}
+
+// ── EdgeLineLayer helper ──────────────────────────────────────────────────────
+// Pre-builds a Set of types per group so the template uses O(1) lookups instead
+// of O(k) array.includes() calls in a hot nested loop.
+const edgeLineGroups = computed(() => {
+  const groups = props.overlayConfig.edgeLine?.featureGroups ?? [];
+  return groups.map((g) => ({ ...g, typeSet: new Set(g.types) }));
+});
+
+// ── Event handlers ────────────────────────────────────────────────────────────
+
 function onSvgClick(event) {
+  if (!props.interactionEnabled) return;
   const svg = event.currentTarget;
   const pt = svg.createSVGPoint();
   pt.x = event.clientX;
   pt.y = event.clientY;
   const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
 
-  const { grid, tx, ty, cells, cellByColRow } = gridData.value;
+  const { grid, tx, ty, cells: allCells, cellByColRow } = gridData.value;
   const localX = svgPt.x - tx;
   const localY = svgPt.y - ty;
 
-  if (props.editorMode === 'edge') {
+  if (props.edgeInteraction) {
     const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
-    const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : cells;
+    const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : allCells;
     const nearest = findNearestEdge(localX, localY, searchCells);
     if (nearest) emit('edge-click', nearest);
   } else {
@@ -302,53 +313,8 @@ function onSvgClick(event) {
   }
 }
 
-// Single boolean per component instance (dev tool — only one HexMapOverlay is mounted at a time).
-let rafPending = false;
-
-function onSvgMouseMove(event) {
-  if (rafPending) return;
-  rafPending = true;
-  // Capture event properties synchronously — event.currentTarget is nulled after handler returns.
-  const svg = event.currentTarget;
-  const clientX = event.clientX;
-  const clientY = event.clientY;
-  const drawingNow = isDrawing.value;
-  requestAnimationFrame(() => {
-    rafPending = false;
-    if (!svg) return;
-    const ctm = svg.getScreenCTM();
-    if (!ctm) return;
-    const pt = svg.createSVGPoint();
-    pt.x = clientX;
-    pt.y = clientY;
-    const svgPt = pt.matrixTransform(ctm.inverse());
-    const { grid, tx, ty, cells, cellByColRow, cellById } = gridData.value;
-    const localX = svgPt.x - tx;
-    const localY = svgPt.y - ty;
-
-    const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
-    const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : cells;
-    const nearest = findNearestEdge(localX, localY, searchCells);
-
-    if (props.layers?.edges) {
-      emit('edge-hover', nearest);
-    }
-
-    // During a linearFeature drag trace, collect nearest edges
-    if (drawingNow && props.editorMode === 'linearFeature' && nearest) {
-      const key = `${nearest.hexId}:${nearest.dir}`;
-      if (!traceEdgeSet.has(key)) {
-        traceEdgeSet.add(key);
-        const cell = cellById.get(nearest.hexId);
-        const line = cell ? edgeLine20_80(cell.corners, nearest.dir) : null;
-        traceEdges.value.push({ hexId: nearest.hexId, dir: nearest.dir, line });
-        emit('trace-progress', traceEdges.value.length);
-      }
-    }
-  });
-}
-
 function onSvgContextMenu(event) {
+  if (!props.interactionEnabled) return;
   event.preventDefault();
   const svg = event.currentTarget;
   const pt = svg.createSVGPoint();
@@ -368,44 +334,29 @@ function onSvgContextMenu(event) {
   }
 }
 
-function onSvgMouseDown(_event) {
-  if (props.editorMode === 'linearFeature') {
-    isDrawing.value = true;
-    traceEdgeSet = new Set();
-    traceEdges.value = [];
-  } else if (props.dragPaintEnabled) {
+function onSvgMouseDown() {
+  if (props.dragPaintEnabled) {
     isPaintMouseDown.value = true;
-    emit('paint-stroke-start');
+    if (props.interactionEnabled) emit('paint-stroke-start');
   }
 }
 
 function onSvgMouseUp() {
-  if (isDrawing.value) {
-    isDrawing.value = false;
-    if (traceEdges.value.length > 0) {
-      emit('trace-complete', [...traceEdges.value]);
-    }
-    traceEdgeSet = new Set();
-    traceEdges.value = [];
-  }
   if (isPaintMouseDown.value) {
     isPaintMouseDown.value = false;
-    emit('paint-stroke-done');
+    if (props.interactionEnabled) emit('paint-stroke-done');
   }
 }
 
-// Gate hex-mouseenter on isPaintMouseDown when dragPaintEnabled;
-// in all other modes emit unconditionally (existing behaviour).
+// Gate hex-mouseenter: interaction must be enabled; in drag-paint mode also require mousedown.
 function onHexMouseenter(hexId) {
+  if (!props.interactionEnabled) return;
   if (props.dragPaintEnabled && !isPaintMouseDown.value) return;
   emit('hex-mouseenter', hexId);
 }
 
-// cellById is built inside gridData computed — access via gridData.value.cellById
-
-// isDrawing, traceEdges, and isPaintMouseDown are exposed for test instrumentation only;
-// do not mutate from parent components
-defineExpose({ traceEdgeCount, isDrawing, traceEdges, isPaintMouseDown });
+// Exposed for test instrumentation only.
+defineExpose({ isPaintMouseDown });
 </script>
 
 <template>
@@ -418,18 +369,19 @@ defineExpose({ traceEdgeCount, isDrawing, traceEdges, isPaintMouseDown });
     @mousedown="onSvgMouseDown"
     @mouseup="onSvgMouseUp"
     @mouseleave="onSvgMouseUp"
-    @mousemove="onSvgMouseMove"
   >
     <g :transform="`translate(${gridData.tx},${gridData.ty})`">
       <g :transform="rotationTransform">
-        <!-- 1. Terrain fills -->
-        <g class="layer-terrain">
+        <!-- HexGridLayer + HexFillLayer + HexHighlightLayer ─────────────────
+             One polygon per hex carries fill (hexFill config), stroke (grid +
+             highlight state), and the mouseenter event handler.             -->
+        <g class="layer-grid">
           <polygon
             v-for="cell in cells"
-            :key="'terrain-' + cell.id"
+            :key="'hex-' + cell.id"
             :points="cell.points"
-            :fill="layers.terrain ? (cell.isLosBlocked ? '#cc4444' : cell.fill) : 'none'"
-            :fill-opacity="layers.terrain ? (cell.isLosBlocked ? 0.5 : cell.fillOpacity) : 0"
+            :fill="hexFillColor(cell)"
+            :fill-opacity="hexFillOpacity(cell)"
             :stroke="strokeForCell(cell)"
             :stroke-width="strokeWidthForCell(cell)"
             :stroke-opacity="strokeOpacityForCell(cell)"
@@ -437,8 +389,8 @@ defineExpose({ traceEdgeCount, isDrawing, traceEdges, isPaintMouseDown });
           />
         </g>
 
-        <!-- 2. Wedge shading (sub-hex elevation) -->
-        <g v-if="layers.wedges" class="layer-wedges">
+        <!-- WedgeLayer — sub-hex elevation shading ─────────────────────────-->
+        <g v-if="overlayConfig.wedges" class="layer-wedges">
           <template v-for="cell in cells" :key="'wedges-' + cell.id">
             <template v-if="cell.wedgeElevations">
               <polygon
@@ -454,9 +406,10 @@ defineExpose({ traceEdgeCount, isDrawing, traceEdges, isPaintMouseDown });
           </template>
         </g>
 
-        <!-- 3. Grid (polygon outlines only — already rendered via terrain stroke above) -->
-        <!-- Labels (shown when grid layer is on) -->
-        <g v-if="layers.grid" class="layer-labels">
+        <!-- HexLabelLayer — hex ID or custom labels ─────────────────────────
+             Renders when overlayConfig.hexLabel is set, or in calibrationMode
+             (CalibrationPanel hasn't migrated to overlayConfig yet).         -->
+        <g v-if="overlayConfig.hexLabel || calibrationMode" class="layer-hex-labels">
           <text
             v-for="cell in cells"
             :key="'lbl-' + cell.id"
@@ -464,17 +417,17 @@ defineExpose({ traceEdgeCount, isDrawing, traceEdges, isPaintMouseDown });
             :y="cell.cy"
             text-anchor="middle"
             dominant-baseline="middle"
-            font-size="0.78rem"
+            :font-size="overlayConfig.hexLabel?.size === 'large' ? '0.95rem' : '0.78rem'"
             fill="#00008b"
             fill-opacity="0.85"
             pointer-events="none"
           >
-            {{ cell.id }}
+            {{ hexLabelText(cell) }}
           </text>
         </g>
 
-        <!-- 4. Elevation labels -->
-        <g v-if="showElevation" class="layer-elevation">
+        <!-- ElevationLabelLayer — elevation numbers ─────────────────────────-->
+        <g v-if="overlayConfig.elevationLabel" class="layer-elevation-labels">
           <text
             v-for="cell in cells"
             :key="'elev-' + cell.id"
@@ -494,27 +447,8 @@ defineExpose({ traceEdgeCount, isDrawing, traceEdges, isPaintMouseDown });
           </text>
         </g>
 
-        <!-- 5. Edge feature lines -->
-        <g v-if="layers.edges" class="layer-edges">
-          <template v-for="cell in cells" :key="'edges-' + cell.id">
-            <template v-for="dir in DIRS" :key="dir">
-              <template v-if="cell.edges && cell.edges[dir] && cell.edges[dir].length">
-                <line
-                  v-for="(feat, fi) in cell.edges[dir]"
-                  :key="fi"
-                  v-bind="edgeLine20_80(cell.corners, dir)"
-                  :stroke="edgeColor(feat.type)"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  pointer-events="none"
-                />
-              </template>
-            </template>
-          </template>
-        </g>
-
-        <!-- 6a. Terrain icons (shown when terrain paint tool active) -->
-        <g v-if="editorMode === 'paint'" class="layer-terrain-icons">
+        <!-- HexIconLayer — terrain or feature icons ─────────────────────────-->
+        <g v-if="overlayConfig.hexIcon" class="layer-hex-icons">
           <text
             v-for="cell in cells"
             :key="'icon-' + cell.id"
@@ -529,36 +463,36 @@ defineExpose({ traceEdgeCount, isDrawing, traceEdges, isPaintMouseDown });
             paint-order="stroke"
             pointer-events="none"
           >
-            {{
-              cell.terrain === 'woods' || cell.terrain === 'woodedSloping'
-                ? '▲'
-                : cell.terrain === 'slopingGround'
-                  ? '╱'
-                  : cell.terrain === 'orchard'
-                    ? '⬡'
-                    : cell.terrain === 'marsh'
-                      ? '≈'
-                      : ''
-            }}
+            {{ hexIconText(cell) }}
           </text>
         </g>
 
-        <!-- 6b. Linear feature trace highlights -->
-        <g v-if="isDrawing" class="layer-trace">
-          <template v-for="edge in traceEdges" :key="edge.hexId + ':' + edge.dir">
-            <line
-              v-if="edge.line"
-              v-bind="edge.line"
-              stroke="#00eeff"
-              stroke-width="3"
-              stroke-linecap="round"
-              pointer-events="none"
-            />
+        <!-- EdgeLineLayer — road, stream, contour, and other edge features ───
+             Iterates featureGroups from overlayConfig.edgeLine. Each group
+             defines which types it covers and how to render them.            -->
+        <g v-if="overlayConfig.edgeLine" class="layer-edge-lines">
+          <template v-for="cell in cells" :key="'edges-' + cell.id">
+            <template v-for="dir in DIRS" :key="dir">
+              <template v-if="cell.edges && cell.edges[dir] && cell.edges[dir].length">
+                <template v-for="(group, gi) in edgeLineGroups" :key="gi">
+                  <line
+                    v-for="feat in cell.edges[dir].filter((f) => group.typeSet.has(f.type))"
+                    :key="feat.type"
+                    v-bind="edgeLine20_80(cell.corners, dir)"
+                    :stroke="group.color"
+                    :stroke-width="group.strokeWidth"
+                    :stroke-dasharray="group.dash ?? null"
+                    stroke-linecap="round"
+                    pointer-events="none"
+                  />
+                </template>
+              </template>
+            </template>
           </template>
         </g>
 
-        <!-- 6. Slope arrows -->
-        <g v-if="layers.slopeArrows" class="layer-slope-arrows">
+        <!-- SlopeArrowLayer — slope direction arrows ─────────────────────────-->
+        <g v-if="overlayConfig.slopeArrows" class="layer-slope-arrows">
           <template v-for="cell in cells" :key="'slope-' + cell.id">
             <template v-if="cell.slopeArrowLine">
               <line
