@@ -76,15 +76,15 @@ Replace the monolithic overlay with primitive layer renderers driven by overlayC
 
 ### Tasks
 
-- [ ] Task 4.1: Define and implement primitive layer components inside `HexMapOverlay.vue`:
+- [x] Task 4.1: Define and implement primitive layer components inside `HexMapOverlay.vue`:
       `HexGridLayer`, `HexFillLayer`, `HexLabelLayer`, `HexIconLayer`, `EdgeLineLayer`,
       `HexHighlightLayer`
-- [ ] Task 4.2: Refactor `HexMapOverlay.vue` to accept `overlayConfig` prop and render layers
+- [x] Task 4.2: Refactor `HexMapOverlay.vue` to accept `overlayConfig` prop and render layers
       declaratively; remove all tool-specific rendering logic
-- [ ] Task 4.3: Implement interaction gate — emit mouse/click events only when
+- [x] Task 4.3: Implement interaction gate — emit mouse/click events only when
       `openPanel` ∈ `{elevation, terrain, road, stream, contour}`
-- [ ] Task 4.4: No-tool-active state — when no panel is open, render hover tooltip only
-- [ ] Task 4.5: Update HexMapOverlay tests
+- [x] Task 4.4: No-tool-active state — when no panel is open, render hover tooltip only
+- [x] Task 4.5: Update HexMapOverlay tests
 
 ### Verification
 

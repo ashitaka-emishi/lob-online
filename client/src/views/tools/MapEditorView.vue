@@ -1,6 +1,12 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import HexMapOverlay from '../../components/HexMapOverlay.vue';
+import {
+  TERRAIN_COLORS,
+  ROAD_GROUPS,
+  STREAM_WALL_GROUPS,
+  CONTOUR_GROUPS,
+} from '../../config/feature-types.js';
 import CalibrationControls from '../../components/CalibrationControls.vue';
 import LosTestPanel from '../../components/LosTestPanel.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
@@ -129,14 +135,55 @@ const paintEdgeFeature = ref(null);
 const paintMode = ref('click');
 // True while a paint stroke is in progress; suppresses per-hex saveMapDraft calls
 const paintStrokeActive = ref(false);
-// Layer visibility — managed by BaseToolPanel overlay toggles (Phase 3+); defaults until then
-const layers = ref({
+// Layer visibility flags — used to build overlayConfig below.
+const layerFlags = ref({
   grid: true,
   terrain: true,
   elevation: false,
   wedges: false,
   edges: true,
   slopeArrows: false,
+});
+
+// ── overlayConfig bridge ────────────────────────────────────────────────────
+// Builds the declarative overlayConfig for HexMapOverlay from the current
+// layer flags and editor mode. Tool panels will own this directly once migrated.
+const overlayConfig = computed(() => {
+  const cfg = {};
+  if (layerFlags.value.grid) {
+    cfg.hexLabel = { alwaysOn: true, labelFn: (cell) => cell.id };
+  }
+  if (layerFlags.value.terrain) {
+    cfg.hexFill = {
+      alwaysOn: true,
+      fillFn: (cell) => TERRAIN_COLORS[cell.terrain] ?? null,
+    };
+  }
+  if (layerFlags.value.elevation || editorMode.value === 'elevation') {
+    cfg.elevationLabel = { alwaysOn: true };
+  }
+  if (editorMode.value === 'paint') {
+    cfg.hexIcon = {
+      alwaysOn: true,
+      iconFn: (cell) =>
+        ({ woods: '▲', woodedSloping: '▲', slopingGround: '╱', orchard: '⬡', marsh: '≈' })[
+          cell.terrain
+        ] ?? null,
+    };
+  }
+  if (layerFlags.value.edges) {
+    cfg.edgeLine = {
+      alwaysOn: true,
+      featureGroups: [...ROAD_GROUPS, ...STREAM_WALL_GROUPS, ...CONTOUR_GROUPS],
+    };
+  }
+  if (layerFlags.value.wedges) {
+    cfg.wedges = { alwaysOn: true };
+  }
+  if (layerFlags.value.slopeArrows) {
+    cfg.slopeArrows = { alwaysOn: true };
+  }
+  return cfg;
 });
 
 // ── Export ────────────────────────────────────────────────────────────────────
@@ -472,10 +519,9 @@ onUnmounted(() => {
             :los-hex-b="losHexB"
             :los-path-hexes="losPathHexes"
             :los-blocked-hex="losBlockedHex"
-            :layers="layers"
-            :editor-mode="editorMode"
+            :overlay-config="overlayConfig"
+            :open-panel="openPanel"
             :drag-paint-enabled="dragPaintEnabled"
-            :paint-terrain="paintTerrain"
             :seed-hex-ids="seedHexIdsArray"
             @hex-click="onHexClick"
             @hex-right-click="onHexRightClick"
