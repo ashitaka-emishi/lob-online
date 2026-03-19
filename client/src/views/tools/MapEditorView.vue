@@ -1,23 +1,17 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import HexMapOverlay from '../../components/HexMapOverlay.vue';
-import HexEditPanel from '../../components/HexEditPanel.vue';
 import CalibrationControls from '../../components/CalibrationControls.vue';
 import LosTestPanel from '../../components/LosTestPanel.vue';
-import EditorToolbar from '../../components/EditorToolbar.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import ElevationToolPanel from '../../components/ElevationToolPanel.vue';
 import TerrainToolPanel from '../../components/TerrainToolPanel.vue';
-import LinearFeaturePanel from '../../components/LinearFeaturePanel.vue';
-import WedgeEditor from '../../components/WedgeEditor.vue';
 import { useBulkOperations } from '../../composables/useBulkOperations.js';
-import { useLinearFeatureTrace } from '../../composables/useLinearFeatureTrace.js';
 import { useHexInteraction } from '../../composables/useHexInteraction.js';
 import { useEditorAccordion } from '../../composables/useEditorAccordion.js';
 import { useMapPersistence } from '../../composables/useMapPersistence.js';
 import { useLosTest } from '../../composables/useLosTest.js';
 import { useEdgeToggle } from '../../composables/useEdgeToggle.js';
-import { useWedgeEditor } from '../../composables/useWedgeEditor.js';
 
 const STORAGE_KEY = 'lob-map-editor-calibration-v4';
 const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
@@ -135,6 +129,7 @@ const paintEdgeFeature = ref(null);
 const paintMode = ref('click');
 // True while a paint stroke is in progress; suppresses per-hex saveMapDraft calls
 const paintStrokeActive = ref(false);
+// Layer visibility — managed by BaseToolPanel overlay toggles (Phase 3+); defaults until then
 const layers = ref({
   grid: true,
   terrain: true,
@@ -244,28 +239,16 @@ const vpHexIds = computed(() => {
   return (mapData.value.vpHexes ?? []).map((v) => v.hex);
 });
 
-// ── Seed hex IDs ──────────────────────────────────────────────────────────────
+// ── Seed hex IDs — no UI editor yet; kept for HexMapOverlay highlight rendering ──
 
 const seedHexIds = ref(new Set());
 const seedHexIdsArray = computed(() => [...seedHexIds.value]);
 
-function onSeedToggle({ hexId }) {
-  const s = new Set(seedHexIds.value);
-  if (s.has(hexId)) s.delete(hexId);
-  else s.add(hexId);
-  seedHexIds.value = s;
-}
-
-// ── Terrain + edge feature type lists ────────────────────────────────────────
+// ── Terrain type list ─────────────────────────────────────────────────────────
 
 const terrainTypes = computed(() => {
   if (mapData.value?.terrainTypes) return mapData.value.terrainTypes;
   return ['unknown', 'clear', 'woods', 'slopingGround', 'woodedSloping', 'orchard', 'marsh'];
-});
-
-const edgeFeatureTypes = computed(() => {
-  if (mapData.value?.edgeFeatureTypes) return mapData.value.edgeFeatureTypes;
-  return ['road', 'stream', 'stoneWall', 'slope', 'extremeSlope', 'verticalSlope'];
 });
 
 // M3: watch-based hexIndex — only rebuilds on structural changes (length / full load),
@@ -373,29 +356,11 @@ const { onEdgeClick } = useEdgeToggle({
 
 // ── Bulk operations ───────────────────────────────────────────────────────────
 
-const { clearAllElevations, raiseAll, lowerAll, clearAllTerrain, clearAllWedges } =
-  useBulkOperations({ mapData, elevationMax, onMutated });
-
-// ── Wedge editor (L7: extracted from MapEditorView inline functions) ───────────
-
-const { onWedgeUpdate, initWedgeElevations } = useWedgeEditor({
+const { clearAllElevations, raiseAll, lowerAll, clearAllTerrain } = useBulkOperations({
   mapData,
-  hexIndex,
-  selectedHexId,
-  onHexUpdate,
+  elevationMax,
+  onMutated,
 });
-
-// ── Linear feature trace ──────────────────────────────────────────────────────
-
-const {
-  showTraceConfirm,
-  pendingTraceEdges,
-  liveTraceCount,
-  onTraceProgress,
-  onTraceComplete,
-  applyTrace,
-  cancelTrace,
-} = useLinearFeatureTrace({ mapData, paintEdgeFeature, hexIndex, onMutated });
 
 // ── Keyboard listener ─────────────────────────────────────────────────────────
 
@@ -460,9 +425,6 @@ onUnmounted(() => {
       <button @click="dismissDraft">Dismiss</button>
     </div>
 
-    <!-- Editor toolbar (layer toggles only) -->
-    <EditorToolbar :layers="layers" @layer-change="layers = $event" />
-
     <!-- Load / validation errors -->
     <div v-if="fetchError" class="errors">
       <div class="error-line">Failed to load map data: {{ fetchError }}</div>
@@ -519,8 +481,6 @@ onUnmounted(() => {
             @hex-right-click="onHexRightClick"
             @hex-mouseenter="onHexMouseenter"
             @edge-click="onEdgeClick"
-            @trace-complete="onTraceComplete"
-            @trace-progress="onTraceProgress"
             @paint-stroke-start="onPaintStrokeStart"
             @paint-stroke-done="onPaintStrokeDone"
           />
@@ -593,81 +553,6 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Linear Feature Tool -->
-        <div
-          class="accordion-section accordion-hex"
-          :class="{ 'accordion-flex': openPanel === 'linearFeature' }"
-        >
-          <button class="accordion-header" @click="togglePanel('linearFeature')">
-            <span>Linear Feature</span>
-            <span class="accordion-chevron">{{ openPanel === 'linearFeature' ? '▾' : '▸' }}</span>
-          </button>
-          <div v-if="openPanel === 'linearFeature'" class="accordion-hex-content">
-            <LinearFeaturePanel
-              :edge-feature-types="edgeFeatureTypes"
-              :paint-edge-feature="paintEdgeFeature"
-              :trace-edge-count="liveTraceCount"
-              @feature-change="paintEdgeFeature = $event"
-            />
-          </div>
-        </div>
-
-        <!-- Hex Edit -->
-        <div
-          class="accordion-section accordion-hex"
-          :class="{ 'accordion-flex': openPanel === 'hexEdit' }"
-        >
-          <button class="accordion-header" @click="togglePanel('hexEdit')">
-            <span>Hex Edit</span>
-            <span class="accordion-chevron">{{ openPanel === 'hexEdit' ? '▾' : '▸' }}</span>
-          </button>
-          <div v-if="openPanel === 'hexEdit'" class="accordion-hex-content">
-            <HexEditPanel
-              :hex="selectedHex"
-              :selected-hex-id="selectedHexId"
-              :hex-feature-types="mapData?.hexFeatureTypes ?? []"
-              :edge-feature-types="edgeFeatureTypes"
-              :is-seed-hex="selectedHexId ? seedHexIds.has(selectedHexId) : false"
-              :north-offset="calibration.northOffset ?? 0"
-              @hex-update="onHexUpdate"
-              @seed-toggle="onSeedToggle"
-            />
-          </div>
-        </div>
-
-        <!-- Wedge Editor -->
-        <div
-          class="accordion-section accordion-hex"
-          :class="{ 'accordion-flex': openPanel === 'wedge' }"
-        >
-          <button class="accordion-header" @click="togglePanel('wedge')">
-            <span>Wedge Editor</span>
-            <span class="accordion-chevron">{{ openPanel === 'wedge' ? '▾' : '▸' }}</span>
-          </button>
-          <div v-if="openPanel === 'wedge'" class="accordion-hex-content">
-            <div class="wedge-panel">
-              <div v-if="!selectedHexId" class="wedge-empty">Click a hex to edit its wedges</div>
-              <template v-else>
-                <div class="wedge-hex-id">Hex {{ selectedHexId }}</div>
-                <button
-                  v-if="!selectedHex?.wedgeElevations"
-                  class="wedge-init-btn"
-                  @click="initWedgeElevations"
-                >
-                  Add Wedge Elevations
-                </button>
-                <WedgeEditor
-                  v-if="selectedHex?.wedgeElevations"
-                  :wedge-elevations="selectedHex.wedgeElevations"
-                  :north-offset="calibration.northOffset ?? 0"
-                  @update:wedge-elevations="onWedgeUpdate"
-                />
-              </template>
-              <button class="wedge-clear-btn" @click="clearAllWedges">Clear all wedges</button>
-            </div>
-          </div>
-        </div>
-
         <!-- LOS Test -->
         <div
           class="accordion-section accordion-hex"
@@ -712,16 +597,6 @@ onUnmounted(() => {
       cancel-label="Cancel"
       @confirm="confirmPull"
       @cancel="cancelPull"
-    />
-
-    <!-- Trace confirmation dialog -->
-    <ConfirmDialog
-      :show="showTraceConfirm"
-      :message="`Apply '${paintEdgeFeature ?? 'road'}' to ${pendingTraceEdges.length} edge(s)?`"
-      confirm-label="Apply"
-      cancel-label="Cancel"
-      @confirm="applyTrace"
-      @cancel="cancelTrace"
     />
 
     <!-- Export overlay -->
@@ -1041,59 +916,5 @@ onUnmounted(() => {
   color: #b0d880;
   font-family: monospace;
   line-height: 1.4;
-}
-
-.wedge-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background: #222;
-}
-
-.wedge-empty {
-  color: #666;
-  font-size: 0.8rem;
-  text-align: center;
-  padding: 1rem 0;
-}
-
-.wedge-hex-id {
-  font-size: 0.9rem;
-  font-weight: bold;
-  color: #ffdd00;
-  padding-bottom: 0.3rem;
-  border-bottom: 1px solid #333;
-}
-
-.wedge-init-btn {
-  padding: 0.3rem 0.6rem;
-  background: #333;
-  border: 1px solid #555;
-  color: #c8b88a;
-  cursor: pointer;
-  font-size: 0.8rem;
-  width: 100%;
-  text-align: left;
-}
-
-.wedge-init-btn:hover {
-  background: #3a3a3a;
-}
-
-.wedge-clear-btn {
-  margin-top: 0.3rem;
-  padding: 0.3rem 0.6rem;
-  background: #3a1a1a;
-  border: 1px solid #7a3333;
-  color: #c08080;
-  cursor: pointer;
-  font-size: 0.8rem;
-  width: 100%;
-  text-align: left;
-}
-
-.wedge-clear-btn:hover {
-  background: #4a2020;
 }
 </style>

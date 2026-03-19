@@ -24,16 +24,12 @@
 
 | [x] | hex-to-game-id_20260318 | Extract hexToGameId Helper (Tech Debt #118 + #119) | 2026-03-18 | 2026-03-18 |
 
-| [ ] | wave1-quick-wins_20260318 | Wave 1 Quick Wins — ESLint Worktree Ignore + North Label Bug (#110, #116) | 2026-03-18 | 2026-03-18 |
-
-| [ ] | map-composables_20260318 | Extract Composables from MapEditorView + Unify Selection State (#97) | 2026-03-18 | 2026-03-18 |
-
 | [x] | click-paint-modes_20260318 | Click / Paint Modes for Terrain & Elevation Editor (#115) | 2026-03-18 | 2026-03-18 |
 
 | [x] | minor-debt-bundle_20260318 | Minor Debt Bundle — Issues #119 #123 #127 #128 #129 #130 | 2026-03-18 | 2026-03-18 |
 
-| [ ] | hex-grid-model_20260318 | Hex Grid Model — Fix EVEN_Q Column Offset Convention | 2026-03-18 | 2026-03-18 |
-
 | [x] | map-schema-foundation_20260319 | Map Schema Foundation — Data Model + Compass Label Fix (#135, #143) | 2026-03-19 | 2026-03-19 |
+
+| [~] | tool-panel-framework_20260319 | Tool Panel Framework — Shared Architecture (#136) | 2026-03-19 | 2026-03-19 |
 
 <!-- Tracks registered by /conductor:new-track -->
