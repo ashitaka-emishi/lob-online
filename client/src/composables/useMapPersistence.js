@@ -74,15 +74,45 @@ export function useMapPersistence({
     }, 1000);
   }
 
+  // Known top-level keys from MapSchema; used by isValidDraft to reject unrecognised structures.
+  const KNOWN_MAP_KEYS = new Set([
+    '_status',
+    '_savedAt',
+    '_description',
+    '_digitizationNote',
+    '_todoHexes',
+    '_digitizationPlan',
+    'scenario',
+    'layout',
+    'hexIdFormat',
+    'gridSpec',
+    'terrainTypes',
+    'hexsideTypes',
+    'hexFeatureTypes',
+    'edgeFeatureTypes',
+    'elevationSystem',
+    'vpHexes',
+    'entryHexes',
+    'hexes',
+  ]);
+
   // L1: validate that a parsed localStorage object has the expected map shape,
-  // including that each hex entry has a hex string property (defense against tampered storage)
+  // including that each hex entry has a hex string property (defense against tampered storage).
+  // Also checks that all top-level keys are known (#127) and that gridSpec, if present, is an
+  // object (not a string or array that could be injected via tampered localStorage).
   function isValidDraft(obj) {
-    return (
-      obj !== null &&
-      typeof obj === 'object' &&
-      Array.isArray(obj.hexes) &&
-      obj.hexes.every((h) => h !== null && typeof h === 'object' && typeof h.hex === 'string')
-    );
+    if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return false;
+    if (!Array.isArray(obj.hexes)) return false;
+    if (!obj.hexes.every((h) => h !== null && typeof h === 'object' && typeof h.hex === 'string'))
+      return false;
+    // Reject drafts with unknown top-level keys
+    if (Object.keys(obj).some((k) => !KNOWN_MAP_KEYS.has(k))) return false;
+    // gridSpec, if present, must be a non-null, non-array object
+    if (obj.gridSpec !== undefined) {
+      if (obj.gridSpec === null || typeof obj.gridSpec !== 'object' || Array.isArray(obj.gridSpec))
+        return false;
+    }
+    return true;
   }
 
   function restoreDraft() {

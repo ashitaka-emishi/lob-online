@@ -104,6 +104,46 @@ describe('useMapPersistence', () => {
       restoreDraft();
       expect(mapData.value).toBeNull();
     });
+
+    // isValidDraft deepening (#127): allowlist and gridSpec type checks
+    it('rejects drafts with unknown top-level keys', () => {
+      const { mapData, restoreDraft } = useMapPersistence(makeArgs());
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ hexes: [], _savedAt: 1000, injected: true })
+      );
+      restoreDraft();
+      expect(mapData.value).toBeNull();
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+    });
+
+    it('accepts drafts without gridSpec (optional field)', () => {
+      const { mapData, restoreDraft } = useMapPersistence(makeArgs());
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ hexes: [], _savedAt: 1000 }));
+      restoreDraft();
+      expect(mapData.value).not.toBeNull();
+    });
+
+    it('rejects drafts where gridSpec is a non-object', () => {
+      const { mapData, restoreDraft } = useMapPersistence(makeArgs());
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ hexes: [], _savedAt: 1000, gridSpec: 'not-an-object' })
+      );
+      restoreDraft();
+      expect(mapData.value).toBeNull();
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+    });
+
+    it('rejects drafts where gridSpec is an array', () => {
+      const { mapData, restoreDraft } = useMapPersistence(makeArgs());
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ hexes: [], _savedAt: 1000, gridSpec: ['cols', 10] })
+      );
+      restoreDraft();
+      expect(mapData.value).toBeNull();
+    });
   });
 
   describe('dismissDraft', () => {
