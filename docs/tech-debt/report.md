@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-03-19 after PR #150._
+_Last updated: 2026-03-19 after PR #150 (resolved #124)._
 
 ---
 
@@ -8,10 +8,10 @@ _Last updated: 2026-03-19 after PR #150._
 
 | Metric                           | Value                                                                       |
 | -------------------------------- | --------------------------------------------------------------------------- |
-| Open debt items                  | 10                                                                          |
-| Cumulative debt score (net open) | 23                                                                          |
+| Open debt items                  | 9                                                                           |
+| Cumulative debt score (net open) | 20                                                                          |
 | Highest-risk item                | gridData rebuilds full cell array on any calibration change (#151, score 3) |
-| PRs tracked                      | 29                                                                          |
+| PRs tracked                      | 30                                                                          |
 
 ---
 
@@ -49,6 +49,7 @@ _Last updated: 2026-03-19 after PR #150._
 | 2026-03-19 | PR #148 (resolved #146) | -3                   | 41                       |
 | 2026-03-19 | PR #148 (resolved #147) | -2                   | 41                       |
 | 2026-03-19 | PR #150                 | 11                   | 52                       |
+| 2026-03-19 | PR #150 (resolved #124) | -3                   | 52                       |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -58,7 +59,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is 
 
 Elevated risk. Several significant deferred items that introduce coupling or architectural compromise. Recommend a debt reduction sprint before the next major phase.
 
-Current debt (score 23) spans three clusters. First, architectural debt from the composables layer: dual mutation paths (#124), oversized `useMapPersistence` API surface (#125), and undocumented composable composition contract (#155) will compound as game logic is added in Phase 2. Second, rendering architecture debt: the `overlayConfig` ownership bridge (#153) and the hybrid rendering model (#152) both violate the tool-owns-its-overlays design principle established in PR #150 and will grow with each new tool panel added in #137–#142. Third, performance debt: the `gridData` full-rebuild on any calibration change (#151) causes visible lag during the calibration workflow. The remaining items (#126, #112, #154) are low-priority cleanup.
+Current debt (score 20) spans three clusters. First, architectural debt in the composables layer: the oversized `useMapPersistence` API surface (#125) and undocumented composable composition contract (#155) will compound as game logic is added in Phase 2. Second, rendering architecture debt: the `overlayConfig` ownership bridge (#153) and the hybrid rendering model (#152) both violate the tool-owns-its-overlays design principle and will grow with each new tool panel added in #137–#142. Third, performance debt: the `gridData` full-rebuild on any calibration change (#151) causes visible lag during the calibration workflow. The remaining items (#126, #111, #112, #154) are low-priority cleanup.
 
 ---
 
@@ -72,7 +73,6 @@ _Ordered by score descending (ties: newest first). Resolved items are removed._
 | 3     | #153  | refactor: overlayConfig ownership bridge in MapEditorView should move to tool panels                      | PR #150       | MapEditorView knowing each tool's rendering preferences violates the tool-owns-its-overlays design principle. Bridge will grow with each tool panel added in #137–#142. Deferred until tool panels exist to own it.                    |
 | 3     | #126  | Extract `useCalibration` and `useMapExport` from `MapEditorView`                                          | PR #122       | MapEditorView still carries ~378 lines of inline logic despite the extraction of 8 composables. Calibration and export are self-contained concerns that weren't in scope for this PR.                                                  |
 | 3     | #125  | Reduce `useMapPersistence` API surface (23 return values)                                                 | PR #122       | 23 return values with push/pull dialog state mixed into a persistence composable. Reduces reusability and increases caller coupling. Grouping into sub-objects would clarify ownership.                                                |
-| 3     | #124  | Introduce `onHexUpdateBatch` to unify dual mutation paths                                                 | PR #122       | `applyTrace` and `useBulkOperations` bypass `onHexUpdate` for batch efficiency. If `onHexUpdate` gains side effects (undo history, validation), both batch paths silently skip them — maintenance coupling risk.                       |
 | 2     | #152  | refactor: HexMapOverlay mixes declarative overlayConfig with legacy explicit props                        | PR #150       | Two parallel rendering systems increase cognitive overhead. No functional risk now; becomes a maintenance burden as more tools are implemented. Should be resolved after the tool panel migration is complete.                         |
 | 2     | #155  | docs: document composable overlap/composition contract (useHexPaintTool/useEdgePaintTool/useClickHexside) | PR #150       | Three composables share overlapping signatures with no documented composition contract. Risk materializes in #137–#142 — a future implementer may wire events incorrectly or duplicate stroke batching.                                |
 | 2     | #111  | Hoist `ElevationSystemControls` to `MapEditorView` sibling                                                | PR #109       | `CalibrationControls` now passes `elevationSystem` prop and `elevation-system-change` emit through to the child without any logic. Acceptable interim state, but each future extraction compounds the inert API surface on the parent. |
