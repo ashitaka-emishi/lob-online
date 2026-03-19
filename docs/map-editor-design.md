@@ -1,399 +1,798 @@
 # Map Editor — Detailed Design
 
-**Version:** 1.0
-**Date:** 2026-02-21
-**Status:** Approved — implementation plans reference this document
+**Version:** 2.0
+**Date:** 2026-03-19
+**Status:** Approved — supersedes v1.0 (2026-02-21)
 
 ---
 
 ## Table of Contents
 
-1. [Hex Data Model](#1-hex-data-model)
-2. [Grid Calibration Extensions](#2-grid-calibration-extensions)
-3. [Editor Component Architecture](#3-editor-component-architecture)
-4. [Interaction Modes](#4-interaction-modes)
-5. [Visualization Layers](#5-visualization-layers)
-6. [Save Model](#6-save-model)
+1. [Overview](#1-overview)
+2. [Hex Data Model](#2-hex-data-model)
+3. [Tool Inventory](#3-tool-inventory)
+4. [Tool Panel Framework](#4-tool-panel-framework)
+5. [Grid Calibration Tool](#5-grid-calibration-tool)
+6. [Elevation Tool](#6-elevation-tool)
+7. [Terrain Tool](#7-terrain-tool)
+8. [Road Tool](#8-road-tool)
+9. [Stream and Stone Wall Tool](#9-stream-and-stone-wall-tool)
+10. [Contour Line Tool](#10-contour-line-tool)
+11. [Ford and Bridge Controls](#11-ford-and-bridge-controls)
+12. [LOS Test Panel](#12-los-test-panel)
+13. [Hover Tooltip](#13-hover-tooltip)
+14. [Save Model](#14-save-model)
+15. [Formula and Config Modules](#15-formula-and-config-modules)
 
 ---
 
-## 1. Hex Data Model
+## 1. Overview
 
-The current `hexsides` field is replaced by a richer `edges` field that supports multiple
-features per edge, movement modifiers, and LOS properties. Slope direction, wedge-level
-elevation offsets, and hex-centred features are added as new optional fields. All 30 hexes
-currently in `map.json` have `terrain: 'unknown'`, so the migration is trivial — existing
-entries require no transformation.
+The map editor is a dev-only tool for digitizing `docs/reference/sm-map.jpg` into structured hex
+terrain data in `data/scenarios/south-mountain/map.json`. It is guarded by `MAP_EDITOR_ENABLED=true`
+and never active in production.
+
+### Design Philosophy
+
+Each tool owns a specific, narrow set of map model properties. The engineer completes one full pass
+over the map per tool (all elevations first, then terrain, then roads, etc.) rather than editing
+each hex end-to-end. This produces consistent results and keeps each tool's overlay uncluttered.
+
+### Tool-Based Interaction Model
+
+- **One tool active at a time.** Tools are accordion panels in the right sidebar. Opening a panel
+  activates that tool; only one panel can be open at a time.
+- **No tool active = no map interaction.** When no panel is open, the only map interaction is
+  scroll/pan. A hover tooltip (§13) shows all hex data for the hex under the cursor.
+- **Tools own their overlays.** Each tool declares an `overlayConfig` (§4) that drives
+  `HexMapOverlay`. No global layer toggle bar exists.
+
+---
+
+## 2. Hex Data Model
 
 ### Type Definitions
 
 ```ts
-// Six hex directions, indexed 0–5: N=0, NE=1, SE=2, S=3, SW=4, NW=5
-type HexDir = 'N' | 'NE' | 'SE' | 'S' | 'SW' | 'NW';
+// Face index 0–5, clockwise from the top face in the rendered SVG grid.
+// 0 = top, 1 = top-right, 2 = bottom-right, 3 = bottom, 4 = bottom-left, 5 = top-left.
+// Geometry labels — independent of compass direction. Compass labels are derived at
+// render time from gridSpec.northOffset (see §5).
+type FaceIndex = 0 | 1 | 2 | 3 | 4 | 5;
 
-// Hex-centred feature (e.g. a building, ford, or fortification at the hex interior)
+// A single hex-wide feature. Only one may exist per hex.
 type HexFeature = {
-  type: string; // e.g. 'building', 'ford', 'fortification', 'springhouse'
+  type: 'building'; // only valid value in South Mountain
 };
 
-// Feature on a shared edge between two adjacent hexes
 type EdgeFeature = {
-  type: string; // e.g. 'road', 'pike', 'trail', 'fence', 'stoneWall',
-  //      'bridge', 'stream', 'slope', 'extremeSlope', 'verticalSlope',
-  //      'elevation' (thin contour crossing, +1 MP)
-  movementModifier?: number; // added movement point cost crossing this edge (positive = harder)
-  losBlocking?: boolean; // true if this edge feature blocks LOS between adjacent hexes
-  losHeightBonus?: number; // effective height (feet) added to LOS calculation at this edge
+  type: string;
+  movementModifier?: number;
+  losBlocking?: boolean;
+  losHeightBonus?: number;
 };
 
 type HexEntry = {
-  hex: string; // 'col.row' — zero-padded to match gridSpec (e.g. '05.10')
+  hex: string; // 'col.row' zero-padded, e.g. '05.10'
+  terrain: string; // validated against map.terrainTypes[]
+  elevation: number; // integer level index (0-based)
 
-  terrain: string; // validated against map.terrainTypes[] metadata list
-  elevation: number; // base elevation at hex centre, in feet (contour interval: 50 ft)
+  hexFeature?: HexFeature;
 
-  slope?: number; // 0–5: index into HexDir[], identifies downhill face of hex.
-  //   0=N, 1=NE, 2=SE, 3=S, 4=SW, 5=NW.
-  //   Omit entirely for flat hexes.
-  wedgeElevations?: [number, number, number, number, number, number];
-  // Per-wedge elevation offset relative to `elevation`.
-  // Wedge i is the triangular segment adjacent to edge HexDir[i].
-  // Positive = higher than hex centre; negative = lower.
+  // Canonical edge ownership: only face indices 0, 1, 2 are stored on this hex.
+  // Face indices 3, 4, 5 are owned by the respective neighbour hex, stored there
+  // as face index (dir − 3). See §2 Canonical Edge Ownership.
+  edges?: Partial<Record<0 | 1 | 2, EdgeFeature[]>>;
 
-  features?: HexFeature[]; // Hex-centred features (not associated with any single edge)
-
-  edges?: Partial<Record<HexDir, EdgeFeature[]>>;
-  // Multiple features may exist on each edge.
-  // Only edges with features need entries; omit empty directions.
-
-  vpHex?: boolean; // true if this hex is a Victory Point hex
-  entryHex?: boolean; // true if units may enter the map through this hex
-  side?: 'union' | 'confederate'; // if entryHex, which side may enter here
-  setupUnits?: string[]; // unit IDs that start the scenario in this hex
-
-  _note?: string; // editor annotation; stripped from engine export
+  vpHex?: boolean;
+  entryHex?: boolean;
+  side?: 'union' | 'confederate';
+  setupUnits?: string[];
+  _note?: string;
 };
 ```
 
-### Key Design Decisions
+### Face Index and North Offset
 
-**`terrain` validation via metadata list, not Zod enum.**
-The Zod schema accepts `z.string()` for the `terrain` field. The valid terrain names are
-stored in `map.terrainTypes[]` — a configurable array in `map.json` metadata. The editor
-enforces the list at edit time; the schema remains open to new terrain types without a code
+**Face indices (0–5) are geometry-stable.** They describe physical hex face positions in the SVG
+grid, clockwise from the top face, independent of compass direction.
+
+The map's compass orientation is captured by `gridSpec.northOffset` (integer 0–11, 30° per step).
+The UI converts face indices to compass labels at render time using `compassLabel()` in
+`compass.js` (§15). **Changing `northOffset` never corrupts edge data** — only display labels
 change.
 
-**`slope` as a directional index.**
-`slope` identifies the _downhill face_ of the hex, not the uphill direction. Value 0–5
-maps to N, NE, SE, S, SW, NW respectively (matching the wedge index). A flat hex omits the
-field entirely. The SM Special Slope rule (1.1) uses a 50 ft contour interval; the engine
-compares adjacent hex elevations and consults this field to determine slope grade.
+### Canonical Edge Ownership
 
-**`wedgeElevations` are offsets, not absolute values.**
-`wedgeElevations[i]` is the elevation offset (positive or negative, in feet) for wedge `i`
-relative to `elevation`. This allows fine-grained elevation modelling within a hex without
-changing the base elevation used for LOS calculations at the hex centre.
+Every shared edge is stored on exactly one hex — the **canonical owner**.
 
-**Edge data is stored redundantly in both hexes.**
-Both hexes sharing an edge store the same `EdgeFeature[]` in their respective `edges` maps,
-using mirrored directions (e.g. hex A stores the feature on its `'SE'` edge; hex B stores
-the same feature on its `'NW'` edge). When the editor paints an edge feature, it updates
-both hexes simultaneously. This avoids canonical-owner complexity and makes per-hex lookups
-trivially O(1) — the engine never needs to check the neighbouring hex to determine edge
-properties.
+**Rule:** face indices 0, 1, 2 are stored on the current hex. Face indices 3, 4, 5 are stored on
+the neighbour in that direction as face index `(dir − 3)`.
 
-**`hexsides` field deprecated (removal deferred).**
-The legacy `hexsides` field is deprecated in favour of `edges`. The schema retains it as an
-optional field until a dedicated migration plan removes it. All existing hex entries have no
-hexside data, so the migration requires no data transformation — just a schema and editor pass
-to drop the field and update the save path.
-
-**New metadata fields.**
-The `map.json` root metadata gains two arrays alongside `terrainTypes` and `hexsideTypes`:
-
-- `hexFeatureTypes: string[]` — valid values for `HexFeature.type`
-- `edgeFeatureTypes: string[]` — valid values for `EdgeFeature.type`
-
-### Example HexEntry
-
-```json
-{
-  "hex": "12.08",
-  "terrain": "woods",
-  "elevation": 550,
-  "slope": 3,
-  "wedgeElevations": [0, 25, 50, 0, -25, -25],
-  "features": [],
-  "edges": {
-    "SE": [
-      { "type": "stoneWall", "movementModifier": 1, "losBlocking": false, "losHeightBonus": 0.5 }
-    ],
-    "S": [{ "type": "stream", "movementModifier": 2, "losBlocking": false }]
-  },
-  "vpHex": false,
-  "_note": "Turner's Gap ridge line — stone wall along SE face"
+```js
+// Engine / editor lookup — see edge-model.js (§15)
+function getEdgeFeatures(hexMap, hexId, dir, gridSpec) {
+  if (dir < 3) return hexMap[hexId]?.edges?.[dir] ?? [];
+  const neighborId = getNeighborId(hexId, dir, gridSpec);
+  return hexMap[neighborId]?.edges?.[dir - 3] ?? [];
 }
 ```
 
+Editor writes only the canonical owner's entry. Map boundary edges (no neighbour in `hexes[]`)
+return `[]` — same as the engine's missing-hex handling.
+
+### Edge Feature Coexistence Rules
+
+Enforced by Zod schema at save time and by `validateCoexistence()` in `edge-model.js` at paint
+time:
+
+| Group   | Types                                                 | Rule                                                                            |
+| ------- | ----------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Road    | `trail`, `road`, `pike`                               | Coexist freely with each other and all other groups                             |
+| Contour | `elevation`, `slope`, `extremeSlope`, `verticalSlope` | **Mutually exclusive** within this group; at most one per edge                  |
+| Linear  | `stream`, `stoneWall`                                 | Coexist with any other edge feature                                             |
+| Ford    | `ford`                                                | Valid only when `stream` also exists on the same edge                           |
+| Bridge  | `bridge`                                              | Valid only when at least one of `road`, `trail`, `pike` exists on the same edge |
+
+### Map Metadata
+
+- `terrainTypes: string[]` — valid terrain names (editor enforces at edit time)
+- `elevationSystem: { baseElevation, elevationLevels }` — integer level count (0-based)
+
+### Key Design Decisions
+
+**`hexFeature` replaces `features[]`.** South Mountain has only one hex-wide feature type
+(buildings). A single optional field is simpler and avoids empty-array noise.
+
+**Elevation as integer level index.** Editor and overlays work in levels (0 to
+`elevationLevels − 1`). Physical feet are context only.
+
+**Canonical edge ownership.** Halves edge storage and eliminates sync bugs. Engine lookups require
+a neighbour check for faces 3–5, already required for movement and LOS.
+
+**`hexsides` removed.** All existing entries had no hexside data; no migration needed.
+
 ---
 
-## 2. Grid Calibration Extensions
+## 3. Tool Inventory
 
-Two fields are added to the existing `gridSpec` object in `map.json`:
-
-| Field      | Type      | Range / Default   | Description                                                                                                                                                |
-| ---------- | --------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `rotation` | `number`  | −15 to +15, def 0 | Grid rotation in degrees, applied as an SVG `rotate` transform around the grid anchor point. Corrects for map images that are not perfectly axis-aligned.  |
-| `locked`   | `boolean` | default `false`   | When `true`, `CalibrationControls` disables all inputs and displays a lock indicator. Prevents accidental calibration changes after the grid is finalised. |
-
-### Zod Schema Additions
-
-```js
-// server/src/schemas/map.schema.js — additions to GridSpecSchema
-rotation: z.number().min(-15).max(15).optional(),
-locked: z.boolean().optional(),
-```
-
-### Behaviour
-
-- `rotation` is applied as `transform="rotate(deg, anchorX, anchorY)"` on the root `<g>` in
-  `HexMapOverlay`. The anchor point is the computed pixel position of hex `(0, 0)` — the
-  same origin used for all other grid calculations. Default 0 produces no transform.
-- `locked` only affects the UI. A locked `gridSpec` is still validated and saved normally.
-  The lock state is stored in `gridSpec` (persisted to `map.json`), not just in localStorage.
+| Panel               | Edits                                              | Base composable    |
+| ------------------- | -------------------------------------------------- | ------------------ |
+| Grid Calibration    | `gridSpec`                                         | — (inputs only)    |
+| Elevation           | `hex.elevation`                                    | `useHexPaintTool`  |
+| Terrain             | `hex.terrain`, `hex.hexFeature`                    | `useHexPaintTool`  |
+| Road                | `edges[0‒2]` ∈ {trail, road, pike}                 | `useEdgePaintTool` |
+| Stream & Stone Wall | `edges[0‒2]` ∈ {stream, stoneWall}                 | `useEdgePaintTool` |
+| Contour Line        | `edges[0‒2]` ∈ {elevation, slope, extremeSlope, …} | `useEdgePaintTool` |
+| LOS Test            | read-only                                          | — (standalone)     |
 
 ---
 
-## 3. Editor Component Architecture
+## 4. Tool Panel Framework
+
+### Component and Composable Diagram
 
 ```
-MapEditorView.vue              ← orchestrator; owns all editor state
-  ├── EditorToolbar.vue        (NEW) ← mode selector, paint terrain/edge picker, layer toggles
-  ├── HexMapOverlay.vue        (EXTEND) ← layer rendering, edge overlay, multi-select rect
-  ├── CalibrationControls.vue  (EXTEND) ← rotation slider, grid lock toggle
-  ├── HexEditPanel.vue         (EXTEND) ← elevation, slope direction, hex features list
-  ├── WedgeEditor.vue          (NEW) ← graphical 6-wedge hex diagram with elevation offsets
-  └── EdgeEditPanel.vue        (NEW) ← list editor for multiple features on a selected edge
+MapEditorView.vue  (orchestrator — owns mapData, calibration, openPanel, onMutated)
+│
+├── HexMapOverlay.vue
+│   │  Receives overlayConfig from the active tool panel.
+│   │  Contains zero tool-specific logic.
+│   └── Primitive layer renderers (all driven by overlayConfig):
+│       ├── HexGridLayer      gridSpec → hex outlines
+│       ├── HexFillLayer      fillFn(hex) → per-hex color polygon
+│       ├── HexLabelLayer     labelFn(hex) → text at hex center
+│       ├── HexIconLayer      iconFn(hex) → SVG icon at hex center
+│       ├── EdgeLineLayer     featureGroups, style → lines along or through edges
+│       └── HexHighlightLayer hexIds → outlined/tinted specific hexes
+│
+├── Accordion panels (one open at a time → active tool)
+│   │
+│   ├── CalibrationPanel.vue          (standalone — not a BaseToolPanel)
+│   │
+│   ├── ElevationToolPanel.vue ───────┐
+│   ├── TerrainToolPanel.vue  ────────┤  All extend BaseToolPanel.vue
+│   ├── RoadToolPanel.vue     ────────┤  BaseToolPanel provides:
+│   ├── StreamWallToolPanel.vue ──────┤    • overlayConfig → HexMapOverlay
+│   └── ContourToolPanel.vue  ────────┘    • ToolChooser.vue (shared chooser)
+│                                          • clear-all button + ConfirmDialog
+│                                          • help popup
+│                                          • auto-rendered toggles for non-alwaysOn layers
+│
+└── Composables
+    ├── useHexPaintTool.js     hex click / paint / right-click clear
+    │   └── usePaintStroke.js  stroke start/end; suppresses per-hex localStorage saves
+    │
+    ├── useEdgePaintTool.js    edge paint / right-click clear / clearAll(allowedTypes)
+    │   └── usePaintStroke.js  (shared)
+    │
+    ├── useClickHexside.js     single-click edge placement with validateFn
+    │   (used inside RoadToolPanel for bridge, StreamWallToolPanel for ford)
+    │
+    └── (existing) useMapPersistence, useLosTest, useEditorAccordion, …
+
+Config / formula layer (pure functions, no Vue — see §15)
+    ├── config/feature-types.js   type strings + display properties (colors, styles, labels)
+    ├── formulas/hex-geometry.js
+    ├── formulas/compass.js
+    ├── formulas/edge-model.js
+    ├── formulas/elevation.js
+    └── formulas/los.js
 ```
 
-### Per-Component Scope
+### Interaction Gate
 
-**`CalibrationControls.vue` (extend)**
-Add a `rotation` number input (range −15 to +15, step 0.5°) bound to `gridSpec.rotation`.
-Add a `locked` toggle button that disables all other calibration inputs when active. All
-existing inputs, sliders, and buttons are unchanged.
+`HexMapOverlay` emits click, right-click, and mouseenter events only when a data-editing tool is
+active (`openPanel` ∈ `{elevation, terrain, road, stream, contour}`). When no data-editing tool
+is open, the overlay renders the hover tooltip but emits no interaction events.
 
-**`HexMapOverlay.vue` (extend)**
-Add props: `layers` (object), `editorMode` (string), `paintTerrain` (string).
-Add SVG `<g>` groups for wedge shading, edge feature lines, slope arrows, and rubber-band
-selection rect. Replace the cell visibility filter (which currently limits rendering to VP
-and selected hexes) with "show all hexes" — unknown terrain hexes appear as grey fills.
-Apply `gridSpec.rotation` as an SVG `rotate` transform on the root grid `<g>`.
+### Overlay System
 
-**`HexEditPanel.vue` (extend)**
-Replace the `hexsides` fieldset with an `edges` section: for each of the 6 directions, show
-the list of `EdgeFeature` objects with add/remove buttons and inline inputs for `type`,
-`movementModifier`, `losBlocking`, `losHeightBonus`. Add a `slope` direction picker (a mini
-hex diagram with 6 clickable direction zones). Add a `features` list with add/remove buttons
-for hex-centred features.
+`HexMapOverlay` is a **declarative renderer**. Each tool panel computes an `overlayConfig` object;
+the overlay renders whichever primitive layers are specified. Zero tool-specific logic lives in
+`HexMapOverlay`.
 
-**`EditorToolbar.vue` (NEW)**
-Mode toggle button group: `select` / `paint` / `elevation` / `edge`. Active terrain picker
-(colour-coded buttons, one per terrain type from `map.terrainTypes`). Active edge feature
-picker (shown in `edge` mode). Layer visibility checkboxes. "Export engine JSON" button.
-
-**`WedgeEditor.vue` (NEW)**
-SVG hex diagram divided into 6 wedge triangles. Each wedge shows its elevation offset value.
-Click a wedge to open an inline number input for editing the offset. Emits
-`update:wedgeElevations` to the parent. Only shown when `wedgeElevations` editing is enabled
-in the hex edit panel.
-
-**`EdgeEditPanel.vue` (NEW)**
-Shown when `selectedEdge` is non-null (set by edge-mode click). Lists all `EdgeFeature`
-objects for the selected edge. Add/remove buttons. Inline inputs for `type` (dropdown from
-`map.edgeFeatureTypes`), `movementModifier` (number), `losBlocking` (checkbox),
-`losHeightBonus` (number). Edits apply simultaneously to both the clicked hex and the
-mirrored adjacent hex.
-
-### State Owned by `MapEditorView`
+**Overlay config shape:**
 
 ```js
-// Editor mode
-const editorMode = ref('select'); // 'select' | 'paint' | 'elevation' | 'edge'
-const paintTerrain = ref('clear'); // active terrain type for paint mode
-const paintEdgeFeature = ref(null); // { type, movementModifier, ... } | null
+overlayConfig = {
+  grid: {
+    alwaysOn: true,
+    weight: 'faint' | 'diagnostic',   // faint = 0.3 opacity thin; diagnostic = full calibration grid
+  },
+  hexFill: {
+    alwaysOn: true | false,
+    toggleLabel: string,               // present when alwaysOn: false → BaseToolPanel renders checkbox
+    fillFn: (hex) => cssColor | null,
+  },
+  hexLabel: {
+    alwaysOn: true | false,
+    toggleLabel: string,
+    labelFn: (hex) => string | null,
+    size: 'large' | 'small',
+  },
+  hexIcon: {
+    alwaysOn: true | false,
+    iconFn: (hex) => iconKey | null,   // iconKey resolves to an SVG symbol
+  },
+  edgeLine: {
+    alwaysOn: true,
+    style: 'along-edge' | 'through-hex',
+    featureGroups: [                   // ordered; last group renders on top
+      { types: string[], color: string, strokeWidth: number, dash?: string },
+    ],
+  },
+  highlight: {
+    alwaysOn: true,
+    hexIds: string[],
+    strokeColor: string,
+  },
+}
+```
 
-// Selection
-const selectedHexIds = ref(new Set()); // supports multi-select
-const selectedEdge = ref(null); // { hexId, dir } | null; set in edge mode
+**Toggle pattern:** layers with `alwaysOn: false` have a `toggleLabel`. `BaseToolPanel` reads the
+`overlayConfig` and automatically renders a labelled checkbox for each toggleable layer. The tool
+panel's local state tracks the current `active` value and passes the updated config to
+`HexMapOverlay`. Tools never manage toggle state manually — `BaseToolPanel` owns it.
 
-// Layer visibility (each layer is an independent SVG <g> in HexMapOverlay)
-const layers = ref({
-  grid: true,
-  terrain: true,
-  elevation: false,
-  wedges: false,
-  edges: true,
-  slopeArrows: false,
+**Color and style source of truth:** all `color`, `strokeWidth`, `dash`, `fillFn`, and `iconFn`
+values come from `config/feature-types.js` (§15), not hardcoded in tool panels or overlay
+components. Chooser swatches and overlay rendering both import from the same registry.
+
+### Shared Composable Contracts
+
+**`useHexPaintTool({ onPaint(hex, selectedValue), onClear(hex) })`**
+
+- Handles hex click (click mode) and hex mouseenter (paint mode)
+- Right-click calls `onClear`
+- Uses `usePaintStroke` for stroke batching
+- Used by: Elevation, Terrain
+
+**`useEdgePaintTool({ allowedTypes, onPaint(hexId, faceIndex, type), onClear(hexId, faceIndex, type) })`**
+
+- Handles edge-snapped mousedown drag
+- Right-click calls `onClear` for the selected type
+- Exposes `clearAll()` — removes all `allowedTypes` edges from all hexes
+- Uses `usePaintStroke` for stroke batching
+- Used by: Road, Stream & Stone Wall, Contour Line
+
+**`useClickHexside({ validateFn(hexId, faceIndex) → { valid, reason }, onPlace(hexId, faceIndex), onRemove(hexId, faceIndex) })`**
+
+- Single-click edge placement; right-click removes
+- Calls `validateFn` before placing; shows inline error if invalid
+- Used by: Road (bridge), Stream & Stone Wall (ford)
+
+**`usePaintStroke(onMutated)`**
+
+- Exposes `strokeStart()`, `strokeEnd()`
+- On `strokeStart`: sets `paintStrokeActive = true`
+- On `strokeEnd`: sets `paintStrokeActive = false`, flushes `saveMapDraft` once
+- Used by: `useHexPaintTool`, `useEdgePaintTool`
+
+### Common Tool Controls (all via BaseToolPanel)
+
+Every data-editing tool gets these for free from `BaseToolPanel`:
+
+- **Overlay toggles** — auto-rendered from `overlayConfig` for non-`alwaysOn` layers
+- **Clear all button** — calls `clearAll()` from the active composable after confirmation dialog
+- **Help popup** — tool panel passes help text as a prop; `BaseToolPanel` renders the trigger and modal
+- **Right-click clear** — handled by the active composable; documented once here, not per-tool
+
+Tool sections (§6–§10) document only what is **unique** to each tool.
+
+---
+
+## 5. Grid Calibration Tool
+
+Standalone panel — does not use `BaseToolPanel` or the paint composables.
+
+### Controls
+
+| Control                 | Description                                                              |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `cols`, `rows`          | Grid dimensions                                                          |
+| `hexWidth`, `hexHeight` | Hex cell size in pixels                                                  |
+| `dx`, `dy`              | Grid origin offset                                                       |
+| `imageScale`            | Map image scale multiplier                                               |
+| `strokeWidth`           | Grid line thickness                                                      |
+| `evenColUp`             | Even/odd column stagger direction                                        |
+| `northOffset`           | 12-position rotation ring (0–11, 30° each); sets map compass orientation |
+
+### Overlay Config
+
+```js
+overlayConfig = {
+  grid: { alwaysOn: true, weight: 'diagnostic' },
+  hexLabel: { alwaysOn: true, labelFn: (hex) => `${hex.col}.${hex.row}`, size: 'large' },
+};
+```
+
+### North Offset Picker
+
+Renders a 12-node circular ring. The selected node is highlighted. Face compass labels are derived
+from `allFaceLabels(northOffset)` in `compass.js` (§15).
+
+Because face indices are geometry-stable (§2), changing `northOffset` only changes display labels —
+no edge data is affected and no warning or confirmation is needed.
+
+> **Known bug (fix tracked separately):** The face-index-to-label mapping has an off-by-one error
+> causing labels to appear one step clockwise from correct when `northOffset ≠ 0`.
+
+---
+
+## 6. Elevation Tool
+
+**Edits:** `hex.elevation` — integer level index, 0 to `elevationLevels − 1`.
+
+**Composable:** `useHexPaintTool`. Supports click and paint mode.
+
+Right-click resets `elevation` to 0.
+
+### Overlay Config
+
+```js
+overlayConfig = {
+  hexLabel: {
+    alwaysOn: true,
+    labelFn: (hex) => String(hex.elevation),
+    size: 'large',
+  },
+  hexFill: {
+    alwaysOn: false,
+    toggleLabel: 'Elevation tint',
+    fillFn: (hex) => tintForLevel(hex.elevation, palette), // palette from elevationTintPalette()
+  },
+};
+// Note: no grid layer — elevation labels are readable without it
+```
+
+Tint palette auto-generated by `elevationTintPalette(elevationLevels)` in `elevation.js` (§15):
+level 0 = light blue → green → tan → dark brown at max.
+
+### Unique Controls
+
+- **Value slider** — integer 0 to `elevationLevels − 1`. Both click and paint set this fixed value.
+
+---
+
+## 7. Terrain Tool
+
+**Edits:** `hex.terrain` (string), `hex.hexFeature` (`{ type: 'building' }` or absent).
+
+**Composable:** `useHexPaintTool`. Supports click and paint mode.
+
+Right-click on terrain mode resets `terrain` to `'unknown'`. Right-click on building mode clears
+`hexFeature`; terrain is unaffected.
+
+### Overlay Config
+
+```js
+overlayConfig = {
+  hexFill: {
+    alwaysOn: true,
+    fillFn: (hex) => TERRAIN_COLORS[hex.terrain] ?? TERRAIN_COLORS.unknown,
+    // TERRAIN_COLORS from feature-types.js; all at 80% opacity
+  },
+  hexIcon: {
+    alwaysOn: true,
+    iconFn: (hex) => (hex.hexFeature?.type === 'building' ? 'building' : null),
+  },
+};
+// Note: no grid layer — terrain fill provides enough spatial context
+```
+
+**Terrain colors** (from `feature-types.js`, 80% transparent):
+
+| Terrain       | Color       |
+| ------------- | ----------- |
+| clear         | Transparent |
+| woods         | Dark green  |
+| orchards      | Light green |
+| marsh         | Green-blue  |
+| slopingGround | Brown       |
+| woodedSloping | Green-brown |
+| unknown       | Grey 0.3    |
+
+### Unique Controls
+
+- **Terrain chooser (`ToolChooser`)** — one item per `terrainTypes` entry; each item has a
+  `color` swatch from `TERRAIN_COLORS` in `feature-types.js`.
+- **Building button** — separate item in the chooser with `icon: 'building'` instead of a color
+  swatch. Selecting it switches `onPaint` to write `hexFeature` instead of `terrain`.
+
+---
+
+## 8. Road Tool
+
+**Edits:** `edges[0|1|2]` entries of type `trail`, `road`, `pike`.
+
+**Composable:** `useEdgePaintTool({ allowedTypes: ['trail','road','pike'] })`. Paint mode only.
+
+Right-click removes the selected type from the edge. Clear all removes all three types.
+
+### Overlay Config
+
+```js
+overlayConfig = {
+  grid: { alwaysOn: true, weight: 'faint' },
+  edgeLine: {
+    alwaysOn: true,
+    style: 'through-hex',        // lines connect entry/exit edge midpoints via hex center
+    featureGroups: ROAD_GROUPS,  // from feature-types.js; trail → road → pike (pike on top)
+  },
+}
+
+// ROAD_GROUPS (feature-types.js):
+[
+  { types: ['trail'], color: '#8B6914', strokeWidth: 1.5, dash: '4,3' },
+  { types: ['road'],  color: '#8B6914', strokeWidth: 2 },
+  { types: ['pike'],  color: '#ffffff', strokeWidth: 2.5 },
+]
+```
+
+### Unique Controls
+
+- **Chooser** — trail / road / pike; swatches and styles from `ROAD_GROUPS` in `feature-types.js`.
+- **Bridge sub-control** — see §11.
+
+---
+
+## 9. Stream and Stone Wall Tool
+
+**Edits:** `edges[0|1|2]` entries of type `stream`, `stoneWall`.
+
+**Composable:** `useEdgePaintTool({ allowedTypes: ['stream','stoneWall'] })`. Paint mode only.
+
+Right-click removes the selected type. Clear all removes both types.
+
+### Overlay Config
+
+```js
+overlayConfig = {
+  grid: { alwaysOn: true, weight: 'faint' },
+  edgeLine: {
+    alwaysOn: true,
+    style: 'along-edge',           // line runs along the shared edge
+    featureGroups: STREAM_WALL_GROUPS,  // from feature-types.js
+  },
+}
+
+// STREAM_WALL_GROUPS (feature-types.js):
+[
+  { types: ['stream'],    color: '#4a90d9', strokeWidth: 2 },
+  { types: ['stoneWall'], color: '#555555', strokeWidth: 2 },
+]
+```
+
+### Unique Controls
+
+- **Chooser** — stream / stone wall; swatches from `STREAM_WALL_GROUPS`.
+- **Ford sub-control** — see §11.
+
+---
+
+## 10. Contour Line Tool
+
+**Edits:** `edges[0|1|2]` entries of type `elevation`, `slope`, `extremeSlope`, `verticalSlope`.
+Mutually exclusive per edge (enforced by `validateCoexistence()` in `edge-model.js`).
+
+**Composable:** `useEdgePaintTool({ allowedTypes: ['elevation','slope','extremeSlope','verticalSlope'] })`.
+Paint mode only.
+
+Right-click removes the selected type from the edge. Clear all removes all four types.
+
+### Overlay Config
+
+```js
+overlayConfig = {
+  grid: { alwaysOn: true, weight: 'faint' },
+  edgeLine: {
+    alwaysOn: true,
+    style: 'along-edge',
+    featureGroups: CONTOUR_GROUPS,   // from feature-types.js
+  },
+  hexLabel: {
+    alwaysOn: false,
+    toggleLabel: 'Elevation info',
+    labelFn: hex => String(hex.elevation),
+    size: 'large',
+  },
+  hexFill: {
+    alwaysOn: false,
+    toggleLabel: 'Elevation info',   // same label — BaseToolPanel renders one checkbox for both
+    fillFn: hex => tintForLevel(hex.elevation, palette),
+  },
+}
+
+// CONTOUR_GROUPS (feature-types.js):
+[
+  { types: ['elevation'],     color: '#888888', strokeWidth: 1 },
+  { types: ['slope'],         color: '#222222', strokeWidth: 2 },
+  { types: ['extremeSlope'],  color: '#000000', strokeWidth: 3.5 },
+  { types: ['verticalSlope'], color: '#cc0000', strokeWidth: 2.5 },
+]
+```
+
+Note: `hexLabel` and `hexFill` share the `toggleLabel: 'Elevation info'` string. `BaseToolPanel`
+renders a single checkbox that toggles both layers together.
+
+### Unique Controls
+
+- **Chooser** — four contour types; style swatches from `CONTOUR_GROUPS`.
+- **Auto-detect button** — calls `autoDetectContourType()` from `elevation.js` (§15) for every
+  adjacent hex pair. Rules: 1-level diff → `elevation`; 2-level diff → `extremeSlope`; 3+ →
+  `verticalSlope`. Clears all existing contour edges first. Requires confirmation before running.
+
+---
+
+## 11. Ford and Bridge Controls
+
+Sub-controls inside their respective tool panels using `useClickHexside`. Single-click places or
+removes the feature; no drag painting.
+
+**Ford** (Stream & Stone Wall panel):
+
+```js
+useClickHexside({
+  validateFn: (hexId, face) => {
+    const features = getEdgeFeatures(hexMap, hexId, face, gridSpec);
+    return features.some((f) => f.type === 'stream')
+      ? { valid: true }
+      : { valid: false, reason: 'Ford requires a stream on this edge.' };
+  },
+  onPlace: (hexId, face) => addEdgeFeature(hexId, face, { type: 'ford' }),
+  onRemove: (hexId, face) => removeEdgeFeature(hexId, face, 'ford'),
 });
 ```
 
----
+**Bridge** (Road panel):
 
-## 4. Interaction Modes
+```js
+useClickHexside({
+  validateFn: (hexId, face) => {
+    const features = getEdgeFeatures(hexMap, hexId, face, gridSpec);
+    const ROAD_TYPES = ['road', 'trail', 'pike'];
+    return features.some((f) => ROAD_TYPES.includes(f.type))
+      ? { valid: true }
+      : { valid: false, reason: 'Bridge requires a road, trail, or pike on this edge.' };
+  },
+  onPlace: (hexId, face) => addEdgeFeature(hexId, face, { type: 'bridge' }),
+  onRemove: (hexId, face) => removeEdgeFeature(hexId, face, 'bridge'),
+});
+```
 
-### Select Mode (default)
-
-- **Click hex** → single select; clears previous selection; opens `HexEditPanel` for the
-  clicked hex. Auto-creates `{ hex: id, terrain: 'unknown', elevation: 0 }` in `hexes[]`
-  if the hex is not yet tracked.
-- **Shift+click** → toggle the hex in or out of the current multi-selection. Does not close
-  the edit panel if the primary hex remains selected.
-- **Drag on empty map area** → rubber-band rectangle. On mouse-up, all hexes whose centres
-  fall inside the rectangle are added to the selection.
-- **Escape** → clear all selection; close edit panel.
-- **Multi-select edit** — when more than one hex is selected, `HexEditPanel` shows only
-  bulk-applicable fields: terrain (applied to all), elevation delta (added to each hex's
-  current elevation). Individual edge/slope/feature editing requires a single-hex selection.
-
-### Paint Mode
-
-- Active terrain type is shown in `EditorToolbar` with a colour-coded indicator.
-- **Click or click-drag** → set `terrain` on each hex the cursor enters to `paintTerrain`.
-  Auto-creates the hex entry if not present: `{ hex: id, terrain: paintTerrain.value, elevation: 0 }`.
-- Paint is immediate — no edit panel interaction. The hex is not selected.
-- Marks `unsaved = true` on each paint operation.
-- Entering paint mode clears `selectedHexIds` to avoid a stale edit panel.
-
-### Elevation Mode
-
-- **Click** → increment `elevation` by the contour interval (default 50 ft, from
-  `scenario.rules.slopeContourInterval`).
-- **Shift+click** → decrement elevation by one contour interval.
-- **Click-drag** → applies the increment/decrement continuously to each hex the cursor
-  enters. Direction (up/down) is fixed at mouse-down: shift held at drag start = decrement
-  for the entire drag.
-- Marks `unsaved = true` on each change.
-
-### Edge Draw Mode
-
-- Active edge feature type is shown in `EditorToolbar`.
-- `onMousemove` detects which edge is closest to the cursor: compare the cursor position to
-  the midpoint of each of the hex's 6 edges (midpoint of corner[i] and corner[(i+1)%6]).
-  Snap to the nearest edge midpoint within a threshold of ~8 px at 1× zoom. The snapped
-  edge is highlighted in `HexMapOverlay`.
-- **Click or click-drag** → add the active `EdgeFeature` to the snapped edge. Updates the
-  `edges` field in both the hovered hex and the mirrored direction of the adjacent hex.
-- If an identical feature type already exists on the edge, the click removes it (toggle
-  behaviour).
-- Marks `unsaved = true` on each change.
+Fords render as perpendicular tick marks across the edge; bridges as a bridge glyph. Both symbols
+defined in `feature-types.js`.
 
 ---
 
-## 5. Visualization Layers
+## 12. LOS Test Panel
 
-Each layer is an independent SVG `<g>` element inside `HexMapOverlay`. Layers are toggled
-by the `layers` prop and rendered in the order below (bottom to top).
+Standalone read-only panel. Does not use `BaseToolPanel`, the paint composables, or the overlay
+system. Activating the LOS panel does not trigger the interaction gate — hex clicks are routed to
+the LOS composable (`useLosTest`), not to a paint handler.
 
-**Render order:** terrain → wedge shading → grid → edges → slope arrows → selection overlays
-
-| Layer             | `layers` key  | Render element                            | Notes                                                                                                                                                                                            |
-| ----------------- | ------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Terrain           | `terrain`     | `<polygon fill>` per hex                  | Terrain colour at 0.45 opacity. Unknown hexes: `#cccccc` at 0.3 opacity.                                                                                                                         |
-| Wedge shading     | `wedges`      | 6 `<polygon>` triangles per hex           | Each wedge: fill white (positive offset) or black (negative), opacity proportional to `abs(offset) / 100`. Only rendered for hexes with `wedgeElevations`.                                       |
-| Grid              | `grid`        | `<polygon stroke>` per hex                | Outline at low opacity (stroke-width per `gridSpec.strokeWidth`). Always visible; opacity is independent of `layers.grid` toggle (the toggle hides the thick diagnostic outline only).           |
-| Base elevation    | `elevation`   | `<text>` at hex centre                    | Numeric label (feet). Omitted when `elevation === 0`.                                                                                                                                            |
-| Edge features     | `edges`       | `<line>` along each edge                  | Line runs from 20% to 80% along the edge (from corner[i] toward corner[(i+1)%6]). Colour-coded by feature type (road=brown, stream=blue, stoneWall=grey, slope=orange, verticalSlope=red, etc.). |
-| Slope arrows      | `slopeArrows` | `<path>` arrow at hex centre              | SVG arrow pointing in the `slope` direction. Only rendered for hexes where `slope` is defined.                                                                                                   |
-| Selection overlay | _(always)_    | `<polygon stroke>` + rubber-band `<rect>` | Selected hexes: yellow stroke. Multi-select rect: dashed blue border. VP hexes: red stroke. These are always rendered regardless of layer toggles.                                               |
-
-### Geometry Formulas
-
-**Wedge geometry.** Wedge i = triangle from hex centre to corner[i] to corner[(i+1)%6].
-SVG polygon points are drawn from `hex.corners` provided by honeycomb-grid. The centre
-point is `hex.origin` (or the computed pixel centre for the current gridSpec).
-
-**Edge midpoint geometry.** Edge i midpoint = average of corner[i] and corner[(i+1)%6].
-The edge feature line runs from the point 20% along the edge from corner[i] to the point
-80% along — keeping the line clear of hex corners where multiple edges meet.
-
-**Slope arrow geometry.** A simple SVG arrowhead centred at the hex centre, rotated by
-`slope × 60°` (since HexDir indices are 60° apart: 0=N=0°, 1=NE=60°, 2=SE=120°, etc.).
-
-### Direction Index Reference
-
-| Index | HexDir | Compass bearing | Wedge / slope direction |
-| ----- | ------ | --------------- | ----------------------- |
-| 0     | N      | 0°              | North face              |
-| 1     | NE     | 60°             | Northeast face          |
-| 2     | SE     | 120°            | Southeast face          |
-| 3     | S      | 180°            | South face              |
-| 4     | SW     | 240°            | Southwest face          |
-| 5     | NW     | 300°            | Northwest face          |
-
-This mapping is used consistently across §1 (`slope`, `wedgeElevations`) and §5 (wedge
-geometry, slope arrows, edge midpoints).
+- "Set Hex A" / "Set Hex B" → click hexes to select the LOS pair.
+- Displays LOS result, path hexes, and blocking hex.
+- LOS path hexes highlighted via a `highlight` layer passed to `HexMapOverlay`.
+- No changes from v1.
 
 ---
 
-## 6. Save Model
+## 13. Hover Tooltip
 
-### Three Tiers, in Order of Authority
+When no data-editing tool is active, `HexMapOverlay` shows a tooltip for the hex under the cursor.
 
-**Tier 1 — localStorage autosave (working copy)**
+| Field       | Display                                                           |
+| ----------- | ----------------------------------------------------------------- |
+| Hex ID      | `col.row`                                                         |
+| Terrain     | terrain type string                                               |
+| Elevation   | integer level index                                               |
+| Hex feature | `building` if present; omitted otherwise                          |
+| Edges       | one line per face with features, e.g. `face 2 (SE): road, stream` |
 
-Every change to `mapData` (terrain paint, elevation edit, edge paint, hex feature change)
-is immediately serialised and written to a dedicated localStorage key
-(`lob-map-editor-mapdata-v1`). The stored value includes a `_savedAt` ISO timestamp field.
+Face indices shown with compass label derived from `compassLabel(face, northOffset)` in
+`compass.js`. Tooltip floats near cursor; disappears on mouse leave. No click or hex selection.
 
-On load, if the server returns map data AND localStorage has a working copy with a newer
-`_savedAt` timestamp than the server response, the editor shows a banner offering to restore
-the local draft. The user can dismiss the banner to discard the draft and use the server
-version.
+---
 
-This preserves work across browser reloads without server round-trips and provides a
-safety net against accidental navigation away from the editor.
+## 14. Save Model
 
-**Tier 2 — Server save (authoritative copy)**
+### Three Tiers
 
-The "Save" button performs `PUT /api/tools/map-editor/data` with the full `mapData` object.
-The server Zod-validates the payload and writes it to
-`data/scenarios/south-mountain/map.json`. This file is part of the server codebase and is
-committed to the repository.
+**Tier 1 — localStorage autosave**
+Every edit writes updated `mapData` to `lob-map-editor-mapdata-south-mountain-v2`. On load, if
+localStorage draft is newer than the server response, a restore banner is shown.
 
-On successful save, the localStorage working copy is cleared — the server copy becomes the
-source of truth. On failure, the localStorage copy is retained and the error is shown to the
-user.
+**Tier 2 — Server save (authoritative)**
+"Push to Server" → `PUT /api/tools/map-editor/data` → Zod validation → write `map.json`. On
+success, localStorage cleared. On failure, localStorage retained and error shown.
 
-No change to the endpoint itself. The Zod schema is updated to validate the new fields
-(`edges`, `slope`, `wedgeElevations`, `features`, `gridSpec.rotation`, `gridSpec.locked`).
+**Tier 3 — Engine export (client download)**
+"Export" strips all `_`-prefixed fields and triggers a client-side file download.
 
-**Tier 3 — Engine export (client-side download)**
-
-The "Export engine JSON" button in `EditorToolbar` produces a stripped version of the map
-data suitable for game engine consumption. It removes all editor-only fields:
-
-- Removed: `_note`, `_todoHexes`, `_digitizationPlan`, `_status`, any field prefixed `_`
-- Retained: `hexes` (with `terrain`, `elevation`, `slope`, `wedgeElevations`, `features`,
-  `edges`, `vpHex`, `entryHex`, `side`, `setupUnits`), `vpHexes`, `entryHexes`, `gridSpec`,
-  `terrainTypes`, `hexFeatureTypes`, `edgeFeatureTypes`
-
-The export is triggered as a client-side file download via a temporary `<a download>` link
-— no server round-trip. This is optional and lower priority than the server save; the server
-save (Tier 2) is the primary output consumed by the game engine.
-
-### Conflict and Draft Restoration Flow
+### Draft Restore Flow
 
 ```
-1. User opens editor
-2. Client fetches GET /api/tools/map-editor/data → serverData (has serverData._savedAt)
-3. Client reads localStorage['lob-map-editor-mapdata-v1'] → draft (has draft._savedAt)
-4. If draft exists AND draft._savedAt > serverData._savedAt:
-     Show banner: "You have unsaved local changes from <time>. Restore draft?"
-     [Restore] → use draft as working copy
-     [Discard] → use serverData; clear localStorage key
-   Else:
-     Use serverData as working copy; clear localStorage key if stale
-5. On any edit: immediately write updated mapData (with _savedAt = now) to localStorage
-6. On "Save": PUT serverData; on 200 → clear localStorage key
+1. Fetch GET /api/tools/map-editor/data
+2. If localStorage draft._savedAt > server._savedAt: banner → Restore | Dismiss
+3. On every edit: write mapData + _savedAt to localStorage
+4. On Push: PUT → 200 → clear localStorage
 ```
+
+---
+
+## 15. Formula and Config Modules
+
+All formulas and feature type definitions live in pure-function modules under `client/src/`. No
+Vue reactivity or side effects. Server-side equivalents are added when the game engine needs them.
+
+Each exported function carries JSDoc with: what it computes, parameters, return type, the
+mathematical formula, a reference (rulebook section or external resource), and which
+composables/components use it.
+
+---
+
+### `config/feature-types.js`
+
+Single source of truth for all feature type strings and their display properties. Both chooser
+items and overlay `featureGroups` import from here — colors and styles are defined once.
+
+```js
+export const TERRAIN_COLORS = {
+  clear: null,
+  woods: 'rgba(34,85,34,0.8)',
+  orchards: 'rgba(100,160,60,0.8)',
+  marsh: 'rgba(60,120,100,0.8)',
+  slopingGround: 'rgba(139,100,60,0.8)',
+  woodedSloping: 'rgba(80,110,50,0.8)',
+  unknown: 'rgba(150,150,150,0.3)',
+};
+
+export const ROAD_GROUPS = [
+  { types: ['trail'], color: '#8B6914', strokeWidth: 1.5, dash: '4,3' },
+  { types: ['road'], color: '#8B6914', strokeWidth: 2 },
+  { types: ['pike'], color: '#ffffff', strokeWidth: 2.5 },
+];
+
+export const STREAM_WALL_GROUPS = [
+  { types: ['stream'], color: '#4a90d9', strokeWidth: 2 },
+  { types: ['stoneWall'], color: '#555555', strokeWidth: 2 },
+];
+
+export const CONTOUR_GROUPS = [
+  { types: ['elevation'], color: '#888888', strokeWidth: 1 },
+  { types: ['slope'], color: '#222222', strokeWidth: 2 },
+  { types: ['extremeSlope'], color: '#000000', strokeWidth: 3.5 },
+  { types: ['verticalSlope'], color: '#cc0000', strokeWidth: 2.5 },
+];
+
+export const FORD_BRIDGE_SYMBOLS = {
+  ford: 'perpendicular-ticks',
+  bridge: 'bridge-glyph',
+};
+```
+
+---
+
+### `formulas/hex-geometry.js`
+
+Hex grid spatial calculations. Flat-top orientation.
+
+**Reference:** Amit Patel, "Hexagonal Grids" — redblobgames.com/grids/hexagons
+
+| Function                                           | Description                                                                                                 |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `hexCenter(col, row, gridSpec)`                    | Pixel center of hex at `(col, row)`; applies `dx`, `dy`, `hexWidth`, `hexHeight`, `evenColUp`, `imageScale` |
+| `hexCorners(cx, cy, hexWidth, hexHeight)`          | Array of 6 `{x,y}` corner points, clockwise from top-left corner                                            |
+| `edgeMidpoint(corners, faceIndex)`                 | `{x,y}` midpoint of face `faceIndex`: average of `corners[faceIndex]` and `corners[(faceIndex+1)%6]`        |
+| `edgePoints(corners, faceIndex, pct)`              | Point `pct`% along face from corner `i` toward corner `(i+1)%6`; used to inset edge lines from corners      |
+| `getNeighborCoord(col, row, faceIndex, evenColUp)` | `{col, row}` of the hex adjacent in direction `faceIndex`; uses offset lookup tables for even/odd stagger   |
+| `getNeighborId(hexId, faceIndex, gridSpec)`        | String `'col.row'` of neighbour; parses `hexId`, calls `getNeighborCoord`                                   |
+| `pointInHex(px, py, cx, cy, hexWidth, hexHeight)`  | Boolean; flat-top bounding box test then corner-cut test                                                    |
+| `nearestFace(px, py, corners)`                     | Face index (0–5) whose midpoint is closest to `(px, py)`; used for edge-click snapping                      |
+
+---
+
+### `formulas/compass.js`
+
+Converts geometry face indices to compass labels given `northOffset`.
+
+**Reference:** §5 of this document. The 12-step ring (0–11, 30° each) allows north to fall
+between hex faces for non-axis-aligned maps.
+
+| Function                               | Formula / Description                                                                                                   |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `compassLabel(faceIndex, northOffset)` | `SIX_LABELS[Math.round(((faceIndex*2 − northOffset + 12) % 12) / 2) % 6]`; `SIX_LABELS = ['N','NE','SE','S','SW','NW']` |
+| `faceIndexForNorth(northOffset)`       | Face whose label is 'N': `Math.round(northOffset / 2) % 6`                                                              |
+| `allFaceLabels(northOffset)`           | Array of 6 compass labels indexed by face 0–5; wrapper over `compassLabel`                                              |
+
+---
+
+### `formulas/edge-model.js`
+
+Canonical edge ownership, lookup, and coexistence validation.
+
+**Reference:** §2 of this document (Canonical Edge Ownership, Edge Feature Coexistence Rules).
+
+| Function                                                      | Description                                                                                     |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `canonicalOwner(hexId, faceIndex, gridSpec)`                  | `{ ownerId, ownerFace }`: if `faceIndex < 3` → current hex; else → neighbour at `faceIndex − 3` |
+| `getEdgeFeatures(hexMap, hexId, faceIndex, gridSpec)`         | Resolves canonical owner; returns `EdgeFeature[]` or `[]`                                       |
+| `oppositeFace(faceIndex)`                                     | `(faceIndex + 3) % 6` — the mirrored face on the adjacent hex                                   |
+| `validateCoexistence(existingFeatures, newType)`              | `{ valid, reason }` — enforces coexistence rules from §2                                        |
+| `addEdgeFeature(hexMap, hexId, faceIndex, feature, gridSpec)` | Mutates canonical owner's edge entry; calls `validateCoexistence` first                         |
+| `removeEdgeFeature(hexMap, hexId, faceIndex, type, gridSpec)` | Removes all features of `type` from canonical owner's edge entry                                |
+
+---
+
+### `formulas/elevation.js`
+
+Elevation palette generation and contour auto-detection.
+
+**Reference (palette):** Standard perceptual terrain color ramp (cartographic convention).
+**Reference (contour rules):** _Line of Battle v2.0_ §1.1 (Slope and Elevation); _South Mountain_
+special rules — slope grade defined by elevation level differences between adjacent hex centers.
+
+| Function                                | Description                                                                                                                              |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `elevationTintPalette(elevationLevels)` | Array of `elevationLevels` CSS colors; interpolates HSL from `hsl(185,50%,65%)` (level 0) through green, tan, to `hsl(25,50%,30%)` (max) |
+| `tintForLevel(level, palette)`          | CSS color string for integer level index                                                                                                 |
+| `autoDetectContourType(levelA, levelB)` | `diff = abs(levelA−levelB)`; returns: `0→null`, `1→'elevation'`, `2→'extremeSlope'`, `3+→'verticalSlope'`                                |
+
+---
+
+### `formulas/los.js`
+
+Line-of-sight calculation between two hex centers.
+
+**Reference:** _Line of Battle v2.0_ §4 (Line of Sight). _South Mountain_ special rules §SM-3
+(woods hex adds +1 effective height). Hex line algorithm: Amit Patel, "Hexagonal Grids" —
+redblobgames.com/grids/hexagons/#line-drawing (supercover DDA on cube coordinates).
+
+| Function                                   | Description                                                                                                                 |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `hexLine(hexA, hexB, gridSpec)`            | Ordered array of hex IDs on the straight line from center of `hexA` to center of `hexB`; supercover DDA on cube coordinates |
+| `effectiveHeight(hex, edgeFeatures)`       | `hex.elevation + terrainHeightBonus(hex.terrain) + max(edgeFeature.losHeightBonus ?? 0)`                                    |
+| `losBlocked(hexA, hexB, hexMap, gridSpec)` | `{ blocked, blockingHexId }` — traces `hexLine`, computes `effectiveHeight` at each hex, applies LoB §4 rules               |
+| `terrainHeightBonus(terrainType)`          | `woods → 1`, all others `→ 0` (SM special rule SM-3)                                                                        |

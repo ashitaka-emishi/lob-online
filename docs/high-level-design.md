@@ -1311,7 +1311,8 @@ This section describes the dev-only tooling required to prepare accurate game da
 
 The map editor is a dev-only tool for digitizing `docs/reference/sm-map.jpg` into structured hex terrain data in `data/scenarios/south-mountain/map.json`. It is not part of the game itself and is never active in production.
 
-**Purpose:** Click each hex on the map image, assign terrain type and hexside data, mark VP hexes and entry hexes, calibrate the hex grid over the image — then save to `map.json`.
+**Purpose:** Digitize `docs/reference/sm-map.jpg` into `map.json` hex data using a set of
+focused single-pass tools — one full map pass per data type (elevation, terrain, roads, etc.).
 
 **Toggle:** set `MAP_EDITOR_ENABLED=true` in `.env`. The guard in `server.js` uses a dynamic import:
 
@@ -1329,54 +1330,54 @@ if (process.env.MAP_EDITOR_ENABLED === 'true') {
 npm run dev:map-editor    # runs scripts/map-editor.sh
 ```
 
-This script sets `MAP_EDITOR_ENABLED=true` and starts both the Express server and the Vite client in parallel.
-
 **Architecture:**
 
 ```
-MapEditorView.vue              ← orchestrator; owns all editor state
-  ├── EditorToolbar.vue        (NEW) ← mode selector, paint terrain/edge picker, layer toggles
-  ├── HexMapOverlay.vue        (EXTEND) ← layer rendering, edge overlay, multi-select rect
-  ├── CalibrationControls.vue  (EXTEND) ← rotation slider, grid lock toggle
-  ├── HexEditPanel.vue         (EXTEND) ← elevation, slope direction, hex features list
-  ├── WedgeEditor.vue          (NEW) ← graphical 6-wedge hex diagram with elevation offsets
-  └── EdgeEditPanel.vue        (NEW) ← list editor for multiple features on a selected edge
+MapEditorView.vue              ← orchestrator; owns mapData, calibration, openPanel
+  ├── HexMapOverlay.vue        ← declarative overlay renderer; zero tool-specific logic
+  ├── BaseToolPanel.vue        ← shared shell: clear-all, help popup, overlay toggles
+  │   └── ToolChooser.vue      ← shared button-toggle group chooser
+  ├── CalibrationControls.vue  ← gridSpec inputs, north offset picker
+  ├── ElevationToolPanel.vue   ← useHexPaintTool; slider + tint overlay
+  ├── TerrainToolPanel.vue     ← useHexPaintTool; terrain + building chooser
+  ├── RoadToolPanel.vue        ← useEdgePaintTool + useClickHexside (bridge)
+  ├── StreamWallToolPanel.vue  ← useEdgePaintTool + useClickHexside (ford)
+  ├── ContourToolPanel.vue     ← useEdgePaintTool; auto-detect from elevation data
+  └── LosTestPanel.vue         ← read-only; useLosTest
 ```
 
 **Data flow:**
 
 ```
-1. Load       GET /api/tools/map-editor/data → map.json into Vue state; offer localStorage
-              draft restore if draft._savedAt > server._savedAt
-2. Calibrate  CalibrationControls adjusts gridSpec (origin, size, rotation); hex grid redraws
-3. Edit       Click hex → select mode opens HexEditPanel (terrain, elevation, slope, edges,
-              features); paint mode sets terrain on hover; edge mode paints EdgeFeature on
-              both adjacent hexes; elevation mode increments/decrements elevation
-4. Autosave   Every change writes working copy to localStorage (lob-map-editor-mapdata-v1)
-5. Save       PUT /api/tools/map-editor/data → Zod validation → write map.json;
-              clears localStorage working copy on success
-6. Export     "Export engine JSON" button strips editor-only fields and downloads as a file
+1. Load      GET /api/tools/map-editor/data → map.json into Vue state
+             offer localStorage draft restore if draft._savedAt > server._savedAt
+2. Calibrate CalibrationControls adjusts gridSpec; hex grid redraws live
+3. Edit      Open a tool panel → activates that tool's overlays and interaction gate
+             paint/click hexes or edges → tool composable writes canonical hex entry
+             right-click → remove / reset selected value
+4. Autosave  Every stroke-end writes working copy to localStorage
+5. Save      PUT /api/tools/map-editor/data → Zod validation → write map.json
+6. Export    "Export" strips _-prefixed fields → client-side file download
 ```
 
-**Note:** The Vue route `/tools/map-editor` is always registered in the client router. Visiting it without `MAP_EDITOR_ENABLED=true` on the server will result in API 404s when the editor tries to load or save data.
+**Note:** The Vue route `/tools/map-editor` is always registered in the client router. Visiting
+it without `MAP_EDITOR_ENABLED=true` will result in API 404s.
 
 #### Detailed Design
 
-See `docs/map-editor-design.md` for the full specification, including:
+See `docs/map-editor-design.md` for the full specification:
 
-- **§1 Hex Data Model** — the revised `HexEntry` schema with `edges`, `slope`,
-  `wedgeElevations`, and `features`; the `hexsides`→`edges` migration rationale; symmetric
-  edge storage; and metadata list fields.
-- **§2 Grid Calibration Extensions** — `gridSpec.rotation` (SVG rotate transform) and
-  `gridSpec.locked` (disables calibration UI).
-- **§3 Editor Component Architecture** — per-component scope for all five components and
-  the full `MapEditorView` state object.
-- **§4 Interaction Modes** — select (single/multi/rubber-band), paint (click-drag terrain),
-  elevation (increment/decrement), edge draw (snap-to-edge, mirror update).
-- **§5 Visualization Layers** — six independently-toggled SVG layers, render order,
-  wedge/edge/slope geometry formulas, and the `HexDir` 0–5 index reference.
-- **§6 Save Model** — three-tier save (localStorage autosave → server save → engine export)
-  and the draft-restoration conflict flow.
+- **§2 Hex Data Model** — `HexEntry` with `hexFeature` (single building flag), canonical edge
+  ownership (faces 0–2 stored on hex; faces 3–5 on neighbour), integer face indices independent
+  of `northOffset`, and edge feature coexistence rules.
+- **§4 Tool Panel Framework** — component/composable diagram, declarative overlay system
+  (`overlayConfig`), shared composable contracts (`useHexPaintTool`, `useEdgePaintTool`,
+  `useClickHexside`, `usePaintStroke`), and `BaseToolPanel` common controls.
+- **§6–§10 Tool sections** — per-tool `overlayConfig` declarations and unique controls.
+- **§14 Save Model** — three-tier save (localStorage → server → engine export).
+- **§15 Formula and Config Modules** — `config/feature-types.js` (single source of truth for
+  colors/styles), `formulas/hex-geometry.js`, `formulas/compass.js`, `formulas/edge-model.js`,
+  `formulas/elevation.js`, `formulas/los.js`.
 
 ---
 
