@@ -623,6 +623,29 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 
+  // onMutated guard (#123): unsaved.value = true is written only once across multiple mutations
+  it('marks unsaved on first hex-update and stays marked on subsequent updates', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain('* unsaved');
+
+    const hexEditPanel = wrapper.findComponent({ name: 'HexEditPanel' });
+    await hexEditPanel.vm.$emit('hex-update', { hex: '01.01', terrain: 'woods' });
+    await wrapper.vm.$nextTick();
+    expect(wrapper.text()).toContain('* unsaved');
+
+    // A second mutation should not break the unsaved state
+    await hexEditPanel.vm.$emit('hex-update', { hex: '01.01', terrain: 'clear' });
+    await wrapper.vm.$nextTick();
+    expect(wrapper.text()).toContain('* unsaved');
+
+    vi.useRealTimers();
+    wrapper.unmount();
+  });
+
   it('save success clears the v2 localStorage draft key', async () => {
     const fetchMock = vi
       .fn()

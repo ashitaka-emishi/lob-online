@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue';
-import { resolveHex } from '../utils/hexGeometry.js';
+import { resolveHexOrStub } from '../utils/hexGeometry.js';
 
 /**
  * Hex interaction handlers and selection state derivations.
@@ -45,16 +45,16 @@ export function useHexInteraction({
     selectedHexIds.value.size === 1 ? selectedHexIds.value.values().next().value : null
   );
 
-  // M3: use resolveHex to eliminate the repeated find-or-stub pattern
+  // M3: use resolveHexOrStub to eliminate the repeated find-or-stub pattern
   const selectedHex = computed(() => {
     if (!selectedHexId.value || !mapData.value) return null;
-    return resolveHex(mapData.value.hexes, hexIndex.value, selectedHexId.value);
+    return resolveHexOrStub(mapData.value.hexes, hexIndex.value, selectedHexId.value);
   });
 
   // ── Elevation adjustment ───────────────────────────────────────────────────
   function adjustHexElevation(hexId, delta) {
     if (!mapData.value) return;
-    const existing = resolveHex(mapData.value.hexes, hexIndex.value, hexId);
+    const existing = resolveHexOrStub(mapData.value.hexes, hexIndex.value, hexId);
     const current = existing.elevation ?? 0;
     const clamped = Math.max(0, Math.min(elevationMax.value, current + delta));
     onHexUpdate({ ...existing, elevation: clamped });

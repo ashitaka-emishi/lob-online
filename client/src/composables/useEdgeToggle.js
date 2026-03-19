@@ -1,4 +1,4 @@
-import { adjacentHexId, resolveHex, OPPOSITE_DIR } from '../utils/hexGeometry.js';
+import { adjacentHexId, resolveHexOrStub, OPPOSITE_DIR } from '../utils/hexGeometry.js';
 
 /**
  * Edge feature toggle handler — extracted from useHexInteraction (M2).
@@ -33,11 +33,14 @@ export function useEdgeToggle({ mapData, hexIndex, paintEdgeFeature, calibration
     const featureType = paintEdgeFeature.value ?? 'road';
 
     // Read both hex objects before any mutation so hexIndex is only accessed once.
-    const thisHex = resolveHex(mapData.value.hexes, hexIndex.value, hexId);
+    const thisHex = resolveHexOrStub(mapData.value.hexes, hexIndex.value, hexId);
     const adjId = adjacentHexId(hexId, dir, calibration.value);
-    const adjHex = adjId ? resolveHex(mapData.value.hexes, hexIndex.value, adjId) : null;
+    const adjHex = adjId ? resolveHexOrStub(mapData.value.hexes, hexIndex.value, adjId) : null;
 
     // Apply both updates after all reads.
+    // onHexUpdate is called twice intentionally: each hex owns its own edge feature list, so
+    // the clicked hex (dir) and its neighbour (OPPOSITE_DIR[dir]) must each be updated
+    // independently. The debounce in saveMapDraft ensures only one localStorage write results.
     onHexUpdate(toggleEdgeFeature(thisHex, dir, featureType));
     if (adjHex) {
       onHexUpdate(toggleEdgeFeature(adjHex, OPPOSITE_DIR[dir], featureType));

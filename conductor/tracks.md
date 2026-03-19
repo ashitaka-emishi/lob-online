@@ -30,4 +30,6 @@
 
 | [x] | click-paint-modes_20260318 | Click / Paint Modes for Terrain & Elevation Editor (#115) | 2026-03-18 | 2026-03-18 |
 
+| [x] | minor-debt-bundle_20260318 | Minor Debt Bundle — Issues #119 #123 #127 #128 #129 #130 | 2026-03-18 | 2026-03-18 |
+
 <!-- Tracks registered by /conductor:new-track -->

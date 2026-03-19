@@ -11,7 +11,7 @@ const PANEL_DISPLAY_NAMES = {
 };
 
 // Which panels activate a tool mode when opened
-export const TOOL_PANEL_MODES = Object.freeze({
+const TOOL_PANEL_MODES = Object.freeze({
   elevation: 'elevation',
   terrain: 'paint',
   linearFeature: 'linearFeature',
@@ -45,5 +45,10 @@ export function useEditorAccordion({ onClearSelection } = {}) {
     }
   }
 
-  return { openPanel, editorMode, activeToolName, togglePanel };
+  /** Returns true if the named panel activates a tool mode when open. */
+  function isToolPanel(name) {
+    return Object.prototype.hasOwnProperty.call(TOOL_PANEL_MODES, name);
+  }
+
+  return { openPanel, editorMode, activeToolName, togglePanel, isToolPanel };
 }

@@ -1,0 +1,16 @@
+{
+  "id": "minor-debt-bundle_20260318",
+  "title": "Minor Debt Bundle — Issues #119 #123 #127 #128 #129 #130",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-03-18T00:00:00.000Z",
+  "updated": "2026-03-18T00:00:00.000Z",
+  "phases": {
+    "total": 5,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 11,
+    "completed": 0
+  }
+}

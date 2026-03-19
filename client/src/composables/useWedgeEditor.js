@@ -1,4 +1,4 @@
-import { resolveHex } from '../utils/hexGeometry.js';
+import { resolveHexOrStub } from '../utils/hexGeometry.js';
 
 /**
  * Wedge elevation update and initialization for the selected hex.
@@ -14,14 +14,14 @@ import { resolveHex } from '../utils/hexGeometry.js';
 export function useWedgeEditor({ mapData, hexIndex, selectedHexId, onHexUpdate }) {
   function onWedgeUpdate(newElev) {
     if (!selectedHexId.value || !mapData.value) return;
-    // M3: use resolveHex to eliminate the repeated find-or-stub pattern
-    const existing = resolveHex(mapData.value.hexes, hexIndex.value, selectedHexId.value);
+    // M3: use resolveHexOrStub to eliminate the repeated find-or-stub pattern
+    const existing = resolveHexOrStub(mapData.value.hexes, hexIndex.value, selectedHexId.value);
     onHexUpdate({ ...existing, wedgeElevations: newElev });
   }
 
   function initWedgeElevations() {
     if (!selectedHexId.value || !mapData.value) return;
-    const existing = resolveHex(mapData.value.hexes, hexIndex.value, selectedHexId.value);
+    const existing = resolveHexOrStub(mapData.value.hexes, hexIndex.value, selectedHexId.value);
     onHexUpdate({ ...existing, wedgeElevations: [0, 0, 0, 0, 0, 0] });
   }
 

@@ -1,5 +1,49 @@
 import { ref } from 'vue';
 
+// Known top-level keys from MapSchema; used by isValidDraft to reject unrecognised structures.
+// Must stay in sync with MapSchema.shape — verified by the cross-check test in useMapPersistence.test.js.
+const KNOWN_MAP_KEYS = new Set([
+  '_status',
+  '_savedAt',
+  '_description',
+  '_digitizationNote',
+  '_todoHexes',
+  '_digitizationPlan',
+  'scenario',
+  'layout',
+  'hexIdFormat',
+  'gridSpec',
+  'terrainTypes',
+  'hexsideTypes',
+  'hexFeatureTypes',
+  'edgeFeatureTypes',
+  'elevationSystem',
+  'vpHexes',
+  'entryHexes',
+  'hexes',
+]);
+
+// L1: validate that a parsed localStorage object has the expected map shape,
+// including that each hex entry has a hex string property (defense against tampered storage).
+// Also checks that all top-level keys are known (#127) and that gridSpec, if present, is an
+// object (not a string or array that could be injected via tampered localStorage).
+// L2: allowlist and gridSpec checks run before hexes.every() (O(n) over 2000+ hexes) to
+// short-circuit cheaply on structurally invalid objects.
+function isValidDraft(obj) {
+  if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return false;
+  if (!Array.isArray(obj.hexes)) return false;
+  // Reject drafts with unknown top-level keys (cheap — runs before the O(n) hexes.every)
+  if (Object.keys(obj).some((k) => !KNOWN_MAP_KEYS.has(k))) return false;
+  // gridSpec, if present, must be a non-null, non-array object
+  if (obj.gridSpec !== undefined) {
+    if (obj.gridSpec === null || typeof obj.gridSpec !== 'object' || Array.isArray(obj.gridSpec))
+      return false;
+  }
+  if (!obj.hexes.every((h) => h !== null && typeof h === 'object' && typeof h.hex === 'string'))
+    return false;
+  return true;
+}
+
 /**
  * Map data fetch, save, draft, push, and pull state + logic.
  *
@@ -72,17 +116,6 @@ export function useMapPersistence({
         /* ignore storage errors */
       }
     }, 1000);
-  }
-
-  // L1: validate that a parsed localStorage object has the expected map shape,
-  // including that each hex entry has a hex string property (defense against tampered storage)
-  function isValidDraft(obj) {
-    return (
-      obj !== null &&
-      typeof obj === 'object' &&
-      Array.isArray(obj.hexes) &&
-      obj.hexes.every((h) => h !== null && typeof h === 'object' && typeof h.hex === 'string')
-    );
   }
 
   function restoreDraft() {

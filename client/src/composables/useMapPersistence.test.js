@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ref } from 'vue';
 import { useMapPersistence } from './useMapPersistence.js';
+import { MapSchema } from '../../../server/src/schemas/map.schema.js';
 
 const DRAFT_KEY = 'test-draft-v2';
 const DRAFT_KEY_V1 = 'test-draft-v1';
@@ -103,6 +104,120 @@ describe('useMapPersistence', () => {
       const { mapData, restoreDraft } = useMapPersistence(makeArgs());
       restoreDraft();
       expect(mapData.value).toBeNull();
+    });
+
+    // isValidDraft deepening (#127): allowlist and gridSpec type checks
+    it('rejects drafts with unknown top-level keys', () => {
+      const { mapData, restoreDraft } = useMapPersistence(makeArgs());
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ hexes: [], _savedAt: 1000, injected: true })
+      );
+      restoreDraft();
+      expect(mapData.value).toBeNull();
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+    });
+
+    it('accepts drafts without gridSpec (optional field)', () => {
+      const { mapData, restoreDraft } = useMapPersistence(makeArgs());
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ hexes: [], _savedAt: 1000 }));
+      restoreDraft();
+      expect(mapData.value).not.toBeNull();
+    });
+
+    it('rejects drafts where gridSpec is a non-object', () => {
+      const { mapData, restoreDraft } = useMapPersistence(makeArgs());
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ hexes: [], _savedAt: 1000, gridSpec: 'not-an-object' })
+      );
+      restoreDraft();
+      expect(mapData.value).toBeNull();
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+    });
+
+    it('rejects drafts where gridSpec is an array', () => {
+      const { mapData, restoreDraft } = useMapPersistence(makeArgs());
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ hexes: [], _savedAt: 1000, gridSpec: ['cols', 10] })
+      );
+      restoreDraft();
+      expect(mapData.value).toBeNull();
+    });
+
+    // L3: additional edge cases
+    it('rejects drafts where gridSpec is null', () => {
+      const { mapData, restoreDraft } = useMapPersistence(makeArgs());
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ hexes: [], _savedAt: 1000, gridSpec: null })
+      );
+      restoreDraft();
+      expect(mapData.value).toBeNull();
+    });
+
+    it('rejects drafts with a suspicious unknown key (allowlist covers prototype-like keys)', () => {
+      // Store a raw JSON string with an unknown key that isValidDraft must block.
+      // JSON.parse does not cause prototype pollution in modern V8, but the allowlist
+      // still rejects any unrecognised own key.
+      const { mapData, restoreDraft } = useMapPersistence(makeArgs());
+      localStorage.setItem(DRAFT_KEY, '{"hexes":[],"_savedAt":1000,"__badKey":true}');
+      restoreDraft();
+      expect(mapData.value).toBeNull();
+      expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+    });
+
+    it('rejects drafts where hexes contains a null entry', () => {
+      const { mapData, restoreDraft } = useMapPersistence(makeArgs());
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ hexes: [null], _savedAt: 1000 }));
+      restoreDraft();
+      expect(mapData.value).toBeNull();
+    });
+  });
+
+  // M1: KNOWN_MAP_KEYS must stay in sync with MapSchema.shape top-level keys.
+  // This test imports MapSchema directly so that any future schema addition will break the test
+  // immediately, prompting a developer to update KNOWN_MAP_KEYS as well.
+  describe('KNOWN_MAP_KEYS parity with MapSchema', () => {
+    it('contains exactly the same keys as MapSchema.shape (plus draft-only _savedAt)', () => {
+      // MapSchema is wrapped in superRefine (ZodEffects); access the inner ZodObject via _def.schema
+      const schemaKeys = new Set(Object.keys(MapSchema._def.schema.shape));
+      // The client-side allowlist — must mirror this list in useMapPersistence.js
+      const knownKeys = [
+        '_status',
+        '_savedAt',
+        '_description',
+        '_digitizationNote',
+        '_todoHexes',
+        '_digitizationPlan',
+        'scenario',
+        'layout',
+        'hexIdFormat',
+        'gridSpec',
+        'terrainTypes',
+        'hexsideTypes',
+        'hexFeatureTypes',
+        'edgeFeatureTypes',
+        'elevationSystem',
+        'vpHexes',
+        'entryHexes',
+        'hexes',
+      ];
+      const knownSet = new Set(knownKeys);
+      // _savedAt is appended by saveMapDraft at write time; it is not in the server schema
+      const draftOnlyKeys = new Set(['_savedAt']);
+      // Every MapSchema key must appear in KNOWN_MAP_KEYS
+      for (const key of schemaKeys) {
+        expect(knownSet.has(key), `MapSchema key "${key}" missing from KNOWN_MAP_KEYS`).toBe(true);
+      }
+      // Every KNOWN_MAP_KEYS entry (excluding draft-only keys) must appear in MapSchema
+      for (const key of knownKeys) {
+        if (draftOnlyKeys.has(key)) continue;
+        expect(schemaKeys.has(key), `KNOWN_MAP_KEYS entry "${key}" missing from MapSchema`).toBe(
+          true
+        );
+      }
     });
   });
 

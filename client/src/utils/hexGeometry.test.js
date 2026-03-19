@@ -3,7 +3,7 @@ import { defineHex, Grid, rectangle, Orientation } from 'honeycomb-grid'; // use
 import {
   edgeMidpoint,
   edgeLine20_80,
-  resolveHex,
+  resolveHexOrStub,
   wedgePolygonPoints,
   adjacentHexId,
   getEdgeLabels,
@@ -355,7 +355,7 @@ describe('hexToGameId', () => {
   });
 });
 
-describe('resolveHex', () => {
+describe('resolveHexOrStub', () => {
   const hexes = [
     { hex: '01.01', terrain: 'clear', elevation: 3 },
     { hex: '02.01', terrain: 'woods' },
@@ -363,15 +363,18 @@ describe('resolveHex', () => {
   const indexMap = new Map(hexes.map((h, i) => [h.hex, i]));
 
   it('returns the existing hex entry when found', () => {
-    expect(resolveHex(hexes, indexMap, '01.01')).toStrictEqual(hexes[0]);
+    expect(resolveHexOrStub(hexes, indexMap, '01.01')).toStrictEqual(hexes[0]);
   });
 
   it('returns a stub object for an unknown hexId', () => {
-    expect(resolveHex(hexes, indexMap, '99.99')).toEqual({ hex: '99.99', terrain: 'unknown' });
+    expect(resolveHexOrStub(hexes, indexMap, '99.99')).toEqual({
+      hex: '99.99',
+      terrain: 'unknown',
+    });
   });
 
   it('stub has the correct hexId', () => {
-    const result = resolveHex(hexes, indexMap, '03.05');
+    const result = resolveHexOrStub(hexes, indexMap, '03.05');
     expect(result.hex).toBe('03.05');
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { useEditorAccordion, TOOL_PANEL_MODES } from './useEditorAccordion.js';
+import { useEditorAccordion } from './useEditorAccordion.js';
 
 describe('useEditorAccordion', () => {
   describe('initial state', () => {
@@ -141,14 +141,21 @@ describe('useEditorAccordion', () => {
     });
   });
 
-  describe('TOOL_PANEL_MODES export', () => {
-    it('contains the expected panel-to-mode mappings', () => {
-      expect(TOOL_PANEL_MODES).toMatchObject({
-        elevation: 'elevation',
-        terrain: 'paint',
-        linearFeature: 'linearFeature',
-        wedge: 'wedge',
-      });
+  describe('isToolPanel', () => {
+    it('returns true for tool panels (elevation, terrain, linearFeature, wedge)', () => {
+      const { isToolPanel } = useEditorAccordion();
+      expect(isToolPanel('elevation')).toBe(true);
+      expect(isToolPanel('terrain')).toBe(true);
+      expect(isToolPanel('linearFeature')).toBe(true);
+      expect(isToolPanel('wedge')).toBe(true);
+    });
+
+    it('returns false for non-tool panels (hexEdit, calibration, losTest)', () => {
+      const { isToolPanel } = useEditorAccordion();
+      expect(isToolPanel('hexEdit')).toBe(false);
+      expect(isToolPanel('calibration')).toBe(false);
+      expect(isToolPanel('losTest')).toBe(false);
+      expect(isToolPanel('unknown')).toBe(false);
     });
   });
 });
