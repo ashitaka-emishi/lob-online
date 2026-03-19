@@ -249,12 +249,16 @@ export function adjacentHexId(hexId, dir, gridSpec) {
  * Look up a hex by id in an index map, returning a stub object for unknown hexes.
  * Centralises the repeated "find index → get entry or create stub" pattern.
  *
+ * The name reflects the fallback behaviour: callers that need a hard failure for
+ * missing hexes (e.g. game-logic contexts) should handle the stub return value
+ * explicitly rather than relying on silent stub creation.
+ *
  * @param {Array<object>} hexes - the map's hex array
  * @param {Map<string, number>} indexMap - hexId → array index
  * @param {string} hexId
  * @returns {object} the existing hex entry, or `{ hex: hexId, terrain: 'unknown' }`
  */
-export function resolveHex(hexes, indexMap, hexId) {
+export function resolveHexOrStub(hexes, indexMap, hexId) {
   const idx = indexMap.get(hexId);
   return idx !== undefined ? hexes[idx] : { hex: hexId, terrain: 'unknown' };
 }
