@@ -14,7 +14,7 @@ const BASE_CAL = {
   imageScale: 1,
   orientation: 'flat',
   strokeWidth: 0.5,
-  evenColUp: false,
+  evenColUp: true,
 };
 
 describe('HexMapOverlay', () => {
@@ -353,11 +353,11 @@ describe('HexMapOverlay', () => {
 
   // --- hex ID coordinate-system consistency tests (#114) ---
 
-  it('cell IDs are consistent with los.js adjacentHexId — SE neighbor of 01.03 is 02.03', () => {
-    // With evenColUp:false (offset:-1, ODD_Q), hex(col=1,row=0) is at the same visual row
-    // as hex(col=0,row=0) but shifted down by half a hex — game row must stay 3, not 2.
-    // adjacentHexId('01.03','SE',{rows:3,cols:4}) === '02.03'
-    // Before the fix the formula subtracts 1 for even game cols → labels it '02.02' instead.
+  it('cell IDs are consistent with los.js adjacentHexId — NE neighbor of 01.03 is 02.03', () => {
+    // With evenColUp:true (offset:+1, EVEN_Q), even 0-based columns are shifted up.
+    // hex(col=1,row=0) is the NE neighbor of hex(col=0,row=0) at the same game row — '02.03'.
+    // adjacentHexId('01.03','NE',{rows:3,cols:4}) === '02.03'
+    // Regression: the formula must not subtract 1 for even game cols (that was the old ODD_Q bug).
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
@@ -374,10 +374,10 @@ describe('HexMapOverlay', () => {
     const labelTexts = wrapper.findAll('text').map((el) => el.text());
     // Odd game column (col=1, hex.col=0): top hex should be row 3 — always holds.
     expect(labelTexts).toContain('01.03');
-    // Even game column (col=2, hex.col=1): top-most rendered hex must be row 3 as well,
-    // because adjacentHexId('01.03','SE',{rows:3,cols:4}) === '02.03'.
-    // Before the fix, the formula subtracted 1 for even game cols → top hex got '02.02'
-    // instead of '02.03', shifting the entire column's labels one row down.
+    // Even game column (col=2, hex.col=1): top-most rendered hex must be row 3,
+    // because adjacentHexId('01.03','NE',{rows:3,cols:4}) === '02.03' under EVEN_Q.
+    // Regression: with ODD_Q the formula subtracted 1 for even game cols → top hex
+    // was incorrectly labeled '02.02', shifting the entire column's labels one row down.
     expect(labelTexts).toContain('02.03');
     // The column starts at row 3, so row 4 must NOT appear (would indicate an off-by-one
     // in the other direction).

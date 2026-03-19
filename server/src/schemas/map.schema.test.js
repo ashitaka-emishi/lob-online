@@ -71,7 +71,7 @@ describe('MapSchema — valid documents', () => {
         imageScale: 1,
         strokeWidth: 0.5,
         orientation: 'flat',
-        evenColUp: false,
+        evenColUp: true,
       },
     });
     expect(result.success).toBe(true);

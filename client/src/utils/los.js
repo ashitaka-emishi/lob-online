@@ -2,8 +2,8 @@
  * LOS algorithm for Line of Battle wargame — South Mountain scenario.
  * Pure functions; no framework dependencies.
  *
- * Hex coordinate system: flat-top hexes, ODD_Q offset convention
- * (evenColUp: false → honeycomb-grid offset: -1).
+ * Hex coordinate system: flat-top hexes, EVEN_Q offset convention
+ * (evenColUp: true → honeycomb-grid offset: +1).
  * Game IDs are "CC.RR" (1-indexed, row 1 = bottom).
  */
 
@@ -41,13 +41,13 @@ export function parseHexId(id) {
 
 /**
  * Game col/row → cube { q, r, s }
- * Flat-top ODD_Q offset convention (evenColUp: false).
+ * Flat-top EVEN_Q offset convention (evenColUp: true).
  */
 export function colRowToCube(col, row, gridSpec) {
   const hcCol = col - 1;
   const hcRow = gridSpec.rows - row;
   const q = hcCol;
-  const r = hcRow - Math.floor((hcCol - (hcCol & 1)) / 2);
+  const r = hcRow - Math.floor((hcCol + (hcCol & 1)) / 2);
   const s = -q - r;
   return { q, r, s };
 }
@@ -58,7 +58,7 @@ export function colRowToCube(col, row, gridSpec) {
 export function cubeToColRow(cube, gridSpec) {
   const { q, r } = cube;
   const hcCol = q;
-  const hcRow = r + Math.floor((q - (q & 1)) / 2);
+  const hcRow = r + Math.floor((q + (q & 1)) / 2);
   const col = hcCol + 1;
   const row = gridSpec.rows - hcRow;
   return { col, row };
@@ -163,7 +163,7 @@ export function dirFromDelta(dq, dr) {
  */
 export function evaluateLos(hexAId, hexBId, mapData, options = {}) {
   const { treeLosHeight = 1 } = options;
-  const gridSpec = mapData.gridSpec ?? { cols: 64, rows: 35, evenColUp: false };
+  const gridSpec = mapData.gridSpec ?? { cols: 64, rows: 35, evenColUp: true };
 
   // Build hex lookup index
   const hexIndex = {};

@@ -1,6 +1,6 @@
 /**
  * Pure geometry helpers for hex map rendering and coordinate math.
- * Assumes flat-top hexes with cube coordinate convention (ODD_Q offset, evenColUp: false).
+ * Assumes flat-top hexes with cube coordinate convention (EVEN_Q offset, evenColUp: true).
  */
 
 export const DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
@@ -136,7 +136,7 @@ export function findNearestEdge(localX, localY, cells, threshold = 8) {
  * Return the cell for `candidateHex` plus its valid neighbors, looked up via `cellByColRow`.
  * Reduces edge-search candidates from the full grid to at most 7 cells.
  *
- * Uses pure ODD_Q offset math (offset: -1, flat-top) — no honeycomb-grid API call needed.
+ * Uses pure EVEN_Q offset math (offset: +1, flat-top) — no honeycomb-grid API call needed.
  *
  * @param {{col:number, row:number}} candidateHex - object with col/row offset coordinates
  * @param {Map<string,object>} cellByColRow - Map keyed by "${col},${row}" → cell object
@@ -147,25 +147,25 @@ export function getCellAndNeighbors(candidateHex, cellByColRow) {
   const candidate = cellByColRow.get(`${col},${row}`);
   const result = candidate ? [candidate] : [];
 
-  // ODD_Q offset neighbor deltas for flat-top hexes (honeycomb offset: -1)
-  // Even columns shift diagonals up by 1 row; odd columns shift diagonals down.
+  // EVEN_Q offset neighbor deltas for flat-top hexes (honeycomb offset: +1)
+  // Even columns (0-based) are shifted up; odd columns are at baseline.
   const isOdd = col & 1;
   const deltas = isOdd
     ? [
-        [0, -1],
-        [1, 0],
-        [1, 1],
-        [0, 1],
-        [-1, 1],
-        [-1, 0],
-      ]
-    : [
         [0, -1],
         [1, -1],
         [1, 0],
         [0, 1],
         [-1, 0],
         [-1, -1],
+      ]
+    : [
+        [0, -1],
+        [1, 0],
+        [1, 1],
+        [0, 1],
+        [-1, 1],
+        [-1, 0],
       ];
 
   for (const [dc, dr] of deltas) {
@@ -208,7 +208,7 @@ const DIR_CUBE_DELTAS = {
 
 /**
  * Return the hex ID of the neighbor in direction `dir` from `hexId`, or null if out of bounds.
- * Uses flat-top ODD_Q offset convention (evenColUp: false).
+ * Uses flat-top EVEN_Q offset convention (evenColUp: true).
  *
  * @param {string} hexId - e.g. "03.03"
  * @param {string} dir - 'N'|'NE'|'SE'|'S'|'SW'|'NW'
@@ -223,11 +223,11 @@ export function adjacentHexId(hexId, dir, gridSpec) {
   const col = parseInt(colStr, 10);
   const row = parseInt(rowStr, 10);
 
-  // Game col/row → cube coords (ODD_Q offset, evenColUp: false)
+  // Game col/row → cube coords (EVEN_Q offset, evenColUp: true)
   const hcCol = col - 1;
   const hcRow = gridSpec.rows - row;
   const q = hcCol;
-  const r = hcRow - Math.floor((hcCol - (hcCol & 1)) / 2);
+  const r = hcRow - Math.floor((hcCol + (hcCol & 1)) / 2);
 
   // Step
   const nq = q + delta.dq;
@@ -235,7 +235,7 @@ export function adjacentHexId(hexId, dir, gridSpec) {
 
   // Cube → game col/row
   const nhcCol = nq;
-  const nhcRow = nr + Math.floor((nq - (nq & 1)) / 2);
+  const nhcRow = nr + Math.floor((nq + (nq & 1)) / 2);
   const ncol = nhcCol + 1;
   const nrow = gridSpec.rows - nhcRow;
 

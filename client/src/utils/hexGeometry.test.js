@@ -123,35 +123,35 @@ describe('wedgePolygonPoints', () => {
 describe('adjacentHexId', () => {
   const GRID = { cols: 5, rows: 5 };
 
-  // From "03.03" (col=3, row=3): hcCol=2, hcRow=2; q=2, r=2-floor(2/2)=1, s=-3
+  // From "03.03" (col=3, row=3): hcCol=2(even), hcRow=2; EVEN_Q: q=2, r=2-floor(2/2)=1, s=-3
   it('returns N neighbor of "03.03"', () => {
-    // N: nq=2, nr=0; nhcCol=2, nhcRow=0+1=1; ncol=3, nrow=5-1=4 → "03.04"
+    // N: nq=2, nr=0; nhcCol=2(even), nhcRow=0+floor(2/2)=1; ncol=3, nrow=4 → "03.04"
     expect(adjacentHexId('03.03', 'N', GRID)).toBe('03.04');
   });
 
   it('returns S neighbor of "03.03"', () => {
-    // S: nq=2, nr=2; nhcCol=2, nhcRow=2+1=3; ncol=3, nrow=5-3=2 → "03.02"
+    // S: nq=2, nr=2; nhcCol=2(even), nhcRow=2+1=3; ncol=3, nrow=2 → "03.02"
     expect(adjacentHexId('03.03', 'S', GRID)).toBe('03.02');
   });
 
   it('returns NE neighbor of "03.03"', () => {
-    // NE: nq=3, nr=0; nhcCol=3(odd), nhcRow=0+floor(2/2)=0+1=1; ncol=4, nrow=4 → "04.04"
-    expect(adjacentHexId('03.03', 'NE', GRID)).toBe('04.04');
+    // NE: nq=3, nr=0; nhcCol=3(odd), nhcRow=0+floor(4/2)=2; ncol=4, nrow=3 → "04.03"
+    expect(adjacentHexId('03.03', 'NE', GRID)).toBe('04.03');
   });
 
   it('returns SE neighbor of "03.03"', () => {
-    // SE: nq=3, nr=1; nhcCol=3(odd), nhcRow=1+1=2; ncol=4, nrow=3 → "04.03"
-    expect(adjacentHexId('03.03', 'SE', GRID)).toBe('04.03');
+    // SE: nq=3, nr=1; nhcCol=3(odd), nhcRow=1+2=3; ncol=4, nrow=2 → "04.02"
+    expect(adjacentHexId('03.03', 'SE', GRID)).toBe('04.02');
   });
 
   it('returns SW neighbor of "03.03"', () => {
-    // SW: nq=1, nr=2; nhcCol=1(odd), nhcRow=2+0=2; ncol=2, nrow=3 → "02.03"
-    expect(adjacentHexId('03.03', 'SW', GRID)).toBe('02.03');
+    // SW: nq=1, nr=2; nhcCol=1(odd), nhcRow=2+floor(2/2)=3; ncol=2, nrow=2 → "02.02"
+    expect(adjacentHexId('03.03', 'SW', GRID)).toBe('02.02');
   });
 
   it('returns NW neighbor of "03.03"', () => {
-    // NW: nq=1, nr=1; nhcCol=1(odd), nhcRow=1+0=1; ncol=2, nrow=4 → "02.04"
-    expect(adjacentHexId('03.03', 'NW', GRID)).toBe('02.04');
+    // NW: nq=1, nr=1; nhcCol=1(odd), nhcRow=1+1=2; ncol=2, nrow=3 → "02.03"
+    expect(adjacentHexId('03.03', 'NW', GRID)).toBe('02.03');
   });
 
   it('returns null when neighbor is out of bounds (west edge)', () => {
@@ -169,6 +169,39 @@ describe('adjacentHexId', () => {
 
   it('returns null for an unknown direction', () => {
     expect(adjacentHexId('03.03', 'INVALID', GRID)).toBeNull();
+  });
+
+  // Parity test: even game column (col=4, hcCol=3, odd 0-based) exercises the other
+  // EVEN_Q branch. All 6 neighbors from "04.03" (hcCol=3 odd) must be verified.
+  describe('from even game column "04.03" (odd hcCol — EVEN_Q odd branch)', () => {
+    // hcCol=3(odd), hcRow=2; EVEN_Q: q=3, r=2-floor(4/2)=0, s=-3
+    it('N neighbor', () => {
+      // N: nq=3, nr=-1; nhcCol=3(odd), nhcRow=-1+floor(4/2)=1; ncol=4, nrow=4 → "04.04"
+      expect(adjacentHexId('04.03', 'N', GRID)).toBe('04.04');
+    });
+    it('S neighbor', () => {
+      // S: nq=3, nr=1; nhcRow=1+2=3; nrow=2 → "04.02"
+      expect(adjacentHexId('04.03', 'S', GRID)).toBe('04.02');
+    });
+    it('NE neighbor', () => {
+      // NE: nq=4, nr=-1; nhcCol=4(even), nhcRow=-1+floor(4/2)=1; ncol=5, nrow=4 → "05.04"
+      expect(adjacentHexId('04.03', 'NE', GRID)).toBe('05.04');
+    });
+    it('SE neighbor', () => {
+      // SE: nq=4, nr=0; nhcRow=0+2=2; nrow=3 → "05.03"
+      expect(adjacentHexId('04.03', 'SE', GRID)).toBe('05.03');
+    });
+    it('SW neighbor', () => {
+      // SW: nq=2, nr=1; nhcCol=2(even), nhcRow=1+floor(2/2)=2; ncol=3, nrow=3 → "03.03"
+      expect(adjacentHexId('04.03', 'SW', GRID)).toBe('03.03');
+    });
+    it('NW neighbor', () => {
+      // NW: nq=2, nr=0; nhcRow=0+1=1; nrow=4 → "03.04"
+      expect(adjacentHexId('04.03', 'NW', GRID)).toBe('03.04');
+    });
+    it('NE returns null at east boundary', () => {
+      expect(adjacentHexId('05.03', 'NE', GRID)).toBeNull();
+    });
   });
 });
 
@@ -241,7 +274,7 @@ describe('getCellAndNeighbors', () => {
     dimensions: { xRadius: 35, yRadius: 35 },
     orientation: Orientation.FLAT,
     origin: { x: 0, y: 0 },
-    offset: -1,
+    offset: 1,
   });
   const grid = new Grid(Hex, rectangle({ width: 4, height: 3 }));
 
@@ -337,8 +370,7 @@ describe('hexToGameId', () => {
     expect(hexToGameId({ col: 0, row: 0 }, 3)).toBe('01.03');
   });
 
-  it('col=1, row=0, gridRows=3 → "02.03" (top of second column)', () => {
-    // Must match adjacentHexId('01.03', 'SE', {rows:3, cols:4}) === '02.03'
+  it('col=1, row=0, gridRows=3 → "02.03" (top of second honeycomb column)', () => {
     expect(hexToGameId({ col: 1, row: 0 }, 3)).toBe('02.03');
   });
 

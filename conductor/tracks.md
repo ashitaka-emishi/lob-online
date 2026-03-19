@@ -32,4 +32,6 @@
 
 | [x] | minor-debt-bundle_20260318 | Minor Debt Bundle — Issues #119 #123 #127 #128 #129 #130 | 2026-03-18 | 2026-03-18 |
 
+| [ ] | hex-grid-model_20260318 | Hex Grid Model — Fix EVEN_Q Column Offset Convention | 2026-03-18 | 2026-03-18 |
+
 <!-- Tracks registered by /conductor:new-track -->
