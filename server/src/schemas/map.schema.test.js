@@ -892,6 +892,47 @@ describe('MapSchema — integer face-index edge keys (#135)', () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it('rejects edge feature with unknown type', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '01.01', terrain: 'clear', edges: { 0: [{ type: 'ditch' }] } }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts all known edge feature types', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [
+        {
+          hex: '01.01',
+          terrain: 'clear',
+          edges: {
+            0: [{ type: 'road' }, { type: 'stream' }, { type: 'ford' }],
+            1: [{ type: 'trail' }, { type: 'pike' }, { type: 'bridge' }],
+            2: [{ type: 'stoneWall' }, { type: 'slope' }],
+          },
+        },
+        {
+          hex: '01.02',
+          terrain: 'clear',
+          edges: { 0: [{ type: 'elevation' }] },
+        },
+        {
+          hex: '01.03',
+          terrain: 'clear',
+          edges: { 0: [{ type: 'extremeSlope' }] },
+        },
+        {
+          hex: '01.04',
+          terrain: 'clear',
+          edges: { 0: [{ type: 'verticalSlope' }] },
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
 });
 
 describe('MapSchema — validateCoexistence (#135)', () => {

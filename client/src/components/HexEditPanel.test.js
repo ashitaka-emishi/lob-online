@@ -21,7 +21,7 @@ describe('HexEditPanel', () => {
   it('shows form fields when hex is provided', () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: { hex: '12.34', terrain: 'clear', hexsides: {} },
+        hex: { hex: '12.34', terrain: 'clear' },
         selectedHexId: '12.34',
       },
     });
@@ -32,7 +32,7 @@ describe('HexEditPanel', () => {
   it('changing terrain select emits hex-update', async () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: { hex: '05.10', terrain: 'clear', hexsides: {} },
+        hex: { hex: '05.10', terrain: 'clear' },
         selectedHexId: '05.10',
       },
     });
@@ -47,13 +47,13 @@ describe('HexEditPanel', () => {
   it('checking vpHex checkbox emits hex-update with vpHex: true', async () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: { hex: '05.10', terrain: 'clear', hexsides: {}, vpHex: false },
+        hex: { hex: '05.10', terrain: 'clear', vpHex: false },
         selectedHexId: '05.10',
       },
     });
     const checkboxes = wrapper.findAll('input[type="checkbox"]');
-    // vpHex is first checkbox
-    const vpCheckbox = checkboxes[0];
+    // building=0, vpHex=1, entryHex=2, seed=3
+    const vpCheckbox = checkboxes[1];
     await vpCheckbox.setValue(true);
     await vpCheckbox.trigger('change');
     const emitted = wrapper.emitted('hex-update');
@@ -64,7 +64,7 @@ describe('HexEditPanel', () => {
   it('hex with elevation renders elevation input', () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: { hex: '05.10', terrain: 'clear', elevation: 2, hexsides: {} },
+        hex: { hex: '05.10', terrain: 'clear', elevation: 2 },
         selectedHexId: '05.10',
       },
     });
@@ -75,7 +75,7 @@ describe('HexEditPanel', () => {
   it('hex with setupUnits shows unit list', () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: { hex: '05.10', terrain: 'clear', hexsides: {}, setupUnits: ['1/A/1'] },
+        hex: { hex: '05.10', terrain: 'clear', setupUnits: ['1/A/1'] },
         selectedHexId: '05.10',
       },
     });
@@ -87,7 +87,7 @@ describe('HexEditPanel', () => {
   it('renders slope picker buttons (N,NE,SE,S,SW,NW,None)', () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: { hex: '05.10', terrain: 'clear', hexsides: {} },
+        hex: { hex: '05.10', terrain: 'clear' },
         selectedHexId: '05.10',
       },
     });
@@ -101,7 +101,7 @@ describe('HexEditPanel', () => {
   it('clicking a slope direction button emits hex-update with slope index', async () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: { hex: '05.10', terrain: 'clear', hexsides: {} },
+        hex: { hex: '05.10', terrain: 'clear' },
         selectedHexId: '05.10',
       },
     });
@@ -115,7 +115,7 @@ describe('HexEditPanel', () => {
   it('clicking "None" slope button emits hex-update without slope', async () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: { hex: '05.10', terrain: 'clear', hexsides: {}, slope: 1 },
+        hex: { hex: '05.10', terrain: 'clear', slope: 1 },
         selectedHexId: '05.10',
       },
     });
@@ -130,7 +130,7 @@ describe('HexEditPanel', () => {
   it('wedge section is removed — no WedgeEditor or toggle-wedge-btn in HexEditPanel', async () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: { hex: '05.10', terrain: 'clear', hexsides: {}, wedgeElevations: [0, 0, 0, 0, 0, 0] },
+        hex: { hex: '05.10', terrain: 'clear', wedgeElevations: [0, 0, 0, 0, 0, 0] },
         selectedHexId: '05.10',
       },
     });
@@ -141,7 +141,7 @@ describe('HexEditPanel', () => {
   it('renders EdgeEditPanel for the edges section', () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: { hex: '05.10', terrain: 'clear', hexsides: {} },
+        hex: { hex: '05.10', terrain: 'clear' },
         selectedHexId: '05.10',
         edgeFeatureTypes: ['road', 'stream'],
       },
@@ -150,94 +150,85 @@ describe('HexEditPanel', () => {
     expect(wrapper.findAll('.dir-row').length).toBe(6);
   });
 
-  it('features section shows add-feature row with hex feature types', () => {
+  it('building checkbox is unchecked when hex has no hexFeature', () => {
     const wrapper = mount(HexEditPanel, {
-      props: {
-        hex: { hex: '05.10', terrain: 'clear', hexsides: {} },
-        selectedHexId: '05.10',
-        hexFeatureTypes: ['building', 'ford'],
-      },
+      props: { hex: { hex: '05.10', terrain: 'clear' }, selectedHexId: '05.10' },
     });
-    const featureSelect = wrapper.find('.feature-select');
-    expect(featureSelect.exists()).toBe(true);
-    const options = featureSelect.findAll('option');
-    expect(options.some((o) => o.text() === 'building')).toBe(true);
+    const buildingCheckbox = wrapper.findAll('input[type="checkbox"]')[0];
+    expect(buildingCheckbox.element.checked).toBe(false);
   });
 
-  it('hex with existing features shows them in feature rows', () => {
+  it('building checkbox is checked when hex has hexFeature: { type: "building" }', () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: {
-          hex: '05.10',
-          terrain: 'clear',
-          hexsides: {},
-          features: [{ type: 'building' }],
-        },
+        hex: { hex: '05.10', terrain: 'clear', hexFeature: { type: 'building' } },
         selectedHexId: '05.10',
       },
     });
-    expect(wrapper.text()).toContain('building');
-    expect(wrapper.findAll('.feature-row').length).toBe(1);
+    const buildingCheckbox = wrapper.findAll('input[type="checkbox"]')[0];
+    expect(buildingCheckbox.element.checked).toBe(true);
   });
 
-  it('removing a feature emits hex-update without it', async () => {
+  it('toggling building checkbox on emits hex-update with hexFeature', async () => {
     const wrapper = mount(HexEditPanel, {
-      props: {
-        hex: {
-          hex: '05.10',
-          terrain: 'clear',
-          hexsides: {},
-          features: [{ type: 'building' }, { type: 'ford' }],
-        },
-        selectedHexId: '05.10',
-      },
+      props: { hex: { hex: '05.10', terrain: 'clear' }, selectedHexId: '05.10' },
     });
-    const removeBtn = wrapper.find('.small-remove-btn');
-    await removeBtn.trigger('click');
+    await wrapper.findAll('input[type="checkbox"]')[0].trigger('change');
     const emitted = wrapper.emitted('hex-update');
     expect(emitted).toBeTruthy();
-    const updated = emitted[emitted.length - 1][0];
-    expect(updated.features).toHaveLength(1);
-    expect(updated.features[0].type).toBe('ford');
+    expect(emitted[emitted.length - 1][0].hexFeature).toEqual({ type: 'building' });
+  });
+
+  it('toggling building checkbox off emits hex-update without hexFeature', async () => {
+    const wrapper = mount(HexEditPanel, {
+      props: {
+        hex: { hex: '05.10', terrain: 'clear', hexFeature: { type: 'building' } },
+        selectedHexId: '05.10',
+      },
+    });
+    await wrapper.findAll('input[type="checkbox"]')[0].trigger('change');
+    const emitted = wrapper.emitted('hex-update');
+    expect(emitted).toBeTruthy();
+    expect(emitted[emitted.length - 1][0].hexFeature).toBeUndefined();
   });
 
   it('seed hex checkbox is rendered and disabled when canMarkAsSeed is false', () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: { hex: '05.10', terrain: 'unknown', hexsides: {} },
+        hex: { hex: '05.10', terrain: 'unknown' },
         selectedHexId: '05.10',
         isSeedHex: false,
       },
     });
     const checkboxes = wrapper.findAll('input[type="checkbox"]');
-    // seed is 3rd checkbox (index 2)
-    const seedCheckbox = checkboxes[2];
+    // building=0, vpHex=1, entryHex=2, seed=3
+    const seedCheckbox = checkboxes[3];
     expect(seedCheckbox.element.disabled).toBe(true);
   });
 
   it('seed hex checkbox is enabled when terrain and elevation are set', () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: { hex: '05.10', terrain: 'clear', elevation: 2, hexsides: {} },
+        hex: { hex: '05.10', terrain: 'clear', elevation: 2 },
         selectedHexId: '05.10',
         isSeedHex: false,
       },
     });
     const checkboxes = wrapper.findAll('input[type="checkbox"]');
-    const seedCheckbox = checkboxes[2];
+    const seedCheckbox = checkboxes[3];
     expect(seedCheckbox.element.disabled).toBe(false);
   });
 
   it('checking seed checkbox emits seed-toggle with hexId and confirmedData', async () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: { hex: '05.10', terrain: 'clear', elevation: 2, hexsides: {} },
+        hex: { hex: '05.10', terrain: 'clear', elevation: 2 },
         selectedHexId: '05.10',
         isSeedHex: false,
       },
     });
     const checkboxes = wrapper.findAll('input[type="checkbox"]');
-    const seedCheckbox = checkboxes[2];
+    const seedCheckbox = checkboxes[3];
     await seedCheckbox.trigger('change');
     const emitted = wrapper.emitted('seed-toggle');
     expect(emitted).toBeTruthy();
@@ -246,7 +237,7 @@ describe('HexEditPanel', () => {
     expect(emitted[0][0].confirmedData.elevation).toBe(2);
   });
 
-  it('renders terrain and elevation fields when a minimal default hex (no hexsides) is passed', () => {
+  it('renders terrain and elevation fields when a minimal hex is passed', () => {
     const wrapper = mount(HexEditPanel, {
       props: {
         hex: { hex: '03.05', terrain: 'unknown' },
@@ -263,7 +254,7 @@ describe('HexEditPanel', () => {
         hex: {
           hex: '05.10',
           terrain: 'clear',
-          hexsides: {},
+
           wedgeElevations: [3, 1, 0, 0, 0, 0],
         },
         selectedHexId: '05.10',
@@ -281,7 +272,7 @@ describe('HexEditPanel', () => {
   it('northOffset=3 slope buttons show SM cardinal labels W,NW,NE,E,SE,SW', () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: { hex: '05.10', terrain: 'clear', hexsides: {} },
+        hex: { hex: '05.10', terrain: 'clear' },
         selectedHexId: '05.10',
         northOffset: 3,
       },
@@ -294,7 +285,7 @@ describe('HexEditPanel', () => {
   it('northOffset=3 slope button click for index 0 emits slope=0 (geographic W)', async () => {
     const wrapper = mount(HexEditPanel, {
       props: {
-        hex: { hex: '05.10', terrain: 'clear', hexsides: {} },
+        hex: { hex: '05.10', terrain: 'clear' },
         selectedHexId: '05.10',
         northOffset: 3,
       },
