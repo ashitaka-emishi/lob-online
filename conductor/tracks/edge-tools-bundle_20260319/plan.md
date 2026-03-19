@@ -3,7 +3,7 @@
 **Track ID:** edge-tools-bundle_20260319
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-03-19
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -108,11 +108,11 @@ Wire all new panels into MapEditorView and verify the full accordion/interaction
 
 ### Tasks
 
-- [ ] Task 5.1: Register RoadToolPanel, StreamWallToolPanel, ContourToolPanel in
+- [x] Task 5.1: Register RoadToolPanel, StreamWallToolPanel, ContourToolPanel in
       MapEditorView.vue accordion (openPanel values: 'road', 'stream', 'contour'); extend
       interaction gate to include new panel names; remove any stale overlayConfig pass-through
       for elevation/terrain panels if still present; update MapEditorView tests
-- [ ] Task 5.2: Manual smoke-test against the live map editor: open each panel, paint a few
+- [x] Task 5.2: Manual smoke-test against the live map editor: open each panel, paint a few
       edges, verify overlays render correctly, verify save/push-to-server round-trip preserves
       edge data; fix any integration issues found
 
