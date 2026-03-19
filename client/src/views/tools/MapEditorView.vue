@@ -13,6 +13,7 @@ import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import ElevationToolPanel from '../../components/ElevationToolPanel.vue';
 import TerrainToolPanel from '../../components/TerrainToolPanel.vue';
 import RoadToolPanel from '../../components/RoadToolPanel.vue';
+import StreamWallToolPanel from '../../components/StreamWallToolPanel.vue';
 import { useBulkOperations } from '../../composables/useBulkOperations.js';
 import { useHexInteraction } from '../../composables/useHexInteraction.js';
 import { useEditorAccordion } from '../../composables/useEditorAccordion.js';
@@ -159,8 +160,12 @@ const elevationPanelOverlayConfig = ref(null);
 // Config received from RoadToolPanel via @overlay-config.
 const roadPanelOverlayConfig = ref(null);
 
+// Config received from StreamWallToolPanel via @overlay-config.
+const streamPanelOverlayConfig = ref(null);
+
 // Selected edge types for each panel — owned by MapEditorView, passed to panels.
 const roadSelectedType = ref('trail');
+const streamSelectedType = ref('stream');
 
 // ── Edge mutations ────────────────────────────────────────────────────────────
 // Mutate edges in-place on the reactive hex object (avoids rebuilding hexIndex).
@@ -241,6 +246,9 @@ const overlayConfig = computed(() => {
   }
   if (openPanel.value === 'road' && roadPanelOverlayConfig.value) {
     return roadPanelOverlayConfig.value;
+  }
+  if (openPanel.value === 'stream' && streamPanelOverlayConfig.value) {
+    return streamPanelOverlayConfig.value;
   }
 
   const cfg = {};
@@ -490,6 +498,8 @@ function onEdgeClick({ hexId, dir }) {
   if (faceIndex === -1) return;
   if (openPanel.value === 'road') {
     handleEdgePaint(hexId, faceIndex, roadSelectedType.value);
+  } else if (openPanel.value === 'stream') {
+    handleEdgePaint(hexId, faceIndex, streamSelectedType.value);
   } else {
     legacyOnEdgeClick({ hexId, dir });
   }
@@ -500,6 +510,8 @@ function onEdgeRightClick({ hexId, dir }) {
   if (faceIndex === -1) return;
   if (openPanel.value === 'road') {
     handleEdgeClear(hexId, faceIndex, roadSelectedType.value);
+  } else if (openPanel.value === 'stream') {
+    handleEdgeClear(hexId, faceIndex, streamSelectedType.value);
   }
 }
 
@@ -724,6 +736,30 @@ onUnmounted(() => {
               @bridge-place="handleEdgePaint($event.hexId, $event.faceIndex, 'bridge')"
               @bridge-remove="handleEdgeClear($event.hexId, $event.faceIndex, 'bridge')"
               @overlay-config="roadPanelOverlayConfig = $event"
+            />
+          </div>
+        </div>
+
+        <!-- Stream & Stone Wall Tool -->
+        <div
+          class="accordion-section accordion-hex"
+          :class="{ 'accordion-flex': openPanel === 'stream' }"
+        >
+          <button class="accordion-header" @click="togglePanel('stream')">
+            <span>Stream &amp; Stone Wall Tool</span>
+            <span class="accordion-chevron">{{ openPanel === 'stream' ? '▾' : '▸' }}</span>
+          </button>
+          <div v-if="openPanel === 'stream'" class="accordion-hex-content">
+            <StreamWallToolPanel
+              :selected-type="streamSelectedType"
+              :get-edge-features="getEdgeFeaturesAt"
+              @type-change="streamSelectedType = $event"
+              @edge-paint="handleEdgePaint($event.hexId, $event.faceIndex, $event.type)"
+              @edge-clear="handleEdgeClear($event.hexId, $event.faceIndex, $event.type)"
+              @edge-clear-all="handleEdgeClearAll($event)"
+              @ford-place="handleEdgePaint($event.hexId, $event.faceIndex, 'ford')"
+              @ford-remove="handleEdgeClear($event.hexId, $event.faceIndex, 'ford')"
+              @overlay-config="streamPanelOverlayConfig = $event"
             />
           </div>
         </div>
