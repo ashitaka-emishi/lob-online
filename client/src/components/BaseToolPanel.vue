@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 const props = defineProps({
   overlayConfig: {
@@ -19,13 +19,24 @@ const emit = defineEmits(['overlay-toggle', 'clear-all']);
 // Track enabled state for each toggleable layer; default all on.
 const toggleStates = ref({});
 
+// Initialize toggleStates for any new toggleable keys when overlayConfig changes.
+watch(
+  () => props.overlayConfig,
+  (cfg) => {
+    for (const [key, layer] of Object.entries(cfg)) {
+      if (layer && layer.alwaysOn === false && layer.toggleLabel && !(key in toggleStates.value)) {
+        toggleStates.value[key] = true;
+      }
+    }
+  },
+  { immediate: true }
+);
+
+// Pure derivation — no side effects.
 const toggleableLayers = computed(() =>
   Object.entries(props.overlayConfig)
     .filter(([, layer]) => layer && layer.alwaysOn === false && layer.toggleLabel)
-    .map(([key, layer]) => {
-      if (!(key in toggleStates.value)) toggleStates.value[key] = true;
-      return { key, label: layer.toggleLabel };
-    })
+    .map(([key, layer]) => ({ key, label: layer.toggleLabel }))
 );
 
 function onToggle(key) {

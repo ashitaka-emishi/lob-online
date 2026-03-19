@@ -12,12 +12,6 @@ import {
   hexToGameId,
 } from '../utils/hexGeometry.js';
 
-// ── Interaction gate ───────────────────────────────────────────────────────────
-// Events emitted only when a data-editing tool is active.
-const INTERACTIVE_PANELS = new Set(['elevation', 'terrain', 'road', 'stream', 'contour']);
-// Edge-click mode: road/stream/contour tools snap clicks to edges; others snap to hexes.
-const EDGE_PANELS = new Set(['road', 'stream', 'contour']);
-
 const props = defineProps({
   calibration: {
     type: Object,
@@ -82,11 +76,16 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
-  // Active panel name — gates interaction events.
-  // Only INTERACTIVE_PANELS values enable hex/edge click, mouseenter events.
-  openPanel: {
-    type: String,
-    default: null,
+  // True when a data-editing tool panel is open — gates all interaction events.
+  // Computed by the parent so this component does not need to know tool panel names.
+  interactionEnabled: {
+    type: Boolean,
+    default: false,
+  },
+  // True when the active tool snaps clicks to edges rather than hexes.
+  edgeInteraction: {
+    type: Boolean,
+    default: false,
   },
   // True when the active tool supports drag-paint. Gates hex-mouseenter to mousedown-only.
   dragPaintEnabled: {
@@ -101,13 +100,9 @@ const emit = defineEmits([
   'hex-mouseenter',
   'hex-mouseleave',
   'edge-click',
-  'edge-hover',
   'paint-stroke-done',
   'paint-stroke-start',
 ]);
-
-const interactionEnabled = computed(() => INTERACTIVE_PANELS.has(props.openPanel));
-const edgeMode = computed(() => EDGE_PANELS.has(props.openPanel));
 
 // Paint mousedown gate — true while the mouse button is held during drag-paint.
 const isPaintMouseDown = ref(false);
@@ -217,7 +212,9 @@ function hexFillColor(cell) {
 
 function hexFillOpacity(cell) {
   if (cell.isLosBlocked) return 0.5;
-  const color = hexFillColor(cell);
+  const cfg = props.overlayConfig.hexFill;
+  if (!cfg) return 0;
+  const color = cfg.fillFn?.(cell) ?? 'none';
   return color !== 'none' ? 0.45 : 0;
 }
 
@@ -279,10 +276,18 @@ function hexIconText(cell) {
   return cfg?.iconFn?.(cell) ?? null;
 }
 
+// ── EdgeLineLayer helper ──────────────────────────────────────────────────────
+// Pre-builds a Set of types per group so the template uses O(1) lookups instead
+// of O(k) array.includes() calls in a hot nested loop.
+const edgeLineGroups = computed(() => {
+  const groups = props.overlayConfig.edgeLine?.featureGroups ?? [];
+  return groups.map((g) => ({ ...g, typeSet: new Set(g.types) }));
+});
+
 // ── Event handlers ────────────────────────────────────────────────────────────
 
 function onSvgClick(event) {
-  if (!interactionEnabled.value) return;
+  if (!props.interactionEnabled) return;
   const svg = event.currentTarget;
   const pt = svg.createSVGPoint();
   pt.x = event.clientX;
@@ -293,7 +298,7 @@ function onSvgClick(event) {
   const localX = svgPt.x - tx;
   const localY = svgPt.y - ty;
 
-  if (edgeMode.value) {
+  if (props.edgeInteraction) {
     const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
     const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : allCells;
     const nearest = findNearestEdge(localX, localY, searchCells);
@@ -308,39 +313,8 @@ function onSvgClick(event) {
   }
 }
 
-let rafPending = false;
-
-function onSvgMouseMove(event) {
-  if (rafPending) return;
-  rafPending = true;
-  const svg = event.currentTarget;
-  const clientX = event.clientX;
-  const clientY = event.clientY;
-  requestAnimationFrame(() => {
-    rafPending = false;
-    if (!svg) return;
-    const ctm = svg.getScreenCTM();
-    if (!ctm) return;
-    const pt = svg.createSVGPoint();
-    pt.x = clientX;
-    pt.y = clientY;
-    const svgPt = pt.matrixTransform(ctm.inverse());
-    const { grid, tx, ty, cells: allCells, cellByColRow } = gridData.value;
-    const localX = svgPt.x - tx;
-    const localY = svgPt.y - ty;
-
-    const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
-    const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : allCells;
-    const nearest = findNearestEdge(localX, localY, searchCells);
-
-    if (props.overlayConfig.edgeLine) {
-      emit('edge-hover', nearest);
-    }
-  });
-}
-
 function onSvgContextMenu(event) {
-  if (!interactionEnabled.value) return;
+  if (!props.interactionEnabled) return;
   event.preventDefault();
   const svg = event.currentTarget;
   const pt = svg.createSVGPoint();
@@ -363,20 +337,20 @@ function onSvgContextMenu(event) {
 function onSvgMouseDown() {
   if (props.dragPaintEnabled) {
     isPaintMouseDown.value = true;
-    if (interactionEnabled.value) emit('paint-stroke-start');
+    if (props.interactionEnabled) emit('paint-stroke-start');
   }
 }
 
 function onSvgMouseUp() {
   if (isPaintMouseDown.value) {
     isPaintMouseDown.value = false;
-    if (interactionEnabled.value) emit('paint-stroke-done');
+    if (props.interactionEnabled) emit('paint-stroke-done');
   }
 }
 
 // Gate hex-mouseenter: interaction must be enabled; in drag-paint mode also require mousedown.
 function onHexMouseenter(hexId) {
-  if (!interactionEnabled.value) return;
+  if (!props.interactionEnabled) return;
   if (props.dragPaintEnabled && !isPaintMouseDown.value) return;
   emit('hex-mouseenter', hexId);
 }
@@ -395,7 +369,6 @@ defineExpose({ isPaintMouseDown });
     @mousedown="onSvgMouseDown"
     @mouseup="onSvgMouseUp"
     @mouseleave="onSvgMouseUp"
-    @mousemove="onSvgMouseMove"
   >
     <g :transform="`translate(${gridData.tx},${gridData.ty})`">
       <g :transform="rotationTransform">
@@ -501,9 +474,9 @@ defineExpose({ isPaintMouseDown });
           <template v-for="cell in cells" :key="'edges-' + cell.id">
             <template v-for="dir in DIRS" :key="dir">
               <template v-if="cell.edges && cell.edges[dir] && cell.edges[dir].length">
-                <template v-for="(group, gi) in overlayConfig.edgeLine.featureGroups" :key="gi">
+                <template v-for="(group, gi) in edgeLineGroups" :key="gi">
                   <line
-                    v-for="feat in cell.edges[dir].filter((f) => group.types.includes(f.type))"
+                    v-for="feat in cell.edges[dir].filter((f) => group.typeSet.has(f.type))"
                     :key="feat.type"
                     v-bind="edgeLine20_80(cell.corners, dir)"
                     :stroke="group.color"

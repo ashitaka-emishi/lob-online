@@ -148,28 +148,41 @@ const layerFlags = ref({
 // ── overlayConfig bridge ────────────────────────────────────────────────────
 // Builds the declarative overlayConfig for HexMapOverlay from the current
 // layer flags and editor mode. Tool panels will own this directly once migrated.
+
+// L5: Stable function references lifted out of the computed so overlayConfig
+// does not create new closure objects on every reactive dependency change.
+const TERRAIN_ICON_MAP = {
+  woods: '▲',
+  woodedSloping: '▲',
+  slopingGround: '╱',
+  orchard: '⬡',
+  marsh: '≈',
+};
+const hexLabelFn = (cell) => cell.id;
+const hexFillFn = (cell) => TERRAIN_COLORS[cell.terrain] ?? null;
+const hexIconFn = (cell) => TERRAIN_ICON_MAP[cell.terrain] ?? null;
+
+// M2: Panels that enable hex/edge interaction — defined here so HexMapOverlay
+// does not need to know panel names.
+const INTERACTIVE_PANELS = new Set(['elevation', 'terrain', 'road', 'stream', 'contour']);
+const EDGE_PANELS = new Set(['road', 'stream', 'contour']);
+
+const interactionEnabled = computed(() => INTERACTIVE_PANELS.has(openPanel.value));
+const edgeInteraction = computed(() => EDGE_PANELS.has(openPanel.value));
+
 const overlayConfig = computed(() => {
   const cfg = {};
   if (layerFlags.value.grid) {
-    cfg.hexLabel = { alwaysOn: true, labelFn: (cell) => cell.id };
+    cfg.hexLabel = { alwaysOn: true, labelFn: hexLabelFn };
   }
   if (layerFlags.value.terrain) {
-    cfg.hexFill = {
-      alwaysOn: true,
-      fillFn: (cell) => TERRAIN_COLORS[cell.terrain] ?? null,
-    };
+    cfg.hexFill = { alwaysOn: true, fillFn: hexFillFn };
   }
   if (layerFlags.value.elevation || editorMode.value === 'elevation') {
     cfg.elevationLabel = { alwaysOn: true };
   }
   if (editorMode.value === 'paint') {
-    cfg.hexIcon = {
-      alwaysOn: true,
-      iconFn: (cell) =>
-        ({ woods: '▲', woodedSloping: '▲', slopingGround: '╱', orchard: '⬡', marsh: '≈' })[
-          cell.terrain
-        ] ?? null,
-    };
+    cfg.hexIcon = { alwaysOn: true, iconFn: hexIconFn };
   }
   if (layerFlags.value.edges) {
     cfg.edgeLine = {
@@ -520,7 +533,8 @@ onUnmounted(() => {
             :los-path-hexes="losPathHexes"
             :los-blocked-hex="losBlockedHex"
             :overlay-config="overlayConfig"
-            :open-panel="openPanel"
+            :interaction-enabled="interactionEnabled"
+            :edge-interaction="edgeInteraction"
             :drag-paint-enabled="dragPaintEnabled"
             :seed-hex-ids="seedHexIdsArray"
             @hex-click="onHexClick"

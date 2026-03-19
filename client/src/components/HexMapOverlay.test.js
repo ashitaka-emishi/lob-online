@@ -377,7 +377,7 @@ describe('HexMapOverlay', () => {
 
   // ── Interaction gate (Task 4.3) ────────────────────────────────────────────
 
-  it('hex-click is NOT emitted when openPanel is null', async () => {
+  it('hex-click is NOT emitted when interactionEnabled is false (default)', async () => {
     const { svgX, svgY } = makeSvgPoint(0, 0);
     const wrapper = mount(HexMapOverlay, { props: { calibration: BASE_CAL } });
     setupSvgPoint(wrapper, svgX, svgY);
@@ -385,20 +385,10 @@ describe('HexMapOverlay', () => {
     expect(wrapper.emitted('hex-click')).toBeFalsy();
   });
 
-  it('hex-click is NOT emitted when openPanel is "calibration"', async () => {
-    const { svgX, svgY } = makeSvgPoint(0, 0);
-    const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'calibration' },
-    });
-    setupSvgPoint(wrapper, svgX, svgY);
-    await wrapper.trigger('click');
-    expect(wrapper.emitted('hex-click')).toBeFalsy();
-  });
-
-  it('hex-click IS emitted when openPanel is "elevation"', async () => {
+  it('hex-click IS emitted when interactionEnabled is true', async () => {
     const { svgX, svgY, expectedId } = makeSvgPoint(0, 0);
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'elevation' },
+      props: { calibration: BASE_CAL, interactionEnabled: true },
     });
     setupSvgPoint(wrapper, svgX, svgY);
     await wrapper.trigger('click');
@@ -407,19 +397,7 @@ describe('HexMapOverlay', () => {
     expect(emitted[0][0]).toBe(expectedId);
   });
 
-  it('hex-click IS emitted when openPanel is "terrain"', async () => {
-    const { svgX, svgY, expectedId } = makeSvgPoint(0, 0);
-    const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'terrain' },
-    });
-    setupSvgPoint(wrapper, svgX, svgY);
-    await wrapper.trigger('click');
-    const emitted = wrapper.emitted('hex-click');
-    expect(emitted).toBeTruthy();
-    expect(emitted[0][0]).toBe(expectedId);
-  });
-
-  it('hex-right-click is NOT emitted when openPanel is null', async () => {
+  it('hex-right-click is NOT emitted when interactionEnabled is false (default)', async () => {
     const { svgX, svgY } = makeSvgPoint(0, 0);
     const wrapper = mount(HexMapOverlay, { props: { calibration: BASE_CAL } });
     setupSvgPoint(wrapper, svgX, svgY);
@@ -427,10 +405,10 @@ describe('HexMapOverlay', () => {
     expect(wrapper.emitted('hex-right-click')).toBeFalsy();
   });
 
-  it('hex-right-click IS emitted when openPanel is "terrain"', async () => {
+  it('hex-right-click IS emitted when interactionEnabled is true', async () => {
     const { svgX, svgY, expectedId } = makeSvgPoint(0, 0);
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'terrain' },
+      props: { calibration: BASE_CAL, interactionEnabled: true },
     });
     setupSvgPoint(wrapper, svgX, svgY);
     await wrapper.trigger('contextmenu');
@@ -444,7 +422,7 @@ describe('HexMapOverlay', () => {
   it('onSvgClick emits hex-click with hex ID matching hexToGameId formula', async () => {
     const { svgX, svgY, expectedId } = makeSvgPoint(0, 0);
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'elevation' },
+      props: { calibration: BASE_CAL, interactionEnabled: true },
     });
     setupSvgPoint(wrapper, svgX, svgY);
     await wrapper.trigger('click');
@@ -456,7 +434,7 @@ describe('HexMapOverlay', () => {
   it('onSvgContextMenu emits hex-right-click with hex ID matching hexToGameId formula', async () => {
     const { svgX, svgY, expectedId } = makeSvgPoint(0, 0);
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'terrain' },
+      props: { calibration: BASE_CAL, interactionEnabled: true },
     });
     setupSvgPoint(wrapper, svgX, svgY);
     await wrapper.trigger('contextmenu');
@@ -468,7 +446,7 @@ describe('HexMapOverlay', () => {
   it('onSvgClick emits correct hex ID for an even game column (hexCol=1)', async () => {
     const { svgX, svgY, expectedId } = makeSvgPoint(1, 0);
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'elevation', overlayConfig: WITH_LABELS },
+      props: { calibration: BASE_CAL, interactionEnabled: true, overlayConfig: WITH_LABELS },
     });
     setupSvgPoint(wrapper, svgX, svgY);
     await wrapper.trigger('click');
@@ -482,7 +460,7 @@ describe('HexMapOverlay', () => {
   it('onSvgContextMenu emits correct hex ID for an even game column (hexCol=1)', async () => {
     const { svgX, svgY, expectedId } = makeSvgPoint(1, 0);
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'terrain', overlayConfig: WITH_LABELS },
+      props: { calibration: BASE_CAL, interactionEnabled: true, overlayConfig: WITH_LABELS },
     });
     setupSvgPoint(wrapper, svgX, svgY);
     await wrapper.trigger('contextmenu');
@@ -497,7 +475,7 @@ describe('HexMapOverlay', () => {
 
   it('hex-mouseenter is NOT emitted on hover alone when dragPaintEnabled (no mousedown)', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'terrain', dragPaintEnabled: true },
+      props: { calibration: BASE_CAL, interactionEnabled: true, dragPaintEnabled: true },
     });
     const polygons = wrapper.findAll('polygon');
     expect(polygons.length).toBeGreaterThan(0);
@@ -507,7 +485,7 @@ describe('HexMapOverlay', () => {
 
   it('hex-mouseenter IS emitted on hover after mousedown when dragPaintEnabled', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'terrain', dragPaintEnabled: true },
+      props: { calibration: BASE_CAL, interactionEnabled: true, dragPaintEnabled: true },
     });
     await wrapper.trigger('mousedown');
     const polygons = wrapper.findAll('polygon');
@@ -517,7 +495,7 @@ describe('HexMapOverlay', () => {
 
   it('hex-mouseenter stops firing after mouseup when dragPaintEnabled', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'terrain', dragPaintEnabled: true },
+      props: { calibration: BASE_CAL, interactionEnabled: true, dragPaintEnabled: true },
     });
     await wrapper.trigger('mousedown');
     await wrapper.trigger('mouseup');
@@ -528,7 +506,7 @@ describe('HexMapOverlay', () => {
 
   it('hex-mouseenter is NOT emitted on hover alone in elevation mode when dragPaintEnabled', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'elevation', dragPaintEnabled: true },
+      props: { calibration: BASE_CAL, interactionEnabled: true, dragPaintEnabled: true },
     });
     const polygons = wrapper.findAll('polygon');
     await polygons[0].trigger('mouseenter');
@@ -537,7 +515,7 @@ describe('HexMapOverlay', () => {
 
   it('hex-mouseenter IS emitted after mousedown in elevation mode when dragPaintEnabled', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'elevation', dragPaintEnabled: true },
+      props: { calibration: BASE_CAL, interactionEnabled: true, dragPaintEnabled: true },
     });
     await wrapper.trigger('mousedown');
     const polygons = wrapper.findAll('polygon');
@@ -545,9 +523,9 @@ describe('HexMapOverlay', () => {
     expect(wrapper.emitted('hex-mouseenter')).toBeTruthy();
   });
 
-  it('paint-stroke-start is emitted on mousedown when dragPaintEnabled and openPanel active', async () => {
+  it('paint-stroke-start is emitted on mousedown when dragPaintEnabled and interactionEnabled', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'terrain', dragPaintEnabled: true },
+      props: { calibration: BASE_CAL, interactionEnabled: true, dragPaintEnabled: true },
     });
     await wrapper.trigger('mousedown');
     expect(wrapper.emitted('paint-stroke-start')).toBeTruthy();
@@ -555,15 +533,15 @@ describe('HexMapOverlay', () => {
 
   it('paint-stroke-start is NOT emitted when dragPaintEnabled is false', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'terrain', dragPaintEnabled: false },
+      props: { calibration: BASE_CAL, interactionEnabled: true, dragPaintEnabled: false },
     });
     await wrapper.trigger('mousedown');
     expect(wrapper.emitted('paint-stroke-start')).toBeFalsy();
   });
 
-  it('paint-stroke-start is NOT emitted when openPanel is not active (no interaction)', async () => {
+  it('paint-stroke-start is NOT emitted when interactionEnabled is false', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: null, dragPaintEnabled: true },
+      props: { calibration: BASE_CAL, dragPaintEnabled: true },
     });
     await wrapper.trigger('mousedown');
     expect(wrapper.emitted('paint-stroke-start')).toBeFalsy();
@@ -571,7 +549,7 @@ describe('HexMapOverlay', () => {
 
   it('paint-stroke-done is emitted on mouseup after a paint stroke', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'terrain', dragPaintEnabled: true },
+      props: { calibration: BASE_CAL, interactionEnabled: true, dragPaintEnabled: true },
     });
     await wrapper.trigger('mousedown');
     await wrapper.trigger('mouseup');
@@ -580,7 +558,7 @@ describe('HexMapOverlay', () => {
 
   it('paint-stroke-done is NOT emitted on mouseup when no mousedown occurred', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'terrain', dragPaintEnabled: true },
+      props: { calibration: BASE_CAL, interactionEnabled: true, dragPaintEnabled: true },
     });
     await wrapper.trigger('mouseup');
     expect(wrapper.emitted('paint-stroke-done')).toBeFalsy();
@@ -588,7 +566,7 @@ describe('HexMapOverlay', () => {
 
   it('isPaintMouseDown is false initially and true after mousedown when dragPaintEnabled', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'terrain', dragPaintEnabled: true },
+      props: { calibration: BASE_CAL, interactionEnabled: true, dragPaintEnabled: true },
     });
     expect(wrapper.vm.isPaintMouseDown).toBe(false);
     await wrapper.trigger('mousedown');
@@ -597,18 +575,18 @@ describe('HexMapOverlay', () => {
     expect(wrapper.vm.isPaintMouseDown).toBe(false);
   });
 
-  it('hex-mouseenter emits unconditionally when dragPaintEnabled is false and openPanel active', async () => {
+  it('hex-mouseenter emits unconditionally when dragPaintEnabled is false and interactionEnabled', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: 'terrain' },
+      props: { calibration: BASE_CAL, interactionEnabled: true },
     });
     const polygons = wrapper.findAll('polygon');
     await polygons[0].trigger('mouseenter');
     expect(wrapper.emitted('hex-mouseenter')).toBeTruthy();
   });
 
-  it('hex-mouseenter NOT emitted when openPanel is inactive even without dragPaintEnabled', async () => {
+  it('hex-mouseenter NOT emitted when interactionEnabled is false even without dragPaintEnabled', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, openPanel: null },
+      props: { calibration: BASE_CAL },
     });
     const polygons = wrapper.findAll('polygon');
     await polygons[0].trigger('mouseenter');

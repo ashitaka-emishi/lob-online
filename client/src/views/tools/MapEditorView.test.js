@@ -19,11 +19,12 @@ vi.mock('../../components/HexMapOverlay.vue', () => ({
       'losPathHexes',
       'losBlockedHex',
       'overlayConfig',
-      'openPanel',
+      'interactionEnabled',
+      'edgeInteraction',
       'dragPaintEnabled',
       'seedHexIds',
     ],
-    emits: ['hex-click', 'hex-mouseenter', 'hex-mouseleave', 'edge-click', 'edge-hover'],
+    emits: ['hex-click', 'hex-mouseenter', 'hex-mouseleave', 'edge-click'],
   },
 }));
 
