@@ -12,16 +12,16 @@ const TerrainType = z.enum([
   'unknown',
 ]);
 
-const HexFeature = z.object({
-  type: z.string(),
-});
-
 const EdgeFeature = z.object({
   type: z.string(),
   movementModifier: z.number().optional(),
   losBlocking: z.boolean().optional(),
   losHeightBonus: z.number().optional(),
 });
+
+// Canonical edge ownership: only face indices 0, 1, 2 are stored on this hex.
+// Faces 3, 4, 5 are stored on the neighbour hex as face index (dir − 3).
+const FaceIndex = z.enum(['0', '1', '2']);
 
 const HexEntry = z.object({
   hex: HexId,
@@ -39,9 +39,8 @@ const HexEntry = z.object({
       z.number().int().min(-98).max(98),
     ])
     .optional(),
-  hexsides: z.record(z.string(), z.string()).optional(),
-  edges: z.record(z.enum(['N', 'NE', 'SE', 'S', 'SW', 'NW']), z.array(EdgeFeature)).optional(),
-  features: z.array(HexFeature).optional(),
+  edges: z.record(FaceIndex, z.array(EdgeFeature)).optional(),
+  hexFeature: z.object({ type: z.literal('building') }).optional(),
   vpHex: z.boolean().optional(),
   entryHex: z.boolean().optional(),
   side: z.enum(['union', 'confederate']).optional(),
@@ -51,6 +50,45 @@ const HexEntry = z.object({
   detectionConfidence: z.number().min(0).max(1).optional(),
   _note: z.string().optional(),
 });
+
+const ELEVATION_TYPES = new Set(['elevation', 'slope', 'extremeSlope', 'verticalSlope']);
+const ROUTE_TYPES = new Set(['road', 'trail', 'pike']);
+
+function validateCoexistence(hex, hexIdx, ctx) {
+  if (!hex.edges) return;
+  for (const [face, features] of Object.entries(hex.edges)) {
+    const types = features.map((f) => f.type);
+    const typeSet = new Set(types);
+
+    // ford requires stream on same edge
+    if (typeSet.has('ford') && !typeSet.has('stream')) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Hex ${hex.hex} face ${face}: ford requires stream on the same edge`,
+        path: ['hexes', hexIdx, 'edges', face],
+      });
+    }
+
+    // bridge requires road/trail/pike on same edge
+    if (typeSet.has('bridge') && !types.some((t) => ROUTE_TYPES.has(t))) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Hex ${hex.hex} face ${face}: bridge requires road, trail, or pike on the same edge`,
+        path: ['hexes', hexIdx, 'edges', face],
+      });
+    }
+
+    // elevation types are mutually exclusive per edge
+    const elevationTypesOnEdge = types.filter((t) => ELEVATION_TYPES.has(t));
+    if (elevationTypesOnEdge.length > 1) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Hex ${hex.hex} face ${face}: elevation types are mutually exclusive (found: ${elevationTypesOnEdge.join(', ')})`,
+        path: ['hexes', hexIdx, 'edges', face],
+      });
+    }
+  }
+}
 
 export const MapSchema = z
   .object({
@@ -80,7 +118,6 @@ export const MapSchema = z
       })
       .optional(),
     terrainTypes: z.array(z.string()).optional(),
-    hexsideTypes: z.array(z.string()).optional(),
     hexFeatureTypes: z.array(z.string()).optional(),
     edgeFeatureTypes: z.array(z.string()).optional(),
     elevationSystem: z
@@ -139,5 +176,6 @@ export const MapSchema = z
           }
         }
       }
+      validateCoexistence(hex, i, ctx);
     }
   });
