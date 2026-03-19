@@ -12,10 +12,6 @@ const props = defineProps({
     type: String,
     default: null,
   },
-  hexFeatureTypes: {
-    type: Array,
-    default: () => [],
-  },
   edgeFeatureTypes: {
     type: Array,
     default: () => ['road', 'stream', 'stoneWall', 'slope', 'extremeSlope', 'verticalSlope'],
@@ -41,10 +37,8 @@ const TERRAIN_TYPES = [
   'orchard',
   'marsh',
 ];
-const HEXSIDE_DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
 
 const form = ref(null);
-const addFeatureType = ref('');
 
 const edgeLabels = computed(() => getEdgeLabels(props.northOffset ?? 0));
 
@@ -59,10 +53,9 @@ watch(
       terrain: hex.terrain ?? 'unknown',
       elevation: hex.elevation ?? '',
       slope: hex.slope ?? null,
-      features: hex.features ? [...hex.features] : [],
+      hexFeature: hex.hexFeature ?? null,
       edges: hex.edges ? JSON.parse(JSON.stringify(hex.edges)) : {},
       wedgeElevations: hex.wedgeElevations ? [...hex.wedgeElevations] : null,
-      hexsides: { ...hex.hexsides },
       vpHex: hex.vpHex ?? false,
       entryHex: hex.entryHex ?? false,
       side: hex.side ?? '',
@@ -83,20 +76,13 @@ function emitUpdate() {
   if (form.value.slope !== null && form.value.slope !== undefined) {
     updated.slope = form.value.slope;
   }
-  if (form.value.features && form.value.features.length) {
-    updated.features = form.value.features;
-  }
+  if (form.value.hexFeature) updated.hexFeature = form.value.hexFeature;
   if (form.value.edges && Object.keys(form.value.edges).length) {
     updated.edges = form.value.edges;
   }
   if (props.hex.wedgeElevations) {
     updated.wedgeElevations = props.hex.wedgeElevations;
   }
-  const hexsides = {};
-  for (const dir of HEXSIDE_DIRS) {
-    if (form.value.hexsides[dir]) hexsides[dir] = form.value.hexsides[dir];
-  }
-  if (Object.keys(hexsides).length) updated.hexsides = hexsides;
   if (form.value.vpHex) updated.vpHex = true;
   if (form.value.entryHex) {
     updated.entryHex = true;
@@ -113,16 +99,9 @@ function setSlope(idxOrNull) {
   emitUpdate();
 }
 
-function addFeature() {
-  if (!form.value || !addFeatureType.value) return;
-  form.value.features = [...form.value.features, { type: addFeatureType.value }];
-  addFeatureType.value = '';
-  emitUpdate();
-}
-
-function removeFeature(idx) {
+function toggleBuilding() {
   if (!form.value) return;
-  form.value.features = form.value.features.filter((_, i) => i !== idx);
+  form.value.hexFeature = form.value.hexFeature ? null : { type: 'building' };
   emitUpdate();
 }
 
@@ -153,7 +132,6 @@ function toggleSeed() {
     confirmedData: {
       terrain: form.value.terrain,
       elevation: Number(form.value.elevation),
-      features: (form.value.features ?? []).map((f) => f.type),
     },
   });
 }
@@ -203,23 +181,11 @@ function toggleSeed() {
           </div>
         </div>
 
-        <!-- Hex Features -->
-        <div class="features-section">
-          <div class="section-label">Features</div>
-          <div v-for="(feat, fi) in form.features" :key="fi" class="feature-row">
-            <span class="feature-type">{{ feat.type }}</span>
-            <button class="small-remove-btn" @click="removeFeature(fi)">✕</button>
-          </div>
-          <div class="add-feature-row">
-            <select v-model="addFeatureType" class="feature-select">
-              <option value="">— add feature —</option>
-              <option v-for="ft in hexFeatureTypes" :key="ft" :value="ft">{{ ft }}</option>
-            </select>
-            <button class="small-add-btn" :disabled="!addFeatureType" @click="addFeature">
-              Add
-            </button>
-          </div>
-        </div>
+        <!-- Hex Feature -->
+        <label class="checkbox-label">
+          <input type="checkbox" :checked="!!form.hexFeature" @change="toggleBuilding" />
+          Building
+        </label>
 
         <!-- Edges -->
         <div class="edges-section">
@@ -365,7 +331,6 @@ textarea {
 }
 
 .slope-section,
-.features-section,
 .edges-section {
   border: 1px solid #333;
   padding: 0.4rem 0.5rem;
@@ -390,57 +355,6 @@ textarea {
   background: #4a5a2a;
   border-color: #7aab3e;
   color: #b0d880;
-}
-
-.feature-row {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.1rem 0;
-}
-
-.feature-type {
-  flex: 1;
-  color: #c8b88a;
-  font-size: 0.8rem;
-}
-
-.small-remove-btn {
-  background: none;
-  border: none;
-  color: #c06060;
-  cursor: pointer;
-  font-size: 0.75rem;
-  padding: 0;
-}
-
-.add-feature-row {
-  display: flex;
-  gap: 0.25rem;
-  margin-top: 0.25rem;
-}
-
-.feature-select {
-  flex: 1;
-  background: #1a1a1a;
-  border: 1px solid #555;
-  color: #e0d8c8;
-  padding: 0.15rem 0.3rem;
-  font-size: 0.78rem;
-}
-
-.small-add-btn {
-  padding: 0.15rem 0.4rem;
-  background: #333;
-  border: 1px solid #555;
-  color: #e0d8c8;
-  cursor: pointer;
-  font-size: 0.78rem;
-}
-
-.small-add-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
 }
 
 .seed-hint {

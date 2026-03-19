@@ -211,7 +211,7 @@ const gridData = computed(() => {
       slope,
       wedgeElevations: known?.wedgeElevations ?? null,
       edges: known?.edges ?? {},
-      features: known?.features ?? [],
+      hexFeature: known?.hexFeature ?? null,
       bottomCY,
       isVP,
       isSeed,

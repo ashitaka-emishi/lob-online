@@ -12,8 +12,22 @@ const TerrainType = z.enum([
   'unknown',
 ]);
 
+export const EDGE_FEATURE_TYPE_VALUES = [
+  'road',
+  'trail',
+  'pike',
+  'stream',
+  'ford',
+  'bridge',
+  'stoneWall',
+  'elevation',
+  'slope',
+  'extremeSlope',
+  'verticalSlope',
+];
+
 const EdgeFeature = z.object({
-  type: z.string(),
+  type: z.enum(EDGE_FEATURE_TYPE_VALUES),
   movementModifier: z.number().optional(),
   losBlocking: z.boolean().optional(),
   losHeightBonus: z.number().optional(),
@@ -54,8 +68,7 @@ const HexEntry = z.object({
 });
 
 // Exported so game-logic consumers (LOS, movement) can share the canonical classification
-// without duplication. When EdgeFeature.type graduates to a z.enum(), these sets should
-// be derived from it rather than maintained separately.
+// without duplication. Both sets are subsets of EDGE_FEATURE_TYPE_VALUES.
 export const ELEVATION_TYPES = new Set(['elevation', 'slope', 'extremeSlope', 'verticalSlope']);
 export const ROUTE_TYPES = new Set(['road', 'trail', 'pike']);
 
