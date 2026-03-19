@@ -10,25 +10,14 @@ import ElevationToolPanel from '../../components/ElevationToolPanel.vue';
 import TerrainToolPanel from '../../components/TerrainToolPanel.vue';
 import LinearFeaturePanel from '../../components/LinearFeaturePanel.vue';
 import WedgeEditor from '../../components/WedgeEditor.vue';
-import { adjacentHexId } from '../../utils/hexGeometry.js';
-
-const PANEL_DISPLAY_NAMES = {
-  calibration: 'Grid Calibration',
-  elevation: 'Elevation Tool',
-  terrain: 'Terrain Tool',
-  linearFeature: 'Linear Feature',
-  hexEdit: 'Hex Edit',
-  wedge: 'Wedge Editor',
-  losTest: 'LOS Test',
-};
-
-// Which panels activate a tool mode when opened
-const TOOL_PANEL_MODES = {
-  elevation: 'elevation',
-  terrain: 'paint',
-  linearFeature: 'linearFeature',
-  wedge: 'wedge',
-};
+import { useBulkOperations } from '../../composables/useBulkOperations.js';
+import { useLinearFeatureTrace } from '../../composables/useLinearFeatureTrace.js';
+import { useHexInteraction } from '../../composables/useHexInteraction.js';
+import { useEditorAccordion, TOOL_PANEL_MODES } from '../../composables/useEditorAccordion.js';
+import { useMapPersistence } from '../../composables/useMapPersistence.js';
+import { useLosTest } from '../../composables/useLosTest.js';
+import { useEdgeToggle } from '../../composables/useEdgeToggle.js';
+import { useWedgeEditor } from '../../composables/useWedgeEditor.js';
 
 const STORAGE_KEY = 'lob-map-editor-calibration-v4';
 const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
@@ -54,7 +43,28 @@ const DEFAULT_CALIBRATION = {
 function loadCalibration() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return { ...DEFAULT_CALIBRATION, ...JSON.parse(stored) };
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // L1/L2: destructure only known keys so unexpected properties from tampered
+      // localStorage cannot flow into the calibration object; guard all numerics.
+      const safeNumeric = (val, fallback) => (Number.isFinite(val) ? val : fallback);
+      const safeBoolean = (val, fallback) => (typeof val === 'boolean' ? val : fallback);
+      const safeString = (val, fallback) => (typeof val === 'string' ? val : fallback);
+      const D = DEFAULT_CALIBRATION;
+      return {
+        cols: safeNumeric(parsed.cols, D.cols),
+        rows: safeNumeric(parsed.rows, D.rows),
+        dx: safeNumeric(parsed.dx, D.dx),
+        dy: safeNumeric(parsed.dy, D.dy),
+        hexWidth: safeNumeric(parsed.hexWidth, D.hexWidth),
+        hexHeight: safeNumeric(parsed.hexHeight, D.hexHeight),
+        imageScale: safeNumeric(parsed.imageScale, D.imageScale),
+        strokeWidth: safeNumeric(parsed.strokeWidth, D.strokeWidth),
+        northOffset: safeNumeric(parsed.northOffset, D.northOffset),
+        orientation: safeString(parsed.orientation, D.orientation),
+        evenColUp: safeBoolean(parsed.evenColUp, D.evenColUp),
+      };
+    }
   } catch (_) {
     /* ignore */
   }
@@ -65,33 +75,61 @@ const calibration = ref(loadCalibration());
 const calibrationMode = ref(false);
 const showExportOverlay = ref(false);
 
-// Accordion: only one panel open at a time
-const openPanel = ref('hexEdit');
-const activeToolName = computed(() =>
-  openPanel.value ? (PANEL_DISPLAY_NAMES[openPanel.value] ?? openPanel.value) : null
-);
+// ── Composable dependency order (must not be rearranged) ─────────────────────
+// Persistence → selectedHexIds → Accordion → LOS → Interaction → EdgeToggle / Bulk / Wedge / Trace
+// Each composable receives refs from those above it; init order encodes the dependency graph.
 
-function togglePanel(name) {
-  const prevPanel = openPanel.value;
-  const wasOpen = prevPanel === name;
-  openPanel.value = wasOpen ? null : name;
+// ── Map persistence (composable) ──────────────────────────────────────────────
 
-  // Derive editorMode from the now-open panel
-  editorMode.value = TOOL_PANEL_MODES[openPanel.value] ?? 'select';
+const {
+  cleanup: cleanupPersistence,
+  mapData,
+  fetchError,
+  unsaved,
+  saveStatus,
+  isOffline,
+  showPushConfirm,
+  showPullConfirm,
+  isPulling,
+  pullError,
+  saveErrors,
+  draftBannerVisible,
+  saveMapDraft,
+  restoreDraft,
+  dismissDraft,
+  fetchMapData,
+  pullFromServer,
+  confirmPull,
+  cancelPull,
+  save,
+  confirmSave,
+  cancelSave,
+} = useMapPersistence({
+  calibration,
+  storageKey: STORAGE_KEY,
+  draftKey: MAP_DRAFT_KEY,
+  draftKeyV1: MAP_DRAFT_KEY_V1,
+  // M4: caller owns calibration writes — composable notifies via callback
+  onCalibrationLoaded: (gridSpec) => {
+    calibration.value = { ...DEFAULT_CALIBRATION, ...gridSpec };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
+  },
+});
 
-  // Clear selection when a tool panel closes
-  if (TOOL_PANEL_MODES[prevPanel] && !TOOL_PANEL_MODES[openPanel.value]) {
-    selectedHexId.value = null;
-  }
-}
+// ── Selection (H2: owned here so accordion's onClearSelection can reference it directly) ──
 
-// ── Editor modes and layers ───────────────────────────────────────────────────
+const selectedHexIds = ref(new Set());
 
-const editorMode = ref('select');
+// ── Editor accordion + modes ──────────────────────────────────────────────────
+
+const { openPanel, editorMode, activeToolName, togglePanel } = useEditorAccordion({
+  onClearSelection: () => {
+    selectedHexIds.value = new Set();
+  },
+});
+
 const paintTerrain = ref('clear');
 const paintEdgeFeature = ref(null);
-const selectedHexIds = ref(new Set());
-const selectedEdge = ref(null);
 const layers = ref({
   grid: true,
   terrain: true,
@@ -100,13 +138,11 @@ const layers = ref({
   edges: true,
   slopeArrows: false,
 });
-const draftBannerVisible = ref(false);
 
 // ── Export ────────────────────────────────────────────────────────────────────
 
-const exportData = computed(() =>
-  mapData.value ? { ...mapData.value, gridSpec: calibration.value } : null
-);
+// L3: boolean guard replaces the expensive spread computed that ran on every paint
+const hasMapData = computed(() => !!mapData.value);
 
 function stripPrivateFields(obj) {
   if (Array.isArray(obj)) return obj.map(stripPrivateFields);
@@ -123,8 +159,8 @@ function stripPrivateFields(obj) {
 // Called on-demand when the export overlay opens or when copy/download is triggered.
 // Not a reactive computed — the deep-walk is expensive and only needed at export time.
 function getEngineExport() {
-  if (!exportData.value) return null;
-  return stripPrivateFields(exportData.value);
+  if (!mapData.value) return null;
+  return stripPrivateFields({ ...mapData.value, gridSpec: calibration.value });
 }
 
 // Cache the export snapshot for the template. Computed once when the overlay opens,
@@ -196,134 +232,6 @@ function onImageLoad(event) {
   imgNaturalHeight.value = event.target.naturalHeight;
 }
 
-// ── Map data ──────────────────────────────────────────────────────────────────
-
-const mapData = ref(null);
-const fetchError = ref('');
-const unsaved = ref(false);
-const saveStatus = ref(''); // '' | 'saving' | 'saved' | 'error'
-const isOffline = ref(false);
-const serverSavedAt = ref(0);
-const showPushConfirm = ref(false);
-const showPullConfirm = ref(false);
-const isPulling = ref(false);
-const pullError = ref('');
-
-let saveMapDraftTimer = null;
-
-function saveMapDraft() {
-  if (saveMapDraftTimer !== null) clearTimeout(saveMapDraftTimer);
-  saveMapDraftTimer = setTimeout(() => {
-    saveMapDraftTimer = null;
-    if (!mapData.value) return;
-    try {
-      const draft = { ...mapData.value, _savedAt: Date.now() };
-      localStorage.setItem(MAP_DRAFT_KEY, JSON.stringify(draft));
-    } catch (_) {
-      /* ignore storage errors */
-    }
-  }, 500);
-}
-
-function restoreDraft() {
-  try {
-    const draftStr = localStorage.getItem(MAP_DRAFT_KEY);
-    if (!draftStr) return;
-    const draft = JSON.parse(draftStr);
-    delete draft._savedAt;
-    mapData.value = draft;
-    draftBannerVisible.value = false;
-  } catch (_) {
-    /* ignore */
-  }
-}
-
-function dismissDraft() {
-  localStorage.removeItem(MAP_DRAFT_KEY);
-  draftBannerVisible.value = false;
-}
-
-async function fetchServerData() {
-  const res = await fetch('/api/tools/map-editor/data');
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
-
-async function executePull() {
-  isPulling.value = true;
-  pullError.value = '';
-  try {
-    const serverData = await fetchServerData();
-    mapData.value = serverData;
-    serverSavedAt.value = serverData._savedAt ?? 0;
-    localStorage.removeItem(MAP_DRAFT_KEY);
-    unsaved.value = false;
-    isOffline.value = false;
-    if (serverData.gridSpec) {
-      calibration.value = { ...DEFAULT_CALIBRATION, ...serverData.gridSpec };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
-    }
-  } catch (err) {
-    pullError.value = err.message;
-  } finally {
-    isPulling.value = false;
-  }
-}
-
-async function pullFromServer() {
-  if (unsaved.value) {
-    showPullConfirm.value = true;
-    return;
-  }
-  await executePull();
-}
-
-async function fetchMapData() {
-  try {
-    const serverData = await fetchServerData();
-
-    serverSavedAt.value = serverData._savedAt ?? 0;
-
-    // Check for a local draft newer than server data
-    try {
-      const draftStr = localStorage.getItem(MAP_DRAFT_KEY);
-      if (draftStr) {
-        const draft = JSON.parse(draftStr);
-        if ((draft._savedAt ?? 0) > serverSavedAt.value) {
-          draftBannerVisible.value = true;
-        } else {
-          localStorage.removeItem(MAP_DRAFT_KEY);
-        }
-      }
-    } catch (_) {
-      /* ignore */
-    }
-
-    mapData.value = serverData;
-    if (mapData.value.gridSpec) {
-      calibration.value = { ...DEFAULT_CALIBRATION, ...mapData.value.gridSpec };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
-    }
-  } catch (err) {
-    // Offline fallback: try loading local draft
-    try {
-      const draftStr = localStorage.getItem(MAP_DRAFT_KEY);
-      if (draftStr) {
-        const draft = JSON.parse(draftStr);
-        mapData.value = draft;
-        if (draft.gridSpec) {
-          calibration.value = { ...DEFAULT_CALIBRATION, ...draft.gridSpec };
-        }
-        isOffline.value = true;
-        return;
-      }
-    } catch (_) {
-      /* ignore */
-    }
-    fetchError.value = err.message;
-  }
-}
-
 // ── VP hex IDs ────────────────────────────────────────────────────────────────
 
 const vpHexIds = computed(() => {
@@ -355,166 +263,27 @@ const edgeFeatureTypes = computed(() => {
   return ['road', 'stream', 'stoneWall', 'slope', 'extremeSlope', 'verticalSlope'];
 });
 
-// ── Hex selection ─────────────────────────────────────────────────────────────
-
-const selectedHexId = ref(null);
-
-// O(1) index: hexId → array index. Recomputed when hexes array or any element is mutated.
-const hexIndex = computed(() => new Map(mapData.value?.hexes.map((h, i) => [h.hex, i]) ?? []));
-
-const selectedHex = computed(() => {
-  if (!selectedHexId.value || !mapData.value) return null;
-  const idx = hexIndex.value.get(selectedHexId.value);
-  return idx !== undefined
-    ? mapData.value.hexes[idx]
-    : { hex: selectedHexId.value, terrain: 'unknown' };
-});
-
-// ── LOS pick mode ─────────────────────────────────────────────────────────────
-
-const losHexA = ref(null);
-const losHexB = ref(null);
-const losSelectingHex = ref(null); // 'A' | 'B' | null
-const losResult = ref(null);
-
-function onLosPickStart(side) {
-  losSelectingHex.value = side;
-}
-function onLosPickCancel() {
-  losSelectingHex.value = null;
-}
-function onLosSetHexA(id) {
-  losHexA.value = id;
-}
-function onLosSetHexB(id) {
-  losHexB.value = id;
-}
-function onLosResult(r) {
-  losResult.value = r;
-}
-
-const losPathHexes = computed(() => {
-  if (!losResult.value) return [];
-  return losResult.value.steps.filter((s) => s.role === 'intermediate').map((s) => s.hexId);
-});
-
-const losBlockedHex = computed(() => {
-  if (!losResult.value) return null;
-  return losResult.value.steps.find((s) => s.blocked)?.hexId ?? null;
-});
-
-// ── Hex interaction ───────────────────────────────────────────────────────────
-
-const OPPOSITE_DIR = { N: 'S', S: 'N', NE: 'SW', SW: 'NE', NW: 'SE', SE: 'NW' };
+// M3: watch-based hexIndex — only rebuilds on structural changes (length / full load),
+// not on in-place property mutations (terrain, elevation paints). This avoids O(n)
+// Map rebuilds on every paint stroke while still rebuilding when hexes are added/removed.
+const hexIndex = ref(new Map());
+watch(
+  () => [mapData.value, mapData.value?.hexes.length],
+  () => {
+    hexIndex.value = mapData.value
+      ? new Map(mapData.value.hexes.map((h, i) => [h.hex, i]))
+      : new Map();
+  },
+  { immediate: true }
+);
 
 const elevationLevels = computed(() => mapData.value?.elevationSystem?.elevationLevels ?? 22);
 const elevationMax = computed(() => elevationLevels.value - 1);
 
-function adjustHexElevation(hexId, delta) {
-  if (!mapData.value) return;
-  const idx = hexIndex.value.get(hexId);
-  const existing = idx !== undefined ? mapData.value.hexes[idx] : undefined;
-  const current = existing?.elevation ?? 0;
-  const clamped = Math.max(0, Math.min(elevationMax.value, current + delta));
-  const updated = existing
-    ? { ...existing, elevation: clamped }
-    : { hex: hexId, terrain: 'unknown', elevation: clamped };
-  onHexUpdate(updated);
-}
-
-function onHexClick(hexId, nativeEvent) {
-  if (losSelectingHex.value === 'A') {
-    losHexA.value = hexId;
-    losSelectingHex.value = null;
-    openPanel.value = 'losTest';
-  } else if (losSelectingHex.value === 'B') {
-    losHexB.value = hexId;
-    losSelectingHex.value = null;
-    openPanel.value = 'losTest';
-  } else if (editorMode.value === 'elevation') {
-    if (selectedHexId.value === hexId) {
-      selectedHexId.value = null; // deselect on re-click
-    } else {
-      selectedHexId.value = hexId;
-      adjustHexElevation(hexId, +1);
-    }
-  } else if (editorMode.value === 'paint') {
-    const existingIdx = hexIndex.value.get(hexId);
-    const existing = existingIdx !== undefined ? mapData.value.hexes[existingIdx] : undefined;
-    const updated = existing
-      ? { ...existing, terrain: paintTerrain.value }
-      : { hex: hexId, terrain: paintTerrain.value };
-    onHexUpdate(updated);
-    selectedHexId.value = hexId;
-  } else if (editorMode.value === 'wedge') {
-    selectedHexId.value = hexId === selectedHexId.value ? null : hexId;
-  } else if (editorMode.value === 'select') {
-    if (nativeEvent?.shiftKey) {
-      const ids = new Set(selectedHexIds.value);
-      if (ids.has(hexId)) ids.delete(hexId);
-      else ids.add(hexId);
-      selectedHexIds.value = ids;
-    } else {
-      selectedHexId.value = hexId;
-    }
-  }
-}
-
-function onHexRightClick(hexId) {
-  if (editorMode.value === 'elevation') {
-    adjustHexElevation(hexId, -1);
-  }
-}
-
-function onHexMouseenter(hexId) {
-  if (editorMode.value === 'paint') {
-    const existingIdx = hexIndex.value.get(hexId);
-    const existing = existingIdx !== undefined ? mapData.value.hexes[existingIdx] : undefined;
-    const updatedHex = existing
-      ? { ...existing, terrain: paintTerrain.value }
-      : { hex: hexId, terrain: paintTerrain.value };
-    onHexUpdate(updatedHex);
-  }
-}
-
-function onEdgeClick({ hexId, dir }) {
-  if (!mapData.value) return;
-  const featureType = paintEdgeFeature.value ?? 'road';
-  selectedEdge.value = { hexId, dir };
-
-  function toggleEdgeFeature(hex, d, ft) {
-    const edges = hex.edges ? { ...hex.edges } : {};
-    const features = edges[d] ? [...edges[d]] : [];
-    const existingIdx = features.findIndex((f) => f.type === ft);
-    if (existingIdx >= 0) {
-      features.splice(existingIdx, 1);
-    } else {
-      features.push({ type: ft });
-    }
-    if (features.length) edges[d] = features;
-    else delete edges[d];
-    return { ...hex, edges };
-  }
-
-  // Read both hex objects before any mutation so hexIndex is only accessed once.
-  const thisIdx = hexIndex.value.get(hexId);
-  const thisHex =
-    thisIdx !== undefined ? mapData.value.hexes[thisIdx] : { hex: hexId, terrain: 'unknown' };
-
-  const adjId = adjacentHexId(hexId, dir, calibration.value);
-  const adjIdx = adjId !== null ? hexIndex.value.get(adjId) : undefined;
-  const adjHex = adjId
-    ? adjIdx !== undefined
-      ? mapData.value.hexes[adjIdx]
-      : { hex: adjId, terrain: 'unknown' }
-    : null;
-
-  // Apply both updates after all reads
-  onHexUpdate(toggleEdgeFeature(thisHex, dir, featureType));
-  if (adjHex) {
-    const oppDir = OPPOSITE_DIR[dir];
-    onHexUpdate(toggleEdgeFeature(adjHex, oppDir, featureType));
-  }
+// M7: single onMutated used by bulk ops and trace (avoids duplicating the same two lines).
+function onMutated() {
+  unsaved.value = true;
+  saveMapDraft();
 }
 
 function onHexUpdate(updatedHex) {
@@ -525,138 +294,78 @@ function onHexUpdate(updatedHex) {
   } else {
     mapData.value.hexes.push(updatedHex);
   }
-  unsaved.value = true;
-  saveMapDraft();
+  onMutated();
 }
+
+// ── LOS test (H1: extracted from useHexInteraction) ───────────────────────────
+
+const {
+  losHexA,
+  losHexB,
+  losSelectingHex,
+  losPathHexes,
+  losBlockedHex,
+  tryPickLosHex,
+  onLosPickStart,
+  onLosPickCancel,
+  onLosSetHexA,
+  onLosSetHexB,
+  onLosResult,
+} = useLosTest({
+  onLosPanelOpen: () => {
+    openPanel.value = 'losTest';
+  },
+});
+
+// ── Hex interaction (composable) ──────────────────────────────────────────────
+
+const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter } =
+  useHexInteraction({
+    mapData,
+    hexIndex,
+    selectedHexIds,
+    editorMode,
+    paintTerrain,
+    elevationMax,
+    tryPickLosHex,
+    onHexUpdate,
+  });
+
+// ── Edge feature toggle (M2: extracted from useHexInteraction) ─────────────────
+
+const { onEdgeClick } = useEdgeToggle({
+  mapData,
+  hexIndex,
+  paintEdgeFeature,
+  calibration,
+  onHexUpdate,
+});
 
 // ── Bulk operations ───────────────────────────────────────────────────────────
 
-function clearAllElevations() {
-  if (!mapData.value) return;
-  mapData.value.hexes = mapData.value.hexes.map(({ elevation: _elevation, ...rest }) => rest);
-  unsaved.value = true;
-  saveMapDraft();
-}
+const { clearAllElevations, raiseAll, lowerAll, clearAllTerrain, clearAllWedges } =
+  useBulkOperations({ mapData, elevationMax, onMutated });
 
-function raiseAll() {
-  if (!mapData.value) return;
-  const max = elevationMax.value;
-  mapData.value.hexes = mapData.value.hexes.map((h) => ({
-    ...h,
-    elevation: Math.min(max, (h.elevation ?? 0) + 1),
-  }));
-  unsaved.value = true;
-  saveMapDraft();
-}
+// ── Wedge editor (L7: extracted from MapEditorView inline functions) ───────────
 
-function lowerAll() {
-  if (!mapData.value) return;
-  mapData.value.hexes = mapData.value.hexes.map((h) => ({
-    ...h,
-    elevation: Math.max(0, (h.elevation ?? 0) - 1),
-  }));
-  unsaved.value = true;
-  saveMapDraft();
-}
-
-function clearAllTerrain() {
-  if (!mapData.value) return;
-  mapData.value.hexes = mapData.value.hexes.map((h) => ({ ...h, terrain: 'clear' }));
-  unsaved.value = true;
-  saveMapDraft();
-}
-
-function clearAllWedges() {
-  if (!mapData.value) return;
-  mapData.value.hexes = mapData.value.hexes.map((h) => {
-    if (!h.wedgeElevations) return h;
-    return { ...h, wedgeElevations: [0, 0, 0, 0, 0, 0] };
-  });
-  unsaved.value = true;
-  saveMapDraft();
-}
-
-function onWedgeUpdate(newElev) {
-  if (!selectedHexId.value || !mapData.value) return;
-  const idx = hexIndex.value.get(selectedHexId.value);
-  const existing = idx !== undefined ? mapData.value.hexes[idx] : undefined;
-  const updated = existing
-    ? { ...existing, wedgeElevations: newElev }
-    : { hex: selectedHexId.value, terrain: 'unknown', wedgeElevations: newElev };
-  onHexUpdate(updated);
-}
-
-function initWedgeElevations() {
-  if (!selectedHexId.value || !mapData.value) return;
-  const idx = hexIndex.value.get(selectedHexId.value);
-  const existing = idx !== undefined ? mapData.value.hexes[idx] : undefined;
-  const updated = existing
-    ? { ...existing, wedgeElevations: [0, 0, 0, 0, 0, 0] }
-    : { hex: selectedHexId.value, terrain: 'unknown', wedgeElevations: [0, 0, 0, 0, 0, 0] };
-  onHexUpdate(updated);
-}
+const { onWedgeUpdate, initWedgeElevations } = useWedgeEditor({
+  mapData,
+  hexIndex,
+  selectedHexId,
+  onHexUpdate,
+});
 
 // ── Linear feature trace ──────────────────────────────────────────────────────
 
-const showTraceConfirm = ref(false);
-const pendingTraceEdges = ref([]);
-const liveTraceCount = ref(0);
-
-function onTraceProgress(count) {
-  liveTraceCount.value = count;
-}
-
-function onTraceComplete(edges) {
-  if (!edges.length) return;
-  pendingTraceEdges.value = edges;
-  liveTraceCount.value = 0;
-  showTraceConfirm.value = true;
-}
-
-function applyTrace() {
-  const featureType = paintEdgeFeature.value ?? 'road';
-  const byHex = new Map();
-  for (const { hexId, dir } of pendingTraceEdges.value) {
-    if (!byHex.has(hexId)) byHex.set(hexId, []);
-    byHex.get(hexId).push(dir);
-  }
-  // Snapshot the index once before any mutations so that each iteration does not
-  // force an O(n) recompute of hexIndex. All trace hexes are expected to already
-  // exist in the array; new hexes are pushed after the read pass.
-  const idx = hexIndex.value;
-  const updates = [];
-  for (const [hexId, dirs] of byHex) {
-    const hexIdx = idx.get(hexId);
-    const hex =
-      hexIdx !== undefined ? mapData.value.hexes[hexIdx] : { hex: hexId, terrain: 'unknown' };
-    const edges = hex.edges ? { ...hex.edges } : {};
-    for (const dir of dirs) {
-      const features = edges[dir] ? [...edges[dir]] : [];
-      if (!features.some((f) => f.type === featureType)) {
-        features.push({ type: featureType });
-      }
-      edges[dir] = features;
-    }
-    updates.push({ hexIdx, updated: { ...hex, edges } });
-  }
-  // Single reactive write pass — invalidates hexIndex once instead of once per hex.
-  for (const { hexIdx, updated } of updates) {
-    if (hexIdx !== undefined) {
-      mapData.value.hexes[hexIdx] = updated;
-    } else {
-      mapData.value.hexes.push(updated);
-    }
-  }
-  unsaved.value = true;
-  saveMapDraft();
-  pendingTraceEdges.value = [];
-  showTraceConfirm.value = false;
-}
-
-function cancelTrace() {
-  showTraceConfirm.value = false;
-  pendingTraceEdges.value = [];
-}
+const {
+  showTraceConfirm,
+  pendingTraceEdges,
+  liveTraceCount,
+  onTraceProgress,
+  onTraceComplete,
+  applyTrace,
+  cancelTrace,
+} = useLinearFeatureTrace({ mapData, paintEdgeFeature, hexIndex, onMutated });
 
 // ── Keyboard listener ─────────────────────────────────────────────────────────
 
@@ -670,86 +379,14 @@ function onKeyDown(e) {
   }
 }
 
-// ── Save / Push / Pull ────────────────────────────────────────────────────────
-
-const saveErrors = ref([]);
-
-async function executePush() {
-  if (!mapData.value) return;
-  saveStatus.value = 'saving';
-  saveErrors.value = [];
-  try {
-    const res = await fetch('/api/tools/map-editor/data', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(mapData.value),
-    });
-    const body = await res.json();
-    if (res.ok) {
-      serverSavedAt.value = body._savedAt ?? Date.now();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
-      unsaved.value = false;
-      saveStatus.value = 'saved';
-      localStorage.removeItem(MAP_DRAFT_KEY);
-      setTimeout(() => {
-        saveStatus.value = '';
-      }, 2000);
-    } else {
-      saveStatus.value = 'error';
-      saveErrors.value = body.issues ?? [];
-    }
-  } catch (err) {
-    saveStatus.value = 'error';
-    saveErrors.value = [{ message: err.message }];
-  }
-}
-
-async function save() {
-  if (isOffline.value) return;
-  saveErrors.value = [];
-  if (!mapData.value) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
-    saveStatus.value = 'saved';
-    setTimeout(() => {
-      saveStatus.value = '';
-    }, 2000);
-    return;
-  }
-
-  // Show confirmation if server has data newer than local draft
-  let localDraftSavedAt = 0;
-  try {
-    const draftStr = localStorage.getItem(MAP_DRAFT_KEY);
-    if (draftStr) localDraftSavedAt = JSON.parse(draftStr)._savedAt ?? 0;
-  } catch (_) {
-    /* ignore */
-  }
-  if (unsaved.value && serverSavedAt.value > localDraftSavedAt) {
-    showPushConfirm.value = true;
-    return;
-  }
-
-  await executePush();
-}
-
 onMounted(() => {
   window.addEventListener('keydown', onKeyDown);
-  // Migrate v1 draft key to v2 (one-time)
-  try {
-    const v1 = localStorage.getItem(MAP_DRAFT_KEY_V1);
-    if (v1) {
-      localStorage.setItem(MAP_DRAFT_KEY, v1);
-      localStorage.removeItem(MAP_DRAFT_KEY_V1);
-    }
-  } catch (_) {
-    /* ignore */
-  }
   fetchMapData();
 });
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeyDown);
-  if (saveMapDraftTimer !== null) clearTimeout(saveMapDraftTimer);
+  cleanupPersistence();
 });
 </script>
 
@@ -765,7 +402,7 @@ onUnmounted(() => {
       <span v-if="saveStatus === 'error'" class="save-error">Error</span>
       <span v-if="unsaved" class="unsaved-marker">* unsaved</span>
       <a class="nav-link" href="/tools/scenario-editor">Scenario Editor</a>
-      <button class="export-btn" :disabled="!exportData" @click="showExportOverlay = true">
+      <button class="export-btn" :disabled="!hasMapData" @click="showExportOverlay = true">
         Export
       </button>
       <button
@@ -1026,11 +663,8 @@ onUnmounted(() => {
       message="Server data is newer. Overwrite?"
       confirm-label="Overwrite"
       cancel-label="Cancel"
-      @confirm="
-        showPushConfirm = false;
-        executePush();
-      "
-      @cancel="showPushConfirm = false"
+      @confirm="confirmSave"
+      @cancel="cancelSave"
     />
 
     <!-- Pull confirmation dialog -->
@@ -1039,11 +673,8 @@ onUnmounted(() => {
       message="Discard local changes and load server data?"
       confirm-label="Discard & Pull"
       cancel-label="Cancel"
-      @confirm="
-        showPullConfirm = false;
-        executePull();
-      "
-      @cancel="showPullConfirm = false"
+      @confirm="confirmPull"
+      @cancel="cancelPull"
     />
 
     <!-- Trace confirmation dialog -->

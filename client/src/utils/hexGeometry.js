@@ -5,6 +5,16 @@
 
 export const DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
 
+/** Maps each direction to its opposite (shared edge on the adjacent hex). */
+export const OPPOSITE_DIR = Object.freeze({
+  N: 'S',
+  S: 'N',
+  NE: 'SW',
+  SW: 'NE',
+  NW: 'SE',
+  SE: 'NW',
+});
+
 /**
  * Maps each compass direction to the [i, j] corner indices that form that edge.
  * For flat-top hexes (Orientation.FLAT), honeycomb-grid corners start at 0° (East/right)
@@ -233,4 +243,18 @@ export function adjacentHexId(hexId, dir, gridSpec) {
   if (ncol < 1 || ncol > gridSpec.cols || nrow < 1 || nrow > gridSpec.rows) return null;
 
   return formatGameId(ncol, nrow);
+}
+
+/**
+ * Look up a hex by id in an index map, returning a stub object for unknown hexes.
+ * Centralises the repeated "find index → get entry or create stub" pattern.
+ *
+ * @param {Array<object>} hexes - the map's hex array
+ * @param {Map<string, number>} indexMap - hexId → array index
+ * @param {string} hexId
+ * @returns {object} the existing hex entry, or `{ hex: hexId, terrain: 'unknown' }`
+ */
+export function resolveHex(hexes, indexMap, hexId) {
+  const idx = indexMap.get(hexId);
+  return idx !== undefined ? hexes[idx] : { hex: hexId, terrain: 'unknown' };
 }

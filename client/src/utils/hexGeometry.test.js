@@ -3,11 +3,13 @@ import { defineHex, Grid, rectangle, Orientation } from 'honeycomb-grid'; // use
 import {
   edgeMidpoint,
   edgeLine20_80,
+  resolveHex,
   wedgePolygonPoints,
   adjacentHexId,
   getEdgeLabels,
   DIR_TO_CORNERS,
   DIRS,
+  OPPOSITE_DIR,
   findNearestEdge,
   getCellAndNeighbors,
   formatGameId,
@@ -350,5 +352,41 @@ describe('hexToGameId', () => {
 
   it('pads single-digit col and row with leading zeros', () => {
     expect(hexToGameId({ col: 4, row: 30 }, 35)).toBe('05.05');
+  });
+});
+
+describe('resolveHex', () => {
+  const hexes = [
+    { hex: '01.01', terrain: 'clear', elevation: 3 },
+    { hex: '02.01', terrain: 'woods' },
+  ];
+  const indexMap = new Map(hexes.map((h, i) => [h.hex, i]));
+
+  it('returns the existing hex entry when found', () => {
+    expect(resolveHex(hexes, indexMap, '01.01')).toStrictEqual(hexes[0]);
+  });
+
+  it('returns a stub object for an unknown hexId', () => {
+    expect(resolveHex(hexes, indexMap, '99.99')).toEqual({ hex: '99.99', terrain: 'unknown' });
+  });
+
+  it('stub has the correct hexId', () => {
+    const result = resolveHex(hexes, indexMap, '03.05');
+    expect(result.hex).toBe('03.05');
+  });
+});
+
+describe('OPPOSITE_DIR', () => {
+  it('maps each direction to its opposite', () => {
+    expect(OPPOSITE_DIR.N).toBe('S');
+    expect(OPPOSITE_DIR.S).toBe('N');
+    expect(OPPOSITE_DIR.NE).toBe('SW');
+    expect(OPPOSITE_DIR.SW).toBe('NE');
+    expect(OPPOSITE_DIR.NW).toBe('SE');
+    expect(OPPOSITE_DIR.SE).toBe('NW');
+  });
+
+  it('is frozen', () => {
+    expect(Object.isFrozen(OPPOSITE_DIR)).toBe(true);
   });
 });

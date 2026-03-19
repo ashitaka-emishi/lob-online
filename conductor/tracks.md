@@ -26,4 +26,6 @@
 
 | [ ] | wave1-quick-wins_20260318 | Wave 1 Quick Wins — ESLint Worktree Ignore + North Label Bug (#110, #116) | 2026-03-18 | 2026-03-18 |
 
+| [ ] | map-composables_20260318 | Extract Composables from MapEditorView + Unify Selection State (#97) | 2026-03-18 | 2026-03-18 |
+
 <!-- Tracks registered by /conductor:new-track -->
