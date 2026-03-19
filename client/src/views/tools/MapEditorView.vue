@@ -12,12 +12,15 @@ import LosTestPanel from '../../components/LosTestPanel.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import ElevationToolPanel from '../../components/ElevationToolPanel.vue';
 import TerrainToolPanel from '../../components/TerrainToolPanel.vue';
+import RoadToolPanel from '../../components/RoadToolPanel.vue';
 import { useBulkOperations } from '../../composables/useBulkOperations.js';
 import { useHexInteraction } from '../../composables/useHexInteraction.js';
 import { useEditorAccordion } from '../../composables/useEditorAccordion.js';
 import { useMapPersistence } from '../../composables/useMapPersistence.js';
 import { useLosTest } from '../../composables/useLosTest.js';
 import { useEdgeToggle } from '../../composables/useEdgeToggle.js';
+import { DIRS } from '../../utils/hexGeometry.js';
+import { canonicalOwner, validateCoexistence } from '../../formulas/edge-model.js';
 
 const STORAGE_KEY = 'lob-map-editor-calibration-v4';
 const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
@@ -153,6 +156,63 @@ const layerFlags = ref({
 // Config received from ElevationToolPanel via @overlay-config.
 const elevationPanelOverlayConfig = ref(null);
 
+// Config received from RoadToolPanel via @overlay-config.
+const roadPanelOverlayConfig = ref(null);
+
+// Selected edge types for each panel — owned by MapEditorView, passed to panels.
+const roadSelectedType = ref('trail');
+
+// ── Edge mutations ────────────────────────────────────────────────────────────
+// Mutate edges in-place on the reactive hex object (avoids rebuilding hexIndex).
+// Uses canonicalOwner from edge-model.js to find the owning hex and face.
+
+function getEdgeFeaturesAt(hexId, faceIndex) {
+  if (!mapData.value) return [];
+  const { ownerId, ownerFace } = canonicalOwner(hexId, faceIndex, calibration.value);
+  const idx = hexIndex.value.get(ownerId) ?? -1;
+  if (idx < 0) return [];
+  return mapData.value.hexes[idx]?.edges?.[ownerFace] ?? [];
+}
+
+function handleEdgePaint(hexId, faceIndex, type) {
+  if (!mapData.value) return;
+  const { ownerId, ownerFace } = canonicalOwner(hexId, faceIndex, calibration.value);
+  const idx = hexIndex.value.get(ownerId) ?? -1;
+  if (idx < 0) return;
+  const hex = mapData.value.hexes[idx];
+  if (!hex.edges) hex.edges = {};
+  if (!hex.edges[ownerFace]) hex.edges[ownerFace] = [];
+  const existing = hex.edges[ownerFace];
+  if (existing.includes(type)) return;
+  const { valid } = validateCoexistence(existing, type);
+  if (!valid) return;
+  hex.edges[ownerFace] = [...existing, type];
+  onMutated();
+}
+
+function handleEdgeClear(hexId, faceIndex, type) {
+  if (!mapData.value) return;
+  const { ownerId, ownerFace } = canonicalOwner(hexId, faceIndex, calibration.value);
+  const idx = hexIndex.value.get(ownerId) ?? -1;
+  if (idx < 0) return;
+  const hex = mapData.value.hexes[idx];
+  if (!hex?.edges?.[ownerFace]) return;
+  hex.edges[ownerFace] = hex.edges[ownerFace].filter((f) => f !== type);
+  onMutated();
+}
+
+function handleEdgeClearAll(allowedTypes) {
+  if (!mapData.value) return;
+  for (const hex of mapData.value.hexes) {
+    if (!hex.edges) continue;
+    for (const face of [0, 1, 2]) {
+      if (!hex.edges[face]) continue;
+      hex.edges[face] = hex.edges[face].filter((f) => !allowedTypes.includes(f));
+    }
+  }
+  onMutated();
+}
+
 // L5: Stable function references lifted out of the computed so overlayConfig
 // does not create new closure objects on every reactive dependency change.
 const TERRAIN_ICON_MAP = {
@@ -175,9 +235,12 @@ const interactionEnabled = computed(() => INTERACTIVE_PANELS.has(openPanel.value
 const edgeInteraction = computed(() => EDGE_PANELS.has(openPanel.value));
 
 const overlayConfig = computed(() => {
-  // When the elevation tool is active, use its own config (tool-owns-its-overlays).
+  // When a tool panel is active, use its own config (tool-owns-its-overlays).
   if (openPanel.value === 'elevation' && elevationPanelOverlayConfig.value) {
     return elevationPanelOverlayConfig.value;
+  }
+  if (openPanel.value === 'road' && roadPanelOverlayConfig.value) {
+    return roadPanelOverlayConfig.value;
   }
 
   const cfg = {};
@@ -412,13 +475,33 @@ const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter
 
 // ── Edge feature toggle (M2: extracted from useHexInteraction) ─────────────────
 
-const { onEdgeClick } = useEdgeToggle({
+const { onEdgeClick: legacyOnEdgeClick } = useEdgeToggle({
   mapData,
   hexIndex,
   paintEdgeFeature,
   calibration,
   onHexUpdate,
 });
+
+// Routes edge-click from HexMapOverlay to the active tool panel's handler.
+// { hexId: string, dir: string } — dir is a geometry direction string (DIRS[faceIndex]).
+function onEdgeClick({ hexId, dir }) {
+  const faceIndex = DIRS.indexOf(dir);
+  if (faceIndex === -1) return;
+  if (openPanel.value === 'road') {
+    handleEdgePaint(hexId, faceIndex, roadSelectedType.value);
+  } else {
+    legacyOnEdgeClick({ hexId, dir });
+  }
+}
+
+function onEdgeRightClick({ hexId, dir }) {
+  const faceIndex = DIRS.indexOf(dir);
+  if (faceIndex === -1) return;
+  if (openPanel.value === 'road') {
+    handleEdgeClear(hexId, faceIndex, roadSelectedType.value);
+  }
+}
 
 // ── Bulk operations ───────────────────────────────────────────────────────────
 
@@ -547,6 +630,7 @@ onUnmounted(() => {
             @hex-right-click="onHexRightClick"
             @hex-mouseenter="onHexMouseenter"
             @edge-click="onEdgeClick"
+            @edge-right-click="onEdgeRightClick"
             @paint-stroke-start="onPaintStrokeStart"
             @paint-stroke-done="onPaintStrokeDone"
           />
@@ -616,6 +700,30 @@ onUnmounted(() => {
               @terrain-change="paintTerrain = $event"
               @clear-all-terrain="clearAllTerrain"
               @paint-mode-change="paintMode = $event"
+            />
+          </div>
+        </div>
+
+        <!-- Road Tool -->
+        <div
+          class="accordion-section accordion-hex"
+          :class="{ 'accordion-flex': openPanel === 'road' }"
+        >
+          <button class="accordion-header" @click="togglePanel('road')">
+            <span>Road Tool</span>
+            <span class="accordion-chevron">{{ openPanel === 'road' ? '▾' : '▸' }}</span>
+          </button>
+          <div v-if="openPanel === 'road'" class="accordion-hex-content">
+            <RoadToolPanel
+              :selected-type="roadSelectedType"
+              :get-edge-features="getEdgeFeaturesAt"
+              @type-change="roadSelectedType = $event"
+              @edge-paint="handleEdgePaint($event.hexId, $event.faceIndex, $event.type)"
+              @edge-clear="handleEdgeClear($event.hexId, $event.faceIndex, $event.type)"
+              @edge-clear-all="handleEdgeClearAll($event)"
+              @bridge-place="handleEdgePaint($event.hexId, $event.faceIndex, 'bridge')"
+              @bridge-remove="handleEdgeClear($event.hexId, $event.faceIndex, 'bridge')"
+              @overlay-config="roadPanelOverlayConfig = $event"
             />
           </div>
         </div>

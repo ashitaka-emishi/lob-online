@@ -100,6 +100,7 @@ const emit = defineEmits([
   'hex-mouseenter',
   'hex-mouseleave',
   'edge-click',
+  'edge-right-click',
   'paint-stroke-done',
   'paint-stroke-start',
 ]);
@@ -325,6 +326,14 @@ function onSvgContextMenu(event) {
   const { grid, tx, ty } = gridData.value;
   const localX = svgPt.x - tx;
   const localY = svgPt.y - ty;
+
+  if (props.edgeInteraction) {
+    const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
+    const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : allCells;
+    const nearest = findNearestEdge(localX, localY, searchCells);
+    if (nearest) emit('edge-right-click', nearest);
+    return;
+  }
 
   const hex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
   if (hex) {
