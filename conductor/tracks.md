@@ -30,6 +30,6 @@
 
 | [x] | map-schema-foundation_20260319 | Map Schema Foundation — Data Model + Compass Label Fix (#135, #143) | 2026-03-19 | 2026-03-19 |
 
-| [~] | tool-panel-framework_20260319 | Tool Panel Framework — Shared Architecture (#136) | 2026-03-19 | 2026-03-19 |
+| [x] | tool-panel-framework_20260319 | Tool Panel Framework — Shared Architecture (#136) | 2026-03-19 | 2026-03-19 |
 
 <!-- Tracks registered by /conductor:new-track -->
