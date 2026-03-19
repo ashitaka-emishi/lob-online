@@ -1,0 +1,23 @@
+{
+  "id": "map-schema-foundation_20260319",
+  "title": "Map Schema Foundation — Data Model + Compass Label Fix",
+  "type": "chore",
+  "issues": [135, 143],
+  "status": "complete",
+  "created": "2026-03-19T00:00:00.000Z",
+  "updated": "2026-03-19T00:00:00.000Z",
+  "phases": {
+    "total": 4,
+    "completed": 4
+  },
+  "tasks": {
+    "total": 14,
+    "completed": 14
+  },
+  "commits": [
+    "e5703a6: chore(map.schema): data model overhaul — integer edge keys, hexFeature, coexistence validation (#135)",
+    "0cdd7f1: fix(compassLabel): add compass.js utility + fix off-by-one in cardinal labels (#143)",
+    "f5d2351: chore(map.json): migrate to v2 schema — integer face indices, hexFeature, drop hexsideTypes (#135)",
+    "4154b37: chore(useMapPersistence): remove hexsideTypes from KNOWN_MAP_KEYS allowlist (#135)"
+  ]
+}
