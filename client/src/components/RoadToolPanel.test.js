@@ -113,9 +113,6 @@ describe('RoadToolPanel', () => {
       props: { getEdgeFeatures: () => [] }, // no road features
     });
     // Switch to bridge mode
-    wrapper.vm.$el; // ensure mount
-    // Directly trigger bridge mode and click
-    const vm = wrapper.vm;
     // Switch internal mode to bridge by triggering the button
     const bridgeBtn = wrapper.findAll('.mode-btn').find((b) => b.text() === 'Bridge');
     bridgeBtn.trigger('click');

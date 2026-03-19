@@ -323,7 +323,7 @@ function onSvgContextMenu(event) {
   pt.y = event.clientY;
   const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
 
-  const { grid, tx, ty } = gridData.value;
+  const { grid, tx, ty, cells: allCells, cellByColRow } = gridData.value;
   const localX = svgPt.x - tx;
   const localY = svgPt.y - ty;
 
