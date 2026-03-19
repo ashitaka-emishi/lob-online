@@ -1,4 +1,4 @@
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { resolveHex } from '../utils/hexGeometry.js';
 
 /**
@@ -37,8 +37,9 @@ export function useHexInteraction({
   tryPickLosHex,
   onHexUpdate,
 }) {
-  // Default paintMode to 'paint' to preserve backward compat with callers that don't pass it
-  const _paintMode = paintMode ?? { value: 'paint' };
+  // Default paintMode to 'paint' to preserve backward compat with callers that don't pass it.
+  // Use ref() so the fallback is reactive, matching the behaviour of a real caller-supplied ref.
+  const _paintMode = paintMode ?? ref('paint');
   // M5: use .values().next().value — avoids spreading the entire Set into an array
   const selectedHexId = computed(() =>
     selectedHexIds.value.size === 1 ? selectedHexIds.value.values().next().value : null

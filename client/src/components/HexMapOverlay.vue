@@ -72,6 +72,12 @@ const props = defineProps({
     type: String,
     default: 'select',
   },
+  // True when the active tool supports drag-paint (terrain or elevation mode).
+  // Computed by the parent so HexMapOverlay does not interpret mode string values directly.
+  dragPaintEnabled: {
+    type: Boolean,
+    default: false,
+  },
   paintTerrain: {
     type: String,
     default: 'clear',
@@ -92,6 +98,7 @@ const emit = defineEmits([
   'trace-complete',
   'trace-progress',
   'paint-stroke-done',
+  'paint-stroke-start',
 ]);
 
 // Force elevation layer visible when elevation tool is active
@@ -366,8 +373,9 @@ function onSvgMouseDown(_event) {
     isDrawing.value = true;
     traceEdgeSet = new Set();
     traceEdges.value = [];
-  } else if (props.editorMode === 'paint' || props.editorMode === 'elevation') {
+  } else if (props.dragPaintEnabled) {
     isPaintMouseDown.value = true;
+    emit('paint-stroke-start');
   }
 }
 
@@ -386,12 +394,10 @@ function onSvgMouseUp() {
   }
 }
 
-// Gate hex-mouseenter for paint/elevation modes on isPaintMouseDown;
+// Gate hex-mouseenter on isPaintMouseDown when dragPaintEnabled;
 // in all other modes emit unconditionally (existing behaviour).
 function onHexMouseenter(hexId) {
-  if (props.editorMode === 'paint' || props.editorMode === 'elevation') {
-    if (!isPaintMouseDown.value) return;
-  }
+  if (props.dragPaintEnabled && !isPaintMouseDown.value) return;
   emit('hex-mouseenter', hexId);
 }
 
@@ -428,7 +434,6 @@ defineExpose({ traceEdgeCount, isDrawing, traceEdges, isPaintMouseDown });
             :stroke-width="strokeWidthForCell(cell)"
             :stroke-opacity="strokeOpacityForCell(cell)"
             @mouseenter="onHexMouseenter(cell.id)"
-            @mouseleave="emit('hex-mouseleave', cell.id)"
           />
         </g>
 

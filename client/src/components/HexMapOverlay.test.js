@@ -591,9 +591,9 @@ describe('HexMapOverlay', () => {
 
   // --- paint-mode mousedown gate tests (#115) ---
 
-  it('hex-mouseenter is NOT emitted on polygon hover alone in paint editorMode (no mousedown)', async () => {
+  it('hex-mouseenter is NOT emitted on polygon hover alone when dragPaintEnabled (no mousedown)', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, editorMode: 'paint' },
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: true },
     });
     const polygons = wrapper.findAll('polygon');
     expect(polygons.length).toBeGreaterThan(0);
@@ -601,9 +601,9 @@ describe('HexMapOverlay', () => {
     expect(wrapper.emitted('hex-mouseenter')).toBeFalsy();
   });
 
-  it('hex-mouseenter IS emitted on hover after mousedown in paint editorMode', async () => {
+  it('hex-mouseenter IS emitted on hover after mousedown when dragPaintEnabled', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, editorMode: 'paint' },
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: true },
     });
     await wrapper.trigger('mousedown');
     const polygons = wrapper.findAll('polygon');
@@ -611,9 +611,9 @@ describe('HexMapOverlay', () => {
     expect(wrapper.emitted('hex-mouseenter')).toBeTruthy();
   });
 
-  it('hex-mouseenter stops firing after mouseup in paint editorMode', async () => {
+  it('hex-mouseenter stops firing after mouseup when dragPaintEnabled', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, editorMode: 'paint' },
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: true },
     });
     await wrapper.trigger('mousedown');
     await wrapper.trigger('mouseup');
@@ -622,18 +622,18 @@ describe('HexMapOverlay', () => {
     expect(wrapper.emitted('hex-mouseenter')).toBeFalsy();
   });
 
-  it('hex-mouseenter is NOT emitted on hover alone in elevation editorMode (no mousedown)', async () => {
+  it('hex-mouseenter is NOT emitted on hover alone in elevation mode when dragPaintEnabled (no mousedown)', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, editorMode: 'elevation' },
+      props: { calibration: BASE_CAL, editorMode: 'elevation', dragPaintEnabled: true },
     });
     const polygons = wrapper.findAll('polygon');
     await polygons[0].trigger('mouseenter');
     expect(wrapper.emitted('hex-mouseenter')).toBeFalsy();
   });
 
-  it('hex-mouseenter IS emitted on hover after mousedown in elevation editorMode', async () => {
+  it('hex-mouseenter IS emitted on hover after mousedown in elevation mode when dragPaintEnabled', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, editorMode: 'elevation' },
+      props: { calibration: BASE_CAL, editorMode: 'elevation', dragPaintEnabled: true },
     });
     await wrapper.trigger('mousedown');
     const polygons = wrapper.findAll('polygon');
@@ -641,9 +641,25 @@ describe('HexMapOverlay', () => {
     expect(wrapper.emitted('hex-mouseenter')).toBeTruthy();
   });
 
+  it('paint-stroke-start is emitted on mousedown when dragPaintEnabled', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: true },
+    });
+    await wrapper.trigger('mousedown');
+    expect(wrapper.emitted('paint-stroke-start')).toBeTruthy();
+  });
+
+  it('paint-stroke-start is NOT emitted on mousedown when dragPaintEnabled is false', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: false },
+    });
+    await wrapper.trigger('mousedown');
+    expect(wrapper.emitted('paint-stroke-start')).toBeFalsy();
+  });
+
   it('paint-stroke-done is emitted on mouseup after a paint stroke', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, editorMode: 'paint' },
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: true },
     });
     await wrapper.trigger('mousedown');
     await wrapper.trigger('mouseup');
@@ -652,15 +668,15 @@ describe('HexMapOverlay', () => {
 
   it('paint-stroke-done is NOT emitted on mouseup when no mousedown occurred', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, editorMode: 'paint' },
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: true },
     });
     await wrapper.trigger('mouseup');
     expect(wrapper.emitted('paint-stroke-done')).toBeFalsy();
   });
 
-  it('isPaintMouseDown is false initially and true after mousedown in paint mode', async () => {
+  it('isPaintMouseDown is false initially and true after mousedown when dragPaintEnabled', async () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, editorMode: 'paint' },
+      props: { calibration: BASE_CAL, editorMode: 'paint', dragPaintEnabled: true },
     });
     expect(wrapper.vm.isPaintMouseDown).toBe(false);
     await wrapper.trigger('mousedown');
@@ -669,7 +685,7 @@ describe('HexMapOverlay', () => {
     expect(wrapper.vm.isPaintMouseDown).toBe(false);
   });
 
-  it('hex-mouseenter still emits unconditionally in non-paint/elevation modes (e.g. select)', async () => {
+  it('hex-mouseenter still emits unconditionally when dragPaintEnabled is false (e.g. select mode)', async () => {
     const wrapper = mount(HexMapOverlay, {
       props: { calibration: BASE_CAL, editorMode: 'select' },
     });

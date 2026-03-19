@@ -125,6 +125,7 @@ const selectedHexIds = ref(new Set());
 const { openPanel, editorMode, activeToolName, togglePanel } = useEditorAccordion({
   onClearSelection: () => {
     selectedHexIds.value = new Set();
+    paintMode.value = 'click'; // L3: reset when switching away from paintable panels
   },
 });
 
@@ -287,10 +288,14 @@ const elevationMax = computed(() => elevationLevels.value - 1);
 // M7: single onMutated used by bulk ops and trace (avoids duplicating the same two lines).
 // During a paint stroke, suppress per-hex saveMapDraft; flush once on stroke end.
 function onMutated() {
-  unsaved.value = true;
+  if (!unsaved.value) unsaved.value = true; // guard redundant reactive writes during drag
   if (!paintStrokeActive.value) {
     saveMapDraft();
   }
+}
+
+function onPaintStrokeStart() {
+  paintStrokeActive.value = true;
 }
 
 function onPaintStrokeDone() {
@@ -333,6 +338,16 @@ const {
 
 // ── Hex interaction (composable) ──────────────────────────────────────────────
 
+// Two-layer hex-mouseenter gate:
+//   Layer 1 (HexMapOverlay): emits hex-mouseenter only when isPaintMouseDown (mouse-button held).
+//   Layer 2 (useHexInteraction): acts on hex-mouseenter only when paintMode === 'paint'.
+// Both layers must pass for a drag stroke to paint. dragPaintEnabled activates layer 1;
+// paintMode activates layer 2. paintStrokeActive is set on paint-stroke-start (mousedown)
+// so even the first hex click in a stroke is batched correctly.
+const dragPaintEnabled = computed(
+  () => editorMode.value === 'paint' || editorMode.value === 'elevation'
+);
+
 const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter } =
   useHexInteraction({
     mapData,
@@ -345,13 +360,6 @@ const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter
     tryPickLosHex,
     onHexUpdate,
   });
-
-function onHexMouseenterWithStroke(hexId) {
-  if (paintMode.value === 'paint') {
-    paintStrokeActive.value = true;
-  }
-  onHexMouseenter(hexId);
-}
 
 // ── Edge feature toggle (M2: extracted from useHexInteraction) ─────────────────
 
@@ -504,14 +512,16 @@ onUnmounted(() => {
             :los-blocked-hex="losBlockedHex"
             :layers="layers"
             :editor-mode="editorMode"
+            :drag-paint-enabled="dragPaintEnabled"
             :paint-terrain="paintTerrain"
             :seed-hex-ids="seedHexIdsArray"
             @hex-click="onHexClick"
             @hex-right-click="onHexRightClick"
-            @hex-mouseenter="onHexMouseenterWithStroke"
+            @hex-mouseenter="onHexMouseenter"
             @edge-click="onEdgeClick"
             @trace-complete="onTraceComplete"
             @trace-progress="onTraceProgress"
+            @paint-stroke-start="onPaintStrokeStart"
             @paint-stroke-done="onPaintStrokeDone"
           />
         </div>
