@@ -196,7 +196,6 @@ describe('useMapPersistence', () => {
         'hexIdFormat',
         'gridSpec',
         'terrainTypes',
-        'hexsideTypes',
         'hexFeatureTypes',
         'edgeFeatureTypes',
         'elevationSystem',

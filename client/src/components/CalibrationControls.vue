@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import ElevationSystemControls from './ElevationSystemControls.vue';
+import { compassLabel } from '../utils/compass.js';
 
 const props = defineProps({
   calibration: {
@@ -57,16 +58,16 @@ const HEX_CORNERS = [
 ];
 const hexPoints = HEX_CORNERS.map((c) => `${c.x},${c.y}`).join(' ');
 
-const CARD_LABELS_HEX = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
 const LABEL_SCALE = 1.65;
 
 const cardinalLabelPositions = computed(() => {
   const n = props.calibration.northOffset ?? 0;
-  return PICKER_POSITIONS.filter((_, i) => i % 2 === 0).map((pos, idx) => {
-    const p = idx * 2;
-    const steps = Math.floor(((p - n + 12) % 12) / 2) % 6;
-    return { x: pos.x * LABEL_SCALE, y: pos.y * LABEL_SCALE, label: CARD_LABELS_HEX[steps] };
-  });
+  // Even positions (0,2,4,6,8,10) correspond to face indices 0–5
+  return PICKER_POSITIONS.filter((_, i) => i % 2 === 0).map((pos, faceIndex) => ({
+    x: pos.x * LABEL_SCALE,
+    y: pos.y * LABEL_SCALE,
+    label: compassLabel(faceIndex, n),
+  }));
 });
 
 function setNorthOffset(n) {

@@ -14,7 +14,6 @@ const KNOWN_MAP_KEYS = new Set([
   'hexIdFormat',
   'gridSpec',
   'terrainTypes',
-  'hexsideTypes',
   'hexFeatureTypes',
   'edgeFeatureTypes',
   'elevationSystem',

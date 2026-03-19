@@ -85,7 +85,7 @@ describe('MapSchema — valid documents', () => {
           hex: '05.10',
           terrain: 'woods',
           elevation: 2,
-          hexsides: { N: 'stream' },
+          hexFeature: { type: 'building' },
           vpHex: true,
           entryHex: false,
           side: 'union',
@@ -815,5 +815,151 @@ describe('MapSchema — invalid documents', () => {
     const noScenario = { _status: 'draft', layout: 'pointy-top', vpHexes: [], hexes: [] };
     const result = MapSchema.safeParse(noScenario);
     expect(result.success).toBe(false);
+  });
+});
+
+describe('MapSchema — hexFeature single field (#135)', () => {
+  it('accepts hexFeature: { type: "building" }', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '01.01', terrain: 'clear', hexFeature: { type: 'building' } }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts hex with no hexFeature (optional)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '01.01', terrain: 'clear' }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects hexFeature with unknown type', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '01.01', terrain: 'clear', hexFeature: { type: 'fort' } }],
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('MapSchema — integer face-index edge keys (#135)', () => {
+  it('accepts edges with face index "0"', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [
+        {
+          hex: '01.01',
+          terrain: 'clear',
+          edges: { 0: [{ type: 'stream' }] },
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts edges with face indices "0", "1", "2"', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [
+        {
+          hex: '01.01',
+          terrain: 'clear',
+          edges: {
+            0: [{ type: 'stream' }],
+            1: [{ type: 'road' }],
+            2: [{ type: 'elevation' }],
+          },
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects edges with string direction key "N"', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '01.01', terrain: 'clear', edges: { N: [{ type: 'stream' }] } }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects edges with face index "3" (non-canonical)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '01.01', terrain: 'clear', edges: { 3: [{ type: 'stream' }] } }],
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('MapSchema — validateCoexistence (#135)', () => {
+  const BASE_HEX = { hex: '01.01', terrain: 'clear' };
+
+  it('rejects ford without stream on same edge', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ ...BASE_HEX, edges: { 0: [{ type: 'ford' }] } }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts ford with stream on same edge', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ ...BASE_HEX, edges: { 0: [{ type: 'ford' }, { type: 'stream' }] } }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects bridge without road/trail/pike on same edge', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ ...BASE_HEX, edges: { 1: [{ type: 'bridge' }, { type: 'stream' }] } }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts bridge with road on same edge', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [
+        { ...BASE_HEX, edges: { 1: [{ type: 'bridge' }, { type: 'road' }, { type: 'stream' }] } },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects two elevation-type features on same edge (slope + extremeSlope)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ ...BASE_HEX, edges: { 0: [{ type: 'slope' }, { type: 'extremeSlope' }] } }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts slope alone on an edge', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ ...BASE_HEX, edges: { 0: [{ type: 'slope' }] } }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts stream and stoneWall coexisting on same edge', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ ...BASE_HEX, edges: { 2: [{ type: 'stream' }, { type: 'stoneWall' }] } }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts road and trail coexisting on same edge', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ ...BASE_HEX, edges: { 0: [{ type: 'road' }, { type: 'trail' }] } }],
+    });
+    expect(result.success).toBe(true);
   });
 });

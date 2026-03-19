@@ -34,4 +34,6 @@
 
 | [ ] | hex-grid-model_20260318 | Hex Grid Model — Fix EVEN_Q Column Offset Convention | 2026-03-18 | 2026-03-18 |
 
+| [x] | map-schema-foundation_20260319 | Map Schema Foundation — Data Model + Compass Label Fix (#135, #143) | 2026-03-19 | 2026-03-19 |
+
 <!-- Tracks registered by /conductor:new-track -->
