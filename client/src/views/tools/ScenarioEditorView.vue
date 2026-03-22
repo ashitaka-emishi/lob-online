@@ -230,7 +230,6 @@ function updateField(path, value) {
   } else if (parts.length === 2) {
     scenarioData.value[parts[0]] = { ...scenarioData.value[parts[0]], [parts[1]]: value };
   } else {
-    console.warn(`[ScenarioEditorView] updateField: unsupported path depth — "${path}"`);
     return;
   }
   markDirty();

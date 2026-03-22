@@ -49,11 +49,11 @@ describe('RoadToolPanel', () => {
     expect(wrapper.emitted('overlay-config')).toBeTruthy();
   });
 
-  it('emitted overlay-config has edgeLine with through-hex style', () => {
+  it('emitted overlay-config has edgeLine with along-edge style', () => {
     const wrapper = mount(RoadToolPanel);
     const cfg = wrapper.emitted('overlay-config').at(-1)[0];
     expect(cfg.edgeLine).toBeTruthy();
-    expect(cfg.edgeLine.style).toBe('through-hex');
+    expect(cfg.edgeLine.style).toBe('along-edge');
     expect(cfg.edgeLine.featureGroups.length).toBe(3); // trail, road, pike
   });
 

@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { compassLabel, faceIndexForNorth, allFaceLabels } from './compass.js';
 
+const LABELS_8 = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+
 describe('formulas/compass', () => {
   describe('compassLabel(faceIndex, northOffset)', () => {
     it('returns N for faceIndex 0 when northOffset 0 (north at top face)', () => {
@@ -12,24 +14,19 @@ describe('formulas/compass', () => {
       expect(labels).toEqual(['N', 'NE', 'SE', 'S', 'SW', 'NW']);
     });
 
-    it('northOffset 2: face 0 is NE, face 1 is SE, etc.', () => {
+    it('northOffset 2: face 0 is NW', () => {
       // northOffset 2 means north is 2 steps clockwise from face 0 → face 0 is NW
-      // SIX_LABELS[(Math.round(((0*2-2+12)%12)/2))%6] = SIX_LABELS[Math.round(10/2)%6] = SIX_LABELS[5] = 'NW'
       expect(compassLabel(0, 2)).toBe('NW');
     });
 
     it('northOffset 6: south at top, face 0 is S', () => {
-      // Math.round(((0*2-6+12)%12)/2)%6 = Math.round(6/2)%6 = 3 → 'S'
       expect(compassLabel(0, 6)).toBe('S');
     });
 
     it('SM default: northOffset 3, face 0 is W', () => {
-      // South Mountain: northOffset 3 (right vertex ≈ geographic N)
-      // Math.round(((0*2-3+12)%12)/2)%6 = Math.round(9/2)%6 = Math.round(4.5)%6 = 4 → 'SW'
-      // Actually let's just verify the formula is consistent
-      const label = compassLabel(0, 3);
-      expect(typeof label).toBe('string');
-      expect(['N', 'NE', 'SE', 'S', 'SW', 'NW']).toContain(label);
+      // South Mountain: northOffset=3 (right vertex ≈ geographic N).
+      // Geographic N falls between faces 1 and 2, so face 0 maps to 'W'.
+      expect(compassLabel(0, 3)).toBe('W');
     });
 
     it('faceIndex 5 with northOffset 0 returns NW', () => {
@@ -37,10 +34,9 @@ describe('formulas/compass', () => {
     });
 
     it('is defined for all valid face indices 0–5 and northOffsets 0–11', () => {
-      const valid = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
       for (let f = 0; f <= 5; f++) {
         for (let n = 0; n <= 11; n++) {
-          expect(valid).toContain(compassLabel(f, n));
+          expect(LABELS_8).toContain(compassLabel(f, n));
         }
       }
     });
@@ -66,11 +62,11 @@ describe('formulas/compass', () => {
   });
 
   describe('allFaceLabels(northOffset)', () => {
-    it('returns an array of 6 strings', () => {
+    it('returns an array of 6 strings from the 8-direction set', () => {
       const labels = allFaceLabels(0);
       expect(labels).toHaveLength(6);
       for (const l of labels) {
-        expect(['N', 'NE', 'SE', 'S', 'SW', 'NW']).toContain(l);
+        expect(LABELS_8).toContain(l);
       }
     });
 
@@ -83,6 +79,10 @@ describe('formulas/compass', () => {
 
     it('northOffset 0 returns standard flat-top sequence', () => {
       expect(allFaceLabels(0)).toEqual(['N', 'NE', 'SE', 'S', 'SW', 'NW']);
+    });
+
+    it('northOffset 3 (SM default) returns W, NW, NE, E, SE, SW', () => {
+      expect(allFaceLabels(3)).toEqual(['W', 'NW', 'NE', 'E', 'SE', 'SW']);
     });
   });
 });

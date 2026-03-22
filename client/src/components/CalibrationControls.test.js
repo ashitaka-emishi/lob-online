@@ -184,14 +184,15 @@ describe('CalibrationControls', () => {
   it.each([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])(
     'cardinal labels: all 6 compass directions appear exactly once for northOffset=%i',
     (offset) => {
-      const COMPASS = new Set(['N', 'NE', 'SE', 'S', 'SW', 'NW']);
+      // Full 8-direction set: odd northOffsets produce 'E' and/or 'W' (north on a vertex).
+      const COMPASS8 = new Set(['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']);
       const wrapper = mount(CalibrationControls, {
         props: { calibration: { ...BASE_CAL, northOffset: offset } },
       });
       const labels = wrapper
         .findAll('text')
         .map((t) => t.text().trim())
-        .filter((t) => COMPASS.has(t));
+        .filter((t) => COMPASS8.has(t));
       expect(labels).toHaveLength(6);
       expect(new Set(labels).size).toBe(6);
     }

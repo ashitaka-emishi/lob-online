@@ -79,7 +79,7 @@ const ownOverlayConfig = computed(() => ({
   grid: { alwaysOn: true, weight: 'faint' },
   edgeLine: {
     alwaysOn: true,
-    style: 'through-hex',
+    style: 'along-edge',
     featureGroups: ROAD_GROUPS,
   },
 }));

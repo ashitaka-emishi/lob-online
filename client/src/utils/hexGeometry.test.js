@@ -16,43 +16,45 @@ import {
   hexToGameId,
 } from './hexGeometry.js';
 
-// Simple synthetic corners for a flat-top hex centred at (0,0) with radius 2.
-// corners[0]=E(2,0), [1]=SE(1,2), [2]=SW(-1,2), [3]=W(-2,0), [4]=NW(-1,-2), [5]=NE(1,-2)
+// Actual honeycomb-grid FLAT corner order: NE(0), E(1), SE(2), SW(3), W(4), NW(5).
+// Corners start at NE (upper-right vertex, 30° before East) and go clockwise in screen coords.
+// For a flat-top hex centred at (0,0) with radius 2:
+// corners[0]=NE(1,-2), [1]=E(2,0), [2]=SE(1,2), [3]=SW(-1,2), [4]=W(-2,0), [5]=NW(-1,-2)
 const CORNERS = [
-  { x: 2, y: 0 }, // 0: E
-  { x: 1, y: 2 }, // 1: SE
-  { x: -1, y: 2 }, // 2: SW
-  { x: -2, y: 0 }, // 3: W
-  { x: -1, y: -2 }, // 4: NW
-  { x: 1, y: -2 }, // 5: NE
+  { x: 1, y: -2 }, // 0: NE (upper-right)
+  { x: 2, y: 0 }, // 1: E (right)
+  { x: 1, y: 2 }, // 2: SE (lower-right)
+  { x: -1, y: 2 }, // 3: SW (lower-left)
+  { x: -2, y: 0 }, // 4: W (left)
+  { x: -1, y: -2 }, // 5: NW (upper-left)
 ];
 const CENTRE = { x: 0, y: 0 };
 
 describe('edgeMidpoint', () => {
-  it('returns midpoint of N edge (corners 4 and 5)', () => {
+  it('returns midpoint of N edge (corners 5 and 0)', () => {
     const mid = edgeMidpoint(CORNERS, 'N');
-    // corners[4]=(-1,-2), corners[5]=(1,-2) → midpoint=(0,-2)
+    // corners[5]=(-1,-2), corners[0]=(1,-2) → midpoint=(0,-2)
     expect(mid.x).toBeCloseTo(0);
     expect(mid.y).toBeCloseTo(-2);
   });
 
-  it('returns midpoint of S edge (corners 1 and 2)', () => {
+  it('returns midpoint of S edge (corners 2 and 3)', () => {
     const mid = edgeMidpoint(CORNERS, 'S');
-    // corners[1]=(1,2), corners[2]=(-1,2) → midpoint=(0,2)
+    // corners[2]=(1,2), corners[3]=(-1,2) → midpoint=(0,2)
     expect(mid.x).toBeCloseTo(0);
     expect(mid.y).toBeCloseTo(2);
   });
 
-  it('returns midpoint of SE edge (corners 0 and 1)', () => {
+  it('returns midpoint of SE edge (corners 1 and 2)', () => {
     const mid = edgeMidpoint(CORNERS, 'SE');
-    // corners[0]=(2,0), corners[1]=(1,2) → midpoint=(1.5,1)
+    // corners[1]=(2,0), corners[2]=(1,2) → midpoint=(1.5,1)
     expect(mid.x).toBeCloseTo(1.5);
     expect(mid.y).toBeCloseTo(1);
   });
 
-  it('handles NE edge (corners 5 and 0)', () => {
+  it('handles NE edge (corners 0 and 1)', () => {
     const mid = edgeMidpoint(CORNERS, 'NE');
-    // corners[5]=(1,-2), corners[0]=(2,0) → midpoint=(1.5,-1)
+    // corners[0]=(1,-2), corners[1]=(2,0) → midpoint=(1.5,-1)
     expect(mid.x).toBeCloseTo(1.5);
     expect(mid.y).toBeCloseTo(-1);
   });
@@ -67,7 +69,7 @@ describe('edgeMidpoint', () => {
 describe('edgeLine20_80', () => {
   it('returns 20%→80% segment along N edge', () => {
     const seg = edgeLine20_80(CORNERS, 'N');
-    // N edge: corners[4]=(-1,-2), corners[5]=(1,-2)
+    // N edge: corners[5]=(-1,-2), corners[0]=(1,-2)
     // 20%: -1 + (1-(-1))*0.2 = -1 + 0.4 = -0.6, y=-2
     // 80%: -1 + (1-(-1))*0.8 = -1 + 1.6 = 0.6, y=-2
     expect(seg.x1).toBeCloseTo(-0.6);
@@ -109,14 +111,14 @@ describe('wedgePolygonPoints', () => {
 
   it('first wedge includes centre and corners[0] and corners[1]', () => {
     const pts = wedgePolygonPoints(CORNERS, CENTRE);
-    // Wedge 0: centre(0,0) → corners[0](2,0) → corners[1](1,2)
-    expect(pts[0]).toBe('0,0 2,0 1,2');
+    // Wedge 0: centre(0,0) → corners[0](1,-2) → corners[1](2,0)  [NE wedge]
+    expect(pts[0]).toBe('0,0 1,-2 2,0');
   });
 
   it('wraps around: last wedge uses corners[5] and corners[0]', () => {
     const pts = wedgePolygonPoints(CORNERS, CENTRE);
-    // Wedge 5: centre(0,0) → corners[5](1,-2) → corners[0](2,0)
-    expect(pts[5]).toBe('0,0 1,-2 2,0');
+    // Wedge 5: centre(0,0) → corners[5](-1,-2) → corners[0](1,-2)  [N wedge]
+    expect(pts[5]).toBe('0,0 -1,-2 1,-2');
   });
 });
 

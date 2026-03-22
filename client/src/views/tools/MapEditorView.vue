@@ -41,7 +41,7 @@ const DEFAULT_CALIBRATION = {
   hexHeight: 35,
   imageScale: 1,
   orientation: 'flat',
-  strokeWidth: 0.5,
+  strokeWidth: 1,
   evenColUp: true,
   northOffset: 0,
 };
@@ -182,23 +182,31 @@ function getEdgeFeaturesAt(hexId, faceIndex) {
   const { ownerId, ownerFace } = canonicalOwner(hexId, faceIndex, calibration.value);
   const idx = hexIndex.value.get(ownerId) ?? -1;
   if (idx < 0) return [];
-  return mapData.value.hexes[idx]?.edges?.[ownerFace] ?? [];
+  const raw = mapData.value.hexes[idx]?.edges?.[ownerFace] ?? [];
+  // Normalise to plain type strings for callers (bridge/ford validation)
+  return raw.map((f) => (typeof f === 'string' ? f : f.type));
 }
 
 function handleEdgePaint(hexId, faceIndex, type) {
-  if (!mapData.value) return;
+  if (!mapData.value) return false;
   const { ownerId, ownerFace } = canonicalOwner(hexId, faceIndex, calibration.value);
-  const idx = hexIndex.value.get(ownerId) ?? -1;
-  if (idx < 0) return;
+  let idx = hexIndex.value.get(ownerId) ?? -1;
+  if (idx < 0) {
+    mapData.value.hexes.push({ hex: ownerId, terrain: 'unknown' });
+    idx = mapData.value.hexes.length - 1;
+    hexIndex.value.set(ownerId, idx);
+  }
   const hex = mapData.value.hexes[idx];
   if (!hex.edges) hex.edges = {};
   if (!hex.edges[ownerFace]) hex.edges[ownerFace] = [];
   const existing = hex.edges[ownerFace];
-  if (existing.includes(type)) return;
-  const { valid } = validateCoexistence(existing, type);
-  if (!valid) return;
-  hex.edges[ownerFace] = [...existing, type];
+  const existingTypes = existing.map((f) => (typeof f === 'string' ? f : f.type));
+  if (existingTypes.includes(type)) return false;
+  const { valid } = validateCoexistence(existingTypes, type);
+  if (!valid) return false;
+  hex.edges[ownerFace] = [...existing, { type }];
   onMutated();
+  return true;
 }
 
 function handleEdgeClear(hexId, faceIndex, type) {
@@ -208,7 +216,9 @@ function handleEdgeClear(hexId, faceIndex, type) {
   if (idx < 0) return;
   const hex = mapData.value.hexes[idx];
   if (!hex?.edges?.[ownerFace]) return;
-  hex.edges[ownerFace] = hex.edges[ownerFace].filter((f) => f !== type);
+  hex.edges[ownerFace] = hex.edges[ownerFace].filter(
+    (f) => (typeof f === 'string' ? f : f.type) !== type
+  );
   onMutated();
 }
 
@@ -218,7 +228,9 @@ function handleEdgeClearAll(allowedTypes) {
     if (!hex.edges) continue;
     for (const face of [0, 1, 2]) {
       if (!hex.edges[face]) continue;
-      hex.edges[face] = hex.edges[face].filter((f) => !allowedTypes.includes(f));
+      hex.edges[face] = hex.edges[face].filter(
+        (f) => !allowedTypes.includes(typeof f === 'string' ? f : f.type)
+      );
     }
   }
   onMutated();
@@ -501,19 +513,25 @@ const { onEdgeClick: legacyOnEdgeClick } = useEdgeToggle({
 });
 
 // Routes edge-click from HexMapOverlay to the active tool panel's handler.
-// { hexId: string, dir: string } — dir is a geometry direction string (DIRS[faceIndex]).
-function onEdgeClick({ hexId, dir }) {
+// { hexId, dir, clientX, clientY } — clientX/Y are screen coords for logging.
+function onEdgeClick({ hexId, dir, clientX, clientY }) {
   const faceIndex = DIRS.indexOf(dir);
   if (faceIndex === -1) return;
+  let type;
   if (openPanel.value === 'road') {
-    handleEdgePaint(hexId, faceIndex, roadSelectedType.value);
+    type = roadSelectedType.value;
   } else if (openPanel.value === 'stream') {
-    handleEdgePaint(hexId, faceIndex, streamSelectedType.value);
+    type = streamSelectedType.value;
   } else if (openPanel.value === 'contour') {
-    handleEdgePaint(hexId, faceIndex, contourSelectedType.value);
+    type = contourSelectedType.value;
   } else {
     legacyOnEdgeClick({ hexId, dir });
+    return;
   }
+  console.log(
+    `[edge-click] mouse=(${Math.round(clientX ?? 0)},${Math.round(clientY ?? 0)}) hex=${hexId} dir=${dir}`
+  );
+  handleEdgePaint(hexId, faceIndex, type);
 }
 
 function onEdgeRightClick({ hexId, dir }) {
