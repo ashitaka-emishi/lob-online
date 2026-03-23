@@ -5,6 +5,7 @@ import {
   DIRS,
   edgeMidpoint,
   edgeLine20_80,
+  edgeToCenter,
   wedgePolygonPoints,
   getEdgeLabels,
   findNearestEdge,
@@ -319,6 +320,24 @@ const cellsForEdges = computed(() => {
   }));
 });
 
+// ── ThroughHexLayer pre-filtered data (#139) ──────────────────────────────────
+// Mirrors cellsForEdges but uses edgeToCenter() so each segment runs from the
+// hex centre to the edge midpoint. Active only when edgeLine.style === 'through-hex'.
+const throughHexSegments = computed(() => {
+  if (props.overlayConfig.edgeLine?.style !== 'through-hex') return [];
+  return cells.value.map((cell) => ({
+    id: cell.id,
+    edgeFaces: CANONICAL_EDGE_DIRS.map((dir, fi) => ({
+      dir,
+      lineAttrs: edgeToCenter(cell.corners, cell.cx, cell.cy, dir),
+      groups: edgeLineGroups.value.map((group) => ({
+        group,
+        features: cell.edges?.[fi]?.filter((f) => group.typeSet.has(f.type)) ?? [],
+      })),
+    })),
+  }));
+});
+
 // ── Coordinate helper ─────────────────────────────────────────────────────────
 
 function _toLocal(svg, clientX, clientY) {
@@ -569,6 +588,26 @@ defineExpose({ isPaintMouseDown, hoverInfo });
              faces 3/4/5 live on the neighbour as face 0/1/2.               -->
         <g v-if="overlayConfig.edgeLine" class="layer-edge-lines">
           <template v-for="cell in cellsForEdges" :key="'edges-' + cell.id">
+            <template v-for="face in cell.edgeFaces" :key="face.dir">
+              <template v-for="(gd, gi) in face.groups" :key="gi">
+                <line
+                  v-for="feat in gd.features"
+                  :key="feat.type"
+                  v-bind="face.lineAttrs"
+                  :stroke="gd.group.color"
+                  :stroke-width="gd.group.strokeWidth"
+                  :stroke-dasharray="gd.group.dash ?? null"
+                  stroke-linecap="round"
+                  pointer-events="none"
+                />
+              </template>
+            </template>
+          </template>
+        </g>
+
+        <!-- ThroughHexLayer — road and trail features rendered centre→midpoint (#139) -->
+        <g v-if="overlayConfig.edgeLine?.style === 'through-hex'" class="layer-through-hex-lines">
+          <template v-for="cell in throughHexSegments" :key="'thru-' + cell.id">
             <template v-for="face in cell.edgeFaces" :key="face.dir">
               <template v-for="(gd, gi) in face.groups" :key="gi">
                 <line

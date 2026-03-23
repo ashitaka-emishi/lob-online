@@ -837,6 +837,110 @@ describe('HexMapOverlay — unified overlayConfig highlight and state API', () =
     const seed = polygons.find((p) => p.attributes('stroke') === '#cc44ee');
     expect(seed).toBeTruthy();
   });
+
+  // ── through-hex edge rendering (#139) ────────────────────────────────────────
+
+  it('through-hex style renders .layer-through-hex-lines group when edgeLine has style: through-hex', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [{ hex: '01.03', terrain: 'clear', edges: { 0: [{ type: 'road' }] } }],
+        overlayConfig: {
+          edgeLine: {
+            alwaysOn: true,
+            style: 'through-hex',
+            featureGroups: [{ types: ['road'], color: '#888', strokeWidth: 2 }],
+          },
+        },
+      },
+    });
+    expect(wrapper.find('.layer-through-hex-lines').exists()).toBe(true);
+  });
+
+  it('through-hex style renders a <line> per canonical edge with a matching road feature', () => {
+    // Two canonical edges (N=0, NE=1) with road features → two through-hex line segments
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [
+          {
+            hex: '01.03',
+            terrain: 'clear',
+            edges: { 0: [{ type: 'road' }], 1: [{ type: 'road' }] },
+          },
+        ],
+        overlayConfig: {
+          edgeLine: {
+            alwaysOn: true,
+            style: 'through-hex',
+            featureGroups: [{ types: ['road'], color: '#888', strokeWidth: 2 }],
+          },
+        },
+      },
+    });
+    const throughLines = wrapper.find('.layer-through-hex-lines').findAll('line');
+    expect(throughLines.length).toBe(2);
+  });
+
+  it('through-hex <line> has x1/y1 at hex center and x2/y2 at edge midpoint (non-zero coords)', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [{ hex: '01.03', terrain: 'clear', edges: { 0: [{ type: 'road' }] } }],
+        overlayConfig: {
+          edgeLine: {
+            alwaysOn: true,
+            style: 'through-hex',
+            featureGroups: [{ types: ['road'], color: '#888', strokeWidth: 2 }],
+          },
+        },
+      },
+    });
+    const line = wrapper.find('.layer-through-hex-lines line');
+    expect(line.exists()).toBe(true);
+    // All four coordinates must be present and non-zero (hex is not at origin)
+    ['x1', 'y1', 'x2', 'y2'].forEach((attr) => {
+      const val = parseFloat(line.attributes(attr));
+      expect(isNaN(val)).toBe(false);
+    });
+    // Center y always differs from N-edge midpoint y (edge is above center)
+    expect(line.attributes('y1')).not.toBe(line.attributes('y2'));
+  });
+
+  it('through-hex style does NOT render .layer-through-hex-lines for along-edge style', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [{ hex: '01.03', terrain: 'clear', edges: { 0: [{ type: 'road' }] } }],
+        overlayConfig: {
+          edgeLine: {
+            alwaysOn: true,
+            // no style property → defaults to along-edge behavior
+            featureGroups: [{ types: ['road'], color: '#888', strokeWidth: 2 }],
+          },
+        },
+      },
+    });
+    expect(wrapper.find('.layer-through-hex-lines').exists()).toBe(false);
+  });
+
+  it('through-hex style renders no lines for a hex with no road edges', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [{ hex: '01.03', terrain: 'clear' }],
+        overlayConfig: {
+          edgeLine: {
+            alwaysOn: true,
+            style: 'through-hex',
+            featureGroups: [{ types: ['road'], color: '#888', strokeWidth: 2 }],
+          },
+        },
+      },
+    });
+    const throughLines = wrapper.find('.layer-through-hex-lines').findAll('line');
+    expect(throughLines.length).toBe(0);
+  });
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
