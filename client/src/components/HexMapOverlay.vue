@@ -449,7 +449,7 @@ function onHexMouseenter(hexId) {
 }
 
 // Exposed for test instrumentation only.
-defineExpose({ isPaintMouseDown });
+defineExpose({ isPaintMouseDown, hoverInfo });
 </script>
 
 <template>
