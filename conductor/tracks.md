@@ -42,4 +42,6 @@
 
 | [x] | map-editor-extraction_20260323 | MapEditorView Extraction Debt Bundle | 2026-03-23 | 2026-03-23 |
 
+| [x] | map-editor-tool-closeout_20260323 | Map Editor Tool Closeout — Issues #137 #138 #139 #140 #141 #142 | 2026-03-23 | 2026-03-23 |
+
 <!-- Tracks registered by /conductor:new-track -->
