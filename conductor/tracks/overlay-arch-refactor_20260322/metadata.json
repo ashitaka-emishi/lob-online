@@ -2,7 +2,7 @@
   "id": "overlay-arch-refactor_20260322",
   "title": "Rendering Architecture — overlayConfig Ownership Cleanup",
   "type": "refactor",
-  "status": "pending",
+  "status": "in_progress",
   "created": "2026-03-22T00:00:00.000Z",
   "updated": "2026-03-22T00:00:00.000Z",
   "phases": {

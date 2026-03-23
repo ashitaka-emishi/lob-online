@@ -36,6 +36,6 @@
 
 | [x] | hex-overlay-perf_20260322 | HexMapOverlay Performance Quick Wins Bundle | 2026-03-22 | 2026-03-22 |
 
-| [ ] | overlay-arch-refactor_20260322 | Rendering Architecture — overlayConfig Ownership Cleanup | 2026-03-22 | 2026-03-22 |
+| [~] | overlay-arch-refactor_20260322 | Rendering Architecture — overlayConfig Ownership Cleanup | 2026-03-22 | 2026-03-22 |
 
 <!-- Tracks registered by /conductor:new-track -->
