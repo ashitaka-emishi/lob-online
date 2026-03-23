@@ -18,6 +18,7 @@ function makeArgs(overrides = {}) {
   const tryPickLosHex = vi.fn().mockReturnValue(false);
   const onHexUpdate = vi.fn();
   const elevationTarget = ref(1);
+  const paintHexFeature = ref(null);
   return {
     selectedHexIds,
     mapData,
@@ -26,6 +27,7 @@ function makeArgs(overrides = {}) {
     paintTerrain,
     elevationMax,
     elevationTarget,
+    paintHexFeature,
     tryPickLosHex,
     onHexUpdate,
     ...overrides,
@@ -160,14 +162,17 @@ describe('useHexInteraction', () => {
       );
     });
 
-    it('click with building sets hexFeature not terrain', () => {
-      const args = makeArgs({ editorMode: ref('paint'), paintTerrain: ref('building') });
+    it('click with paintHexFeature sets hexFeature not terrain', () => {
+      const args = makeArgs({
+        editorMode: ref('paint'),
+        paintHexFeature: ref({ type: 'building' }),
+      });
       const { onHexClick } = useHexInteraction(args);
       onHexClick('01.01', {});
       expect(args.onHexUpdate).toHaveBeenCalledWith(
         expect.objectContaining({ hex: '01.01', hexFeature: { type: 'building' } })
       );
-      // terrain should NOT be changed to 'building'
+      // terrain should NOT be touched
       expect(args.onHexUpdate.mock.calls[0][0].terrain).not.toBe('building');
     });
   });
@@ -189,8 +194,11 @@ describe('useHexInteraction', () => {
       expect(args.onHexUpdate).not.toHaveBeenCalled();
     });
 
-    it('clears hexFeature when paint mode and building selected', () => {
-      const args = makeArgs({ editorMode: ref('paint'), paintTerrain: ref('building') });
+    it('clears hexFeature when paint mode and paintHexFeature is set', () => {
+      const args = makeArgs({
+        editorMode: ref('paint'),
+        paintHexFeature: ref({ type: 'building' }),
+      });
       args.mapData.value.hexes[0].hexFeature = { type: 'building' };
       const { onHexRightClick } = useHexInteraction(args);
       onHexRightClick('01.01');

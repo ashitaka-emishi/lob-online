@@ -93,6 +93,9 @@ const { openPanel, editorMode, activeToolName, togglePanel, isToolPanel } = useE
 });
 
 const paintTerrain = ref('clear');
+// paintHexFeature is the mutation intent when a non-terrain item (e.g. building) is selected.
+// Kept separate from paintTerrain so the composable doesn't need to string-match magic values.
+const paintHexFeature = ref(null);
 const paintEdgeFeature = ref(null);
 // click/paint mode toggle — shared across terrain and elevation panels (only one open at a time)
 const paintMode = ref('click');
@@ -380,6 +383,14 @@ const dragPaintEnabled = computed(
   () => editorMode.value === 'paint' || editorMode.value === 'elevation'
 );
 
+// Updates both paintTerrain (UI active-state) and paintHexFeature (mutation intent).
+// Building is a hex feature, not a terrain type — keeping them separate avoids magic-string
+// checks in the composable (SRP fix from team review).
+function onTerrainChange(value) {
+  paintTerrain.value = value;
+  paintHexFeature.value = value === 'building' ? { type: 'building' } : null;
+}
+
 const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter } =
   useHexInteraction({
     mapData,
@@ -389,6 +400,7 @@ const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter
     paintTerrain,
     elevationMax,
     elevationTarget,
+    paintHexFeature,
     paintMode,
     tryPickLosHex,
     onHexUpdate,
@@ -406,7 +418,7 @@ const { onEdgeClick: legacyOnEdgeClick } = useEdgeToggle({
 
 // Routes edge-click from HexMapOverlay to the active tool panel's handler.
 // { hexId, dir, clientX, clientY } — clientX/Y are screen coords for logging.
-function onEdgeClick({ hexId, dir, clientX, clientY }) {
+function onEdgeClick({ hexId, dir }) {
   const faceIndex = DIRS.indexOf(dir);
   if (faceIndex === -1) return;
   let type;
@@ -420,9 +432,6 @@ function onEdgeClick({ hexId, dir, clientX, clientY }) {
     legacyOnEdgeClick({ hexId, dir });
     return;
   }
-  console.log(
-    `[edge-click] mouse=(${Math.round(clientX ?? 0)},${Math.round(clientY ?? 0)}) hex=${hexId} dir=${dir}`
-  );
   handleEdgePaint(hexId, faceIndex, type);
 }
 
@@ -630,6 +639,7 @@ onUnmounted(() => {
             <ElevationToolPanel
               :selected-hex="selectedHex"
               :elevation-levels="elevationLevels"
+              :target-elevation="elevationTarget"
               :paint-mode="paintMode"
               @clear-all-elevations="clearAllElevations"
               @raise-all="raiseAll"
@@ -655,7 +665,7 @@ onUnmounted(() => {
               :terrain-types="terrainTypes"
               :paint-terrain="paintTerrain"
               :paint-mode="paintMode"
-              @terrain-change="paintTerrain = $event"
+              @terrain-change="onTerrainChange"
               @clear-all-terrain="clearAllTerrain"
               @paint-mode-change="paintMode = $event"
               @overlay-config="activePanelOverlayConfig = $event"

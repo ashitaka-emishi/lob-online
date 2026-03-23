@@ -141,10 +141,18 @@ describe('ElevationToolPanel', () => {
     expect(slider.attributes('max')).toBe('9');
   });
 
-  it('slider defaults to 1', () => {
+  it('slider reflects targetElevation prop (default 1)', () => {
     const wrapper = mount(ElevationToolPanel, { props: { elevationLevels: 22 } });
     const slider = wrapper.find('input[type="range"]');
     expect(Number(slider.element.value)).toBe(1);
+  });
+
+  it('slider reflects targetElevation prop when set to non-default', () => {
+    const wrapper = mount(ElevationToolPanel, {
+      props: { elevationLevels: 22, targetElevation: 7 },
+    });
+    const slider = wrapper.find('input[type="range"]');
+    expect(Number(slider.element.value)).toBe(7);
   });
 
   it('changing slider emits target-elevation-change with numeric value', async () => {

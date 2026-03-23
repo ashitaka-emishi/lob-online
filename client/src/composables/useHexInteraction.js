@@ -23,6 +23,7 @@ import { resolveHexOrStub } from '../utils/hexGeometry.js';
  * @param {import('vue').Ref<string>} args.paintTerrain
  * @param {import('vue').ComputedRef<number>} args.elevationMax
  * @param {import('vue').Ref<number>} [args.elevationTarget] - target value for elevation painting; defaults to ref(1)
+ * @param {import('vue').Ref<object|null>} [args.paintHexFeature] - hex feature to paint (e.g. {type:'building'}); null → use paintTerrain
  * @param {import('vue').Ref<string>} [args.paintMode] - 'click'|'paint'; defaults to 'paint'
  * @param {function} [args.tryPickLosHex] - from useLosTest; returns true if click consumed by LOS
  * @param {function} args.onHexUpdate - single-hex mutation handler
@@ -35,6 +36,7 @@ export function useHexInteraction({
   paintTerrain,
   elevationMax,
   elevationTarget,
+  paintHexFeature,
   paintMode,
   tryPickLosHex,
   onHexUpdate,
@@ -44,6 +46,9 @@ export function useHexInteraction({
   const _paintMode = paintMode ?? ref('paint');
   // Default elevationTarget to 1 for callers that haven't wired the slider yet.
   const _elevationTarget = elevationTarget ?? ref(1);
+  // paintHexFeature: when set, applyPaint writes hexFeature instead of terrain so the two
+  // concepts stay distinct. Callers that don't yet pass this get the null fallback (terrain-only).
+  const _paintHexFeature = paintHexFeature ?? ref(null);
   // M5: use .values().next().value — avoids spreading the entire Set into an array
   const selectedHexId = computed(() =>
     selectedHexIds.value.size === 1 ? selectedHexIds.value.values().next().value : null
@@ -83,16 +88,18 @@ export function useHexInteraction({
 
   // ── Click / mouseenter handlers ────────────────────────────────────────────
 
-  // M2: shared paint helper — eliminates identical blocks in onHexClick and onHexMouseenter
+  // M2: shared paint helper — eliminates identical blocks in onHexClick and onHexMouseenter.
+  // When paintHexFeature is set (e.g. building), writes hexFeature instead of terrain so the
+  // two concepts stay distinct in the data model.
   function applyPaint(hexId) {
     const existingIdx = hexIndex.value.get(hexId);
-    if (paintTerrain.value === 'building') {
-      // Buildings set hexFeature, not terrain, so existing terrain is preserved.
+    if (_paintHexFeature.value) {
+      // Feature paint — sets hexFeature, leaves terrain untouched.
       if (existingIdx !== undefined) {
-        mapData.value.hexes[existingIdx].hexFeature = { type: 'building' };
+        mapData.value.hexes[existingIdx].hexFeature = _paintHexFeature.value;
         onHexUpdate(mapData.value.hexes[existingIdx]);
       } else {
-        onHexUpdate({ hex: hexId, hexFeature: { type: 'building' } });
+        onHexUpdate({ hex: hexId, hexFeature: _paintHexFeature.value });
       }
     } else if (existingIdx !== undefined) {
       // M1: mutate in-place to avoid object allocation on every paint stroke
@@ -134,8 +141,8 @@ export function useHexInteraction({
   function onHexRightClick(hexId) {
     if (editorMode.value === 'elevation') {
       clearHexElevation(hexId);
-    } else if (editorMode.value === 'paint' && paintTerrain.value === 'building') {
-      // Right-click clears the hexFeature (removes building) without touching terrain.
+    } else if (editorMode.value === 'paint' && _paintHexFeature.value) {
+      // Right-click clears the hexFeature (e.g. building) without touching terrain.
       const existingIdx = hexIndex.value.get(hexId);
       if (existingIdx !== undefined) {
         mapData.value.hexes[existingIdx].hexFeature = null;
