@@ -7,19 +7,22 @@
  * See docs/map-editor-design.md §5, §15.
  */
 
-const SIX_LABELS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
+// Same 12-position ring as hexGeometry.js COMPASS_12.
+const COMPASS_12 = ['N', 'NE', 'NE', 'E', 'SE', 'SE', 'S', 'SW', 'SW', 'W', 'NW', 'NW'];
 
 /**
  * Returns the compass label for a hex face given the grid's north offset.
  *
- * Formula: `SIX_LABELS[Math.round(((faceIndex*2 − northOffset + 12) % 12) / 2) % 6]`
+ * Uses the same formula as hexGeometry.getEdgeLabels. When northOffset is
+ * odd (north falls on a vertex, e.g. northOffset=3 for South Mountain) the
+ * return value may be 'E' or 'W'.
  *
  * @param {number} faceIndex - Geometry-stable face index 0–5, clockwise from top face.
  * @param {number} northOffset - 12-position picker value (0–11) from gridSpec.
- * @returns {string} One of 'N', 'NE', 'SE', 'S', 'SW', 'NW'.
+ * @returns {string} One of 'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'.
  */
 export function compassLabel(faceIndex, northOffset) {
-  return SIX_LABELS[Math.round(((faceIndex * 2 - northOffset + 12) % 12) / 2) % 6];
+  return COMPASS_12[(((faceIndex * 2 - northOffset) % 12) + 12) % 12];
 }
 
 /**

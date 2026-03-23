@@ -1,14 +1,13 @@
 <script setup>
+import { ref, computed, watch } from 'vue';
 import BaseToolPanel from './BaseToolPanel.vue';
+import { elevationTintPalette, tintForLevel } from '../formulas/elevation.js';
 
 const HELP_TEXT =
   'Click or drag to raise elevation (+1). Right-click to lower (−1). ' +
   'Use Raise all / Lower all to shift the entire map by one level.';
 
-// overlayConfig is passed down from MapEditorView and forwarded to BaseToolPanel
-// so that BaseToolPanel can render toggle checkboxes for any non-alwaysOn layers.
-// The full elevation-tool overlayConfig (with fillFn) is implemented in #137.
-defineProps({
+const props = defineProps({
   selectedHex: {
     type: Object,
     default: null,
@@ -21,19 +20,59 @@ defineProps({
     type: String,
     default: 'click',
   },
-  overlayConfig: {
-    type: Object,
-    default: () => ({}),
-  },
 });
 
-const emit = defineEmits(['clear-all-elevations', 'raise-all', 'lower-all', 'paint-mode-change']);
+const emit = defineEmits([
+  'clear-all-elevations',
+  'raise-all',
+  'lower-all',
+  'paint-mode-change',
+  'overlay-config',
+]);
+
+// ── Overlay config ────────────────────────────────────────────────────────────
+
+const tintEnabled = ref(true);
+
+const palette = computed(() => elevationTintPalette(props.elevationLevels));
+
+const ownOverlayConfig = computed(() => {
+  const cfg = {
+    hexLabel: {
+      alwaysOn: true,
+      labelFn: (hex) => String(hex.elevation ?? 0),
+      size: 'large',
+    },
+  };
+  if (tintEnabled.value) {
+    cfg.hexFill = {
+      alwaysOn: false,
+      toggleLabel: 'Elevation tint',
+      fillFn: (hex) => tintForLevel(hex.elevation ?? 0, palette.value),
+    };
+  } else {
+    cfg.hexFill = {
+      alwaysOn: false,
+      toggleLabel: 'Elevation tint',
+      fillFn: () => null,
+    };
+  }
+  return cfg;
+});
+
+// Emit whenever the config changes so MapEditorView can pass it to HexMapOverlay.
+watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true });
+
+function onOverlayToggle(key) {
+  if (key === 'hexFill') tintEnabled.value = !tintEnabled.value;
+}
 </script>
 
 <template>
   <BaseToolPanel
-    :overlay-config="overlayConfig"
+    :overlay-config="ownOverlayConfig"
     :help-text="HELP_TEXT"
+    @overlay-toggle="onOverlayToggle"
     @clear-all="emit('clear-all-elevations')"
   >
     <div class="mode-toggle">

@@ -38,16 +38,14 @@ describe('ElevationToolPanel', () => {
 
   it('clicking Clear all and confirming emits clear-all-elevations', async () => {
     const wrapper = mount(ElevationToolPanel);
-    // BaseToolPanel renders a "Clear all" button that shows a confirm dialog first
     const clearBtn = wrapper.findAll('button').find((b) => b.text() === 'Clear all');
     await clearBtn.trigger('click');
-    // Confirm dialog should now be visible; click the "Clear" confirm button
     const confirmBtn = wrapper.findAll('button').find((b) => b.text() === 'Clear');
     await confirmBtn.trigger('click');
     expect(wrapper.emitted('clear-all-elevations')).toBeTruthy();
   });
 
-  // --- click/paint mode toggle (#115) ---
+  // --- click/paint mode toggle ---
 
   it('renders a Click and a Paint mode toggle button', () => {
     const wrapper = mount(ElevationToolPanel);
@@ -88,5 +86,43 @@ describe('ElevationToolPanel', () => {
     const clickWrapper = mount(ElevationToolPanel, { props: { paintMode: 'click' } });
     const paintWrapper = mount(ElevationToolPanel, { props: { paintMode: 'paint' } });
     expect(clickWrapper.text()).not.toEqual(paintWrapper.text());
+  });
+
+  // --- overlay-config ownership ---
+
+  it('emits overlay-config on mount', () => {
+    const wrapper = mount(ElevationToolPanel);
+    expect(wrapper.emitted('overlay-config')).toBeTruthy();
+  });
+
+  it('emitted overlay-config has hexLabel with labelFn', () => {
+    const wrapper = mount(ElevationToolPanel, { props: { elevationLevels: 10 } });
+    const configs = wrapper.emitted('overlay-config');
+    const cfg = configs[configs.length - 1][0];
+    expect(cfg.hexLabel).toBeTruthy();
+    expect(cfg.hexLabel.alwaysOn).toBe(true);
+    expect(typeof cfg.hexLabel.labelFn).toBe('function');
+    expect(cfg.hexLabel.labelFn({ elevation: 5 })).toBe('5');
+  });
+
+  it('emitted overlay-config has hexFill with fillFn', () => {
+    const wrapper = mount(ElevationToolPanel, { props: { elevationLevels: 10 } });
+    const configs = wrapper.emitted('overlay-config');
+    const cfg = configs[configs.length - 1][0];
+    expect(cfg.hexFill).toBeTruthy();
+    expect(cfg.hexFill.toggleLabel).toBe('Elevation tint');
+    expect(typeof cfg.hexFill.fillFn).toBe('function');
+  });
+
+  it('fillFn returns a css color for valid level', () => {
+    const wrapper = mount(ElevationToolPanel, { props: { elevationLevels: 10 } });
+    const cfg = wrapper.emitted('overlay-config').at(-1)[0];
+    const color = cfg.hexFill.fillFn({ elevation: 3 });
+    expect(color).toMatch(/^hsl\(/);
+  });
+
+  it('renders "Elevation tint" toggle checkbox via BaseToolPanel', () => {
+    const wrapper = mount(ElevationToolPanel);
+    expect(wrapper.text()).toContain('Elevation tint');
   });
 });

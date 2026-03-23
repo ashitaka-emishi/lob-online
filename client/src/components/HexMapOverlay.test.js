@@ -245,10 +245,11 @@ describe('HexMapOverlay', () => {
   // ── EdgeLineLayer (overlayConfig.edgeLine) ───────────────────────────────
 
   it('overlayConfig.edgeLine renders <line> elements for matching edge features', () => {
+    // Edges are stored by canonical face index (0=N, 1=NE, 2=SE)
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
-        hexes: [{ hex: '01.03', terrain: 'clear', edges: { N: [{ type: 'stream' }] } }],
+        hexes: [{ hex: '01.03', terrain: 'clear', edges: { 0: [{ type: 'stream' }] } }],
         overlayConfig: {
           edgeLine: {
             alwaysOn: true,
@@ -264,7 +265,7 @@ describe('HexMapOverlay', () => {
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
-        hexes: [{ hex: '01.03', terrain: 'clear', edges: { N: [{ type: 'stream' }] } }],
+        hexes: [{ hex: '01.03', terrain: 'clear', edges: { 0: [{ type: 'stream' }] } }],
         overlayConfig: {},
       },
     });

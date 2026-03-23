@@ -7,17 +7,25 @@ import {
   STREAM_WALL_GROUPS,
   CONTOUR_GROUPS,
 } from '../../config/feature-types.js';
+
+const ALL_EDGE_GROUPS = [...ROAD_GROUPS, ...STREAM_WALL_GROUPS, ...CONTOUR_GROUPS];
 import CalibrationControls from '../../components/CalibrationControls.vue';
 import LosTestPanel from '../../components/LosTestPanel.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import ElevationToolPanel from '../../components/ElevationToolPanel.vue';
 import TerrainToolPanel from '../../components/TerrainToolPanel.vue';
+import RoadToolPanel from '../../components/RoadToolPanel.vue';
+import StreamWallToolPanel from '../../components/StreamWallToolPanel.vue';
+import ContourToolPanel from '../../components/ContourToolPanel.vue';
 import { useBulkOperations } from '../../composables/useBulkOperations.js';
 import { useHexInteraction } from '../../composables/useHexInteraction.js';
 import { useEditorAccordion } from '../../composables/useEditorAccordion.js';
 import { useMapPersistence } from '../../composables/useMapPersistence.js';
 import { useLosTest } from '../../composables/useLosTest.js';
 import { useEdgeToggle } from '../../composables/useEdgeToggle.js';
+import { DIRS } from '../../utils/hexGeometry.js';
+import { canonicalOwner, validateCoexistence } from '../../formulas/edge-model.js';
+import { autoDetectContourType } from '../../formulas/elevation.js';
 
 const STORAGE_KEY = 'lob-map-editor-calibration-v4';
 const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
@@ -35,7 +43,7 @@ const DEFAULT_CALIBRATION = {
   hexHeight: 35,
   imageScale: 1,
   orientation: 'flat',
-  strokeWidth: 0.5,
+  strokeWidth: 1,
   evenColUp: true,
   northOffset: 0,
 };
@@ -147,7 +155,88 @@ const layerFlags = ref({
 
 // ── overlayConfig bridge ────────────────────────────────────────────────────
 // Builds the declarative overlayConfig for HexMapOverlay from the current
-// layer flags and editor mode. Tool panels will own this directly once migrated.
+// layer flags and editor mode. Tool panels emit their own config via overlay-config;
+// when a panel is active its config replaces the base config (tool-owns-its-overlays).
+
+// Config received from ElevationToolPanel via @overlay-config.
+const elevationPanelOverlayConfig = ref(null);
+
+// Config received from RoadToolPanel via @overlay-config.
+const roadPanelOverlayConfig = ref(null);
+
+// Config received from StreamWallToolPanel via @overlay-config.
+const streamPanelOverlayConfig = ref(null);
+
+// Config received from ContourToolPanel via @overlay-config.
+const contourPanelOverlayConfig = ref(null);
+
+// Selected edge types for each panel — owned by MapEditorView, passed to panels.
+const roadSelectedType = ref('trail');
+const streamSelectedType = ref('stream');
+const contourSelectedType = ref('elevation');
+
+// ── Edge mutations ────────────────────────────────────────────────────────────
+// Mutate edges in-place on the reactive hex object (avoids rebuilding hexIndex).
+// Uses canonicalOwner from edge-model.js to find the owning hex and face.
+
+function getEdgeFeaturesAt(hexId, faceIndex) {
+  if (!mapData.value) return [];
+  const { ownerId, ownerFace } = canonicalOwner(hexId, faceIndex, calibration.value);
+  const idx = hexIndex.value.get(ownerId) ?? -1;
+  if (idx < 0) return [];
+  const raw = mapData.value.hexes[idx]?.edges?.[ownerFace] ?? [];
+  // Normalise to plain type strings for callers (bridge/ford validation)
+  return raw.map((f) => (typeof f === 'string' ? f : f.type));
+}
+
+function handleEdgePaint(hexId, faceIndex, type) {
+  if (!mapData.value) return false;
+  const { ownerId, ownerFace } = canonicalOwner(hexId, faceIndex, calibration.value);
+  let idx = hexIndex.value.get(ownerId) ?? -1;
+  if (idx < 0) {
+    mapData.value.hexes.push({ hex: ownerId, terrain: 'unknown' });
+    idx = mapData.value.hexes.length - 1;
+    hexIndex.value.set(ownerId, idx);
+  }
+  const hex = mapData.value.hexes[idx];
+  if (!hex.edges) hex.edges = {};
+  if (!hex.edges[ownerFace]) hex.edges[ownerFace] = [];
+  const existing = hex.edges[ownerFace];
+  const existingTypes = existing.map((f) => (typeof f === 'string' ? f : f.type));
+  if (existingTypes.includes(type)) return false;
+  const { valid } = validateCoexistence(existingTypes, type);
+  if (!valid) return false;
+  hex.edges[ownerFace] = [...existing, { type }];
+  onMutated();
+  return true;
+}
+
+function handleEdgeClear(hexId, faceIndex, type) {
+  if (!mapData.value) return;
+  const { ownerId, ownerFace } = canonicalOwner(hexId, faceIndex, calibration.value);
+  const idx = hexIndex.value.get(ownerId) ?? -1;
+  if (idx < 0) return;
+  const hex = mapData.value.hexes[idx];
+  if (!hex?.edges?.[ownerFace]) return;
+  hex.edges[ownerFace] = hex.edges[ownerFace].filter(
+    (f) => (typeof f === 'string' ? f : f.type) !== type
+  );
+  onMutated();
+}
+
+function handleEdgeClearAll(allowedTypes) {
+  if (!mapData.value) return;
+  for (const hex of mapData.value.hexes) {
+    if (!hex.edges) continue;
+    for (const face of [0, 1, 2]) {
+      if (!hex.edges[face]) continue;
+      hex.edges[face] = hex.edges[face].filter(
+        (f) => !allowedTypes.includes(typeof f === 'string' ? f : f.type)
+      );
+    }
+  }
+  onMutated();
+}
 
 // L5: Stable function references lifted out of the computed so overlayConfig
 // does not create new closure objects on every reactive dependency change.
@@ -171,6 +260,20 @@ const interactionEnabled = computed(() => INTERACTIVE_PANELS.has(openPanel.value
 const edgeInteraction = computed(() => EDGE_PANELS.has(openPanel.value));
 
 const overlayConfig = computed(() => {
+  // When a tool panel is active, use its own config (tool-owns-its-overlays).
+  if (openPanel.value === 'elevation' && elevationPanelOverlayConfig.value) {
+    return elevationPanelOverlayConfig.value;
+  }
+  if (openPanel.value === 'road' && roadPanelOverlayConfig.value) {
+    return roadPanelOverlayConfig.value;
+  }
+  if (openPanel.value === 'stream' && streamPanelOverlayConfig.value) {
+    return streamPanelOverlayConfig.value;
+  }
+  if (openPanel.value === 'contour' && contourPanelOverlayConfig.value) {
+    return contourPanelOverlayConfig.value;
+  }
+
   const cfg = {};
   if (layerFlags.value.grid) {
     cfg.hexLabel = { alwaysOn: true, labelFn: hexLabelFn };
@@ -178,16 +281,13 @@ const overlayConfig = computed(() => {
   if (layerFlags.value.terrain) {
     cfg.hexFill = { alwaysOn: true, fillFn: hexFillFn };
   }
-  if (layerFlags.value.elevation || editorMode.value === 'elevation') {
-    cfg.elevationLabel = { alwaysOn: true };
-  }
   if (editorMode.value === 'paint') {
     cfg.hexIcon = { alwaysOn: true, iconFn: hexIconFn };
   }
   if (layerFlags.value.edges) {
     cfg.edgeLine = {
       alwaysOn: true,
-      featureGroups: [...ROAD_GROUPS, ...STREAM_WALL_GROUPS, ...CONTOUR_GROUPS],
+      featureGroups: ALL_EDGE_GROUPS,
     };
   }
   if (layerFlags.value.wedges) {
@@ -406,13 +506,74 @@ const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter
 
 // ── Edge feature toggle (M2: extracted from useHexInteraction) ─────────────────
 
-const { onEdgeClick } = useEdgeToggle({
+const { onEdgeClick: legacyOnEdgeClick } = useEdgeToggle({
   mapData,
   hexIndex,
   paintEdgeFeature,
   calibration,
   onHexUpdate,
 });
+
+// Routes edge-click from HexMapOverlay to the active tool panel's handler.
+// { hexId, dir, clientX, clientY } — clientX/Y are screen coords for logging.
+function onEdgeClick({ hexId, dir, clientX, clientY }) {
+  const faceIndex = DIRS.indexOf(dir);
+  if (faceIndex === -1) return;
+  let type;
+  if (openPanel.value === 'road') {
+    type = roadSelectedType.value;
+  } else if (openPanel.value === 'stream') {
+    type = streamSelectedType.value;
+  } else if (openPanel.value === 'contour') {
+    type = contourSelectedType.value;
+  } else {
+    legacyOnEdgeClick({ hexId, dir });
+    return;
+  }
+  console.log(
+    `[edge-click] mouse=(${Math.round(clientX ?? 0)},${Math.round(clientY ?? 0)}) hex=${hexId} dir=${dir}`
+  );
+  handleEdgePaint(hexId, faceIndex, type);
+}
+
+function onEdgeRightClick({ hexId, dir }) {
+  const faceIndex = DIRS.indexOf(dir);
+  if (faceIndex === -1) return;
+  if (openPanel.value === 'road') {
+    handleEdgeClear(hexId, faceIndex, roadSelectedType.value);
+  } else if (openPanel.value === 'stream') {
+    handleEdgeClear(hexId, faceIndex, streamSelectedType.value);
+  } else if (openPanel.value === 'contour') {
+    handleEdgeClear(hexId, faceIndex, contourSelectedType.value);
+  }
+}
+
+// ── Auto-detect contours ──────────────────────────────────────────────────────
+// Clears all contour edges, then derives contour type for every adjacent hex pair
+// using the elevation difference (autoDetectContourType from elevation.js).
+
+function handleAutoDetectContours() {
+  if (!mapData.value) return;
+  // Clear existing contour edges
+  handleEdgeClearAll(['elevation', 'slope', 'extremeSlope', 'verticalSlope']);
+  // Iterate each hex and its face-0/1/2 neighbors
+  const hexes = mapData.value.hexes;
+  for (const hex of hexes) {
+    for (let face = 0; face < 3; face++) {
+      const { ownerId, ownerFace } = canonicalOwner(hex.hex, face, calibration.value);
+      if (ownerId !== hex.hex) continue; // only process canonical face owners
+      // Find neighbor across this face
+      const { ownerId: neighborId } = canonicalOwner(hex.hex, face + 3, calibration.value);
+      const neighborIdx = hexIndex.value.get(neighborId) ?? -1;
+      if (neighborIdx < 0) continue;
+      const neighbor = hexes[neighborIdx];
+      const type = autoDetectContourType(hex.elevation ?? 0, neighbor.elevation ?? 0);
+      if (type) {
+        handleEdgePaint(ownerId, ownerFace, type);
+      }
+    }
+  }
+}
 
 // ── Bulk operations ───────────────────────────────────────────────────────────
 
@@ -541,6 +702,7 @@ onUnmounted(() => {
             @hex-right-click="onHexRightClick"
             @hex-mouseenter="onHexMouseenter"
             @edge-click="onEdgeClick"
+            @edge-right-click="onEdgeRightClick"
             @paint-stroke-start="onPaintStrokeStart"
             @paint-stroke-done="onPaintStrokeDone"
           />
@@ -588,6 +750,7 @@ onUnmounted(() => {
               @raise-all="raiseAll"
               @lower-all="lowerAll"
               @paint-mode-change="paintMode = $event"
+              @overlay-config="elevationPanelOverlayConfig = $event"
             />
           </div>
         </div>
@@ -609,6 +772,77 @@ onUnmounted(() => {
               @terrain-change="paintTerrain = $event"
               @clear-all-terrain="clearAllTerrain"
               @paint-mode-change="paintMode = $event"
+            />
+          </div>
+        </div>
+
+        <!-- Road Tool -->
+        <div
+          class="accordion-section accordion-hex"
+          :class="{ 'accordion-flex': openPanel === 'road' }"
+        >
+          <button class="accordion-header" @click="togglePanel('road')">
+            <span>Road Tool</span>
+            <span class="accordion-chevron">{{ openPanel === 'road' ? '▾' : '▸' }}</span>
+          </button>
+          <div v-if="openPanel === 'road'" class="accordion-hex-content">
+            <RoadToolPanel
+              :selected-type="roadSelectedType"
+              :get-edge-features="getEdgeFeaturesAt"
+              @type-change="roadSelectedType = $event"
+              @edge-paint="handleEdgePaint($event.hexId, $event.faceIndex, $event.type)"
+              @edge-clear="handleEdgeClear($event.hexId, $event.faceIndex, $event.type)"
+              @edge-clear-all="handleEdgeClearAll($event)"
+              @bridge-place="handleEdgePaint($event.hexId, $event.faceIndex, 'bridge')"
+              @bridge-remove="handleEdgeClear($event.hexId, $event.faceIndex, 'bridge')"
+              @overlay-config="roadPanelOverlayConfig = $event"
+            />
+          </div>
+        </div>
+
+        <!-- Stream & Stone Wall Tool -->
+        <div
+          class="accordion-section accordion-hex"
+          :class="{ 'accordion-flex': openPanel === 'stream' }"
+        >
+          <button class="accordion-header" @click="togglePanel('stream')">
+            <span>Stream &amp; Stone Wall Tool</span>
+            <span class="accordion-chevron">{{ openPanel === 'stream' ? '▾' : '▸' }}</span>
+          </button>
+          <div v-if="openPanel === 'stream'" class="accordion-hex-content">
+            <StreamWallToolPanel
+              :selected-type="streamSelectedType"
+              :get-edge-features="getEdgeFeaturesAt"
+              @type-change="streamSelectedType = $event"
+              @edge-paint="handleEdgePaint($event.hexId, $event.faceIndex, $event.type)"
+              @edge-clear="handleEdgeClear($event.hexId, $event.faceIndex, $event.type)"
+              @edge-clear-all="handleEdgeClearAll($event)"
+              @ford-place="handleEdgePaint($event.hexId, $event.faceIndex, 'ford')"
+              @ford-remove="handleEdgeClear($event.hexId, $event.faceIndex, 'ford')"
+              @overlay-config="streamPanelOverlayConfig = $event"
+            />
+          </div>
+        </div>
+
+        <!-- Contour Tool -->
+        <div
+          class="accordion-section accordion-hex"
+          :class="{ 'accordion-flex': openPanel === 'contour' }"
+        >
+          <button class="accordion-header" @click="togglePanel('contour')">
+            <span>Contour Tool</span>
+            <span class="accordion-chevron">{{ openPanel === 'contour' ? '▾' : '▸' }}</span>
+          </button>
+          <div v-if="openPanel === 'contour'" class="accordion-hex-content">
+            <ContourToolPanel
+              :selected-type="contourSelectedType"
+              :elevation-levels="elevationLevels"
+              @type-change="contourSelectedType = $event"
+              @edge-paint="handleEdgePaint($event.hexId, $event.faceIndex, $event.type)"
+              @edge-clear="handleEdgeClear($event.hexId, $event.faceIndex, $event.type)"
+              @edge-clear-all="handleEdgeClearAll($event)"
+              @auto-detect-contours="handleAutoDetectContours"
+              @overlay-config="contourPanelOverlayConfig = $event"
             />
           </div>
         </div>

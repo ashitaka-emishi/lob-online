@@ -3,6 +3,8 @@
  * Assumes flat-top hexes with cube coordinate convention (EVEN_Q offset, evenColUp: true).
  */
 
+import { compassLabel } from '../formulas/compass.js';
+
 export const DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
 
 /** Maps each direction to its opposite (shared edge on the adjacent hex). */
@@ -17,20 +19,20 @@ export const OPPOSITE_DIR = Object.freeze({
 
 /**
  * Maps each compass direction to the [i, j] corner indices that form that edge.
- * For flat-top hexes (Orientation.FLAT), honeycomb-grid corners start at 0° (East/right)
- * and increment counterclockwise:
- *   0: East (right), 1: SE, 2: SW, 3: West (left), 4: NW, 5: NE
+ * For flat-top hexes (Orientation.FLAT), honeycomb-grid corners start at NE (upper-right
+ * vertex, 30° before East) and increment clockwise in screen coordinates:
+ *   0: NE (upper-right), 1: E (right), 2: SE (lower-right), 3: SW (lower-left), 4: W (left), 5: NW (upper-left)
  *
  * Edge between consecutive corners:
- *   SE: [0,1], S: [1,2], SW: [2,3], NW: [3,4], N: [4,5], NE: [5,0]
+ *   N: [5,0], NE: [0,1], SE: [1,2], S: [2,3], SW: [3,4], NW: [4,5]
  */
 export const DIR_TO_CORNERS = {
-  SE: [0, 1],
-  S: [1, 2],
-  SW: [2, 3],
-  NW: [3, 4],
-  N: [4, 5],
-  NE: [5, 0],
+  N: [5, 0],
+  NE: [0, 1],
+  SE: [1, 2],
+  S: [2, 3],
+  SW: [3, 4],
+  NW: [4, 5],
 };
 
 /**
@@ -64,6 +66,22 @@ export function edgeLine20_80(corners, dir) {
 }
 
 /**
+ * Return the line segment from the hex centre to the midpoint of edge `dir`.
+ * Used for "through-hex" style overlays (roads, trails, pikes) where the line
+ * runs from the centre outward to the edge face so adjacent hexes connect.
+ *
+ * @param {Array<{x:number,y:number}>} corners
+ * @param {number} cx - hex centre x
+ * @param {number} cy - hex centre y
+ * @param {string} dir
+ * @returns {{x1:number, y1:number, x2:number, y2:number}}
+ */
+export function edgeToCenter(corners, cx, cy, dir) {
+  const mid = edgeMidpoint(corners, dir);
+  return { x1: cx, y1: cy, x2: mid.x, y2: mid.y };
+}
+
+/**
  * Return 6 SVG polygon point strings, one per wedge (triangle from centre to each edge).
  * Each string is "cx,cy ax,ay bx,by" suitable for <polygon points="...">.
  * @param {Array<{x:number,y:number}>} corners - 6 hex corners
@@ -76,14 +94,6 @@ export function wedgePolygonPoints(corners, centre) {
     return `${centre.x},${centre.y} ${corner.x},${corner.y} ${next.x},${next.y}`;
   });
 }
-
-/**
- * 12-point compass labels for the 12 30°-increment positions around a flat-top hex.
- * Even indices (0,2,4,6,8,10) = edge midpoints; odd indices (1,3,5,7,9,11) = vertices.
- * Going clockwise from position 0 (top / geometric-N edge):
- *   0:N  1:NE  2:NE  3:E  4:SE  5:SE  6:S  7:SW  8:SW  9:W  10:NW  11:NW
- */
-const COMPASS_12 = ['N', 'NE', 'NE', 'E', 'SE', 'SE', 'S', 'SW', 'SW', 'W', 'NW', 'NW'];
 
 /**
  * Return the 6 geographic edge labels for a flat-top hex given a northOffset.
@@ -101,7 +111,7 @@ const COMPASS_12 = ['N', 'NE', 'NE', 'E', 'SE', 'SE', 'S', 'SW', 'SW', 'W', 'NW'
  * getEdgeLabels(6)  // ['S','SW','NW','N','NE','SE']  — south at top
  */
 export function getEdgeLabels(northOffset) {
-  return Array.from({ length: 6 }, (_, i) => COMPASS_12[(((i * 2 - northOffset) % 12) + 12) % 12]);
+  return Array.from({ length: 6 }, (_, i) => compassLabel(i, northOffset));
 }
 
 /**
@@ -111,18 +121,40 @@ export function getEdgeLabels(northOffset) {
  * @param {number} localX - cursor x in grid-local coordinates
  * @param {number} localY - cursor y in grid-local coordinates
  * @param {Array<{id:string, corners:Array<{x:number,y:number}>}>} cells
- * @param {number} [threshold=8] - maximum distance in pixels
+ * @param {number} [threshold=6] - maximum distance in pixels
+ * @param {number} [tMargin=0] - fraction (0–0.5) excluded at each end of the segment.
+ *   When > 0, only the middle (1 - 2*tMargin) of the edge qualifies, preventing corner
+ *   ambiguity where multiple edges converge at the same vertex.
  * @returns {{hexId:string, dir:string}|null}
  */
-export function findNearestEdge(localX, localY, cells, threshold = 8) {
+export function findNearestEdge(localX, localY, cells, threshold = 6, tMargin = 0) {
   let nearest = null;
   let nearestDist = threshold;
+  const tMin = tMargin;
+  const tMax = 1 - tMargin;
   for (const cell of cells) {
     for (const dir of DIRS) {
-      const mid = edgeMidpoint(cell.corners, dir);
-      const ddx = mid.x - localX;
-      const ddy = mid.y - localY;
-      const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+      const [i, j] = DIR_TO_CORNERS[dir];
+      const ax = cell.corners[i].x;
+      const ay = cell.corners[i].y;
+      const bx = cell.corners[j].x;
+      const by = cell.corners[j].y;
+      // Distance from (localX, localY) to segment [A, B]
+      const abx = bx - ax;
+      const aby = by - ay;
+      const ab2 = abx * abx + aby * aby;
+      const t =
+        ab2 > 0
+          ? Math.max(tMin, Math.min(tMax, ((localX - ax) * abx + (localY - ay) * aby) / ab2))
+          : tMin;
+      // If tMargin is set and the unclamped t is outside [tMin, tMax], skip this edge.
+      if (tMargin > 0) {
+        const tRaw = ab2 > 0 ? ((localX - ax) * abx + (localY - ay) * aby) / ab2 : 0;
+        if (tRaw < tMin || tRaw > tMax) continue;
+      }
+      const cx = ax + t * abx - localX;
+      const cy = ay + t * aby - localY;
+      const dist = Math.sqrt(cx * cx + cy * cy);
       if (dist < nearestDist) {
         nearestDist = dist;
         nearest = { hexId: cell.id, dir };

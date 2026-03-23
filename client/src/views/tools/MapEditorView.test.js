@@ -24,7 +24,7 @@ vi.mock('../../components/HexMapOverlay.vue', () => ({
       'dragPaintEnabled',
       'seedHexIds',
     ],
-    emits: ['hex-click', 'hex-mouseenter', 'hex-mouseleave', 'edge-click'],
+    emits: ['hex-click', 'hex-mouseenter', 'hex-mouseleave', 'edge-click', 'edge-right-click'],
   },
 }));
 
@@ -599,6 +599,51 @@ describe('MapEditorView', () => {
     expect(wrapper.text()).toContain('* unsaved');
 
     vi.useRealTimers();
+    wrapper.unmount();
+  });
+
+  it('opening Road Tool accordion renders trail/road/pike type buttons', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+    const headers = wrapper.findAll('button.accordion-header');
+    const roadHeader = headers.find((h) => h.text().includes('Road Tool'));
+    await roadHeader.trigger('click');
+    await flushPromises();
+    const text = wrapper.text();
+    expect(text).toContain('trail');
+    expect(text).toContain('road');
+    expect(text).toContain('pike');
+    wrapper.unmount();
+  });
+
+  it('opening Stream & Stone Wall Tool accordion renders stream/stoneWall type buttons', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+    const headers = wrapper.findAll('button.accordion-header');
+    const streamHeader = headers.find((h) => h.text().includes('Stream'));
+    await streamHeader.trigger('click');
+    await flushPromises();
+    const text = wrapper.text();
+    expect(text).toContain('stream');
+    expect(text).toContain('stoneWall');
+    wrapper.unmount();
+  });
+
+  it('opening Contour Tool accordion renders all four contour type buttons', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+    const headers = wrapper.findAll('button.accordion-header');
+    const contourHeader = headers.find((h) => h.text().includes('Contour Tool'));
+    await contourHeader.trigger('click');
+    await flushPromises();
+    const text = wrapper.text();
+    expect(text).toContain('elevation');
+    expect(text).toContain('slope');
+    expect(text).toContain('extremeSlope');
+    expect(text).toContain('verticalSlope');
     wrapper.unmount();
   });
 

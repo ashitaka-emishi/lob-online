@@ -23,23 +23,23 @@ export const TERRAIN_COLORS = {
  * and an optional SVG dash pattern.
  */
 export const ROAD_GROUPS = [
-  { types: ['trail'], color: '#8B6914', strokeWidth: 1.5, dash: '4,3' },
-  { types: ['road'], color: '#8B6914', strokeWidth: 2 },
-  { types: ['pike'], color: '#ffffff', strokeWidth: 2.5 },
+  { types: ['trail'], color: '#c89428', strokeWidth: 3, dash: '6,4' },
+  { types: ['road'], color: '#c89428', strokeWidth: 4 },
+  { types: ['pike'], color: '#ffffff', strokeWidth: 5 },
 ];
 
 /** Stream and stone wall feature groups. */
 export const STREAM_WALL_GROUPS = [
-  { types: ['stream'], color: '#4a90d9', strokeWidth: 2 },
-  { types: ['stoneWall'], color: '#555555', strokeWidth: 2 },
+  { types: ['stream'], color: '#4a90d9', strokeWidth: 4 },
+  { types: ['stoneWall'], color: '#888888', strokeWidth: 3 },
 ];
 
 /** Contour / slope feature groups ordered from lowest to highest severity. */
 export const CONTOUR_GROUPS = [
-  { types: ['elevation'], color: '#888888', strokeWidth: 1 },
-  { types: ['slope'], color: '#222222', strokeWidth: 2 },
-  { types: ['extremeSlope'], color: '#000000', strokeWidth: 3.5 },
-  { types: ['verticalSlope'], color: '#cc0000', strokeWidth: 2.5 },
+  { types: ['elevation'], color: '#aaaaaa', strokeWidth: 2 },
+  { types: ['slope'], color: '#444444', strokeWidth: 3 },
+  { types: ['extremeSlope'], color: '#111111', strokeWidth: 5 },
+  { types: ['verticalSlope'], color: '#cc0000', strokeWidth: 4 },
 ];
 
 /** SVG glyph keys for ford and bridge point features. */

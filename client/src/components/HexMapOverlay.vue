@@ -100,12 +100,33 @@ const emit = defineEmits([
   'hex-mouseenter',
   'hex-mouseleave',
   'edge-click',
+  'edge-right-click',
   'paint-stroke-done',
   'paint-stroke-start',
 ]);
 
 // Paint mousedown gate — true while the mouse button is held during drag-paint.
 const isPaintMouseDown = ref(false);
+
+// Hover state — updated on every mousemove when edgeInteraction is active.
+// hexId:    hex the cursor is physically inside (for tooltip).
+// nearHexId/nearDir: closest edge at large threshold (tooltip label only).
+// snapHexId/snapDir: closest edge within snap threshold + tMargin (fuchsia + paint).
+// inProximity: true when snapHexId is non-null.
+const hoverInfo = ref(null);
+// Cell for the fuchsia highlight — tracks the snap result, not the always-nearest result.
+const hoverSnapCell = computed(() => {
+  if (!hoverInfo.value?.snapHexId) return null;
+  return gridData.value.cellById.get(hoverInfo.value.snapHexId) ?? null;
+});
+
+// Maps geometric direction strings (N/NE/SE/S/SW/NW) to geographic compass labels
+// (e.g. W/NW/NE/E/SE/SW for northOffset=3). Used only for tooltip display — all
+// internal edge operations still use geometric face indices.
+const geoLabelMap = computed(() => {
+  const labels = getEdgeLabels(props.calibration.northOffset ?? 0);
+  return Object.fromEntries(DIRS.map((dir, i) => [dir, labels[i]]));
+});
 
 // ── Derived sets ──────────────────────────────────────────────────────────────
 const hexIndex = computed(() => {
@@ -150,7 +171,7 @@ const gridData = computed(() => {
     const id = hexToGameId(hex, gridRows);
     const known = hexIndex.value[id];
     const terrain = known?.terrain ?? 'unknown';
-    const bottomCY = (corners[1].y + corners[2].y) / 2;
+    const bottomCY = (corners[2].y + corners[3].y) / 2;
     const isVP = vpHexSet.value.has(id);
     const isSeed = seedHexSet.value.has(id);
     const isLosA = id === props.losHexA;
@@ -284,32 +305,31 @@ const edgeLineGroups = computed(() => {
   return groups.map((g) => ({ ...g, typeSet: new Set(g.types) }));
 });
 
+// ── Coordinate helper ─────────────────────────────────────────────────────────
+
+function _toLocal(svg, clientX, clientY) {
+  const pt = svg.createSVGPoint();
+  pt.x = clientX;
+  pt.y = clientY;
+  const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+  const { tx, ty } = gridData.value;
+  return { localX: svgPt.x - tx, localY: svgPt.y - ty };
+}
+
 // ── Event handlers ────────────────────────────────────────────────────────────
 
 function onSvgClick(event) {
   if (!props.interactionEnabled) return;
+  // Edge clicks are handled by onSvgMouseDown / onSvgMouseMove to support drag-paint.
+  if (props.edgeInteraction) return;
   const svg = event.currentTarget;
-  const pt = svg.createSVGPoint();
-  pt.x = event.clientX;
-  pt.y = event.clientY;
-  const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
-
-  const { grid, tx, ty, cells: allCells, cellByColRow } = gridData.value;
-  const localX = svgPt.x - tx;
-  const localY = svgPt.y - ty;
-
-  if (props.edgeInteraction) {
-    const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
-    const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : allCells;
-    const nearest = findNearestEdge(localX, localY, searchCells);
-    if (nearest) emit('edge-click', nearest);
-  } else {
-    const hex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
-    if (hex) {
-      const gridRows = props.calibration.rows > 0 ? props.calibration.rows : 35;
-      const id = hexToGameId(hex, gridRows);
-      emit('hex-click', id, event);
-    }
+  const { localX, localY } = _toLocal(svg, event.clientX, event.clientY);
+  const { grid } = gridData.value;
+  const hex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
+  if (hex) {
+    const gridRows = props.calibration.rows > 0 ? props.calibration.rows : 35;
+    const id = hexToGameId(hex, gridRows);
+    emit('hex-click', id, event);
   }
 }
 
@@ -317,14 +337,16 @@ function onSvgContextMenu(event) {
   if (!props.interactionEnabled) return;
   event.preventDefault();
   const svg = event.currentTarget;
-  const pt = svg.createSVGPoint();
-  pt.x = event.clientX;
-  pt.y = event.clientY;
-  const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+  const { localX, localY } = _toLocal(svg, event.clientX, event.clientY);
+  const { grid, cells: allCells, cellByColRow } = gridData.value;
 
-  const { grid, tx, ty } = gridData.value;
-  const localX = svgPt.x - tx;
-  const localY = svgPt.y - ty;
+  if (props.edgeInteraction) {
+    const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
+    const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : allCells;
+    const nearest = findNearestEdge(localX, localY, searchCells, 6);
+    if (nearest) emit('edge-right-click', nearest);
+    return;
+  }
 
   const hex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
   if (hex) {
@@ -334,18 +356,61 @@ function onSvgContextMenu(event) {
   }
 }
 
-function onSvgMouseDown() {
+function onSvgMouseDown(event) {
   if (props.dragPaintEnabled) {
     isPaintMouseDown.value = true;
-    if (props.interactionEnabled) emit('paint-stroke-start');
   }
+  if (props.dragPaintEnabled && props.interactionEnabled) {
+    emit('paint-stroke-start');
+  }
+  if (!props.edgeInteraction || !props.interactionEnabled) return;
+  const svg = event.currentTarget;
+  const { localX, localY } = _toLocal(svg, event.clientX, event.clientY);
+  const { grid, cells: allCells, cellByColRow } = gridData.value;
+  const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
+  const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : allCells;
+  // No tMargin — full edge length is clickable, including near vertices.
+  const nearest = findNearestEdge(localX, localY, searchCells, 6);
+  if (nearest) {
+    emit('edge-click', {
+      hexId: nearest.hexId,
+      dir: nearest.dir,
+      clientX: event.clientX,
+      clientY: event.clientY,
+    });
+  }
+}
+
+function onSvgMouseMove(event) {
+  if (!props.edgeInteraction) return;
+  const svg = event.currentTarget;
+  const { localX, localY } = _toLocal(svg, event.clientX, event.clientY);
+  const { grid, cells: allCells, cellByColRow } = gridData.value;
+  const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
+  const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : allCells;
+  const gridRows = props.calibration.rows > 0 ? props.calibration.rows : 35;
+
+  // Update hover state for fuchsia highlight and tooltip.
+  const nearestAlways = findNearestEdge(localX, localY, searchCells, 999);
+  const nearestSnap = findNearestEdge(localX, localY, searchCells, 6);
+  hoverInfo.value = {
+    hexId: candidateHex ? hexToGameId(candidateHex, gridRows) : null,
+    nearHexId: nearestAlways?.hexId ?? null,
+    nearDir: nearestAlways?.dir ?? null,
+    snapHexId: nearestSnap?.hexId ?? null,
+    snapDir: nearestSnap?.dir ?? null,
+    inProximity: !!nearestSnap,
+    localX,
+    localY,
+  };
 }
 
 function onSvgMouseUp() {
   if (isPaintMouseDown.value) {
     isPaintMouseDown.value = false;
-    if (props.interactionEnabled) emit('paint-stroke-done');
+    if (props.dragPaintEnabled && props.interactionEnabled) emit('paint-stroke-done');
   }
+  hoverInfo.value = null;
 }
 
 // Gate hex-mouseenter: interaction must be enabled; in drag-paint mode also require mousedown.
@@ -369,6 +434,7 @@ defineExpose({ isPaintMouseDown });
     @mousedown="onSvgMouseDown"
     @mouseup="onSvgMouseUp"
     @mouseleave="onSvgMouseUp"
+    @mousemove.passive="onSvgMouseMove"
   >
     <g :transform="`translate(${gridData.tx},${gridData.ty})`">
       <g :transform="rotationTransform">
@@ -396,7 +462,7 @@ defineExpose({ isPaintMouseDown });
               <polygon
                 v-for="(wv, wi) in cell.wedgeElevations"
                 :key="wi"
-                :points="wedgePolygonPoints(cell.corners, { x: cell.cx, y: cell.cy })[wi]"
+                :points="wedgePolygonPoints(cell.corners, { x: cell.cx, y: cell.cy })[(wi + 5) % 6]"
                 :fill="wv > 0 ? 'white' : wv < 0 ? 'black' : 'transparent'"
                 :fill-opacity="wv !== 0 ? 0.35 : 0"
                 stroke="none"
@@ -472,11 +538,13 @@ defineExpose({ isPaintMouseDown });
              defines which types it covers and how to render them.            -->
         <g v-if="overlayConfig.edgeLine" class="layer-edge-lines">
           <template v-for="cell in cells" :key="'edges-' + cell.id">
-            <template v-for="dir in DIRS" :key="dir">
-              <template v-if="cell.edges && cell.edges[dir] && cell.edges[dir].length">
+            <!-- Only canonical faces 0/1/2 (N/NE/SE) are stored on this hex.
+                 Faces 3/4/5 (S/SW/NW) are stored on the neighbour as face 0/1/2. -->
+            <template v-for="(dir, fi) in ['N', 'NE', 'SE']" :key="dir">
+              <template v-if="cell.edges && cell.edges[fi] && cell.edges[fi].length">
                 <template v-for="(group, gi) in edgeLineGroups" :key="gi">
                   <line
-                    v-for="feat in cell.edges[dir].filter((f) => group.typeSet.has(f.type))"
+                    v-for="feat in cell.edges[fi].filter((f) => group.typeSet.has(f.type))"
                     :key="feat.type"
                     v-bind="edgeLine20_80(cell.corners, dir)"
                     :stroke="group.color"
@@ -490,6 +558,17 @@ defineExpose({ isPaintMouseDown });
             </template>
           </template>
         </g>
+
+        <!-- EdgeHoverLayer — fuchsia highlight on the exact edge that will be painted -->
+        <line
+          v-if="hoverSnapCell && hoverInfo.snapDir && hoverInfo.inProximity"
+          v-bind="edgeLine20_80(hoverSnapCell.corners, hoverInfo.snapDir)"
+          stroke="#ff00ff"
+          stroke-width="4"
+          stroke-linecap="round"
+          stroke-opacity="0.85"
+          pointer-events="none"
+        />
 
         <!-- SlopeArrowLayer — slope direction arrows ─────────────────────────-->
         <g v-if="overlayConfig.slopeArrows" class="layer-slope-arrows">
@@ -516,6 +595,33 @@ defineExpose({ isPaintMouseDown });
           </template>
         </g>
       </g>
+    </g>
+
+    <!-- EdgeHoverTooltip — SVG root coords (localX/Y + grid translation offset) -->
+    <g v-if="hoverInfo && edgeInteraction" pointer-events="none">
+      <rect
+        :x="hoverInfo.localX + gridData.tx + 10"
+        :y="hoverInfo.localY + gridData.ty - 22"
+        width="190"
+        height="18"
+        rx="2"
+        fill="rgba(0,0,0,0.82)"
+        :stroke="hoverInfo.inProximity ? '#ff00ff' : '#555555'"
+        stroke-width="1"
+      />
+      <text
+        :x="hoverInfo.localX + gridData.tx + 14"
+        :y="hoverInfo.localY + gridData.ty - 9"
+        font-size="10"
+        font-family="monospace"
+        :fill="hoverInfo.inProximity ? '#ff66ff' : '#e0d8c8'"
+      >
+        hex:{{ hoverInfo.hexId ?? '—' }} edge:{{
+          hoverInfo.nearHexId
+            ? `${hoverInfo.nearHexId}:${geoLabelMap[hoverInfo.nearDir] ?? hoverInfo.nearDir}`
+            : '—'
+        }}{{ hoverInfo.inProximity ? ' ●' : '' }}
+      </text>
     </g>
 
     <!-- Arrow marker definition -->
