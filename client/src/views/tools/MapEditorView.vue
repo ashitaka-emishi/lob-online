@@ -21,6 +21,7 @@ import { useEditorAccordion } from '../../composables/useEditorAccordion.js';
 import { useMapPersistence } from '../../composables/useMapPersistence.js';
 import { useLosTest } from '../../composables/useLosTest.js';
 import { useEdgeToggle } from '../../composables/useEdgeToggle.js';
+import { useEdgePanelWiring } from '../../composables/useEdgePanelWiring.js';
 import { DIRS } from '../../utils/hexGeometry.js';
 import { canonicalOwner, validateCoexistence } from '../../formulas/edge-model.js';
 import { autoDetectContourType } from '../../formulas/elevation.js';
@@ -120,10 +121,16 @@ const layerFlags = ref({
 const CONFIG_PANELS = new Set(['terrain', 'elevation', 'road', 'stream', 'contour']);
 const activePanelOverlayConfig = ref(null);
 
-// Selected edge types for each panel — owned by MapEditorView, passed to panels.
-const roadSelectedType = ref('trail');
-const streamSelectedType = ref('stream');
-const contourSelectedType = ref('elevation');
+// Per-panel edge wiring — encapsulates selectedType ref + the four shared event handlers.
+const _edgePanelDeps = {
+  handleEdgePaint,
+  handleEdgeClear,
+  handleEdgeClearAll,
+  activePanelOverlayConfig,
+};
+const road = useEdgePanelWiring('trail', _edgePanelDeps);
+const stream = useEdgePanelWiring('stream', _edgePanelDeps);
+const contour = useEdgePanelWiring('elevation', _edgePanelDeps);
 
 // ── Edge mutations ────────────────────────────────────────────────────────────
 // Mutate edges in-place on the reactive hex object (avoids rebuilding hexIndex).
@@ -423,11 +430,11 @@ function onEdgeClick({ hexId, dir }) {
   if (faceIndex === -1) return;
   let type;
   if (openPanel.value === 'road') {
-    type = roadSelectedType.value;
+    type = road.selectedType.value;
   } else if (openPanel.value === 'stream') {
-    type = streamSelectedType.value;
+    type = stream.selectedType.value;
   } else if (openPanel.value === 'contour') {
-    type = contourSelectedType.value;
+    type = contour.selectedType.value;
   } else {
     legacyOnEdgeClick({ hexId, dir });
     return;
@@ -439,11 +446,11 @@ function onEdgeRightClick({ hexId, dir }) {
   const faceIndex = DIRS.indexOf(dir);
   if (faceIndex === -1) return;
   if (openPanel.value === 'road') {
-    handleEdgeClear(hexId, faceIndex, roadSelectedType.value);
+    handleEdgeClear(hexId, faceIndex, road.selectedType.value);
   } else if (openPanel.value === 'stream') {
-    handleEdgeClear(hexId, faceIndex, streamSelectedType.value);
+    handleEdgeClear(hexId, faceIndex, stream.selectedType.value);
   } else if (openPanel.value === 'contour') {
-    handleEdgeClear(hexId, faceIndex, contourSelectedType.value);
+    handleEdgeClear(hexId, faceIndex, contour.selectedType.value);
   }
 }
 
@@ -684,15 +691,15 @@ onUnmounted(() => {
           </button>
           <div v-if="openPanel === 'road'" class="accordion-hex-content">
             <RoadToolPanel
-              :selected-type="roadSelectedType"
+              :selected-type="road.selectedType"
               :get-edge-features="getEdgeFeaturesAt"
-              @type-change="roadSelectedType = $event"
-              @edge-paint="handleEdgePaint($event.hexId, $event.faceIndex, $event.type)"
-              @edge-clear="handleEdgeClear($event.hexId, $event.faceIndex, $event.type)"
-              @edge-clear-all="handleEdgeClearAll($event)"
+              @type-change="road.onTypeChange"
+              @edge-paint="road.onEdgePaint"
+              @edge-clear="road.onEdgeClear"
+              @edge-clear-all="road.onEdgeClearAll"
               @bridge-place="handleEdgePaint($event.hexId, $event.faceIndex, 'bridge')"
               @bridge-remove="handleEdgeClear($event.hexId, $event.faceIndex, 'bridge')"
-              @overlay-config="activePanelOverlayConfig = $event"
+              @overlay-config="road.onOverlayConfig"
             />
           </div>
         </div>
@@ -708,15 +715,15 @@ onUnmounted(() => {
           </button>
           <div v-if="openPanel === 'stream'" class="accordion-hex-content">
             <StreamWallToolPanel
-              :selected-type="streamSelectedType"
+              :selected-type="stream.selectedType"
               :get-edge-features="getEdgeFeaturesAt"
-              @type-change="streamSelectedType = $event"
-              @edge-paint="handleEdgePaint($event.hexId, $event.faceIndex, $event.type)"
-              @edge-clear="handleEdgeClear($event.hexId, $event.faceIndex, $event.type)"
-              @edge-clear-all="handleEdgeClearAll($event)"
+              @type-change="stream.onTypeChange"
+              @edge-paint="stream.onEdgePaint"
+              @edge-clear="stream.onEdgeClear"
+              @edge-clear-all="stream.onEdgeClearAll"
               @ford-place="handleEdgePaint($event.hexId, $event.faceIndex, 'ford')"
               @ford-remove="handleEdgeClear($event.hexId, $event.faceIndex, 'ford')"
-              @overlay-config="activePanelOverlayConfig = $event"
+              @overlay-config="stream.onOverlayConfig"
             />
           </div>
         </div>
@@ -732,14 +739,14 @@ onUnmounted(() => {
           </button>
           <div v-if="openPanel === 'contour'" class="accordion-hex-content">
             <ContourToolPanel
-              :selected-type="contourSelectedType"
+              :selected-type="contour.selectedType"
               :elevation-levels="elevationLevels"
-              @type-change="contourSelectedType = $event"
-              @edge-paint="handleEdgePaint($event.hexId, $event.faceIndex, $event.type)"
-              @edge-clear="handleEdgeClear($event.hexId, $event.faceIndex, $event.type)"
-              @edge-clear-all="handleEdgeClearAll($event)"
+              @type-change="contour.onTypeChange"
+              @edge-paint="contour.onEdgePaint"
+              @edge-clear="contour.onEdgeClear"
+              @edge-clear-all="contour.onEdgeClearAll"
               @auto-detect-contours="handleAutoDetectContours"
-              @overlay-config="activePanelOverlayConfig = $event"
+              @overlay-config="contour.onOverlayConfig"
             />
           </div>
         </div>
