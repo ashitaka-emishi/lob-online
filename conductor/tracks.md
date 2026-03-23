@@ -32,6 +32,6 @@
 
 | [x] | tool-panel-framework_20260319 | Tool Panel Framework — Shared Architecture (#136) | 2026-03-19 | 2026-03-19 |
 
-| [~] | edge-tools-bundle_20260319 | Edge Tool Panels Bundle — Road, Stream/Stone Wall, Contour Line, Ford & Bridge | 2026-03-19 | 2026-03-19 |
+| [x] | edge-tools-bundle_20260319 | Edge Tool Panels Bundle — Road, Stream/Stone Wall, Contour Line, Ford & Bridge | 2026-03-19 | 2026-03-22 |
 
 <!-- Tracks registered by /conductor:new-track -->
