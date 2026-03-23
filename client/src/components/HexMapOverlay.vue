@@ -21,18 +21,6 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
-  vpHexIds: {
-    type: Array,
-    default: () => [],
-  },
-  selectedHexId: {
-    type: String,
-    default: null,
-  },
-  calibrationMode: {
-    type: Boolean,
-    default: false,
-  },
   imageWidth: {
     type: Number,
     default: 1400,
@@ -41,37 +29,21 @@ const props = defineProps({
     type: Number,
     default: 900,
   },
-  losHexA: {
-    type: String,
-    default: null,
-  },
-  losHexB: {
-    type: String,
-    default: null,
-  },
-  losPathHexes: {
-    type: Array,
-    default: () => [],
-  },
-  losBlockedHex: {
-    type: String,
-    default: null,
-  },
-  seedHexIds: {
-    type: Array,
-    default: () => [],
-  },
-  // ── New declarative config ─────────────────────────────────────────────────
-  // overlayConfig shape (all keys optional):
+  // ── Declarative rendering config ───────────────────────────────────────────
+  // Full shape documented in client/src/utils/overlayConfig.js. All keys optional.
   //   grid:           { alwaysOn, weight: 'faint'|'diagnostic' }
-  //   hexFill:        { alwaysOn, toggleLabel?, fillFn: (cell) => cssColor|null }
-  //   hexLabel:       { alwaysOn, toggleLabel?, labelFn: (cell) => string|null, size? }
-  //   elevationLabel: { alwaysOn }           — elevation number at bottom of each hex
+  //   hexFill:        { alwaysOn, fillFn: (cell) => cssColor|null }
+  //   hexLabel:       { alwaysOn, labelFn: (cell) => string|null, size? }
+  //   elevationLabel: { alwaysOn }
   //   hexIcon:        { alwaysOn, iconFn: (cell) => string|null }
   //   edgeLine:       { alwaysOn, featureGroups: [{types, color, strokeWidth, dash?}] }
-  //   highlight:      { alwaysOn, hexIds: string[], strokeColor }
-  //   wedges:         { alwaysOn }           — wedge shading from wedgeElevations
-  //   slopeArrows:    { alwaysOn }           — slope direction arrows
+  //   wedges:         { alwaysOn }
+  //   slopeArrows:    { alwaysOn }
+  //   selectedHex:    { hexId: string|null }
+  //   calibration:    { active: boolean }
+  //   los:            { hexA, hexB, pathHexes, blockedHex }
+  //   vpHighlight:    { hexIds: string[] }
+  //   seedHighlight:  { hexIds: string[] }
   overlayConfig: {
     type: Object,
     default: () => ({}),
@@ -135,9 +107,9 @@ const hexIndex = computed(() => {
   return idx;
 });
 
-const vpHexSet = computed(() => new Set(props.vpHexIds));
-const losPathSet = computed(() => new Set(props.losPathHexes));
-const seedHexSet = computed(() => new Set(props.seedHexIds));
+const vpHexSet = computed(() => new Set(props.overlayConfig.vpHighlight?.hexIds ?? []));
+const losPathSet = computed(() => new Set(props.overlayConfig.los?.pathHexes ?? []));
+const seedHexSet = computed(() => new Set(props.overlayConfig.seedHighlight?.hexIds ?? []));
 
 // ── Grid computation ──────────────────────────────────────────────────────────
 const gridData = computed(() => {
@@ -174,10 +146,11 @@ const gridData = computed(() => {
     const bottomCY = (corners[2].y + corners[3].y) / 2;
     const isVP = vpHexSet.value.has(id);
     const isSeed = seedHexSet.value.has(id);
-    const isLosA = id === props.losHexA;
-    const isLosB = id === props.losHexB;
+    const los = props.overlayConfig.los;
+    const isLosA = id === (los?.hexA ?? null);
+    const isLosB = id === (los?.hexB ?? null);
     const isLosPath = losPathSet.value.has(id);
-    const isLosBlocked = id === props.losBlockedHex;
+    const isLosBlocked = id === (los?.blockedHex ?? null);
     const slope = known?.slope ?? null;
     const slopeDir = slope !== null && slope !== undefined ? DIRS[slope] : null;
     const slopeMid = slopeDir ? edgeMidpoint(corners, slopeDir) : null;
@@ -245,12 +218,12 @@ function hexFillOpacity(cell) {
 // ── HexGridLayer / HexHighlightLayer helpers ──────────────────────────────────
 
 function strokeForCell(cell) {
-  if (props.calibrationMode) return '#cc88ff';
+  if (props.overlayConfig.calibration?.active) return '#cc88ff';
   if (cell.isLosBlocked) return '#cc4444';
   if (cell.isLosA) return '#44aa44';
   if (cell.isLosB) return '#4488cc';
   if (cell.isLosPath) return '#cc8844';
-  if (props.selectedHexId === cell.id) return '#ffdd00';
+  if (props.overlayConfig.selectedHex?.hexId === cell.id) return '#ffdd00';
   if (cell.isSeed) return '#cc44ee';
   if (cell.isVP) return '#cc3333';
   const gridCfg = props.overlayConfig.grid;
@@ -258,24 +231,25 @@ function strokeForCell(cell) {
 }
 
 function strokeWidthForCell(cell) {
-  if (props.calibrationMode) return props.calibration.strokeWidth;
+  if (props.overlayConfig.calibration?.active) return props.calibration.strokeWidth;
   if (cell.isLosBlocked || cell.isLosA || cell.isLosB || cell.isLosPath) {
     return Math.max(props.calibration.strokeWidth * 2.5, 2);
   }
-  if (props.selectedHexId === cell.id) return Math.max(props.calibration.strokeWidth * 3, 2);
+  if (props.overlayConfig.selectedHex?.hexId === cell.id)
+    return Math.max(props.calibration.strokeWidth * 3, 2);
   if (cell.isSeed) return Math.max(props.calibration.strokeWidth * 2, 1.5);
   if (cell.isVP) return Math.max(props.calibration.strokeWidth * 2, 1.5);
   return props.calibration.strokeWidth;
 }
 
 function strokeOpacityForCell(cell) {
-  if (props.calibrationMode) return 0.75;
+  if (props.overlayConfig.calibration?.active) return 0.75;
   if (
     cell.isLosBlocked ||
     cell.isLosA ||
     cell.isLosB ||
     cell.isLosPath ||
-    props.selectedHexId === cell.id ||
+    props.overlayConfig.selectedHex?.hexId === cell.id ||
     cell.isSeed ||
     cell.isVP
   )
@@ -288,8 +262,8 @@ function strokeOpacityForCell(cell) {
 function hexLabelText(cell) {
   const cfg = props.overlayConfig.hexLabel;
   if (cfg) return cfg.labelFn?.(cell) ?? null;
-  // calibrationMode fallback: show hex ID without needing overlayConfig
-  if (props.calibrationMode) return cell.id;
+  // calibration.active fallback: show hex ID without needing overlayConfig.hexLabel
+  if (props.overlayConfig.calibration?.active) return cell.id;
   return null;
 }
 
@@ -509,9 +483,12 @@ defineExpose({ isPaintMouseDown });
         </g>
 
         <!-- HexLabelLayer — hex ID or custom labels ─────────────────────────
-             Renders when overlayConfig.hexLabel is set, or in calibrationMode
-             (CalibrationPanel hasn't migrated to overlayConfig yet).         -->
-        <g v-if="overlayConfig.hexLabel || calibrationMode" class="layer-hex-labels">
+             Renders when overlayConfig.hexLabel is set, or when
+             overlayConfig.calibration.active is true (diagnostic mode).      -->
+        <g
+          v-if="overlayConfig.hexLabel || overlayConfig.calibration?.active"
+          class="layer-hex-labels"
+        >
           <text
             v-for="cell in cells"
             :key="'lbl-' + cell.id"

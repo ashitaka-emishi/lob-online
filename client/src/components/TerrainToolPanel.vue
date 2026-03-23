@@ -1,4 +1,7 @@
 <script setup>
+import { computed, watch } from 'vue';
+import { TERRAIN_COLORS } from '../config/feature-types.js';
+
 defineProps({
   terrainTypes: {
     type: Array,
@@ -22,7 +25,12 @@ defineProps({
   },
 });
 
-const emit = defineEmits(['terrain-change', 'clear-all-terrain', 'paint-mode-change']);
+const emit = defineEmits([
+  'terrain-change',
+  'clear-all-terrain',
+  'paint-mode-change',
+  'overlay-config',
+]);
 
 const TERRAIN_ICONS = {
   clear: '○',
@@ -33,6 +41,28 @@ const TERRAIN_ICONS = {
   marsh: '≈',
   unknown: '?',
 };
+
+// Terrain icon overlay — subset of TERRAIN_ICONS that renders on hexes in the map
+// (clear and unknown intentionally omitted; those hex types show no icon).
+const TERRAIN_ICON_MAP = {
+  woods: '▲',
+  woodedSloping: '▲',
+  slopingGround: '╱',
+  orchard: '⬡',
+  marsh: '≈',
+};
+
+// ── Overlay config ────────────────────────────────────────────────────────────
+// TerrainToolPanel owns its overlay slice: terrain fill colors + terrain icons.
+// hex ID labels are always included so they're visible while painting.
+
+const ownOverlayConfig = computed(() => ({
+  hexLabel: { alwaysOn: true, labelFn: (cell) => cell.id },
+  hexFill: { alwaysOn: true, fillFn: (cell) => TERRAIN_COLORS[cell.terrain] ?? null },
+  hexIcon: { alwaysOn: true, iconFn: (cell) => TERRAIN_ICON_MAP[cell.terrain] ?? null },
+}));
+
+watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true });
 </script>
 
 <template>

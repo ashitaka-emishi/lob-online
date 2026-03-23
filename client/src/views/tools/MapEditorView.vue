@@ -1,12 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import HexMapOverlay from '../../components/HexMapOverlay.vue';
-import {
-  TERRAIN_COLORS,
-  ROAD_GROUPS,
-  STREAM_WALL_GROUPS,
-  CONTOUR_GROUPS,
-} from '../../config/feature-types.js';
+import { ROAD_GROUPS, STREAM_WALL_GROUPS, CONTOUR_GROUPS } from '../../config/feature-types.js';
 
 const ALL_EDGE_GROUPS = [...ROAD_GROUPS, ...STREAM_WALL_GROUPS, ...CONTOUR_GROUPS];
 import CalibrationControls from '../../components/CalibrationControls.vue';
@@ -143,11 +138,10 @@ const paintEdgeFeature = ref(null);
 const paintMode = ref('click');
 // True while a paint stroke is in progress; suppresses per-hex saveMapDraft calls
 const paintStrokeActive = ref(false);
-// Layer visibility flags — used to build overlayConfig below.
+// Layer visibility flags for the base (no-panel-active) overlay config.
+// terrain and elevation are now owned by their respective tool panels.
 const layerFlags = ref({
   grid: true,
-  terrain: true,
-  elevation: false,
   wedges: false,
   edges: true,
   slopeArrows: false,
@@ -157,6 +151,9 @@ const layerFlags = ref({
 // Builds the declarative overlayConfig for HexMapOverlay from the current
 // layer flags and editor mode. Tool panels emit their own config via overlay-config;
 // when a panel is active its config replaces the base config (tool-owns-its-overlays).
+
+// Config received from TerrainToolPanel via @overlay-config.
+const terrainPanelOverlayConfig = ref(null);
 
 // Config received from ElevationToolPanel via @overlay-config.
 const elevationPanelOverlayConfig = ref(null);
@@ -238,18 +235,8 @@ function handleEdgeClearAll(allowedTypes) {
   onMutated();
 }
 
-// L5: Stable function references lifted out of the computed so overlayConfig
-// does not create new closure objects on every reactive dependency change.
-const TERRAIN_ICON_MAP = {
-  woods: '▲',
-  woodedSloping: '▲',
-  slopingGround: '╱',
-  orchard: '⬡',
-  marsh: '≈',
-};
+// L5: Stable function reference for the hex ID label — used in the base (no-panel) config.
 const hexLabelFn = (cell) => cell.id;
-const hexFillFn = (cell) => TERRAIN_COLORS[cell.terrain] ?? null;
-const hexIconFn = (cell) => TERRAIN_ICON_MAP[cell.terrain] ?? null;
 
 // M2: Panels that enable hex/edge interaction — defined here so HexMapOverlay
 // does not need to know panel names.
@@ -259,30 +246,47 @@ const EDGE_PANELS = new Set(['road', 'stream', 'contour']);
 const interactionEnabled = computed(() => INTERACTIVE_PANELS.has(openPanel.value));
 const edgeInteraction = computed(() => EDGE_PANELS.has(openPanel.value));
 
+// Global editor state — always merged into overlayConfig regardless of which tool panel
+// is active. HexMapOverlay reads this from overlayConfig; no separate flat props needed.
+function _globalOverlayState() {
+  return {
+    selectedHex: { hexId: selectedHexId.value ?? null },
+    calibration: { active: calibrationMode.value },
+    los: {
+      hexA: losHexA.value,
+      hexB: losHexB.value,
+      pathHexes: losPathHexes.value,
+      blockedHex: losBlockedHex.value,
+    },
+    vpHighlight: { hexIds: vpHexIds.value },
+    seedHighlight: { hexIds: seedHexIdsArray.value },
+  };
+}
+
 const overlayConfig = computed(() => {
-  // When a tool panel is active, use its own config (tool-owns-its-overlays).
+  const global = _globalOverlayState();
+  // When a tool panel is active, merge its config with global editor state.
+  // Each panel owns its rendering keys; MapEditorView passes through without knowing contents.
+  if (openPanel.value === 'terrain' && terrainPanelOverlayConfig.value) {
+    return { ...terrainPanelOverlayConfig.value, ...global };
+  }
   if (openPanel.value === 'elevation' && elevationPanelOverlayConfig.value) {
-    return elevationPanelOverlayConfig.value;
+    return { ...elevationPanelOverlayConfig.value, ...global };
   }
   if (openPanel.value === 'road' && roadPanelOverlayConfig.value) {
-    return roadPanelOverlayConfig.value;
+    return { ...roadPanelOverlayConfig.value, ...global };
   }
   if (openPanel.value === 'stream' && streamPanelOverlayConfig.value) {
-    return streamPanelOverlayConfig.value;
+    return { ...streamPanelOverlayConfig.value, ...global };
   }
   if (openPanel.value === 'contour' && contourPanelOverlayConfig.value) {
-    return contourPanelOverlayConfig.value;
+    return { ...contourPanelOverlayConfig.value, ...global };
   }
 
-  const cfg = {};
+  // Base config (no tool panel active): structural overlays + global state.
+  const cfg = { ...global };
   if (layerFlags.value.grid) {
     cfg.hexLabel = { alwaysOn: true, labelFn: hexLabelFn };
-  }
-  if (layerFlags.value.terrain) {
-    cfg.hexFill = { alwaysOn: true, fillFn: hexFillFn };
-  }
-  if (editorMode.value === 'paint') {
-    cfg.hexIcon = { alwaysOn: true, iconFn: hexIconFn };
   }
   if (layerFlags.value.edges) {
     cfg.edgeLine = {
@@ -684,20 +688,12 @@ onUnmounted(() => {
           <HexMapOverlay
             :calibration="calibration"
             :hexes="mapData?.hexes ?? []"
-            :vp-hex-ids="vpHexIds"
-            :selected-hex-id="selectedHexId"
-            :calibration-mode="calibrationMode"
             :image-width="imgNaturalWidth"
             :image-height="imgNaturalHeight"
-            :los-hex-a="losHexA"
-            :los-hex-b="losHexB"
-            :los-path-hexes="losPathHexes"
-            :los-blocked-hex="losBlockedHex"
             :overlay-config="overlayConfig"
             :interaction-enabled="interactionEnabled"
             :edge-interaction="edgeInteraction"
             :drag-paint-enabled="dragPaintEnabled"
-            :seed-hex-ids="seedHexIdsArray"
             @hex-click="onHexClick"
             @hex-right-click="onHexRightClick"
             @hex-mouseenter="onHexMouseenter"
@@ -772,6 +768,7 @@ onUnmounted(() => {
               @terrain-change="paintTerrain = $event"
               @clear-all-terrain="clearAllTerrain"
               @paint-mode-change="paintMode = $event"
+              @overlay-config="terrainPanelOverlayConfig = $event"
             />
           </div>
         </div>

@@ -63,9 +63,9 @@ describe('HexMapOverlay', () => {
     expect(wrapper.findAll('polygon').length).toBeGreaterThan(0);
   });
 
-  it('calibrationMode=true renders text labels without overlayConfig', () => {
+  it('overlayConfig.calibration.active renders text labels without hexLabel config', () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, calibrationMode: true },
+      props: { calibration: BASE_CAL, overlayConfig: { calibration: { active: true } } },
     });
     expect(wrapper.findAll('text').length).toBeGreaterThan(0);
   });
@@ -331,9 +331,7 @@ describe('HexMapOverlay', () => {
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
-        calibrationMode: false,
-        vpHexIds: [],
-        seedHexIds: ['01.03'],
+        overlayConfig: { seedHighlight: { hexIds: ['01.03'] } },
       },
     });
     const polygons = wrapper.findAll('polygon');
@@ -344,7 +342,7 @@ describe('HexMapOverlay', () => {
   it('seed hex polygon has wider stroke-width than default', () => {
     const cal = { ...BASE_CAL, strokeWidth: 0.5 };
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: cal, calibrationMode: false, vpHexIds: [], seedHexIds: ['01.03'] },
+      props: { calibration: cal, overlayConfig: { seedHighlight: { hexIds: ['01.03'] } } },
     });
     const polygons = wrapper.findAll('polygon');
     const seedPoly = polygons.find((p) => p.attributes('stroke') === '#cc44ee');
@@ -357,9 +355,7 @@ describe('HexMapOverlay', () => {
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
-        calibrationMode: false,
-        vpHexIds: [],
-        seedHexIds: ['01.03'],
+        overlayConfig: { seedHighlight: { hexIds: ['01.03'] } },
       },
     });
     const polygons = wrapper.findAll('polygon');
@@ -656,6 +652,128 @@ describe('HexMapOverlay', () => {
 
     await wrapper.trigger('mousemove');
     expect(rafCallbacks.length).toBe(0);
+  });
+});
+
+// ── Unified overlayConfig API — highlight/LOS/calibration state ───────────────
+// Verifies the new overlayConfig keys that replaced the removed flat props
+// (vpHexIds, selectedHexId, calibrationMode, losHexA/B/pathHexes/blockedHex, seedHexIds).
+
+describe('HexMapOverlay — unified overlayConfig highlight and state API', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  // ── overlayConfig.selectedHex replaces selectedHexId flat prop ──────────────
+
+  it('overlayConfig.selectedHex.hexId highlights the hex with yellow stroke', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        overlayConfig: { selectedHex: { hexId: '01.03' } },
+      },
+    });
+    const polygons = wrapper.findAll('polygon');
+    const selected = polygons.find((p) => p.attributes('stroke') === '#ffdd00');
+    expect(selected).toBeTruthy();
+  });
+
+  it('flat prop selectedHexId is no longer accepted (not in defineProps)', () => {
+    // After Phase 2: selectedHexId is removed from defineProps.
+    // Passing it as a prop must have no effect (Vue silently ignores unknown props).
+    // This test verifies the component still renders without throwing.
+    expect(() => {
+      mount(HexMapOverlay, {
+        props: { calibration: BASE_CAL, selectedHexId: '01.03' },
+      });
+    }).not.toThrow();
+    // After removal, no yellow-stroked polygon should appear from the flat prop alone.
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, selectedHexId: '01.03' },
+    });
+    const polygons = wrapper.findAll('polygon');
+    const yellow = polygons.find((p) => p.attributes('stroke') === '#ffdd00');
+    expect(yellow).toBeFalsy();
+  });
+
+  // ── overlayConfig.calibration replaces calibrationMode flat prop ────────────
+
+  it('overlayConfig.calibration.active renders diagnostic stroke (#cc88ff)', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        overlayConfig: { calibration: { active: true } },
+      },
+    });
+    const polygons = wrapper.findAll('polygon');
+    const diag = polygons.find((p) => p.attributes('stroke') === '#cc88ff');
+    expect(diag).toBeTruthy();
+  });
+
+  it('overlayConfig.calibration.active renders hex labels without hexLabel config', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        overlayConfig: { calibration: { active: true } },
+      },
+    });
+    expect(wrapper.findAll('text').length).toBeGreaterThan(0);
+  });
+
+  // ── overlayConfig.los replaces losHexA/B/pathHexes/blockedHex flat props ────
+
+  it('overlayConfig.los.hexA renders green stroke on that hex', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        overlayConfig: { los: { hexA: '01.03', hexB: null, pathHexes: [], blockedHex: null } },
+      },
+    });
+    const polygons = wrapper.findAll('polygon');
+    const losA = polygons.find((p) => p.attributes('stroke') === '#44aa44');
+    expect(losA).toBeTruthy();
+  });
+
+  it('overlayConfig.los.blockedHex renders red fill on that hex', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        overlayConfig: {
+          los: { hexA: null, hexB: null, pathHexes: [], blockedHex: '01.03' },
+        },
+      },
+    });
+    const polygons = wrapper.findAll('polygon');
+    const blocked = polygons.find((p) => p.attributes('fill') === '#cc4444');
+    expect(blocked).toBeTruthy();
+  });
+
+  // ── overlayConfig.vpHighlight replaces vpHexIds flat prop ───────────────────
+
+  it('overlayConfig.vpHighlight.hexIds renders red stroke on VP hexes', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        overlayConfig: { vpHighlight: { hexIds: ['01.03'] } },
+      },
+    });
+    const polygons = wrapper.findAll('polygon');
+    const vp = polygons.find((p) => p.attributes('stroke') === '#cc3333');
+    expect(vp).toBeTruthy();
+  });
+
+  // ── overlayConfig.seedHighlight replaces seedHexIds flat prop ───────────────
+
+  it('overlayConfig.seedHighlight.hexIds renders purple stroke on seed hexes', () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        overlayConfig: { seedHighlight: { hexIds: ['01.03'] } },
+      },
+    });
+    const polygons = wrapper.findAll('polygon');
+    const seed = polygons.find((p) => p.attributes('stroke') === '#cc44ee');
+    expect(seed).toBeTruthy();
   });
 });
 
