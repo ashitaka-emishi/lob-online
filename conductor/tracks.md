@@ -44,6 +44,6 @@
 
 | [x] | map-editor-tool-closeout_20260323 | Map Editor Tool Closeout — Issues #137 #138 #139 #140 #141 #142 | 2026-03-23 | 2026-03-23 |
 
-| [~] | tech-debt-closeout_20260323 | Tech Debt Closeout — All Open Items | 2026-03-23 | 2026-03-23 |
+| [x] | tech-debt-closeout_20260323 | Tech Debt Closeout — All Open Items | 2026-03-23 | 2026-03-23 |
 
 <!-- Tracks registered by /conductor:new-track -->

@@ -3,7 +3,7 @@
 **Track ID:** tech-debt-closeout_20260323
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-03-23
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -62,11 +62,11 @@ write-path validation to `onCalibrationChange`.
 
 ### Tasks
 
-- [ ] Task 3.1: Add depth-limit parameter (default 10) to `stripPrivateFields`; add test for deep input (#175)
-- [ ] Task 3.2: Close GitHub issue #175
-- [ ] Task 3.3: Add `safeNumeric`/`safeBoolean`/`safeOrientation` guards to `onCalibrationChange` write path (#176)
-- [ ] Task 3.4: Add test verifying invalid write values are clamped/rejected (#176)
-- [ ] Task 3.5: Close GitHub issue #176
+- [x] Task 3.1: Add depth-limit parameter (default 10) to `stripPrivateFields`; add test for deep input (#175)
+- [x] Task 3.2: Close GitHub issue #175
+- [x] Task 3.3: Add `safeNumeric`/`safeBoolean`/`safeOrientation` guards to `onCalibrationChange` write path (#176)
+- [x] Task 3.4: Add test verifying invalid write values are clamped/rejected (#176)
+- [x] Task 3.5: Close GitHub issue #176
 
 ### Verification
 

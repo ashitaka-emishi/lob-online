@@ -30,7 +30,7 @@ Navigation hub for project context.
 
 | [map-editor-extraction_20260323](./tracks/map-editor-extraction_20260323/index.md) | MapEditorView Extraction Debt Bundle | Complete |
 | [map-editor-tool-closeout_20260323](./tracks/map-editor-tool-closeout_20260323/index.md) | Map Editor Tool Closeout — Issues #137 #138 #139 #140 #141 #142 | Complete |
-| [tech-debt-closeout_20260323](./tracks/tech-debt-closeout_20260323/index.md) | Tech Debt Closeout — All Open Items | In Progress |
+| [tech-debt-closeout_20260323](./tracks/tech-debt-closeout_20260323/index.md) | Tech Debt Closeout — All Open Items | Complete |
 
 ## Getting Started
 
