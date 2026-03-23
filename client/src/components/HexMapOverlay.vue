@@ -195,6 +195,9 @@ const gridData = computed(() => {
       elevation: known?.elevation ?? null,
       slope,
       wedgeElevations: known?.wedgeElevations ?? null,
+      // Pre-computed wedge polygon strings — stable between calibration changes,
+      // avoids calling wedgePolygonPoints() inline on every render (#164).
+      wedgePoints: wedgePolygonPoints(corners, { x: cx, y: cy }),
       edges: known?.edges ?? {},
       hexFeature: known?.hexFeature ?? null,
       bottomCY,
@@ -303,6 +306,25 @@ function hexIconText(cell) {
 const edgeLineGroups = computed(() => {
   const groups = props.overlayConfig.edgeLine?.featureGroups ?? [];
   return groups.map((g) => ({ ...g, typeSet: new Set(g.types) }));
+});
+
+// ── EdgeLineLayer pre-filtered data (#163) ────────────────────────────────────
+// Pre-computes which features to render per cell × canonical face × group so the
+// template v-for iterates a stable array rather than calling .filter() inline on
+// every render. Invalidates only when cells (calibration) or edgeLineGroups change.
+const CANONICAL_EDGE_DIRS = ['N', 'NE', 'SE'];
+const cellsForEdges = computed(() => {
+  return cells.value.map((cell) => ({
+    id: cell.id,
+    corners: cell.corners,
+    edgeFaces: CANONICAL_EDGE_DIRS.map((dir, fi) => ({
+      dir,
+      groups: edgeLineGroups.value.map((group) => ({
+        group,
+        features: cell.edges?.[fi]?.filter((f) => group.typeSet.has(f.type)) ?? [],
+      })),
+    })),
+  }));
 });
 
 // ── Coordinate helper ─────────────────────────────────────────────────────────
@@ -472,7 +494,7 @@ defineExpose({ isPaintMouseDown });
               <polygon
                 v-for="(wv, wi) in cell.wedgeElevations"
                 :key="wi"
-                :points="wedgePolygonPoints(cell.corners, { x: cell.cx, y: cell.cy })[(wi + 5) % 6]"
+                :points="cell.wedgePoints[(wi + 5) % 6]"
                 :fill="wv > 0 ? 'white' : wv < 0 ? 'black' : 'transparent'"
                 :fill-opacity="wv !== 0 ? 0.35 : 0"
                 stroke="none"
@@ -544,26 +566,23 @@ defineExpose({ isPaintMouseDown });
         </g>
 
         <!-- EdgeLineLayer — road, stream, contour, and other edge features ───
-             Iterates featureGroups from overlayConfig.edgeLine. Each group
-             defines which types it covers and how to render them.            -->
+             Uses cellsForEdges (computed) to avoid inline .filter() on each
+             render. Only canonical faces 0/1/2 (N/NE/SE) are stored per hex;
+             faces 3/4/5 live on the neighbour as face 0/1/2.               -->
         <g v-if="overlayConfig.edgeLine" class="layer-edge-lines">
-          <template v-for="cell in cells" :key="'edges-' + cell.id">
-            <!-- Only canonical faces 0/1/2 (N/NE/SE) are stored on this hex.
-                 Faces 3/4/5 (S/SW/NW) are stored on the neighbour as face 0/1/2. -->
-            <template v-for="(dir, fi) in ['N', 'NE', 'SE']" :key="dir">
-              <template v-if="cell.edges && cell.edges[fi] && cell.edges[fi].length">
-                <template v-for="(group, gi) in edgeLineGroups" :key="gi">
-                  <line
-                    v-for="feat in cell.edges[fi].filter((f) => group.typeSet.has(f.type))"
-                    :key="feat.type"
-                    v-bind="edgeLine20_80(cell.corners, dir)"
-                    :stroke="group.color"
-                    :stroke-width="group.strokeWidth"
-                    :stroke-dasharray="group.dash ?? null"
-                    stroke-linecap="round"
-                    pointer-events="none"
-                  />
-                </template>
+          <template v-for="cell in cellsForEdges" :key="'edges-' + cell.id">
+            <template v-for="face in cell.edgeFaces" :key="face.dir">
+              <template v-for="(gd, gi) in face.groups" :key="gi">
+                <line
+                  v-for="feat in gd.features"
+                  :key="feat.type"
+                  v-bind="edgeLine20_80(cell.corners, face.dir)"
+                  :stroke="gd.group.color"
+                  :stroke-width="gd.group.strokeWidth"
+                  :stroke-dasharray="gd.group.dash ?? null"
+                  stroke-linecap="round"
+                  pointer-events="none"
+                />
               </template>
             </template>
           </template>
