@@ -45,11 +45,11 @@ Group the 23 return values into three sub-objects. Update MapEditorView (and any
 
 ### Tasks
 
-- [ ] Task 3.1: Audit all imports of `useMapPersistence` across the codebase; list every destructured name per call site
-- [ ] Task 3.2: Update `useMapPersistence.js` to return `{ state, dialog, actions }` where `state` = core data refs, `dialog` = pull/push confirmation refs + handlers, `actions` = fetch/save/draft fns; keep named exports stable via destructuring at the top of the file for any internal cross-references
-- [ ] Task 3.3: Update `useMapPersistence.test.js` to assert the grouped shape
-- [ ] Task 3.4: Update MapEditorView and all other call sites to use the grouped API
-- [ ] Task 3.5: Verify no call site references a now-missing top-level name
+- [x] Task 3.1: Audit all imports of `useMapPersistence` across the codebase; list every destructured name per call site
+- [x] Task 3.2: Update `useMapPersistence.js` to return `{ state, dialog, actions }` where `state` = core data refs, `dialog` = pull/push confirmation refs + handlers, `actions` = fetch/save/draft fns; keep named exports stable via destructuring at the top of the file for any internal cross-references
+- [x] Task 3.3: Update `useMapPersistence.test.js` to assert the grouped shape
+- [x] Task 3.4: Update MapEditorView and all other call sites to use the grouped API
+- [x] Task 3.5: Verify no call site references a now-missing top-level name
 
 ### Verification
 

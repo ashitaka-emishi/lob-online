@@ -337,28 +337,23 @@ export function useMapPersistence({
   }
 
   return {
-    cleanup,
-    mapData,
-    fetchError,
-    unsaved,
-    saveStatus,
-    isOffline,
-    serverSavedAt,
-    showPushConfirm,
-    showPullConfirm,
-    isPulling,
-    pullError,
-    saveErrors,
-    draftBannerVisible,
-    saveMapDraft,
-    restoreDraft,
-    dismissDraft,
-    fetchMapData,
-    pullFromServer,
-    confirmPull,
-    cancelPull,
-    save,
-    confirmSave,
-    cancelSave,
+    // Core data refs — what the view reads and renders
+    state: { mapData, fetchError, unsaved, saveStatus, isOffline, serverSavedAt, saveErrors },
+    // Pull/push confirmation overlay state
+    dialog: { showPushConfirm, showPullConfirm, isPulling, pullError, draftBannerVisible },
+    // Functions — fetch, save, draft lifecycle, and dialog actions
+    actions: {
+      cleanup,
+      saveMapDraft,
+      restoreDraft,
+      dismissDraft,
+      fetchMapData,
+      pullFromServer,
+      confirmPull,
+      cancelPull,
+      save,
+      confirmSave,
+      cancelSave,
+    },
   };
 }
