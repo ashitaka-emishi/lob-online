@@ -89,6 +89,24 @@ describe('useCalibration', () => {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
       expect(stored.dy).toBe(7);
     });
+
+    it('clamps NaN numeric field to default on write path (#176)', () => {
+      const { calibration, onCalibrationChange } = useCalibration();
+      onCalibrationChange({ ...DEFAULT_CALIBRATION, hexWidth: NaN });
+      expect(calibration.value.hexWidth).toBe(DEFAULT_CALIBRATION.hexWidth);
+    });
+
+    it('clamps invalid orientation to default on write path (#176)', () => {
+      const { calibration, onCalibrationChange } = useCalibration();
+      onCalibrationChange({ ...DEFAULT_CALIBRATION, orientation: 'diagonal' });
+      expect(calibration.value.orientation).toBe(DEFAULT_CALIBRATION.orientation);
+    });
+
+    it('clamps non-boolean evenColUp to default on write path (#176)', () => {
+      const { calibration, onCalibrationChange } = useCalibration();
+      onCalibrationChange({ ...DEFAULT_CALIBRATION, evenColUp: 'yes' });
+      expect(calibration.value.evenColUp).toBe(DEFAULT_CALIBRATION.evenColUp);
+    });
   });
 
   describe('onCalibrationLoaded', () => {

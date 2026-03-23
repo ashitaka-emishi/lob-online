@@ -1,11 +1,12 @@
 import { ref, watch } from 'vue';
 
-export function stripPrivateFields(obj) {
-  if (Array.isArray(obj)) return obj.map(stripPrivateFields);
+export function stripPrivateFields(obj, _depth = 0) {
+  if (_depth > 10) return null;
+  if (Array.isArray(obj)) return obj.map((item) => stripPrivateFields(item, _depth + 1));
   if (obj && typeof obj === 'object') {
     const out = {};
     for (const [k, v] of Object.entries(obj)) {
-      if (!k.startsWith('_')) out[k] = stripPrivateFields(v);
+      if (!k.startsWith('_')) out[k] = stripPrivateFields(v, _depth + 1);
     }
     return out;
   }

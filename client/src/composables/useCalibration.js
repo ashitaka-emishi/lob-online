@@ -61,8 +61,31 @@ export function useCalibration() {
   const calibrationMode = ref(false);
 
   function onCalibrationChange(val) {
-    calibration.value = val;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(val));
+    const safeNumeric = (v, fallback) => (Number.isFinite(v) ? v : fallback);
+    const safeBoolean = (v, fallback) => (typeof v === 'boolean' ? v : fallback);
+    const safeOrientation = (v, fallback) => (VALID_ORIENTATIONS.includes(v) ? v : fallback);
+    const D = DEFAULT_CALIBRATION;
+    const safe = {
+      cols: safeNumeric(val.cols, D.cols),
+      rows: safeNumeric(val.rows, D.rows),
+      dx: safeNumeric(val.dx, D.dx),
+      dy: safeNumeric(val.dy, D.dy),
+      hexWidth: safeNumeric(val.hexWidth, D.hexWidth),
+      hexHeight: safeNumeric(val.hexHeight, D.hexHeight),
+      imageScale: safeNumeric(val.imageScale, D.imageScale),
+      strokeWidth: safeNumeric(val.strokeWidth, D.strokeWidth),
+      northOffset: safeNumeric(val.northOffset, D.northOffset),
+      orientation: safeOrientation(val.orientation, D.orientation),
+      evenColUp: safeBoolean(val.evenColUp, D.evenColUp),
+    };
+    // Preserve optional fields not covered by DEFAULT_CALIBRATION (e.g. rotation, locked)
+    const extras = {};
+    for (const k of Object.keys(val)) {
+      if (!(k in safe)) extras[k] = val[k];
+    }
+    const validated = { ...safe, ...extras };
+    calibration.value = validated;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(validated));
   }
 
   function onCalibrationLoaded(gridSpec) {
