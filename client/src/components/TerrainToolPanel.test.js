@@ -5,10 +5,10 @@ import TerrainToolPanel from './TerrainToolPanel.vue';
 const TERRAIN_TYPES = ['clear', 'woods', 'slopingGround', 'marsh'];
 
 describe('TerrainToolPanel', () => {
-  it('renders a button for each terrain type', () => {
+  it('renders a button for each terrain type plus the building button', () => {
     const wrapper = mount(TerrainToolPanel, { props: { terrainTypes: TERRAIN_TYPES } });
     const btns = wrapper.findAll('.terrain-btn');
-    expect(btns.length).toBe(4);
+    expect(btns.length).toBe(TERRAIN_TYPES.length + 1); // +1 for building
   });
 
   it('active terrain button has active class', () => {
@@ -82,5 +82,56 @@ describe('TerrainToolPanel', () => {
     const paintBtn = wrapper.findAll('.mode-btn').find((b) => b.text() === 'Paint');
     await paintBtn.trigger('click');
     expect(wrapper.emitted('paint-mode-change')?.[0][0]).toBe('paint');
+  });
+
+  // --- color swatches (#138) ---
+
+  it('each terrain button contains a .terrain-swatch element', () => {
+    const wrapper = mount(TerrainToolPanel, { props: { terrainTypes: TERRAIN_TYPES } });
+    const btns = wrapper.findAll('.terrain-btn');
+    btns.forEach((btn) => {
+      expect(btn.find('.terrain-swatch').exists()).toBe(true);
+    });
+  });
+
+  it('terrain button swatch has inline background-color for colored types', () => {
+    const wrapper = mount(TerrainToolPanel, {
+      props: { terrainTypes: ['woods'] },
+    });
+    const swatch = wrapper.find('.terrain-swatch');
+    expect(swatch.attributes('style')).toContain('background-color');
+  });
+
+  it('terrain button swatch has no background-color for clear (null color)', () => {
+    const wrapper = mount(TerrainToolPanel, {
+      props: { terrainTypes: ['clear'] },
+    });
+    const swatch = wrapper.find('.terrain-swatch');
+    const style = swatch.attributes('style') ?? '';
+    expect(style).not.toContain('background-color');
+  });
+
+  // --- building button (#138) ---
+
+  it('renders a building button in the palette', () => {
+    const wrapper = mount(TerrainToolPanel, { props: { terrainTypes: TERRAIN_TYPES } });
+    const btns = wrapper.findAll('.terrain-btn');
+    const buildingBtn = btns.find((b) => b.text().includes('building'));
+    expect(buildingBtn).toBeTruthy();
+  });
+
+  it('clicking building button emits terrain-change with building', async () => {
+    const wrapper = mount(TerrainToolPanel, { props: { terrainTypes: TERRAIN_TYPES } });
+    const buildingBtn = wrapper.findAll('.terrain-btn').find((b) => b.text().includes('building'));
+    await buildingBtn.trigger('click');
+    expect(wrapper.emitted('terrain-change')?.[0][0]).toBe('building');
+  });
+
+  it('building button has no color swatch background', () => {
+    const wrapper = mount(TerrainToolPanel, { props: { terrainTypes: TERRAIN_TYPES } });
+    const buildingBtn = wrapper.findAll('.terrain-btn').find((b) => b.text().includes('building'));
+    const swatch = buildingBtn.find('.terrain-swatch');
+    const style = swatch.exists() ? (swatch.attributes('style') ?? '') : '';
+    expect(style).not.toContain('background-color');
   });
 });

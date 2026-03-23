@@ -17,6 +17,8 @@ function makeArgs(overrides = {}) {
   const elevationMax = computed(() => 21);
   const tryPickLosHex = vi.fn().mockReturnValue(false);
   const onHexUpdate = vi.fn();
+  const elevationTarget = ref(1);
+  const paintHexFeature = ref(null);
   return {
     selectedHexIds,
     mapData,
@@ -24,6 +26,8 @@ function makeArgs(overrides = {}) {
     editorMode,
     paintTerrain,
     elevationMax,
+    elevationTarget,
+    paintHexFeature,
     tryPickLosHex,
     onHexUpdate,
     ...overrides,
@@ -110,13 +114,13 @@ describe('useHexInteraction', () => {
   });
 
   describe('onHexClick — elevation mode', () => {
-    it('click selects hex and calls onHexUpdate with elevation +1', () => {
-      const args = makeArgs({ editorMode: ref('elevation') });
+    it('click selects hex and sets elevation to elevationTarget value', () => {
+      const args = makeArgs({ editorMode: ref('elevation'), elevationTarget: ref(5) });
       const { selectedHexId, onHexClick } = useHexInteraction(args);
       onHexClick('01.01', {});
       expect(selectedHexId.value).toBe('01.01');
       expect(args.onHexUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ hex: '01.01', elevation: 4 })
+        expect.objectContaining({ hex: '01.01', elevation: 5 })
       );
     });
 
@@ -157,15 +161,29 @@ describe('useHexInteraction', () => {
         expect.objectContaining({ hex: '01.01', terrain: 'woods' })
       );
     });
+
+    it('click with paintHexFeature sets hexFeature not terrain', () => {
+      const args = makeArgs({
+        editorMode: ref('paint'),
+        paintHexFeature: ref({ type: 'building' }),
+      });
+      const { onHexClick } = useHexInteraction(args);
+      onHexClick('01.01', {});
+      expect(args.onHexUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ hex: '01.01', hexFeature: { type: 'building' } })
+      );
+      // terrain should NOT be touched
+      expect(args.onHexUpdate.mock.calls[0][0].terrain).not.toBe('building');
+    });
   });
 
   describe('onHexRightClick', () => {
-    it('decrements elevation in elevation mode', () => {
+    it('clears elevation to 0 in elevation mode', () => {
       const args = makeArgs({ editorMode: ref('elevation') });
       const { onHexRightClick } = useHexInteraction(args);
-      onHexRightClick('01.01');
+      onHexRightClick('01.01'); // hex.elevation = 3 → 0
       expect(args.onHexUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ hex: '01.01', elevation: 2 })
+        expect.objectContaining({ hex: '01.01', elevation: 0 })
       );
     });
 
@@ -174,6 +192,19 @@ describe('useHexInteraction', () => {
       const { onHexRightClick } = useHexInteraction(args);
       onHexRightClick('01.01');
       expect(args.onHexUpdate).not.toHaveBeenCalled();
+    });
+
+    it('clears hexFeature when paint mode and paintHexFeature is set', () => {
+      const args = makeArgs({
+        editorMode: ref('paint'),
+        paintHexFeature: ref({ type: 'building' }),
+      });
+      args.mapData.value.hexes[0].hexFeature = { type: 'building' };
+      const { onHexRightClick } = useHexInteraction(args);
+      onHexRightClick('01.01');
+      expect(args.onHexUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ hex: '01.01', hexFeature: null })
+      );
     });
   });
 
@@ -202,15 +233,16 @@ describe('useHexInteraction', () => {
       expect(args.onHexUpdate).not.toHaveBeenCalled();
     });
 
-    it('raises elevation in elevation mode when paintMode is paint', () => {
+    it('sets elevation to target in elevation mode when paintMode is paint', () => {
       const args = makeArgs({
         editorMode: ref('elevation'),
         paintMode: ref('paint'),
+        elevationTarget: ref(7),
       });
       const { onHexMouseenter } = useHexInteraction(args);
-      onHexMouseenter('01.01'); // elevation: 3 → 4
+      onHexMouseenter('01.01');
       expect(args.onHexUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ hex: '01.01', elevation: 4 })
+        expect.objectContaining({ hex: '01.01', elevation: 7 })
       );
     });
 

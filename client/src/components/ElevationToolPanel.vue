@@ -3,9 +3,14 @@ import { ref, computed, watch } from 'vue';
 import BaseToolPanel from './BaseToolPanel.vue';
 import { elevationTintPalette, tintForLevel } from '../formulas/elevation.js';
 
+// Stable function references — defined once per component instance (not per computed
+// recomputation) so Vue's dependency tracking doesn't see spurious identity changes.
+const _labelFn = (hex) => String(hex.elevation ?? 0);
+const _nullFillFn = () => null;
+
 const HELP_TEXT =
-  'Click or drag to raise elevation (+1). Right-click to lower (−1). ' +
-  'Use Raise all / Lower all to shift the entire map by one level.';
+  'Set a target elevation with the slider, then click or drag to paint that value. ' +
+  'Right-click to clear (set to 0). Use Raise all / Lower all to shift the entire map.';
 
 const props = defineProps({
   selectedHex: {
@@ -20,6 +25,10 @@ const props = defineProps({
     type: String,
     default: 'click',
   },
+  targetElevation: {
+    type: Number,
+    default: 1,
+  },
 });
 
 const emit = defineEmits([
@@ -28,7 +37,16 @@ const emit = defineEmits([
   'lower-all',
   'paint-mode-change',
   'overlay-config',
+  'target-elevation-change',
 ]);
+
+// ── Target elevation slider ────────────────────────────────────────────────────
+// targetElevation is owned by the parent (MapEditorView) and passed as a prop.
+// The slider emits target-elevation-change so the parent can update its ref.
+
+function onSliderChange(event) {
+  emit('target-elevation-change', Number(event.target.value));
+}
 
 // ── Overlay config ────────────────────────────────────────────────────────────
 
@@ -36,29 +54,21 @@ const tintEnabled = ref(true);
 
 const palette = computed(() => elevationTintPalette(props.elevationLevels));
 
-const ownOverlayConfig = computed(() => {
-  const cfg = {
-    hexLabel: {
-      alwaysOn: true,
-      labelFn: (hex) => String(hex.elevation ?? 0),
-      size: 'large',
-    },
-  };
-  if (tintEnabled.value) {
-    cfg.hexFill = {
-      alwaysOn: false,
-      toggleLabel: 'Elevation tint',
-      fillFn: (hex) => tintForLevel(hex.elevation ?? 0, palette.value),
-    };
-  } else {
-    cfg.hexFill = {
-      alwaysOn: false,
-      toggleLabel: 'Elevation tint',
-      fillFn: () => null,
-    };
-  }
-  return cfg;
+// Stable tint fillFn: recomputes only when palette changes (not on every ownOverlayConfig
+// recomputation), giving downstream watchers a stable function reference.
+const _tintFillFn = computed(() => {
+  const p = palette.value;
+  return (hex) => tintForLevel(hex.elevation ?? 0, p);
 });
+
+const ownOverlayConfig = computed(() => ({
+  hexLabel: { alwaysOn: true, labelFn: _labelFn, size: 'large' },
+  hexFill: {
+    alwaysOn: false,
+    toggleLabel: 'Elevation tint',
+    fillFn: tintEnabled.value ? _tintFillFn.value : _nullFillFn,
+  },
+}));
 
 // Emit whenever the config changes so MapEditorView can pass it to HexMapOverlay.
 watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true });
@@ -91,11 +101,16 @@ function onOverlayToggle(key) {
         Paint
       </button>
     </div>
-    <div class="tool-hint">
-      <template v-if="paintMode === 'paint'"
-        >Drag to raise (+1) continuously. Right-click to lower (−1).</template
-      >
-      <template v-else>Click to raise (+1). Right-click to lower (−1).</template>
+    <div class="elevation-slider">
+      <label class="slider-label">Target: {{ targetElevation }}</label>
+      <input
+        type="range"
+        class="slider-input"
+        :min="0"
+        :max="elevationLevels - 1"
+        :value="targetElevation"
+        @input="onSliderChange"
+      />
     </div>
 
     <div v-if="selectedHex" class="selected-hex-info">
@@ -139,10 +154,21 @@ function onOverlayToggle(key) {
   color: #b0d880;
 }
 
-.tool-hint {
-  font-size: 0.75rem;
-  color: #888;
-  font-style: italic;
+.elevation-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.slider-label {
+  font-size: 0.8rem;
+  color: #7aab3e;
+}
+
+.slider-input {
+  width: 100%;
+  accent-color: #7aab3e;
+  cursor: pointer;
 }
 
 .selected-hex-info {

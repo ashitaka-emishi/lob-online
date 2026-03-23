@@ -5,6 +5,7 @@ import {
   DIRS,
   edgeMidpoint,
   edgeLine20_80,
+  edgeToCenter,
   wedgePolygonPoints,
   getEdgeLabels,
   findNearestEdge,
@@ -221,58 +222,68 @@ const rotationTransform = computed(() => {
   return deg ? `rotate(${deg})` : '';
 });
 
-// ── HexFillLayer helpers ───────────────────────────────────────────────────────
+// ── Grid + highlight display attrs (#177) ─────────────────────────────────────
+// Pre-computes fill/stroke per cell into a computed so the template iterates a
+// stable array instead of calling four functions per cell on every render.
+// Depends on `cells` (calibration/data) and the overlay config properties it reads.
+const cellsWithDisplayAttrs = computed(() => {
+  const diag = props.overlayConfig.diagnosticMode?.active;
+  const selectedHexId = props.overlayConfig.selectedHex?.hexId;
+  const gridWeight = props.overlayConfig.grid?.weight;
+  const hexFillCfg = props.overlayConfig.hexFill;
+  const sw = props.calibration.strokeWidth;
 
-// Returns both fill and fill-opacity in one call to avoid invoking fillFn twice per cell.
-function hexFillAttrs(cell) {
-  if (cell.isLosBlocked) return { fill: '#cc4444', 'fill-opacity': 0.5 };
-  const cfg = props.overlayConfig.hexFill;
-  if (!cfg) return { fill: 'none', 'fill-opacity': 0 };
-  const color = cfg.fillFn?.(cell) ?? 'none';
-  return { fill: color, 'fill-opacity': color !== 'none' ? 0.45 : 0 };
-}
+  return cells.value.map((cell) => {
+    // fill
+    let fill, fillOpacity;
+    if (cell.isLosBlocked) {
+      fill = '#cc4444';
+      fillOpacity = 0.5;
+    } else {
+      const color = hexFillCfg?.fillFn?.(cell) ?? 'none';
+      fill = color;
+      fillOpacity = color !== 'none' ? 0.45 : 0;
+    }
 
-// ── HexGridLayer / HexHighlightLayer helpers ──────────────────────────────────
+    // stroke color
+    let stroke;
+    if (diag) stroke = '#cc88ff';
+    else if (cell.isLosBlocked) stroke = '#cc4444';
+    else if (cell.isLosA) stroke = '#44aa44';
+    else if (cell.isLosB) stroke = '#4488cc';
+    else if (cell.isLosPath) stroke = '#cc8844';
+    else if (selectedHexId === cell.id) stroke = '#ffdd00';
+    else if (cell.isSeed) stroke = '#cc44ee';
+    else if (cell.isVP) stroke = '#cc3333';
+    else stroke = gridWeight === 'diagnostic' ? '#cc88ff' : '#88776644';
 
-function strokeForCell(cell) {
-  if (props.overlayConfig.diagnosticMode?.active) return '#cc88ff';
-  if (cell.isLosBlocked) return '#cc4444';
-  if (cell.isLosA) return '#44aa44';
-  if (cell.isLosB) return '#4488cc';
-  if (cell.isLosPath) return '#cc8844';
-  if (props.overlayConfig.selectedHex?.hexId === cell.id) return '#ffdd00';
-  if (cell.isSeed) return '#cc44ee';
-  if (cell.isVP) return '#cc3333';
-  const gridCfg = props.overlayConfig.grid;
-  return gridCfg?.weight === 'diagnostic' ? '#cc88ff' : '#88776644';
-}
+    // stroke width
+    let strokeWidth;
+    if (diag) strokeWidth = sw;
+    else if (cell.isLosBlocked || cell.isLosA || cell.isLosB || cell.isLosPath)
+      strokeWidth = Math.max(sw * 2.5, 2);
+    else if (selectedHexId === cell.id) strokeWidth = Math.max(sw * 3, 2);
+    else if (cell.isSeed || cell.isVP) strokeWidth = Math.max(sw * 2, 1.5);
+    else strokeWidth = sw;
 
-function strokeWidthForCell(cell) {
-  if (props.overlayConfig.diagnosticMode?.active) return props.calibration.strokeWidth;
-  if (cell.isLosBlocked || cell.isLosA || cell.isLosB || cell.isLosPath) {
-    return Math.max(props.calibration.strokeWidth * 2.5, 2);
-  }
-  if (props.overlayConfig.selectedHex?.hexId === cell.id)
-    return Math.max(props.calibration.strokeWidth * 3, 2);
-  if (cell.isSeed) return Math.max(props.calibration.strokeWidth * 2, 1.5);
-  if (cell.isVP) return Math.max(props.calibration.strokeWidth * 2, 1.5);
-  return props.calibration.strokeWidth;
-}
+    // stroke opacity
+    let strokeOpacity;
+    if (diag) strokeOpacity = 0.75;
+    else if (
+      cell.isLosBlocked ||
+      cell.isLosA ||
+      cell.isLosB ||
+      cell.isLosPath ||
+      selectedHexId === cell.id ||
+      cell.isSeed ||
+      cell.isVP
+    )
+      strokeOpacity = 1;
+    else strokeOpacity = 0.6;
 
-function strokeOpacityForCell(cell) {
-  if (props.overlayConfig.diagnosticMode?.active) return 0.75;
-  if (
-    cell.isLosBlocked ||
-    cell.isLosA ||
-    cell.isLosB ||
-    cell.isLosPath ||
-    props.overlayConfig.selectedHex?.hexId === cell.id ||
-    cell.isSeed ||
-    cell.isVP
-  )
-    return 1;
-  return 0.6;
-}
+    return { ...cell, fill, fillOpacity, stroke, strokeWidth, strokeOpacity };
+  });
+});
 
 // ── HexLabelLayer helper ──────────────────────────────────────────────────────
 
@@ -299,24 +310,41 @@ const edgeLineGroups = computed(() => {
   return groups.map((g) => ({ ...g, typeSet: new Set(g.types) }));
 });
 
-// ── EdgeLineLayer pre-filtered data (#163) ────────────────────────────────────
+// ── EdgeLineLayer pre-filtered data (#163, refactored #177) ───────────────────
 // Pre-computes which features to render per cell × canonical face × group so the
 // template v-for iterates a stable array rather than calling .filter() inline on
 // every render. Invalidates only when cells (calibration) or edgeLineGroups change.
 const CANONICAL_EDGE_DIRS = ['N', 'NE', 'SE'];
-const cellsForEdges = computed(() => {
+
+// Shared builder used by both cellsForEdges and throughHexSegments. Accepts a
+// lineAttrFn(cell, dir) so each layer supplies its own geometry without duplicating
+// the group-filter loop.
+function _buildCellEdgeData(lineAttrFn) {
   return cells.value.map((cell) => ({
     id: cell.id,
-    corners: cell.corners,
     edgeFaces: CANONICAL_EDGE_DIRS.map((dir, fi) => ({
       dir,
-      lineAttrs: edgeLine20_80(cell.corners, dir),
+      lineAttrs: lineAttrFn(cell, dir),
       groups: edgeLineGroups.value.map((group) => ({
         group,
         features: cell.edges?.[fi]?.filter((f) => group.typeSet.has(f.type)) ?? [],
       })),
     })),
   }));
+}
+
+const cellsForEdges = computed(() => {
+  // Short-circuit when through-hex is active so both layers never render the same data.
+  if (props.overlayConfig.edgeLine?.style === 'through-hex') return [];
+  return _buildCellEdgeData((cell, dir) => edgeLine20_80(cell.corners, dir));
+});
+
+// ── ThroughHexLayer pre-filtered data (#139) ──────────────────────────────────
+// Uses edgeToCenter() so each segment runs from hex centre to edge midpoint.
+// Active only when edgeLine.style === 'through-hex'; mutually exclusive with cellsForEdges.
+const throughHexSegments = computed(() => {
+  if (props.overlayConfig.edgeLine?.style !== 'through-hex') return [];
+  return _buildCellEdgeData((cell, dir) => edgeToCenter(cell.corners, cell.cx, cell.cy, dir));
 });
 
 // ── Coordinate helper ─────────────────────────────────────────────────────────
@@ -471,13 +499,14 @@ defineExpose({ isPaintMouseDown, hoverInfo });
              highlight state), and the mouseenter event handler.             -->
         <g class="layer-grid">
           <polygon
-            v-for="cell in cells"
+            v-for="cell in cellsWithDisplayAttrs"
             :key="'hex-' + cell.id"
             :points="cell.points"
-            v-bind="hexFillAttrs(cell)"
-            :stroke="strokeForCell(cell)"
-            :stroke-width="strokeWidthForCell(cell)"
-            :stroke-opacity="strokeOpacityForCell(cell)"
+            :fill="cell.fill"
+            :fill-opacity="cell.fillOpacity"
+            :stroke="cell.stroke"
+            :stroke-width="cell.strokeWidth"
+            :stroke-opacity="cell.strokeOpacity"
             @mouseenter="onHexMouseenter(cell.id)"
           />
         </g>
@@ -567,8 +596,31 @@ defineExpose({ isPaintMouseDown, hoverInfo });
              Uses cellsForEdges (computed) to avoid inline .filter() on each
              render. Only canonical faces 0/1/2 (N/NE/SE) are stored per hex;
              faces 3/4/5 live on the neighbour as face 0/1/2.               -->
-        <g v-if="overlayConfig.edgeLine" class="layer-edge-lines">
+        <g
+          v-if="overlayConfig.edgeLine && overlayConfig.edgeLine.style !== 'through-hex'"
+          class="layer-edge-lines"
+        >
           <template v-for="cell in cellsForEdges" :key="'edges-' + cell.id">
+            <template v-for="face in cell.edgeFaces" :key="face.dir">
+              <template v-for="(gd, gi) in face.groups" :key="gi">
+                <line
+                  v-for="feat in gd.features"
+                  :key="feat.type"
+                  v-bind="face.lineAttrs"
+                  :stroke="gd.group.color"
+                  :stroke-width="gd.group.strokeWidth"
+                  :stroke-dasharray="gd.group.dash ?? null"
+                  stroke-linecap="round"
+                  pointer-events="none"
+                />
+              </template>
+            </template>
+          </template>
+        </g>
+
+        <!-- ThroughHexLayer — road and trail features rendered centre→midpoint (#139) -->
+        <g v-if="overlayConfig.edgeLine?.style === 'through-hex'" class="layer-through-hex-lines">
+          <template v-for="cell in throughHexSegments" :key="'thru-' + cell.id">
             <template v-for="face in cell.edgeFaces" :key="face.dir">
               <template v-for="(gd, gi) in face.groups" :key="gi">
                 <line

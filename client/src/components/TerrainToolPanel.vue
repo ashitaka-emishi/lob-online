@@ -40,7 +40,11 @@ const TERRAIN_ICONS = {
   orchard: '⬡',
   marsh: '≈',
   unknown: '?',
+  building: '⊞',
 };
+
+// Building is always appended after terrain types; not a terrain value itself.
+const BUILDING_TYPE = 'building';
 
 // Terrain icon overlay — subset of TERRAIN_ICONS that renders on hexes in the map
 // (clear and unknown intentionally omitted; those hex types show no icon).
@@ -98,8 +102,21 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
         :class="{ active: paintTerrain === t }"
         @click="emit('terrain-change', t)"
       >
+        <span
+          class="terrain-swatch"
+          :style="TERRAIN_COLORS[t] ? { backgroundColor: TERRAIN_COLORS[t] } : {}"
+        />
         <span class="terrain-icon">{{ TERRAIN_ICONS[t] ?? '?' }}</span>
         <span class="terrain-name">{{ t }}</span>
+      </button>
+      <button
+        class="terrain-btn"
+        :class="{ active: paintTerrain === BUILDING_TYPE }"
+        @click="emit('terrain-change', BUILDING_TYPE)"
+      >
+        <span class="terrain-swatch" />
+        <span class="terrain-icon">{{ TERRAIN_ICONS.building }}</span>
+        <span class="terrain-name">building</span>
       </button>
     </div>
 
@@ -176,6 +193,14 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
   background: #3a5a2a;
   border-color: #7aab3e;
   color: #b0d880;
+}
+
+.terrain-swatch {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 1px solid #555;
+  flex-shrink: 0;
 }
 
 .terrain-icon {
