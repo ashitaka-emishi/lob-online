@@ -4,8 +4,8 @@ import BaseToolPanel from './BaseToolPanel.vue';
 import { elevationTintPalette, tintForLevel } from '../formulas/elevation.js';
 
 const HELP_TEXT =
-  'Click or drag to raise elevation (+1). Right-click to lower (−1). ' +
-  'Use Raise all / Lower all to shift the entire map by one level.';
+  'Set a target elevation with the slider, then click or drag to paint that value. ' +
+  'Right-click to clear (set to 0). Use Raise all / Lower all to shift the entire map.';
 
 const props = defineProps({
   selectedHex: {
@@ -28,7 +28,17 @@ const emit = defineEmits([
   'lower-all',
   'paint-mode-change',
   'overlay-config',
+  'target-elevation-change',
 ]);
+
+// ── Target elevation slider ────────────────────────────────────────────────────
+
+const targetElevation = ref(1);
+
+function onSliderChange(event) {
+  targetElevation.value = Number(event.target.value);
+  emit('target-elevation-change', targetElevation.value);
+}
 
 // ── Overlay config ────────────────────────────────────────────────────────────
 
@@ -91,11 +101,16 @@ function onOverlayToggle(key) {
         Paint
       </button>
     </div>
-    <div class="tool-hint">
-      <template v-if="paintMode === 'paint'"
-        >Drag to raise (+1) continuously. Right-click to lower (−1).</template
-      >
-      <template v-else>Click to raise (+1). Right-click to lower (−1).</template>
+    <div class="elevation-slider">
+      <label class="slider-label">Target: {{ targetElevation }}</label>
+      <input
+        type="range"
+        :min="0"
+        :max="elevationLevels - 1"
+        :value="targetElevation"
+        @input="onSliderChange"
+        class="slider-input"
+      />
     </div>
 
     <div v-if="selectedHex" class="selected-hex-info">
@@ -139,10 +154,21 @@ function onOverlayToggle(key) {
   color: #b0d880;
 }
 
-.tool-hint {
-  font-size: 0.75rem;
-  color: #888;
-  font-style: italic;
+.elevation-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.slider-label {
+  font-size: 0.8rem;
+  color: #7aab3e;
+}
+
+.slider-input {
+  width: 100%;
+  accent-color: #7aab3e;
+  cursor: pointer;
 }
 
 .selected-hex-info {

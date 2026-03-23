@@ -82,10 +82,11 @@ describe('ElevationToolPanel', () => {
     expect(wrapper.emitted('paint-mode-change')?.[0][0]).toBe('paint');
   });
 
-  it('hint text changes based on paintMode', () => {
+  it('renders the same slider UI in both click and paint modes', () => {
     const clickWrapper = mount(ElevationToolPanel, { props: { paintMode: 'click' } });
     const paintWrapper = mount(ElevationToolPanel, { props: { paintMode: 'paint' } });
-    expect(clickWrapper.text()).not.toEqual(paintWrapper.text());
+    expect(clickWrapper.find('input[type="range"]').exists()).toBe(true);
+    expect(paintWrapper.find('input[type="range"]').exists()).toBe(true);
   });
 
   // --- overlay-config ownership ---
@@ -124,5 +125,38 @@ describe('ElevationToolPanel', () => {
   it('renders "Elevation tint" toggle checkbox via BaseToolPanel', () => {
     const wrapper = mount(ElevationToolPanel);
     expect(wrapper.text()).toContain('Elevation tint');
+  });
+
+  // --- elevation slider (#137) ---
+
+  it('renders a range slider input', () => {
+    const wrapper = mount(ElevationToolPanel, { props: { elevationLevels: 22 } });
+    expect(wrapper.find('input[type="range"]').exists()).toBe(true);
+  });
+
+  it('slider min is 0 and max is elevationLevels − 1', () => {
+    const wrapper = mount(ElevationToolPanel, { props: { elevationLevels: 10 } });
+    const slider = wrapper.find('input[type="range"]');
+    expect(slider.attributes('min')).toBe('0');
+    expect(slider.attributes('max')).toBe('9');
+  });
+
+  it('slider defaults to 1', () => {
+    const wrapper = mount(ElevationToolPanel, { props: { elevationLevels: 22 } });
+    const slider = wrapper.find('input[type="range"]');
+    expect(Number(slider.element.value)).toBe(1);
+  });
+
+  it('changing slider emits target-elevation-change with numeric value', async () => {
+    const wrapper = mount(ElevationToolPanel, { props: { elevationLevels: 22 } });
+    const slider = wrapper.find('input[type="range"]');
+    await slider.setValue('5');
+    expect(wrapper.emitted('target-elevation-change')).toBeTruthy();
+    expect(wrapper.emitted('target-elevation-change')[0][0]).toBe(5);
+  });
+
+  it('displays the current target elevation value next to slider', () => {
+    const wrapper = mount(ElevationToolPanel, { props: { elevationLevels: 22 } });
+    expect(wrapper.text()).toContain('1'); // default targetElevation
   });
 });

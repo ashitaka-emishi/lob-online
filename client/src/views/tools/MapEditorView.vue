@@ -315,6 +315,7 @@ watch(
 
 const elevationLevels = computed(() => mapData.value?.elevationSystem?.elevationLevels ?? 22);
 const elevationMax = computed(() => elevationLevels.value - 1);
+const elevationTarget = ref(1);
 
 // M7: single onMutated used by bulk ops and trace (avoids duplicating the same two lines).
 // During a paint stroke, suppress per-hex saveMapDraft; flush once on stroke end.
@@ -387,6 +388,7 @@ const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter
     editorMode,
     paintTerrain,
     elevationMax,
+    elevationTarget,
     paintMode,
     tryPickLosHex,
     onHexUpdate,
@@ -633,6 +635,7 @@ onUnmounted(() => {
               @raise-all="raiseAll"
               @lower-all="lowerAll"
               @paint-mode-change="paintMode = $event"
+              @target-elevation-change="elevationTarget = $event"
               @overlay-config="activePanelOverlayConfig = $event"
             />
           </div>

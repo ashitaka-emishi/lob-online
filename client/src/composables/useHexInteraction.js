@@ -22,6 +22,7 @@ import { resolveHexOrStub } from '../utils/hexGeometry.js';
  * @param {import('vue').Ref<string>} args.editorMode
  * @param {import('vue').Ref<string>} args.paintTerrain
  * @param {import('vue').ComputedRef<number>} args.elevationMax
+ * @param {import('vue').Ref<number>} [args.elevationTarget] - target value for elevation painting; defaults to ref(1)
  * @param {import('vue').Ref<string>} [args.paintMode] - 'click'|'paint'; defaults to 'paint'
  * @param {function} [args.tryPickLosHex] - from useLosTest; returns true if click consumed by LOS
  * @param {function} args.onHexUpdate - single-hex mutation handler
@@ -33,6 +34,7 @@ export function useHexInteraction({
   editorMode,
   paintTerrain,
   elevationMax,
+  elevationTarget,
   paintMode,
   tryPickLosHex,
   onHexUpdate,
@@ -40,6 +42,8 @@ export function useHexInteraction({
   // Default paintMode to 'paint' to preserve backward compat with callers that don't pass it.
   // Use ref() so the fallback is reactive, matching the behaviour of a real caller-supplied ref.
   const _paintMode = paintMode ?? ref('paint');
+  // Default elevationTarget to 1 for callers that haven't wired the slider yet.
+  const _elevationTarget = elevationTarget ?? ref(1);
   // M5: use .values().next().value — avoids spreading the entire Set into an array
   const selectedHexId = computed(() =>
     selectedHexIds.value.size === 1 ? selectedHexIds.value.values().next().value : null
@@ -52,12 +56,29 @@ export function useHexInteraction({
   });
 
   // ── Elevation adjustment ───────────────────────────────────────────────────
+
+  // Delta-based — used internally for adjustHexElevation (retained for API stability).
   function adjustHexElevation(hexId, delta) {
     if (!mapData.value) return;
     const existing = resolveHexOrStub(mapData.value.hexes, hexIndex.value, hexId);
     const current = existing.elevation ?? 0;
     const clamped = Math.max(0, Math.min(elevationMax.value, current + delta));
     onHexUpdate({ ...existing, elevation: clamped });
+  }
+
+  // Target-based — used by click/paint; sets elevation to the slider's fixed value.
+  function paintHexElevation(hexId) {
+    if (!mapData.value) return;
+    const existing = resolveHexOrStub(mapData.value.hexes, hexIndex.value, hexId);
+    const clamped = Math.max(0, Math.min(elevationMax.value, _elevationTarget.value));
+    onHexUpdate({ ...existing, elevation: clamped });
+  }
+
+  // Right-click clears elevation to 0.
+  function clearHexElevation(hexId) {
+    if (!mapData.value) return;
+    const existing = resolveHexOrStub(mapData.value.hexes, hexIndex.value, hexId);
+    onHexUpdate({ ...existing, elevation: 0 });
   }
 
   // ── Click / mouseenter handlers ────────────────────────────────────────────
@@ -83,7 +104,7 @@ export function useHexInteraction({
         selectedHexIds.value = new Set(); // deselect on re-click
       } else {
         selectedHexIds.value = new Set([hexId]);
-        adjustHexElevation(hexId, +1);
+        paintHexElevation(hexId);
       }
     } else if (editorMode.value === 'paint') {
       applyPaint(hexId);
@@ -104,7 +125,7 @@ export function useHexInteraction({
 
   function onHexRightClick(hexId) {
     if (editorMode.value === 'elevation') {
-      adjustHexElevation(hexId, -1);
+      clearHexElevation(hexId);
     }
   }
 
@@ -113,7 +134,7 @@ export function useHexInteraction({
     if (editorMode.value === 'paint') {
       applyPaint(hexId);
     } else if (editorMode.value === 'elevation') {
-      adjustHexElevation(hexId, +1);
+      paintHexElevation(hexId);
     }
   }
 
