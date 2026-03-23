@@ -125,7 +125,7 @@ export function getEdgeLabels(northOffset) {
  * @param {number} [tMargin=0] - fraction (0–0.5) excluded at each end of the segment.
  *   When > 0, only the middle (1 - 2*tMargin) of the edge qualifies, preventing corner
  *   ambiguity where multiple edges converge at the same vertex.
- * @returns {{hexId:string, dir:string}|null}
+ * @returns {{hexId:string, dir:string, dist:number}|null}
  */
 export function findNearestEdge(localX, localY, cells, threshold = 6, tMargin = 0) {
   let nearest = null;

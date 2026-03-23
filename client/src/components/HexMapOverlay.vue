@@ -365,7 +365,7 @@ function onSvgContextMenu(event) {
   if (props.edgeInteraction) {
     const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
     const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : allCells;
-    const nearest = findNearestEdge(localX, localY, searchCells, 6);
+    const nearest = findNearestEdge(localX, localY, searchCells, EDGE_SNAP_THRESHOLD_PX);
     if (nearest) emit('edge-right-click', nearest);
     return;
   }
@@ -392,7 +392,7 @@ function onSvgMouseDown(event) {
   const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
   const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : allCells;
   // No tMargin — full edge length is clickable, including near vertices.
-  const nearest = findNearestEdge(localX, localY, searchCells, 6);
+  const nearest = findNearestEdge(localX, localY, searchCells, EDGE_SNAP_THRESHOLD_PX);
   if (nearest) {
     emit('edge-click', {
       hexId: nearest.hexId,
@@ -402,6 +402,10 @@ function onSvgMouseDown(event) {
     });
   }
 }
+
+// Snap threshold in pixels — maximum distance from cursor to an edge segment for it to
+// be considered "snapped". Used in onSvgContextMenu, onSvgMouseDown, and onSvgMouseMove.
+const EDGE_SNAP_THRESHOLD_PX = 6;
 
 // rAF gate — true while a requestAnimationFrame is already queued for the edge-hover update.
 // Prevents hoverInfo from being written on every raw mousemove event (#160).
@@ -421,9 +425,9 @@ function onSvgMouseMove(event) {
     const gridRows = props.calibration.rows > 0 ? props.calibration.rows : 35;
 
     // Single findNearestEdge call (threshold=999 ≙ always find nearest).
-    // dist ≤ 6 determines snap — avoids a second O(cells×6) traversal (#159).
+    // dist ≤ EDGE_SNAP_THRESHOLD_PX determines snap — avoids a second O(cells×6) traversal (#159).
     const nearest = findNearestEdge(localX, localY, searchCells, 999);
-    const nearestSnap = nearest && nearest.dist <= 6 ? nearest : null;
+    const nearestSnap = nearest && nearest.dist <= EDGE_SNAP_THRESHOLD_PX ? nearest : null;
     hoverInfo.value = {
       hexId: candidateHex ? hexToGameId(candidateHex, gridRows) : null,
       nearHexId: nearest?.hexId ?? null,
