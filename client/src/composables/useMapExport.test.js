@@ -32,6 +32,19 @@ describe('stripPrivateFields', () => {
     expect(result.flag).toBe(true);
     expect(result.empty).toBeNull();
   });
+
+  it('returns null for nodes beyond the default depth limit (#175)', () => {
+    // Build 12 levels of nesting — exceeds the default guard of 10
+    let obj = 'leaf';
+    for (let i = 0; i < 12; i++) obj = { n: obj };
+    const result = stripPrivateFields(obj);
+    // Navigate 11 .n hops — the last one should be null (truncated by depth guard)
+    let node = result;
+    for (let i = 0; i < 11; i++) {
+      node = node?.n ?? null;
+    }
+    expect(node).toBeNull();
+  });
 });
 
 describe('useMapExport', () => {

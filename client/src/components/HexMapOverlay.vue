@@ -5,13 +5,13 @@ import {
   DIRS,
   edgeMidpoint,
   edgeLine20_80,
-  edgeToCenter,
   wedgePolygonPoints,
   getEdgeLabels,
   findNearestEdge,
   getCellAndNeighbors,
   hexToGameId,
 } from '../utils/hexGeometry.js';
+import { useEdgeLineLayer } from '../composables/useEdgeLineLayer.js';
 
 const props = defineProps({
   calibration: {
@@ -137,77 +137,89 @@ watch(
 );
 
 // ── Grid computation ──────────────────────────────────────────────────────────
+// gridGeometry: expensive honeycomb Grid + per-hex polygon computation.
+// Backed by a shallowRef + watch on the 6 shape-affecting calibration fields so
+// it only rebuilds when hex size, orientation, or grid dimensions actually change.
+// Nudging strokeWidth, northOffset, dx, or dy does NOT trigger a rebuild (#151).
+const gridGeometry = shallowRef(null);
+watch(
+  [
+    () => props.calibration.cols,
+    () => props.calibration.rows,
+    () => props.calibration.hexWidth,
+    () => props.calibration.hexHeight,
+    () => props.calibration.orientation,
+    () => props.calibration.evenColUp,
+  ],
+  ([cols, rows, hexWidth, hexHeight, orientation, evenColUp]) => {
+    const gridCols = cols > 0 ? cols : 64;
+    const gridRows = rows > 0 ? rows : 35;
+    const orient = orientation === 'pointy' ? Orientation.POINTY : Orientation.FLAT;
+    const Hex = defineHex({
+      dimensions: { xRadius: hexWidth, yRadius: hexHeight },
+      orientation: orient,
+      origin: { x: 0, y: 0 },
+      offset: evenColUp ? 1 : -1,
+    });
+    const grid = new Grid(Hex, rectangle({ width: gridCols, height: gridRows }));
+    const geoCells = [];
+    grid.forEach((hex) => {
+      const corners = hex.corners;
+      const cx = hex.x;
+      const cy = hex.y;
+      geoCells.push({
+        col: hex.col,
+        row: hex.row,
+        id: hexToGameId(hex, gridRows),
+        points: corners.map((c) => `${c.x},${c.y}`).join(' '),
+        cx,
+        cy,
+        corners,
+        bottomCY: (corners[2].y + corners[3].y) / 2,
+        // Pre-computed wedge polygon strings — stable between calibration changes,
+        // avoids calling wedgePolygonPoints() inline on every render (#164).
+        wedgePoints: wedgePolygonPoints(corners, { x: cx, y: cy }),
+      });
+    });
+    gridGeometry.value = { grid, geoCells, gridRows };
+  },
+  { immediate: true }
+);
+
+// gridData: translation + data enrichment layer. Depends on gridGeometry (cached) plus
+// the calibration fields that affect translation/labels and the per-hex data index.
+// Rebuilding this is fast: no defineHex/Grid, just arithmetic + a geoCells.map().
+// LOS/selection display flags are intentionally absent here — they live in
+// cellsWithDisplayAttrs so that selection changes do NOT invalidate this layer
+// or the useEdgeLineLayer computeds that depend on `cells` (#151 follow-up).
 const gridData = computed(() => {
-  const { dx, dy, hexWidth, hexHeight, imageScale, orientation, evenColUp, cols, rows } =
-    props.calibration;
-  const gridCols = cols > 0 ? cols : 64;
-  const gridRows = rows > 0 ? rows : 35;
-  const orient = orientation === 'pointy' ? Orientation.POINTY : Orientation.FLAT;
+  const { grid, geoCells, gridRows } = gridGeometry.value;
+  const { dx, dy, imageScale } = props.calibration;
+  const northOffset = props.calibration.northOffset ?? 0;
 
-  const Hex = defineHex({
-    dimensions: { xRadius: hexWidth, yRadius: hexHeight },
-    orientation: orient,
-    origin: { x: 0, y: 0 },
-    offset: evenColUp ? 1 : -1,
-  });
-
-  const grid = new Grid(Hex, rectangle({ width: gridCols, height: gridRows }));
   const anchorHex = grid.getHex({ col: 0, row: gridRows - 1 });
   const tx = dx - anchorHex.x;
   const ty = props.imageHeight * imageScale - dy - anchorHex.y;
 
-  const northOffset = props.calibration.northOffset ?? 0;
   const edgeLabels = getEdgeLabels(northOffset);
 
-  const cells = [];
-  grid.forEach((hex) => {
-    const corners = hex.corners;
-    const points = corners.map((c) => `${c.x},${c.y}`).join(' ');
-    const cx = hex.x;
-    const cy = hex.y;
-    const id = hexToGameId(hex, gridRows);
+  const cells = geoCells.map((geoCell) => {
+    const { id, corners, cx, cy } = geoCell;
     const known = hexIndex.value[id];
-    const terrain = known?.terrain ?? 'unknown';
-    const bottomCY = (corners[2].y + corners[3].y) / 2;
-    const isVP = vpHexSet.value.has(id);
-    const isSeed = seedHexSet.value.has(id);
-    const los = props.overlayConfig.los;
-    const isLosA = id === (los?.hexA ?? null);
-    const isLosB = id === (los?.hexB ?? null);
-    const isLosPath = losPathSet.value.has(id);
-    const isLosBlocked = id === (los?.blockedHex ?? null);
     const slope = known?.slope ?? null;
     const slopeDir = slope !== null && slope !== undefined ? DIRS[slope] : null;
     const slopeMid = slopeDir ? edgeMidpoint(corners, slopeDir) : null;
-    const slopeArrowLine = slopeMid ? { x1: cx, y1: cy, x2: slopeMid.x, y2: slopeMid.y } : null;
-    const slopeArrowLabel = slopeDir ? (edgeLabels[slope] ?? null) : null;
-    cells.push({
-      id,
-      col: hex.col,
-      row: hex.row,
-      points,
-      cx,
-      cy,
-      corners,
-      terrain,
+    return {
+      ...geoCell,
+      terrain: known?.terrain ?? 'unknown',
       elevation: known?.elevation ?? null,
       slope,
       wedgeElevations: known?.wedgeElevations ?? null,
-      // Pre-computed wedge polygon strings — stable between calibration changes,
-      // avoids calling wedgePolygonPoints() inline on every render (#164).
-      wedgePoints: wedgePolygonPoints(corners, { x: cx, y: cy }),
       edges: known?.edges ?? {},
       hexFeature: known?.hexFeature ?? null,
-      bottomCY,
-      isVP,
-      isSeed,
-      isLosA,
-      isLosB,
-      isLosPath,
-      isLosBlocked,
-      slopeArrowLine,
-      slopeArrowLabel,
-    });
+      slopeArrowLine: slopeMid ? { x1: cx, y1: cy, x2: slopeMid.x, y2: slopeMid.y } : null,
+      slopeArrowLabel: slopeDir ? (edgeLabels[slope] ?? null) : null,
+    };
   });
 
   const cellByColRow = new Map(cells.map((c) => [`${c.col},${c.row}`, c]));
@@ -232,11 +244,21 @@ const cellsWithDisplayAttrs = computed(() => {
   const gridWeight = props.overlayConfig.grid?.weight;
   const hexFillCfg = props.overlayConfig.hexFill;
   const sw = props.calibration.strokeWidth;
+  // LOS/selection flags live here rather than in gridData so that selection and
+  // LOS changes only invalidate this display computed, not cells or useEdgeLineLayer.
+  const los = props.overlayConfig.los;
 
   return cells.value.map((cell) => {
+    const isVP = vpHexSet.value.has(cell.id);
+    const isSeed = seedHexSet.value.has(cell.id);
+    const isLosA = cell.id === (los?.hexA ?? null);
+    const isLosB = cell.id === (los?.hexB ?? null);
+    const isLosPath = losPathSet.value.has(cell.id);
+    const isLosBlocked = cell.id === (los?.blockedHex ?? null);
+
     // fill
     let fill, fillOpacity;
-    if (cell.isLosBlocked) {
+    if (isLosBlocked) {
       fill = '#cc4444';
       fillOpacity = 0.5;
     } else {
@@ -248,35 +270,34 @@ const cellsWithDisplayAttrs = computed(() => {
     // stroke color
     let stroke;
     if (diag) stroke = '#cc88ff';
-    else if (cell.isLosBlocked) stroke = '#cc4444';
-    else if (cell.isLosA) stroke = '#44aa44';
-    else if (cell.isLosB) stroke = '#4488cc';
-    else if (cell.isLosPath) stroke = '#cc8844';
+    else if (isLosBlocked) stroke = '#cc4444';
+    else if (isLosA) stroke = '#44aa44';
+    else if (isLosB) stroke = '#4488cc';
+    else if (isLosPath) stroke = '#cc8844';
     else if (selectedHexId === cell.id) stroke = '#ffdd00';
-    else if (cell.isSeed) stroke = '#cc44ee';
-    else if (cell.isVP) stroke = '#cc3333';
+    else if (isSeed) stroke = '#cc44ee';
+    else if (isVP) stroke = '#cc3333';
     else stroke = gridWeight === 'diagnostic' ? '#cc88ff' : '#88776644';
 
     // stroke width
     let strokeWidth;
     if (diag) strokeWidth = sw;
-    else if (cell.isLosBlocked || cell.isLosA || cell.isLosB || cell.isLosPath)
-      strokeWidth = Math.max(sw * 2.5, 2);
+    else if (isLosBlocked || isLosA || isLosB || isLosPath) strokeWidth = Math.max(sw * 2.5, 2);
     else if (selectedHexId === cell.id) strokeWidth = Math.max(sw * 3, 2);
-    else if (cell.isSeed || cell.isVP) strokeWidth = Math.max(sw * 2, 1.5);
+    else if (isSeed || isVP) strokeWidth = Math.max(sw * 2, 1.5);
     else strokeWidth = sw;
 
     // stroke opacity
     let strokeOpacity;
     if (diag) strokeOpacity = 0.75;
     else if (
-      cell.isLosBlocked ||
-      cell.isLosA ||
-      cell.isLosB ||
-      cell.isLosPath ||
+      isLosBlocked ||
+      isLosA ||
+      isLosB ||
+      isLosPath ||
       selectedHexId === cell.id ||
-      cell.isSeed ||
-      cell.isVP
+      isSeed ||
+      isVP
     )
       strokeOpacity = 1;
     else strokeOpacity = 0.6;
@@ -302,50 +323,13 @@ function hexIconText(cell) {
   return cfg?.iconFn?.(cell) ?? null;
 }
 
-// ── EdgeLineLayer helper ──────────────────────────────────────────────────────
-// Pre-builds a Set of types per group so the template uses O(1) lookups instead
-// of O(k) array.includes() calls in a hot nested loop.
-const edgeLineGroups = computed(() => {
-  const groups = props.overlayConfig.edgeLine?.featureGroups ?? [];
-  return groups.map((g) => ({ ...g, typeSet: new Set(g.types) }));
-});
-
-// ── EdgeLineLayer pre-filtered data (#163, refactored #177) ───────────────────
-// Pre-computes which features to render per cell × canonical face × group so the
-// template v-for iterates a stable array rather than calling .filter() inline on
-// every render. Invalidates only when cells (calibration) or edgeLineGroups change.
-const CANONICAL_EDGE_DIRS = ['N', 'NE', 'SE'];
-
-// Shared builder used by both cellsForEdges and throughHexSegments. Accepts a
-// lineAttrFn(cell, dir) so each layer supplies its own geometry without duplicating
-// the group-filter loop.
-function _buildCellEdgeData(lineAttrFn) {
-  return cells.value.map((cell) => ({
-    id: cell.id,
-    edgeFaces: CANONICAL_EDGE_DIRS.map((dir, fi) => ({
-      dir,
-      lineAttrs: lineAttrFn(cell, dir),
-      groups: edgeLineGroups.value.map((group) => ({
-        group,
-        features: cell.edges?.[fi]?.filter((f) => group.typeSet.has(f.type)) ?? [],
-      })),
-    })),
-  }));
-}
-
-const cellsForEdges = computed(() => {
-  // Short-circuit when through-hex is active so both layers never render the same data.
-  if (props.overlayConfig.edgeLine?.style === 'through-hex') return [];
-  return _buildCellEdgeData((cell, dir) => edgeLine20_80(cell.corners, dir));
-});
-
-// ── ThroughHexLayer pre-filtered data (#139) ──────────────────────────────────
-// Uses edgeToCenter() so each segment runs from hex centre to edge midpoint.
-// Active only when edgeLine.style === 'through-hex'; mutually exclusive with cellsForEdges.
-const throughHexSegments = computed(() => {
-  if (props.overlayConfig.edgeLine?.style !== 'through-hex') return [];
-  return _buildCellEdgeData((cell, dir) => edgeToCenter(cell.corners, cell.cx, cell.cy, dir));
-});
+// ── EdgeLineLayer + ThroughHexLayer pre-filtered data (#163, #169) ────────────
+// Extracted into useEdgeLineLayer composable (#169). Invalidates only when cells
+// or edgeLine config change — LOS/selection state changes do NOT invalidate it.
+const { cellsForEdges, throughHexSegments } = useEdgeLineLayer(
+  cells,
+  computed(() => props.overlayConfig)
+);
 
 // ── Coordinate helper ─────────────────────────────────────────────────────────
 
@@ -476,8 +460,9 @@ function onHexMouseenter(hexId) {
   emit('hex-mouseenter', hexId);
 }
 
-// Exposed for test instrumentation only.
-defineExpose({ isPaintMouseDown, hoverInfo });
+// Exposed for test instrumentation only. gridGeometry is @internal — not intended
+// for parent component consumption; the raw honeycomb Grid is an implementation detail.
+defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
 </script>
 
 <template>

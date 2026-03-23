@@ -715,6 +715,49 @@ describe('HexMapOverlay', () => {
     expect(hi.snapHexId).toBeNull();
     expect(hi.snapDir).toBeNull();
   });
+
+  // ── gridGeometry stability (#151) ─────────────────────────────────────────
+  // gridGeometry is the expensive honeycomb Grid + polygon computation layer.
+  // It must NOT rebuild when only non-geometry calibration fields change
+  // (northOffset, strokeWidth, dx, dy, imageScale).
+
+  it('gridGeometry reference is stable when only northOffset changes (#151)', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: { ...BASE_CAL, northOffset: 0 } },
+    });
+    const geoBefore = wrapper.vm.gridGeometry;
+    expect(geoBefore).toBeDefined();
+    await wrapper.setProps({ calibration: { ...BASE_CAL, northOffset: 3 } });
+    expect(wrapper.vm.gridGeometry).toBe(geoBefore);
+  });
+
+  it('gridGeometry reference is stable when only strokeWidth changes (#151)', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: { ...BASE_CAL, strokeWidth: 1 } },
+    });
+    const geoBefore = wrapper.vm.gridGeometry;
+    expect(geoBefore).toBeDefined();
+    await wrapper.setProps({ calibration: { ...BASE_CAL, strokeWidth: 2 } });
+    expect(wrapper.vm.gridGeometry).toBe(geoBefore);
+  });
+
+  it('gridGeometry reference changes when hexWidth changes (#151)', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: { ...BASE_CAL, hexWidth: 35 } },
+    });
+    const geoBefore = wrapper.vm.gridGeometry;
+    await wrapper.setProps({ calibration: { ...BASE_CAL, hexWidth: 40 } });
+    expect(wrapper.vm.gridGeometry).not.toBe(geoBefore);
+  });
+
+  it('gridGeometry reference changes when cols changes (#151)', async () => {
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: { ...BASE_CAL, cols: 4 } },
+    });
+    const geoBefore = wrapper.vm.gridGeometry;
+    await wrapper.setProps({ calibration: { ...BASE_CAL, cols: 6 } });
+    expect(wrapper.vm.gridGeometry).not.toBe(geoBefore);
+  });
 });
 
 // ── Unified overlayConfig API — highlight/LOS/calibration state ───────────────
