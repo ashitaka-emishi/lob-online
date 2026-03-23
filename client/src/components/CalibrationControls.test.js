@@ -208,35 +208,8 @@ describe('CalibrationControls', () => {
     expect(emitted).toBeFalsy();
   });
 
-  describe('Elevation System section', () => {
-    const ELEV_SYS = { baseElevation: 500, elevationLevels: 22 };
-
-    it('passes elevationSystem and locked props to ElevationSystemControls', () => {
-      const wrapper = mount(CalibrationControls, {
-        props: { calibration: BASE_CAL, elevationSystem: ELEV_SYS },
-      });
-      const child = wrapper.findComponent({ name: 'ElevationSystemControls' });
-      expect(child.props('elevationSystem')).toEqual(ELEV_SYS);
-      expect(child.props('locked')).toBe(false);
-    });
-
-    it('passes locked: true when calibration is locked', () => {
-      const wrapper = mount(CalibrationControls, {
-        props: { calibration: { ...BASE_CAL, locked: true }, elevationSystem: ELEV_SYS },
-      });
-      const child = wrapper.findComponent({ name: 'ElevationSystemControls' });
-      expect(child.props('locked')).toBe(true);
-    });
-
-    it('forwards elevation-system-change from ElevationSystemControls', async () => {
-      const wrapper = mount(CalibrationControls, {
-        props: { calibration: BASE_CAL, elevationSystem: ELEV_SYS },
-      });
-      const child = wrapper.findComponent({ name: 'ElevationSystemControls' });
-      await child.vm.$emit('elevation-system-change', { baseElevation: 600, elevationLevels: 22 });
-      const emitted = wrapper.emitted('elevation-system-change');
-      expect(emitted).toBeTruthy();
-      expect(emitted[emitted.length - 1][0]).toEqual({ baseElevation: 600, elevationLevels: 22 });
-    });
+  it('does not render ElevationSystemControls (hoisted to MapEditorView #111)', () => {
+    const wrapper = mount(CalibrationControls, { props: { calibration: BASE_CAL } });
+    expect(wrapper.findComponent({ name: 'ElevationSystemControls' }).exists()).toBe(false);
   });
 });

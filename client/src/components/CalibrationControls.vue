@@ -1,6 +1,5 @@
 <script setup>
 import { computed } from 'vue';
-import ElevationSystemControls from './ElevationSystemControls.vue';
 import { compassLabel } from '../utils/compass.js';
 
 const props = defineProps({
@@ -12,17 +11,9 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  elevationSystem: {
-    type: Object,
-    default: null,
-  },
 });
 
-const emit = defineEmits([
-  'calibration-change',
-  'toggle-calibration-mode',
-  'elevation-system-change',
-]);
+const emit = defineEmits(['calibration-change', 'toggle-calibration-mode']);
 
 function update(field, value) {
   emit('calibration-change', { ...props.calibration, [field]: Number(value) });
@@ -238,11 +229,6 @@ function toggleLocked() {
         </g>
       </svg>
     </div>
-    <ElevationSystemControls
-      :elevation-system="elevationSystem"
-      :locked="calibration.locked ?? false"
-      @elevation-system-change="$emit('elevation-system-change', $event)"
-    />
     <button :class="{ active: calibration.locked }" @click="toggleLocked">
       {{ calibration.locked ? 'Locked 🔒' : 'Lock' }}
     </button>

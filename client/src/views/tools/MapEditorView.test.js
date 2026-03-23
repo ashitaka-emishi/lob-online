@@ -38,7 +38,7 @@ vi.mock('../../components/LosTestPanel.vue', () => ({
 }));
 
 import MapEditorView from './MapEditorView.vue';
-import CalibrationControls from '../../components/CalibrationControls.vue';
+import ElevationSystemControls from '../../components/ElevationSystemControls.vue';
 import LosTestPanel from '../../components/LosTestPanel.vue';
 import ElevationToolPanel from '../../components/ElevationToolPanel.vue';
 
@@ -529,21 +529,21 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 
-  it('elevation-system-change from CalibrationControls merges into mapData.elevationSystem', async () => {
+  it('elevation-system-change from ElevationSystemControls merges into mapData.elevationSystem', async () => {
     vi.useFakeTimers();
     vi.stubGlobal('fetch', mockFetch(makeElevationMap()));
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
 
-    // Open Grid Calibration accordion
+    // Open Grid Calibration accordion (ElevationSystemControls is rendered inside it)
     const headers = wrapper.findAll('button.accordion-header');
     const calHeader = headers.find((h) => h.text().includes('Grid Calibration'));
     await calHeader.trigger('click');
     await flushPromises();
 
-    // Emit elevation-system-change from CalibrationControls
-    const calControls = wrapper.findComponent(CalibrationControls);
-    calControls.vm.$emit('elevation-system-change', {
+    // Emit elevation-system-change directly from ElevationSystemControls
+    const elevControls = wrapper.findComponent(ElevationSystemControls);
+    elevControls.vm.$emit('elevation-system-change', {
       baseElevation: 600,
       elevationLevels: 25,
       contourInterval: 50,
@@ -562,19 +562,19 @@ describe('MapEditorView', () => {
     vi.useRealTimers();
   });
 
-  it('CalibrationControls receives elevationSystem prop from mapData', async () => {
+  it('ElevationSystemControls receives elevationSystem prop from mapData (#111)', async () => {
     vi.stubGlobal('fetch', mockFetch(makeElevationMap()));
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
 
-    // Open Grid Calibration accordion
+    // Open Grid Calibration accordion (ElevationSystemControls is rendered inside it)
     const headers = wrapper.findAll('button.accordion-header');
     const calHeader = headers.find((h) => h.text().includes('Grid Calibration'));
     await calHeader.trigger('click');
     await flushPromises();
 
-    const calControls = wrapper.findComponent(CalibrationControls);
-    expect(calControls.props('elevationSystem')).toEqual(
+    const elevControls = wrapper.findComponent(ElevationSystemControls);
+    expect(elevControls.props('elevationSystem')).toEqual(
       expect.objectContaining({ baseElevation: 500, elevationLevels: 22 })
     );
     wrapper.unmount();
