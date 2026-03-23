@@ -26,7 +26,7 @@ Navigation hub for project context.
 
 | [hex-to-game-id_20260318](./tracks/hex-to-game-id_20260318/index.md) | Extract hexToGameId Helper (Tech Debt #118 + #119) | Complete |
 | [map-schema-foundation_20260319](./tracks/map-schema-foundation_20260319/index.md) | Map Schema Foundation — Data Model + Compass Label Fix (#135, #143) | Complete |
-| [tool-panel-framework_20260319](./tracks/tool-panel-framework_20260319/index.md) | Tool Panel Framework — Shared Architecture (#136) | Pending |
+| [tool-panel-framework_20260319](./tracks/tool-panel-framework_20260319/index.md) | Tool Panel Framework — Shared Architecture (#136) | Complete |
 
 | [map-editor-extraction_20260323](./tracks/map-editor-extraction_20260323/index.md) | MapEditorView Extraction Debt Bundle | Complete |
 | [map-editor-tool-closeout_20260323](./tracks/map-editor-tool-closeout_20260323/index.md) | Map Editor Tool Closeout — Issues #137 #138 #139 #140 #141 #142 | Complete |

@@ -2,16 +2,16 @@
   "id": "tool-panel-framework_20260319",
   "title": "Tool Panel Framework — Shared Architecture",
   "type": "feature",
-  "status": "in_progress",
+  "status": "complete",
   "created": "2026-03-19T00:00:00.000Z",
-  "updated": "2026-03-19T00:00:00.000Z",
+  "updated": "2026-03-23T00:00:00.000Z",
   "githubIssue": 136,
   "phases": {
     "total": 5,
-    "completed": 0
+    "completed": 5
   },
   "tasks": {
     "total": 20,
-    "completed": 0
+    "completed": 20
   }
 }
