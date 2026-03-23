@@ -157,7 +157,7 @@ export function findNearestEdge(localX, localY, cells, threshold = 6, tMargin = 
       const dist = Math.sqrt(cx * cx + cy * cy);
       if (dist < nearestDist) {
         nearestDist = dist;
-        nearest = { hexId: cell.id, dir };
+        nearest = { hexId: cell.id, dir, dist };
       }
     }
   }

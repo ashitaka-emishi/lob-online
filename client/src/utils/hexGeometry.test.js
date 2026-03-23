@@ -226,17 +226,17 @@ describe('findNearestEdge', () => {
 
   it('returns nearest edge when cursor is exactly on N midpoint', () => {
     const result = findNearestEdge(0, -2, [cell]);
-    expect(result).toEqual({ hexId: 'A', dir: 'N' });
+    expect(result).toEqual(expect.objectContaining({ hexId: 'A', dir: 'N' }));
   });
 
   it('returns nearest edge when cursor is exactly on S midpoint', () => {
     const result = findNearestEdge(0, 2, [cell]);
-    expect(result).toEqual({ hexId: 'A', dir: 'S' });
+    expect(result).toEqual(expect.objectContaining({ hexId: 'A', dir: 'S' }));
   });
 
   it('returns nearest edge when cursor is exactly on SE midpoint', () => {
     const result = findNearestEdge(1.5, 1, [cell]);
-    expect(result).toEqual({ hexId: 'A', dir: 'SE' });
+    expect(result).toEqual(expect.objectContaining({ hexId: 'A', dir: 'SE' }));
   });
 
   it('returns null when cursor is far from all edges (custom threshold)', () => {
@@ -260,13 +260,35 @@ describe('findNearestEdge', () => {
     const cellB = { id: 'B', corners: shifted };
     // Cursor at (10, -2) = N midpoint of cellB; N midpoint of cellA is at (0, -2), dist=10
     const result = findNearestEdge(10, -2, [cell, cellB]);
-    expect(result).toEqual({ hexId: 'B', dir: 'N' });
+    expect(result).toEqual(expect.objectContaining({ hexId: 'B', dir: 'N' }));
   });
 
   it('uses custom threshold — excludes edges beyond it', () => {
     // N midpoint at (0, -2); cursor at (0, -9) → dist=7, within default threshold=8 but not 6
     expect(findNearestEdge(0, -9, [cell], 6)).toBeNull();
-    expect(findNearestEdge(0, -9, [cell], 8)).toEqual({ hexId: 'A', dir: 'N' });
+    expect(findNearestEdge(0, -9, [cell], 8)).toEqual(
+      expect.objectContaining({ hexId: 'A', dir: 'N' })
+    );
+  });
+
+  // ── dist field — enables snap deduplication (#159) ─────────────────────────
+
+  it('result includes dist (distance from cursor to nearest edge midpoint)', () => {
+    // Cursor exactly on N midpoint (0, -2) → dist should be 0
+    const result = findNearestEdge(0, -2, [cell]);
+    expect(result).not.toBeNull();
+    expect(typeof result.dist).toBe('number');
+    expect(result.dist).toBeCloseTo(0, 5);
+  });
+
+  it('dist can be used to determine snap threshold without a second call', () => {
+    // N midpoint at (0, -2); cursor at (0, -9) → dist = 7, beyond 6px snap threshold
+    const result = findNearestEdge(0, -9, [cell], 999);
+    expect(result).not.toBeNull();
+    expect(result.dist).toBeGreaterThan(6);
+    // snap = result whose dist ≤ 6
+    const snap = result.dist <= 6 ? result : null;
+    expect(snap).toBeNull();
   });
 });
 

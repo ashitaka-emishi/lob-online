@@ -381,28 +381,38 @@ function onSvgMouseDown(event) {
   }
 }
 
+// rAF gate — true while a requestAnimationFrame is already queued for the edge-hover update.
+// Prevents hoverInfo from being written on every raw mousemove event (#160).
+let _edgeHoverRafPending = false;
+
 function onSvgMouseMove(event) {
   if (!props.edgeInteraction) return;
+  if (_edgeHoverRafPending) return;
+  _edgeHoverRafPending = true;
   const svg = event.currentTarget;
-  const { localX, localY } = _toLocal(svg, event.clientX, event.clientY);
-  const { grid, cells: allCells, cellByColRow } = gridData.value;
-  const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
-  const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : allCells;
-  const gridRows = props.calibration.rows > 0 ? props.calibration.rows : 35;
+  requestAnimationFrame(() => {
+    _edgeHoverRafPending = false;
+    const { localX, localY } = _toLocal(svg, event.clientX, event.clientY);
+    const { grid, cells: allCells, cellByColRow } = gridData.value;
+    const candidateHex = grid.pointToHex({ x: localX, y: localY }, { allowOutside: false });
+    const searchCells = candidateHex ? getCellAndNeighbors(candidateHex, cellByColRow) : allCells;
+    const gridRows = props.calibration.rows > 0 ? props.calibration.rows : 35;
 
-  // Update hover state for fuchsia highlight and tooltip.
-  const nearestAlways = findNearestEdge(localX, localY, searchCells, 999);
-  const nearestSnap = findNearestEdge(localX, localY, searchCells, 6);
-  hoverInfo.value = {
-    hexId: candidateHex ? hexToGameId(candidateHex, gridRows) : null,
-    nearHexId: nearestAlways?.hexId ?? null,
-    nearDir: nearestAlways?.dir ?? null,
-    snapHexId: nearestSnap?.hexId ?? null,
-    snapDir: nearestSnap?.dir ?? null,
-    inProximity: !!nearestSnap,
-    localX,
-    localY,
-  };
+    // Single findNearestEdge call (threshold=999 ≙ always find nearest).
+    // dist ≤ 6 determines snap — avoids a second O(cells×6) traversal (#159).
+    const nearest = findNearestEdge(localX, localY, searchCells, 999);
+    const nearestSnap = nearest && nearest.dist <= 6 ? nearest : null;
+    hoverInfo.value = {
+      hexId: candidateHex ? hexToGameId(candidateHex, gridRows) : null,
+      nearHexId: nearest?.hexId ?? null,
+      nearDir: nearest?.dir ?? null,
+      snapHexId: nearestSnap?.hexId ?? null,
+      snapDir: nearestSnap?.dir ?? null,
+      inProximity: !!nearestSnap,
+      localX,
+      localY,
+    };
+  });
 }
 
 function onSvgMouseUp() {

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { defineHex, Grid, rectangle, Orientation } from 'honeycomb-grid';
 import { hexToGameId } from '../utils/hexGeometry.js';
@@ -23,6 +23,10 @@ const WITH_LABELS = {
 };
 
 describe('HexMapOverlay', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('renders an SVG element', () => {
     const wrapper = mount(HexMapOverlay, {
       props: { calibration: BASE_CAL },
@@ -592,6 +596,66 @@ describe('HexMapOverlay', () => {
     const polygons = wrapper.findAll('polygon');
     await polygons[0].trigger('mouseenter');
     expect(wrapper.emitted('hex-mouseenter')).toBeFalsy();
+  });
+
+  // ── rAF gate on edge-hover path (#160) ────────────────────────────────────
+
+  it('onSvgMouseMove schedules at most one rAF per burst (second event is a no-op)', async () => {
+    const rafCallbacks = [];
+    vi.stubGlobal('requestAnimationFrame', (cb) => {
+      rafCallbacks.push(cb);
+      return 1;
+    });
+
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, edgeInteraction: true, interactionEnabled: true },
+    });
+    const svgEl = wrapper.find('svg').element;
+    svgEl.createSVGPoint = () => ({ x: 0, y: 0, matrixTransform: () => ({ x: 50, y: 50 }) });
+    svgEl.getScreenCTM = () => ({ inverse: () => ({}) });
+
+    await wrapper.trigger('mousemove');
+    await wrapper.trigger('mousemove');
+
+    expect(rafCallbacks.length).toBe(1);
+  });
+
+  it('onSvgMouseMove: a second burst after rAF fires schedules a new rAF', async () => {
+    const rafCallbacks = [];
+    vi.stubGlobal('requestAnimationFrame', (cb) => {
+      rafCallbacks.push(cb);
+      return rafCallbacks.length;
+    });
+
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, edgeInteraction: true, interactionEnabled: true },
+    });
+    const svgEl = wrapper.find('svg').element;
+    svgEl.createSVGPoint = () => ({ x: 0, y: 0, matrixTransform: () => ({ x: 50, y: 50 }) });
+    svgEl.getScreenCTM = () => ({ inverse: () => ({}) });
+
+    await wrapper.trigger('mousemove');
+    expect(rafCallbacks.length).toBe(1);
+    // Fire the rAF callback (resets the pending flag)
+    rafCallbacks[0]();
+    // A new mousemove should schedule another rAF
+    await wrapper.trigger('mousemove');
+    expect(rafCallbacks.length).toBe(2);
+  });
+
+  it('onSvgMouseMove with edgeInteraction=false does not schedule rAF', async () => {
+    const rafCallbacks = [];
+    vi.stubGlobal('requestAnimationFrame', (cb) => {
+      rafCallbacks.push(cb);
+      return 1;
+    });
+
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, edgeInteraction: false },
+    });
+
+    await wrapper.trigger('mousemove');
+    expect(rafCallbacks.length).toBe(0);
   });
 });
 
