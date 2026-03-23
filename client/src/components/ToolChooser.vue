@@ -11,6 +11,15 @@ defineProps({
 });
 
 const emit = defineEmits(['update:modelValue']);
+
+function itemColor(item) {
+  if (!item.color) return undefined;
+  if (typeof CSS !== 'undefined' && !CSS.supports('color', item.color)) {
+    console.warn(`ToolChooser: invalid color "${item.color}"`);
+    return undefined;
+  }
+  return item.color;
+}
 </script>
 
 <template>
@@ -21,7 +30,7 @@ const emit = defineEmits(['update:modelValue']);
       :class="['chooser-btn', { active: item.value === modelValue }]"
       @click="emit('update:modelValue', item.value)"
     >
-      <span v-if="item.color" class="color-swatch" :style="{ background: item.color }" />
+      <span v-if="item.color" class="color-swatch" :style="{ background: itemColor(item) }" />
       {{ item.label }}
     </button>
   </div>

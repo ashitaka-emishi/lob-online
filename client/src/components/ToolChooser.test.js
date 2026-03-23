@@ -1,6 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import ToolChooser from './ToolChooser.vue';
+
+// jsdom does not implement CSS.supports — stub it globally so color validation logic runs.
+vi.stubGlobal('CSS', {
+  supports: (_prop, value) => value.startsWith('#') || /^[a-z]+$/.test(value),
+});
 
 const ITEMS = [
   { value: 'trail', label: 'Trail' },
@@ -51,5 +56,34 @@ describe('ToolChooser', () => {
   it('renders an empty list when items is empty', () => {
     const wrapper = mount(ToolChooser, { props: { items: [], modelValue: null } });
     expect(wrapper.findAll('button')).toHaveLength(0);
+  });
+
+  describe('color validation', () => {
+    let warnSpy;
+
+    beforeEach(() => {
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
+    it('does not warn when item.color is a valid CSS color', () => {
+      mount(ToolChooser, {
+        props: { items: [{ value: 'a', label: 'A', color: '#8B6914' }], modelValue: 'a' },
+      });
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('warns when item.color is an invalid CSS color string', () => {
+      mount(ToolChooser, {
+        props: {
+          items: [{ value: 'a', label: 'A', color: 'not-a-valid-color' }],
+          modelValue: 'a',
+        },
+      });
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('ToolChooser: invalid color'));
+    });
   });
 });
