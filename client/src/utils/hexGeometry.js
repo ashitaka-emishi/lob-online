@@ -3,6 +3,8 @@
  * Assumes flat-top hexes with cube coordinate convention (EVEN_Q offset, evenColUp: true).
  */
 
+import { compassLabel } from '../formulas/compass.js';
+
 export const DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
 
 /** Maps each direction to its opposite (shared edge on the adjacent hex). */
@@ -94,14 +96,6 @@ export function wedgePolygonPoints(corners, centre) {
 }
 
 /**
- * 12-point compass labels for the 12 30°-increment positions around a flat-top hex.
- * Even indices (0,2,4,6,8,10) = edge midpoints; odd indices (1,3,5,7,9,11) = vertices.
- * Going clockwise from position 0 (top / geometric-N edge):
- *   0:N  1:NE  2:NE  3:E  4:SE  5:SE  6:S  7:SW  8:SW  9:W  10:NW  11:NW
- */
-const COMPASS_12 = ['N', 'NE', 'NE', 'E', 'SE', 'SE', 'S', 'SW', 'SW', 'W', 'NW', 'NW'];
-
-/**
  * Return the 6 geographic edge labels for a flat-top hex given a northOffset.
  *
  * northOffset (0–11) encodes which of the 12 hex positions geographic north points toward.
@@ -117,7 +111,7 @@ const COMPASS_12 = ['N', 'NE', 'NE', 'E', 'SE', 'SE', 'S', 'SW', 'SW', 'W', 'NW'
  * getEdgeLabels(6)  // ['S','SW','NW','N','NE','SE']  — south at top
  */
 export function getEdgeLabels(northOffset) {
-  return Array.from({ length: 6 }, (_, i) => COMPASS_12[(((i * 2 - northOffset) % 12) + 12) % 12]);
+  return Array.from({ length: 6 }, (_, i) => compassLabel(i, northOffset));
 }
 
 /**

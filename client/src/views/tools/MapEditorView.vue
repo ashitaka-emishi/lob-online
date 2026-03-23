@@ -7,6 +7,8 @@ import {
   STREAM_WALL_GROUPS,
   CONTOUR_GROUPS,
 } from '../../config/feature-types.js';
+
+const ALL_EDGE_GROUPS = [...ROAD_GROUPS, ...STREAM_WALL_GROUPS, ...CONTOUR_GROUPS];
 import CalibrationControls from '../../components/CalibrationControls.vue';
 import LosTestPanel from '../../components/LosTestPanel.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
@@ -285,7 +287,7 @@ const overlayConfig = computed(() => {
   if (layerFlags.value.edges) {
     cfg.edgeLine = {
       alwaysOn: true,
-      featureGroups: [...ROAD_GROUPS, ...STREAM_WALL_GROUPS, ...CONTOUR_GROUPS],
+      featureGroups: ALL_EDGE_GROUPS,
     };
   }
   if (layerFlags.value.wedges) {

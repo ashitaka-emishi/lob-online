@@ -71,6 +71,8 @@ function handleEdgeRightClick(hexId, faceIndex) {
   }
 }
 
+// Exposed for test instrumentation. MapEditorView routes edge events through
+// its own onEdgeClick/onEdgeRightClick handlers, not via these methods directly.
 defineExpose({ handleEdgeClick, handleEdgeRightClick });
 
 // ── Overlay config ─────────────────────────────────────────────────────────

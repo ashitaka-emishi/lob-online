@@ -64,6 +64,8 @@ function handleEdgeRightClick(hexId, faceIndex) {
   emit('edge-clear', { hexId, faceIndex, type: props.selectedType });
 }
 
+// Exposed for test instrumentation. MapEditorView routes edge events through
+// its own onEdgeClick/onEdgeRightClick handlers, not via these methods directly.
 defineExpose({ handleEdgeClick, handleEdgeRightClick });
 
 // ── Overlay config ─────────────────────────────────────────────────────────
