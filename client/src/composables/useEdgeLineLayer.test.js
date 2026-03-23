@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useEdgeLineLayer } from './useEdgeLineLayer.js';
 
 // Minimal cell factory — supplies only what useEdgeLineLayer needs.
