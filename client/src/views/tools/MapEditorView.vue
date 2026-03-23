@@ -5,6 +5,7 @@ import { ROAD_GROUPS, STREAM_WALL_GROUPS, CONTOUR_GROUPS } from '../../config/fe
 
 const ALL_EDGE_GROUPS = [...ROAD_GROUPS, ...STREAM_WALL_GROUPS, ...CONTOUR_GROUPS];
 import CalibrationControls from '../../components/CalibrationControls.vue';
+import ElevationSystemControls from '../../components/ElevationSystemControls.vue';
 import LosTestPanel from '../../components/LosTestPanel.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import ElevationToolPanel from '../../components/ElevationToolPanel.vue';
@@ -691,16 +692,19 @@ onUnmounted(() => {
           :class="{ 'accordion-flex': openPanel === 'calibration' }"
         >
           <button class="accordion-header" @click="togglePanel('calibration')">
-            <span>Grid Calibration</span>
+            <span>Grid &amp; Elevation Setup</span>
             <span class="accordion-chevron">{{ openPanel === 'calibration' ? '▾' : '▸' }}</span>
           </button>
           <div v-if="openPanel === 'calibration'" class="accordion-hex-content">
             <CalibrationControls
               :calibration="calibration"
               :calibration-mode="calibrationMode"
-              :elevation-system="mapData?.elevationSystem ?? null"
               @calibration-change="onCalibrationChange"
               @toggle-calibration-mode="toggleCalibrationMode"
+            />
+            <ElevationSystemControls
+              :elevation-system="mapData?.elevationSystem ?? null"
+              :locked="calibration.locked ?? false"
               @elevation-system-change="onElevationSystemChange"
             />
           </div>

@@ -1,6 +1,5 @@
 <script setup>
 import { computed } from 'vue';
-import ElevationSystemControls from './ElevationSystemControls.vue';
 import { compassLabel } from '../utils/compass.js';
 
 const props = defineProps({
@@ -12,17 +11,9 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  elevationSystem: {
-    type: Object,
-    default: null,
-  },
 });
 
-const emit = defineEmits([
-  'calibration-change',
-  'toggle-calibration-mode',
-  'elevation-system-change',
-]);
+const emit = defineEmits(['calibration-change', 'toggle-calibration-mode']);
 
 function update(field, value) {
   emit('calibration-change', { ...props.calibration, [field]: Number(value) });
@@ -90,7 +81,7 @@ function toggleLocked() {
 </script>
 
 <template>
-  <div class="calibration-controls">
+  <div class="calibration-controls editor-form">
     <label>
       Grid Cols
       <input
@@ -238,11 +229,6 @@ function toggleLocked() {
         </g>
       </svg>
     </div>
-    <ElevationSystemControls
-      :elevation-system="elevationSystem"
-      :locked="calibration.locked ?? false"
-      @elevation-system-change="$emit('elevation-system-change', $event)"
-    />
     <button :class="{ active: calibration.locked }" @click="toggleLocked">
       {{ calibration.locked ? 'Locked 🔒' : 'Lock' }}
     </button>
@@ -256,6 +242,8 @@ function toggleLocked() {
   </div>
 </template>
 
+<style src="../assets/editor-form.css"></style>
+
 <style scoped>
 .calibration-controls {
   display: flex;
@@ -264,24 +252,6 @@ function toggleLocked() {
   padding: 0.6rem;
   background: #2a2a2a;
   border-bottom: 1px solid #444;
-}
-
-label {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.75rem;
-  color: #a09880;
-  gap: 0.15rem;
-}
-
-input[type='number'] {
-  width: 100%;
-  background: #1a1a1a;
-  border: 1px solid #555;
-  color: #e0d8c8;
-  padding: 0.2rem 0.3rem;
-  font-size: 0.85rem;
-  box-sizing: border-box;
 }
 
 .north-picker-label {

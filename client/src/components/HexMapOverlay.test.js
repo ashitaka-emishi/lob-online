@@ -649,6 +649,72 @@ describe('HexMapOverlay', () => {
     await wrapper.trigger('mousemove');
     expect(rafCallbacks.length).toBe(0);
   });
+
+  // ── rAF callback output integration test (#170) ────────────────────────────
+  // Verifies the full output path: after the rAF fires, hoverInfo contains a
+  // correctly resolved hexId, nearHexId/nearDir (always set at threshold=999),
+  // and null snap fields when the cursor is at a hex center (>6px from edges).
+
+  it('rAF callback writes hoverInfo with hexId, nearHexId, nearDir, and inProximity=false at hex center', async () => {
+    let rafCb;
+    vi.stubGlobal('requestAnimationFrame', (cb) => {
+      rafCb = cb;
+      return 1;
+    });
+
+    const wrapper = mount(HexMapOverlay, {
+      props: { calibration: BASE_CAL, edgeInteraction: true, interactionEnabled: true },
+    });
+
+    // Parse tx, ty from the SVG group transform attribute: "translate(tx, ty)"
+    const gTransform = wrapper.find('svg g').attributes('transform');
+    const [tx, ty] = gTransform.match(/-?[\d.]+/g).map(Number);
+
+    // Get the first hex polygon's corner points (in local / pre-translate space)
+    const poly = wrapper.find('polygon');
+    const pts = poly
+      .attributes('points')
+      .trim()
+      .split(' ')
+      .map((p) => {
+        const [x, y] = p.split(',').map(Number);
+        return { x, y };
+      });
+
+    // Hex center = average of the 6 corners
+    const centerX = pts.reduce((s, p) => s + p.x, 0) / pts.length;
+    const centerY = pts.reduce((s, p) => s + p.y, 0) / pts.length;
+
+    // _toLocal subtracts (tx, ty) from svgPt; supply svgPt = center + offset so localX = centerX
+    const svgEl = wrapper.find('svg').element;
+    svgEl.createSVGPoint = () => ({
+      x: 0,
+      y: 0,
+      matrixTransform: () => ({ x: centerX + tx, y: centerY + ty }),
+    });
+    svgEl.getScreenCTM = () => ({ inverse: () => ({}) });
+
+    await wrapper.trigger('mousemove');
+    expect(rafCb).toBeDefined();
+    rafCb(); // execute rAF callback synchronously
+
+    const hi = wrapper.vm.hoverInfo;
+    expect(hi).not.toBeNull();
+
+    // hexId: cursor is at the center of a valid hex — game ID must be a non-empty string
+    expect(typeof hi.hexId).toBe('string');
+    expect(hi.hexId.length).toBeGreaterThan(0);
+
+    // nearHexId / nearDir: findNearestEdge with threshold=999 always resolves to something
+    expect(hi.nearHexId).not.toBeNull();
+    expect(typeof hi.nearDir).toBe('string');
+
+    // At hex center the cursor is ~hexWidth/2 ≈ 35px from every edge — well above the 6px
+    // snap threshold — so no snap should occur.
+    expect(hi.inProximity).toBe(false);
+    expect(hi.snapHexId).toBeNull();
+    expect(hi.snapDir).toBeNull();
+  });
 });
 
 // ── Unified overlayConfig API — highlight/LOS/calibration state ───────────────

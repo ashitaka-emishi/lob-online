@@ -1,0 +1,25 @@
+/*
+ * Shared stylesheet for map editor form controls.
+ * Import this file (non-scoped) in any editor panel component that uses
+ * label + input[type='number'] form rows so the styles stay consistent.
+ * Rules are scoped under .editor-form to prevent leaking to non-editor views.
+ * Add class="editor-form" to the root element of each consuming component.
+ */
+
+.editor-form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.75rem;
+  color: #a09880;
+  gap: 0.15rem;
+}
+
+.editor-form input[type='number'] {
+  width: 100%;
+  background: #1a1a1a;
+  border: 1px solid #555;
+  color: #e0d8c8;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+}
