@@ -5,13 +5,13 @@ import {
   DIRS,
   edgeMidpoint,
   edgeLine20_80,
-  edgeToCenter,
   wedgePolygonPoints,
   getEdgeLabels,
   findNearestEdge,
   getCellAndNeighbors,
   hexToGameId,
 } from '../utils/hexGeometry.js';
+import { useEdgeLineLayer } from '../composables/useEdgeLineLayer.js';
 
 const props = defineProps({
   calibration: {
@@ -318,50 +318,13 @@ function hexIconText(cell) {
   return cfg?.iconFn?.(cell) ?? null;
 }
 
-// ── EdgeLineLayer helper ──────────────────────────────────────────────────────
-// Pre-builds a Set of types per group so the template uses O(1) lookups instead
-// of O(k) array.includes() calls in a hot nested loop.
-const edgeLineGroups = computed(() => {
-  const groups = props.overlayConfig.edgeLine?.featureGroups ?? [];
-  return groups.map((g) => ({ ...g, typeSet: new Set(g.types) }));
-});
-
-// ── EdgeLineLayer pre-filtered data (#163, refactored #177) ───────────────────
-// Pre-computes which features to render per cell × canonical face × group so the
-// template v-for iterates a stable array rather than calling .filter() inline on
-// every render. Invalidates only when cells (calibration) or edgeLineGroups change.
-const CANONICAL_EDGE_DIRS = ['N', 'NE', 'SE'];
-
-// Shared builder used by both cellsForEdges and throughHexSegments. Accepts a
-// lineAttrFn(cell, dir) so each layer supplies its own geometry without duplicating
-// the group-filter loop.
-function _buildCellEdgeData(lineAttrFn) {
-  return cells.value.map((cell) => ({
-    id: cell.id,
-    edgeFaces: CANONICAL_EDGE_DIRS.map((dir, fi) => ({
-      dir,
-      lineAttrs: lineAttrFn(cell, dir),
-      groups: edgeLineGroups.value.map((group) => ({
-        group,
-        features: cell.edges?.[fi]?.filter((f) => group.typeSet.has(f.type)) ?? [],
-      })),
-    })),
-  }));
-}
-
-const cellsForEdges = computed(() => {
-  // Short-circuit when through-hex is active so both layers never render the same data.
-  if (props.overlayConfig.edgeLine?.style === 'through-hex') return [];
-  return _buildCellEdgeData((cell, dir) => edgeLine20_80(cell.corners, dir));
-});
-
-// ── ThroughHexLayer pre-filtered data (#139) ──────────────────────────────────
-// Uses edgeToCenter() so each segment runs from hex centre to edge midpoint.
-// Active only when edgeLine.style === 'through-hex'; mutually exclusive with cellsForEdges.
-const throughHexSegments = computed(() => {
-  if (props.overlayConfig.edgeLine?.style !== 'through-hex') return [];
-  return _buildCellEdgeData((cell, dir) => edgeToCenter(cell.corners, cell.cx, cell.cy, dir));
-});
+// ── EdgeLineLayer + ThroughHexLayer pre-filtered data (#163, #169) ────────────
+// Extracted into useEdgeLineLayer composable (#169). Invalidates only when cells
+// or edgeLine config change — LOS/selection state changes do NOT invalidate it.
+const { cellsForEdges, throughHexSegments } = useEdgeLineLayer(
+  cells,
+  computed(() => props.overlayConfig)
+);
 
 // ── Coordinate helper ─────────────────────────────────────────────────────────
 
