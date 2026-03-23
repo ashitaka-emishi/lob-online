@@ -14,6 +14,7 @@ import RoadToolPanel from '../../components/RoadToolPanel.vue';
 import StreamWallToolPanel from '../../components/StreamWallToolPanel.vue';
 import ContourToolPanel from '../../components/ContourToolPanel.vue';
 import { useBulkOperations } from '../../composables/useBulkOperations.js';
+import { useCalibration } from '../../composables/useCalibration.js';
 import { useHexInteraction } from '../../composables/useHexInteraction.js';
 import { useEditorAccordion } from '../../composables/useEditorAccordion.js';
 import { useMapPersistence } from '../../composables/useMapPersistence.js';
@@ -28,55 +29,16 @@ const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
 const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
 const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
 
-// ── Calibration ───────────────────────────────────────────────────────────────
+// ── Calibration (composable) ───────────────────────────────────────────────────
 
-const DEFAULT_CALIBRATION = {
-  cols: 64,
-  rows: 35,
-  dx: 0,
-  dy: 0,
-  hexWidth: 35,
-  hexHeight: 35,
-  imageScale: 1,
-  orientation: 'flat',
-  strokeWidth: 1,
-  evenColUp: true,
-  northOffset: 0,
-};
+const {
+  calibration,
+  calibrationMode,
+  onCalibrationChange: applyCalibrationChange,
+  onCalibrationLoaded,
+  toggleCalibrationMode,
+} = useCalibration();
 
-function loadCalibration() {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      // L1/L2: destructure only known keys so unexpected properties from tampered
-      // localStorage cannot flow into the calibration object; guard all numerics.
-      const safeNumeric = (val, fallback) => (Number.isFinite(val) ? val : fallback);
-      const safeBoolean = (val, fallback) => (typeof val === 'boolean' ? val : fallback);
-      const safeString = (val, fallback) => (typeof val === 'string' ? val : fallback);
-      const D = DEFAULT_CALIBRATION;
-      return {
-        cols: safeNumeric(parsed.cols, D.cols),
-        rows: safeNumeric(parsed.rows, D.rows),
-        dx: safeNumeric(parsed.dx, D.dx),
-        dy: safeNumeric(parsed.dy, D.dy),
-        hexWidth: safeNumeric(parsed.hexWidth, D.hexWidth),
-        hexHeight: safeNumeric(parsed.hexHeight, D.hexHeight),
-        imageScale: safeNumeric(parsed.imageScale, D.imageScale),
-        strokeWidth: safeNumeric(parsed.strokeWidth, D.strokeWidth),
-        northOffset: safeNumeric(parsed.northOffset, D.northOffset),
-        orientation: safeString(parsed.orientation, D.orientation),
-        evenColUp: safeBoolean(parsed.evenColUp, D.evenColUp),
-      };
-    }
-  } catch (_) {
-    /* ignore */
-  }
-  return { ...DEFAULT_CALIBRATION };
-}
-
-const calibration = ref(loadCalibration());
-const calibrationMode = ref(false);
 const showExportOverlay = ref(false);
 
 // ── Composable dependency order (must not be rearranged) ─────────────────────
@@ -113,11 +75,7 @@ const {
   storageKey: STORAGE_KEY,
   draftKey: MAP_DRAFT_KEY,
   draftKeyV1: MAP_DRAFT_KEY_V1,
-  // M4: caller owns calibration writes — composable notifies via callback
-  onCalibrationLoaded: (gridSpec) => {
-    calibration.value = { ...DEFAULT_CALIBRATION, ...gridSpec };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
-  },
+  onCalibrationLoaded,
 });
 
 // ── Selection (H2: owned here so accordion's onClearSelection can reference it directly) ──
@@ -353,16 +311,11 @@ function onElevationSystemChange(val) {
 }
 
 function onCalibrationChange(val) {
-  calibration.value = val;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(val));
+  applyCalibrationChange(val);
   if (mapData.value) {
     mapData.value.gridSpec = val;
     unsaved.value = true;
   }
-}
-
-function toggleCalibrationMode() {
-  calibrationMode.value = !calibrationMode.value;
 }
 
 // ── Map image size ────────────────────────────────────────────────────────────

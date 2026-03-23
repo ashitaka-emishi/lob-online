@@ -40,4 +40,6 @@
 
 | [x] | minor-debt-bundle_20260322 | Minor Debt Bundle — Issues #111 #112 #154 #162 #165 #166 #170 | 2026-03-22 | 2026-03-22 |
 
+| [~] | map-editor-extraction_20260323 | MapEditorView Extraction Debt Bundle | 2026-03-23 | 2026-03-23 |
+
 <!-- Tracks registered by /conductor:new-track -->
