@@ -50,35 +50,35 @@ Order: #154 first (isolated utility change), then #111 (component move), then #1
 
 ### Tasks
 
-- [ ] Task 2.1: Read `ToolChooser.vue`. Identify where `item.color` is bound to the DOM.
+- [x] Task 2.1: Read `ToolChooser.vue`. Identify where `item.color` is bound to the DOM.
       Add a `validateColor(value)` utility (inline or in `utils/color.js`) using
       `CSS.supports('color', value)`. Call it in the computed that produces the color binding
       and emit `console.warn(\`ToolChooser: invalid color "\${value}"\`)`when the check fails.
  Add a Vitest test: valid color passes silently, invalid string triggers the warn. Commit:
 `fix(ToolChooser): warn on invalid item.color CSS value (#154)`.
-- [ ] Task 2.2: Read `MapEditorView.vue` and `CalibrationControls.vue` to find where
+- [x] Task 2.2: Read `MapEditorView.vue` and `CalibrationControls.vue` to find where
       `ElevationSystemControls` is currently mounted and how its props/emits are threaded.
       Move `<ElevationSystemControls>` out of `CalibrationControls` into `MapEditorView` as
       a sibling of `<CalibrationControls>`. Remove the now-redundant prop pass-through from
       `CalibrationControls`. Update existing tests if any reference the old structure. Commit:
       `refactor(CalibrationControls): hoist ElevationSystemControls to MapEditorView (#111)`.
-- [ ] Task 2.3: Read `RoadToolPanel.vue` and `StreamWallToolPanel.vue` side-by-side —
+- [x] Task 2.3: Read `RoadToolPanel.vue` and `StreamWallToolPanel.vue` side-by-side —
       identify the identical chrome sections (mode toggle, chooser row, clear-all button,
       sub-control slot). Design the `EdgeToolPanelShell` props and slot API. Write the Vitest
       test for `EdgeToolPanelShell` (renders mode buttons, emits mode-change, renders default
       slot, renders sub-control slot, emits clear-all) before implementing.
-- [ ] Task 2.4: Create `client/src/components/EdgeToolPanelShell.vue`. Implement to pass
+- [x] Task 2.4: Create `client/src/components/EdgeToolPanelShell.vue`. Implement to pass
       the tests from Task 2.3. Props: `items` (array of `{value, label}`), `selectedType`
       (string), `paintMode` (string). Emits: `type-change`, `mode-change`, `clear-all`.
       Slots: `default` (main content), `sub-control` (bridge/ford sub-panel). Scoped CSS:
       all shared `.edge-tool-panel`, `.mode-toggle`, `.mode-btn`, `.chooser-row`, `.clear-btn`
       rules live here.
-- [ ] Task 2.5: Migrate `RoadToolPanel.vue` to use `EdgeToolPanelShell`. Remove the chrome
+- [x] Task 2.5: Migrate `RoadToolPanel.vue` to use `EdgeToolPanelShell`. Remove the chrome
       sections and their scoped CSS. Migrate `StreamWallToolPanel.vue` identically. Migrate
       `ContourToolPanel.vue` (which shares the same chrome). Delete the now-duplicate scoped
       CSS from all three panels (#166 closed). Commit: `refactor(edge-panels): extract
 EdgeToolPanelShell, deduplicate chrome and CSS (#162 #166)`.
-- [ ] Task 2.6: Run full test suite. Confirm 825+ tests pass. Lint and format clean.
+- [x] Task 2.6: Run full test suite. Confirm 825+ tests pass. Lint and format clean.
 
 ### Verification
 
