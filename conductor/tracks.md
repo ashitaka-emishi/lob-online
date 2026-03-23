@@ -38,6 +38,6 @@
 
 | [x] | overlay-arch-refactor_20260322 | Rendering Architecture — overlayConfig Ownership Cleanup | 2026-03-22 | 2026-03-22 |
 
-| [ ] | minor-debt-bundle_20260322 | Minor Debt Bundle — Issues #111 #112 #154 #162 #165 #166 #170 | 2026-03-22 | 2026-03-22 |
+| [~] | minor-debt-bundle_20260322 | Minor Debt Bundle — Issues #111 #112 #154 #162 #165 #166 #170 | 2026-03-22 | 2026-03-22 |
 
 <!-- Tracks registered by /conductor:new-track -->

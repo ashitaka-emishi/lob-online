@@ -24,14 +24,14 @@ edge-panel migration happens in Phase 2 after the shell exists.
 
 ### Tasks
 
-- [ ] Task 1.1: Read `CalibrationControls.vue` and `ElevationSystemControls.vue` — identify
+- [x] Task 1.1: Read `CalibrationControls.vue` and `ElevationSystemControls.vue` — identify
       all duplicated scoped CSS rules that apply to `label`, `input[type='number']`, and
       shared layout. List them.
-- [ ] Task 1.2: Create `client/src/assets/editor-form.css` with the shared rules. Import it
+- [x] Task 1.2: Create `client/src/assets/editor-form.css` with the shared rules. Import it
       (non-scoped) in both components. Remove the duplicated rules from each `<style scoped>`.
       Write a brief comment in the file explaining it is a shared stylesheet for map editor
       form controls.
-- [ ] Task 1.3: Run `npm run lint && npm run format:check && npm run test` — confirm no
+- [x] Task 1.3: Run `npm run lint && npm run format:check && npm run test` — confirm no
       regressions. Commit: `style(editor-form): extract shared form-input CSS (#112)`.
 
 ### Verification
