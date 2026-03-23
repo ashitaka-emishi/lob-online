@@ -63,9 +63,9 @@ describe('HexMapOverlay', () => {
     expect(wrapper.findAll('polygon').length).toBeGreaterThan(0);
   });
 
-  it('calibrationMode=true renders text labels without overlayConfig', () => {
+  it('overlayConfig.calibration.active renders text labels without hexLabel config', () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, calibrationMode: true },
+      props: { calibration: BASE_CAL, overlayConfig: { calibration: { active: true } } },
     });
     expect(wrapper.findAll('text').length).toBeGreaterThan(0);
   });
@@ -331,9 +331,7 @@ describe('HexMapOverlay', () => {
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
-        calibrationMode: false,
-        vpHexIds: [],
-        seedHexIds: ['01.03'],
+        overlayConfig: { seedHighlight: { hexIds: ['01.03'] } },
       },
     });
     const polygons = wrapper.findAll('polygon');
@@ -344,7 +342,7 @@ describe('HexMapOverlay', () => {
   it('seed hex polygon has wider stroke-width than default', () => {
     const cal = { ...BASE_CAL, strokeWidth: 0.5 };
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: cal, calibrationMode: false, vpHexIds: [], seedHexIds: ['01.03'] },
+      props: { calibration: cal, overlayConfig: { seedHighlight: { hexIds: ['01.03'] } } },
     });
     const polygons = wrapper.findAll('polygon');
     const seedPoly = polygons.find((p) => p.attributes('stroke') === '#cc44ee');
@@ -357,9 +355,7 @@ describe('HexMapOverlay', () => {
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
-        calibrationMode: false,
-        vpHexIds: [],
-        seedHexIds: ['01.03'],
+        overlayConfig: { seedHighlight: { hexIds: ['01.03'] } },
       },
     });
     const polygons = wrapper.findAll('polygon');
@@ -659,12 +655,11 @@ describe('HexMapOverlay', () => {
   });
 });
 
-// ── Phase 2 API skeleton (overlay-arch-refactor_20260322) ──────────────────────
-// These tests are intentionally RED until Phase 2 migrates HexMapOverlay's flat
-// props into overlayConfig. Each test documents the target API shape.
-// Do not delete — they will turn green after the Phase 2 migration.
+// ── Unified overlayConfig API — highlight/LOS/calibration state ───────────────
+// Verifies the new overlayConfig keys that replaced the removed flat props
+// (vpHexIds, selectedHexId, calibrationMode, losHexA/B/pathHexes/blockedHex, seedHexIds).
 
-describe('HexMapOverlay — unified overlayConfig API (Phase 2 target, currently red)', () => {
+describe('HexMapOverlay — unified overlayConfig highlight and state API', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });

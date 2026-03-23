@@ -259,22 +259,40 @@ const EDGE_PANELS = new Set(['road', 'stream', 'contour']);
 const interactionEnabled = computed(() => INTERACTIVE_PANELS.has(openPanel.value));
 const edgeInteraction = computed(() => EDGE_PANELS.has(openPanel.value));
 
+// Global editor state — always merged into overlayConfig regardless of which tool panel
+// is active. HexMapOverlay reads this from overlayConfig; no separate flat props needed.
+function _globalOverlayState() {
+  return {
+    selectedHex: { hexId: selectedHexId.value ?? null },
+    calibration: { active: calibrationMode.value },
+    los: {
+      hexA: losHexA.value,
+      hexB: losHexB.value,
+      pathHexes: losPathHexes.value,
+      blockedHex: losBlockedHex.value,
+    },
+    vpHighlight: { hexIds: vpHexIds.value },
+    seedHighlight: { hexIds: seedHexIdsArray.value },
+  };
+}
+
 const overlayConfig = computed(() => {
-  // When a tool panel is active, use its own config (tool-owns-its-overlays).
+  const global = _globalOverlayState();
+  // When a tool panel is active, merge its config with global editor state.
   if (openPanel.value === 'elevation' && elevationPanelOverlayConfig.value) {
-    return elevationPanelOverlayConfig.value;
+    return { ...elevationPanelOverlayConfig.value, ...global };
   }
   if (openPanel.value === 'road' && roadPanelOverlayConfig.value) {
-    return roadPanelOverlayConfig.value;
+    return { ...roadPanelOverlayConfig.value, ...global };
   }
   if (openPanel.value === 'stream' && streamPanelOverlayConfig.value) {
-    return streamPanelOverlayConfig.value;
+    return { ...streamPanelOverlayConfig.value, ...global };
   }
   if (openPanel.value === 'contour' && contourPanelOverlayConfig.value) {
-    return contourPanelOverlayConfig.value;
+    return { ...contourPanelOverlayConfig.value, ...global };
   }
 
-  const cfg = {};
+  const cfg = { ...global };
   if (layerFlags.value.grid) {
     cfg.hexLabel = { alwaysOn: true, labelFn: hexLabelFn };
   }
@@ -684,20 +702,12 @@ onUnmounted(() => {
           <HexMapOverlay
             :calibration="calibration"
             :hexes="mapData?.hexes ?? []"
-            :vp-hex-ids="vpHexIds"
-            :selected-hex-id="selectedHexId"
-            :calibration-mode="calibrationMode"
             :image-width="imgNaturalWidth"
             :image-height="imgNaturalHeight"
-            :los-hex-a="losHexA"
-            :los-hex-b="losHexB"
-            :los-path-hexes="losPathHexes"
-            :los-blocked-hex="losBlockedHex"
             :overlay-config="overlayConfig"
             :interaction-enabled="interactionEnabled"
             :edge-interaction="edgeInteraction"
             :drag-paint-enabled="dragPaintEnabled"
-            :seed-hex-ids="seedHexIdsArray"
             @hex-click="onHexClick"
             @hex-right-click="onHexRightClick"
             @hex-mouseenter="onHexMouseenter"

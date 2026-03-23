@@ -72,15 +72,15 @@ path, remove legacy flat props, and update `MapEditorView` bindings.
 
 ### Tasks
 
-- [ ] Task 2.1: Add the new `overlayConfig` keys needed to cover every flat prop being removed.
+- [x] Task 2.1: Add the new `overlayConfig` keys needed to cover every flat prop being removed.
       Keep old props temporarily (both paths active) so the component stays functional.
-- [ ] Task 2.2: Migrate `HexMapOverlay` template branches to read exclusively from
+- [x] Task 2.2: Migrate `HexMapOverlay` template branches to read exclusively from
       `overlayConfig`; remove the legacy explicit-prop branches.
-- [ ] Task 2.3: Remove the now-unused flat props from `HexMapOverlay`'s `defineProps`.
-- [ ] Task 2.4: Update `MapEditorView` bindings to pass the merged `overlayConfig` rather
+- [x] Task 2.3: Remove the now-unused flat props from `HexMapOverlay`'s `defineProps`.
+- [x] Task 2.4: Update `MapEditorView` bindings to pass the merged `overlayConfig` rather
       than individual props. At this point `MapEditorView` still owns the config content.
-- [ ] Task 2.5: Update Vitest tests to the new prop API; make the Phase 1 skeleton tests green.
-- [ ] Task 2.6: Manual smoke test in the map editor dev server — all overlay layers (terrain,
+- [x] Task 2.5: Update Vitest tests to the new prop API; make the Phase 1 skeleton tests green.
+- [x] Task 2.6: Manual smoke test in the map editor dev server — all overlay layers (terrain,
       elevation, roads, streams, contours, wedges, LOS) render correctly.
 
 ### Verification
