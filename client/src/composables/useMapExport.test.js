@@ -1,6 +1,38 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
-import { useMapExport } from './useMapExport.js';
+import { useMapExport, stripPrivateFields } from './useMapExport.js';
+
+describe('stripPrivateFields', () => {
+  it('removes top-level keys starting with underscore', () => {
+    const result = stripPrivateFields({ hexes: [], _meta: 'private', _savedAt: 123 });
+    expect(result).not.toHaveProperty('_meta');
+    expect(result).not.toHaveProperty('_savedAt');
+    expect(result).toHaveProperty('hexes');
+  });
+
+  it('removes underscore-prefixed keys recursively in nested objects', () => {
+    const result = stripPrivateFields({ nested: { a: 1, _b: 2 } });
+    expect(result.nested).toEqual({ a: 1 });
+  });
+
+  it('removes underscore-prefixed keys from objects inside arrays', () => {
+    const result = stripPrivateFields({
+      items: [
+        { x: 1, _y: 2 },
+        { x: 3, _y: 4 },
+      ],
+    });
+    expect(result.items).toEqual([{ x: 1 }, { x: 3 }]);
+  });
+
+  it('passes through primitives (string, number, boolean, null) unchanged', () => {
+    const result = stripPrivateFields({ name: 'test', count: 42, flag: true, empty: null });
+    expect(result.name).toBe('test');
+    expect(result.count).toBe(42);
+    expect(result.flag).toBe(true);
+    expect(result.empty).toBeNull();
+  });
+});
 
 describe('useMapExport', () => {
   describe('initial state', () => {
@@ -15,69 +47,39 @@ describe('useMapExport', () => {
     });
   });
 
-  describe('stripPrivateFields', () => {
-    it('removes top-level keys starting with underscore', () => {
-      const mapData = ref({ hexes: [], _meta: 'private', _savedAt: 123 });
-      const calibration = ref({ cols: 64 });
-      const { getEngineExport } = useMapExport(mapData, calibration);
-      const result = getEngineExport();
-      expect(result).not.toHaveProperty('_meta');
-      expect(result).not.toHaveProperty('_savedAt');
-      expect(result).toHaveProperty('hexes');
-    });
-
-    it('removes underscore-prefixed keys recursively in nested objects', () => {
-      const mapData = ref({ nested: { a: 1, _b: 2 } });
-      const calibration = ref({});
-      const { getEngineExport } = useMapExport(mapData, calibration);
-      const result = getEngineExport();
-      expect(result.nested).toEqual({ a: 1 });
-    });
-
-    it('removes underscore-prefixed keys from objects inside arrays', () => {
-      const mapData = ref({
-        items: [
-          { x: 1, _y: 2 },
-          { x: 3, _y: 4 },
-        ],
-      });
-      const calibration = ref({});
-      const { getEngineExport } = useMapExport(mapData, calibration);
-      const result = getEngineExport();
-      expect(result.items).toEqual([{ x: 1 }, { x: 3 }]);
-    });
-
-    it('passes through primitives (string, number, boolean, null) unchanged', () => {
-      const mapData = ref({ name: 'test', count: 42, flag: true, empty: null });
-      const calibration = ref({});
-      const { getEngineExport } = useMapExport(mapData, calibration);
-      const result = getEngineExport();
-      expect(result.name).toBe('test');
-      expect(result.count).toBe(42);
-      expect(result.flag).toBe(true);
-      expect(result.empty).toBeNull();
-    });
-  });
-
-  describe('getEngineExport', () => {
-    it('merges calibration as gridSpec into the exported object', () => {
+  describe('exportSnapshot (via showExportOverlay watch)', () => {
+    it('merges calibration as gridSpec when overlay opens', async () => {
       const mapData = ref({ hexes: [] });
       const calibration = ref({ cols: 64, rows: 35 });
-      const { getEngineExport } = useMapExport(mapData, calibration);
-      const result = getEngineExport();
-      expect(result.gridSpec).toEqual({ cols: 64, rows: 35 });
+      const { showExportOverlay, exportSnapshot } = useMapExport(mapData, calibration);
+      showExportOverlay.value = true;
+      await Promise.resolve();
+      expect(exportSnapshot.value.gridSpec).toEqual({ cols: 64, rows: 35 });
     });
 
-    it('returns null when mapData is null', () => {
-      const { getEngineExport } = useMapExport(ref(null), ref({}));
-      expect(getEngineExport()).toBeNull();
+    it('returns null snapshot when mapData is null', async () => {
+      const { showExportOverlay, exportSnapshot } = useMapExport(ref(null), ref({}));
+      showExportOverlay.value = true;
+      await Promise.resolve();
+      expect(exportSnapshot.value).toBeNull();
     });
 
-    it('does not mutate the original mapData', () => {
+    it('clears snapshot when overlay closes', async () => {
+      const mapData = ref({ hexes: [] });
+      const { showExportOverlay, exportSnapshot } = useMapExport(mapData, ref({}));
+      showExportOverlay.value = true;
+      await Promise.resolve();
+      showExportOverlay.value = false;
+      await Promise.resolve();
+      expect(exportSnapshot.value).toBeNull();
+    });
+
+    it('does not mutate the original mapData', async () => {
       const original = { hexes: [], _meta: 'private' };
       const mapData = ref(original);
-      const { getEngineExport } = useMapExport(mapData, ref({}));
-      getEngineExport();
+      const { showExportOverlay } = useMapExport(mapData, ref({}));
+      showExportOverlay.value = true;
+      await Promise.resolve();
       expect(original._meta).toBe('private');
     });
   });

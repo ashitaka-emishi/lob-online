@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { useCalibration } from './useCalibration.js';
-
-const STORAGE_KEY = 'lob-map-editor-calibration-v4';
+import { useCalibration, STORAGE_KEY } from './useCalibration.js';
 
 const DEFAULT_CALIBRATION = {
   cols: 64,

@@ -1,6 +1,6 @@
 import { ref, watch } from 'vue';
 
-function stripPrivateFields(obj) {
+export function stripPrivateFields(obj) {
   if (Array.isArray(obj)) return obj.map(stripPrivateFields);
   if (obj && typeof obj === 'object') {
     const out = {};
@@ -20,7 +20,7 @@ function stripPrivateFields(obj) {
  *
  * @param {import('vue').Ref} mapData - reactive ref to the current map data object
  * @param {import('vue').Ref} calibration - reactive ref to the current calibration object
- * @returns {{ showExportOverlay, exportSnapshot, getEngineExport, copyMapData, downloadExport }}
+ * @returns {{ showExportOverlay, exportSnapshot, copyMapData, downloadExport }}
  */
 export function useMapExport(mapData, calibration) {
   const showExportOverlay = ref(false);
@@ -53,5 +53,5 @@ export function useMapExport(mapData, calibration) {
     URL.revokeObjectURL(url);
   }
 
-  return { showExportOverlay, exportSnapshot, getEngineExport, copyMapData, downloadExport };
+  return { showExportOverlay, exportSnapshot, copyMapData, downloadExport };
 }

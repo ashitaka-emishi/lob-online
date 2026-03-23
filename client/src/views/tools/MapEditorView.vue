@@ -14,7 +14,7 @@ import RoadToolPanel from '../../components/RoadToolPanel.vue';
 import StreamWallToolPanel from '../../components/StreamWallToolPanel.vue';
 import ContourToolPanel from '../../components/ContourToolPanel.vue';
 import { useBulkOperations } from '../../composables/useBulkOperations.js';
-import { useCalibration } from '../../composables/useCalibration.js';
+import { useCalibration, STORAGE_KEY } from '../../composables/useCalibration.js';
 import { useMapExport } from '../../composables/useMapExport.js';
 import { useHexInteraction } from '../../composables/useHexInteraction.js';
 import { useEditorAccordion } from '../../composables/useEditorAccordion.js';
@@ -25,7 +25,6 @@ import { DIRS } from '../../utils/hexGeometry.js';
 import { canonicalOwner, validateCoexistence } from '../../formulas/edge-model.js';
 import { autoDetectContourType } from '../../formulas/elevation.js';
 
-const STORAGE_KEY = 'lob-map-editor-calibration-v4';
 const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
 const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
 const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';

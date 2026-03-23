@@ -1,6 +1,8 @@
 import { ref } from 'vue';
 
-const STORAGE_KEY = 'lob-map-editor-calibration-v4';
+export const STORAGE_KEY = 'lob-map-editor-calibration-v4';
+
+const VALID_ORIENTATIONS = ['flat', 'pointy'];
 
 const DEFAULT_CALIBRATION = {
   cols: 64,
@@ -23,7 +25,8 @@ function loadCalibration() {
       const parsed = JSON.parse(stored);
       const safeNumeric = (val, fallback) => (Number.isFinite(val) ? val : fallback);
       const safeBoolean = (val, fallback) => (typeof val === 'boolean' ? val : fallback);
-      const safeString = (val, fallback) => (typeof val === 'string' ? val : fallback);
+      const safeOrientation = (val, fallback) =>
+        VALID_ORIENTATIONS.includes(val) ? val : fallback;
       const D = DEFAULT_CALIBRATION;
       return {
         cols: safeNumeric(parsed.cols, D.cols),
@@ -35,7 +38,7 @@ function loadCalibration() {
         imageScale: safeNumeric(parsed.imageScale, D.imageScale),
         strokeWidth: safeNumeric(parsed.strokeWidth, D.strokeWidth),
         northOffset: safeNumeric(parsed.northOffset, D.northOffset),
-        orientation: safeString(parsed.orientation, D.orientation),
+        orientation: safeOrientation(parsed.orientation, D.orientation),
         evenColUp: safeBoolean(parsed.evenColUp, D.evenColUp),
       };
     }
