@@ -256,6 +256,8 @@ function toggleLocked() {
   </div>
 </template>
 
+<style src="../assets/editor-form.css"></style>
+
 <style scoped>
 .calibration-controls {
   display: flex;
@@ -264,24 +266,6 @@ function toggleLocked() {
   padding: 0.6rem;
   background: #2a2a2a;
   border-bottom: 1px solid #444;
-}
-
-label {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.75rem;
-  color: #a09880;
-  gap: 0.15rem;
-}
-
-input[type='number'] {
-  width: 100%;
-  background: #1a1a1a;
-  border: 1px solid #555;
-  color: #e0d8c8;
-  padding: 0.2rem 0.3rem;
-  font-size: 0.85rem;
-  box-sizing: border-box;
 }
 
 .north-picker-label {
