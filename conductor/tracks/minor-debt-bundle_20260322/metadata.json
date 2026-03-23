@@ -2,15 +2,15 @@
   "id": "minor-debt-bundle_20260322",
   "title": "Minor Debt Bundle — Issues #111 #112 #154 #162 #165 #166 #170",
   "type": "refactor",
-  "status": "in_progress",
+  "status": "complete",
   "created": "2026-03-22T00:00:00.000Z",
   "updated": "2026-03-23T00:00:00.000Z",
   "phases": {
     "total": 3,
-    "completed": 0
+    "completed": 3
   },
   "tasks": {
     "total": 10,
-    "completed": 9
+    "completed": 10
   }
 }

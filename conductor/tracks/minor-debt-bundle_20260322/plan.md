@@ -3,7 +3,7 @@
 **Track ID:** minor-debt-bundle_20260322
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-03-22
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -97,20 +97,20 @@ Two independent items: remove a dead assertion shim and add a missing integratio
 
 ### Tasks
 
-- [ ] Task 3.1: Read `utils/compass.js`. Find and remove all `console.assert` calls. Confirm
+- [x] Task 3.1: Read `utils/compass.js`. Find and remove all `console.assert` calls. Confirm
       that the values those assertions checked are already covered by existing Vitest tests
       (or add a targeted test if a case is not covered). Commit: `perf(compass): remove
 console.assert from hot path (#165)`.
-- [ ] Task 3.2: Read `HexMapOverlay.test.js` — find the existing rAF gate tests (around the
+- [x] Task 3.2: Read `HexMapOverlay.test.js` — find the existing rAF gate tests (around the
       `onSvgMouseMove` describe block). Read `HexMapOverlay.vue` `onSvgMouseMove` to
       understand what `hoverInfo` should contain after the rAF callback fires.
-- [ ] Task 3.3: Write an integration test for the full rAF callback output path: stub
+- [x] Task 3.3: Write an integration test for the full rAF callback output path: stub
       `requestAnimationFrame` to execute synchronously (re-use the existing `vi.stubGlobal`
       pattern), fire a `mousemove` at an SVG coordinate that lands on a known hex, and
       assert that `hoverInfo.value` contains the expected `hexId`, `nearHexId`, `nearDir`,
       `snapHexId`, `snapDir`, and `inProximity`. Commit: `test(HexMapOverlay): integration
 test for onSvgMouseMove rAF callback output (#170)`.
-- [ ] Task 3.4: Run `npm run test:coverage` — confirm coverage ≥ 70%. Run lint + format.
+- [x] Task 3.4: Run `npm run test:coverage` — confirm coverage ≥ 70%. Run lint + format.
 
 ### Verification
 
