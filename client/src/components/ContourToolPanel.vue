@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import BaseToolPanel from './BaseToolPanel.vue';
+import EdgeToolPanelShell from './EdgeToolPanelShell.vue';
 import { CONTOUR_GROUPS } from '../config/feature-types.js';
 import { elevationTintPalette, tintForLevel } from '../formulas/elevation.js';
 
@@ -102,7 +102,7 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
 </script>
 
 <template>
-  <BaseToolPanel
+  <EdgeToolPanelShell
     :overlay-config="ownOverlayConfig"
     :help-text="HELP_TEXT"
     @overlay-toggle="onOverlayToggle"
@@ -142,55 +142,10 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
       <button @click="onAutoDetectConfirm">Detect</button>
       <button @click="showAutoDetectConfirm = false">Cancel</button>
     </div>
-  </BaseToolPanel>
+  </EdgeToolPanelShell>
 </template>
 
 <style scoped>
-.type-chooser {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.type-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.3rem 0.5rem;
-  background: #333;
-  border: 1px solid #555;
-  color: #e0d8c8;
-  cursor: pointer;
-  font-size: 0.8rem;
-  text-align: left;
-}
-
-.type-btn:hover {
-  background: #3a3a3a;
-}
-
-.type-btn.active {
-  background: #3a5a2a;
-  border-color: #7aab3e;
-  color: #b0d880;
-}
-
-.type-swatch {
-  display: inline-block;
-  min-width: 24px;
-  flex-shrink: 0;
-}
-
-.type-name {
-  flex: 1;
-}
-
-.tool-hint {
-  font-size: 0.75rem;
-  color: #888;
-  font-style: italic;
-}
-
 .auto-detect-section {
   padding-top: 0.25rem;
   border-top: 1px solid #333;

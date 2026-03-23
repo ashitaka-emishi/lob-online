@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import BaseToolPanel from './BaseToolPanel.vue';
+import EdgeToolPanelShell from './EdgeToolPanelShell.vue';
 import { STREAM_WALL_GROUPS } from '../config/feature-types.js';
 import { useClickHexside } from '../composables/useClickHexside.js';
 
@@ -9,6 +9,11 @@ const STREAM_WALL_TYPES = ['stream', 'stoneWall'];
 const HELP_TEXT =
   'Click an edge to paint the selected type. Right-click to remove it. ' +
   'Switch to Ford mode to place a ford on a stream edge (requires stream).';
+
+const MODES = [
+  { value: 'paint', label: 'Paint' },
+  { value: 'ford', label: 'Ford' },
+];
 
 const props = defineProps({
   selectedType: {
@@ -90,132 +95,36 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
 </script>
 
 <template>
-  <BaseToolPanel
+  <EdgeToolPanelShell
     :overlay-config="ownOverlayConfig"
     :help-text="HELP_TEXT"
+    :modes="MODES"
+    :active-mode="mode"
+    @mode-change="mode = $event"
     @clear-all="emit('edge-clear-all', STREAM_WALL_TYPES)"
   >
-    <!-- Mode selector -->
-    <div class="mode-toggle">
-      <button class="mode-btn" :class="{ active: mode === 'paint' }" @click="mode = 'paint'">
-        Paint
-      </button>
-      <button class="mode-btn" :class="{ active: mode === 'ford' }" @click="mode = 'ford'">
-        Ford
+    <!-- Paint mode: stream/wall type chooser -->
+    <div class="type-chooser">
+      <button
+        v-for="group in STREAM_WALL_GROUPS"
+        :key="group.types[0]"
+        class="type-btn"
+        :class="{ active: selectedType === group.types[0] }"
+        @click="emit('type-change', group.types[0])"
+      >
+        <span
+          class="type-swatch"
+          :style="{ background: group.color, width: `${group.strokeWidth * 4}px`, height: '3px' }"
+        />
+        <span class="type-name">{{ group.types[0] }}</span>
       </button>
     </div>
+    <div class="tool-hint">Click an edge to paint. Right-click to remove.</div>
 
-    <!-- Type chooser (paint mode) -->
-    <template v-if="mode === 'paint'">
-      <div class="type-chooser">
-        <button
-          v-for="group in STREAM_WALL_GROUPS"
-          :key="group.types[0]"
-          class="type-btn"
-          :class="{ active: selectedType === group.types[0] }"
-          @click="emit('type-change', group.types[0])"
-        >
-          <span
-            class="type-swatch"
-            :style="{ background: group.color, width: `${group.strokeWidth * 4}px` }"
-          />
-          <span class="type-name">{{ group.types[0] }}</span>
-        </button>
-      </div>
-      <div class="tool-hint">Click an edge to paint. Right-click to remove.</div>
-    </template>
-
-    <!-- Ford mode -->
-    <template v-else>
-      <div class="tool-hint ford-hint">
-        Click a stream edge to place a ford.<br />Right-click to remove.
-      </div>
+    <!-- Ford sub-control -->
+    <template #sub-control>
+      <div class="tool-hint">Click a stream edge to place a ford.<br />Right-click to remove.</div>
       <div v-if="validationError" class="validation-error">{{ validationError }}</div>
     </template>
-  </BaseToolPanel>
+  </EdgeToolPanelShell>
 </template>
-
-<style scoped>
-.mode-toggle {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.mode-btn {
-  flex: 1;
-  padding: 0.25rem 0.4rem;
-  background: #333;
-  border: 1px solid #555;
-  color: #a09880;
-  cursor: pointer;
-  font-size: 0.78rem;
-  font-family: inherit;
-}
-
-.mode-btn:hover {
-  background: #3a3a3a;
-}
-
-.mode-btn.active {
-  background: #3a5a2a;
-  border-color: #7aab3e;
-  color: #b0d880;
-}
-
-.type-chooser {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.type-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.3rem 0.5rem;
-  background: #333;
-  border: 1px solid #555;
-  color: #e0d8c8;
-  cursor: pointer;
-  font-size: 0.8rem;
-  text-align: left;
-}
-
-.type-btn:hover {
-  background: #3a3a3a;
-}
-
-.type-btn.active {
-  background: #3a5a2a;
-  border-color: #7aab3e;
-  color: #b0d880;
-}
-
-.type-swatch {
-  display: inline-block;
-  height: 3px;
-  min-width: 12px;
-}
-
-.type-name {
-  flex: 1;
-}
-
-.tool-hint {
-  font-size: 0.75rem;
-  color: #888;
-  font-style: italic;
-}
-
-.ford-hint {
-  line-height: 1.4;
-}
-
-.validation-error {
-  font-size: 0.75rem;
-  color: #c08080;
-  padding: 0.25rem 0.4rem;
-  background: #2a1a1a;
-  border: 1px solid #7a3333;
-}
-</style>
