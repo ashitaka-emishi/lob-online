@@ -114,7 +114,11 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
       >
         <span
           class="type-swatch"
-          :style="{ background: group.color, width: `${group.strokeWidth * 4}px`, height: '3px' }"
+          :style="{
+            background: group.color /* hardcoded hex constant from STREAM_WALL_GROUPS */,
+            width: `${group.strokeWidth * 4}px`,
+            height: '3px',
+          }"
         />
         <span class="type-name">{{ group.types[0] }}</span>
       </button>

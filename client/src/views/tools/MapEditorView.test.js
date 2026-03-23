@@ -496,8 +496,8 @@ describe('MapEditorView', () => {
     await flushPromises();
     expect(wrapper.text()).toContain('Raise all');
 
-    // Click Grid Calibration to open it — Elevation should close
-    const calHeader = headers.find((h) => h.text().includes('Grid Calibration'));
+    // Click Grid & Elevation Setup to open it — Elevation should close
+    const calHeader = headers.find((h) => h.text().includes('Grid & Elevation Setup'));
     await calHeader.trigger('click');
     await flushPromises();
     expect(wrapper.text()).not.toContain('Raise all');
@@ -535,9 +535,9 @@ describe('MapEditorView', () => {
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
 
-    // Open Grid Calibration accordion (ElevationSystemControls is rendered inside it)
+    // Open Grid & Elevation Setup accordion (ElevationSystemControls is rendered inside it)
     const headers = wrapper.findAll('button.accordion-header');
-    const calHeader = headers.find((h) => h.text().includes('Grid Calibration'));
+    const calHeader = headers.find((h) => h.text().includes('Grid & Elevation Setup'));
     await calHeader.trigger('click');
     await flushPromises();
 
@@ -567,9 +567,9 @@ describe('MapEditorView', () => {
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
 
-    // Open Grid Calibration accordion (ElevationSystemControls is rendered inside it)
+    // Open Grid & Elevation Setup accordion (ElevationSystemControls is rendered inside it)
     const headers = wrapper.findAll('button.accordion-header');
-    const calHeader = headers.find((h) => h.text().includes('Grid Calibration'));
+    const calHeader = headers.find((h) => h.text().includes('Grid & Elevation Setup'));
     await calHeader.trigger('click');
     await flushPromises();
 

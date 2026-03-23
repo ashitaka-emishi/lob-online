@@ -115,7 +115,7 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
         <span
           class="type-swatch"
           :style="{
-            background: group.color,
+            background: group.color /* hardcoded hex constant from ROAD_GROUPS */,
             width: `${group.strokeWidth * 4}px`,
             height: '3px',
             borderTop: group.dash ? `2px dashed ${group.color}` : undefined,

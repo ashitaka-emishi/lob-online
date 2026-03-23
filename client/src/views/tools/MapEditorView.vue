@@ -692,7 +692,7 @@ onUnmounted(() => {
           :class="{ 'accordion-flex': openPanel === 'calibration' }"
         >
           <button class="accordion-header" @click="togglePanel('calibration')">
-            <span>Grid Calibration</span>
+            <span>Grid &amp; Elevation Setup</span>
             <span class="accordion-chevron">{{ openPanel === 'calibration' ? '▾' : '▸' }}</span>
           </button>
           <div v-if="openPanel === 'calibration'" class="accordion-hex-content">

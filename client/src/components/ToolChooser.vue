@@ -18,6 +18,9 @@ function itemColor(item) {
     console.warn(`ToolChooser: invalid color "${item.color}"`);
     return undefined;
   }
+  // When CSS global is unavailable (test environments, legacy browsers) the
+  // validation is skipped and item.color is returned as-is. All callers in
+  // this project supply hardcoded hex constants, so the fallback is safe.
   return item.color;
 }
 </script>

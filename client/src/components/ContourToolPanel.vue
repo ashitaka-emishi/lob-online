@@ -73,6 +73,12 @@ defineExpose({ handleEdgeClick, handleEdgeRightClick });
 // hexLabel is added/removed from the config when elevationInfoEnabled changes —
 // both layers respond to a single checkbox in BaseToolPanel (via hexFill's toggleLabel).
 
+// Stable function reference: reads reactive state at call time so its identity
+// doesn't change between ownOverlayConfig invalidations (avoids a new closure
+// on every toggle, which would always fail shallow prop equality checks).
+const hexFillFn = (hex) =>
+  elevationInfoEnabled.value ? tintForLevel(hex.elevation ?? 0, palette.value) : null;
+
 const ownOverlayConfig = computed(() => {
   const cfg = {
     grid: { alwaysOn: true, weight: 'faint' },
@@ -84,8 +90,7 @@ const ownOverlayConfig = computed(() => {
     hexFill: {
       alwaysOn: false,
       toggleLabel: 'Elevation info',
-      fillFn: (hex) =>
-        elevationInfoEnabled.value ? tintForLevel(hex.elevation ?? 0, palette.value) : null,
+      fillFn: hexFillFn,
     },
   };
   if (elevationInfoEnabled.value) {
@@ -120,7 +125,7 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
         <span
           class="type-swatch"
           :style="{
-            background: group.color,
+            background: group.color /* hardcoded hex constant from CONTOUR_GROUPS */,
             height: `${group.strokeWidth}px`,
             width: '24px',
           }"

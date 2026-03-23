@@ -81,7 +81,7 @@ function toggleLocked() {
 </script>
 
 <template>
-  <div class="calibration-controls">
+  <div class="calibration-controls editor-form">
     <label>
       Grid Cols
       <input

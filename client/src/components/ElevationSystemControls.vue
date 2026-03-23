@@ -19,7 +19,7 @@ function update(field, value) {
 </script>
 
 <template>
-  <div class="elevation-system-controls">
+  <div class="elevation-system-controls editor-form">
     <div class="section-label">Elevation System</div>
     <label>
       Base Elevation (ft)
