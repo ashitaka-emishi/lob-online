@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-03-22 after PR #171._
+_Last updated: 2026-03-23 after PR #173._
 
 ---
 
@@ -8,10 +8,10 @@ _Last updated: 2026-03-22 after PR #171._
 
 | Metric                           | Value                                                                       |
 | -------------------------------- | --------------------------------------------------------------------------- |
-| Open debt items                  | 12                                                                          |
-| Cumulative debt score (net open) | 22                                                                          |
+| Open debt items                  | 5                                                                           |
+| Cumulative debt score (net open) | 13                                                                          |
 | Highest-risk item                | gridData rebuilds full cell array on any calibration change (#151, score 3) |
-| PRs tracked                      | 41                                                                          |
+| PRs tracked                      | 49                                                                          |
 
 ---
 
@@ -61,6 +61,14 @@ _Last updated: 2026-03-22 after PR #171._
 | 2026-03-22 | PR #171 (resolved #153) | -3                   | 68                       |
 | 2026-03-22 | PR #171 (resolved #155) | -2                   | 68                       |
 | 2026-03-22 | PR #171 (resolved #167) | -1                   | 68                       |
+| 2026-03-23 | PR #173                 | 0                    | 68                       |
+| 2026-03-23 | PR #173 (resolved #111) | -2                   | 68                       |
+| 2026-03-23 | PR #173 (resolved #112) | -1                   | 68                       |
+| 2026-03-23 | PR #173 (resolved #154) | -1                   | 68                       |
+| 2026-03-23 | PR #173 (resolved #162) | -2                   | 68                       |
+| 2026-03-23 | PR #173 (resolved #165) | -1                   | 68                       |
+| 2026-03-23 | PR #173 (resolved #166) | -1                   | 68                       |
+| 2026-03-23 | PR #173 (resolved #170) | -1                   | 68                       |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -68,9 +76,9 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is 
 
 ## Risk Assessment
 
-Elevated risk. Several significant deferred items that introduce coupling or architectural compromise. Recommend a debt reduction sprint before the next major phase.
+Moderate risk. Some deferred workarounds and sub-optimal patterns that will slow future phases if not addressed.
 
-Current debt (score 22) spans two primary clusters. First, MapEditorView extraction debt: the oversized `useMapPersistence` API surface (#125), the pending `useCalibration`/`useMapExport` extraction (#126), and the per-tool-panel wiring composable (#161) will compound as game logic is added in Phase 2. Second, rendering performance debt: `gridData` full-rebuild on calibration changes (#151) and the `cellsForEdges` composable extraction (#169) remain the highest-priority performance items. Structural duplication across edge tool panels (#162) and minor style/test gaps (#111, #112, #154, #165, #166, #170) account for the remainder. PR #171 (overlay-arch-refactor) closed the entire rendering architecture cluster: #152 (hybrid rendering model), #153 (overlayConfig ownership bridge), #155 (composable composition contract), and #167 (HexMapOverlay prop list) — reducing net open debt from 30 to 22.
+Current debt (score 13) is concentrated in `MapEditorView` extraction debt. The three score-3 items (#151, #126, #125) all concern the same component: `gridData` full-rebuild on calibration changes (#151), the pending `useCalibration`/`useMapExport` extraction (#126), and the oversized `useMapPersistence` API surface (#125). These will compound as game logic is added in Phase 2. The two score-2 items are structural: per-tool-panel wiring composable extraction (#161) and the `cellsForEdges` composable (#169). PR #173 (minor-debt-bundle) closed all seven minor debt items (#111, #112, #154, #162, #165, #166, #170), reducing net open debt from 22 to 13.
 
 ---
 
@@ -85,13 +93,6 @@ _Ordered by score descending (ties: newest first). Resolved items are removed._
 | 3     | #125  | Reduce `useMapPersistence` API surface (23 return values)                         | PR #122       | 23 return values with push/pull dialog state mixed into a persistence composable. Reduces reusability and increases caller coupling. Grouping into sub-objects would clarify ownership.                                                                                                                                                                        |
 | 2     | #161  | refactor: extract per-tool-panel wiring in MapEditorView into a shared composable | PR #158       | Three nearly-identical panel-wiring blocks in MapEditorView will grow with each new tool panel. Requires design decision on composable API shape.                                                                                                                                                                                                              |
 | 2     | #169  | refactor: extract cellsForEdges into useEdgeLineLayer composable                  | PR #168       | `cellsForEdges` invalidates on any `gridData` change (including LOS/selection state) because it depends on `cells`, downstream of the monolithic `gridData` computed. The structure encodes the template's nested v-for shape in script setup. Natural fit for extraction into `useEdgeLineLayer(cells, overlayConfig)` during overlay-arch-refactor_20260322. |
-| 2     | #162  | refactor: deduplicate RoadToolPanel / StreamWallToolPanel structural boilerplate  | PR #158       | Near-identical structure across both panels; changes to shared chrome must be applied in two places. Low urgency until a third structurally identical panel exists.                                                                                                                                                                                            |
-| 2     | #111  | Hoist `ElevationSystemControls` to `MapEditorView` sibling                        | PR #109       | `CalibrationControls` now passes `elevationSystem` prop and `elevation-system-change` emit through to the child without any logic. Acceptable interim state, but each future extraction compounds the inert API surface on the parent.                                                                                                                         |
-| 1     | #170  | test: add integration test for onSvgMouseMove rAF callback output                 | PR #168       | The rAF gate tests verify scheduling but not the callback's output path (coordinate transform → findNearestEdge → snap → hoverInfo). Individual pieces are unit-tested; this gap is narrow but would catch regressions in the full pipeline.                                                                                                                   |
-| 1     | #166  | style: consolidate duplicated scoped CSS across edge tool panels                  | PR #158       | Same panel chrome CSS copied across three `<style scoped>` blocks. Minor maintenance burden; extract when a fourth panel is added.                                                                                                                                                                                                                             |
-| 1     | #165  | perf: remove console.assert calls from utils/compass.js hot path                  | PR #158       | Establishes convention for dev-only diagnostic assertions on hot-path formula functions. The shim no longer has guards; this tracks the future pattern.                                                                                                                                                                                                        |
-| 1     | #154  | fix: ToolChooser item.color is not validated — accepts any string                 | PR #150       | Silent visual failure (wrong color) when an invalid CSS color string is passed. Low risk since item arrays come from the controlled feature-types.js registry; a typo there would be caught in code review.                                                                                                                                                    |
-| 1     | #112  | Consolidate shared form-input CSS across map editor components                    | PR #109       | `label` and `input[type='number']` scoped styles are duplicated between `CalibrationControls` and `ElevationSystemControls`. Minor maintenance burden; revisit when a third form-input component is extracted.                                                                                                                                                 |
 
 ---
 
