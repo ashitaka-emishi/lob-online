@@ -36,36 +36,36 @@ describe('HexMapOverlay', () => {
 
   it('renders all hexes (one polygon per hex)', () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, vpHexIds: [] },
+      props: { calibration: BASE_CAL },
     });
     // 4 cols * 3 rows = 12 hexes
     expect(wrapper.findAll('polygon').length).toBeGreaterThanOrEqual(12);
   });
 
-  it('vpHexIds does not suppress polygon rendering', () => {
+  it('vpHighlight does not suppress polygon rendering', () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, vpHexIds: ['01.03'] },
+      props: { calibration: BASE_CAL, overlayConfig: { vpHighlight: { hexIds: ['01.03'] } } },
     });
     expect(wrapper.findAll('polygon').length).toBeGreaterThan(0);
   });
 
-  it('calibrationMode=true renders full grid of polygons', () => {
+  it('overlayConfig.diagnosticMode.active renders full grid of polygons', () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, calibrationMode: true },
+      props: { calibration: BASE_CAL, overlayConfig: { diagnosticMode: { active: true } } },
     });
     expect(wrapper.findAll('polygon').length).toBeGreaterThanOrEqual(12);
   });
 
-  it('selectedHexId is highlighted (polygon rendered for it)', () => {
+  it('selectedHex is highlighted (polygon rendered for it)', () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, selectedHexId: '01.03', vpHexIds: [] },
+      props: { calibration: BASE_CAL, overlayConfig: { selectedHex: { hexId: '01.03' } } },
     });
     expect(wrapper.findAll('polygon').length).toBeGreaterThan(0);
   });
 
-  it('overlayConfig.calibration.active renders text labels without hexLabel config', () => {
+  it('overlayConfig.diagnosticMode.active renders text labels without hexLabel config', () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, overlayConfig: { calibration: { active: true } } },
+      props: { calibration: BASE_CAL, overlayConfig: { diagnosticMode: { active: true } } },
     });
     expect(wrapper.findAll('text').length).toBeGreaterThan(0);
   });
@@ -78,46 +78,42 @@ describe('HexMapOverlay', () => {
     expect(svg.attributes('width')).toBe('800');
   });
 
-  it('LOS hex A renders a polygon when losHexA is set', () => {
+  it('overlayConfig.los.hexA renders a polygon', () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, vpHexIds: [], losHexA: '01.03' },
+      props: { calibration: BASE_CAL, overlayConfig: { los: { hexA: '01.03' } } },
     });
     expect(wrapper.findAll('polygon').length).toBeGreaterThan(0);
   });
 
-  it('LOS hex B renders a polygon when losHexB is set', () => {
+  it('overlayConfig.los.hexB renders a polygon', () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, vpHexIds: [], losHexB: '01.03' },
+      props: { calibration: BASE_CAL, overlayConfig: { los: { hexB: '01.03' } } },
     });
     expect(wrapper.findAll('polygon').length).toBeGreaterThan(0);
   });
 
-  it('losPathHexes renders polygons for path hexes', () => {
+  it('overlayConfig.los.pathHexes renders polygons for path hexes', () => {
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
-        vpHexIds: [],
-        losPathHexes: ['01.03', '02.03'],
+        overlayConfig: { los: { pathHexes: ['01.03', '02.03'] } },
       },
     });
     expect(wrapper.findAll('polygon').length).toBeGreaterThanOrEqual(2);
   });
 
-  it('losBlockedHex renders a polygon for the blocked hex', () => {
+  it('overlayConfig.los.blockedHex renders a polygon for the blocked hex', () => {
     const wrapper = mount(HexMapOverlay, {
-      props: { calibration: BASE_CAL, vpHexIds: [], losBlockedHex: '01.03' },
+      props: { calibration: BASE_CAL, overlayConfig: { los: { blockedHex: '01.03' } } },
     });
     expect(wrapper.findAll('polygon').length).toBeGreaterThan(0);
   });
 
-  it('accepts LOS props when all are null/empty', () => {
+  it('renders svg when all LOS fields are null/empty', () => {
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
-        losHexA: null,
-        losHexB: null,
-        losPathHexes: [],
-        losBlockedHex: null,
+        overlayConfig: { los: { hexA: null, hexB: null, pathHexes: [], blockedHex: null } },
       },
     });
     expect(wrapper.find('svg').exists()).toBe(true);
@@ -696,13 +692,13 @@ describe('HexMapOverlay — unified overlayConfig highlight and state API', () =
     expect(yellow).toBeFalsy();
   });
 
-  // ── overlayConfig.calibration replaces calibrationMode flat prop ────────────
+  // ── overlayConfig.diagnosticMode replaces calibrationMode flat prop ─────────
 
-  it('overlayConfig.calibration.active renders diagnostic stroke (#cc88ff)', () => {
+  it('overlayConfig.diagnosticMode.active renders diagnostic stroke (#cc88ff)', () => {
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
-        overlayConfig: { calibration: { active: true } },
+        overlayConfig: { diagnosticMode: { active: true } },
       },
     });
     const polygons = wrapper.findAll('polygon');
@@ -710,11 +706,11 @@ describe('HexMapOverlay — unified overlayConfig highlight and state API', () =
     expect(diag).toBeTruthy();
   });
 
-  it('overlayConfig.calibration.active renders hex labels without hexLabel config', () => {
+  it('overlayConfig.diagnosticMode.active renders hex labels without hexLabel config', () => {
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
-        overlayConfig: { calibration: { active: true } },
+        overlayConfig: { diagnosticMode: { active: true } },
       },
     });
     expect(wrapper.findAll('text').length).toBeGreaterThan(0);

@@ -59,28 +59,21 @@
  * @typedef {Object} SeedHighlightConfig
  * @property {string[]} hexIds - hex IDs to highlight as seed hexes (purple stroke)
  *
- * @typedef {Object} CalibrationConfig
+ * @typedef {Object} DiagnosticModeConfig
  * @property {boolean} active - true when calibration mode is active (diagnostic stroke colors)
  *
  * @typedef {Object} OverlayConfig
- * @property {GridConfig}           [grid]
- * @property {HexFillConfig}        [hexFill]
- * @property {HexLabelConfig}       [hexLabel]
- * @property {ElevationLabelConfig} [elevationLabel]
- * @property {HexIconConfig}        [hexIcon]
- * @property {EdgeLineConfig}       [edgeLine]
- * @property {WedgeConfig}          [wedges]
- * @property {SlopeArrowConfig}     [slopeArrows]
- * @property {SelectedHexConfig}    [selectedHex]
- * @property {LosConfig}            [los]
- * @property {VpHighlightConfig}    [vpHighlight]
- * @property {SeedHighlightConfig}  [seedHighlight]
- * @property {CalibrationConfig}    [calibration]
+ * @property {GridConfig}            [grid]
+ * @property {HexFillConfig}         [hexFill]
+ * @property {HexLabelConfig}        [hexLabel]
+ * @property {ElevationLabelConfig}  [elevationLabel]
+ * @property {HexIconConfig}         [hexIcon]
+ * @property {EdgeLineConfig}        [edgeLine]
+ * @property {WedgeConfig}           [wedges]
+ * @property {SlopeArrowConfig}      [slopeArrows]
+ * @property {SelectedHexConfig}     [selectedHex]
+ * @property {LosConfig}             [los]
+ * @property {VpHighlightConfig}     [vpHighlight]
+ * @property {SeedHighlightConfig}   [seedHighlight]
+ * @property {DiagnosticModeConfig}  [diagnosticMode]
  */
-
-/**
- * Empty overlayConfig — no layers rendered, all interaction state cleared.
- * Use as a base when constructing a panel's config slice.
- * @type {OverlayConfig}
- */
-export const EMPTY_OVERLAY_CONFIG = Object.freeze({});

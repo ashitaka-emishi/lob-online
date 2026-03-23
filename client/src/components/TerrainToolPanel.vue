@@ -62,6 +62,8 @@ const ownOverlayConfig = computed(() => ({
   hexIcon: { alwaysOn: true, iconFn: (cell) => TERRAIN_ICON_MAP[cell.terrain] ?? null },
 }));
 
+// immediate: true fires synchronously during setup so MapEditorView receives the config
+// before the first render (parent is mounted and event-ready before child setup runs).
 watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true });
 </script>
 
