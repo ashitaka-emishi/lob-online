@@ -3,7 +3,7 @@
 **Track ID:** map-editor-extraction_20260323
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-03-23
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
