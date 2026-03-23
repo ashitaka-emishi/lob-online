@@ -152,20 +152,10 @@ const layerFlags = ref({
 // layer flags and editor mode. Tool panels emit their own config via overlay-config;
 // when a panel is active its config replaces the base config (tool-owns-its-overlays).
 
-// Config received from TerrainToolPanel via @overlay-config.
-const terrainPanelOverlayConfig = ref(null);
-
-// Config received from ElevationToolPanel via @overlay-config.
-const elevationPanelOverlayConfig = ref(null);
-
-// Config received from RoadToolPanel via @overlay-config.
-const roadPanelOverlayConfig = ref(null);
-
-// Config received from StreamWallToolPanel via @overlay-config.
-const streamPanelOverlayConfig = ref(null);
-
-// Config received from ContourToolPanel via @overlay-config.
-const contourPanelOverlayConfig = ref(null);
+// Single ref updated by any tool panel that owns an overlayConfig slice.
+// Panels listed here must emit 'overlay-config'; all others fall through to the base config.
+const CONFIG_PANELS = new Set(['terrain', 'elevation', 'road', 'stream', 'contour']);
+const activePanelOverlayConfig = ref(null);
 
 // Selected edge types for each panel — owned by MapEditorView, passed to panels.
 const roadSelectedType = ref('trail');
@@ -248,39 +238,27 @@ const edgeInteraction = computed(() => EDGE_PANELS.has(openPanel.value));
 
 // Global editor state — always merged into overlayConfig regardless of which tool panel
 // is active. HexMapOverlay reads this from overlayConfig; no separate flat props needed.
-function _globalOverlayState() {
-  return {
-    selectedHex: { hexId: selectedHexId.value ?? null },
-    calibration: { active: calibrationMode.value },
-    los: {
-      hexA: losHexA.value,
-      hexB: losHexB.value,
-      pathHexes: losPathHexes.value,
-      blockedHex: losBlockedHex.value,
-    },
-    vpHighlight: { hexIds: vpHexIds.value },
-    seedHighlight: { hexIds: seedHexIdsArray.value },
-  };
-}
+// Declared as a computed so the reactive contract is explicit and dependency tracking is
+// visible to readers; the object it returns still changes on any constituent ref change.
+const globalOverlayState = computed(() => ({
+  selectedHex: { hexId: selectedHexId.value ?? null },
+  diagnosticMode: { active: calibrationMode.value },
+  los: {
+    hexA: losHexA.value,
+    hexB: losHexB.value,
+    pathHexes: losPathHexes.value,
+    blockedHex: losBlockedHex.value,
+  },
+  vpHighlight: { hexIds: vpHexIds.value },
+  seedHighlight: { hexIds: seedHexIdsArray.value },
+}));
 
 const overlayConfig = computed(() => {
-  const global = _globalOverlayState();
-  // When a tool panel is active, merge its config with global editor state.
-  // Each panel owns its rendering keys; MapEditorView passes through without knowing contents.
-  if (openPanel.value === 'terrain' && terrainPanelOverlayConfig.value) {
-    return { ...terrainPanelOverlayConfig.value, ...global };
-  }
-  if (openPanel.value === 'elevation' && elevationPanelOverlayConfig.value) {
-    return { ...elevationPanelOverlayConfig.value, ...global };
-  }
-  if (openPanel.value === 'road' && roadPanelOverlayConfig.value) {
-    return { ...roadPanelOverlayConfig.value, ...global };
-  }
-  if (openPanel.value === 'stream' && streamPanelOverlayConfig.value) {
-    return { ...streamPanelOverlayConfig.value, ...global };
-  }
-  if (openPanel.value === 'contour' && contourPanelOverlayConfig.value) {
-    return { ...contourPanelOverlayConfig.value, ...global };
+  const global = globalOverlayState.value;
+  // When a config-owning tool panel is active, merge its slice with global editor state.
+  // Adding a new panel: add its name to CONFIG_PANELS and a @overlay-config binding in the template.
+  if (CONFIG_PANELS.has(openPanel.value) && activePanelOverlayConfig.value) {
+    return { ...activePanelOverlayConfig.value, ...global };
   }
 
   // Base config (no tool panel active): structural overlays + global state.
@@ -746,7 +724,7 @@ onUnmounted(() => {
               @raise-all="raiseAll"
               @lower-all="lowerAll"
               @paint-mode-change="paintMode = $event"
-              @overlay-config="elevationPanelOverlayConfig = $event"
+              @overlay-config="activePanelOverlayConfig = $event"
             />
           </div>
         </div>
@@ -768,7 +746,7 @@ onUnmounted(() => {
               @terrain-change="paintTerrain = $event"
               @clear-all-terrain="clearAllTerrain"
               @paint-mode-change="paintMode = $event"
-              @overlay-config="terrainPanelOverlayConfig = $event"
+              @overlay-config="activePanelOverlayConfig = $event"
             />
           </div>
         </div>
@@ -792,7 +770,7 @@ onUnmounted(() => {
               @edge-clear-all="handleEdgeClearAll($event)"
               @bridge-place="handleEdgePaint($event.hexId, $event.faceIndex, 'bridge')"
               @bridge-remove="handleEdgeClear($event.hexId, $event.faceIndex, 'bridge')"
-              @overlay-config="roadPanelOverlayConfig = $event"
+              @overlay-config="activePanelOverlayConfig = $event"
             />
           </div>
         </div>
@@ -816,7 +794,7 @@ onUnmounted(() => {
               @edge-clear-all="handleEdgeClearAll($event)"
               @ford-place="handleEdgePaint($event.hexId, $event.faceIndex, 'ford')"
               @ford-remove="handleEdgeClear($event.hexId, $event.faceIndex, 'ford')"
-              @overlay-config="streamPanelOverlayConfig = $event"
+              @overlay-config="activePanelOverlayConfig = $event"
             />
           </div>
         </div>
@@ -839,7 +817,7 @@ onUnmounted(() => {
               @edge-clear="handleEdgeClear($event.hexId, $event.faceIndex, $event.type)"
               @edge-clear-all="handleEdgeClearAll($event)"
               @auto-detect-contours="handleAutoDetectContours"
-              @overlay-config="contourPanelOverlayConfig = $event"
+              @overlay-config="activePanelOverlayConfig = $event"
             />
           </div>
         </div>

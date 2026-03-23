@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, shallowRef, watch } from 'vue';
 import { defineHex, Grid, rectangle, Orientation } from 'honeycomb-grid';
 import {
   DIRS,
@@ -40,7 +40,7 @@ const props = defineProps({
   //   wedges:         { alwaysOn }
   //   slopeArrows:    { alwaysOn }
   //   selectedHex:    { hexId: string|null }
-  //   calibration:    { active: boolean }
+  //   diagnosticMode: { active: boolean }
   //   los:            { hexA, hexB, pathHexes, blockedHex }
   //   vpHighlight:    { hexIds: string[] }
   //   seedHighlight:  { hexIds: string[] }
@@ -107,9 +107,33 @@ const hexIndex = computed(() => {
   return idx;
 });
 
-const vpHexSet = computed(() => new Set(props.overlayConfig.vpHighlight?.hexIds ?? []));
-const losPathSet = computed(() => new Set(props.overlayConfig.los?.pathHexes ?? []));
-const seedHexSet = computed(() => new Set(props.overlayConfig.seedHighlight?.hexIds ?? []));
+// Watch the specific array references rather than the top-level overlayConfig object.
+// This avoids rebuilding the Sets (and cascading into gridData) when unrelated parts of
+// overlayConfig change (e.g. selectedHex, diagnosticMode) but these arrays are unchanged.
+const vpHexSet = shallowRef(new Set());
+const losPathSet = shallowRef(new Set());
+const seedHexSet = shallowRef(new Set());
+watch(
+  () => props.overlayConfig.vpHighlight?.hexIds,
+  (ids) => {
+    vpHexSet.value = new Set(ids ?? []);
+  },
+  { immediate: true }
+);
+watch(
+  () => props.overlayConfig.los?.pathHexes,
+  (ids) => {
+    losPathSet.value = new Set(ids ?? []);
+  },
+  { immediate: true }
+);
+watch(
+  () => props.overlayConfig.seedHighlight?.hexIds,
+  (ids) => {
+    seedHexSet.value = new Set(ids ?? []);
+  },
+  { immediate: true }
+);
 
 // ── Grid computation ──────────────────────────────────────────────────────────
 const gridData = computed(() => {
@@ -199,26 +223,19 @@ const rotationTransform = computed(() => {
 
 // ── HexFillLayer helpers ───────────────────────────────────────────────────────
 
-function hexFillColor(cell) {
-  // LOS blocked fill overrides everything
-  if (cell.isLosBlocked) return '#cc4444';
+// Returns both fill and fill-opacity in one call to avoid invoking fillFn twice per cell.
+function hexFillAttrs(cell) {
+  if (cell.isLosBlocked) return { fill: '#cc4444', 'fill-opacity': 0.5 };
   const cfg = props.overlayConfig.hexFill;
-  if (!cfg) return 'none';
-  return cfg.fillFn?.(cell) ?? 'none';
-}
-
-function hexFillOpacity(cell) {
-  if (cell.isLosBlocked) return 0.5;
-  const cfg = props.overlayConfig.hexFill;
-  if (!cfg) return 0;
+  if (!cfg) return { fill: 'none', 'fill-opacity': 0 };
   const color = cfg.fillFn?.(cell) ?? 'none';
-  return color !== 'none' ? 0.45 : 0;
+  return { fill: color, 'fill-opacity': color !== 'none' ? 0.45 : 0 };
 }
 
 // ── HexGridLayer / HexHighlightLayer helpers ──────────────────────────────────
 
 function strokeForCell(cell) {
-  if (props.overlayConfig.calibration?.active) return '#cc88ff';
+  if (props.overlayConfig.diagnosticMode?.active) return '#cc88ff';
   if (cell.isLosBlocked) return '#cc4444';
   if (cell.isLosA) return '#44aa44';
   if (cell.isLosB) return '#4488cc';
@@ -231,7 +248,7 @@ function strokeForCell(cell) {
 }
 
 function strokeWidthForCell(cell) {
-  if (props.overlayConfig.calibration?.active) return props.calibration.strokeWidth;
+  if (props.overlayConfig.diagnosticMode?.active) return props.calibration.strokeWidth;
   if (cell.isLosBlocked || cell.isLosA || cell.isLosB || cell.isLosPath) {
     return Math.max(props.calibration.strokeWidth * 2.5, 2);
   }
@@ -243,7 +260,7 @@ function strokeWidthForCell(cell) {
 }
 
 function strokeOpacityForCell(cell) {
-  if (props.overlayConfig.calibration?.active) return 0.75;
+  if (props.overlayConfig.diagnosticMode?.active) return 0.75;
   if (
     cell.isLosBlocked ||
     cell.isLosA ||
@@ -263,7 +280,7 @@ function hexLabelText(cell) {
   const cfg = props.overlayConfig.hexLabel;
   if (cfg) return cfg.labelFn?.(cell) ?? null;
   // calibration.active fallback: show hex ID without needing overlayConfig.hexLabel
-  if (props.overlayConfig.calibration?.active) return cell.id;
+  if (props.overlayConfig.diagnosticMode?.active) return cell.id;
   return null;
 }
 
@@ -293,6 +310,7 @@ const cellsForEdges = computed(() => {
     corners: cell.corners,
     edgeFaces: CANONICAL_EDGE_DIRS.map((dir, fi) => ({
       dir,
+      lineAttrs: edgeLine20_80(cell.corners, dir),
       groups: edgeLineGroups.value.map((group) => ({
         group,
         features: cell.edges?.[fi]?.filter((f) => group.typeSet.has(f.type)) ?? [],
@@ -456,8 +474,7 @@ defineExpose({ isPaintMouseDown });
             v-for="cell in cells"
             :key="'hex-' + cell.id"
             :points="cell.points"
-            :fill="hexFillColor(cell)"
-            :fill-opacity="hexFillOpacity(cell)"
+            v-bind="hexFillAttrs(cell)"
             :stroke="strokeForCell(cell)"
             :stroke-width="strokeWidthForCell(cell)"
             :stroke-opacity="strokeOpacityForCell(cell)"
@@ -484,9 +501,9 @@ defineExpose({ isPaintMouseDown });
 
         <!-- HexLabelLayer — hex ID or custom labels ─────────────────────────
              Renders when overlayConfig.hexLabel is set, or when
-             overlayConfig.calibration.active is true (diagnostic mode).      -->
+             overlayConfig.diagnosticMode.active is true (diagnostic mode).   -->
         <g
-          v-if="overlayConfig.hexLabel || overlayConfig.calibration?.active"
+          v-if="overlayConfig.hexLabel || overlayConfig.diagnosticMode?.active"
           class="layer-hex-labels"
         >
           <text
@@ -557,7 +574,7 @@ defineExpose({ isPaintMouseDown });
                 <line
                   v-for="feat in gd.features"
                   :key="feat.type"
-                  v-bind="edgeLine20_80(cell.corners, face.dir)"
+                  v-bind="face.lineAttrs"
                   :stroke="gd.group.color"
                   :stroke-width="gd.group.strokeWidth"
                   :stroke-dasharray="gd.group.dash ?? null"
