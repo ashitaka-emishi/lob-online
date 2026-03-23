@@ -15,6 +15,7 @@ import StreamWallToolPanel from '../../components/StreamWallToolPanel.vue';
 import ContourToolPanel from '../../components/ContourToolPanel.vue';
 import { useBulkOperations } from '../../composables/useBulkOperations.js';
 import { useCalibration } from '../../composables/useCalibration.js';
+import { useMapExport } from '../../composables/useMapExport.js';
 import { useHexInteraction } from '../../composables/useHexInteraction.js';
 import { useEditorAccordion } from '../../composables/useEditorAccordion.js';
 import { useMapPersistence } from '../../composables/useMapPersistence.js';
@@ -38,8 +39,6 @@ const {
   onCalibrationLoaded,
   toggleCalibrationMode,
 } = useCalibration();
-
-const showExportOverlay = ref(false);
 
 // ── Composable dependency order (must not be rearranged) ─────────────────────
 // Persistence → selectedHexIds → Accordion → LOS → Interaction → EdgeToggle / Bulk / Wedge / Trace
@@ -77,6 +76,16 @@ const {
   draftKeyV1: MAP_DRAFT_KEY_V1,
   onCalibrationLoaded,
 });
+
+// ── Map export (composable) ────────────────────────────────────────────────────
+
+const { showExportOverlay, exportSnapshot, copyMapData, downloadExport } = useMapExport(
+  mapData,
+  calibration
+);
+
+// L3: boolean guard replaces the expensive spread computed that ran on every paint
+const hasMapData = computed(() => !!mapData.value);
 
 // ── Selection (H2: owned here so accordion's onClearSelection can reference it directly) ──
 
@@ -239,55 +248,6 @@ const overlayConfig = computed(() => {
   }
   return cfg;
 });
-
-// ── Export ────────────────────────────────────────────────────────────────────
-
-// L3: boolean guard replaces the expensive spread computed that ran on every paint
-const hasMapData = computed(() => !!mapData.value);
-
-function stripPrivateFields(obj) {
-  if (Array.isArray(obj)) return obj.map(stripPrivateFields);
-  if (obj && typeof obj === 'object') {
-    const out = {};
-    for (const [k, v] of Object.entries(obj)) {
-      if (!k.startsWith('_')) out[k] = stripPrivateFields(v);
-    }
-    return out;
-  }
-  return obj;
-}
-
-// Called on-demand when the export overlay opens or when copy/download is triggered.
-// Not a reactive computed — the deep-walk is expensive and only needed at export time.
-function getEngineExport() {
-  if (!mapData.value) return null;
-  return stripPrivateFields({ ...mapData.value, gridSpec: calibration.value });
-}
-
-// Cache the export snapshot for the template. Computed once when the overlay opens,
-// not on every render, so unrelated reactive changes don't re-run the deep-walk.
-const exportSnapshot = ref(null);
-watch(showExportOverlay, (open) => {
-  exportSnapshot.value = open ? getEngineExport() : null;
-});
-
-function copyMapData() {
-  navigator.clipboard.writeText(JSON.stringify(getEngineExport(), null, 2));
-}
-
-function downloadExport() {
-  const data = getEngineExport();
-  if (!data) return;
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
-    type: 'application/json',
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'map-export.json';
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 function onElevationSystemChange(val) {
   if (!mapData.value) return;

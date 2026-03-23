@@ -30,10 +30,10 @@ Move the export overlay state, `stripPrivateFields`, `getEngineExport`, `copyMap
 
 ### Tasks
 
-- [ ] Task 2.1: Write `useMapExport.test.js` covering: `stripPrivateFields` removes `_`-prefixed keys recursively, `getEngineExport` merges calibration into mapData, `copyMapData` calls clipboard API, `downloadExport` triggers a Blob download
-- [ ] Task 2.2: Implement `client/src/composables/useMapExport.js` — signature `useMapExport(mapData, calibration)`, returns `{ showExportOverlay, exportSnapshot, copyMapData, downloadExport }`
-- [ ] Task 2.3: Replace inline export block in MapEditorView with `useMapExport(mapData, calibration)`
-- [ ] Task 2.4: Verify tests pass; confirm copy/download behavior unchanged
+- [x] Task 2.1: Write `useMapExport.test.js` covering: `stripPrivateFields` removes `_`-prefixed keys recursively, `getEngineExport` merges calibration into mapData, `copyMapData` calls clipboard API, `downloadExport` triggers a Blob download
+- [x] Task 2.2: Implement `client/src/composables/useMapExport.js` — signature `useMapExport(mapData, calibration)`, returns `{ showExportOverlay, exportSnapshot, copyMapData, downloadExport }`
+- [x] Task 2.3: Replace inline export block in MapEditorView with `useMapExport(mapData, calibration)`
+- [x] Task 2.4: Verify tests pass; confirm copy/download behavior unchanged
 
 ### Verification
 
