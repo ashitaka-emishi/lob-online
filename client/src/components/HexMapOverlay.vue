@@ -137,77 +137,93 @@ watch(
 );
 
 // ── Grid computation ──────────────────────────────────────────────────────────
+// gridGeometry: expensive honeycomb Grid + per-hex polygon computation.
+// Backed by a shallowRef + watch on the 6 shape-affecting calibration fields so
+// it only rebuilds when hex size, orientation, or grid dimensions actually change.
+// Nudging strokeWidth, northOffset, dx, or dy does NOT trigger a rebuild (#151).
+const gridGeometry = shallowRef(null);
+watch(
+  [
+    () => props.calibration.cols,
+    () => props.calibration.rows,
+    () => props.calibration.hexWidth,
+    () => props.calibration.hexHeight,
+    () => props.calibration.orientation,
+    () => props.calibration.evenColUp,
+  ],
+  ([cols, rows, hexWidth, hexHeight, orientation, evenColUp]) => {
+    const gridCols = cols > 0 ? cols : 64;
+    const gridRows = rows > 0 ? rows : 35;
+    const orient = orientation === 'pointy' ? Orientation.POINTY : Orientation.FLAT;
+    const Hex = defineHex({
+      dimensions: { xRadius: hexWidth, yRadius: hexHeight },
+      orientation: orient,
+      origin: { x: 0, y: 0 },
+      offset: evenColUp ? 1 : -1,
+    });
+    const grid = new Grid(Hex, rectangle({ width: gridCols, height: gridRows }));
+    const geoCells = [];
+    grid.forEach((hex) => {
+      const corners = hex.corners;
+      const cx = hex.x;
+      const cy = hex.y;
+      geoCells.push({
+        col: hex.col,
+        row: hex.row,
+        id: hexToGameId(hex, gridRows),
+        points: corners.map((c) => `${c.x},${c.y}`).join(' '),
+        cx,
+        cy,
+        corners,
+        bottomCY: (corners[2].y + corners[3].y) / 2,
+        // Pre-computed wedge polygon strings — stable between calibration changes,
+        // avoids calling wedgePolygonPoints() inline on every render (#164).
+        wedgePoints: wedgePolygonPoints(corners, { x: cx, y: cy }),
+      });
+    });
+    gridGeometry.value = { grid, geoCells, gridRows };
+  },
+  { immediate: true }
+);
+
+// gridData: translation + data enrichment layer. Depends on gridGeometry (cached) plus
+// the calibration fields that affect translation/labels and the per-hex data/overlay state.
+// Rebuilding this is fast: no defineHex/Grid, just arithmetic + a geoCells.map().
 const gridData = computed(() => {
-  const { dx, dy, hexWidth, hexHeight, imageScale, orientation, evenColUp, cols, rows } =
-    props.calibration;
-  const gridCols = cols > 0 ? cols : 64;
-  const gridRows = rows > 0 ? rows : 35;
-  const orient = orientation === 'pointy' ? Orientation.POINTY : Orientation.FLAT;
+  const { grid, geoCells, gridRows } = gridGeometry.value;
+  const { dx, dy, imageScale } = props.calibration;
+  const northOffset = props.calibration.northOffset ?? 0;
 
-  const Hex = defineHex({
-    dimensions: { xRadius: hexWidth, yRadius: hexHeight },
-    orientation: orient,
-    origin: { x: 0, y: 0 },
-    offset: evenColUp ? 1 : -1,
-  });
-
-  const grid = new Grid(Hex, rectangle({ width: gridCols, height: gridRows }));
   const anchorHex = grid.getHex({ col: 0, row: gridRows - 1 });
   const tx = dx - anchorHex.x;
   const ty = props.imageHeight * imageScale - dy - anchorHex.y;
 
-  const northOffset = props.calibration.northOffset ?? 0;
   const edgeLabels = getEdgeLabels(northOffset);
+  const los = props.overlayConfig.los;
 
-  const cells = [];
-  grid.forEach((hex) => {
-    const corners = hex.corners;
-    const points = corners.map((c) => `${c.x},${c.y}`).join(' ');
-    const cx = hex.x;
-    const cy = hex.y;
-    const id = hexToGameId(hex, gridRows);
+  const cells = geoCells.map((geoCell) => {
+    const { id, corners, cx, cy } = geoCell;
     const known = hexIndex.value[id];
-    const terrain = known?.terrain ?? 'unknown';
-    const bottomCY = (corners[2].y + corners[3].y) / 2;
-    const isVP = vpHexSet.value.has(id);
-    const isSeed = seedHexSet.value.has(id);
-    const los = props.overlayConfig.los;
-    const isLosA = id === (los?.hexA ?? null);
-    const isLosB = id === (los?.hexB ?? null);
-    const isLosPath = losPathSet.value.has(id);
-    const isLosBlocked = id === (los?.blockedHex ?? null);
     const slope = known?.slope ?? null;
     const slopeDir = slope !== null && slope !== undefined ? DIRS[slope] : null;
     const slopeMid = slopeDir ? edgeMidpoint(corners, slopeDir) : null;
-    const slopeArrowLine = slopeMid ? { x1: cx, y1: cy, x2: slopeMid.x, y2: slopeMid.y } : null;
-    const slopeArrowLabel = slopeDir ? (edgeLabels[slope] ?? null) : null;
-    cells.push({
-      id,
-      col: hex.col,
-      row: hex.row,
-      points,
-      cx,
-      cy,
-      corners,
-      terrain,
+    return {
+      ...geoCell,
+      terrain: known?.terrain ?? 'unknown',
       elevation: known?.elevation ?? null,
       slope,
       wedgeElevations: known?.wedgeElevations ?? null,
-      // Pre-computed wedge polygon strings — stable between calibration changes,
-      // avoids calling wedgePolygonPoints() inline on every render (#164).
-      wedgePoints: wedgePolygonPoints(corners, { x: cx, y: cy }),
       edges: known?.edges ?? {},
       hexFeature: known?.hexFeature ?? null,
-      bottomCY,
-      isVP,
-      isSeed,
-      isLosA,
-      isLosB,
-      isLosPath,
-      isLosBlocked,
-      slopeArrowLine,
-      slopeArrowLabel,
-    });
+      isVP: vpHexSet.value.has(id),
+      isSeed: seedHexSet.value.has(id),
+      isLosA: id === (los?.hexA ?? null),
+      isLosB: id === (los?.hexB ?? null),
+      isLosPath: losPathSet.value.has(id),
+      isLosBlocked: id === (los?.blockedHex ?? null),
+      slopeArrowLine: slopeMid ? { x1: cx, y1: cy, x2: slopeMid.x, y2: slopeMid.y } : null,
+      slopeArrowLabel: slopeDir ? (edgeLabels[slope] ?? null) : null,
+    };
   });
 
   const cellByColRow = new Map(cells.map((c) => [`${c.col},${c.row}`, c]));
@@ -477,7 +493,7 @@ function onHexMouseenter(hexId) {
 }
 
 // Exposed for test instrumentation only.
-defineExpose({ isPaintMouseDown, hoverInfo });
+defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
 </script>
 
 <template>
