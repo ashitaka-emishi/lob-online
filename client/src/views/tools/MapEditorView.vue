@@ -14,6 +14,8 @@ import RoadToolPanel from '../../components/RoadToolPanel.vue';
 import StreamWallToolPanel from '../../components/StreamWallToolPanel.vue';
 import ContourToolPanel from '../../components/ContourToolPanel.vue';
 import { useBulkOperations } from '../../composables/useBulkOperations.js';
+import { useCalibration, STORAGE_KEY } from '../../composables/useCalibration.js';
+import { useMapExport } from '../../composables/useMapExport.js';
 import { useHexInteraction } from '../../composables/useHexInteraction.js';
 import { useEditorAccordion } from '../../composables/useEditorAccordion.js';
 import { useMapPersistence } from '../../composables/useMapPersistence.js';
@@ -23,61 +25,19 @@ import { DIRS } from '../../utils/hexGeometry.js';
 import { canonicalOwner, validateCoexistence } from '../../formulas/edge-model.js';
 import { autoDetectContourType } from '../../formulas/elevation.js';
 
-const STORAGE_KEY = 'lob-map-editor-calibration-v4';
 const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
 const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
 const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
 
-// ── Calibration ───────────────────────────────────────────────────────────────
+// ── Calibration (composable) ───────────────────────────────────────────────────
 
-const DEFAULT_CALIBRATION = {
-  cols: 64,
-  rows: 35,
-  dx: 0,
-  dy: 0,
-  hexWidth: 35,
-  hexHeight: 35,
-  imageScale: 1,
-  orientation: 'flat',
-  strokeWidth: 1,
-  evenColUp: true,
-  northOffset: 0,
-};
-
-function loadCalibration() {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      // L1/L2: destructure only known keys so unexpected properties from tampered
-      // localStorage cannot flow into the calibration object; guard all numerics.
-      const safeNumeric = (val, fallback) => (Number.isFinite(val) ? val : fallback);
-      const safeBoolean = (val, fallback) => (typeof val === 'boolean' ? val : fallback);
-      const safeString = (val, fallback) => (typeof val === 'string' ? val : fallback);
-      const D = DEFAULT_CALIBRATION;
-      return {
-        cols: safeNumeric(parsed.cols, D.cols),
-        rows: safeNumeric(parsed.rows, D.rows),
-        dx: safeNumeric(parsed.dx, D.dx),
-        dy: safeNumeric(parsed.dy, D.dy),
-        hexWidth: safeNumeric(parsed.hexWidth, D.hexWidth),
-        hexHeight: safeNumeric(parsed.hexHeight, D.hexHeight),
-        imageScale: safeNumeric(parsed.imageScale, D.imageScale),
-        strokeWidth: safeNumeric(parsed.strokeWidth, D.strokeWidth),
-        northOffset: safeNumeric(parsed.northOffset, D.northOffset),
-        orientation: safeString(parsed.orientation, D.orientation),
-        evenColUp: safeBoolean(parsed.evenColUp, D.evenColUp),
-      };
-    }
-  } catch (_) {
-    /* ignore */
-  }
-  return { ...DEFAULT_CALIBRATION };
-}
-
-const calibration = ref(loadCalibration());
-const calibrationMode = ref(false);
-const showExportOverlay = ref(false);
+const {
+  calibration,
+  calibrationMode,
+  onCalibrationChange: applyCalibrationChange,
+  onCalibrationLoaded,
+  toggleCalibrationMode,
+} = useCalibration();
 
 // ── Composable dependency order (must not be rearranged) ─────────────────────
 // Persistence → selectedHexIds → Accordion → LOS → Interaction → EdgeToggle / Bulk / Wedge / Trace
@@ -86,39 +46,38 @@ const showExportOverlay = ref(false);
 // ── Map persistence (composable) ──────────────────────────────────────────────
 
 const {
-  cleanup: cleanupPersistence,
-  mapData,
-  fetchError,
-  unsaved,
-  saveStatus,
-  isOffline,
-  showPushConfirm,
-  showPullConfirm,
-  isPulling,
-  pullError,
-  saveErrors,
-  draftBannerVisible,
-  saveMapDraft,
-  restoreDraft,
-  dismissDraft,
-  fetchMapData,
-  pullFromServer,
-  confirmPull,
-  cancelPull,
-  save,
-  confirmSave,
-  cancelSave,
+  state: { mapData, fetchError, unsaved, saveStatus, isOffline, saveErrors },
+  dialog: { showPushConfirm, showPullConfirm, isPulling, pullError, draftBannerVisible },
+  actions: {
+    cleanup: cleanupPersistence,
+    saveMapDraft,
+    restoreDraft,
+    dismissDraft,
+    fetchMapData,
+    pullFromServer,
+    confirmPull,
+    cancelPull,
+    save,
+    confirmSave,
+    cancelSave,
+  },
 } = useMapPersistence({
   calibration,
   storageKey: STORAGE_KEY,
   draftKey: MAP_DRAFT_KEY,
   draftKeyV1: MAP_DRAFT_KEY_V1,
-  // M4: caller owns calibration writes — composable notifies via callback
-  onCalibrationLoaded: (gridSpec) => {
-    calibration.value = { ...DEFAULT_CALIBRATION, ...gridSpec };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration.value));
-  },
+  onCalibrationLoaded,
 });
+
+// ── Map export (composable) ────────────────────────────────────────────────────
+
+const { showExportOverlay, exportSnapshot, copyMapData, downloadExport } = useMapExport(
+  mapData,
+  calibration
+);
+
+// L3: boolean guard replaces the expensive spread computed that ran on every paint
+const hasMapData = computed(() => !!mapData.value);
 
 // ── Selection (H2: owned here so accordion's onClearSelection can reference it directly) ──
 
@@ -282,55 +241,6 @@ const overlayConfig = computed(() => {
   return cfg;
 });
 
-// ── Export ────────────────────────────────────────────────────────────────────
-
-// L3: boolean guard replaces the expensive spread computed that ran on every paint
-const hasMapData = computed(() => !!mapData.value);
-
-function stripPrivateFields(obj) {
-  if (Array.isArray(obj)) return obj.map(stripPrivateFields);
-  if (obj && typeof obj === 'object') {
-    const out = {};
-    for (const [k, v] of Object.entries(obj)) {
-      if (!k.startsWith('_')) out[k] = stripPrivateFields(v);
-    }
-    return out;
-  }
-  return obj;
-}
-
-// Called on-demand when the export overlay opens or when copy/download is triggered.
-// Not a reactive computed — the deep-walk is expensive and only needed at export time.
-function getEngineExport() {
-  if (!mapData.value) return null;
-  return stripPrivateFields({ ...mapData.value, gridSpec: calibration.value });
-}
-
-// Cache the export snapshot for the template. Computed once when the overlay opens,
-// not on every render, so unrelated reactive changes don't re-run the deep-walk.
-const exportSnapshot = ref(null);
-watch(showExportOverlay, (open) => {
-  exportSnapshot.value = open ? getEngineExport() : null;
-});
-
-function copyMapData() {
-  navigator.clipboard.writeText(JSON.stringify(getEngineExport(), null, 2));
-}
-
-function downloadExport() {
-  const data = getEngineExport();
-  if (!data) return;
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
-    type: 'application/json',
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'map-export.json';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
 function onElevationSystemChange(val) {
   if (!mapData.value) return;
   const { baseElevation, elevationLevels } = val;
@@ -353,16 +263,11 @@ function onElevationSystemChange(val) {
 }
 
 function onCalibrationChange(val) {
-  calibration.value = val;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(val));
+  applyCalibrationChange(val);
   if (mapData.value) {
     mapData.value.gridSpec = val;
     unsaved.value = true;
   }
-}
-
-function toggleCalibrationMode() {
-  calibrationMode.value = !calibrationMode.value;
 }
 
 // ── Map image size ────────────────────────────────────────────────────────────

@@ -28,6 +28,8 @@ Navigation hub for project context.
 | [map-schema-foundation_20260319](./tracks/map-schema-foundation_20260319/index.md) | Map Schema Foundation — Data Model + Compass Label Fix (#135, #143) | Complete |
 | [tool-panel-framework_20260319](./tracks/tool-panel-framework_20260319/index.md) | Tool Panel Framework — Shared Architecture (#136) | Pending |
 
+| [map-editor-extraction_20260323](./tracks/map-editor-extraction_20260323/index.md) | MapEditorView Extraction Debt Bundle | Complete |
+
 ## Getting Started
 
 Run `/conductor:new-track` to create a new feature track.

@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-03-23 after PR #173._
+_Last updated: 2026-03-23 after PR #174._
 
 ---
 
@@ -9,9 +9,9 @@ _Last updated: 2026-03-23 after PR #173._
 | Metric                           | Value                                                                       |
 | -------------------------------- | --------------------------------------------------------------------------- |
 | Open debt items                  | 5                                                                           |
-| Cumulative debt score (net open) | 13                                                                          |
+| Cumulative debt score (net open) | 9                                                                           |
 | Highest-risk item                | gridData rebuilds full cell array on any calibration change (#151, score 3) |
-| PRs tracked                      | 49                                                                          |
+| PRs tracked                      | 52                                                                          |
 
 ---
 
@@ -69,6 +69,9 @@ _Last updated: 2026-03-23 after PR #173._
 | 2026-03-23 | PR #173 (resolved #165) | -1                   | 68                       |
 | 2026-03-23 | PR #173 (resolved #166) | -1                   | 68                       |
 | 2026-03-23 | PR #173 (resolved #170) | -1                   | 68                       |
+| 2026-03-23 | PR #174                 | 2                    | 70                       |
+| 2026-03-23 | PR #174 (resolved #126) | -3                   | 70                       |
+| 2026-03-23 | PR #174 (resolved #125) | -3                   | 70                       |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -78,7 +81,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is 
 
 Moderate risk. Some deferred workarounds and sub-optimal patterns that will slow future phases if not addressed.
 
-Current debt (score 13) is concentrated in `MapEditorView` extraction debt. The three score-3 items (#151, #126, #125) all concern the same component: `gridData` full-rebuild on calibration changes (#151), the pending `useCalibration`/`useMapExport` extraction (#126), and the oversized `useMapPersistence` API surface (#125). These will compound as game logic is added in Phase 2. The two score-2 items are structural: per-tool-panel wiring composable extraction (#161) and the `cellsForEdges` composable (#169). PR #173 (minor-debt-bundle) closed all seven minor debt items (#111, #112, #154, #162, #165, #166, #170), reducing net open debt from 22 to 13.
+Current debt (score 9) is distributed across three priority levels. One score-3 item remains: `gridData` full-rebuild on calibration changes (#151), a performance issue requiring a non-trivial geometry/cell split. Two score-2 structural items: per-tool-panel wiring composable extraction (#161) and the `cellsForEdges` composable (#169). Two new score-1 items from PR #174 team review are theoretical-only: `stripPrivateFields` depth limit (#175) and `onCalibrationChange` write-path validation asymmetry (#176). PR #174 closed six net score points by resolving #125 and #126 (the MapEditorView extraction and useMapPersistence grouping items).
 
 ---
 
@@ -86,13 +89,13 @@ Current debt (score 13) is concentrated in `MapEditorView` extraction debt. The 
 
 _Ordered by score descending (ties: newest first). Resolved items are removed._
 
-| Score | Issue | Title                                                                             | PR Introduced | Assessment                                                                                                                                                                                                                                                                                                                                                     |
-| ----- | ----- | --------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 3     | #151  | perf: gridData rebuilds full cell array on any calibration change                 | PR #150       | ~2,240 cell objects rebuild on any calibration field change including strokeWidth/northOffset nudges. Causes visible lag on slower machines. Fix requires splitting gridData into geometry + cell layers — non-trivial refactor.                                                                                                                               |
-| 3     | #126  | Extract `useCalibration` and `useMapExport` from `MapEditorView`                  | PR #122       | MapEditorView still carries ~378 lines of inline logic despite the extraction of 8 composables. Calibration and export are self-contained concerns that weren't in scope for this PR.                                                                                                                                                                          |
-| 3     | #125  | Reduce `useMapPersistence` API surface (23 return values)                         | PR #122       | 23 return values with push/pull dialog state mixed into a persistence composable. Reduces reusability and increases caller coupling. Grouping into sub-objects would clarify ownership.                                                                                                                                                                        |
-| 2     | #161  | refactor: extract per-tool-panel wiring in MapEditorView into a shared composable | PR #158       | Three nearly-identical panel-wiring blocks in MapEditorView will grow with each new tool panel. Requires design decision on composable API shape.                                                                                                                                                                                                              |
-| 2     | #169  | refactor: extract cellsForEdges into useEdgeLineLayer composable                  | PR #168       | `cellsForEdges` invalidates on any `gridData` change (including LOS/selection state) because it depends on `cells`, downstream of the monolithic `gridData` computed. The structure encodes the template's nested v-for shape in script setup. Natural fit for extraction into `useEdgeLineLayer(cells, overlayConfig)` during overlay-arch-refactor_20260322. |
+| Score | Issue | Title                                                                               | PR Introduced | Assessment                                                                                                                                                                                                                                                                                                                                                     |
+| ----- | ----- | ----------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3     | #151  | perf: gridData rebuilds full cell array on any calibration change                   | PR #150       | ~2,240 cell objects rebuild on any calibration field change including strokeWidth/northOffset nudges. Causes visible lag on slower machines. Fix requires splitting gridData into geometry + cell layers — non-trivial refactor.                                                                                                                               |
+| 2     | #161  | refactor: extract per-tool-panel wiring in MapEditorView into a shared composable   | PR #158       | Three nearly-identical panel-wiring blocks in MapEditorView will grow with each new tool panel. Requires design decision on composable API shape.                                                                                                                                                                                                              |
+| 2     | #169  | refactor: extract cellsForEdges into useEdgeLineLayer composable                    | PR #168       | `cellsForEdges` invalidates on any `gridData` change (including LOS/selection state) because it depends on `cells`, downstream of the monolithic `gridData` computed. The structure encodes the template's nested v-for shape in script setup. Natural fit for extraction into `useEdgeLineLayer(cells, overlayConfig)` during overlay-arch-refactor_20260322. |
+| 1     | #175  | perf: add depth limit to stripPrivateFields to prevent deep-walk on malformed input | PR #174       | `stripPrivateFields` has no recursion depth guard. No exploit path exists — all callers pass Zod-validated mapData with bounded nesting. Theoretical risk only; defer until a practical need emerges.                                                                                                                                                          |
+| 1     | #176  | refactor: add write-path validation to onCalibrationChange in useCalibration        | PR #174       | `onCalibrationChange` writes to localStorage without running the same `safeNumeric`/`safeBoolean`/`safeOrientation` guards used on the read path. Internal API with a single trusted caller. Acceptable asymmetry for now.                                                                                                                                     |
 
 ---
 
