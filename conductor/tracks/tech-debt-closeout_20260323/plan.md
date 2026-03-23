@@ -40,14 +40,14 @@ MapEditorView (#161), and the `cellsForEdges` logic that belongs in its own comp
 
 ### Tasks
 
-- [ ] Task 2.1: Read MapEditorView and identify the three repeated panel-wiring blocks (#161)
-- [ ] Task 2.2: Write tests for the new `useToolPanelWiring` composable contract
-- [ ] Task 2.3: Extract shared composable `useToolPanelWiring`; replace all three call sites
-- [ ] Task 2.4: Close GitHub issue #161
-- [ ] Task 2.5: Read `cellsForEdges` usage and define `useEdgeLineLayer(cells, overlayConfig)` interface (#169)
-- [ ] Task 2.6: Write tests for `useEdgeLineLayer`
-- [ ] Task 2.7: Extract `useEdgeLineLayer` composable; update MapEditorView / overlay component
-- [ ] Task 2.8: Close GitHub issue #169
+- [x] Task 2.1: Read MapEditorView and identify the three repeated panel-wiring blocks (#161)
+- [x] Task 2.2: Write tests for the new `useToolPanelWiring` composable contract
+- [x] Task 2.3: Extract shared composable `useToolPanelWiring`; replace all three call sites
+- [x] Task 2.4: Close GitHub issue #161
+- [x] Task 2.5: Read `cellsForEdges` usage and define `useEdgeLineLayer(cells, overlayConfig)` interface (#169)
+- [x] Task 2.6: Write tests for `useEdgeLineLayer`
+- [x] Task 2.7: Extract `useEdgeLineLayer` composable; update MapEditorView / overlay component
+- [x] Task 2.8: Close GitHub issue #169
 
 ### Verification
 
