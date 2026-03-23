@@ -86,7 +86,15 @@ export function useHexInteraction({
   // M2: shared paint helper — eliminates identical blocks in onHexClick and onHexMouseenter
   function applyPaint(hexId) {
     const existingIdx = hexIndex.value.get(hexId);
-    if (existingIdx !== undefined) {
+    if (paintTerrain.value === 'building') {
+      // Buildings set hexFeature, not terrain, so existing terrain is preserved.
+      if (existingIdx !== undefined) {
+        mapData.value.hexes[existingIdx].hexFeature = { type: 'building' };
+        onHexUpdate(mapData.value.hexes[existingIdx]);
+      } else {
+        onHexUpdate({ hex: hexId, hexFeature: { type: 'building' } });
+      }
+    } else if (existingIdx !== undefined) {
       // M1: mutate in-place to avoid object allocation on every paint stroke
       mapData.value.hexes[existingIdx].terrain = paintTerrain.value;
       onHexUpdate(mapData.value.hexes[existingIdx]);
@@ -126,6 +134,13 @@ export function useHexInteraction({
   function onHexRightClick(hexId) {
     if (editorMode.value === 'elevation') {
       clearHexElevation(hexId);
+    } else if (editorMode.value === 'paint' && paintTerrain.value === 'building') {
+      // Right-click clears the hexFeature (removes building) without touching terrain.
+      const existingIdx = hexIndex.value.get(hexId);
+      if (existingIdx !== undefined) {
+        mapData.value.hexes[existingIdx].hexFeature = null;
+        onHexUpdate(mapData.value.hexes[existingIdx]);
+      }
     }
   }
 

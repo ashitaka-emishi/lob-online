@@ -159,6 +159,17 @@ describe('useHexInteraction', () => {
         expect.objectContaining({ hex: '01.01', terrain: 'woods' })
       );
     });
+
+    it('click with building sets hexFeature not terrain', () => {
+      const args = makeArgs({ editorMode: ref('paint'), paintTerrain: ref('building') });
+      const { onHexClick } = useHexInteraction(args);
+      onHexClick('01.01', {});
+      expect(args.onHexUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ hex: '01.01', hexFeature: { type: 'building' } })
+      );
+      // terrain should NOT be changed to 'building'
+      expect(args.onHexUpdate.mock.calls[0][0].terrain).not.toBe('building');
+    });
   });
 
   describe('onHexRightClick', () => {
@@ -176,6 +187,16 @@ describe('useHexInteraction', () => {
       const { onHexRightClick } = useHexInteraction(args);
       onHexRightClick('01.01');
       expect(args.onHexUpdate).not.toHaveBeenCalled();
+    });
+
+    it('clears hexFeature when paint mode and building selected', () => {
+      const args = makeArgs({ editorMode: ref('paint'), paintTerrain: ref('building') });
+      args.mapData.value.hexes[0].hexFeature = { type: 'building' };
+      const { onHexRightClick } = useHexInteraction(args);
+      onHexRightClick('01.01');
+      expect(args.onHexUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ hex: '01.01', hexFeature: null })
+      );
     });
   });
 
