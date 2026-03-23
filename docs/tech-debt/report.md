@@ -1,17 +1,17 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-03-23 after PR #177._
+_Last updated: 2026-03-23 after PR #178._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                       |
-| -------------------------------- | --------------------------------------------------------------------------- |
-| Open debt items                  | 5                                                                           |
-| Cumulative debt score (net open) | 9                                                                           |
-| Highest-risk item                | gridData rebuilds full cell array on any calibration change (#151, score 3) |
-| PRs tracked                      | 53                                                                          |
+| Metric                           | Value |
+| -------------------------------- | ----- |
+| Open debt items                  | 0     |
+| Cumulative debt score (net open) | 0     |
+| Highest-risk item                | —     |
+| PRs tracked                      | 59    |
 
 ---
 
@@ -73,6 +73,12 @@ _Last updated: 2026-03-23 after PR #177._
 | 2026-03-23 | PR #174 (resolved #126) | -3                   | 70                       |
 | 2026-03-23 | PR #174 (resolved #125) | -3                   | 70                       |
 | 2026-03-23 | PR #177                 | 0                    | 70                       |
+| 2026-03-23 | PR #178 (resolved #151) | -3                   | 70                       |
+| 2026-03-23 | PR #178 (resolved #161) | -2                   | 70                       |
+| 2026-03-23 | PR #178 (resolved #169) | -2                   | 70                       |
+| 2026-03-23 | PR #178 (resolved #175) | -1                   | 70                       |
+| 2026-03-23 | PR #178 (resolved #176) | -1                   | 70                       |
+| 2026-03-23 | PR #178                 | 0                    | 70                       |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -80,9 +86,9 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is 
 
 ## Risk Assessment
 
-Moderate risk. Some deferred workarounds and sub-optimal patterns that will slow future phases if not addressed.
+No debt items recorded. Risk level: **None**.
 
-Current debt (score 9) is distributed across three priority levels. One score-3 item remains: `gridData` full-rebuild on calibration changes (#151), a performance issue requiring a non-trivial geometry/cell split. Two score-2 structural items: per-tool-panel wiring composable extraction (#161) and the `cellsForEdges` composable (#169). Two new score-1 items from PR #174 team review are theoretical-only: `stripPrivateFields` depth limit (#175) and `onCalibrationChange` write-path validation asymmetry (#176). PR #174 closed six net score points by resolving #125 and #126 (the MapEditorView extraction and useMapPersistence grouping items).
+PR #178 (tech debt closeout + team-review fixes) resolved all 5 previously open items. The calibration validation gap (#151, #175, #176) was addressed by extracting a shared `sanitizeCalibration` helper used across all write paths. The composable extraction items (#161, #169) were delivered, and the performance isolation issue (LOS/selection flags in `gridData`) was corrected so that hex selection no longer invalidates `useEdgeLineLayer`. The register is now clean.
 
 ---
 
@@ -90,13 +96,10 @@ Current debt (score 9) is distributed across three priority levels. One score-3 
 
 _Ordered by score descending (ties: newest first). Resolved items are removed._
 
-| Score | Issue | Title                                                                               | PR Introduced | Assessment                                                                                                                                                                                                                                                                                                                                                     |
-| ----- | ----- | ----------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 3     | #151  | perf: gridData rebuilds full cell array on any calibration change                   | PR #150       | ~2,240 cell objects rebuild on any calibration field change including strokeWidth/northOffset nudges. Causes visible lag on slower machines. Fix requires splitting gridData into geometry + cell layers — non-trivial refactor.                                                                                                                               |
-| 2     | #161  | refactor: extract per-tool-panel wiring in MapEditorView into a shared composable   | PR #158       | Three nearly-identical panel-wiring blocks in MapEditorView will grow with each new tool panel. Requires design decision on composable API shape.                                                                                                                                                                                                              |
-| 2     | #169  | refactor: extract cellsForEdges into useEdgeLineLayer composable                    | PR #168       | `cellsForEdges` invalidates on any `gridData` change (including LOS/selection state) because it depends on `cells`, downstream of the monolithic `gridData` computed. The structure encodes the template's nested v-for shape in script setup. Natural fit for extraction into `useEdgeLineLayer(cells, overlayConfig)` during overlay-arch-refactor_20260322. |
-| 1     | #175  | perf: add depth limit to stripPrivateFields to prevent deep-walk on malformed input | PR #174       | `stripPrivateFields` has no recursion depth guard. No exploit path exists — all callers pass Zod-validated mapData with bounded nesting. Theoretical risk only; defer until a practical need emerges.                                                                                                                                                          |
-| 1     | #176  | refactor: add write-path validation to onCalibrationChange in useCalibration        | PR #174       | `onCalibrationChange` writes to localStorage without running the same `safeNumeric`/`safeBoolean`/`safeOrientation` guards used on the read path. Internal API with a single trusted caller. Acceptable asymmetry for now.                                                                                                                                     |
+| Score | Issue | Title | PR Introduced | Assessment |
+| ----- | ----- | ----- | ------------- | ---------- |
+
+_No open debt items._
 
 ---
 
