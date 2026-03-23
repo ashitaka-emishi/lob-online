@@ -105,11 +105,11 @@ function onOverlayToggle(key) {
       <label class="slider-label">Target: {{ targetElevation }}</label>
       <input
         type="range"
+        class="slider-input"
         :min="0"
         :max="elevationLevels - 1"
         :value="targetElevation"
         @input="onSliderChange"
-        class="slider-input"
       />
     </div>
 
