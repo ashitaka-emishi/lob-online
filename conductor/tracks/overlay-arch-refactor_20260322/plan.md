@@ -3,7 +3,7 @@
 **Track ID:** overlay-arch-refactor_20260322
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-03-22
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -97,16 +97,16 @@ pass-through merger, no longer knowing the contents of each tool's config.
 
 ### Tasks
 
-- [ ] Task 3.1: Per tool panel (terrain, elevation, road, stream/wall, contour, wedge):
+- [x] Task 3.1: Per tool panel (terrain, elevation, road, stream/wall, contour, wedge):
       add a `computed` that returns the panel's `overlayConfig` slice and expose it via
       the chosen ownership mechanism (emit or store write).
-- [ ] Task 3.2: Update `MapEditorView` to merge incoming slices into the single
+- [x] Task 3.2: Update `MapEditorView` to merge incoming slices into the single
       `overlayConfig` passed to `HexMapOverlay`. `MapEditorView` must not hard-code
       any tool-specific rendering flags.
-- [ ] Task 3.3: Write/update composable composition contract doc (#155) — a JSDoc block
+- [x] Task 3.3: Write/update composable composition contract doc (#155) — a JSDoc block
       or inline comment describing how `useHexPaintTool`, `useEdgePaintTool`, and
       `useClickHexside` compose and which events they share.
-- [ ] Task 3.4: Run `npm run test:coverage`; confirm coverage ≥ 70%. Run lint + format.
+- [x] Task 3.4: Run `npm run test:coverage`; confirm coverage ≥ 70%. Run lint + format.
 
 ### Verification
 
