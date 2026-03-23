@@ -18,29 +18,43 @@ const DEFAULT_CALIBRATION = {
   northOffset: 0,
 };
 
+/**
+ * Sanitises a raw calibration object against DEFAULT_CALIBRATION.
+ * Rejects NaN/Infinity numerics, non-boolean booleans, and invalid orientation
+ * strings, falling back to the default value for each field. Unknown keys are
+ * dropped; known optional extension fields (rotation, locked) are type-checked
+ * and included only when present.
+ */
+function sanitizeCalibration(raw) {
+  const safeNumeric = (val, fallback) => (Number.isFinite(val) ? val : fallback);
+  const safeBoolean = (val, fallback) => (typeof val === 'boolean' ? val : fallback);
+  const safeOrientation = (val, fallback) => (VALID_ORIENTATIONS.includes(val) ? val : fallback);
+  const D = DEFAULT_CALIBRATION;
+  const result = {
+    cols: safeNumeric(raw.cols, D.cols),
+    rows: safeNumeric(raw.rows, D.rows),
+    dx: safeNumeric(raw.dx, D.dx),
+    dy: safeNumeric(raw.dy, D.dy),
+    hexWidth: safeNumeric(raw.hexWidth, D.hexWidth),
+    hexHeight: safeNumeric(raw.hexHeight, D.hexHeight),
+    imageScale: safeNumeric(raw.imageScale, D.imageScale),
+    strokeWidth: safeNumeric(raw.strokeWidth, D.strokeWidth),
+    northOffset: safeNumeric(raw.northOffset, D.northOffset),
+    orientation: safeOrientation(raw.orientation, D.orientation),
+    evenColUp: safeBoolean(raw.evenColUp, D.evenColUp),
+  };
+  // Optional extension fields — typed but absent from DEFAULT_CALIBRATION.
+  // Only included when present so callers can distinguish "not set" from a default.
+  if (raw.rotation !== undefined) result.rotation = safeNumeric(raw.rotation, 0);
+  if (raw.locked !== undefined) result.locked = safeBoolean(raw.locked, false);
+  return result;
+}
+
 function loadCalibration() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      const parsed = JSON.parse(stored);
-      const safeNumeric = (val, fallback) => (Number.isFinite(val) ? val : fallback);
-      const safeBoolean = (val, fallback) => (typeof val === 'boolean' ? val : fallback);
-      const safeOrientation = (val, fallback) =>
-        VALID_ORIENTATIONS.includes(val) ? val : fallback;
-      const D = DEFAULT_CALIBRATION;
-      return {
-        cols: safeNumeric(parsed.cols, D.cols),
-        rows: safeNumeric(parsed.rows, D.rows),
-        dx: safeNumeric(parsed.dx, D.dx),
-        dy: safeNumeric(parsed.dy, D.dy),
-        hexWidth: safeNumeric(parsed.hexWidth, D.hexWidth),
-        hexHeight: safeNumeric(parsed.hexHeight, D.hexHeight),
-        imageScale: safeNumeric(parsed.imageScale, D.imageScale),
-        strokeWidth: safeNumeric(parsed.strokeWidth, D.strokeWidth),
-        northOffset: safeNumeric(parsed.northOffset, D.northOffset),
-        orientation: safeOrientation(parsed.orientation, D.orientation),
-        evenColUp: safeBoolean(parsed.evenColUp, D.evenColUp),
-      };
+      return sanitizeCalibration(JSON.parse(stored));
     }
   } catch (_) {
     /* ignore */
@@ -61,37 +75,15 @@ export function useCalibration() {
   const calibrationMode = ref(false);
 
   function onCalibrationChange(val) {
-    const safeNumeric = (v, fallback) => (Number.isFinite(v) ? v : fallback);
-    const safeBoolean = (v, fallback) => (typeof v === 'boolean' ? v : fallback);
-    const safeOrientation = (v, fallback) => (VALID_ORIENTATIONS.includes(v) ? v : fallback);
-    const D = DEFAULT_CALIBRATION;
-    const safe = {
-      cols: safeNumeric(val.cols, D.cols),
-      rows: safeNumeric(val.rows, D.rows),
-      dx: safeNumeric(val.dx, D.dx),
-      dy: safeNumeric(val.dy, D.dy),
-      hexWidth: safeNumeric(val.hexWidth, D.hexWidth),
-      hexHeight: safeNumeric(val.hexHeight, D.hexHeight),
-      imageScale: safeNumeric(val.imageScale, D.imageScale),
-      strokeWidth: safeNumeric(val.strokeWidth, D.strokeWidth),
-      northOffset: safeNumeric(val.northOffset, D.northOffset),
-      orientation: safeOrientation(val.orientation, D.orientation),
-      evenColUp: safeBoolean(val.evenColUp, D.evenColUp),
-    };
-    // Preserve optional fields not covered by DEFAULT_CALIBRATION (e.g. rotation, locked)
-    const extras = {};
-    for (const k of Object.keys(val)) {
-      if (!(k in safe)) extras[k] = val[k];
-    }
-    const validated = { ...safe, ...extras };
+    const validated = sanitizeCalibration(val);
     calibration.value = validated;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(validated));
   }
 
   function onCalibrationLoaded(gridSpec) {
-    const merged = { ...DEFAULT_CALIBRATION, ...gridSpec };
-    calibration.value = merged;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    const validated = sanitizeCalibration({ ...DEFAULT_CALIBRATION, ...gridSpec });
+    calibration.value = validated;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(validated));
   }
 
   function toggleCalibrationMode() {

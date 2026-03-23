@@ -7,6 +7,10 @@ import { ref } from 'vue';
  *
  * @param {string} defaultType - Initial selected edge type for this panel.
  * @param {{ handleEdgePaint, handleEdgeClear, handleEdgeClearAll, activePanelOverlayConfig }} deps
+ *   `activePanelOverlayConfig` is a shared Ref written by all panel instances. This is an
+ *   intentional last-writer-wins pattern that relies on the accordion's single-panel exclusivity
+ *   guarantee — only one panel is active at a time. If multiple panels were ever open
+ *   simultaneously they would race on this ref.
  * @returns {{ selectedType, onTypeChange, onEdgePaint, onEdgeClear, onEdgeClearAll, onOverlayConfig }}
  */
 export function useEdgePanelWiring(defaultType, deps) {

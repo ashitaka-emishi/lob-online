@@ -187,8 +187,11 @@ watch(
 );
 
 // gridData: translation + data enrichment layer. Depends on gridGeometry (cached) plus
-// the calibration fields that affect translation/labels and the per-hex data/overlay state.
+// the calibration fields that affect translation/labels and the per-hex data index.
 // Rebuilding this is fast: no defineHex/Grid, just arithmetic + a geoCells.map().
+// LOS/selection display flags are intentionally absent here — they live in
+// cellsWithDisplayAttrs so that selection changes do NOT invalidate this layer
+// or the useEdgeLineLayer computeds that depend on `cells` (#151 follow-up).
 const gridData = computed(() => {
   const { grid, geoCells, gridRows } = gridGeometry.value;
   const { dx, dy, imageScale } = props.calibration;
@@ -199,7 +202,6 @@ const gridData = computed(() => {
   const ty = props.imageHeight * imageScale - dy - anchorHex.y;
 
   const edgeLabels = getEdgeLabels(northOffset);
-  const los = props.overlayConfig.los;
 
   const cells = geoCells.map((geoCell) => {
     const { id, corners, cx, cy } = geoCell;
@@ -215,12 +217,6 @@ const gridData = computed(() => {
       wedgeElevations: known?.wedgeElevations ?? null,
       edges: known?.edges ?? {},
       hexFeature: known?.hexFeature ?? null,
-      isVP: vpHexSet.value.has(id),
-      isSeed: seedHexSet.value.has(id),
-      isLosA: id === (los?.hexA ?? null),
-      isLosB: id === (los?.hexB ?? null),
-      isLosPath: losPathSet.value.has(id),
-      isLosBlocked: id === (los?.blockedHex ?? null),
       slopeArrowLine: slopeMid ? { x1: cx, y1: cy, x2: slopeMid.x, y2: slopeMid.y } : null,
       slopeArrowLabel: slopeDir ? (edgeLabels[slope] ?? null) : null,
     };
@@ -248,11 +244,21 @@ const cellsWithDisplayAttrs = computed(() => {
   const gridWeight = props.overlayConfig.grid?.weight;
   const hexFillCfg = props.overlayConfig.hexFill;
   const sw = props.calibration.strokeWidth;
+  // LOS/selection flags live here rather than in gridData so that selection and
+  // LOS changes only invalidate this display computed, not cells or useEdgeLineLayer.
+  const los = props.overlayConfig.los;
 
   return cells.value.map((cell) => {
+    const isVP = vpHexSet.value.has(cell.id);
+    const isSeed = seedHexSet.value.has(cell.id);
+    const isLosA = cell.id === (los?.hexA ?? null);
+    const isLosB = cell.id === (los?.hexB ?? null);
+    const isLosPath = losPathSet.value.has(cell.id);
+    const isLosBlocked = cell.id === (los?.blockedHex ?? null);
+
     // fill
     let fill, fillOpacity;
-    if (cell.isLosBlocked) {
+    if (isLosBlocked) {
       fill = '#cc4444';
       fillOpacity = 0.5;
     } else {
@@ -264,35 +270,34 @@ const cellsWithDisplayAttrs = computed(() => {
     // stroke color
     let stroke;
     if (diag) stroke = '#cc88ff';
-    else if (cell.isLosBlocked) stroke = '#cc4444';
-    else if (cell.isLosA) stroke = '#44aa44';
-    else if (cell.isLosB) stroke = '#4488cc';
-    else if (cell.isLosPath) stroke = '#cc8844';
+    else if (isLosBlocked) stroke = '#cc4444';
+    else if (isLosA) stroke = '#44aa44';
+    else if (isLosB) stroke = '#4488cc';
+    else if (isLosPath) stroke = '#cc8844';
     else if (selectedHexId === cell.id) stroke = '#ffdd00';
-    else if (cell.isSeed) stroke = '#cc44ee';
-    else if (cell.isVP) stroke = '#cc3333';
+    else if (isSeed) stroke = '#cc44ee';
+    else if (isVP) stroke = '#cc3333';
     else stroke = gridWeight === 'diagnostic' ? '#cc88ff' : '#88776644';
 
     // stroke width
     let strokeWidth;
     if (diag) strokeWidth = sw;
-    else if (cell.isLosBlocked || cell.isLosA || cell.isLosB || cell.isLosPath)
-      strokeWidth = Math.max(sw * 2.5, 2);
+    else if (isLosBlocked || isLosA || isLosB || isLosPath) strokeWidth = Math.max(sw * 2.5, 2);
     else if (selectedHexId === cell.id) strokeWidth = Math.max(sw * 3, 2);
-    else if (cell.isSeed || cell.isVP) strokeWidth = Math.max(sw * 2, 1.5);
+    else if (isSeed || isVP) strokeWidth = Math.max(sw * 2, 1.5);
     else strokeWidth = sw;
 
     // stroke opacity
     let strokeOpacity;
     if (diag) strokeOpacity = 0.75;
     else if (
-      cell.isLosBlocked ||
-      cell.isLosA ||
-      cell.isLosB ||
-      cell.isLosPath ||
+      isLosBlocked ||
+      isLosA ||
+      isLosB ||
+      isLosPath ||
       selectedHexId === cell.id ||
-      cell.isSeed ||
-      cell.isVP
+      isSeed ||
+      isVP
     )
       strokeOpacity = 1;
     else strokeOpacity = 0.6;
@@ -455,7 +460,8 @@ function onHexMouseenter(hexId) {
   emit('hex-mouseenter', hexId);
 }
 
-// Exposed for test instrumentation only.
+// Exposed for test instrumentation only. gridGeometry is @internal — not intended
+// for parent component consumption; the raw honeycomb Grid is an implementation detail.
 defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
 </script>
 

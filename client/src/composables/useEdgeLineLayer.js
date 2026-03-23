@@ -8,8 +8,8 @@ const CANONICAL_EDGE_DIRS = ['N', 'NE', 'SE'];
  *
  * Extracted from HexMapOverlay (#169) so the logic is independently testable and
  * the dependency chain is explicit: only `cells` and `overlayConfig.edgeLine` are
- * reactive inputs. LOS / selection state changes in overlayConfig do NOT invalidate
- * this layer because they live in unrelated overlayConfig keys.
+ * reactive inputs. LOS / selection state changes do NOT invalidate this layer —
+ * those flags are computed in cellsWithDisplayAttrs, not in the `cells` ref passed here.
  *
  * @param {Ref<Array>} cells - Reactive ref to the enriched cell array from gridData.
  * @param {Ref<Object>|Object} overlayConfig - Reactive ref or reactive object containing
@@ -24,12 +24,14 @@ export function useEdgeLineLayer(cells, overlayConfig) {
   });
 
   function _buildCellEdgeData(lineAttrFn) {
+    // Capture once outside the loop — avoids repeated reactive .value access per cell.
+    const groups = edgeLineGroups.value;
     return cells.value.map((cell) => ({
       id: cell.id,
       edgeFaces: CANONICAL_EDGE_DIRS.map((dir, fi) => ({
         dir,
         lineAttrs: lineAttrFn(cell, dir),
-        groups: edgeLineGroups.value.map((group) => ({
+        groups: groups.map((group) => ({
           group,
           features: cell.edges?.[fi]?.filter((f) => group.typeSet.has(f.type)) ?? [],
         })),
