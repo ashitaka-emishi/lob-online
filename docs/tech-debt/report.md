@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-03-23 after PR #174._
+_Last updated: 2026-03-23 after PR #177._
 
 ---
 
@@ -11,7 +11,7 @@ _Last updated: 2026-03-23 after PR #174._
 | Open debt items                  | 5                                                                           |
 | Cumulative debt score (net open) | 9                                                                           |
 | Highest-risk item                | gridData rebuilds full cell array on any calibration change (#151, score 3) |
-| PRs tracked                      | 52                                                                          |
+| PRs tracked                      | 53                                                                          |
 
 ---
 
@@ -72,6 +72,7 @@ _Last updated: 2026-03-23 after PR #174._
 | 2026-03-23 | PR #174                 | 2                    | 70                       |
 | 2026-03-23 | PR #174 (resolved #126) | -3                   | 70                       |
 | 2026-03-23 | PR #174 (resolved #125) | -3                   | 70                       |
+| 2026-03-23 | PR #177                 | 0                    | 70                       |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
