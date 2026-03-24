@@ -115,15 +115,9 @@ export function useHexInteraction({
     if (tryPickLosHex?.(hexId)) return;
 
     if (editorMode.value === 'elevation') {
-      if (selectedHexId.value === hexId) {
-        selectedHexIds.value = new Set(); // deselect on re-click
-      } else {
-        selectedHexIds.value = new Set([hexId]);
-        paintHexElevation(hexId);
-      }
+      paintHexElevation(hexId);
     } else if (editorMode.value === 'paint') {
       applyPaint(hexId);
-      selectedHexIds.value = new Set([hexId]);
     } else if (editorMode.value === 'wedge') {
       selectedHexIds.value = selectedHexId.value === hexId ? new Set() : new Set([hexId]);
     } else if (editorMode.value === 'select') {

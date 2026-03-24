@@ -1,9 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import EdgeToolPanelShell from './EdgeToolPanelShell.vue';
-import { ROAD_GROUPS } from '../config/feature-types.js';
-
-const ROAD_TYPES = ['trail', 'road', 'pike'];
+import { ROAD_GROUPS, EDGE_PREREQUISITES } from '../config/feature-types.js';
 
 const HELP_TEXT =
   'Click an edge to paint the selected road type. ' +
@@ -38,9 +36,10 @@ const validationError = ref(null);
 // ── Edge event routing ──────────────────────────────────────────────────────
 
 function handleEdgeClick(hexId, faceIndex) {
-  if (props.selectedType === 'bridge') {
+  const prereqs = EDGE_PREREQUISITES[props.selectedType];
+  if (prereqs) {
     const features = props.getEdgeFeatures(hexId, faceIndex);
-    if (!features.some((f) => ROAD_TYPES.includes(f))) {
+    if (!prereqs.some((p) => features.includes(p))) {
       validationError.value = 'Bridge requires a road, trail, or pike on this edge.';
       setTimeout(() => {
         validationError.value = null;
