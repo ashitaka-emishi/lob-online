@@ -10,7 +10,7 @@
 export const TERRAIN_COLORS = {
   clear: null,
   woods: 'rgba(34,85,34,0.8)',
-  orchards: 'rgba(100,160,60,0.8)',
+  orchard: 'rgba(144,238,100,0.8)',
   marsh: 'rgba(60,120,100,0.8)',
   slopingGround: 'rgba(139,100,60,0.8)',
   woodedSloping: 'rgba(55,35,10,0.85)',
@@ -27,13 +27,13 @@ export const ROAD_GROUPS = [
   {
     types: ['trail'],
     color: '#c89428',
-    strokeWidth: 5,
-    dash: '8,5',
+    strokeWidth: 8,
+    dash: '10,6',
     outlineColor: '#000',
-    outlineWidth: 8,
+    outlineWidth: 12,
   },
-  { types: ['road'], color: '#c89428', strokeWidth: 6, outlineColor: '#000', outlineWidth: 9 },
-  { types: ['pike'], color: '#ffffff', strokeWidth: 7, outlineColor: '#000', outlineWidth: 10 },
+  { types: ['road'], color: '#c89428', strokeWidth: 10, outlineColor: '#000', outlineWidth: 14 },
+  { types: ['pike'], color: '#ffffff', strokeWidth: 12, outlineColor: '#000', outlineWidth: 16 },
 ];
 
 /** Road types that receive through-hex line rendering (excludes bridge which is a glyph). */
@@ -57,4 +57,13 @@ export const CONTOUR_GROUPS = [
 export const FORD_BRIDGE_SYMBOLS = {
   ford: 'perpendicular-ticks',
   bridge: 'bridge-glyph',
+};
+
+/**
+ * Required edge features for overlay-glyph types that depend on a base feature.
+ * Used by both panel components and the production onEdgeClick dispatch.
+ */
+export const EDGE_PREREQUISITES = {
+  bridge: ['trail', 'road', 'pike'],
+  ford: ['stream'],
 };

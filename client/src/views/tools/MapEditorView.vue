@@ -1,9 +1,15 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import HexMapOverlay from '../../components/HexMapOverlay.vue';
-import { ROAD_GROUPS, STREAM_WALL_GROUPS, CONTOUR_GROUPS } from '../../config/feature-types.js';
+import {
+  STREAM_WALL_GROUPS,
+  CONTOUR_GROUPS,
+  EDGE_PREREQUISITES,
+} from '../../config/feature-types.js';
 
-const ALL_EDGE_GROUPS = [...ROAD_GROUPS, ...STREAM_WALL_GROUPS, ...CONTOUR_GROUPS];
+// Roads are excluded from the base overlay — they only render in the Road tool panel
+// (through-hex style). Including them here would show the old along-edge road segments.
+const BASE_EDGE_GROUPS = [...STREAM_WALL_GROUPS, ...CONTOUR_GROUPS];
 import CalibrationControls from '../../components/CalibrationControls.vue';
 import ElevationSystemControls from '../../components/ElevationSystemControls.vue';
 import LosTestPanel from '../../components/LosTestPanel.vue';
@@ -117,6 +123,16 @@ const layerFlags = ref({
 const CONFIG_PANELS = new Set(['terrain', 'elevation', 'road', 'stream', 'contour']);
 const activePanelOverlayConfig = ref(null);
 
+// All tools are click-only — paintMode:'click' prevents useHexInteraction from
+// applying terrain/elevation on mouseenter (hover-paint suppression).
+const paintMode = ref('click');
+
+// Clear panel overlay config on every panel transition so a stale panel's config
+// never bleeds into the next panel's display while its first overlay-config fires.
+watch(openPanel, () => {
+  activePanelOverlayConfig.value = null;
+});
+
 // Per-panel edge wiring — encapsulates selectedType ref + the four shared event handlers.
 const _edgePanelDeps = {
   handleEdgePaint,
@@ -196,7 +212,14 @@ const hexLabelFn = (cell) => cell.id;
 
 // M2: Panels that enable hex/edge interaction — defined here so HexMapOverlay
 // does not need to know panel names.
-const INTERACTIVE_PANELS = new Set(['elevation', 'terrain', 'road', 'stream', 'contour']);
+const INTERACTIVE_PANELS = new Set([
+  'elevation',
+  'terrain',
+  'road',
+  'stream',
+  'contour',
+  'losTest',
+]);
 const EDGE_PANELS = new Set(['road', 'stream', 'contour']);
 
 const interactionEnabled = computed(() => INTERACTIVE_PANELS.has(openPanel.value));
@@ -235,7 +258,7 @@ const overlayConfig = computed(() => {
   if (layerFlags.value.edges) {
     cfg.edgeLine = {
       alwaysOn: true,
-      featureGroups: ALL_EDGE_GROUPS,
+      featureGroups: BASE_EDGE_GROUPS,
     };
   }
   if (layerFlags.value.wedges) {
@@ -376,13 +399,10 @@ const {
 
 // ── Hex interaction (composable) ──────────────────────────────────────────────
 
-// Two-layer hex-mouseenter gate:
-//   Layer 1 (HexMapOverlay): emits hex-mouseenter only when isPaintMouseDown (mouse-button held).
-//   Layer 2 (useHexInteraction): acts on hex-mouseenter only when paintMode === 'paint'.
-// Drag paint is disabled — all tools are click-only.
+// dragPaintEnabled:false keeps HexMapOverlay from emitting paint-stroke events.
 const dragPaintEnabled = false;
 
-// Updates both paintTerrain (UI active-state) and paintHexFeature (mutation intent).
+//Updates both paintTerrain (UI active-state) and paintHexFeature (mutation intent).
 // Building is a hex feature, not a terrain type — keeping them separate avoids magic-string
 // checks in the composable (SRP fix from team review).
 function onTerrainChange(value) {
@@ -400,6 +420,7 @@ const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter
     elevationMax,
     elevationTarget,
     paintHexFeature,
+    paintMode,
     tryPickLosHex,
     onHexUpdate,
   });
@@ -416,27 +437,38 @@ const { onEdgeClick: legacyOnEdgeClick } = useEdgeToggle({
 
 // Routes edge-click from HexMapOverlay to the active tool panel's handler.
 // { hexId, dir, clientX, clientY } — clientX/Y are screen coords for logging.
+// Dispatch table for edge click and right-click — one entry per panel.
+// selectedType: reactive ref for the currently active tool type.
+// clearTypes: feature type strings removed on right-click (whole-hex clear).
+// clearSingle: if true, right-click removes only selectedType from the clicked face.
+const EDGE_DISPATCH = {
+  road: {
+    selectedType: () => road.selectedType.value,
+    clearTypes: ['trail', 'road', 'pike', 'bridge'],
+  },
+  stream: {
+    selectedType: () => stream.selectedType.value,
+    clearTypes: ['stream', 'stoneWall', 'ford'],
+  },
+  contour: {
+    selectedType: () => contour.selectedType.value,
+    clearSingle: true,
+  },
+};
+
 function onEdgeClick({ hexId, dir }) {
   const faceIndex = DIRS.indexOf(dir);
   if (faceIndex === -1) return;
-  let type;
-  if (openPanel.value === 'road') {
-    type = road.selectedType.value;
-    if (type === 'bridge') {
-      const feats = getEdgeFeaturesAt(hexId, faceIndex);
-      if (!feats.some((f) => ['trail', 'road', 'pike'].includes(f))) return;
-    }
-  } else if (openPanel.value === 'stream') {
-    type = stream.selectedType.value;
-    if (type === 'ford') {
-      const feats = getEdgeFeaturesAt(hexId, faceIndex);
-      if (!feats.includes('stream')) return;
-    }
-  } else if (openPanel.value === 'contour') {
-    type = contour.selectedType.value;
-  } else {
+  const entry = EDGE_DISPATCH[openPanel.value];
+  if (!entry) {
     legacyOnEdgeClick({ hexId, dir });
     return;
+  }
+  const type = entry.selectedType();
+  const prereqs = EDGE_PREREQUISITES[type];
+  if (prereqs) {
+    const feats = getEdgeFeaturesAt(hexId, faceIndex);
+    if (!prereqs.some((p) => feats.includes(p))) return;
   }
   handleEdgePaint(hexId, faceIndex, type);
 }
@@ -444,12 +476,12 @@ function onEdgeClick({ hexId, dir }) {
 function onEdgeRightClick({ hexId, dir }) {
   const faceIndex = DIRS.indexOf(dir);
   if (faceIndex === -1) return;
-  if (openPanel.value === 'road') {
-    handleHexEdgeClearAll(hexId, ['trail', 'road', 'pike', 'bridge']);
-  } else if (openPanel.value === 'stream') {
-    handleHexEdgeClearAll(hexId, ['stream', 'stoneWall', 'ford']);
-  } else if (openPanel.value === 'contour') {
-    handleEdgeClear(hexId, faceIndex, contour.selectedType.value);
+  const entry = EDGE_DISPATCH[openPanel.value];
+  if (!entry) return;
+  if (entry.clearSingle) {
+    handleEdgeClear(hexId, faceIndex, entry.selectedType());
+  } else {
+    handleHexEdgeClearAll(hexId, entry.clearTypes);
   }
 }
 
