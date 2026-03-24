@@ -125,37 +125,8 @@ describe('ContourToolPanel', () => {
     );
   });
 
-  // ── Auto-detect ─────────────────────────────────────────────────────────────
-
-  it('shows auto-detect button', () => {
+  it('does not render auto-detect button', () => {
     const wrapper = mount(ContourToolPanel);
-    const btn = wrapper.find('.auto-detect-btn');
-    expect(btn.exists()).toBe(true);
-  });
-
-  it('shows confirm dialog after clicking auto-detect', async () => {
-    const wrapper = mount(ContourToolPanel);
-    await wrapper.find('.auto-detect-btn').trigger('click');
-    expect(wrapper.find('.confirm-dialog').exists()).toBe(true);
-  });
-
-  it('emits auto-detect-contours on confirm', async () => {
-    const wrapper = mount(ContourToolPanel);
-    await wrapper.find('.auto-detect-btn').trigger('click');
-    await wrapper
-      .findAll('button')
-      .find((b) => b.text() === 'Detect')
-      .trigger('click');
-    expect(wrapper.emitted('auto-detect-contours')).toBeTruthy();
-  });
-
-  it('hides confirm dialog on cancel', async () => {
-    const wrapper = mount(ContourToolPanel);
-    await wrapper.find('.auto-detect-btn').trigger('click');
-    await wrapper
-      .findAll('button')
-      .find((b) => b.text() === 'Cancel')
-      .trigger('click');
-    expect(wrapper.find('.confirm-dialog').exists()).toBe(false);
+    expect(wrapper.find('.auto-detect-btn').exists()).toBe(false);
   });
 });

@@ -9,8 +9,8 @@ const _labelFn = (hex) => String(hex.elevation ?? 0);
 const _nullFillFn = () => null;
 
 const HELP_TEXT =
-  'Set a target elevation with the slider, then click or drag to paint that value. ' +
-  'Right-click to clear (set to 0). Use Raise all / Lower all to shift the entire map.';
+  'Set a target elevation with the slider, then click to paint that value. ' +
+  'Right-click to clear (set to 0).';
 
 const props = defineProps({
   selectedHex: {
@@ -21,24 +21,13 @@ const props = defineProps({
     type: Number,
     default: 22,
   },
-  paintMode: {
-    type: String,
-    default: 'click',
-  },
   targetElevation: {
     type: Number,
     default: 1,
   },
 });
 
-const emit = defineEmits([
-  'clear-all-elevations',
-  'raise-all',
-  'lower-all',
-  'paint-mode-change',
-  'overlay-config',
-  'target-elevation-change',
-]);
+const emit = defineEmits(['clear-all-elevations', 'overlay-config', 'target-elevation-change']);
 
 // ── Target elevation slider ────────────────────────────────────────────────────
 // targetElevation is owned by the parent (MapEditorView) and passed as a prop.
@@ -85,22 +74,6 @@ function onOverlayToggle(key) {
     @overlay-toggle="onOverlayToggle"
     @clear-all="emit('clear-all-elevations')"
   >
-    <div class="mode-toggle">
-      <button
-        class="mode-btn"
-        :class="{ active: paintMode === 'click' }"
-        @click="emit('paint-mode-change', 'click')"
-      >
-        Click
-      </button>
-      <button
-        class="mode-btn"
-        :class="{ active: paintMode === 'paint' }"
-        @click="emit('paint-mode-change', 'paint')"
-      >
-        Paint
-      </button>
-    </div>
     <div class="elevation-slider">
       <label class="slider-label">Target: {{ targetElevation }}</label>
       <input
@@ -119,41 +92,10 @@ function onOverlayToggle(key) {
       <span class="hex-elev-max">(max: {{ elevationLevels - 1 }})</span>
     </div>
     <div v-else class="no-selection">No hex selected</div>
-
-    <div class="bulk-buttons">
-      <button class="bulk-btn" @click="emit('raise-all')">Raise all +1</button>
-      <button class="bulk-btn" @click="emit('lower-all')">Lower all −1</button>
-    </div>
   </BaseToolPanel>
 </template>
 
 <style scoped>
-.mode-toggle {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.mode-btn {
-  flex: 1;
-  padding: 0.25rem 0.4rem;
-  background: #333;
-  border: 1px solid #555;
-  color: #a09880;
-  cursor: pointer;
-  font-size: 0.78rem;
-  font-family: inherit;
-}
-
-.mode-btn:hover {
-  background: #3a3a3a;
-}
-
-.mode-btn.active {
-  background: #3a5a2a;
-  border-color: #7aab3e;
-  color: #b0d880;
-}
-
 .elevation-slider {
   display: flex;
   flex-direction: column;
@@ -199,25 +141,5 @@ function onOverlayToggle(key) {
   font-size: 0.8rem;
   text-align: center;
   padding: 0.5rem;
-}
-
-.bulk-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.bulk-btn {
-  padding: 0.3rem 0.6rem;
-  background: #333;
-  border: 1px solid #555;
-  color: #e0d8c8;
-  cursor: pointer;
-  font-size: 0.8rem;
-  text-align: left;
-}
-
-.bulk-btn:hover {
-  background: #3a3a3a;
 }
 </style>

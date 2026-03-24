@@ -2,18 +2,13 @@
 import { ref, computed, watch } from 'vue';
 import EdgeToolPanelShell from './EdgeToolPanelShell.vue';
 import { ROAD_GROUPS } from '../config/feature-types.js';
-import { useClickHexside } from '../composables/useClickHexside.js';
 
 const ROAD_TYPES = ['trail', 'road', 'pike'];
 
 const HELP_TEXT =
-  'Click an edge to paint the selected road type. Right-click to remove it. ' +
-  'Switch to Bridge mode to place a bridge on a road edge (requires road, trail, or pike).';
-
-const MODES = [
-  { value: 'road', label: 'Paint' },
-  { value: 'bridge', label: 'Bridge' },
-];
+  'Click an edge to paint the selected road type. ' +
+  'Select Bridge to add a bridge over an existing road edge. ' +
+  'Right-click a hex to clear all road features from it.';
 
 const props = defineProps({
   selectedType: {
@@ -32,52 +27,37 @@ const emit = defineEmits([
   'edge-paint',
   'edge-clear',
   'edge-clear-all',
-  'bridge-place',
-  'bridge-remove',
+  'hex-road-clear',
   'overlay-config',
 ]);
 
-// ── Mode: paint road types vs place bridge ─────────────────────────────────
+// ── Bridge validation error ─────────────────────────────────────────────────
 
-const mode = ref('road'); // 'road' | 'bridge'
-
-// ── Bridge sub-control ──────────────────────────────────────────────────────
-
-const {
-  onEdgeClick: onBridgeClick,
-  onEdgeRightClick: onBridgeRightClick,
-  validationError,
-} = useClickHexside({
-  validateFn: (hexId, faceIndex) => {
-    const features = props.getEdgeFeatures(hexId, faceIndex);
-    return features.some((f) => ROAD_TYPES.includes(f))
-      ? { valid: true }
-      : { valid: false, reason: 'Bridge requires a road, trail, or pike on this edge.' };
-  },
-  onPlace: (hexId, faceIndex) => emit('bridge-place', { hexId, faceIndex }),
-  onRemove: (hexId, faceIndex) => emit('bridge-remove', { hexId, faceIndex }),
-});
+const validationError = ref(null);
 
 // ── Edge event routing ──────────────────────────────────────────────────────
 
 function handleEdgeClick(hexId, faceIndex) {
-  if (mode.value === 'bridge') {
-    onBridgeClick(hexId, faceIndex);
-  } else {
-    emit('edge-paint', { hexId, faceIndex, type: props.selectedType });
+  if (props.selectedType === 'bridge') {
+    const features = props.getEdgeFeatures(hexId, faceIndex);
+    if (!features.some((f) => ROAD_TYPES.includes(f))) {
+      validationError.value = 'Bridge requires a road, trail, or pike on this edge.';
+      setTimeout(() => {
+        validationError.value = null;
+      }, 3000);
+      return;
+    }
+    validationError.value = null;
   }
+  emit('edge-paint', { hexId, faceIndex, type: props.selectedType });
 }
 
-function handleEdgeRightClick(hexId, faceIndex) {
-  if (mode.value === 'bridge') {
-    onBridgeRightClick(hexId, faceIndex);
-  } else {
-    emit('edge-clear', { hexId, faceIndex, type: props.selectedType });
-  }
+function handleEdgeRightClick(hexId, _faceIndex) {
+  // Right-click on any edge clears ALL road features from the hex (not just the clicked edge).
+  emit('hex-road-clear', { hexId });
 }
 
-// Exposed for test instrumentation. MapEditorView routes edge events through
-// its own onEdgeClick/onEdgeRightClick handlers, not via these methods directly.
+// Exposed for test instrumentation.
 defineExpose({ handleEdgeClick, handleEdgeRightClick });
 
 // ── Overlay config ─────────────────────────────────────────────────────────
@@ -98,12 +78,9 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
   <EdgeToolPanelShell
     :overlay-config="ownOverlayConfig"
     :help-text="HELP_TEXT"
-    :modes="MODES"
-    :active-mode="mode"
-    @mode-change="mode = $event"
-    @clear-all="emit('edge-clear-all', ROAD_TYPES)"
+    @clear-all="emit('edge-clear-all', ['trail', 'road', 'pike', 'bridge'])"
   >
-    <!-- Paint mode: road type chooser -->
+    <!-- Road type chooser including bridge -->
     <div class="type-chooser">
       <button
         v-for="group in ROAD_GROUPS"
@@ -115,7 +92,7 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
         <span
           class="type-swatch"
           :style="{
-            background: group.color /* hardcoded hex constant from ROAD_GROUPS */,
+            background: group.color,
             width: `${group.strokeWidth * 4}px`,
             height: '3px',
             borderTop: group.dash ? `2px dashed ${group.color}` : undefined,
@@ -123,15 +100,28 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
         />
         <span class="type-name">{{ group.types[0] }}</span>
       </button>
+      <!-- Bridge as an edge type -->
+      <button
+        class="type-btn"
+        :class="{ active: selectedType === 'bridge' }"
+        @click="emit('type-change', 'bridge')"
+      >
+        <span class="type-swatch bridge-swatch">][</span>
+        <span class="type-name">bridge</span>
+      </button>
     </div>
-    <div class="tool-hint">Click an edge to paint. Right-click to remove.</div>
-
-    <!-- Bridge sub-control -->
-    <template #sub-control>
-      <div class="tool-hint">
-        Click an edge with a road/trail/pike to place a bridge.<br />Right-click to remove.
-      </div>
-      <div v-if="validationError" class="validation-error">{{ validationError }}</div>
-    </template>
+    <div class="tool-hint">Click an edge to paint. Right-click a hex to clear all roads.</div>
+    <div v-if="validationError" class="validation-error">{{ validationError }}</div>
   </EdgeToolPanelShell>
 </template>
+
+<style scoped>
+.bridge-swatch {
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #e0d8c8;
+  min-width: 1.5rem;
+  text-align: center;
+  display: inline-block;
+}
+</style>

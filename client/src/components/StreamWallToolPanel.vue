@@ -2,18 +2,11 @@
 import { ref, computed, watch } from 'vue';
 import EdgeToolPanelShell from './EdgeToolPanelShell.vue';
 import { STREAM_WALL_GROUPS } from '../config/feature-types.js';
-import { useClickHexside } from '../composables/useClickHexside.js';
-
-const STREAM_WALL_TYPES = ['stream', 'stoneWall'];
 
 const HELP_TEXT =
-  'Click an edge to paint the selected type. Right-click to remove it. ' +
-  'Switch to Ford mode to place a ford on a stream edge (requires stream).';
-
-const MODES = [
-  { value: 'paint', label: 'Paint' },
-  { value: 'ford', label: 'Ford' },
-];
+  'Click an edge to paint the selected type. ' +
+  'Select Ford to add a ford over an existing stream edge. ' +
+  'Right-click a hex to clear all stream, wall, and ford features from it.';
 
 const props = defineProps({
   selectedType: {
@@ -32,52 +25,37 @@ const emit = defineEmits([
   'edge-paint',
   'edge-clear',
   'edge-clear-all',
-  'ford-place',
-  'ford-remove',
+  'hex-stream-clear',
   'overlay-config',
 ]);
 
-// ── Mode: paint stream/wall types vs place ford ─────────────────────────────
+// ── Ford validation error ───────────────────────────────────────────────────
 
-const mode = ref('paint'); // 'paint' | 'ford'
-
-// ── Ford sub-control ────────────────────────────────────────────────────────
-
-const {
-  onEdgeClick: onFordClick,
-  onEdgeRightClick: onFordRightClick,
-  validationError,
-} = useClickHexside({
-  validateFn: (hexId, faceIndex) => {
-    const features = props.getEdgeFeatures(hexId, faceIndex);
-    return features.includes('stream')
-      ? { valid: true }
-      : { valid: false, reason: 'Ford requires a stream on this edge.' };
-  },
-  onPlace: (hexId, faceIndex) => emit('ford-place', { hexId, faceIndex }),
-  onRemove: (hexId, faceIndex) => emit('ford-remove', { hexId, faceIndex }),
-});
+const validationError = ref(null);
 
 // ── Edge event routing ──────────────────────────────────────────────────────
 
 function handleEdgeClick(hexId, faceIndex) {
-  if (mode.value === 'ford') {
-    onFordClick(hexId, faceIndex);
-  } else {
-    emit('edge-paint', { hexId, faceIndex, type: props.selectedType });
+  if (props.selectedType === 'ford') {
+    const features = props.getEdgeFeatures(hexId, faceIndex);
+    if (!features.includes('stream')) {
+      validationError.value = 'Ford requires a stream on this edge.';
+      setTimeout(() => {
+        validationError.value = null;
+      }, 3000);
+      return;
+    }
+    validationError.value = null;
   }
+  emit('edge-paint', { hexId, faceIndex, type: props.selectedType });
 }
 
-function handleEdgeRightClick(hexId, faceIndex) {
-  if (mode.value === 'ford') {
-    onFordRightClick(hexId, faceIndex);
-  } else {
-    emit('edge-clear', { hexId, faceIndex, type: props.selectedType });
-  }
+function handleEdgeRightClick(hexId, _faceIndex) {
+  // Right-click on any edge clears ALL stream/wall/ford features from the hex.
+  emit('hex-stream-clear', { hexId });
 }
 
-// Exposed for test instrumentation. MapEditorView routes edge events through
-// its own onEdgeClick/onEdgeRightClick handlers, not via these methods directly.
+// Exposed for test instrumentation.
 defineExpose({ handleEdgeClick, handleEdgeRightClick });
 
 // ── Overlay config ─────────────────────────────────────────────────────────
@@ -98,12 +76,9 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
   <EdgeToolPanelShell
     :overlay-config="ownOverlayConfig"
     :help-text="HELP_TEXT"
-    :modes="MODES"
-    :active-mode="mode"
-    @mode-change="mode = $event"
-    @clear-all="emit('edge-clear-all', STREAM_WALL_TYPES)"
+    @clear-all="emit('edge-clear-all', ['stream', 'stoneWall', 'ford'])"
   >
-    <!-- Paint mode: stream/wall type chooser -->
+    <!-- Stream/wall type chooser including ford -->
     <div class="type-chooser">
       <button
         v-for="group in STREAM_WALL_GROUPS"
@@ -115,20 +90,37 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
         <span
           class="type-swatch"
           :style="{
-            background: group.color /* hardcoded hex constant from STREAM_WALL_GROUPS */,
+            background: group.color,
             width: `${group.strokeWidth * 4}px`,
             height: '3px',
           }"
         />
         <span class="type-name">{{ group.types[0] }}</span>
       </button>
+      <!-- Ford as an edge type -->
+      <button
+        class="type-btn"
+        :class="{ active: selectedType === 'ford' }"
+        @click="emit('type-change', 'ford')"
+      >
+        <span class="type-swatch ford-swatch">][</span>
+        <span class="type-name">ford</span>
+      </button>
     </div>
-    <div class="tool-hint">Click an edge to paint. Right-click to remove.</div>
-
-    <!-- Ford sub-control -->
-    <template #sub-control>
-      <div class="tool-hint">Click a stream edge to place a ford.<br />Right-click to remove.</div>
-      <div v-if="validationError" class="validation-error">{{ validationError }}</div>
-    </template>
+    <div class="tool-hint">
+      Click an edge to paint. Right-click a hex to clear all stream features.
+    </div>
+    <div v-if="validationError" class="validation-error">{{ validationError }}</div>
   </EdgeToolPanelShell>
 </template>
+
+<style scoped>
+.ford-swatch {
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #4a90d9;
+  min-width: 1.5rem;
+  text-align: center;
+  display: inline-block;
+}
+</style>

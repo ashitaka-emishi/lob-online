@@ -141,10 +141,11 @@ export function useHexInteraction({
   function onHexRightClick(hexId) {
     if (editorMode.value === 'elevation') {
       clearHexElevation(hexId);
-    } else if (editorMode.value === 'paint' && _paintHexFeature.value) {
-      // Right-click clears the hexFeature (e.g. building) without touching terrain.
+    } else if (editorMode.value === 'paint') {
+      // Right-click clears terrain to 'clear' and removes building overlay.
       const existingIdx = hexIndex.value.get(hexId);
       if (existingIdx !== undefined) {
+        mapData.value.hexes[existingIdx].terrain = 'clear';
         mapData.value.hexes[existingIdx].hexFeature = null;
         onHexUpdate(mapData.value.hexes[existingIdx]);
       }

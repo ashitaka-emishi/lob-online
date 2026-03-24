@@ -13,20 +13,31 @@ export const TERRAIN_COLORS = {
   orchards: 'rgba(100,160,60,0.8)',
   marsh: 'rgba(60,120,100,0.8)',
   slopingGround: 'rgba(139,100,60,0.8)',
-  woodedSloping: 'rgba(80,110,50,0.8)',
+  woodedSloping: 'rgba(55,35,10,0.85)',
   unknown: 'rgba(150,150,150,0.3)',
 };
 
 /**
  * Road feature groups ordered from lowest to highest precedence (pike on top).
  * Each group specifies the types it represents, display color, stroke width,
- * and an optional SVG dash pattern.
+ * an optional SVG dash pattern, and an optional outline color/width.
+ * Bridge is a separate overlay rendered as a `][` glyph, not a line.
  */
 export const ROAD_GROUPS = [
-  { types: ['trail'], color: '#c89428', strokeWidth: 3, dash: '6,4' },
-  { types: ['road'], color: '#c89428', strokeWidth: 4 },
-  { types: ['pike'], color: '#ffffff', strokeWidth: 5 },
+  {
+    types: ['trail'],
+    color: '#c89428',
+    strokeWidth: 5,
+    dash: '8,5',
+    outlineColor: '#000',
+    outlineWidth: 8,
+  },
+  { types: ['road'], color: '#c89428', strokeWidth: 6, outlineColor: '#000', outlineWidth: 9 },
+  { types: ['pike'], color: '#ffffff', strokeWidth: 7, outlineColor: '#000', outlineWidth: 10 },
 ];
+
+/** Road types that receive through-hex line rendering (excludes bridge which is a glyph). */
+export const ROAD_LINE_TYPES = new Set(['trail', 'road', 'pike']);
 
 /** Stream and stone wall feature groups. */
 export const STREAM_WALL_GROUPS = [

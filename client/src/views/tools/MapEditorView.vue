@@ -24,7 +24,6 @@ import { useEdgeToggle } from '../../composables/useEdgeToggle.js';
 import { useEdgePanelWiring } from '../../composables/useEdgePanelWiring.js';
 import { DIRS } from '../../utils/hexGeometry.js';
 import { canonicalOwner, validateCoexistence } from '../../formulas/edge-model.js';
-import { autoDetectContourType } from '../../formulas/elevation.js';
 
 const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
 const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
@@ -89,7 +88,6 @@ const selectedHexIds = ref(new Set());
 const { openPanel, editorMode, activeToolName, togglePanel, isToolPanel } = useEditorAccordion({
   onClearSelection: () => {
     selectedHexIds.value = new Set();
-    paintMode.value = 'click'; // L3: reset when switching away from paintable panels
   },
 });
 
@@ -98,8 +96,6 @@ const paintTerrain = ref('clear');
 // Kept separate from paintTerrain so the composable doesn't need to string-match magic values.
 const paintHexFeature = ref(null);
 const paintEdgeFeature = ref(null);
-// click/paint mode toggle — shared across terrain and elevation panels (only one open at a time)
-const paintMode = ref('click');
 // True while a paint stroke is in progress; suppresses per-hex saveMapDraft calls
 const paintStrokeActive = ref(false);
 // Layer visibility flags for the base (no-panel-active) overlay config.
@@ -383,12 +379,8 @@ const {
 // Two-layer hex-mouseenter gate:
 //   Layer 1 (HexMapOverlay): emits hex-mouseenter only when isPaintMouseDown (mouse-button held).
 //   Layer 2 (useHexInteraction): acts on hex-mouseenter only when paintMode === 'paint'.
-// Both layers must pass for a drag stroke to paint. dragPaintEnabled activates layer 1;
-// paintMode activates layer 2. paintStrokeActive is set on paint-stroke-start (mousedown)
-// so even the first hex click in a stroke is batched correctly.
-const dragPaintEnabled = computed(
-  () => editorMode.value === 'paint' || editorMode.value === 'elevation'
-);
+// Drag paint is disabled — all tools are click-only.
+const dragPaintEnabled = false;
 
 // Updates both paintTerrain (UI active-state) and paintHexFeature (mutation intent).
 // Building is a hex feature, not a terrain type — keeping them separate avoids magic-string
@@ -408,7 +400,6 @@ const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter
     elevationMax,
     elevationTarget,
     paintHexFeature,
-    paintMode,
     tryPickLosHex,
     onHexUpdate,
   });
@@ -431,8 +422,16 @@ function onEdgeClick({ hexId, dir }) {
   let type;
   if (openPanel.value === 'road') {
     type = road.selectedType.value;
+    if (type === 'bridge') {
+      const feats = getEdgeFeaturesAt(hexId, faceIndex);
+      if (!feats.some((f) => ['trail', 'road', 'pike'].includes(f))) return;
+    }
   } else if (openPanel.value === 'stream') {
     type = stream.selectedType.value;
+    if (type === 'ford') {
+      const feats = getEdgeFeaturesAt(hexId, faceIndex);
+      if (!feats.includes('stream')) return;
+    }
   } else if (openPanel.value === 'contour') {
     type = contour.selectedType.value;
   } else {
@@ -446,44 +445,33 @@ function onEdgeRightClick({ hexId, dir }) {
   const faceIndex = DIRS.indexOf(dir);
   if (faceIndex === -1) return;
   if (openPanel.value === 'road') {
-    handleEdgeClear(hexId, faceIndex, road.selectedType.value);
+    handleHexEdgeClearAll(hexId, ['trail', 'road', 'pike', 'bridge']);
   } else if (openPanel.value === 'stream') {
-    handleEdgeClear(hexId, faceIndex, stream.selectedType.value);
+    handleHexEdgeClearAll(hexId, ['stream', 'stoneWall', 'ford']);
   } else if (openPanel.value === 'contour') {
     handleEdgeClear(hexId, faceIndex, contour.selectedType.value);
   }
 }
 
-// ── Auto-detect contours ──────────────────────────────────────────────────────
-// Clears all contour edges, then derives contour type for every adjacent hex pair
-// using the elevation difference (autoDetectContourType from elevation.js).
-
-function handleAutoDetectContours() {
+// Clears all features of the given types from every canonical edge (0/1/2) of hexId.
+function handleHexEdgeClearAll(hexId, types) {
   if (!mapData.value) return;
-  // Clear existing contour edges
-  handleEdgeClearAll(['elevation', 'slope', 'extremeSlope', 'verticalSlope']);
-  // Iterate each hex and its face-0/1/2 neighbors
-  const hexes = mapData.value.hexes;
-  for (const hex of hexes) {
-    for (let face = 0; face < 3; face++) {
-      const { ownerId, ownerFace } = canonicalOwner(hex.hex, face, calibration.value);
-      if (ownerId !== hex.hex) continue; // only process canonical face owners
-      // Find neighbor across this face
-      const { ownerId: neighborId } = canonicalOwner(hex.hex, face + 3, calibration.value);
-      const neighborIdx = hexIndex.value.get(neighborId) ?? -1;
-      if (neighborIdx < 0) continue;
-      const neighbor = hexes[neighborIdx];
-      const type = autoDetectContourType(hex.elevation ?? 0, neighbor.elevation ?? 0);
-      if (type) {
-        handleEdgePaint(ownerId, ownerFace, type);
-      }
-    }
+  const idx = hexIndex.value.get(hexId) ?? -1;
+  if (idx < 0) return;
+  const hex = mapData.value.hexes[idx];
+  if (!hex.edges) return;
+  for (const face of [0, 1, 2]) {
+    if (!hex.edges[face]) continue;
+    hex.edges[face] = hex.edges[face].filter(
+      (f) => !types.includes(typeof f === 'string' ? f : f.type)
+    );
   }
+  onMutated();
 }
 
 // ── Bulk operations ───────────────────────────────────────────────────────────
 
-const { clearAllElevations, raiseAll, lowerAll, clearAllTerrain } = useBulkOperations({
+const { clearAllElevations, clearAllTerrain } = useBulkOperations({
   mapData,
   elevationMax,
   onMutated,
@@ -647,11 +635,7 @@ onUnmounted(() => {
               :selected-hex="selectedHex"
               :elevation-levels="elevationLevels"
               :target-elevation="elevationTarget"
-              :paint-mode="paintMode"
               @clear-all-elevations="clearAllElevations"
-              @raise-all="raiseAll"
-              @lower-all="lowerAll"
-              @paint-mode-change="paintMode = $event"
               @target-elevation-change="elevationTarget = $event"
               @overlay-config="activePanelOverlayConfig = $event"
             />
@@ -671,10 +655,8 @@ onUnmounted(() => {
             <TerrainToolPanel
               :terrain-types="terrainTypes"
               :paint-terrain="paintTerrain"
-              :paint-mode="paintMode"
               @terrain-change="onTerrainChange"
               @clear-all-terrain="clearAllTerrain"
-              @paint-mode-change="paintMode = $event"
               @overlay-config="activePanelOverlayConfig = $event"
             />
           </div>
@@ -697,8 +679,9 @@ onUnmounted(() => {
               @edge-paint="road.onEdgePaint"
               @edge-clear="road.onEdgeClear"
               @edge-clear-all="road.onEdgeClearAll"
-              @bridge-place="handleEdgePaint($event.hexId, $event.faceIndex, 'bridge')"
-              @bridge-remove="handleEdgeClear($event.hexId, $event.faceIndex, 'bridge')"
+              @hex-road-clear="
+                handleHexEdgeClearAll($event.hexId, ['trail', 'road', 'pike', 'bridge'])
+              "
               @overlay-config="road.onOverlayConfig"
             />
           </div>
@@ -721,8 +704,9 @@ onUnmounted(() => {
               @edge-paint="stream.onEdgePaint"
               @edge-clear="stream.onEdgeClear"
               @edge-clear-all="stream.onEdgeClearAll"
-              @ford-place="handleEdgePaint($event.hexId, $event.faceIndex, 'ford')"
-              @ford-remove="handleEdgeClear($event.hexId, $event.faceIndex, 'ford')"
+              @hex-stream-clear="
+                handleHexEdgeClearAll($event.hexId, ['stream', 'stoneWall', 'ford'])
+              "
               @overlay-config="stream.onOverlayConfig"
             />
           </div>
@@ -745,7 +729,6 @@ onUnmounted(() => {
               @edge-paint="contour.onEdgePaint"
               @edge-clear="contour.onEdgeClear"
               @edge-clear-all="contour.onEdgeClearAll"
-              @auto-detect-contours="handleAutoDetectContours"
               @overlay-config="contour.onOverlayConfig"
             />
           </div>
