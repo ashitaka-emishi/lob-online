@@ -46,4 +46,6 @@
 
 | [x] | tech-debt-closeout_20260323 | Tech Debt Closeout — All Open Items | 2026-03-23 | 2026-03-23 |
 
+| [ ] | map-editor-ui-refactor_20260323 | Map Editor UI Refactor — Tool Panel Cleanup & Feature Improvements | 2026-03-23 | 2026-03-23 |
+
 <!-- Tracks registered by /conductor:new-track -->

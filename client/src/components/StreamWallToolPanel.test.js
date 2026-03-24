@@ -3,24 +3,19 @@ import { mount } from '@vue/test-utils';
 import StreamWallToolPanel from './StreamWallToolPanel.vue';
 
 describe('StreamWallToolPanel', () => {
-  it('renders stream and stoneWall type buttons', () => {
+  // ── Rendering ───────────────────────────────────────────────────────────────
+
+  it('renders stream, stoneWall, and ford type buttons', () => {
     const wrapper = mount(StreamWallToolPanel);
     const text = wrapper.text();
     expect(text).toContain('stream');
     expect(text).toContain('stoneWall');
+    expect(text).toContain('ford');
   });
 
-  it('renders Paint and Ford mode buttons', () => {
+  it('does not render Paint/Ford mode toggle buttons', () => {
     const wrapper = mount(StreamWallToolPanel);
-    const labels = wrapper.findAll('.mode-btn').map((b) => b.text());
-    expect(labels).toContain('Paint');
-    expect(labels).toContain('Ford');
-  });
-
-  it('Paint mode is active by default', () => {
-    const wrapper = mount(StreamWallToolPanel);
-    const paintBtn = wrapper.findAll('.mode-btn').find((b) => b.text() === 'Paint');
-    expect(paintBtn.classes()).toContain('active');
+    expect(wrapper.findAll('.mode-btn').length).toBe(0);
   });
 
   it('highlights the selected type button', () => {
@@ -29,11 +24,20 @@ describe('StreamWallToolPanel', () => {
     expect(btn.classes()).toContain('active');
   });
 
+  // ── Type selection ──────────────────────────────────────────────────────────
+
   it('emits type-change when a type button is clicked', async () => {
     const wrapper = mount(StreamWallToolPanel);
     const btn = wrapper.findAll('.type-btn').find((b) => b.text().includes('stoneWall'));
     await btn.trigger('click');
     expect(wrapper.emitted('type-change')?.[0][0]).toBe('stoneWall');
+  });
+
+  it('emits type-change with ford when ford button is clicked', async () => {
+    const wrapper = mount(StreamWallToolPanel);
+    const fordBtn = wrapper.findAll('.type-btn').find((b) => b.text().includes('ford'));
+    await fordBtn.trigger('click');
+    expect(wrapper.emitted('type-change')?.[0][0]).toBe('ford');
   });
 
   // ── Overlay config ──────────────────────────────────────────────────────────
@@ -53,12 +57,13 @@ describe('StreamWallToolPanel', () => {
   it('emitted overlay-config has faint grid', () => {
     const wrapper = mount(StreamWallToolPanel);
     const cfg = wrapper.emitted('overlay-config').at(-1)[0];
+    expect(cfg.grid).toBeTruthy();
     expect(cfg.grid.weight).toBe('faint');
   });
 
   // ── Edge paint events ───────────────────────────────────────────────────────
 
-  it('handleEdgeClick emits edge-paint in paint mode', () => {
+  it('handleEdgeClick emits edge-paint with selectedType', () => {
     const wrapper = mount(StreamWallToolPanel, { props: { selectedType: 'stream' } });
     wrapper.vm.handleEdgeClick('05.03', 2);
     expect(wrapper.emitted('edge-paint')?.[0][0]).toEqual({
@@ -68,71 +73,53 @@ describe('StreamWallToolPanel', () => {
     });
   });
 
-  it('handleEdgeRightClick emits edge-clear in paint mode', () => {
-    const wrapper = mount(StreamWallToolPanel, { props: { selectedType: 'stoneWall' } });
-    wrapper.vm.handleEdgeRightClick('03.02', 1);
-    expect(wrapper.emitted('edge-clear')?.[0][0]).toEqual({
-      hexId: '03.02',
-      faceIndex: 1,
-      type: 'stoneWall',
+  it('handleEdgeRightClick emits hex-stream-clear with hexId', () => {
+    const wrapper = mount(StreamWallToolPanel, { props: { selectedType: 'stream' } });
+    wrapper.vm.handleEdgeRightClick('03.02', 0);
+    expect(wrapper.emitted('hex-stream-clear')?.[0][0]).toEqual({ hexId: '03.02' });
+  });
+
+  // ── Ford type validation ────────────────────────────────────────────────────
+
+  it('ford selection: edge-paint not emitted when edge has no stream', () => {
+    const wrapper = mount(StreamWallToolPanel, {
+      props: { selectedType: 'ford', getEdgeFeatures: () => [] },
     });
+    wrapper.vm.handleEdgeClick('05.03', 1);
+    expect(wrapper.emitted('edge-paint')).toBeFalsy();
+  });
+
+  it('ford selection: edge-paint emitted with type ford when edge has stream', () => {
+    const wrapper = mount(StreamWallToolPanel, {
+      props: { selectedType: 'ford', getEdgeFeatures: () => ['stream'] },
+    });
+    wrapper.vm.handleEdgeClick('05.03', 1);
+    expect(wrapper.emitted('edge-paint')?.[0][0]).toEqual({
+      hexId: '05.03',
+      faceIndex: 1,
+      type: 'ford',
+    });
+  });
+
+  it('ford selection: validation error shown when edge has no stream', async () => {
+    const wrapper = mount(StreamWallToolPanel, {
+      props: { selectedType: 'ford', getEdgeFeatures: () => [] },
+    });
+    wrapper.vm.handleEdgeClick('05.03', 1);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('.validation-error').exists()).toBe(true);
   });
 
   // ── Clear all ───────────────────────────────────────────────────────────────
 
-  it('Clear all emits edge-clear-all with stream and stoneWall after confirmation', async () => {
+  it('Clear all button emits edge-clear-all with stream types including ford', async () => {
     const wrapper = mount(StreamWallToolPanel);
-    await wrapper
-      .findAll('button')
-      .find((b) => b.text() === 'Clear all')
-      .trigger('click');
-    await wrapper
-      .findAll('button')
-      .find((b) => b.text() === 'Clear')
-      .trigger('click');
+    const clearBtn = wrapper.findAll('button').find((b) => b.text() === 'Clear all');
+    await clearBtn.trigger('click');
+    const confirmBtn = wrapper.findAll('button').find((b) => b.text() === 'Clear');
+    await confirmBtn.trigger('click');
     const emitted = wrapper.emitted('edge-clear-all');
     expect(emitted).toBeTruthy();
-    expect(emitted[0][0]).toEqual(expect.arrayContaining(['stream', 'stoneWall']));
-  });
-
-  // ── Ford mode ───────────────────────────────────────────────────────────────
-
-  it('switches to Ford mode when Ford button is clicked', async () => {
-    const wrapper = mount(StreamWallToolPanel);
-    await wrapper
-      .findAll('.mode-btn')
-      .find((b) => b.text() === 'Ford')
-      .trigger('click');
-    expect(wrapper.text()).toContain('stream edge');
-  });
-
-  it('ford placement blocked without stream — no ford-place emitted', async () => {
-    const wrapper = mount(StreamWallToolPanel, { props: { getEdgeFeatures: () => [] } });
-    await wrapper
-      .findAll('.mode-btn')
-      .find((b) => b.text() === 'Ford')
-      .trigger('click');
-    wrapper.vm.handleEdgeClick('05.03', 1);
-    expect(wrapper.emitted('ford-place')).toBeFalsy();
-  });
-
-  it('ford-place emitted when stream exists on edge', async () => {
-    const wrapper = mount(StreamWallToolPanel, { props: { getEdgeFeatures: () => ['stream'] } });
-    await wrapper
-      .findAll('.mode-btn')
-      .find((b) => b.text() === 'Ford')
-      .trigger('click');
-    wrapper.vm.handleEdgeClick('05.03', 1);
-    expect(wrapper.emitted('ford-place')?.[0][0]).toEqual({ hexId: '05.03', faceIndex: 1 });
-  });
-
-  it('ford-remove emitted on right-click in ford mode', async () => {
-    const wrapper = mount(StreamWallToolPanel, { props: { getEdgeFeatures: () => ['stream'] } });
-    await wrapper
-      .findAll('.mode-btn')
-      .find((b) => b.text() === 'Ford')
-      .trigger('click');
-    wrapper.vm.handleEdgeRightClick('05.03', 1);
-    expect(wrapper.emitted('ford-remove')?.[0][0]).toEqual({ hexId: '05.03', faceIndex: 1 });
+    expect(emitted[0][0]).toEqual(expect.arrayContaining(['stream', 'stoneWall', 'ford']));
   });
 });

@@ -206,9 +206,9 @@ describe('MapEditorView', () => {
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
 
-    // Make the editor dirty via ElevationToolPanel raise-all
+    // Make the editor dirty via ElevationToolPanel clear-all-elevations
     const elevPanel = await openElevationPanel(wrapper);
-    elevPanel.vm.$emit('raise-all');
+    elevPanel.vm.$emit('clear-all-elevations');
     await flushPromises();
 
     const pullBtn = wrapper.find('button.pull-btn');
@@ -238,7 +238,7 @@ describe('MapEditorView', () => {
     const headers = wrapper.findAll('button.accordion-header');
     const elevHeader = headers.find((h) => h.text().includes('Elevation Tool'));
     await elevHeader.trigger('click');
-    expect(wrapper.text()).toContain('Raise all');
+    expect(wrapper.text()).toContain('Elevation tint');
     wrapper.unmount();
   });
 
@@ -259,9 +259,9 @@ describe('MapEditorView', () => {
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
 
-    // Open elevation panel and trigger a mutation via raise-all
+    // Open elevation panel and trigger a mutation via clear-all-elevations
     const elevPanel = await openElevationPanel(wrapper);
-    elevPanel.vm.$emit('raise-all');
+    elevPanel.vm.$emit('clear-all-elevations');
     await flushPromises();
 
     // saveMapDraft is debounced 500ms — advance timers to trigger the write
@@ -449,9 +449,9 @@ describe('MapEditorView', () => {
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
 
-    // Make unsaved=true via ElevationToolPanel raise-all
+    // Make unsaved=true via ElevationToolPanel clear-all-elevations
     const elevPanel = await openElevationPanel(wrapper);
-    elevPanel.vm.$emit('raise-all');
+    elevPanel.vm.$emit('clear-all-elevations');
     await flushPromises();
     // unsaved=true, localDraftSavedAt=1500 < serverSavedAt=2000 → dialog should appear
 
@@ -487,20 +487,20 @@ describe('MapEditorView', () => {
     await flushPromises();
 
     // No panel open by default
-    expect(wrapper.text()).not.toContain('Raise all');
+    expect(wrapper.text()).not.toContain('Elevation tint');
 
     // Open Elevation panel
     const headers = wrapper.findAll('button.accordion-header');
     const elevHeader = headers.find((h) => h.text().includes('Elevation Tool'));
     await elevHeader.trigger('click');
     await flushPromises();
-    expect(wrapper.text()).toContain('Raise all');
+    expect(wrapper.text()).toContain('Elevation tint');
 
     // Click Grid & Elevation Setup to open it — Elevation should close
     const calHeader = headers.find((h) => h.text().includes('Grid & Elevation Setup'));
     await calHeader.trigger('click');
     await flushPromises();
-    expect(wrapper.text()).not.toContain('Raise all');
+    expect(wrapper.text()).not.toContain('Elevation tint');
     wrapper.unmount();
   });
 
@@ -590,11 +590,11 @@ describe('MapEditorView', () => {
     expect(wrapper.text()).not.toContain('* unsaved');
 
     const elevPanel = await openElevationPanel(wrapper);
-    elevPanel.vm.$emit('raise-all');
+    elevPanel.vm.$emit('clear-all-elevations');
     await wrapper.vm.$nextTick();
     expect(wrapper.text()).toContain('* unsaved');
 
-    elevPanel.vm.$emit('lower-all');
+    elevPanel.vm.$emit('clear-all-elevations');
     await wrapper.vm.$nextTick();
     expect(wrapper.text()).toContain('* unsaved');
 

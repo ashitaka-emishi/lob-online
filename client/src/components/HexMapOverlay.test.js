@@ -922,14 +922,22 @@ describe('HexMapOverlay — unified overlayConfig highlight and state API', () =
       },
     });
     const throughLines = wrapper.find('.layer-through-hex-lines').findAll('line');
-    expect(throughLines.length).toBe(2);
+    // Each edge renders two lines: outline pass + road pass
+    expect(throughLines.length).toBe(4);
   });
 
   it('through-hex <line> has x1/y1 at hex center and x2/y2 at edge midpoint (non-zero coords)', () => {
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
-        hexes: [{ hex: '01.03', terrain: 'clear', edges: { 0: [{ type: 'road' }] } }],
+        // Two road edges so this hex meets the 2+ threshold required for rendering
+        hexes: [
+          {
+            hex: '01.03',
+            terrain: 'clear',
+            edges: { 0: [{ type: 'road' }], 1: [{ type: 'road' }] },
+          },
+        ],
         overlayConfig: {
           edgeLine: {
             alwaysOn: true,

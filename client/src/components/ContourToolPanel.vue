@@ -8,8 +8,7 @@ const CONTOUR_TYPES = ['elevation', 'slope', 'extremeSlope', 'verticalSlope'];
 
 const HELP_TEXT =
   'Click an edge to paint the selected contour type. Right-click to remove it. ' +
-  'Toggle "Elevation info" to see elevation levels and gradient while editing. ' +
-  'Use Auto-detect to derive contour types from adjacent elevation differences.';
+  'Toggle "Elevation info" to see elevation levels and gradient while editing.';
 
 const props = defineProps({
   selectedType: {
@@ -27,7 +26,6 @@ const emit = defineEmits([
   'edge-paint',
   'edge-clear',
   'edge-clear-all',
-  'auto-detect-contours',
   'overlay-config',
 ]);
 
@@ -39,19 +37,6 @@ const palette = computed(() => elevationTintPalette(props.elevationLevels));
 
 function onOverlayToggle(key) {
   if (key === 'hexFill') elevationInfoEnabled.value = !elevationInfoEnabled.value;
-}
-
-// ── Auto-detect confirmation ────────────────────────────────────────────────
-
-const showAutoDetectConfirm = ref(false);
-
-function onAutoDetectClick() {
-  showAutoDetectConfirm.value = true;
-}
-
-function onAutoDetectConfirm() {
-  showAutoDetectConfirm.value = false;
-  emit('auto-detect-contours');
 }
 
 // ── Edge event routing ──────────────────────────────────────────────────────
@@ -135,65 +120,7 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
     </div>
 
     <div class="tool-hint">Click an edge to paint. Right-click to remove.</div>
-
-    <!-- Auto-detect -->
-    <div class="auto-detect-section">
-      <button class="auto-detect-btn" @click="onAutoDetectClick">Auto-detect from elevation</button>
-    </div>
-
-    <!-- Auto-detect confirmation -->
-    <div v-if="showAutoDetectConfirm" class="confirm-dialog">
-      <span class="confirm-msg">Clear all contour edges and re-derive from elevation data?</span>
-      <button @click="onAutoDetectConfirm">Detect</button>
-      <button @click="showAutoDetectConfirm = false">Cancel</button>
-    </div>
   </EdgeToolPanelShell>
 </template>
 
-<style scoped>
-.auto-detect-section {
-  padding-top: 0.25rem;
-  border-top: 1px solid #333;
-}
-
-.auto-detect-btn {
-  width: 100%;
-  padding: 0.3rem 0.5rem;
-  background: #1a2a3a;
-  border: 1px solid #3a6a8a;
-  color: #88c0d8;
-  cursor: pointer;
-  font-size: 0.78rem;
-  text-align: left;
-  font-family: inherit;
-}
-
-.auto-detect-btn:hover {
-  background: #2a3a4a;
-}
-
-.confirm-dialog {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.5rem;
-  background: #2a1a1a;
-  border: 1px solid #7a3333;
-}
-
-.confirm-msg {
-  font-size: 0.75rem;
-  color: #c08080;
-  line-height: 1.4;
-}
-
-.confirm-dialog button {
-  padding: 0.2rem 0.5rem;
-  background: #333;
-  border: 1px solid #555;
-  color: #e0d8c8;
-  cursor: pointer;
-  font-size: 0.75rem;
-  font-family: inherit;
-}
-</style>
+<style scoped></style>

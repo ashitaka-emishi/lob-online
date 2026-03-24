@@ -10,8 +10,10 @@ import {
   findNearestEdge,
   getCellAndNeighbors,
   hexToGameId,
+  adjacentHexId,
 } from '../utils/hexGeometry.js';
 import { useEdgeLineLayer } from '../composables/useEdgeLineLayer.js';
+import { ROAD_LINE_TYPES } from '../config/feature-types.js';
 
 const props = defineProps({
   calibration: {
@@ -331,6 +333,56 @@ const { cellsForEdges, throughHexSegments } = useEdgeLineLayer(
   computed(() => props.overlayConfig)
 );
 
+// ── Road edge count — 2+ threshold for through-hex rendering ─────────────────
+// Counts all road-bearing edges touching each hex (canonical + neighbor's canonical).
+// Hexes with fewer than 2 road edges are suppressed in the ThroughHexLayer.
+const CANONICAL_DIRS_ROAD = ['N', 'NE', 'SE'];
+
+const roadEdgeCountMap = computed(() => {
+  if (props.overlayConfig.edgeLine?.style !== 'through-hex') return new Map();
+  const counts = new Map();
+  const gridSpec = props.calibration;
+  for (const cell of cells.value) {
+    const hexId = cell.id;
+    for (let fi = 0; fi < 3; fi++) {
+      const hasRoad = cell.edges?.[fi]?.some((f) => ROAD_LINE_TYPES.has(f.type));
+      if (!hasRoad) continue;
+      counts.set(hexId, (counts.get(hexId) ?? 0) + 1);
+      const neighborId = adjacentHexId(hexId, CANONICAL_DIRS_ROAD[fi], gridSpec);
+      if (neighborId) counts.set(neighborId, (counts.get(neighborId) ?? 0) + 1);
+    }
+  }
+  return counts;
+});
+
+// Through-hex segments filtered to hexes with 2+ road edges.
+const filteredThroughHexSegments = computed(() => {
+  const countMap = roadEdgeCountMap.value;
+  if (countMap.size === 0) return throughHexSegments.value;
+  return throughHexSegments.value.filter((cell) => (countMap.get(cell.id) ?? 0) >= 2);
+});
+
+// ── Bridge and ford glyph data ────────────────────────────────────────────────
+// Returns [{hexId, corners, dir}] for edges that have a bridge or ford feature.
+function _buildGlyphEdges(featureType) {
+  return cells.value.flatMap((cell) =>
+    CANONICAL_DIRS_ROAD.flatMap((dir, fi) => {
+      const hasFeat = cell.edges?.[fi]?.some((f) => f.type === featureType);
+      return hasFeat ? [{ id: cell.id + '-' + dir, corners: cell.corners, dir }] : [];
+    })
+  );
+}
+
+const bridgeGlyphEdges = computed(() => {
+  if (props.overlayConfig.edgeLine?.style !== 'through-hex') return [];
+  return _buildGlyphEdges('bridge');
+});
+
+const fordGlyphEdges = computed(() => {
+  if (props.overlayConfig.edgeLine?.style !== 'along-edge') return [];
+  return _buildGlyphEdges('ford');
+});
+
 // ── Coordinate helper ─────────────────────────────────────────────────────────
 
 function _toLocal(svg, clientX, clientY) {
@@ -603,14 +655,26 @@ defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
           </template>
         </g>
 
-        <!-- ThroughHexLayer — road and trail features rendered centre→midpoint (#139) -->
+        <!-- ThroughHexLayer — road and trail features rendered centre→midpoint (#139)
+             Only renders hexes with 2+ road edges; outlines drawn first then roads on top. -->
         <g v-if="overlayConfig.edgeLine?.style === 'through-hex'" class="layer-through-hex-lines">
-          <template v-for="cell in throughHexSegments" :key="'thru-' + cell.id">
+          <template v-for="cell in filteredThroughHexSegments" :key="'thru-' + cell.id">
             <template v-for="face in cell.edgeFaces" :key="face.dir">
               <template v-for="(gd, gi) in face.groups" :key="gi">
+                <!-- Outline pass (wider, behind) -->
                 <line
                   v-for="feat in gd.features"
-                  :key="feat.type"
+                  :key="'out-' + feat.type"
+                  v-bind="face.lineAttrs"
+                  :stroke="gd.group.outlineColor ?? '#000'"
+                  :stroke-width="gd.group.outlineWidth ?? gd.group.strokeWidth + 3"
+                  stroke-linecap="round"
+                  pointer-events="none"
+                />
+                <!-- Road pass (on top) -->
+                <line
+                  v-for="feat in gd.features"
+                  :key="'rd-' + feat.type"
                   v-bind="face.lineAttrs"
                   :stroke="gd.group.color"
                   :stroke-width="gd.group.strokeWidth"
@@ -621,6 +685,48 @@ defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
               </template>
             </template>
           </template>
+        </g>
+
+        <!-- BridgeGlyphLayer — black ][ at bridge edge midpoints -->
+        <g v-if="overlayConfig.edgeLine?.style === 'through-hex'" class="layer-bridge-glyphs">
+          <text
+            v-for="e in bridgeGlyphEdges"
+            :key="'bridge-' + e.id"
+            :x="edgeMidpoint(e.corners, e.dir).x"
+            :y="edgeMidpoint(e.corners, e.dir).y + 4"
+            text-anchor="middle"
+            font-size="9"
+            font-family="monospace"
+            font-weight="bold"
+            fill="#000000"
+            stroke="#ffffff"
+            stroke-width="1.5"
+            paint-order="stroke"
+            pointer-events="none"
+          >
+            ][
+          </text>
+        </g>
+
+        <!-- FordGlyphLayer — dark blue ][ at ford edge midpoints -->
+        <g v-if="overlayConfig.edgeLine?.style === 'along-edge'" class="layer-ford-glyphs">
+          <text
+            v-for="e in fordGlyphEdges"
+            :key="'ford-' + e.id"
+            :x="edgeMidpoint(e.corners, e.dir).x"
+            :y="edgeMidpoint(e.corners, e.dir).y + 4"
+            text-anchor="middle"
+            font-size="9"
+            font-family="monospace"
+            font-weight="bold"
+            fill="#00008b"
+            stroke="#ffffff"
+            stroke-width="1.5"
+            paint-order="stroke"
+            pointer-events="none"
+          >
+            ][
+          </text>
         </g>
 
         <!-- EdgeHoverLayer — fuchsia highlight on the exact edge that will be painted -->

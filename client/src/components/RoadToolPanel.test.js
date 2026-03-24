@@ -5,26 +5,18 @@ import RoadToolPanel from './RoadToolPanel.vue';
 describe('RoadToolPanel', () => {
   // ── Rendering ───────────────────────────────────────────────────────────────
 
-  it('renders trail, road, pike type buttons', () => {
+  it('renders trail, road, pike, and bridge type buttons', () => {
     const wrapper = mount(RoadToolPanel);
     const text = wrapper.text();
     expect(text).toContain('trail');
     expect(text).toContain('road');
     expect(text).toContain('pike');
+    expect(text).toContain('bridge');
   });
 
-  it('renders Paint and Bridge mode buttons', () => {
+  it('does not render Paint/Bridge mode toggle buttons', () => {
     const wrapper = mount(RoadToolPanel);
-    const btns = wrapper.findAll('.mode-btn');
-    const labels = btns.map((b) => b.text());
-    expect(labels).toContain('Paint');
-    expect(labels).toContain('Bridge');
-  });
-
-  it('Paint mode is active by default', () => {
-    const wrapper = mount(RoadToolPanel);
-    const paintBtn = wrapper.findAll('.mode-btn').find((b) => b.text() === 'Paint');
-    expect(paintBtn.classes()).toContain('active');
+    expect(wrapper.findAll('.mode-btn').length).toBe(0);
   });
 
   it('highlights the selected type button', () => {
@@ -40,6 +32,13 @@ describe('RoadToolPanel', () => {
     const pikeBtn = wrapper.findAll('.type-btn').find((b) => b.text().includes('pike'));
     await pikeBtn.trigger('click');
     expect(wrapper.emitted('type-change')?.[0][0]).toBe('pike');
+  });
+
+  it('emits type-change with bridge when bridge button is clicked', async () => {
+    const wrapper = mount(RoadToolPanel);
+    const bridgeBtn = wrapper.findAll('.type-btn').find((b) => b.text().includes('bridge'));
+    await bridgeBtn.trigger('click');
+    expect(wrapper.emitted('type-change')?.[0][0]).toBe('bridge');
   });
 
   // ── Overlay config ──────────────────────────────────────────────────────────
@@ -66,7 +65,7 @@ describe('RoadToolPanel', () => {
 
   // ── Edge paint events ───────────────────────────────────────────────────────
 
-  it('handleEdgeClick emits edge-paint with selectedType in paint mode', () => {
+  it('handleEdgeClick emits edge-paint with selectedType', () => {
     const wrapper = mount(RoadToolPanel, { props: { selectedType: 'road' } });
     wrapper.vm.handleEdgeClick('05.03', 1);
     expect(wrapper.emitted('edge-paint')?.[0][0]).toEqual({
@@ -76,19 +75,46 @@ describe('RoadToolPanel', () => {
     });
   });
 
-  it('handleEdgeRightClick emits edge-clear with selectedType in paint mode', () => {
+  it('handleEdgeRightClick emits hex-road-clear with hexId', () => {
     const wrapper = mount(RoadToolPanel, { props: { selectedType: 'trail' } });
     wrapper.vm.handleEdgeRightClick('03.02', 0);
-    expect(wrapper.emitted('edge-clear')?.[0][0]).toEqual({
-      hexId: '03.02',
-      faceIndex: 0,
-      type: 'trail',
+    expect(wrapper.emitted('hex-road-clear')?.[0][0]).toEqual({ hexId: '03.02' });
+  });
+
+  // ── Bridge type validation ──────────────────────────────────────────────────
+
+  it('bridge selection: edge-paint not emitted when edge has no road', () => {
+    const wrapper = mount(RoadToolPanel, {
+      props: { selectedType: 'bridge', getEdgeFeatures: () => [] },
     });
+    wrapper.vm.handleEdgeClick('05.03', 1);
+    expect(wrapper.emitted('edge-paint')).toBeFalsy();
+  });
+
+  it('bridge selection: edge-paint emitted with type bridge when edge has road', () => {
+    const wrapper = mount(RoadToolPanel, {
+      props: { selectedType: 'bridge', getEdgeFeatures: () => ['road'] },
+    });
+    wrapper.vm.handleEdgeClick('05.03', 1);
+    expect(wrapper.emitted('edge-paint')?.[0][0]).toEqual({
+      hexId: '05.03',
+      faceIndex: 1,
+      type: 'bridge',
+    });
+  });
+
+  it('bridge selection: validation error shown when edge has no road', async () => {
+    const wrapper = mount(RoadToolPanel, {
+      props: { selectedType: 'bridge', getEdgeFeatures: () => [] },
+    });
+    wrapper.vm.handleEdgeClick('05.03', 1);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('.validation-error').exists()).toBe(true);
   });
 
   // ── Clear all ───────────────────────────────────────────────────────────────
 
-  it('Clear all button emits edge-clear-all after confirmation', async () => {
+  it('Clear all button emits edge-clear-all with road types including bridge', async () => {
     const wrapper = mount(RoadToolPanel);
     const clearBtn = wrapper.findAll('button').find((b) => b.text() === 'Clear all');
     await clearBtn.trigger('click');
@@ -96,47 +122,6 @@ describe('RoadToolPanel', () => {
     await confirmBtn.trigger('click');
     const emitted = wrapper.emitted('edge-clear-all');
     expect(emitted).toBeTruthy();
-    expect(emitted[0][0]).toEqual(expect.arrayContaining(['trail', 'road', 'pike']));
-  });
-
-  // ── Bridge mode ─────────────────────────────────────────────────────────────
-
-  it('switches to Bridge mode when Bridge button is clicked', async () => {
-    const wrapper = mount(RoadToolPanel);
-    const bridgeBtn = wrapper.findAll('.mode-btn').find((b) => b.text() === 'Bridge');
-    await bridgeBtn.trigger('click');
-    expect(wrapper.text()).toContain('place a bridge');
-  });
-
-  it('bridge placement blocked without road on edge — no bridge-place emitted', () => {
-    const wrapper = mount(RoadToolPanel, {
-      props: { getEdgeFeatures: () => [] }, // no road features
-    });
-    // Switch to bridge mode
-    // Switch internal mode to bridge by triggering the button
-    const bridgeBtn = wrapper.findAll('.mode-btn').find((b) => b.text() === 'Bridge');
-    bridgeBtn.trigger('click');
-    wrapper.vm.handleEdgeClick('05.03', 1);
-    expect(wrapper.emitted('bridge-place')).toBeFalsy();
-  });
-
-  it('bridge-place emitted when road exists on edge', async () => {
-    const wrapper = mount(RoadToolPanel, {
-      props: { getEdgeFeatures: () => ['road'] },
-    });
-    const bridgeBtn = wrapper.findAll('.mode-btn').find((b) => b.text() === 'Bridge');
-    await bridgeBtn.trigger('click');
-    wrapper.vm.handleEdgeClick('05.03', 1);
-    expect(wrapper.emitted('bridge-place')?.[0][0]).toEqual({ hexId: '05.03', faceIndex: 1 });
-  });
-
-  it('bridge-remove emitted on right-click in bridge mode', async () => {
-    const wrapper = mount(RoadToolPanel, {
-      props: { getEdgeFeatures: () => ['road'] },
-    });
-    const bridgeBtn = wrapper.findAll('.mode-btn').find((b) => b.text() === 'Bridge');
-    await bridgeBtn.trigger('click');
-    wrapper.vm.handleEdgeRightClick('05.03', 1);
-    expect(wrapper.emitted('bridge-remove')?.[0][0]).toEqual({ hexId: '05.03', faceIndex: 1 });
+    expect(emitted[0][0]).toEqual(expect.arrayContaining(['trail', 'road', 'pike', 'bridge']));
   });
 });

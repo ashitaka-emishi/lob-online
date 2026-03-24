@@ -114,24 +114,22 @@ describe('useHexInteraction', () => {
   });
 
   describe('onHexClick — elevation mode', () => {
-    it('click selects hex and sets elevation to elevationTarget value', () => {
+    it('click sets elevation to elevationTarget value without selecting hex', () => {
       const args = makeArgs({ editorMode: ref('elevation'), elevationTarget: ref(5) });
       const { selectedHexId, onHexClick } = useHexInteraction(args);
       onHexClick('01.01', {});
-      expect(selectedHexId.value).toBe('01.01');
+      expect(selectedHexId.value).toBeNull();
       expect(args.onHexUpdate).toHaveBeenCalledWith(
         expect.objectContaining({ hex: '01.01', elevation: 5 })
       );
     });
 
-    it('clicking the already-selected hex deselects it without adjusting elevation', () => {
-      const args = makeArgs({ editorMode: ref('elevation') });
-      const { selectedHexId, onHexClick } = useHexInteraction(args);
-      onHexClick('01.01', {}); // select
-      args.onHexUpdate.mockClear();
-      onHexClick('01.01', {}); // deselect
-      expect(selectedHexId.value).toBeNull();
-      expect(args.onHexUpdate).not.toHaveBeenCalled();
+    it('clicking the same hex twice applies elevation both times', () => {
+      const args = makeArgs({ editorMode: ref('elevation'), elevationTarget: ref(3) });
+      const { onHexClick } = useHexInteraction(args);
+      onHexClick('01.01', {});
+      onHexClick('01.01', {});
+      expect(args.onHexUpdate).toHaveBeenCalledTimes(2);
     });
   });
 

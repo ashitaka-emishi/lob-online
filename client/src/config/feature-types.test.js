@@ -17,7 +17,7 @@ describe('feature-types', () => {
       const required = [
         'clear',
         'woods',
-        'orchards',
+        'orchard',
         'marsh',
         'slopingGround',
         'woodedSloping',
@@ -33,7 +33,7 @@ describe('feature-types', () => {
     });
 
     it('non-clear terrains have rgba color strings', () => {
-      const colored = ['woods', 'orchards', 'marsh', 'slopingGround', 'woodedSloping', 'unknown'];
+      const colored = ['woods', 'orchard', 'marsh', 'slopingGround', 'woodedSloping', 'unknown'];
       for (const type of colored) {
         expect(TERRAIN_COLORS[type]).toMatch(/^rgba\(/);
       }
