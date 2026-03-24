@@ -11,6 +11,8 @@ import { ref } from 'vue';
  *   intentional last-writer-wins pattern that relies on the accordion's single-panel exclusivity
  *   guarantee — only one panel is active at a time. If multiple panels were ever open
  *   simultaneously they would race on this ref.
+ *   The caller (MapEditorView) watches `openPanel` and resets this ref to `null` on every
+ *   panel transition, so stale config from the previous panel never bleeds into the next.
  * @returns {{ selectedType, onTypeChange, onEdgePaint, onEdgeClear, onEdgeClearAll, onOverlayConfig }}
  */
 export function useEdgePanelWiring(defaultType, deps) {

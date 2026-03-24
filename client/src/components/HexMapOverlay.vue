@@ -15,6 +15,8 @@ import {
 import { useEdgeLineLayer } from '../composables/useEdgeLineLayer.js';
 import { ROAD_LINE_TYPES } from '../config/feature-types.js';
 
+const ALL_DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
+
 const props = defineProps({
   calibration: {
     type: Object,
@@ -226,7 +228,21 @@ const gridData = computed(() => {
 
   const cellByColRow = new Map(cells.map((c) => [`${c.col},${c.row}`, c]));
   const cellById = new Map(cells.map((c) => [c.id, c]));
-  return { cells, grid, tx, ty, cellByColRow, cellById };
+
+  // neighborMap: Map<"hexId:dir", cell> — built once per calibration change so
+  // useEdgeLineLayer and roadEdgeCountMap never call adjacentHexId per-cell per-invalidation.
+  const neighborMap = new Map();
+  for (const cell of cells) {
+    for (const dir of ALL_DIRS) {
+      const neighborId = adjacentHexId(cell.id, dir, props.calibration);
+      if (neighborId) {
+        const neighbor = cellById.get(neighborId);
+        if (neighbor) neighborMap.set(`${cell.id}:${dir}`, neighbor);
+      }
+    }
+  }
+
+  return { cells, grid, tx, ty, cellByColRow, cellById, neighborMap };
 });
 
 const cells = computed(() => gridData.value.cells);
@@ -304,7 +320,7 @@ const cellsWithDisplayAttrs = computed(() => {
       strokeOpacity = 1;
     else strokeOpacity = 0.6;
 
-    return { ...cell, fill, fillOpacity, stroke, strokeWidth, strokeOpacity };
+    return { cell, fill, fillOpacity, stroke, strokeWidth, strokeOpacity };
   });
 });
 
@@ -330,7 +346,8 @@ function hexIconText(cell) {
 // or edgeLine config change — LOS/selection state changes do NOT invalidate it.
 const { cellsForEdges, throughHexSegments } = useEdgeLineLayer(
   cells,
-  computed(() => props.overlayConfig)
+  computed(() => props.overlayConfig),
+  computed(() => gridData.value.neighborMap)
 );
 
 // ── Road edge count — 2+ threshold for through-hex rendering ─────────────────
@@ -341,15 +358,15 @@ const CANONICAL_DIRS_ROAD = ['N', 'NE', 'SE'];
 const roadEdgeCountMap = computed(() => {
   if (props.overlayConfig.edgeLine?.style !== 'through-hex') return new Map();
   const counts = new Map();
-  const gridSpec = props.calibration;
+  const nbMap = gridData.value.neighborMap;
   for (const cell of cells.value) {
     const hexId = cell.id;
     for (let fi = 0; fi < 3; fi++) {
       const hasRoad = cell.edges?.[fi]?.some((f) => ROAD_LINE_TYPES.has(f.type));
       if (!hasRoad) continue;
       counts.set(hexId, (counts.get(hexId) ?? 0) + 1);
-      const neighborId = adjacentHexId(hexId, CANONICAL_DIRS_ROAD[fi], gridSpec);
-      if (neighborId) counts.set(neighborId, (counts.get(neighborId) ?? 0) + 1);
+      const neighbor = nbMap.get(`${hexId}:${CANONICAL_DIRS_ROAD[fi]}`);
+      if (neighbor) counts.set(neighbor.id, (counts.get(neighbor.id) ?? 0) + 1);
     }
   }
   return counts;
@@ -363,12 +380,27 @@ const filteredThroughHexSegments = computed(() => {
 });
 
 // ── Bridge and ford glyph data ────────────────────────────────────────────────
-// Returns [{hexId, corners, dir}] for edges that have a bridge or ford feature.
+// Rotation angle (degrees) to align the ][ symbol along each edge direction.
+// For flat-top hexes: N/S edges are horizontal (0°), NE/SW tilt 60°, SE/NW tilt -60°.
+const GLYPH_EDGE_ROTATION = { N: 0, NE: 60, SE: -60, S: 0, SW: 60, NW: -60 };
+
+// Returns [{id, x, y, transform}] for edges that have a bridge or ford feature.
+// Pre-computing x/y/transform avoids calling edgeMidpoint 2-3× per glyph in the template.
 function _buildGlyphEdges(featureType) {
   return cells.value.flatMap((cell) =>
     CANONICAL_DIRS_ROAD.flatMap((dir, fi) => {
       const hasFeat = cell.edges?.[fi]?.some((f) => f.type === featureType);
-      return hasFeat ? [{ id: cell.id + '-' + dir, corners: cell.corners, dir }] : [];
+      if (!hasFeat) return [];
+      const mid = edgeMidpoint(cell.corners, dir);
+      const angle = GLYPH_EDGE_ROTATION[dir] ?? 0;
+      return [
+        {
+          id: cell.id + '-' + dir,
+          x: mid.x,
+          y: mid.y,
+          transform: `rotate(${angle}, ${mid.x}, ${mid.y})`,
+        },
+      ];
     })
   );
 }
@@ -536,15 +568,15 @@ defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
              highlight state), and the mouseenter event handler.             -->
         <g class="layer-grid">
           <polygon
-            v-for="cell in cellsWithDisplayAttrs"
-            :key="'hex-' + cell.id"
-            :points="cell.points"
-            :fill="cell.fill"
-            :fill-opacity="cell.fillOpacity"
-            :stroke="cell.stroke"
-            :stroke-width="cell.strokeWidth"
-            :stroke-opacity="cell.strokeOpacity"
-            @mouseenter="onHexMouseenter(cell.id)"
+            v-for="da in cellsWithDisplayAttrs"
+            :key="'hex-' + da.cell.id"
+            :points="da.cell.points"
+            :fill="da.fill"
+            :fill-opacity="da.fillOpacity"
+            :stroke="da.stroke"
+            :stroke-width="da.strokeWidth"
+            :stroke-opacity="da.strokeOpacity"
+            @mouseenter="onHexMouseenter(da.cell.id)"
           />
         </g>
 
@@ -618,10 +650,10 @@ defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
             :y="cell.cy + 6"
             text-anchor="middle"
             dominant-baseline="middle"
-            font-size="10"
-            fill="#ffffffbb"
-            stroke="rgba(0,0,0,0.5)"
-            stroke-width="1.5"
+            font-size="24"
+            fill="#000000"
+            stroke="#ffffff"
+            stroke-width="2.5"
             paint-order="stroke"
             pointer-events="none"
           >
@@ -687,20 +719,22 @@ defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
           </template>
         </g>
 
-        <!-- BridgeGlyphLayer — black ][ at bridge edge midpoints -->
+        <!-- BridgeGlyphLayer — black ][ at bridge edge midpoints, rotated along edge -->
         <g v-if="overlayConfig.edgeLine?.style === 'through-hex'" class="layer-bridge-glyphs">
           <text
             v-for="e in bridgeGlyphEdges"
             :key="'bridge-' + e.id"
-            :x="edgeMidpoint(e.corners, e.dir).x"
-            :y="edgeMidpoint(e.corners, e.dir).y + 4"
+            :x="e.x"
+            :y="e.y"
+            :transform="e.transform"
             text-anchor="middle"
-            font-size="9"
+            dominant-baseline="central"
+            font-size="24"
             font-family="monospace"
             font-weight="bold"
             fill="#000000"
             stroke="#ffffff"
-            stroke-width="1.5"
+            stroke-width="2.5"
             paint-order="stroke"
             pointer-events="none"
           >
@@ -708,20 +742,22 @@ defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
           </text>
         </g>
 
-        <!-- FordGlyphLayer — dark blue ][ at ford edge midpoints -->
+        <!-- FordGlyphLayer — dark blue ][ at ford edge midpoints, rotated along edge -->
         <g v-if="overlayConfig.edgeLine?.style === 'along-edge'" class="layer-ford-glyphs">
           <text
             v-for="e in fordGlyphEdges"
             :key="'ford-' + e.id"
-            :x="edgeMidpoint(e.corners, e.dir).x"
-            :y="edgeMidpoint(e.corners, e.dir).y + 4"
+            :x="e.x"
+            :y="e.y"
+            :transform="e.transform"
             text-anchor="middle"
-            font-size="9"
+            dominant-baseline="central"
+            font-size="24"
             font-family="monospace"
             font-weight="bold"
             fill="#00008b"
             stroke="#ffffff"
-            stroke-width="1.5"
+            stroke-width="2.5"
             paint-order="stroke"
             pointer-events="none"
           >

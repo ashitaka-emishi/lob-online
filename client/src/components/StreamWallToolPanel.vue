@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import EdgeToolPanelShell from './EdgeToolPanelShell.vue';
-import { STREAM_WALL_GROUPS } from '../config/feature-types.js';
+import { STREAM_WALL_GROUPS, EDGE_PREREQUISITES } from '../config/feature-types.js';
 
 const HELP_TEXT =
   'Click an edge to paint the selected type. ' +
@@ -36,9 +36,10 @@ const validationError = ref(null);
 // ── Edge event routing ──────────────────────────────────────────────────────
 
 function handleEdgeClick(hexId, faceIndex) {
-  if (props.selectedType === 'ford') {
+  const prereqs = EDGE_PREREQUISITES[props.selectedType];
+  if (prereqs) {
     const features = props.getEdgeFeatures(hexId, faceIndex);
-    if (!features.includes('stream')) {
+    if (!prereqs.some((p) => features.includes(p))) {
       validationError.value = 'Ford requires a stream on this edge.';
       setTimeout(() => {
         validationError.value = null;
