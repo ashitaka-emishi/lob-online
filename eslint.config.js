@@ -15,7 +15,7 @@ export default [
       'docs/**',
       'coverage/**',
       'ecosystem.config.cjs',
-      'scripts/**',
+      'scripts/*.sh',
     ],
   },
 
@@ -59,6 +59,38 @@ export default [
     rules: {
       'n/no-extraneous-import': 'off',
       'n/no-missing-import': 'off',
+    },
+  },
+
+  // Scripts — Node.js utility scripts (no n/no-extraneous-import since deps may be root-level)
+  {
+    files: ['scripts/*.js'],
+    plugins: { n: pluginN, import: pluginImport },
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+        URL: 'readonly',
+        Buffer: 'readonly',
+      },
+    },
+    rules: {
+      ...pluginN.configs['flat/recommended'].rules,
+      'n/no-missing-import': 'off',
+      'n/no-extraneous-import': 'off',
+      'n/no-process-exit': 'off',
+      'n/hashbang': 'off',
+      'no-console': 'off',
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      'import/order': [
+        'warn',
+        {
+          groups: ['builtin', 'external', 'internal'],
+          'newlines-between': 'always',
+        },
+      ],
     },
   },
 

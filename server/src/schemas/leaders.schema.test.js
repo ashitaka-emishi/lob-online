@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { LeadersSchema } from './leaders.schema.js';
 
 const MINIMAL_LEADER = {

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { OOBSchema } from './oob.schema.js';
 
 const MINIMAL_UNIT = {
