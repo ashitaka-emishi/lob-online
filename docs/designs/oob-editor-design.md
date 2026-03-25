@@ -347,12 +347,12 @@ data/scenarios/south-mountain/leaders.json  — add counterRef fields
 
 ## Issues
 
-- #??? — add `successionIds` and `counterRef` to OOB schema and data
-- #??? — add `counterRef` to leaders schema and data
-- #??? — server routes: `/api/oob`, `/api/leaders`, `/api/counters`
-- #??? — OOB editor: hierarchy tree and Pinia store
-- #??? — OOB editor: detail panel — all unit types with counter image widget
-- #??? — OOB editor: leader detail panel with counter image widget (incl. promoted images)
-- #??? — OOB editor: succession list component
-- #??? — `npm run dev:oob-editor` launch script and home page nav buttons
-- #??? — counter auto-detection script (`scripts/detect-counters.js`)
+- #189 — add `successionIds` and `counterRef` to OOB schema and data
+- #190 — add `counterRef` to leaders schema and data
+- #191 — server routes: `/api/oob`, `/api/leaders`, `/api/counters`
+- #192 — OOB editor: hierarchy tree and Pinia store
+- #193 — OOB editor: detail panel — all unit types with counter image widget
+- #194 — OOB editor: leader detail panel with counter image widget (incl. promoted images)
+- #195 — OOB editor: succession list component
+- #196 — `npm run dev:oob-editor` launch script and home page nav buttons
+- #197 — counter auto-detection script (`scripts/detect-counters.js`)
