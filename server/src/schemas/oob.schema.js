@@ -3,7 +3,9 @@ import { z } from 'zod';
 const CounterRef = z
   .object({
     front: z.string().nullable(),
+    frontConfidence: z.number().min(0).max(1).nullable(),
     back: z.string().nullable(),
+    backConfidence: z.number().min(0).max(1).nullable(),
   })
   .nullable();
 

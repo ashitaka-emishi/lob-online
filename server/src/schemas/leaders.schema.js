@@ -5,9 +5,13 @@ const CommandLevel = z.enum(['army', 'wing', 'corps', 'division', 'brigade', 'ca
 const LeaderCounterRef = z
   .object({
     front: z.string().nullable(),
+    frontConfidence: z.number().min(0).max(1).nullable(),
     back: z.string().nullable(),
+    backConfidence: z.number().min(0).max(1).nullable(),
     promotedFront: z.string().nullable(),
+    promotedFrontConfidence: z.number().min(0).max(1).nullable(),
     promotedBack: z.string().nullable(),
+    promotedBackConfidence: z.number().min(0).max(1).nullable(),
   })
   .nullable();
 

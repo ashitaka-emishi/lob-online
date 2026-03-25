@@ -102,7 +102,7 @@ describe('OOBSchema — counterRef on InfantryCavalryUnit', () => {
     expect(result.success).toBe(true);
   });
 
-  it('accepts unit with counterRef object', () => {
+  it('accepts unit with counterRef object including confidence', () => {
     const oob = {
       ...MINIMAL_OOB,
       union: {
@@ -119,7 +119,12 @@ describe('OOBSchema — counterRef on InfantryCavalryUnit', () => {
                     regiments: [
                       {
                         ...MINIMAL_UNIT,
-                        counterRef: { front: 'CS1-Front_01.jpg', back: 'CS1-Back_01.jpg' },
+                        counterRef: {
+                          front: 'CS1-Front_01.jpg',
+                          frontConfidence: 0.9,
+                          back: 'CS1-Back_01.jpg',
+                          backConfidence: 0.85,
+                        },
                       },
                     ],
                   },
@@ -148,7 +153,17 @@ describe('OOBSchema — counterRef on InfantryCavalryUnit', () => {
                 brigades: [
                   {
                     ...MINIMAL_BRIGADE,
-                    regiments: [{ ...MINIMAL_UNIT, counterRef: { front: null, back: null } }],
+                    regiments: [
+                      {
+                        ...MINIMAL_UNIT,
+                        counterRef: {
+                          front: null,
+                          frontConfidence: null,
+                          back: null,
+                          backConfidence: null,
+                        },
+                      },
+                    ],
                   },
                 ],
               },
@@ -183,9 +198,16 @@ describe('OOBSchema — counterRef on ArtilleryBattery', () => {
     expect(result.success).toBe(true);
   });
 
-  it('accepts battery with counterRef object', () => {
+  it('accepts battery with counterRef object including confidence', () => {
     const result = OOBSchema.safeParse(
-      oobWithBattery({ counterRef: { front: 'CS1-Front_50.jpg', back: 'CS1-Back_50.jpg' } })
+      oobWithBattery({
+        counterRef: {
+          front: 'CS1-Front_50.jpg',
+          frontConfidence: 0.88,
+          back: 'CS1-Back_50.jpg',
+          backConfidence: 0.76,
+        },
+      })
     );
     expect(result.success).toBe(true);
   });

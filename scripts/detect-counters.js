@@ -2,16 +2,24 @@
 /**
  * detect-counters.js
  *
- * One-time developer script. Uses the Claude vision API to match counter images in
- * docs/reference/src-counters-sm/ to unit and leader records in oob.json / leaders.json.
+ * One-time developer script. Uses the Claude vision API to match counter images already in
+ * client/public/counters/ to unit and leader records in oob.json / leaders.json.
+ *
+ * Images are NOT moved or deleted — they are already in place.
  *
  * Behaviour:
- *   1. Read all images from SOURCE_DIR
- *   2. For each image call Claude vision API to identify the unit/leader shown
- *   3. Copy ALL images to DEST_DIR (idempotent — skips if already present)
- *   4. Write counterRef into data files for high-confidence matches (>= CONFIDENCE_THRESHOLD)
- *   5. Delete SOURCE_DIR after all images are copied
+ *   1. Read all images from COUNTERS_DIR (client/public/counters/)
+ *   2. Determine side (front/back) from filename
+ *   3. For each image call Claude vision API to identify the unit/leader shown
+ *   4. Write counterRef + confidence into the matching record for ALL matches (threshold = 0)
+ *   5. Save updated oob.json and leaders.json
  *   6. Print summary report
+ *
+ * Filename conventions:
+ *   CS1-Front_##.jpg  — front face from scanned counter sheet 1
+ *   CS1-Back_##.jpg   — back face from scanned counter sheet 1
+ *   C## copy.png      — Confederate (CSA) unit front (cut-out individual counter)
+ *   U## [copy].png    — Union (USA) unit front (cut-out individual counter)
  *
  * Usage:
  *   node scripts/detect-counters.js [--dry-run]
@@ -19,16 +27,8 @@
  * Requires ANTHROPIC_API_KEY in environment.
  */
 
-import {
-  readFileSync,
-  writeFileSync,
-  existsSync,
-  readdirSync,
-  copyFileSync,
-  mkdirSync,
-  rmSync,
-} from 'fs';
-import { join, extname, dirname } from 'path';
+import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
+import { join, extname, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -36,14 +36,44 @@ import Anthropic from '@anthropic-ai/sdk';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 
-const SOURCE_DIR = join(ROOT, 'docs/reference/src-counters-sm');
-const DEST_DIR = join(ROOT, 'client/public/counters');
+const COUNTERS_DIR = join(ROOT, 'client/public/counters');
 const OOB_PATH = join(ROOT, 'data/scenarios/south-mountain/oob.json');
 const LEADERS_PATH = join(ROOT, 'data/scenarios/south-mountain/leaders.json');
-const CONFIDENCE_THRESHOLD = 0.8;
+const CONFIDENCE_THRESHOLD = 0.0;
 const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp']);
 
 const DRY_RUN = process.argv.includes('--dry-run');
+
+// ---------------------------------------------------------------------------
+// Filename helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Determine the counter face side from the filename.
+ *
+ *   CS1-Front_##  → "front"
+ *   CS1-Back_##   → "back"
+ *   C## copy.png  → "front"  (Confederate individual counter — always front)
+ *   U## [copy].png → "front" (Union individual counter — always front)
+ */
+function sideFromFilename(filename) {
+  const lower = filename.toLowerCase();
+  if (lower.includes('-front_')) return 'front';
+  if (lower.includes('-back_')) return 'back';
+  // C## and U## cut-out files are always fronts
+  return 'front';
+}
+
+/**
+ * Return an army hint ("confederate" | "union" | null) from the filename.
+ * C## = Confederate, U## = Union. CS1-* sheets may contain either.
+ */
+function armyFromFilename(filename) {
+  const name = basename(filename, extname(filename)).toLowerCase();
+  if (/^c\d+/.test(name)) return 'confederate';
+  if (/^u\d+/.test(name)) return 'union';
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // Data loading helpers
@@ -59,7 +89,7 @@ function saveJSON(path, data) {
 
 /**
  * Walk oob.json and collect all unit and battery records.
- * Returns Map<id, record> — record is mutated in-place when counterRef is written.
+ * Returns Map<id, { record, type }> — record is mutated in-place when counterRef is written.
  */
 function collectOOBRecords(oob) {
   const map = new Map();
@@ -81,7 +111,7 @@ function collectOOBRecords(oob) {
 
 /**
  * Walk leaders.json and collect all leader records.
- * Returns Map<id, record>.
+ * Returns Map<id, { record, type }>.
  */
 function collectLeaderRecords(leaders) {
   const map = new Map();
@@ -106,14 +136,26 @@ function collectLeaderRecords(leaders) {
 // ---------------------------------------------------------------------------
 
 /**
- * Build a compact roster string to pass to Claude so it can choose an ID.
+ * Build a compact roster string, with optional army hint label.
  */
-function buildRoster(oobMap, leaderMap) {
-  const lines = ['UNITS (id | name | type):'];
+function buildRoster(oobMap, leaderMap, armyHint) {
+  const lines = [];
+
+  const unitLines = [];
   for (const [id, { record }] of oobMap) {
     const t = record.gunType ? 'artillery' : record.type;
-    lines.push(`  ${id} | ${record.name} | ${t}`);
+    unitLines.push(`  ${id} | ${record.name} | ${t}`);
   }
+
+  if (armyHint === 'confederate') {
+    lines.push('UNITS (id | name | type) — NOTE: this counter is Confederate:');
+  } else if (armyHint === 'union') {
+    lines.push('UNITS (id | name | type) — NOTE: this counter is Union:');
+  } else {
+    lines.push('UNITS (id | name | type):');
+  }
+  lines.push(...unitLines);
+
   lines.push('LEADERS (id | name | commandLevel):');
   for (const [id, { record }] of leaderMap) {
     lines.push(`  ${id} | ${record.name} | ${record.commandLevel}`);
@@ -123,42 +165,56 @@ function buildRoster(oobMap, leaderMap) {
 
 /**
  * Call Claude vision API to identify the counter in the image.
+ * Side is already known from the filename — Claude only needs to identify the unitId.
  *
- * Returns { unitId: string|null, side: string, confidence: number }
- *   unitId — id from oob.json or leaders.json, or null if unrecognised
- *   side   — "front" | "back" | "promotedFront" | "promotedBack"
- *   confidence — 0..1
+ * Returns { unitId: string|null, confidence: number }
  */
-async function identifyCounter(client, imagePath, roster) {
+async function identifyCounter(client, imagePath, side, armyHint, roster) {
   const imageData = readFileSync(imagePath);
   const base64 = imageData.toString('base64');
   const ext = extname(imagePath).toLowerCase().replace('.', '');
-  const mediaType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+  const mediaType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : `image/${ext}`;
 
-  const systemPrompt = `You are a wargame counter identification assistant. You will be shown a counter
-image from the South Mountain scenario of Line of Battle v2.0. Your task is to identify which unit
-or leader the counter belongs to by reading the text and insignia printed on it.
+  const sideDesc =
+    side === 'back'
+      ? `This is the BACK (reverse) face of a unit counter. The back face shows:
+- "COL" printed in red (column formation indicator)
+- The regiment's name underneath
+- The unit's formation chain: CORPS / DIVISION / BRIGADE`
+      : `This is the FRONT (obverse) face of a counter. Unit fronts show:
+- The unit designation (regiment number and state abbreviation, e.g. "22 NY")
+- A state or national flag/symbol as background image
+- A line formation symbol
+- Strength points and weapon type insignia
+Leader fronts show the leader's name, initiative rating, and command level insignia.`;
 
-Respond ONLY with a JSON object (no markdown, no explanation) with exactly these fields:
-{
-  "unitId": "<id from the roster, or null if you cannot identify>",
-  "side": "<front|back|promotedFront|promotedBack>",
-  "confidence": <0.0 to 1.0>
-}
+  const armyNote = armyHint
+    ? `NOTE: This counter belongs to the ${armyHint.toUpperCase()} army.`
+    : '';
+
+  const systemPrompt = `You are a wargame counter identification assistant for the South Mountain
+scenario of Line of Battle v2.0. Identify which unit or leader the counter image belongs to by
+reading the printed text and insignia.
+
+${sideDesc}
+
+${armyNote}
+
+Respond ONLY with valid JSON (no markdown, no code fences, no explanation):
+{"unitId":"<id from the roster, or null>","confidence":<0.0 to 1.0>}
 
 Rules:
-- "front" = normal obverse face (typically shows unit designation and strength)
-- "back" = normal reverse face (typically shows reduced strength or morale/straggler info)
-- "promotedFront" = leader promoted variant obverse (rare; only if explicitly a promoted leader counter)
-- "promotedBack" = leader promoted variant reverse (rare)
-- confidence should reflect how certain you are. Be strict: only use >= 0.80 if you are highly confident.
-- If the image is blank, a supply wagon/train, or not a combat counter, set unitId to null.`;
+- unitId must exactly match an id from the provided roster, or be null
+- confidence: how certain you are (0 = no idea, 1 = certain)
+- If the image is a supply wagon, supply train, or blank counter, set unitId to null
+- Read the printed text carefully — regiment numbers, state names, and leader names are the
+  most reliable identifiers`;
 
-  const userPrompt = `Identify this counter from the roster below.\n\n${roster}`;
+  const userPrompt = `Identify this counter (${side} face). Match it to an entry in the roster below.\n\n${roster}`;
 
   const response = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 256,
+    max_tokens: 128,
     system: systemPrompt,
     messages: [
       {
@@ -174,42 +230,62 @@ Rules:
     ],
   });
 
-  const text = response.content[0]?.text?.trim() ?? '';
+  const raw = response.content[0]?.text?.trim() ?? '';
+  // Strip any accidental ```json ... ``` wrapper
+  const text = raw
+    .replace(/^```json\s*/i, '')
+    .replace(/```\s*$/, '')
+    .replace(/\n/g, ' ');
+
   try {
     const parsed = JSON.parse(text);
     return {
       unitId: parsed.unitId ?? null,
-      side: parsed.side ?? 'front',
       confidence:
         typeof parsed.confidence === 'number' ? Math.min(1, Math.max(0, parsed.confidence)) : 0,
     };
   } catch {
-    console.warn(`  [warn] Could not parse Claude response for ${imagePath}: ${text}`);
-    return { unitId: null, side: 'front', confidence: 0 };
+    console.warn(`  [warn] Could not parse Claude response: ${text}`);
+    return { unitId: null, confidence: 0 };
   }
 }
 
 // ---------------------------------------------------------------------------
-// counterRef write helpers
+// counterRef write helper
 // ---------------------------------------------------------------------------
 
 /**
- * Write a filename into the correct counterRef slot on a record.
- * For unit records: { front, back }
- * For leader records: { front, back, promotedFront, promotedBack }
+ * Expand a null counterRef to its full object shape, then write the filename + confidence
+ * for the given side.
  */
-function writeCounterRef(record, recordType, side, filename) {
+function writeCounterRef(record, recordType, side, filename, confidence) {
   if (record.counterRef === null || record.counterRef === undefined) {
     if (recordType === 'leader') {
-      record.counterRef = { front: null, back: null, promotedFront: null, promotedBack: null };
+      record.counterRef = {
+        front: null,
+        frontConfidence: null,
+        back: null,
+        backConfidence: null,
+        promotedFront: null,
+        promotedFrontConfidence: null,
+        promotedBack: null,
+        promotedBackConfidence: null,
+      };
     } else {
-      record.counterRef = { front: null, back: null };
+      record.counterRef = {
+        front: null,
+        frontConfidence: null,
+        back: null,
+        backConfidence: null,
+      };
     }
   }
+  const confKey = side + 'Confidence';
   if (Object.prototype.hasOwnProperty.call(record.counterRef, side)) {
     record.counterRef[side] = filename;
+    record.counterRef[confKey] = confidence;
   } else {
-    console.warn(`  [warn] Side "${side}" is not valid for record type "${recordType}" — skipping`);
+    console.warn(`  [warn] Side "${side}" not valid for record type "${recordType}" — skipping`);
   }
 }
 
@@ -223,66 +299,50 @@ async function main() {
     process.exit(1);
   }
 
-  if (!existsSync(SOURCE_DIR)) {
-    console.error(`[detect-counters] Source directory not found: ${SOURCE_DIR}`);
+  if (!existsSync(COUNTERS_DIR)) {
+    console.error(`[detect-counters] Counters directory not found: ${COUNTERS_DIR}`);
     process.exit(1);
   }
 
-  const imageFiles = readdirSync(SOURCE_DIR)
+  const imageFiles = readdirSync(COUNTERS_DIR)
     .filter((f) => IMAGE_EXTS.has(extname(f).toLowerCase()))
     .sort();
 
   if (imageFiles.length === 0) {
-    console.log('[detect-counters] No images found in source directory. Nothing to do.');
+    console.log('[detect-counters] No images found. Nothing to do.');
     return;
   }
 
-  console.log(`[detect-counters] Found ${imageFiles.length} images in ${SOURCE_DIR}`);
+  console.log(`[detect-counters] Found ${imageFiles.length} images in ${COUNTERS_DIR}`);
   if (DRY_RUN) console.log('[detect-counters] DRY RUN — no files will be written');
 
-  // Load data
   const oob = loadJSON(OOB_PATH);
   const leaders = loadJSON(LEADERS_PATH);
   const oobMap = collectOOBRecords(oob);
   const leaderMap = collectLeaderRecords(leaders);
-  const roster = buildRoster(oobMap, leaderMap);
 
   const client = new Anthropic();
-
-  // Ensure destination exists
-  if (!DRY_RUN) {
-    mkdirSync(DEST_DIR, { recursive: true });
-  }
-
-  // Results tracking
   const results = [];
-  let copyCount = 0;
-  let skipCopyCount = 0;
 
   for (const filename of imageFiles) {
-    const srcPath = join(SOURCE_DIR, filename);
-    const destPath = join(DEST_DIR, filename);
+    const imagePath = join(COUNTERS_DIR, filename);
+    const side = sideFromFilename(filename);
+    const armyHint = armyFromFilename(filename);
+    const roster = buildRoster(oobMap, leaderMap, armyHint);
 
-    // --- Copy (all images, regardless of confidence) ---
-    const alreadyCopied = existsSync(destPath);
-    if (!alreadyCopied) {
-      if (!DRY_RUN) copyFileSync(srcPath, destPath);
-      copyCount++;
-    } else {
-      skipCopyCount++;
-    }
+    process.stdout.write(
+      `  [${results.length + 1}/${imageFiles.length}] ${filename} (${side}) ... `
+    );
 
-    // --- Identify via vision ---
-    process.stdout.write(`  [${results.length + 1}/${imageFiles.length}] ${filename} ... `);
     let identification;
     try {
-      identification = await identifyCounter(client, srcPath, roster);
+      identification = await identifyCounter(client, imagePath, side, armyHint, roster);
     } catch (err) {
       console.log(`ERROR: ${err.message}`);
       results.push({
         filename,
+        side,
         unitId: null,
-        side: null,
         confidence: 0,
         status: 'error',
         error: err.message,
@@ -290,85 +350,53 @@ async function main() {
       continue;
     }
 
-    const { unitId, side, confidence } = identification;
-    const highConf = confidence >= CONFIDENCE_THRESHOLD;
+    const { unitId, confidence } = identification;
+    const meetsThreshold = confidence >= CONFIDENCE_THRESHOLD;
 
-    // --- Write counterRef (high-confidence only, idempotent) ---
     let status = 'unmatched';
-    if (unitId) {
+    if (unitId && meetsThreshold) {
       const entry = oobMap.get(unitId) ?? leaderMap.get(unitId);
       if (entry) {
         const { record, type } = entry;
-        // Idempotency: skip if this slot is already filled
-        const existingRef = record.counterRef;
-        const alreadySet =
-          existingRef !== null &&
-          existingRef !== undefined &&
-          existingRef[side] !== null &&
-          existingRef[side] !== undefined;
-
-        if (highConf && !alreadySet) {
-          if (!DRY_RUN) writeCounterRef(record, type, side, filename);
-          status = 'matched';
-        } else if (alreadySet) {
-          status = 'already-set';
-        } else {
-          status = 'low-confidence';
-        }
+        if (!DRY_RUN) writeCounterRef(record, type, side, filename, confidence);
+        status = 'matched';
       } else {
         status = 'id-not-found';
       }
     }
 
-    console.log(`${unitId ?? 'null'} (${side}) conf=${confidence.toFixed(2)} → ${status}`);
-    results.push({ filename, unitId, side, confidence, status });
+    console.log(`${unitId ?? 'null'} conf=${confidence.toFixed(2)} → ${status}`);
+    results.push({ filename, side, unitId, confidence, status });
   }
 
-  // --- Save updated data files ---
+  // Save updated data files
   if (!DRY_RUN) {
     saveJSON(OOB_PATH, oob);
     saveJSON(LEADERS_PATH, leaders);
-    console.log('\n[detect-counters] Updated oob.json and leaders.json');
+    console.log('\n[detect-counters] Saved oob.json and leaders.json');
   }
 
-  // --- Delete source directory ---
-  if (!DRY_RUN) {
-    try {
-      rmSync(SOURCE_DIR, { recursive: true, force: true });
-      console.log(`[detect-counters] Deleted ${SOURCE_DIR}`);
-    } catch (err) {
-      console.warn(`[detect-counters] Could not delete source directory: ${err.message}`);
-    }
-  }
-
-  // --- Summary report ---
+  // Summary report
   const matched = results.filter((r) => r.status === 'matched').length;
-  const lowConf = results.filter((r) => r.status === 'low-confidence').length;
-  const alreadySet = results.filter((r) => r.status === 'already-set').length;
   const unmatched = results.filter((r) => r.status === 'unmatched').length;
   const idNotFound = results.filter((r) => r.status === 'id-not-found').length;
   const errors = results.filter((r) => r.status === 'error').length;
 
   console.log('\n========== SUMMARY ==========');
   console.log(`Total images:         ${imageFiles.length}`);
-  console.log(`Copied to dest:       ${copyCount} (${skipCopyCount} already present)`);
   console.log(`Matched (written):    ${matched}`);
-  console.log(`Low confidence:       ${lowConf}`);
-  console.log(`Already set:          ${alreadySet}`);
   console.log(`No unit ID returned:  ${unmatched}`);
-  console.log(`ID not in data:       ${idNotFound}`);
+  console.log(`ID not in roster:     ${idNotFound}`);
   console.log(`Errors:               ${errors}`);
   console.log('\nPer-image results:');
-  console.log(
-    '  filename                        | unitId              | side           | conf  | status'
-  );
-  console.log('  ' + '-'.repeat(95));
+  console.log('  filename                        | side  | unitId              | conf  | status');
+  console.log('  ' + '-'.repeat(90));
   for (const r of results) {
     const fn = r.filename.padEnd(32);
+    const s = r.side.padEnd(5);
     const uid = (r.unitId ?? 'null').padEnd(20);
-    const s = (r.side ?? 'null').padEnd(15);
     const c = r.confidence.toFixed(2).padStart(5);
-    console.log(`  ${fn}| ${uid}| ${s}| ${c} | ${r.status}`);
+    console.log(`  ${fn}| ${s} | ${uid}| ${c} | ${r.status}`);
   }
   console.log('==============================');
 }

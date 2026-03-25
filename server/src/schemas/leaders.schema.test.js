@@ -45,7 +45,7 @@ describe('LeadersSchema — counterRef on BaseLeader', () => {
     expect(result.success).toBe(true);
   });
 
-  it('accepts leader with full counterRef object', () => {
+  it('accepts leader with full counterRef object including confidence', () => {
     const leaders = {
       ...MINIMAL_LEADERS,
       union: {
@@ -55,9 +55,13 @@ describe('LeadersSchema — counterRef on BaseLeader', () => {
             ...MINIMAL_LEADER,
             counterRef: {
               front: 'CS1-Front_10.jpg',
+              frontConfidence: 0.9,
               back: 'CS1-Back_10.jpg',
+              backConfidence: 0.85,
               promotedFront: 'CS1-Front_11.jpg',
+              promotedFrontConfidence: 0.7,
               promotedBack: 'CS1-Back_11.jpg',
+              promotedBackConfidence: null,
             },
           },
         ],
@@ -67,7 +71,7 @@ describe('LeadersSchema — counterRef on BaseLeader', () => {
     expect(result.success).toBe(true);
   });
 
-  it('accepts leader with counterRef having null filenames', () => {
+  it('accepts leader with counterRef having null filenames and confidences', () => {
     const leaders = {
       ...MINIMAL_LEADERS,
       union: {
@@ -77,9 +81,13 @@ describe('LeadersSchema — counterRef on BaseLeader', () => {
             ...MINIMAL_LEADER,
             counterRef: {
               front: null,
+              frontConfidence: null,
               back: null,
+              backConfidence: null,
               promotedFront: null,
+              promotedFrontConfidence: null,
               promotedBack: null,
+              promotedBackConfidence: null,
             },
           },
         ],
@@ -97,7 +105,7 @@ describe('LeadersSchema — counterRef on BaseLeader', () => {
         brigades: [
           {
             ...MINIMAL_LEADER,
-            counterRef: { front: 'file.jpg' }, // missing back, promotedFront, promotedBack
+            counterRef: { front: 'file.jpg' }, // missing back, promotedFront, promotedBack, confidence fields
           },
         ],
       },
