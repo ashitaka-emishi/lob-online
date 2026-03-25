@@ -34,10 +34,15 @@ if (collapseSignal)
   });
 
 // Build children from the node's actual shape.
-// Order: inline units → artillery groups → structural children → leaf units
+// Order: commander → inline units → artillery groups → structural children → leaf units
 const childEntries = computed(() => {
   const n = props.node;
   const children = [];
+
+  // Commander injected by OobHierarchyTree (corps/division level only)
+  if (n._leader) {
+    children.push({ node: n._leader, nodeType: 'leader' });
+  }
 
   // Inline corps/division units (cavalry attached to corps, etc.)
   if (n.corpsUnits) {
@@ -79,10 +84,12 @@ const BADGE_MAP = {
   division: 'Div',
   brigade: 'BDE',
   'artillery-group': 'Arty',
+  independent: 'IDP',
+  'reserve-arty': 'RES',
   regiment: 'Inf',
   battery: 'Btry',
   cavalry: 'Cav',
-  leader: 'Leader',
+  leader: 'Ldr',
   infantry: 'Inf',
   artillery: 'Arty',
   unit: 'Unit',
@@ -220,6 +227,16 @@ function toggleExpand(event) {
 .badge-leader {
   background: #203028;
   color: #60a880;
+}
+
+.badge-independent {
+  background: #282838;
+  color: #7878c0;
+}
+
+.badge-reserve-arty {
+  background: #302820;
+  color: #b08840;
 }
 
 .children {

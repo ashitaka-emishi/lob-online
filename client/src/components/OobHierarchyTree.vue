@@ -13,7 +13,7 @@ const props = defineProps({
 
 const store = useOobStore();
 
-// Expand/collapse all — inject-able signals consumed by every OobTreeNode
+// Expand/collapse all — signals consumed by every OobTreeNode via inject
 const expandSignal = ref(0);
 const collapseSignal = ref(0);
 provide('expandSignal', expandSignal);
@@ -26,7 +26,66 @@ function collapseAll() {
   collapseSignal.value++;
 }
 
-// Build the list of top-level tree entries for the active side.
+// ── Leaders lookup ────────────────────────────────────────────────────────────
+// Flatten all leader records for the active side into a commandsId → leader map.
+const leadersMap = computed(() => {
+  const map = {};
+  if (!store.leaders) return map;
+  const sideLeaders = store.leaders[props.side];
+  if (!sideLeaders) return map;
+  Object.values(sideLeaders).forEach((group) => {
+    if (Array.isArray(group)) {
+      group.forEach((l) => {
+        if (l.commandsId) map[l.commandsId] = l;
+      });
+    }
+  });
+  return map;
+});
+
+// Inject the commander (if known) into a node as _leader.
+function withLeader(node) {
+  const leader = leadersMap.value[node.id];
+  if (!leader) return node;
+  return { ...node, _leader: leader };
+}
+
+// ── Artillery distribution (Union) ────────────────────────────────────────────
+// Corps-level artillery is keyed as artyN-Mc (e.g., arty1-1c).
+// Division ids follow the pattern Nd-Mc (e.g., 1d-1c).
+// Match by extracting N from both sides and inject the group into the division.
+// Any unmatched groups remain at corps level.
+function distributeArtillery(corps) {
+  if (!corps.artillery || !corps.divisions?.length) return corps;
+
+  const artyEntries = Object.entries(corps.artillery);
+  const matchedKeys = new Set();
+
+  const divisions = corps.divisions.map((div) => {
+    const divPrefix = div.id.match(/^([^d]+)d-/)?.[1];
+    if (!divPrefix) return div;
+    const match = artyEntries.find(([k]) => k === `arty${divPrefix}-${corps.id}`);
+    if (!match) return div;
+    matchedKeys.add(match[0]);
+    return { ...div, artillery: { [match[0]]: match[1] } };
+  });
+
+  const remainingArty = Object.fromEntries(artyEntries.filter(([k]) => !matchedKeys.has(k)));
+  return {
+    ...corps,
+    artillery: Object.keys(remainingArty).length ? remainingArty : undefined,
+    divisions,
+  };
+}
+
+// Apply artillery distribution + leader injection to a corps and its divisions.
+function processUnionCorps(corps) {
+  const distributed = distributeArtillery(corps);
+  const divisions = distributed.divisions?.map(withLeader) ?? distributed.divisions;
+  return withLeader({ ...distributed, divisions });
+}
+
+// ── Top-level node list ───────────────────────────────────────────────────────
 const topNodes = computed(() => {
   if (!store.oob) return [];
   const side = store.oob[props.side];
@@ -34,43 +93,40 @@ const topNodes = computed(() => {
 
   if (props.side === 'union') {
     const entries = [];
-
-    // Regular corps
-    (side.corps ?? []).forEach((c) => entries.push({ node: c, nodeType: 'corps' }));
-
-    // Cavalry Division appears at the same level as corps
+    (side.corps ?? []).forEach((c) =>
+      entries.push({ node: processUnionCorps(c), nodeType: 'corps' })
+    );
     if (side.cavalryDivision) {
-      entries.push({ node: side.cavalryDivision, nodeType: 'division' });
+      entries.push({ node: withLeader(side.cavalryDivision), nodeType: 'division' });
     }
-
     return entries;
   }
 
   // ── Confederate ─────────────────────────────────────────────────────────
   const entries = [];
-
-  // Top-level divisions (D.H. Hill, Hood, McLaws, etc.)
   (side.divisions ?? []).forEach((d) => entries.push({ node: d, nodeType: 'division' }));
 
-  // Independent formation — synthetic node; cavalry → regiments, artillery → batteries
   if (side.independent) {
-    const indNode = {
-      id: 'independent',
-      name: 'Independent',
-      regiments: side.independent.cavalry ?? [],
-      batteries: side.independent.artillery ?? [],
-    };
-    entries.push({ node: indNode, nodeType: 'division' });
+    entries.push({
+      node: {
+        id: 'independent',
+        name: 'Independent',
+        regiments: side.independent.cavalry ?? [],
+        batteries: side.independent.artillery ?? [],
+      },
+      nodeType: 'independent',
+    });
   }
 
-  // Reserve Artillery — synthetic node; batteries as leaf children
   if (side.reserveArtillery) {
-    const reserveNode = {
-      id: 'reserve-artillery',
-      name: 'Reserve Artillery',
-      batteries: side.reserveArtillery.batteries ?? [],
-    };
-    entries.push({ node: reserveNode, nodeType: 'division' });
+    entries.push({
+      node: {
+        id: 'reserve-artillery',
+        name: 'Reserve Artillery',
+        batteries: side.reserveArtillery.batteries ?? [],
+      },
+      nodeType: 'reserve-arty',
+    });
   }
 
   return entries;
