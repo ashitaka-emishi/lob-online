@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+const CounterRef = z
+  .object({
+    front: z.string().nullable(),
+    frontConfidence: z.number().min(0).max(1).nullable(),
+    back: z.string().nullable(),
+    backConfidence: z.number().min(0).max(1).nullable(),
+  })
+  .nullable();
+
 const WeaponType = z.enum(['R', 'M', 'SR', 'C']);
 const GunType = z.enum(['R', 'N', 'H', 'L', 'HvR']);
 const AmmoClass = z.enum(['B', 'C', 'D']);
@@ -14,6 +23,7 @@ const InfantryCavalryUnit = z.object({
   weapon: WeaponType,
   strengthPoints: z.number().int().positive(),
   stragglerBoxes: z.number().int().positive(),
+  counterRef: CounterRef.optional(),
   _errata: z.string().optional(),
   _note: z.string().optional(),
 });
@@ -24,6 +34,7 @@ const ArtilleryBattery = z.object({
   gunType: GunType,
   strengthPoints: z.number().int().positive(),
   ammoClass: AmmoClass,
+  counterRef: CounterRef.optional(),
   _errata: z.string().optional(),
   _note: z.string().optional(),
 });

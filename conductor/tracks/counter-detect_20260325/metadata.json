@@ -1,0 +1,17 @@
+{
+  "id": "counter-detect_20260325",
+  "title": "Counter Auto-Detection Script",
+  "type": "feature",
+  "status": "pending",
+  "created": "2026-03-25T00:00:00.000Z",
+  "updated": "2026-03-25T00:00:00.000Z",
+  "githubIssue": 197,
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 15,
+    "completed": 0
+  }
+}

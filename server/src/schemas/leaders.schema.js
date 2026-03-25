@@ -2,6 +2,19 @@ import { z } from 'zod';
 
 const CommandLevel = z.enum(['army', 'wing', 'corps', 'division', 'brigade', 'cavalry']);
 
+const LeaderCounterRef = z
+  .object({
+    front: z.string().nullable(),
+    frontConfidence: z.number().min(0).max(1).nullable(),
+    back: z.string().nullable(),
+    backConfidence: z.number().min(0).max(1).nullable(),
+    promotedFront: z.string().nullable(),
+    promotedFrontConfidence: z.number().min(0).max(1).nullable(),
+    promotedBack: z.string().nullable(),
+    promotedBackConfidence: z.number().min(0).max(1).nullable(),
+  })
+  .nullable();
+
 const BaseLeader = z.object({
   id: z.string(),
   name: z.string(),
@@ -9,6 +22,7 @@ const BaseLeader = z.object({
   commandLevel: CommandLevel,
   commandsId: z.string().nullable(),
   initiativeRating: z.number().int().nullable(),
+  counterRef: LeaderCounterRef.optional(),
   specialRules: z.record(z.string(), z.unknown()).optional(),
 });
 

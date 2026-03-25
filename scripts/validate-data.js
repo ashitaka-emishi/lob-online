@@ -139,7 +139,7 @@ function collectUnitIds(oob) {
 // Collect all leader commandsIds
 // ──────────────────────────────────────────────────────────────────────────────
 
-function collectLeaderCommandsIds(leaders) {
+function _collectLeaderCommandsIds(leaders) {
   const ids = new Set();
   const allLeaders = [
     ...leaders.union.army,
