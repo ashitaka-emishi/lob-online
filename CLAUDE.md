@@ -20,14 +20,15 @@ For the full source-document inventory and data-file manifest, see
 
 ### Developer Tools
 
-Two dev-only tools are available, both guarded by `MAP_EDITOR_ENABLED=true` in `.env`. Launch with `npm run dev:map-editor`.
+Three dev-only tools are available (two implemented, one designed), all guarded by `MAP_EDITOR_ENABLED=true` in `.env`.
 
-**Map editor** (`/tools/map-editor`) — digitize `docs/reference/sm-map.jpg` into `map.json` terrain data.
+**Map editor** (`/tools/map-editor`) — digitize `docs/reference/sm-map.jpg` into `map.json` terrain data. Launch with `npm run dev:map-editor`.
 
-**Scenario editor** (`/tools/scenario-editor`) — edit `scenario.json` fields: turn structure, lighting schedule (day/twilight/night by start turn), and rules fields (night visibility cap, fluke stoppage grace period, initiative system, loose cannon, loss recovery, random events). See `docs/designs/scenario-editor-design.md` for the full spec.
+**Scenario editor** (`/tools/scenario-editor`) — edit `scenario.json` fields: turn structure, lighting schedule (day/twilight/night by start turn), and rules fields (night visibility cap, fluke stoppage grace period, initiative system, loose cannon, loss recovery, random events). See `docs/designs/scenario-editor-design.md` for the full spec. Launch with `npm run dev:map-editor`.
+
+**OOB editor** (`/tools/oob-editor`) — view and edit the full command hierarchy, unit stats, leader succession, and counter image linkages in `oob.json` and `leaders.json`. See `docs/designs/oob-editor.md` for the full spec. Launch with `npm run dev:oob-editor` (not yet implemented).
 
 - **Enable:** set `MAP_EDITOR_ENABLED=true` in `.env`
-- **Launch:** `npm run dev:map-editor` (starts both server and client with the env flag set)
 
 A `devops` agent and four skills automate the build/run/test cycle. See `docs/agents/devops/design.md` for the full spec.
 
