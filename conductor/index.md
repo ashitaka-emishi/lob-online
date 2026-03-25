@@ -34,6 +34,7 @@ Navigation hub for project context.
 
 | [map-editor-ui-refactor_20260323](./tracks/map-editor-ui-refactor_20260323/index.md) | Map Editor UI Refactor — Tool Panel Cleanup & Feature Improvements | Pending |
 | [counter-detect_20260325](./tracks/counter-detect_20260325/index.md) | Counter Auto-Detection Script | Pending |
+| [oob-editor-foundation_20260325](./tracks/oob-editor-foundation_20260325/index.md) | OOB Editor Foundation — Launch Script, Store & Hierarchy Tree | Complete |
 
 ## Getting Started
 

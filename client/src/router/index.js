@@ -9,5 +9,6 @@ export default createRouter({
     { path: '/', component: StatusView },
     { path: '/tools/map-editor', component: MapEditorView },
     { path: '/tools/scenario-editor', component: ScenarioEditorView },
+    { path: '/tools/oob-editor', component: () => import('../views/tools/OobEditorView.vue') },
   ],
 });
