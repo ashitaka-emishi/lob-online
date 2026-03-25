@@ -57,8 +57,14 @@ function flattenArtillery(node) {
   return { ...node, artillery: undefined, batteries: [...(node.batteries ?? []), ...extra] };
 }
 
-// For Union corps: match arty groups to divisions by key pattern (artyN-Mc → Nd-Mc),
-// flatten matched batteries directly onto each division, leave unmatched at corps level.
+// For Union corps: distribute arty to divisions and brigades, leave unmatched at corps level.
+//
+// Division matching (two patterns):
+//   • New:    key ends with `-{div.id}`           e.g. arty1-1d-9c  → 1d-9c
+//   • Legacy: key = arty{divNum}-{corpsId}        e.g. arty1-1c     → 1d-1c
+//
+// Brigade matching (Kanawha-style, applied after division pass):
+//   • arty-{bdeNum}{divPrefix}g-{corpsId}         e.g. arty-1kg-9c  → 1b-kd-9c
 function distributeCorpsArtillery(corps) {
   if (!corps.artillery || !corps.divisions?.length) return corps;
   const artyEntries = Object.entries(corps.artillery);
@@ -66,11 +72,31 @@ function distributeCorpsArtillery(corps) {
 
   const divisions = corps.divisions.map((div) => {
     const divPrefix = div.id.match(/^([^d]+)d-/)?.[1];
-    if (!divPrefix) return div;
-    const match = artyEntries.find(([k]) => k === `arty${divPrefix}-${corps.id}`);
-    if (!match) return div;
-    matchedKeys.add(match[0]);
-    return { ...div, batteries: [...(div.batteries ?? []), ...(match[1].batteries ?? [])] };
+
+    // Division-level match
+    const divMatch = artyEntries.find(
+      ([k]) =>
+        !matchedKeys.has(k) &&
+        (k.endsWith(`-${div.id}`) || (divPrefix && k === `arty${divPrefix}-${corps.id}`))
+    );
+    if (divMatch) matchedKeys.add(divMatch[0]);
+
+    // Brigade-level match: arty-{bdeNum}{divPrefix}g-{corpsId} → {bdeNum}b-{div.id}
+    const brigades = (div.brigades ?? []).map((bde) => {
+      const bdeNum = bde.id.match(/^(\d+)b-/)?.[1];
+      if (!bdeNum || !divPrefix) return bde;
+      const bdeMatch = artyEntries.find(
+        ([k]) => !matchedKeys.has(k) && k === `arty-${bdeNum}${divPrefix}g-${corps.id}`
+      );
+      if (!bdeMatch) return bde;
+      matchedKeys.add(bdeMatch[0]);
+      return { ...bde, batteries: [...(bde.batteries ?? []), ...(bdeMatch[1].batteries ?? [])] };
+    });
+
+    const divBatteries = divMatch
+      ? [...(div.batteries ?? []), ...(divMatch[1].batteries ?? [])]
+      : div.batteries;
+    return { ...div, ...(divBatteries ? { batteries: divBatteries } : {}), brigades };
   });
 
   const remainingArty = Object.fromEntries(artyEntries.filter(([k]) => !matchedKeys.has(k)));

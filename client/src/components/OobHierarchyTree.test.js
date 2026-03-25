@@ -199,6 +199,123 @@ describe('OobHierarchyTree — union side', () => {
   });
 });
 
+// ── 9th Corps arty distribution ───────────────────────────────────────────────
+
+describe('OobHierarchyTree — 9th Corps artillery distribution', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    const store = useOobStore();
+    store.oob = {
+      _status: 'available',
+      union: {
+        army: 'Army of the Potomac',
+        corps: [
+          {
+            id: '9c',
+            name: '9 Corps',
+            corpsUnits: [],
+            artillery: {
+              'arty-9c-direct': {
+                batteries: [
+                  { id: 'l2ny', name: 'L 2 NY' },
+                  { id: 'lm3us', name: 'L&M 3 US' },
+                ],
+              },
+              'arty1-1d-9c': {
+                batteries: [
+                  { id: '8mass', name: '8 Mass Lt' },
+                  { id: 'e2us', name: 'E 2 US' },
+                ],
+              },
+              'arty2-2d-9c': {
+                batteries: [
+                  { id: 'dpenn', name: 'D Penn Lt' },
+                  { id: 'e4us', name: 'E 4 US' },
+                ],
+              },
+              'arty3-3d-9c': { batteries: [{ id: 'a5us', name: 'A 5 US' }] },
+              'arty-1kg-9c': { batteries: [{ id: '1ohio', name: '1 Ohio Lt' }] },
+              'arty-2kg-9c': { batteries: [{ id: 'simonds', name: 'Simonds Ky' }] },
+            },
+            divisions: [
+              {
+                id: '1d-9c',
+                name: '1/9 Division',
+                brigades: [
+                  { id: '1b-1d-9c', name: '1/1/9' },
+                  { id: '2b-1d-9c', name: '2/1/9' },
+                ],
+              },
+              {
+                id: '2d-9c',
+                name: '2/9 Division',
+                brigades: [
+                  { id: '1b-2d-9c', name: '1/2/9' },
+                  { id: '2b-2d-9c', name: '2/2/9' },
+                ],
+              },
+              {
+                id: '3d-9c',
+                name: '3/9 Division',
+                brigades: [
+                  { id: '1b-3d-9c', name: '1/3/9' },
+                  { id: '2b-3d-9c', name: '2/3/9' },
+                ],
+              },
+              {
+                id: 'kd-9c',
+                name: 'K/9 Division',
+                brigades: [
+                  { id: '1b-kd-9c', name: '1/K/9 (Scammon)' },
+                  { id: '2b-kd-9c', name: '2/K/9 (Crook)' },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      confederate: CSA_OOB,
+    };
+    store.leaders = MINIMAL_LEADERS;
+  });
+
+  it('keeps L 2 NY and L&M 3 US directly under 9 Corps', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
+    const corpsRow = wrapper.findAll('.node-corps').find((n) => n.text().includes('9 Corps'));
+    expect(corpsRow).toBeTruthy();
+    // Corps-level batteries should appear before divisions — they are in the corps node itself
+    expect(wrapper.text()).toContain('L 2 NY');
+    expect(wrapper.text()).toContain('L&M 3 US');
+  });
+
+  it('places 8 Mass Lt and E 2 US under 1/9 Division', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
+    expect(wrapper.text()).toContain('8 Mass Lt');
+    expect(wrapper.text()).toContain('E 2 US');
+  });
+
+  it('places D Penn Lt and E 4 US under 2/9 Division', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
+    expect(wrapper.text()).toContain('D Penn Lt');
+    expect(wrapper.text()).toContain('E 4 US');
+  });
+
+  it('places A 5 US under 3/9 Division', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
+    expect(wrapper.text()).toContain('A 5 US');
+  });
+
+  it('places 1 Ohio Lt under 1/K/9 brigade', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
+    expect(wrapper.text()).toContain('1 Ohio Lt');
+  });
+
+  it('places Simonds Ky under 2/K/9 brigade', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
+    expect(wrapper.text()).toContain('Simonds Ky');
+  });
+});
+
 // ── Confederate side ──────────────────────────────────────────────────────────
 
 describe('OobHierarchyTree — confederate side', () => {
