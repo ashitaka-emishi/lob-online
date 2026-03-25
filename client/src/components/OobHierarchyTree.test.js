@@ -31,7 +31,7 @@ const MINIMAL_OOB = {
   },
   confederate: {
     army: 'Army of Northern Virginia',
-    corps: [{ id: 'cs1c', name: "D.H. Hill's Corps", divisions: [] }],
+    divisions: [{ id: 'hills-div', name: "D.H. Hill's Division", brigades: [] }],
   },
 };
 
@@ -48,9 +48,9 @@ describe('OobHierarchyTree', () => {
     expect(wrapper.text()).toContain('2 Corps');
   });
 
-  it('renders confederate corps when side=confederate', () => {
+  it('renders confederate divisions when side=confederate', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'confederate' } });
-    expect(wrapper.text()).toContain("D.H. Hill's Corps");
+    expect(wrapper.text()).toContain("D.H. Hill's Division");
     expect(wrapper.text()).not.toContain('1 Corps');
   });
 
@@ -61,9 +61,28 @@ describe('OobHierarchyTree', () => {
     expect(wrapper.text()).toContain('No data loaded');
   });
 
-  it('renders corps count matching data', () => {
+  it('renders corps count matching data for union', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
     const nodes = wrapper.findAll('.node-corps');
+    expect(nodes.length).toBe(2);
+  });
+
+  it('renders divisions as top-level nodes for confederate', () => {
+    const store = useOobStore();
+    store.oob = {
+      ...MINIMAL_OOB,
+      confederate: {
+        army: 'Army of Northern Virginia',
+        divisions: [
+          { id: 'hills-div', name: "D.H. Hill's Division", brigades: [] },
+          { id: 'mclaws-div', name: "McLaws' Division", brigades: [] },
+        ],
+      },
+    };
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'confederate' } });
+    expect(wrapper.text()).toContain("D.H. Hill's Division");
+    expect(wrapper.text()).toContain("McLaws' Division");
+    const nodes = wrapper.findAll('.node-division');
     expect(nodes.length).toBe(2);
   });
 });

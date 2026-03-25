@@ -13,16 +13,28 @@ const props = defineProps({
 
 const store = useOobStore();
 
-const corpsNodes = computed(() => {
+// Union: organized as corps → divisions → brigades
+// Confederate (SM): no corps wrapper — divisions are the top-level nodes
+const topNodes = computed(() => {
   if (!store.oob) return [];
-  return store.oob[props.side]?.corps ?? [];
+  const side = store.oob[props.side];
+  if (!side) return [];
+  if (props.side === 'union') {
+    return side.corps?.map((n) => ({ node: n, nodeType: 'corps' })) ?? [];
+  }
+  return side.divisions?.map((n) => ({ node: n, nodeType: 'division' })) ?? [];
 });
 </script>
 
 <template>
   <div class="oob-hierarchy-tree">
-    <p v-if="corpsNodes.length === 0" class="empty">No data loaded.</p>
-    <OobTreeNode v-for="corps in corpsNodes" :key="corps.id" :node="corps" node-type="corps" />
+    <p v-if="topNodes.length === 0" class="empty">No data loaded.</p>
+    <OobTreeNode
+      v-for="entry in topNodes"
+      :key="entry.node.id"
+      :node="entry.node"
+      :node-type="entry.nodeType"
+    />
   </div>
 </template>
 
