@@ -4,7 +4,7 @@ export default { name: 'OobTreeNode' };
 </script>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, inject, watch } from 'vue';
 import { useOobStore } from '../stores/useOobStore.js';
 
 const props = defineProps({
@@ -21,26 +21,50 @@ const props = defineProps({
 const store = useOobStore();
 const expanded = ref(true);
 
-// Derive children from the node's actual shape
+// Expand/collapse all — signals provided by OobHierarchyTree
+const expandSignal = inject('expandSignal', null);
+const collapseSignal = inject('collapseSignal', null);
+if (expandSignal)
+  watch(expandSignal, () => {
+    expanded.value = true;
+  });
+if (collapseSignal)
+  watch(collapseSignal, () => {
+    expanded.value = false;
+  });
+
+// Build children from the node's actual shape.
+// Order: inline units → artillery groups → structural children → leaf units
 const childEntries = computed(() => {
   const n = props.node;
   const children = [];
 
-  // Corps level: corpsUnits, artillery groups, divisions
+  // Inline corps/division units (cavalry attached to corps, etc.)
+  if (n.corpsUnits) {
+    n.corpsUnits.forEach((u) => children.push({ node: u, nodeType: u.type ?? 'unit' }));
+  }
+
+  // Artillery — stored as a keyed object of groups, each with batteries[]
+  if (n.artillery && typeof n.artillery === 'object' && !Array.isArray(n.artillery)) {
+    Object.entries(n.artillery).forEach(([id, group]) => {
+      children.push({ node: { id, ...group }, nodeType: 'artillery-group' });
+    });
+  }
+
+  // Structural children (corps → division → brigade)
   if (n.divisions) {
     n.divisions.forEach((d) => children.push({ node: d, nodeType: 'division' }));
   }
   if (n.brigades) {
     n.brigades.forEach((b) => children.push({ node: b, nodeType: 'brigade' }));
   }
+
+  // Leaf units
   if (n.regiments) {
-    n.regiments.forEach((r) => children.push({ node: r, nodeType: 'regiment' }));
+    n.regiments.forEach((r) => children.push({ node: r, nodeType: r.type ?? 'regiment' }));
   }
   if (n.batteries) {
     n.batteries.forEach((b) => children.push({ node: b, nodeType: 'battery' }));
-  }
-  if (n.corpsUnits) {
-    n.corpsUnits.forEach((u) => children.push({ node: u, nodeType: u.type ?? 'unit' }));
   }
 
   return children;
@@ -53,14 +77,15 @@ const isSelected = computed(() => store.selectedNode === props.node);
 const BADGE_MAP = {
   corps: 'Corps',
   division: 'Div',
-  brigade: 'Brig',
+  brigade: 'BDE',
+  'artillery-group': 'Arty',
   regiment: 'Inf',
-  battery: 'Arty',
+  battery: 'Btry',
   cavalry: 'Cav',
   leader: 'Leader',
-  unit: 'Unit',
   infantry: 'Inf',
   artillery: 'Arty',
+  unit: 'Unit',
 };
 
 const badgeLabel = computed(() => BADGE_MAP[props.nodeType] ?? props.nodeType);
@@ -168,6 +193,13 @@ function toggleExpand(event) {
   color: #8ab070;
 }
 
+.badge-artillery-group,
+.badge-artillery,
+.badge-arty {
+  background: #302830;
+  color: #a070a0;
+}
+
 .badge-regiment,
 .badge-infantry,
 .badge-unit {
@@ -180,11 +212,9 @@ function toggleExpand(event) {
   color: #b07060;
 }
 
-.badge-battery,
-.badge-arty,
-.badge-artillery {
-  background: #302830;
-  color: #a070a0;
+.badge-battery {
+  background: #281828;
+  color: #906880;
 }
 
 .badge-leader {
