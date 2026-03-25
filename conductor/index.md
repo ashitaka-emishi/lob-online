@@ -32,6 +32,9 @@ Navigation hub for project context.
 | [map-editor-tool-closeout_20260323](./tracks/map-editor-tool-closeout_20260323/index.md) | Map Editor Tool Closeout — Issues #137 #138 #139 #140 #141 #142 | Complete |
 | [tech-debt-closeout_20260323](./tracks/tech-debt-closeout_20260323/index.md) | Tech Debt Closeout — All Open Items | Complete |
 
+| [map-editor-ui-refactor_20260323](./tracks/map-editor-ui-refactor_20260323/index.md) | Map Editor UI Refactor — Tool Panel Cleanup & Feature Improvements | Pending |
+| [counter-detect_20260325](./tracks/counter-detect_20260325/index.md) | Counter Auto-Detection Script | Pending |
+
 ## Getting Started
 
 Run `/conductor:new-track` to create a new feature track.
