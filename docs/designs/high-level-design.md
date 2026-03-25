@@ -1239,7 +1239,6 @@ lob-online/
 │   ├── devlog/               ← devlog entries (YYYY-MM-DD-HHMM-*.md)
 │   ├── devlog.md             ← devlog index
 │   ├── high-level-design.md  ← this document
-│   ├── high-level-design-prompt.md ← archived prompt used to generate high-level-design.md
 │   ├── library.md            ← human-readable reference library manifest
 │   ├── library.json          ← machine-readable catalog
 │   ├── map-editor-design.md  ← map editor detailed design spec
@@ -1410,7 +1409,7 @@ The OOB editor is a dev-only tool for inspecting and correcting `oob.json` and `
 AI-generated unit statistics (combat ratings, morale, wreck thresholds, brigade hierarchy) and
 leader ratings before the rules engine is built and relies on them.
 
-See `docs/designs/oob-editor.md` for the full specification. Follows the same `MAP_EDITOR_ENABLED`
+See `docs/designs/oob-editor-design.md` for the full specification. Follows the same `MAP_EDITOR_ENABLED`
 guard and push/pull sync pattern as the map and scenario editors. Adds `successionIds` to
 brigade/division/corps nodes in `oob.json` and `counterRef` filename linkage to all unit and
 leader records. A `scripts/detect-counters.js` script will use AI image analysis to
