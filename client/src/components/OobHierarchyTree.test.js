@@ -8,6 +8,7 @@ import OobHierarchyTree from './OobHierarchyTree.vue';
 
 const UNION_OOB = {
   army: 'Army of the Potomac',
+  supplyTrain: { id: 'usa-supply', name: 'US Army of the Potomac Supply' },
   corps: [
     {
       id: '1c',
@@ -35,15 +36,29 @@ const UNION_OOB = {
   ],
   cavalryDivision: {
     id: 'cav-div',
-    name: 'Cavalry Division',
-    brigades: [{ id: 'cav-bde', name: 'Cavalry Brigade', regiments: [] }],
+    name: 'F/Cav (Farnsworth)',
+    brigades: [
+      {
+        id: 'fcav',
+        regiments: [{ id: '8ill', name: '8 Ill', type: 'cavalry' }],
+      },
+    ],
+    artillery: {
+      'arty-fcav': { batteries: [{ id: 'cg3us', name: 'C&G 3 US' }] },
+    },
   },
 };
 
 const CSA_OOB = {
   army: 'Army of Northern Virginia',
+  wing: "Longstreet's Wing",
+  supplyWagon: { id: 'csa-supply', name: 'Wing Supply Wagon' },
   divisions: [
-    { id: 'hills-div', name: "D.H. Hill's Division", brigades: [] },
+    {
+      id: 'dh-div',
+      name: "D.H. Hill's Division",
+      brigades: [{ id: 'rodes-bde', name: "Rodes' Brigade", regiments: [] }],
+    },
     { id: 'mclaws-div', name: "McLaws' Division", brigades: [] },
   ],
   independent: {
@@ -56,21 +71,33 @@ const CSA_OOB = {
 };
 
 const UNION_LEADERS = {
-  army: [{ id: 'mcclellan', name: 'George B. McClellan', commandsId: null }],
+  army: [
+    { id: 'mcclellan', name: 'George B. McClellan', commandsId: null },
+    { id: 'burnside', name: 'Ambrose E. Burnside', commandsId: null },
+  ],
   corps: [{ id: 'hooker', name: 'Joseph Hooker', commandsId: '1c' }],
   cavalry: [{ id: 'pleasonton', name: 'Alfred Pleasonton', commandsId: 'cav-div' }],
   divisions: [
     { id: 'hatch', name: 'John P. Hatch', commandsId: '1d-1c' },
     { id: 'ricketts', name: 'James B. Ricketts', commandsId: '2d-1c' },
   ],
-  brigades: [],
+  brigades: [
+    { id: 'phelps', name: 'Walter Phelps', commandsId: '1b-1d-1c' },
+    { id: 'farnsworth', name: 'Elon J. Farnsworth', commandsId: 'fcav' },
+  ],
+};
+
+const CSA_LEADERS = {
+  wing: [{ id: 'longstreet', name: 'James Longstreet', commandsId: 'csa-wing' }],
+  divisions: [{ id: 'dh-hill', name: 'D.H. Hill', commandsId: 'dh-div' }],
+  brigades: [{ id: 'rodes', name: 'Robert Rodes', commandsId: 'rodes-bde' }],
 };
 
 const MINIMAL_OOB = { _status: 'available', union: UNION_OOB, confederate: CSA_OOB };
 const MINIMAL_LEADERS = {
   _status: 'available',
   union: UNION_LEADERS,
-  confederate: { army: [], corps: [], divisions: [], brigades: [] },
+  confederate: CSA_LEADERS,
 };
 
 function setupStore() {
@@ -86,45 +113,73 @@ function setupStore() {
 describe('OobHierarchyTree — union side', () => {
   beforeEach(setupStore);
 
-  it('renders top-level corps nodes', () => {
+  it('renders single Army of the Potomac army node at top level', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
+    expect(wrapper.text()).toContain('Army of the Potomac');
+    expect(wrapper.find('.badge-army').exists()).toBe(true);
+    expect(wrapper.find('.badge-army').text()).toBe('Army');
+  });
+
+  it('shows McClellan and Burnside under army node', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
+    expect(wrapper.text()).toContain('George B. McClellan');
+    expect(wrapper.text()).toContain('Ambrose E. Burnside');
+  });
+
+  it('shows army HQ and supply under army node', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
+    expect(wrapper.find('.badge-hq').exists()).toBe(true);
+    expect(wrapper.find('.badge-supply').exists()).toBe(true);
+    expect(wrapper.find('.badge-supply').text()).toBe('SUPP');
+    expect(wrapper.text()).toContain('US Army of the Potomac Supply');
+  });
+
+  it('renders corps nodes under army node', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
     expect(wrapper.text()).toContain('1 Corps');
+    expect(wrapper.find('.badge-corps').exists()).toBe(true);
   });
 
-  it('renders cavalryDivision at top level alongside corps', () => {
-    const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
-    expect(wrapper.text()).toContain('Cavalry Division');
-    expect(wrapper.findAll('.node-corps').length).toBe(1);
-    expect(wrapper.findAll('.node-division').length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('injects leader under corps', () => {
+  it('injects Hooker as corps leader', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
     expect(wrapper.text()).toContain('Joseph Hooker');
     expect(wrapper.find('.badge-leader').exists()).toBe(true);
   });
 
-  it('injects division leader under division', () => {
+  it('injects division leaders', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
     expect(wrapper.text()).toContain('John P. Hatch');
     expect(wrapper.text()).toContain('James B. Ricketts');
   });
 
-  it('injects cavalry division leader', () => {
+  it('injects brigade leader (Phelps)', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
+    expect(wrapper.text()).toContain('Walter Phelps');
+  });
+
+  it('renders Cavalry Division under army node with Pleasonton leader', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
+    expect(wrapper.text()).toContain('Cavalry Division');
     expect(wrapper.text()).toContain('Alfred Pleasonton');
   });
 
-  it('shows artillery group under its matching division (not directly under corps)', () => {
+  it('renders F/Cav as brigade under Cavalry Division with Farnsworth leader', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
-    // Arty/1/1 Corps belongs to 1/1 Division — must be visible (tree starts expanded)
-    expect(wrapper.text()).toContain('Arty/1/1 Corps');
-    // The corps row itself should NOT have the arty group as a direct child badge at corps level
-    // (verifiable by checking that the arty-group badge appears deeper in the tree)
-    expect(wrapper.find('.badge-artillery-group').exists()).toBe(true);
+    expect(wrapper.text()).toContain('F/Cav');
+    expect(wrapper.text()).toContain('Elon J. Farnsworth');
   });
 
-  it('shows battery under its artillery group', () => {
+  it('shows cavalry battery under F/Cav brigade', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
+    expect(wrapper.text()).toContain('C&G 3 US');
+  });
+
+  it('shows cavalry regiment under F/Cav brigade', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
+    expect(wrapper.text()).toContain('8 Ill');
+  });
+
+  it('distributes artillery battery under its matching division', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
     expect(wrapper.text()).toContain('1 NH Lt');
   });
@@ -149,10 +204,44 @@ describe('OobHierarchyTree — union side', () => {
 describe('OobHierarchyTree — confederate side', () => {
   beforeEach(setupStore);
 
-  it('renders top-level divisions', () => {
+  it('renders single wing node at top level', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'confederate' } });
+    expect(wrapper.text()).toContain("Longstreet's Wing");
+    expect(wrapper.find('.badge-wing').exists()).toBe(true);
+    expect(wrapper.find('.badge-wing').text()).toBe('Wing');
+  });
+
+  it('shows Longstreet as wing leader', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'confederate' } });
+    expect(wrapper.text()).toContain('James Longstreet');
+  });
+
+  it('shows supply wagon under wing node', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'confederate' } });
+    expect(wrapper.text()).toContain('Wing Supply Wagon');
+    expect(wrapper.find('.badge-supply').exists()).toBe(true);
+  });
+
+  it('renders division nodes under wing node', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'confederate' } });
     expect(wrapper.text()).toContain("D.H. Hill's Division");
     expect(wrapper.text()).toContain("McLaws' Division");
+  });
+
+  it('injects CSA division leader (D.H. Hill)', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'confederate' } });
+    expect(wrapper.text()).toContain('D.H. Hill');
+  });
+
+  it('shows HQ node under CSA division', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'confederate' } });
+    expect(wrapper.find('.badge-hq').exists()).toBe(true);
+    expect(wrapper.find('.badge-hq').text()).toBe('HQ');
+  });
+
+  it('injects CSA brigade leader (Rodes)', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'confederate' } });
+    expect(wrapper.text()).toContain('Robert Rodes');
   });
 
   it('renders Independent formation with IDP badge', () => {
@@ -200,10 +289,10 @@ describe('OobHierarchyTree — expand/collapse all', () => {
 
   it('collapses all nodes when Collapse all is clicked', async () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
-    expect(wrapper.text()).toContain('1/1 Division');
+    expect(wrapper.text()).toContain('1 Corps');
     const collapseBtn = wrapper.findAll('.control-btn').find((b) => b.text() === 'Collapse all');
     await collapseBtn.trigger('click');
-    expect(wrapper.text()).not.toContain('1/1 Division');
+    expect(wrapper.text()).not.toContain('1 Corps');
   });
 
   it('expands all nodes after collapsing', async () => {
@@ -211,9 +300,9 @@ describe('OobHierarchyTree — expand/collapse all', () => {
     const collapseBtn = wrapper.findAll('.control-btn').find((b) => b.text() === 'Collapse all');
     const expandBtn = wrapper.findAll('.control-btn').find((b) => b.text() === 'Expand all');
     await collapseBtn.trigger('click');
-    expect(wrapper.text()).not.toContain('1/1 Division');
+    expect(wrapper.text()).not.toContain('1 Corps');
     await expandBtn.trigger('click');
-    expect(wrapper.text()).toContain('1/1 Division');
+    expect(wrapper.text()).toContain('1 Corps');
   });
 });
 
@@ -222,24 +311,29 @@ describe('OobHierarchyTree — expand/collapse all', () => {
 describe('OobTreeNode via OobHierarchyTree', () => {
   beforeEach(setupStore);
 
-  it('collapses children when expand button is clicked', async () => {
+  it('collapses children when expand button is clicked on army node', async () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
     const expandBtn = wrapper.find('.expand-btn');
-    expect(wrapper.text()).toContain('1/1 Division');
+    expect(wrapper.text()).toContain('1 Corps');
     await expandBtn.trigger('click');
-    expect(wrapper.text()).not.toContain('1/1 Division');
+    expect(wrapper.text()).not.toContain('1 Corps');
   });
 
   it('selects node on row click', async () => {
     const store = setupStore();
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
-    const corpsRow = wrapper.find('.node-corps');
-    await corpsRow.trigger('click');
+    const armyRow = wrapper.find('.node-army');
+    await armyRow.trigger('click');
     expect(store.selectedNode).toBeTruthy();
-    expect(store.selectedNode.name).toBe('1 Corps');
+    expect(store.selectedNode.name).toBe('Army of the Potomac');
   });
 
-  it('shows corps type badge', () => {
+  it('shows army type badge', () => {
+    const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
+    expect(wrapper.find('.badge-army').exists()).toBe(true);
+  });
+
+  it('shows corps type badge under army node', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
     expect(wrapper.find('.badge-corps').exists()).toBe(true);
   });

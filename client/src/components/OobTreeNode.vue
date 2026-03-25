@@ -34,14 +34,29 @@ if (collapseSignal)
   });
 
 // Build children from the node's actual shape.
-// Order: commander → inline units → artillery groups → structural children → leaf units
+// Order: leader(s) → HQ → inline units → batteries → structural children → leaf units
 const childEntries = computed(() => {
   const n = props.node;
   const children = [];
 
-  // Commander injected by OobHierarchyTree (corps/division level only)
+  // Single commander (corps/division level)
   if (n._leader) {
     children.push({ node: n._leader, nodeType: 'leader' });
+  }
+
+  // Multiple commanders (e.g. cavalry division with div + bde leaders)
+  if (n._leaders) {
+    n._leaders.forEach((l) => children.push({ node: l, nodeType: 'leader' }));
+  }
+
+  // Synthetic HQ child (USA corps/army, CSA divisions)
+  if (n._hq) {
+    children.push({ node: n._hq, nodeType: 'hq' });
+  }
+
+  // Synthetic supply child (army/wing level)
+  if (n._supply) {
+    children.push({ node: n._supply, nodeType: 'supply' });
   }
 
   // Inline corps/division units (cavalry attached to corps, etc.)
@@ -49,14 +64,25 @@ const childEntries = computed(() => {
     n.corpsUnits.forEach((u) => children.push({ node: u, nodeType: u.type ?? 'unit' }));
   }
 
-  // Artillery — stored as a keyed object of groups, each with batteries[]
+  // Batteries before structural children
+  if (n.batteries) {
+    n.batteries.forEach((b) => children.push({ node: b, nodeType: 'battery' }));
+  }
+
+  // Artillery — fallback for unflattened keyed object groups
   if (n.artillery && typeof n.artillery === 'object' && !Array.isArray(n.artillery)) {
     Object.entries(n.artillery).forEach(([id, group]) => {
       children.push({ node: { id, ...group }, nodeType: 'artillery-group' });
     });
   }
 
-  // Structural children (corps → division → brigade)
+  // Structural children (army → corps → division → brigade)
+  if (n.corps) {
+    n.corps.forEach((c) => children.push({ node: c, nodeType: 'corps' }));
+  }
+  if (n.cavalryDivision) {
+    children.push({ node: n.cavalryDivision, nodeType: 'division' });
+  }
   if (n.divisions) {
     n.divisions.forEach((d) => children.push({ node: d, nodeType: 'division' }));
   }
@@ -64,12 +90,14 @@ const childEntries = computed(() => {
     n.brigades.forEach((b) => children.push({ node: b, nodeType: 'brigade' }));
   }
 
+  // Extra formations (independent, reserve arty, etc.) at wing/army level
+  if (n._formations) {
+    n._formations.forEach((f) => children.push(f));
+  }
+
   // Leaf units
   if (n.regiments) {
     n.regiments.forEach((r) => children.push({ node: r, nodeType: r.type ?? 'regiment' }));
-  }
-  if (n.batteries) {
-    n.batteries.forEach((b) => children.push({ node: b, nodeType: 'battery' }));
   }
 
   return children;
@@ -80,12 +108,16 @@ const hasChildren = computed(() => childEntries.value.length > 0);
 const isSelected = computed(() => store.selectedNode === props.node);
 
 const BADGE_MAP = {
+  army: 'Army',
+  wing: 'Wing',
   corps: 'Corps',
   division: 'Div',
   brigade: 'BDE',
   'artillery-group': 'Arty',
   independent: 'IDP',
   'reserve-arty': 'RES',
+  hq: 'HQ',
+  supply: 'SUPP',
   regiment: 'Inf',
   battery: 'Btry',
   cavalry: 'Cav',
@@ -185,6 +217,13 @@ function toggleExpand(event) {
   letter-spacing: 0.04em;
 }
 
+.badge-army,
+.badge-wing {
+  background: #3a2810;
+  color: #e8c060;
+  font-weight: bold;
+}
+
 .badge-corps {
   background: #4a3820;
   color: #d4a04a;
@@ -237,6 +276,16 @@ function toggleExpand(event) {
 .badge-reserve-arty {
   background: #302820;
   color: #b08840;
+}
+
+.badge-hq {
+  background: #283028;
+  color: #70a870;
+}
+
+.badge-supply {
+  background: #282830;
+  color: #7070b0;
 }
 
 .children {

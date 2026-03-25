@@ -13,12 +13,11 @@ const props = defineProps({
 
 const store = useOobStore();
 
-// Expand/collapse all — signals consumed by every OobTreeNode via inject
+// ── Expand/collapse all ───────────────────────────────────────────────────────
 const expandSignal = ref(0);
 const collapseSignal = ref(0);
 provide('expandSignal', expandSignal);
 provide('collapseSignal', collapseSignal);
-
 function expandAll() {
   expandSignal.value++;
 }
@@ -26,8 +25,7 @@ function collapseAll() {
   collapseSignal.value++;
 }
 
-// ── Leaders lookup ────────────────────────────────────────────────────────────
-// Flatten all leader records for the active side into a commandsId → leader map.
+// ── Leaders lookup (commandsId → leader) ─────────────────────────────────────
 const leadersMap = computed(() => {
   const map = {};
   if (!store.leaders) return map;
@@ -43,21 +41,26 @@ const leadersMap = computed(() => {
   return map;
 });
 
-// Inject the commander (if known) into a node as _leader.
 function withLeader(node) {
   const leader = leadersMap.value[node.id];
-  if (!leader) return node;
-  return { ...node, _leader: leader };
+  return leader ? { ...node, _leader: leader } : node;
 }
 
-// ── Artillery distribution (Union) ────────────────────────────────────────────
-// Corps-level artillery is keyed as artyN-Mc (e.g., arty1-1c).
-// Division ids follow the pattern Nd-Mc (e.g., 1d-1c).
-// Match by extracting N from both sides and inject the group into the division.
-// Any unmatched groups remain at corps level.
-function distributeArtillery(corps) {
-  if (!corps.artillery || !corps.divisions?.length) return corps;
+// ── Artillery flattening ──────────────────────────────────────────────────────
+// Flatten an artillery object (keyed groups with batteries[]) into a plain
+// batteries[] on the node, removing the intermediate group level.
+function flattenArtillery(node) {
+  if (!node.artillery || typeof node.artillery !== 'object' || Array.isArray(node.artillery)) {
+    return node;
+  }
+  const extra = Object.values(node.artillery).flatMap((g) => g.batteries ?? []);
+  return { ...node, artillery: undefined, batteries: [...(node.batteries ?? []), ...extra] };
+}
 
+// For Union corps: match arty groups to divisions by key pattern (artyN-Mc → Nd-Mc),
+// flatten matched batteries directly onto each division, leave unmatched at corps level.
+function distributeCorpsArtillery(corps) {
+  if (!corps.artillery || !corps.divisions?.length) return corps;
   const artyEntries = Object.entries(corps.artillery);
   const matchedKeys = new Set();
 
@@ -67,7 +70,7 @@ function distributeArtillery(corps) {
     const match = artyEntries.find(([k]) => k === `arty${divPrefix}-${corps.id}`);
     if (!match) return div;
     matchedKeys.add(match[0]);
-    return { ...div, artillery: { [match[0]]: match[1] } };
+    return { ...div, batteries: [...(div.batteries ?? []), ...(match[1].batteries ?? [])] };
   });
 
   const remainingArty = Object.fromEntries(artyEntries.filter(([k]) => !matchedKeys.has(k)));
@@ -78,11 +81,55 @@ function distributeArtillery(corps) {
   };
 }
 
-// Apply artillery distribution + leader injection to a corps and its divisions.
-function processUnionCorps(corps) {
-  const distributed = distributeArtillery(corps);
-  const divisions = distributed.divisions?.map(withLeader) ?? distributed.divisions;
-  return withLeader({ ...distributed, divisions });
+// ── Union processing ──────────────────────────────────────────────────────────
+function processUSABrigade(bde) {
+  return withLeader(bde);
+}
+
+function processUSADivision(div) {
+  const withArty = flattenArtillery(div);
+  const brigades = (withArty.brigades ?? []).map(processUSABrigade);
+  return withLeader({ ...withArty, brigades });
+}
+
+function processUSACorps(corps) {
+  const distributed = distributeCorpsArtillery(corps);
+  const withArty = flattenArtillery(distributed);
+  const divisions = (withArty.divisions ?? []).map(processUSADivision);
+  return withLeader({ ...withArty, divisions, _hq: { id: corps.id + '-hq', name: 'HQ' } });
+}
+
+// Cavalry Division: "Cavalry Division" wrapper with Pleasonton leader + HQ.
+// F/cav is a brigade child with Farnsworth leader and all batteries.
+function processUSACavDiv(cd) {
+  const pleasonton = leadersMap.value[cd.id];
+  const cavArty = cd.artillery?.['arty-fcav'];
+  const fcavBde = cd.brigades?.[0];
+  const farnsworth = fcavBde ? leadersMap.value[fcavBde.id] : null;
+  const processedFcav = {
+    ...(fcavBde ?? { id: 'fcav' }),
+    name: 'F/Cav',
+    ...(farnsworth ? { _leader: farnsworth } : {}),
+    batteries: cavArty?.batteries ?? [],
+  };
+  return {
+    id: cd.id,
+    name: 'Cavalry Division',
+    ...(pleasonton ? { _leader: pleasonton } : {}),
+    _hq: { id: cd.id + '-hq', name: 'HQ' },
+    brigades: [processedFcav],
+  };
+}
+
+// ── Confederate processing ────────────────────────────────────────────────────
+function processCSABrigade(bde) {
+  return withLeader(bde);
+}
+
+function processCSADivision(div) {
+  const withArty = flattenArtillery(div);
+  const brigades = (withArty.brigades ?? []).map(processCSABrigade);
+  return withLeader({ ...withArty, brigades, _hq: { id: div.id + '-hq', name: 'HQ' } });
 }
 
 // ── Top-level node list ───────────────────────────────────────────────────────
@@ -92,44 +139,59 @@ const topNodes = computed(() => {
   if (!side) return [];
 
   if (props.side === 'union') {
-    const entries = [];
-    (side.corps ?? []).forEach((c) =>
-      entries.push({ node: processUnionCorps(c), nodeType: 'corps' })
-    );
-    if (side.cavalryDivision) {
-      entries.push({ node: withLeader(side.cavalryDivision), nodeType: 'division' });
-    }
-    return entries;
+    // Army leaders (McClellan, Burnside) — commandsId is null so not in leadersMap
+    const armyLeaders = store.leaders?.union?.army ?? [];
+
+    const armyNode = {
+      id: 'usa-army',
+      name: side.army ?? 'Army of the Potomac',
+      _leaders: armyLeaders,
+      _hq: { id: 'usa-army-hq', name: 'HQ' },
+      _supply: side.supplyTrain,
+      corps: (side.corps ?? []).map(processUSACorps),
+      cavalryDivision: side.cavalryDivision ? processUSACavDiv(side.cavalryDivision) : undefined,
+    };
+
+    return [{ node: armyNode, nodeType: 'army' }];
   }
 
   // ── Confederate ─────────────────────────────────────────────────────────
-  const entries = [];
-  (side.divisions ?? []).forEach((d) => entries.push({ node: d, nodeType: 'division' }));
+  // Wing leader (Longstreet) — commandsId "csa-wing"
+  const wingLeader = store.leaders?.confederate?.wing?.[0] ?? null;
 
-  if (side.independent) {
-    entries.push({
-      node: {
-        id: 'independent',
-        name: 'Independent',
-        regiments: side.independent.cavalry ?? [],
-        batteries: side.independent.artillery ?? [],
-      },
-      nodeType: 'independent',
-    });
-  }
+  const independent = side.independent
+    ? {
+        node: {
+          id: 'independent',
+          name: 'Independent',
+          regiments: side.independent.cavalry ?? [],
+          batteries: side.independent.artillery ?? [],
+        },
+        nodeType: 'independent',
+      }
+    : null;
 
-  if (side.reserveArtillery) {
-    entries.push({
-      node: {
-        id: 'reserve-artillery',
-        name: 'Reserve Artillery',
-        batteries: side.reserveArtillery.batteries ?? [],
-      },
-      nodeType: 'reserve-arty',
-    });
-  }
+  const reserveArty = side.reserveArtillery
+    ? {
+        node: {
+          id: 'reserve-artillery',
+          name: 'Reserve Artillery',
+          batteries: side.reserveArtillery.batteries ?? [],
+        },
+        nodeType: 'reserve-arty',
+      }
+    : null;
 
-  return entries;
+  const wingNode = {
+    id: 'csa-wing',
+    name: side.wing ?? side.army ?? 'Left Wing',
+    ...(wingLeader ? { _leader: wingLeader } : {}),
+    _supply: side.supplyWagon,
+    divisions: (side.divisions ?? []).map(processCSADivision),
+    _formations: [independent, reserveArty].filter(Boolean),
+  };
+
+  return [{ node: wingNode, nodeType: 'wing' }];
 });
 </script>
 
