@@ -88,24 +88,109 @@ function saveJSON(path, data) {
 }
 
 /**
- * Walk oob.json and collect all unit and battery records.
- * Returns Map<id, { record, type }> — record is mutated in-place when counterRef is written.
+ * Walk oob.json and collect all unit and battery records, capturing their full
+ * organizational chain (corps → division → brigade) so the roster can include it.
+ *
+ * Returns Map<id, { record, type, chain }>
+ *   chain: { corps, division, brigade } — string names, any may be null
  */
 function collectOOBRecords(oob) {
   const map = new Map();
-  function walk(node) {
+
+  function walkUnits(node, chain) {
     if (Array.isArray(node)) {
-      node.forEach(walk);
+      node.forEach((n) => walkUnits(n, chain));
       return;
     }
     if (typeof node !== 'object' || !node) return;
     if (node.weapon !== undefined || node.gunType !== undefined) {
-      map.set(node.id, { record: node, type: 'unit' });
+      map.set(node.id, { record: node, type: 'unit', chain });
       return;
     }
-    Object.values(node).forEach(walk);
+    Object.values(node).forEach((v) => walkUnits(v, chain));
   }
-  walk(oob);
+
+  // Walk union corps
+  for (const corps of oob.union?.corps ?? []) {
+    for (const div of corps.divisions ?? []) {
+      for (const brig of div.brigades ?? []) {
+        walkUnits(brig.regiments, { corps: corps.name, division: div.name, brigade: brig.name });
+        for (const artGroup of Object.values(brig.artillery ?? {})) {
+          walkUnits(artGroup.batteries, {
+            corps: corps.name,
+            division: div.name,
+            brigade: artGroup.name,
+          });
+        }
+      }
+      for (const artGroup of Object.values(div.artillery ?? {})) {
+        walkUnits(artGroup.batteries, {
+          corps: corps.name,
+          division: div.name,
+          brigade: artGroup.name,
+        });
+      }
+    }
+    for (const artGroup of Object.values(corps.artillery ?? {})) {
+      walkUnits(artGroup.batteries, { corps: corps.name, division: null, brigade: artGroup.name });
+    }
+    walkUnits(corps.corpsUnits, { corps: corps.name, division: null, brigade: null });
+  }
+
+  // Walk union cavalry division
+  const cavDiv = oob.union?.cavalryDivision;
+  if (cavDiv) {
+    for (const brig of cavDiv.brigades ?? []) {
+      walkUnits(brig.regiments, { corps: cavDiv.name, division: null, brigade: brig.name });
+    }
+    for (const artGroup of Object.values(cavDiv.artillery ?? {})) {
+      walkUnits(artGroup.batteries, { corps: cavDiv.name, division: null, brigade: artGroup.name });
+    }
+  }
+
+  // Walk confederate divisions
+  for (const div of oob.confederate?.divisions ?? []) {
+    for (const brig of div.brigades ?? []) {
+      walkUnits(brig.regiments, { corps: null, division: div.name, brigade: brig.name });
+      for (const artGroup of Object.values(brig.artillery ?? {})) {
+        walkUnits(artGroup.batteries, { corps: null, division: div.name, brigade: artGroup.name });
+      }
+    }
+    for (const artGroup of Object.values(div.artillery ?? {})) {
+      walkUnits(artGroup.batteries, { corps: null, division: div.name, brigade: artGroup.name });
+    }
+  }
+
+  // Walk confederate independent units
+  walkUnits(oob.confederate?.independent?.cavalry, {
+    corps: null,
+    division: 'Independent',
+    brigade: null,
+  });
+  // Pelham's artillery is independent — not attached to any division
+  walkUnits(oob.confederate?.independent?.artillery, {
+    corps: null,
+    division: 'Independent (Pelham)',
+    brigade: null,
+  });
+  walkUnits(oob.confederate?.reserveArtillery?.batteries, {
+    corps: null,
+    division: 'Reserve Artillery',
+    brigade: null,
+  });
+
+  // Walk confederate independent brigades
+  for (const brig of oob.confederate?.independentBrigades ?? []) {
+    walkUnits(brig.regiments, { corps: null, division: 'Independent', brigade: brig.name });
+    for (const artGroup of Object.values(brig.artillery ?? {})) {
+      walkUnits(artGroup.batteries, {
+        corps: null,
+        division: 'Independent',
+        brigade: artGroup.name,
+      });
+    }
+  }
+
   return map;
 }
 
@@ -136,27 +221,49 @@ function collectLeaderRecords(leaders) {
 // ---------------------------------------------------------------------------
 
 /**
- * Build a compact roster string, with optional army hint label.
+ * Build a full roster string including unit stats and organizational chain.
+ *
+ * Unit line format (infantry/cavalry):
+ *   id | name | type | weapon | strength | morale | brigade | division | corps
+ *
+ * Battery line format:
+ *   id | name | artillery | gunType | strength | ammo | brigade | division | corps
+ *
+ * Leader line format:
+ *   id | name | commandLevel
  */
 function buildRoster(oobMap, leaderMap, armyHint) {
   const lines = [];
 
-  const unitLines = [];
-  for (const [id, { record }] of oobMap) {
-    const t = record.gunType ? 'artillery' : record.type;
-    unitLines.push(`  ${id} | ${record.name} | ${t}`);
+  const armyLabel =
+    armyHint === 'confederate'
+      ? ' — NOTE: this counter is Confederate'
+      : armyHint === 'union'
+        ? ' — NOTE: this counter is Union'
+        : '';
+
+  lines.push(
+    `UNITS (id | name | type | weapon/gun | strength | morale/ammo | brigade | division | corps)${armyLabel}:`
+  );
+
+  for (const [id, { record, chain }] of oobMap) {
+    const { brigade = null, division = null, corps = null } = chain ?? {};
+    const brig = brigade ?? '—';
+    const div = division ?? '—';
+    const cor = corps ?? '—';
+
+    let line;
+    if (record.gunType !== undefined) {
+      // Artillery battery
+      line = `  ${id} | ${record.name} | artillery | ${record.gunType} | ${record.strengthPoints}sp | ammo:${record.ammoClass} | ${brig} | ${div} | ${cor}`;
+    } else {
+      // Infantry / cavalry unit
+      line = `  ${id} | ${record.name} | ${record.type} | ${record.weapon} | ${record.strengthPoints}sp | morale:${record.morale} | ${brig} | ${div} | ${cor}`;
+    }
+    lines.push(line);
   }
 
-  if (armyHint === 'confederate') {
-    lines.push('UNITS (id | name | type) — NOTE: this counter is Confederate:');
-  } else if (armyHint === 'union') {
-    lines.push('UNITS (id | name | type) — NOTE: this counter is Union:');
-  } else {
-    lines.push('UNITS (id | name | type):');
-  }
-  lines.push(...unitLines);
-
-  lines.push('LEADERS (id | name | commandLevel):');
+  lines.push('\nLEADERS (id | name | commandLevel):');
   for (const [id, { record }] of leaderMap) {
     lines.push(`  ${id} | ${record.name} | ${record.commandLevel}`);
   }
