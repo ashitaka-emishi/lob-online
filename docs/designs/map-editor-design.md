@@ -1,8 +1,8 @@
-# Map Editor — Detailed Design
+# Map Editor Design
 
-**Version:** 2.0
-**Date:** 2026-03-19
-**Status:** Approved — supersedes v1.0 (2026-02-21)
+**Component Type:** web-feature (dev tool)
+**Status:** implemented
+**Created:** 2026-02-21
 
 ---
 

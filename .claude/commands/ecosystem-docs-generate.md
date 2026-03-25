@@ -5,7 +5,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 
 # /ecosystem-docs-generate
 
-Regenerate all ten files in `docs/claude-ecosystem/` and `docs/ecosystem-design.md` from the
+Regenerate all ten files in `docs/claude-ecosystem/` and `docs/designs/ecosystem-design.md` from the
 ecosystem's source-of-truth inputs.
 
 **Six reference files** are fully rebuilt from sources on every run:
@@ -63,7 +63,7 @@ ls docs/workflows/
 - `docs/workflows/<name>/<name>.states.md`
 
 **Existing docs** (for diffing and narrative updates) — read all ten files in
-`docs/claude-ecosystem/` and `docs/ecosystem-design.md`.
+`docs/claude-ecosystem/` and `docs/designs/ecosystem-design.md`.
 
 ---
 
@@ -168,7 +168,7 @@ New dedicated workflow engine reference. Must contain:
    `.workflow.json`, write `.states.md`, add registry entries, validate with Zod schemas,
    run `/dev-build`.
 
-### 2g — `docs/ecosystem-design.md`
+### 2g — `docs/designs/ecosystem-design.md`
 
 The top-level architecture and design reference for the entire ecosystem (renamed from
 `docs/architecture.md`). Must contain:
@@ -276,7 +276,7 @@ npx prettier --write \
   docs/claude-ecosystem/tutorial-new-agent.md \
   docs/claude-ecosystem/tutorial-modify-agent.md \
   docs/claude-ecosystem/tutorial-orchestration.md \
-  docs/ecosystem-design.md
+  docs/designs/ecosystem-design.md
 ```
 
 Report which files were written and how many lines changed in each.

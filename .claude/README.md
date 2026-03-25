@@ -69,6 +69,6 @@ copy contains no credentials and is safe to commit).
 | Document                                                                    | Purpose                                                                                             |
 | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | [`docs/claude-ecosystem/README.md`](../docs/claude-ecosystem/README.md)     | Hub for the lob-online agent ecosystem: agent reference, skill reference, guardrails, orchestration |
-| [`docs/ecosystem-design.md`](../docs/ecosystem-design.md)                   | Full agent/skill architecture with Mermaid diagrams and skill dependency graph                      |
+| [`docs/designs/ecosystem-design.md`](../docs/designs/ecosystem-design.md)   | Full agent/skill architecture with Mermaid diagrams and skill dependency graph                      |
 | [`docs/migration-wshobson-agents.md`](../docs/migration-wshobson-agents.md) | Old-to-new command mapping from hand-rolled SDLC to wshobson/agents plugin layer                    |
 | [`docs/agents/SKILL_TEMPLATE.md`](../docs/agents/SKILL_TEMPLATE.md)         | Template for authoring new skill files                                                              |

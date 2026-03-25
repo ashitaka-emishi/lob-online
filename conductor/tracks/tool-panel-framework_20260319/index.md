@@ -18,4 +18,4 @@
 
 - [Back to Tracks](../../tracks.md)
 - [Product Context](../../product.md)
-- [Map Editor Design](../../../docs/map-editor-design.md)
+- [Map Editor Design](../../../docs/designs/map-editor-design.md)

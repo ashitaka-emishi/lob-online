@@ -97,7 +97,7 @@ graph LR
 | `.claude/commands/*.md`             | Skill command files                                                 |
 | `docs/agents/*/design.md`           | Canonical source of truth for each agent (§4 → agent file)          |
 | `docs/claude-ecosystem/`            | Full reference hub: agents, skills, orchestration, guardrails       |
-| `docs/ecosystem-design.md`          | This file — top-level architecture overview                         |
+| `docs/designs/ecosystem-design.md`  | This file — top-level architecture overview                         |
 | `docs/migration-wshobson-agents.md` | Old-to-new command mapping from hand-rolled SDLC to wshobson/agents |
 
 ---

@@ -16,7 +16,7 @@ declarative, tool-based architecture. Unblocks all tool implementation tickets (
 
 The current `MapEditorView` uses an accordion-panel model (HexEditPanel, WedgeEditor,
 LinearFeaturePanel, EditorToolbar) that mixes concerns and doesn't scale to the full set of
-LOB map features. The v2 design (docs/map-editor-design.md §4) establishes a shared framework
+LOB map features. The v2 design (docs/designs/map-editor-design.md §4) establishes a shared framework
 where each tool owns its overlay, composables are single-responsibility, and `HexMapOverlay`
 is a pure declarative renderer.
 
@@ -53,7 +53,7 @@ is a pure declarative renderer.
 
 ## Technical Notes
 
-See `docs/map-editor-design.md` §4 (component diagram, overlayConfig contract, composable
+See `docs/designs/map-editor-design.md` §4 (component diagram, overlayConfig contract, composable
 contracts) and §15 (formula + config module specs). The `overlayConfig` object shape and
 `BaseToolPanel` toggle-rendering pattern are fully specified there.
 

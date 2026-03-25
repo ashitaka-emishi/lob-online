@@ -1365,7 +1365,7 @@ it without `MAP_EDITOR_ENABLED=true` will result in API 404s.
 
 #### Detailed Design
 
-See `docs/map-editor-design.md` for the full specification:
+See `docs/designs/map-editor-design.md` for the full specification:
 
 - **§2 Hex Data Model** — `HexEntry` with `hexFeature` (single building flag), canonical edge
   ownership (faces 0–2 stored on hex; faces 3–5 on neighbour), integer face indices independent
@@ -1395,7 +1395,7 @@ Guarded by the same `MAP_EDITOR_ENABLED` env flag.
 
 Route: `/tools/scenario-editor` (client) · `GET/PUT /api/tools/scenario-editor/data` (server).
 
-See `docs/scenario-editor-design.md` for the full specification.
+See `docs/designs/scenario-editor-design.md` for the full specification.
 
 ---
 

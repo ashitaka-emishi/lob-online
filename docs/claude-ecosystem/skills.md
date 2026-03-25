@@ -95,7 +95,7 @@ delete the branch.
 
 ### `/doc-sync`
 
-**Purpose:** Diff-driven sync of `CLAUDE.md`, `docs/high-level-design.md`, and
+**Purpose:** Diff-driven sync of `CLAUDE.md`, `docs/designs/high-level-design.md`, and
 `docs/agents/*/design.md` against the current branch's changes.
 **Owning agent:** unowned
 **Related skills:** none
