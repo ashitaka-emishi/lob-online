@@ -178,15 +178,37 @@ async function identifyCounter(client, imagePath, side, armyHint, roster) {
   const sideDesc =
     side === 'back'
       ? `This is the BACK (reverse) face of a unit counter. The back face shows:
-- "COL" printed in red (column formation indicator)
-- The regiment's name underneath
-- The unit's formation chain: CORPS / DIVISION / BRIGADE`
-      : `This is the FRONT (obverse) face of a counter. Unit fronts show:
-- The unit designation (regiment number and state abbreviation, e.g. "22 NY")
-- A state or national flag/symbol as background image
-- A line formation symbol
-- Strength points and weapon type insignia
-Leader fronts show the leader's name, initiative rating, and command level insignia.`;
+- "COL" printed in red at the top (column formation indicator)
+- The regiment's name printed below "COL"
+- The unit's command chain below that: CORPS / DIVISION / BRIGADE`
+      : armyHint === 'confederate'
+        ? `This is the FRONT (obverse) face of a CONFEDERATE unit counter. Confederate unit fronts show:
+- Regiment name at the top (e.g. "6 GA", "27 NC")
+- Below the regiment name: the division abbreviation / corps abbreviation
+  (e.g. "C/DH" means Colquitt's brigade in D.H. Hill's corps; "G/LAW" means Garland/Law)
+- A state or Confederate flag background image
+- A line formation symbol in the center
+- Bottom-left corner: weapon type (R=rifle, SR=short rifle, M=musket, C=cavalry) and strength points
+- Bottom-right corner: morale rating (A, B, C, or D)
+Leader fronts show the leader's name, initiative rating, and command level.`
+        : armyHint === 'union'
+          ? `This is the FRONT (obverse) face of a UNION unit counter. Union unit fronts show:
+- Regiment name at the top (e.g. "22 NY", "3 ME", "B 4 US" for artillery)
+- Below the regiment name: brigade / division / corps chain
+- A US state flag or national flag background image
+- A line formation symbol in the center
+- Bottom-left corner: weapon type (R=rifle, SR=short rifle, M=musket, C=cavalry) and strength points
+- Bottom-right corner: morale rating (A, B, C, or D)
+Leader fronts show the leader's name, initiative rating, and command level.`
+          : `This is the FRONT (obverse) face of a counter. Unit fronts show:
+- Regiment name at the top
+- Confederate units: division/corps abbreviation below (e.g. "C/DH" = Colquitt/D.H. Hill)
+- Union units: brigade/division/corps chain below
+- A state or national flag background image
+- A line formation symbol in the center
+- Bottom-left corner: weapon type and strength points
+- Bottom-right corner: morale rating (A, B, C, or D)
+Leader fronts show the leader's name, initiative rating, and command level.`;
 
   const armyNote = armyHint
     ? `NOTE: This counter belongs to the ${armyHint.toUpperCase()} army.`
@@ -207,8 +229,10 @@ Rules:
 - unitId must exactly match an id from the provided roster, or be null
 - confidence: how certain you are (0 = no idea, 1 = certain)
 - If the image is a supply wagon, supply train, or blank counter, set unitId to null
-- Read the printed text carefully — regiment numbers, state names, and leader names are the
-  most reliable identifiers`;
+- Read regiment name, state, division/corps abbreviation, weapon type, strength, and morale
+  carefully — use all available text to resolve ambiguities between similarly-named units
+- When two units share the same regiment number from the same state, use the weapon type,
+  strength points, and morale rating to distinguish them`;
 
   const userPrompt = `Identify this counter (${side} face). Match it to an entry in the roster below.\n\n${roster}`;
 
