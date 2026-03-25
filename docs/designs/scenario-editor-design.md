@@ -1,5 +1,9 @@
 # Scenario Editor Design
 
+**Component Type:** web-feature (dev tool)
+**Status:** implemented
+**Created:** 2026-03-16
+
 Dev-only tool for editing `data/scenarios/south-mountain/scenario.json`.
 Guarded by `MAP_EDITOR_ENABLED=true`. Route: `/tools/scenario-editor`.
 

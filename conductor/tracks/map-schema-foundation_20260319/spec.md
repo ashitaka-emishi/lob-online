@@ -18,7 +18,7 @@ same face-index semantics.
 
 The current schema (`server/src/schemas/map.schema.js`) stores edge data with string HexDir
 keys (`'N'`, `'NE'`, etc.) and allows `features: HexFeature[]` (array). The map editor
-design (`docs/map-editor-design.md` §2) specifies a cleaner model: integer face indices 0–2
+design (`docs/designs/map-editor-design.md` §2) specifies a cleaner model: integer face indices 0–2
 for canonical edge ownership (faces 3–5 live on the neighbour), a single optional `hexFeature`
 field, and dropped `hexsides`. Additionally, `CalibrationControls.vue` has an off-by-one bug
 in its cardinal label formula (`Math.floor` vs `Math.round`) that causes the N label to render
@@ -41,7 +41,7 @@ one step clockwise from the correct position when `northOffset ≠ 0`.
 
 ## Dependencies
 
-- `docs/map-editor-design.md` §2 — canonical data model spec (authoritative reference)
+- `docs/designs/map-editor-design.md` §2 — canonical data model spec (authoritative reference)
 - No other open tracks blocked on this; all other map editor tickets depend on this landing first
 
 ## Out of Scope

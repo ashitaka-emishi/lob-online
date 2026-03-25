@@ -50,8 +50,8 @@ All reference PDFs are in `docs/reference/`:
 
 Design documents are in `docs/`:
 
-- `docs/map-editor-design.md` — hex data model and editor spec
-- `docs/high-level-design.md` — overall architecture
+- `docs/designs/map-editor-design.md` — hex data model and editor spec
+- `docs/designs/high-level-design.md` — overall architecture
 
 Data files are in `data/scenarios/south-mountain/`:
 

@@ -61,7 +61,7 @@ Hook the skill into the established development workflow so it runs naturally af
 - [x] Task 3.1: Update `CLAUDE.md` — add `/tech-debt-report` to the workflow table and note it should be run after `/team-review` resolution is complete.
 - [x] Task 3.2: Update `conductor/workflow.md` — add `/tech-debt-report` to the SDLC Commands table after `/team-review`.
 - [x] Task 3.3: Update `.claude/rules/sdlc.md` — add a note in the PR/review section that after resolving review findings, run `/tech-debt-report` to score deferred items and update the debt register.
-- [x] Task 3.4: Update `docs/high-level-design.md` (if it has a dev-tooling or workflow section) to mention the technical debt tracking system and where reports live.
+- [x] Task 3.4: Update `docs/designs/high-level-design.md` (if it has a dev-tooling or workflow section) to mention the technical debt tracking system and where reports live.
 
 ### Verification
 

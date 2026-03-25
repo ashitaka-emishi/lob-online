@@ -263,8 +263,12 @@ A session that starts live on Saturday, continues asynchronously via Discord not
   PUT  /api/tools/scenario-editor/data     → write scenario.json (Zod-validated)
 
 /tools/oob-editor                 (mounted only when MAP_EDITOR_ENABLED=true) — planned
-  GET  /api/tools/oob-editor/data          → read oob.json + leaders.json
-  PUT  /api/tools/oob-editor/data          → write oob.json / leaders.json (Zod-validated)
+  GET  /api/oob/data               → read oob.json
+  PUT  /api/oob/data               → write oob.json (Zod-validated)
+  GET  /api/leaders/data           → read leaders.json
+  PUT  /api/leaders/data           → write leaders.json (Zod-validated)
+  GET  /api/counters/list          → list counter image filenames
+  POST /api/counters/upload        → save counter image to client/public/counters/
 ```
 
 > **Tool toggle pattern:** The map editor routes are guarded by a `MAP_EDITOR_ENABLED` environment variable. In `server.js`, if the flag is set, the router is imported with a dynamic `await import(...)` and mounted. This keeps the map editor completely absent from production bundles. The Vue route `/tools/map-editor` is always present in the client router but the API backing it requires the env flag.
@@ -1235,7 +1239,6 @@ lob-online/
 │   ├── devlog/               ← devlog entries (YYYY-MM-DD-HHMM-*.md)
 │   ├── devlog.md             ← devlog index
 │   ├── high-level-design.md  ← this document
-│   ├── high-level-design-prompt.md ← archived prompt used to generate high-level-design.md
 │   ├── library.md            ← human-readable reference library manifest
 │   ├── library.json          ← machine-readable catalog
 │   ├── map-editor-design.md  ← map editor detailed design spec
@@ -1365,7 +1368,7 @@ it without `MAP_EDITOR_ENABLED=true` will result in API 404s.
 
 #### Detailed Design
 
-See `docs/map-editor-design.md` for the full specification:
+See `docs/designs/map-editor-design.md` for the full specification:
 
 - **§2 Hex Data Model** — `HexEntry` with `hexFeature` (single building flag), canonical edge
   ownership (faces 0–2 stored on hex; faces 3–5 on neighbour), integer face indices independent
@@ -1395,7 +1398,7 @@ Guarded by the same `MAP_EDITOR_ENABLED` env flag.
 
 Route: `/tools/scenario-editor` (client) · `GET/PUT /api/tools/scenario-editor/data` (server).
 
-See `docs/scenario-editor-design.md` for the full specification.
+See `docs/designs/scenario-editor-design.md` for the full specification.
 
 ---
 
@@ -1406,10 +1409,13 @@ The OOB editor is a dev-only tool for inspecting and correcting `oob.json` and `
 AI-generated unit statistics (combat ratings, morale, wreck thresholds, brigade hierarchy) and
 leader ratings before the rules engine is built and relies on them.
 
-Design not yet specified. Will follow the same `MAP_EDITOR_ENABLED` guard and push/pull sync
-pattern as the map and scenario editors.
+See `docs/designs/oob-editor-design.md` for the full specification. Follows the same `MAP_EDITOR_ENABLED`
+guard and push/pull sync pattern as the map and scenario editors. Adds `successionIds` to
+brigade/division/corps nodes in `oob.json` and `counterRef` filename linkage to all unit and
+leader records. A `scripts/detect-counters.js` script will use AI image analysis to
+pre-populate counter linkages from `docs/reference/src-counters-sm/`.
 
-Route: `/tools/oob-editor` (client) · `GET/PUT /api/tools/oob-editor/data` (server) — planned.
+Routes: `/api/oob/data`, `/api/leaders/data`, `/api/counters/list|upload` — planned.
 
 ---
 

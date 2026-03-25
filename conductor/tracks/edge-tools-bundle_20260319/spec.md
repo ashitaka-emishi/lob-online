@@ -19,7 +19,7 @@ shared composables (useEdgePaintTool, useClickHexside, usePaintStroke), the decl
 overlayConfig system, and the edge data model (edge-model.js). The elevation and terrain panels
 use BaseToolPanel but the elevation panel's gradient tint fill is explicitly deferred to this
 track (#137 comment in ElevationToolPanel.vue). formulas/elevation.js does not yet exist.
-All five new panels have detailed specifications in docs/map-editor-design.md §6–§11.
+All five new panels have detailed specifications in docs/designs/map-editor-design.md §6–§11.
 
 ## User Story
 
@@ -56,7 +56,7 @@ encode enough map data to stabilize a portion of the map and begin UI and rules 
 - gridData performance fix (#151)
 - Auto-migration of existing edge data
 - Any actual map digitization data entry
-- Custom rendering beyond the overlays specified in docs/map-editor-design.md
+- Custom rendering beyond the overlays specified in docs/designs/map-editor-design.md
 - Auto-detection of contour types from elevation data (auto-detect button UI only — calls
   autoDetectContourType() formula; no special rendering logic)
 
@@ -71,7 +71,7 @@ encode enough map data to stabilize a portion of the map and begin UI and rules 
 - Ford/bridge are sub-controls inside StreamWallToolPanel and RoadToolPanel respectively,
   using useClickHexside. Low additional effort given composable is built.
 - All overlay colors and styles come from feature-types.js — no hardcoded values in panels.
-- See docs/map-editor-design.md §6–§11 for complete per-tool overlay configs and control specs.
+- See docs/designs/map-editor-design.md §6–§11 for complete per-tool overlay configs and control specs.
 
 ---
 

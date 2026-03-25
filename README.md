@@ -4,13 +4,13 @@ An online implementation of the _Line of Battle v2.0_ wargame system (Multi-Man 
 
 ## Repository Guide
 
-| Document                                               | Description                                                                        |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| [CONTRIBUTING.md](CONTRIBUTING.md)                     | Contribution workflow, coding standards, branch/PR conventions, and devlog process |
-| [.github/README.md](.github/README.md)                 | GitHub issue templates, pull request template, and CI/CD workflow definitions      |
-| [.claude/README.md](.claude/README.md)                 | Claude Code agent definitions and slash-command skills for development automation  |
-| [docs/high-level-design.md](docs/high-level-design.md) | Full system architecture, phased development plan, and implementation status       |
-| [docs/devlog.md](docs/devlog.md)                       | Chronological index of development session notes                                   |
+| Document                                                               | Description                                                                        |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| [CONTRIBUTING.md](CONTRIBUTING.md)                                     | Contribution workflow, coding standards, branch/PR conventions, and devlog process |
+| [.github/README.md](.github/README.md)                                 | GitHub issue templates, pull request template, and CI/CD workflow definitions      |
+| [.claude/README.md](.claude/README.md)                                 | Claude Code agent definitions and slash-command skills for development automation  |
+| [docs/designs/high-level-design.md](docs/designs/high-level-design.md) | Full system architecture, phased development plan, and implementation status       |
+| [docs/devlog.md](docs/devlog.md)                                       | Chronological index of development session notes                                   |
 
 ---
 
@@ -25,7 +25,7 @@ An online implementation of the _Line of Battle v2.0_ wargame system (Multi-Man 
 
 ## Architecture
 
-Single-server, two-player async/real-time wargame. See [docs/high-level-design.md](docs/high-level-design.md) for the full high-level design. Development notes are in the [Devlog](docs/devlog.md).
+Single-server, two-player async/real-time wargame. See [docs/designs/high-level-design.md](docs/designs/high-level-design.md) for the full high-level design. Development notes are in the [Devlog](docs/devlog.md).
 
 ## Project Structure
 

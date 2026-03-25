@@ -5,7 +5,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 
 # /doc-sync
 
-Ensure `CLAUDE.md`, `docs/high-level-design.md`, and all `docs/agents/*/design.md` files
+Ensure `CLAUDE.md`, `docs/designs/high-level-design.md`, and all `docs/agents/*/design.md` files
 accurately reflect the code changes on the current branch. This skill is diff-driven: it
 only inspects and updates docs relevant to what changed. It makes edits directly — removing
 stale facts, correcting inaccuracies, eliminating duplication — rather than producing a
@@ -34,7 +34,7 @@ For each changed file, determine which documentation files reference it. Check b
 1. **File path match** — grep the doc files for the exact path or filename:
 
 ```bash
-grep -rl "<filename>" CLAUDE.md docs/high-level-design.md docs/agents/
+grep -rl "<filename>" CLAUDE.md docs/designs/high-level-design.md docs/agents/
 ```
 
 2. **Subsystem match** — if the file belongs to a named subsystem (e.g.,
@@ -76,7 +76,7 @@ For each doc requiring an update:
 After all edits are applied, run Prettier on the modified files:
 
 ```bash
-npx prettier --write CLAUDE.md docs/high-level-design.md docs/agents/*/design.md
+npx prettier --write CLAUDE.md docs/designs/high-level-design.md docs/agents/*/design.md
 ```
 
 ---
@@ -91,7 +91,7 @@ Output a structured summary:
 | Changed file | Doc file | Action taken |
 |---|---|---|
 | path/to/file.js | CLAUDE.md | Updated: "X" → "Y" |
-| path/to/other.js | docs/high-level-design.md | OK — no stale references |
+| path/to/other.js | docs/designs/high-level-design.md | OK — no stale references |
 | path/to/skill.md | docs/agents/devops/design.md | Removed duplicate sentence in §3 |
 ```
 
@@ -100,7 +100,7 @@ If no edits were made: "All docs consistent with current branch changes."
 Commit any edited doc files before continuing:
 
 ```bash
-git add CLAUDE.md docs/high-level-design.md docs/agents/
+git add CLAUDE.md docs/designs/high-level-design.md docs/agents/
 git commit -m "#{issue-number} docs: sync docs to match implementation"
 ```
 
@@ -108,7 +108,7 @@ git commit -m "#{issue-number} docs: sync docs to match implementation"
 
 ## Constraints
 
-- Only edit `CLAUDE.md`, `docs/high-level-design.md`, and `docs/agents/*/design.md`
+- Only edit `CLAUDE.md`, `docs/designs/high-level-design.md`, and `docs/agents/*/design.md`
 - Do not touch `docs/claude-ecosystem/` — that is `/ecosystem-docs-generate`'s domain
 - Do not touch source code (`.js`, `.vue`, `.json` data files)
 - Do not rewrite narrative prose — only correct specific factual drift

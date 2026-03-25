@@ -82,7 +82,7 @@ and move on.
 
 ## Task 3 — HLD.md Assessment
 
-Read the Implementation Status callout block at the top of `docs/high-level-design.md` (the blockquote near
+Read the Implementation Status callout block at the top of `docs/designs/high-level-design.md` (the blockquote near
 the top, before Section 1).
 
 Ask: did the plan add or change anything that belongs in that status summary — either moving
