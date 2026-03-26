@@ -16,57 +16,59 @@ function setup() {
 
 const REGIMENT_NODE = {
   id: '22ny',
-  name: '22 NY',
+  name: '22nd NY',
   type: 'infantry',
   morale: 'B',
   weapon: 'R',
   strengthPoints: 4,
-  stragglerBoxes: 9,
   counterRef: null,
 };
 
 const CAVALRY_NODE = {
   id: '2ny-cav',
-  name: '2 NY Cav',
+  name: '2nd NY Cav',
   type: 'cavalry',
   morale: 'D',
   weapon: 'C',
   strengthPoints: 3,
-  stragglerBoxes: 9,
   counterRef: null,
 };
 
 const BATTERY_NODE = {
   id: '1nh-lt',
-  name: '1 NH Lt',
+  name: '1st NH Lt',
   gunType: 'R',
   strengthPoints: 4,
-  ammoClass: 'C',
+  morale: 'C',
   counterRef: null,
 };
 
 const BRIGADE_NODE = {
   id: '1b-1d-1c',
   name: '1/1/1',
-  morale: 'B',
   wreckThreshold: 3,
-  wreckTrackTotal: 5,
-  counterRef: null,
 };
 
 const DIVISION_NODE = {
   id: '1d-1c',
   name: '1/1 Division',
-  divisionStragglerBoxes: 5,
-  divisionWreckThreshold: 3,
-  counterRef: null,
+  wreckThreshold: 3,
 };
 
 const CORPS_NODE = {
   id: '1c',
   name: '1 Corps',
-  divisionStragglerBoxes: 0,
-  divisionWreckThreshold: 0,
+};
+
+const HQ_NODE = {
+  id: '1c-hq',
+  name: '1 Corps HQ',
+  counterRef: null,
+};
+
+const SUPPLY_NODE = {
+  id: 'usa-train',
+  name: 'AotP Supply',
   counterRef: null,
 };
 
@@ -115,32 +117,20 @@ describe('OobDetailPanel — regiment node', () => {
         nodePath: 'union.corps.0.divisions.0.brigades.0.regiments.0',
       },
     });
-    const nameInput = wrapper.find('.field-input[type="text"]');
-    expect(nameInput.element.value).toBe('22 NY');
+    expect(wrapper.find('.field-input[type="text"]').element.value).toBe('22nd NY');
   });
 
-  it('renders type, morale, weapon selects', () => {
+  it('renders type, morale, weapon selects — no straggler boxes', () => {
     const wrapper = mount(OobDetailPanel, {
       props: { node: REGIMENT_NODE, nodeType: 'regiment', nodePath: 'union.corps.0' },
     });
     const selects = wrapper.findAll('.field-select');
-    expect(selects.length).toBeGreaterThanOrEqual(3);
-    // type select has infantry selected
+    expect(selects.length).toBe(3); // type, morale, weapon
     expect(selects[0].element.value).toBe('infantry');
-    // morale select
     expect(selects[1].element.value).toBe('B');
-    // weapon select
     expect(selects[2].element.value).toBe('R');
-  });
-
-  it('renders strengthPoints and stragglerBoxes numbers', () => {
-    const wrapper = mount(OobDetailPanel, {
-      props: { node: REGIMENT_NODE, nodeType: 'infantry', nodePath: 'union.corps.0' },
-    });
-    const numbers = wrapper.findAll('.field-number');
-    const vals = numbers.map((n) => n.element.value);
-    expect(vals).toContain('4'); // strengthPoints
-    expect(vals).toContain('9'); // stragglerBoxes
+    // No straggler boxes number input
+    expect(wrapper.findAll('.field-number').length).toBe(1); // only strengthPoints
   });
 
   it('calls store.updateField on name change', async () => {
@@ -149,40 +139,33 @@ describe('OobDetailPanel — regiment node', () => {
     const wrapper = mount(OobDetailPanel, {
       props: { node: REGIMENT_NODE, nodeType: 'regiment', nodePath: 'union.corps.0.regiments.0' },
     });
-    const nameInput = wrapper.find('.field-input[type="text"]');
-    await nameInput.setValue('Updated Name');
-    await nameInput.trigger('change');
+    await wrapper.find('.field-input[type="text"]').setValue('Updated Name');
+    await wrapper.find('.field-input[type="text"]').trigger('change');
     expect(store.updateField).toHaveBeenCalledWith(
       'union.corps.0.regiments.0.name',
       'Updated Name'
     );
   });
 
-  it('calls store.updateField on morale select change', async () => {
-    const store = setup();
-    store.updateField = vi.fn();
+  it('renders counter image widget', () => {
     const wrapper = mount(OobDetailPanel, {
       props: { node: REGIMENT_NODE, nodeType: 'regiment', nodePath: 'union.corps.0.regiments.0' },
     });
-    const moraleSelect = wrapper.findAll('.field-select')[1];
-    await moraleSelect.setValue('C');
-    await moraleSelect.trigger('change');
-    expect(store.updateField).toHaveBeenCalledWith('union.corps.0.regiments.0.morale', 'C');
+    expect(wrapper.find('.counter-widget-stub').exists()).toBe(true);
   });
 });
 
-// ── Cavalry (regiment type) ────────────────────────────────────────────────────
+// ── Cavalry ────────────────────────────────────────────────────────────────────
 
 describe('OobDetailPanel — cavalry node', () => {
   beforeEach(setup);
 
-  it('renders straggler boxes for cavalry', () => {
+  it('shows type/morale/weapon/strengthPoints only — no straggler boxes', () => {
     const wrapper = mount(OobDetailPanel, {
       props: { node: CAVALRY_NODE, nodeType: 'cavalry', nodePath: 'union.corps.0' },
     });
-    const numbers = wrapper.findAll('.field-number');
-    const vals = numbers.map((n) => n.element.value);
-    expect(vals).toContain('9');
+    expect(wrapper.findAll('.field-select').length).toBe(3);
+    expect(wrapper.findAll('.field-number').length).toBe(1);
   });
 });
 
@@ -191,7 +174,7 @@ describe('OobDetailPanel — cavalry node', () => {
 describe('OobDetailPanel — battery node', () => {
   beforeEach(setup);
 
-  it('renders gunType, strengthPoints, ammoClass — no straggler boxes', () => {
+  it('renders gunType, strengthPoints, morale (renamed from ammoClass)', () => {
     const wrapper = mount(OobDetailPanel, {
       props: {
         node: BATTERY_NODE,
@@ -199,33 +182,30 @@ describe('OobDetailPanel — battery node', () => {
         nodePath: 'union.corps.0.artillery.arty1-1c.batteries.0',
       },
     });
-    expect(wrapper.find('.field-readonly').text()).toBe('1nh-lt');
     const selects = wrapper.findAll('.field-select');
-    // gunType and ammoClass
+    expect(selects.length).toBe(2); // gunType + morale
     expect(selects[0].element.value).toBe('R'); // gunType
-    expect(selects[1].element.value).toBe('C'); // ammoClass
+    expect(selects[1].element.value).toBe('C'); // morale
     expect(wrapper.find('.field-number').element.value).toBe('4');
   });
 
-  it('does not render type or weapon selects for battery', () => {
-    const wrapper = mount(OobDetailPanel, {
-      props: { node: BATTERY_NODE, nodeType: 'battery', nodePath: 'union.corps.0.batteries.0' },
-    });
-    const selects = wrapper.findAll('.field-select');
-    // Only gunType + ammoClass (2 selects for battery)
-    expect(selects.length).toBe(2);
-  });
-
-  it('calls updateField on ammoClass change', async () => {
+  it('calls updateField on morale change', async () => {
     const store = setup();
     store.updateField = vi.fn();
     const wrapper = mount(OobDetailPanel, {
       props: { node: BATTERY_NODE, nodeType: 'battery', nodePath: 'union.corps.0.batteries.0' },
     });
-    const ammoSelect = wrapper.findAll('.field-select')[1];
-    await ammoSelect.setValue('B');
-    await ammoSelect.trigger('change');
-    expect(store.updateField).toHaveBeenCalledWith('union.corps.0.batteries.0.ammoClass', 'B');
+    const moraleSelect = wrapper.findAll('.field-select')[1];
+    await moraleSelect.setValue('B');
+    await moraleSelect.trigger('change');
+    expect(store.updateField).toHaveBeenCalledWith('union.corps.0.batteries.0.morale', 'B');
+  });
+
+  it('renders counter image widget', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: { node: BATTERY_NODE, nodeType: 'battery', nodePath: 'union.corps.0.batteries.0' },
+    });
+    expect(wrapper.find('.counter-widget-stub').exists()).toBe(true);
   });
 });
 
@@ -234,7 +214,7 @@ describe('OobDetailPanel — battery node', () => {
 describe('OobDetailPanel — brigade node', () => {
   beforeEach(setup);
 
-  it('renders morale, wreckThreshold, wreckTrackTotal, succession placeholder', () => {
+  it('renders name + wreckThreshold only — no morale, no counter', () => {
     const wrapper = mount(OobDetailPanel, {
       props: {
         node: BRIGADE_NODE,
@@ -242,24 +222,15 @@ describe('OobDetailPanel — brigade node', () => {
         nodePath: 'union.corps.0.divisions.0.brigades.0',
       },
     });
-    expect(wrapper.find('.field-select').element.value).toBe('B'); // morale
-    const numbers = wrapper.findAll('.field-number');
-    expect(numbers.map((n) => n.element.value)).toContain('3'); // wreckThreshold
-    expect(numbers.map((n) => n.element.value)).toContain('5'); // wreckTrackTotal
+    // No selects (no morale)
+    expect(wrapper.findAll('.field-select').length).toBe(0);
+    // One number input: wreckThreshold
+    expect(wrapper.findAll('.field-number').length).toBe(1);
+    expect(wrapper.find('.field-number').element.value).toBe('3');
+    // Succession placeholder
     expect(wrapper.find('.field-placeholder').text()).toContain('SuccessionList');
-  });
-
-  it('does not render type or weapon fields', () => {
-    const wrapper = mount(OobDetailPanel, {
-      props: {
-        node: BRIGADE_NODE,
-        nodeType: 'brigade',
-        nodePath: 'union.corps.0.divisions.0.brigades.0',
-      },
-    });
-    const selects = wrapper.findAll('.field-select');
-    // Only morale (1 select)
-    expect(selects.length).toBe(1);
+    // No counter widget
+    expect(wrapper.find('.counter-widget-stub').exists()).toBe(false);
   });
 
   it('calls updateField on wreckThreshold change', async () => {
@@ -272,9 +243,8 @@ describe('OobDetailPanel — brigade node', () => {
         nodePath: 'union.corps.0.divisions.0.brigades.0',
       },
     });
-    const wtInput = wrapper.findAll('.field-number')[0];
-    await wtInput.setValue('4');
-    await wtInput.trigger('change');
+    await wrapper.find('.field-number').setValue('4');
+    await wrapper.find('.field-number').trigger('change');
     expect(store.updateField).toHaveBeenCalledWith(
       'union.corps.0.divisions.0.brigades.0.wreckThreshold',
       4
@@ -287,21 +257,14 @@ describe('OobDetailPanel — brigade node', () => {
 describe('OobDetailPanel — division node', () => {
   beforeEach(setup);
 
-  it('renders divisionStragglerBoxes and divisionWreckThreshold', () => {
-    const wrapper = mount(OobDetailPanel, {
-      props: { node: DIVISION_NODE, nodeType: 'division', nodePath: 'union.corps.0.divisions.0' },
-    });
-    const numbers = wrapper.findAll('.field-number');
-    expect(numbers.map((n) => n.element.value)).toContain('5');
-    expect(numbers.map((n) => n.element.value)).toContain('3');
-    expect(wrapper.find('.field-placeholder').text()).toContain('SuccessionList');
-  });
-
-  it('does not render morale select for division', () => {
+  it('renders name + wreckThreshold only — no morale, no straggler boxes, no counter', () => {
     const wrapper = mount(OobDetailPanel, {
       props: { node: DIVISION_NODE, nodeType: 'division', nodePath: 'union.corps.0.divisions.0' },
     });
     expect(wrapper.findAll('.field-select').length).toBe(0);
+    expect(wrapper.findAll('.field-number').length).toBe(1);
+    expect(wrapper.find('.field-number').element.value).toBe('3');
+    expect(wrapper.find('.counter-widget-stub').exists()).toBe(false);
   });
 });
 
@@ -310,29 +273,53 @@ describe('OobDetailPanel — division node', () => {
 describe('OobDetailPanel — corps node', () => {
   beforeEach(setup);
 
-  it('renders same fields as division', () => {
+  it('renders name only — no counters, no numeric fields', () => {
     const wrapper = mount(OobDetailPanel, {
       props: { node: CORPS_NODE, nodeType: 'corps', nodePath: 'union.corps.0' },
     });
-    const numbers = wrapper.findAll('.field-number');
-    expect(numbers.length).toBeGreaterThanOrEqual(2);
-    expect(wrapper.find('.field-placeholder').text()).toContain('SuccessionList');
+    // Only name input — no selects, no numbers, no counter widget
+    expect(wrapper.findAll('.field-select').length).toBe(0);
+    expect(wrapper.findAll('.field-number').length).toBe(0);
+    expect(wrapper.find('.counter-widget-stub').exists()).toBe(false);
   });
 });
 
-// ── Counter widget integration ─────────────────────────────────────────────────
+// ── HQ ─────────────────────────────────────────────────────────────────────────
 
-describe('OobDetailPanel — counter widget', () => {
+describe('OobDetailPanel — hq node', () => {
   beforeEach(setup);
 
-  it('renders CounterImageWidget stub when nodePath is provided', () => {
+  it('renders name + counter image widget for HQ nodes', () => {
     const wrapper = mount(OobDetailPanel, {
-      props: { node: REGIMENT_NODE, nodeType: 'regiment', nodePath: 'union.corps.0.regiments.0' },
+      props: { node: HQ_NODE, nodeType: 'hq', nodePath: 'union.corps.0.hq' },
     });
+    expect(wrapper.find('.field-input[type="text"]').element.value).toBe('1 Corps HQ');
+    expect(wrapper.find('.counter-widget-stub').exists()).toBe(true);
+    expect(wrapper.findAll('.field-select').length).toBe(0);
+    expect(wrapper.findAll('.field-number').length).toBe(0);
+  });
+});
+
+// ── Supply ─────────────────────────────────────────────────────────────────────
+
+describe('OobDetailPanel — supply node', () => {
+  beforeEach(setup);
+
+  it('renders name + counter image widget for supply nodes', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: { node: SUPPLY_NODE, nodeType: 'supply', nodePath: 'union.supplyTrain' },
+    });
+    expect(wrapper.find('.field-input[type="text"]').element.value).toBe('AotP Supply');
     expect(wrapper.find('.counter-widget-stub').exists()).toBe(true);
   });
+});
 
-  it('shows no-path notice when nodePath is null', () => {
+// ── No-path notice ─────────────────────────────────────────────────────────────
+
+describe('OobDetailPanel — path edge cases', () => {
+  beforeEach(setup);
+
+  it('shows no-path notice for regiment when nodePath is null', () => {
     const wrapper = mount(OobDetailPanel, {
       props: { node: REGIMENT_NODE, nodeType: 'regiment', nodePath: null },
     });

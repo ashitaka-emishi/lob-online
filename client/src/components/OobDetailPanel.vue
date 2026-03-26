@@ -23,19 +23,26 @@ const store = useOobStore();
 // ── Type classification ───────────────────────────────────────────────────────
 
 const REGIMENT_TYPES = new Set(['regiment', 'infantry', 'cavalry']);
-const BATTERY_TYPE = 'battery';
-const BRIGADE_TYPE = 'brigade';
-const DIVISION_TYPE = 'division';
-const CORPS_TYPE = 'corps';
+const HQ_SUPPLY_TYPES = new Set(['hq', 'supply']);
 
 const isRegiment = computed(() => REGIMENT_TYPES.has(props.nodeType));
-const isBattery = computed(() => props.nodeType === BATTERY_TYPE);
-const isBrigade = computed(() => props.nodeType === BRIGADE_TYPE);
-const isDivision = computed(() => props.nodeType === DIVISION_TYPE);
-const isCorps = computed(() => props.nodeType === CORPS_TYPE);
+const isBattery = computed(() => props.nodeType === 'battery');
+const isBrigade = computed(() => props.nodeType === 'brigade');
+const isDivision = computed(() => props.nodeType === 'division');
+const isCorps = computed(() => props.nodeType === 'corps');
+const isHqOrSupply = computed(() => HQ_SUPPLY_TYPES.has(props.nodeType));
 const isEditable = computed(
-  () => isRegiment.value || isBattery.value || isBrigade.value || isDivision.value || isCorps.value
+  () =>
+    isRegiment.value ||
+    isBattery.value ||
+    isBrigade.value ||
+    isDivision.value ||
+    isCorps.value ||
+    isHqOrSupply.value
 );
+
+// Corps only has a name field — no numeric fields, no counters
+const isCorpsOnly = computed(() => isCorps.value);
 
 // ── Field update helpers ──────────────────────────────────────────────────────
 
@@ -64,7 +71,7 @@ function onSelectChange(fieldName, e) {
 
     <template v-else>
       <!-- ── Header ─────────────────────────────────────────────────────── -->
-      <div class="field-row">
+      <div v-if="node.id" class="field-row">
         <label class="field-label">ID</label>
         <span class="field-readonly">{{ node.id }}</span>
       </div>
@@ -132,17 +139,6 @@ function onSelectChange(fieldName, e) {
             @change="onNumberChange('strengthPoints', $event)"
           />
         </div>
-
-        <div class="field-row">
-          <label class="field-label">Straggler Boxes</label>
-          <input
-            type="number"
-            class="field-input field-number"
-            :value="node.stragglerBoxes ?? 0"
-            min="0"
-            @change="onNumberChange('stragglerBoxes', $event)"
-          />
-        </div>
       </template>
 
       <!-- ── Battery fields ─────────────────────────────────────────────── -->
@@ -174,22 +170,6 @@ function onSelectChange(fieldName, e) {
         </div>
 
         <div class="field-row">
-          <label class="field-label">Ammo Class</label>
-          <select
-            class="field-select"
-            :value="node.ammoClass ?? ''"
-            @change="onSelectChange('ammoClass', $event)"
-          >
-            <option value="B">B — High quality</option>
-            <option value="C">C — Standard</option>
-            <option value="D">D — Depot/reserve</option>
-          </select>
-        </div>
-      </template>
-
-      <!-- ── Brigade fields ─────────────────────────────────────────────── -->
-      <template v-if="isBrigade">
-        <div class="field-row">
           <label class="field-label">Morale</label>
           <select
             class="field-select"
@@ -202,7 +182,10 @@ function onSelectChange(fieldName, e) {
             <option value="D">D</option>
           </select>
         </div>
+      </template>
 
+      <!-- ── Brigade fields ─────────────────────────────────────────────── -->
+      <template v-if="isBrigade">
         <div class="field-row">
           <label class="field-label">Wreck Threshold</label>
           <input
@@ -215,43 +198,21 @@ function onSelectChange(fieldName, e) {
         </div>
 
         <div class="field-row">
-          <label class="field-label">Wreck Track Total</label>
-          <input
-            type="number"
-            class="field-input field-number"
-            :value="node.wreckTrackTotal ?? 0"
-            min="0"
-            @change="onNumberChange('wreckTrackTotal', $event)"
-          />
-        </div>
-
-        <div class="field-row">
           <label class="field-label">Succession</label>
           <span class="field-placeholder">— SuccessionList (#195) —</span>
         </div>
       </template>
 
-      <!-- ── Division / Corps fields ────────────────────────────────────── -->
-      <template v-if="isDivision || isCorps">
-        <div class="field-row">
-          <label class="field-label">Straggler Boxes</label>
-          <input
-            type="number"
-            class="field-input field-number"
-            :value="node.divisionStragglerBoxes ?? 0"
-            min="0"
-            @change="onNumberChange('divisionStragglerBoxes', $event)"
-          />
-        </div>
-
+      <!-- ── Division fields ────────────────────────────────────────────── -->
+      <template v-if="isDivision">
         <div class="field-row">
           <label class="field-label">Wreck Threshold</label>
           <input
             type="number"
             class="field-input field-number"
-            :value="node.divisionWreckThreshold ?? 0"
+            :value="node.wreckThreshold ?? 0"
             min="0"
-            @change="onNumberChange('divisionWreckThreshold', $event)"
+            @change="onNumberChange('wreckThreshold', $event)"
           />
         </div>
 
@@ -261,15 +222,20 @@ function onSelectChange(fieldName, e) {
         </div>
       </template>
 
-      <!-- ── Counter image widget (all editable types) ──────────────────── -->
-      <CounterImageWidget
-        v-if="nodePath"
-        :counter-ref="node.counterRef ?? null"
-        :node-path="nodePath"
-      />
-      <p v-else class="no-path-notice">
-        Path not resolvable — counter image editing unavailable for this node.
-      </p>
+      <!-- ── HQ / Supply counter image ──────────────────────────────────── -->
+      <template v-if="isHqOrSupply || isCorpsOnly">
+        <!-- Corps: name only, no counter -->
+      </template>
+
+      <!-- ── Counter image widget (regiments, batteries, HQ, supply) ────── -->
+      <template v-if="(isRegiment || isBattery || isHqOrSupply) && nodePath">
+        <CounterImageWidget :counter-ref="node.counterRef ?? null" :node-path="nodePath" />
+      </template>
+      <template v-else-if="(isRegiment || isBattery || isHqOrSupply) && !nodePath">
+        <p class="no-path-notice">
+          Path not resolvable — counter image editing unavailable for this node.
+        </p>
+      </template>
     </template>
   </div>
 </template>

@@ -156,28 +156,7 @@ const rankAbbrev = computed(() =>
     : null
 );
 
-const UNIT_LEAF_TYPES = new Set(['regiment', 'infantry', 'cavalry', 'battery', 'unit']);
-
-function ordinalSuffix(n) {
-  const t = n % 100;
-  if (t >= 11 && t <= 13) return 'th';
-  switch (n % 10) {
-    case 1:
-      return 'st';
-    case 2:
-      return 'nd';
-    case 3:
-      return 'rd';
-    default:
-      return 'th';
-  }
-}
-
-const displayName = computed(() => {
-  const name = props.node.name;
-  if (!name || !UNIT_LEAF_TYPES.has(props.nodeType)) return name;
-  return name.replace(/^(\d+)(\s|$)/, (_, num, rest) => `${num}${ordinalSuffix(+num)}${rest}`);
-});
+const displayName = computed(() => props.node.name);
 
 function handleSelect() {
   store.selectNode(props.node, props.nodeType);
