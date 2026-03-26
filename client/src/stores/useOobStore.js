@@ -1,5 +1,7 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
+
+import { findNodePath } from '../utils/findNodePath.js';
 
 import oobFallback from '../../../data/scenarios/south-mountain/oob.json';
 import leadersFallback from '../../../data/scenarios/south-mountain/leaders.json';
@@ -17,6 +19,11 @@ export const useOobStore = defineStore('oob', () => {
   const oob = ref(null);
   const leaders = ref(null);
   const selectedNode = ref(null);
+  const selectedNodeType = ref(null);
+  const selectedNodePath = computed(() => {
+    if (!selectedNode.value || !oob.value) return null;
+    return findNodePath(oob.value, selectedNode.value.id);
+  });
   const dirty = ref(false);
   // M5: expose sync state so the view can show feedback
   const isSyncing = ref(false);
@@ -94,8 +101,9 @@ export const useOobStore = defineStore('oob', () => {
 
   // ── Selection ────────────────────────────────────────────────────────────
 
-  function selectNode(node) {
+  function selectNode(node, nodeType = null) {
     selectedNode.value = node;
+    selectedNodeType.value = nodeType;
   }
 
   // ── Mutations ────────────────────────────────────────────────────────────
@@ -205,6 +213,8 @@ export const useOobStore = defineStore('oob', () => {
     oob,
     leaders,
     selectedNode,
+    selectedNodeType,
+    selectedNodePath,
     dirty,
     isSyncing,
     syncError,

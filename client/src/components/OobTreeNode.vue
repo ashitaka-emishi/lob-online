@@ -180,7 +180,7 @@ const displayName = computed(() => {
 });
 
 function handleSelect() {
-  store.selectNode(props.node);
+  store.selectNode(props.node, props.nodeType);
 }
 
 function toggleExpand(event) {
