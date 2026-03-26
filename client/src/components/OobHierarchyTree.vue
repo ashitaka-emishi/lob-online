@@ -122,7 +122,11 @@ function processUSACorps(corps) {
   const distributed = distributeCorpsArtillery(corps);
   const withArty = flattenArtillery(distributed);
   const divisions = (withArty.divisions ?? []).map(processUSADivision);
-  return withLeader({ ...withArty, divisions, _hq: { id: corps.id + '-hq', name: 'HQ' } });
+  return withLeader({
+    ...withArty,
+    divisions,
+    _hq: { id: corps.id + '-hq', name: `${corps.name} HQ` },
+  });
 }
 
 // Cavalry Division: "Cavalry Division" wrapper with Pleasonton leader + HQ.
@@ -142,7 +146,7 @@ function processUSACavDiv(cd) {
     id: cd.id,
     name: 'Cavalry Division',
     ...(pleasonton ? { _leader: pleasonton } : {}),
-    _hq: { id: cd.id + '-hq', name: 'HQ' },
+    _hq: { id: cd.id + '-hq', name: 'Cavalry Div HQ' },
     brigades: [processedFcav],
   };
 }
@@ -152,10 +156,21 @@ function processCSABrigade(bde) {
   return withLeader(bde);
 }
 
+function divHqName(divName) {
+  return divName
+    .replace(/\s*\([^)]*\)/, '')
+    .replace('Division', 'Div HQ')
+    .trim();
+}
+
 function processCSADivision(div) {
   const withArty = flattenArtillery(div);
   const brigades = (withArty.brigades ?? []).map(processCSABrigade);
-  return withLeader({ ...withArty, brigades, _hq: { id: div.id + '-hq', name: 'HQ' } });
+  return withLeader({
+    ...withArty,
+    brigades,
+    _hq: { id: div.id + '-hq', name: divHqName(div.name) },
+  });
 }
 
 // ── Top-level node list ───────────────────────────────────────────────────────
@@ -172,7 +187,7 @@ const topNodes = computed(() => {
       id: 'usa-army',
       name: side.army ?? 'Army of the Potomac',
       _leaders: armyLeaders,
-      _hq: { id: 'usa-army-hq', name: 'HQ' },
+      _hq: { id: 'usa-army-hq', name: 'AotP HQ' },
       _supply: side.supplyTrain,
       corps: (side.corps ?? []).map(processUSACorps),
       cavalryDivision: side.cavalryDivision ? processUSACavDiv(side.cavalryDivision) : undefined,
@@ -233,6 +248,7 @@ const topNodes = computed(() => {
       :key="entry.node.id"
       :node="entry.node"
       :node-type="entry.nodeType"
+      :depth="0"
     />
   </div>
 </template>

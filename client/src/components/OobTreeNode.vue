@@ -16,6 +16,10 @@ const props = defineProps({
     type: String,
     default: 'unit',
   },
+  depth: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const store = useOobStore();
@@ -30,7 +34,8 @@ if (expandSignal)
   });
 if (collapseSignal)
   watch(collapseSignal, () => {
-    expanded.value = false;
+    // Only collapse the 2nd level (corps/division) and below; leave the root army/wing expanded
+    if (props.depth >= 1) expanded.value = false;
   });
 
 // Build children from the node's actual shape.
@@ -146,6 +151,29 @@ const rankAbbrev = computed(() =>
     : null
 );
 
+const UNIT_LEAF_TYPES = new Set(['regiment', 'infantry', 'cavalry', 'battery', 'unit']);
+
+function ordinalSuffix(n) {
+  const t = n % 100;
+  if (t >= 11 && t <= 13) return 'th';
+  switch (n % 10) {
+    case 1:
+      return 'st';
+    case 2:
+      return 'nd';
+    case 3:
+      return 'rd';
+    default:
+      return 'th';
+  }
+}
+
+const displayName = computed(() => {
+  const name = props.node.name;
+  if (!name || !UNIT_LEAF_TYPES.has(props.nodeType)) return name;
+  return name.replace(/^(\d+)(\s|$)/, (_, num, rest) => `${num}${ordinalSuffix(+num)}${rest}`);
+});
+
 function handleSelect() {
   store.selectNode(props.node);
 }
@@ -169,7 +197,7 @@ function toggleExpand(event) {
       <span v-else class="expand-spacer" />
       <span class="node-name">
         <span v-if="rankAbbrev" class="leader-rank">{{ rankAbbrev }}</span
-        >{{ node.name }}
+        >{{ displayName }}
       </span>
       <span :class="['badge', `badge-${nodeType}`]">{{ badgeLabel }}</span>
     </div>
@@ -179,6 +207,7 @@ function toggleExpand(event) {
         :key="child.node.id ?? child.node.name"
         :node="child.node"
         :node-type="child.nodeType"
+        :depth="depth + 1"
       />
     </div>
   </div>

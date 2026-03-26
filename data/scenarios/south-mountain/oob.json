@@ -17,7 +17,7 @@
     "army": "Army of the Potomac",
     "supplyTrain": {
       "id": "usa-train",
-      "name": "APot HQ & Supply"
+      "name": "AotP Supply"
     },
     "corps": [
       {
@@ -1797,7 +1797,7 @@
       },
       {
         "id": "j-div",
-        "name": "J Division (D.R. Jones)",
+        "name": "J Division",
         "divisionStragglerBoxes": 5,
         "divisionWreckThreshold": 3,
         "artillery": {

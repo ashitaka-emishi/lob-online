@@ -8,7 +8,7 @@ import OobHierarchyTree from './OobHierarchyTree.vue';
 
 const UNION_OOB = {
   army: 'Army of the Potomac',
-  supplyTrain: { id: 'usa-supply', name: 'US Army of the Potomac Supply' },
+  supplyTrain: { id: 'usa-supply', name: 'AotP Supply' },
   corps: [
     {
       id: '1c',
@@ -56,7 +56,7 @@ const CSA_OOB = {
   divisions: [
     {
       id: 'dh-div',
-      name: "D.H. Hill's Division",
+      name: 'dH Division',
       brigades: [{ id: 'rodes-bde', name: "Rodes' Brigade", regiments: [] }],
     },
     { id: 'mclaws-div', name: "McLaws' Division", brigades: [] },
@@ -126,12 +126,15 @@ describe('OobHierarchyTree — union side', () => {
     expect(wrapper.text()).toContain('Ambrose E. Burnside');
   });
 
-  it('shows army HQ and supply under army node', () => {
+  it('shows AotP HQ and AotP Supply under army node', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
     expect(wrapper.find('.badge-hq').exists()).toBe(true);
+    expect(wrapper.text()).toContain('AotP HQ');
     expect(wrapper.find('.badge-supply').exists()).toBe(true);
     expect(wrapper.find('.badge-supply').text()).toBe('SUPP');
-    expect(wrapper.text()).toContain('US Army of the Potomac Supply');
+    expect(wrapper.text()).toContain('AotP Supply');
+    // Corps HQ uses corps name
+    expect(wrapper.text()).toContain('1 Corps HQ');
   });
 
   it('renders corps nodes under army node', () => {
@@ -176,12 +179,12 @@ describe('OobHierarchyTree — union side', () => {
 
   it('shows cavalry regiment under F/Cav brigade', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
-    expect(wrapper.text()).toContain('8 Ill');
+    expect(wrapper.text()).toContain('8th Ill');
   });
 
   it('distributes artillery battery under its matching division', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
-    expect(wrapper.text()).toContain('1 NH Lt');
+    expect(wrapper.text()).toContain('1st NH Lt');
   });
 
   it('shows BDE badge on brigade nodes', () => {
@@ -290,7 +293,7 @@ describe('OobHierarchyTree — 9th Corps artillery distribution', () => {
 
   it('places 8 Mass Lt and E 2 US under 1/9 Division', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
-    expect(wrapper.text()).toContain('8 Mass Lt');
+    expect(wrapper.text()).toContain('8th Mass Lt');
     expect(wrapper.text()).toContain('E 2 US');
   });
 
@@ -307,7 +310,7 @@ describe('OobHierarchyTree — 9th Corps artillery distribution', () => {
 
   it('places 1 Ohio Lt under 1/K/9 brigade', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
-    expect(wrapper.text()).toContain('1 Ohio Lt');
+    expect(wrapper.text()).toContain('1st Ohio Lt');
   });
 
   it('places Simonds Ky under 2/K/9 brigade', () => {
@@ -341,7 +344,7 @@ describe('OobHierarchyTree — confederate side', () => {
 
   it('renders division nodes under wing node', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'confederate' } });
-    expect(wrapper.text()).toContain("D.H. Hill's Division");
+    expect(wrapper.text()).toContain('dH Division');
     expect(wrapper.text()).toContain("McLaws' Division");
   });
 
@@ -350,10 +353,11 @@ describe('OobHierarchyTree — confederate side', () => {
     expect(wrapper.text()).toContain('D.H. Hill');
   });
 
-  it('shows HQ node under CSA division', () => {
+  it('shows named HQ node under CSA division', () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'confederate' } });
     expect(wrapper.find('.badge-hq').exists()).toBe(true);
     expect(wrapper.find('.badge-hq').text()).toBe('HQ');
+    expect(wrapper.text()).toContain('dH Div HQ');
   });
 
   it('injects CSA brigade leader (Rodes)', () => {
@@ -404,12 +408,15 @@ describe('OobHierarchyTree — expand/collapse all', () => {
     expect(labels).toContain('Collapse all');
   });
 
-  it('collapses all nodes when Collapse all is clicked', async () => {
+  it('collapses corps children but keeps army and corps rows visible', async () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
-    expect(wrapper.text()).toContain('1 Corps');
+    expect(wrapper.text()).toContain('1/1 Division');
     const collapseBtn = wrapper.findAll('.control-btn').find((b) => b.text() === 'Collapse all');
     await collapseBtn.trigger('click');
-    expect(wrapper.text()).not.toContain('1 Corps');
+    // Army node and corps rows stay visible; contents inside corps are hidden
+    expect(wrapper.text()).toContain('Army of the Potomac');
+    expect(wrapper.text()).toContain('1 Corps');
+    expect(wrapper.text()).not.toContain('1/1 Division');
   });
 
   it('expands all nodes after collapsing', async () => {
@@ -417,9 +424,9 @@ describe('OobHierarchyTree — expand/collapse all', () => {
     const collapseBtn = wrapper.findAll('.control-btn').find((b) => b.text() === 'Collapse all');
     const expandBtn = wrapper.findAll('.control-btn').find((b) => b.text() === 'Expand all');
     await collapseBtn.trigger('click');
-    expect(wrapper.text()).not.toContain('1 Corps');
+    expect(wrapper.text()).not.toContain('1/1 Division');
     await expandBtn.trigger('click');
-    expect(wrapper.text()).toContain('1 Corps');
+    expect(wrapper.text()).toContain('1/1 Division');
   });
 });
 
@@ -428,11 +435,11 @@ describe('OobHierarchyTree — expand/collapse all', () => {
 describe('OobTreeNode via OobHierarchyTree', () => {
   beforeEach(setupStore);
 
-  it('collapses children when expand button is clicked on army node', async () => {
+  it('collapses children when toggle button is clicked on army node', async () => {
     const wrapper = mount(OobHierarchyTree, { props: { side: 'union' } });
-    const expandBtn = wrapper.find('.expand-btn');
+    const toggleBtn = wrapper.find('.expand-btn');
     expect(wrapper.text()).toContain('1 Corps');
-    await expandBtn.trigger('click');
+    await toggleBtn.trigger('click');
     expect(wrapper.text()).not.toContain('1 Corps');
   });
 
