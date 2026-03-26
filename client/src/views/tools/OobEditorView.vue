@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useOobStore } from '../../stores/useOobStore.js';
 import OobHierarchyTree from '../../components/OobHierarchyTree.vue';
+import OobDetailPanel from '../../components/OobDetailPanel.vue';
 
 const store = useOobStore();
 const activeSide = ref('union');
@@ -53,6 +54,12 @@ async function handlePush() {
       </aside>
       <main class="detail-panel">
         <p v-if="!store.selectedNode" class="placeholder">Select a unit</p>
+        <OobDetailPanel
+          v-else
+          :node="store.selectedNode"
+          :node-type="store.selectedNodeType"
+          :node-path="store.selectedNodePath"
+        />
       </main>
     </div>
   </div>

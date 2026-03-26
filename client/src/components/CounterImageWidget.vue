@@ -26,16 +26,6 @@ function onBackError() {
   backError.value = true;
 }
 
-// Reset error flag when filename changes so the img re-attempts load
-function frontSrc() {
-  frontError.value = false;
-  return props.counterRef?.front ? `/counters/${props.counterRef.front}` : null;
-}
-function backSrc() {
-  backError.value = false;
-  return props.counterRef?.back ? `/counters/${props.counterRef.back}` : null;
-}
-
 // ── Upload ────────────────────────────────────────────────────────────────────
 
 const frontFileInput = ref(null);
