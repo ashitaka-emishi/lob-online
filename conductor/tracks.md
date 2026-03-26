@@ -48,6 +48,8 @@
 
 | [ ] | map-editor-ui-refactor_20260323 | Map Editor UI Refactor — Tool Panel Cleanup & Feature Improvements | 2026-03-23 | 2026-03-23 |
 
-| [~] | counter-detect_20260325 | Counter Auto-Detection Script | 2026-03-25 | 2026-03-25 |
+| [x] | counter-detect_20260325 | Counter Auto-Detection Script | 2026-03-25 | 2026-03-25 |
+
+| [x] | oob-editor-foundation_20260325 | OOB Editor Foundation — Launch Script, Store & Hierarchy Tree | 2026-03-25 | 2026-03-25 |
 
 <!-- Tracks registered by /conductor:new-track -->

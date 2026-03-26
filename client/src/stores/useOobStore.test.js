@@ -1,0 +1,201 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { setActivePinia, createPinia } from 'pinia';
+import { useOobStore } from './useOobStore.js';
+
+const MINIMAL_OOB = { _status: 'available', union: { corps: [] }, confederate: { corps: [] } };
+const MINIMAL_LEADERS = { _status: 'available', union: { army: [] }, confederate: { army: [] } };
+
+function mockFetch(oobData, leadersData, ok = true) {
+  let call = 0;
+  return vi.fn().mockImplementation(() => {
+    const data = call++ === 0 ? oobData : leadersData;
+    return Promise.resolve({
+      ok,
+      status: ok ? 200 : 500,
+      json: () => Promise.resolve(JSON.parse(JSON.stringify(data))),
+    });
+  });
+}
+
+describe('useOobStore', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  // ── Initial state ──────────────────────────────────────────────────────────
+
+  it('initialises with null oob, leaders, selectedNode and dirty=false', () => {
+    const store = useOobStore();
+    expect(store.oob).toBeNull();
+    expect(store.leaders).toBeNull();
+    expect(store.selectedNode).toBeNull();
+    expect(store.dirty).toBe(false);
+  });
+
+  // ── loadData: server success ───────────────────────────────────────────────
+
+  it('loadData: loads from server when both endpoints respond ok', async () => {
+    vi.stubGlobal('fetch', mockFetch(MINIMAL_OOB, MINIMAL_LEADERS));
+    const store = useOobStore();
+    await store.loadData();
+    expect(store.oob).toMatchObject({ _status: 'available' });
+    expect(store.leaders).toMatchObject({ _status: 'available' });
+    expect(store.dirty).toBe(false);
+  });
+
+  // ── loadData: localStorage fallback ───────────────────────────────────────
+
+  it('loadData: falls back to localStorage when server returns non-ok', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 500, json: () => Promise.resolve({}) })
+    );
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key) => {
+        if (key === 'lob-oob-editor-v1') return JSON.stringify(MINIMAL_OOB);
+        if (key === 'lob-leaders-editor-v1') return JSON.stringify(MINIMAL_LEADERS);
+        return null;
+      }),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+    const store = useOobStore();
+    await store.loadData();
+    expect(store.oob).toMatchObject({ _status: 'available' });
+    expect(store.leaders).toMatchObject({ _status: 'available' });
+  });
+
+  // ── loadData: bundled JSON fallback ───────────────────────────────────────
+
+  it('loadData: falls back to bundled JSON when server throws and no localStorage', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')));
+    const store = useOobStore();
+    await store.loadData();
+    // Bundled JSON has real data — just verify it's non-null objects
+    expect(store.oob).not.toBeNull();
+    expect(typeof store.oob).toBe('object');
+    expect(store.leaders).not.toBeNull();
+    expect(typeof store.leaders).toBe('object');
+  });
+
+  // ── selectNode ────────────────────────────────────────────────────────────
+
+  it('selectNode: sets selectedNode', () => {
+    const store = useOobStore();
+    const node = { type: 'corps', id: '1c', name: '1 Corps' };
+    store.selectNode(node);
+    expect(store.selectedNode).toStrictEqual(node);
+  });
+
+  it('selectNode: can be called with null to deselect', () => {
+    const store = useOobStore();
+    store.selectNode({ type: 'corps', id: '1c' });
+    store.selectNode(null);
+    expect(store.selectedNode).toBeNull();
+  });
+
+  // ── updateField ───────────────────────────────────────────────────────────
+
+  it('updateField: updates a top-level oob field and sets dirty', () => {
+    const store = useOobStore();
+    store.oob = { _status: 'available', union: { army: 'Army of the Potomac', corps: [] } };
+    store.updateField('oob._status', 'draft');
+    expect(store.oob._status).toBe('draft');
+    expect(store.dirty).toBe(true);
+  });
+
+  it('updateField: updates a nested field', () => {
+    const store = useOobStore();
+    store.oob = { _status: 'available', union: { army: 'Army of the Potomac', corps: [] } };
+    store.updateField('oob.union.army', 'Updated Army');
+    expect(store.oob.union.army).toBe('Updated Army');
+    expect(store.dirty).toBe(true);
+  });
+
+  it('updateField: no-ops when oob is null', () => {
+    const store = useOobStore();
+    expect(() => store.updateField('oob.union.army', 'X')).not.toThrow();
+    expect(store.dirty).toBe(false);
+  });
+
+  // ── updateCounterRef ──────────────────────────────────────────────────────
+
+  it('updateCounterRef: sets counterRef on a node and marks dirty', () => {
+    const store = useOobStore();
+    store.oob = {
+      _status: 'available',
+      union: { corps: [{ id: '1c', name: '1 Corps', counterRef: null }] },
+    };
+    store.updateCounterRef('oob.union.corps.0', { front: 'front.jpg', back: 'back.jpg' });
+    expect(store.oob.union.corps[0].counterRef).toEqual({ front: 'front.jpg', back: 'back.jpg' });
+    expect(store.dirty).toBe(true);
+  });
+
+  // ── pushToServer ──────────────────────────────────────────────────────────
+
+  it('pushToServer: PUTs both oob and leaders, clears dirty and localStorage on success', async () => {
+    const store = useOobStore();
+    store.oob = MINIMAL_OOB;
+    store.leaders = MINIMAL_LEADERS;
+    store.dirty = true;
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ ok: true }),
+      })
+    );
+    await store.pushToServer();
+
+    expect(store.dirty).toBe(false);
+    expect(localStorage.removeItem).toHaveBeenCalledWith('lob-oob-editor-v1');
+    expect(localStorage.removeItem).toHaveBeenCalledWith('lob-leaders-editor-v1');
+  });
+
+  it('pushToServer: does not clear dirty when server returns non-ok', async () => {
+    const store = useOobStore();
+    store.oob = MINIMAL_OOB;
+    store.leaders = MINIMAL_LEADERS;
+    store.dirty = true;
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 400, json: () => Promise.resolve({}) })
+    );
+    await store.pushToServer();
+
+    expect(store.dirty).toBe(true);
+  });
+
+  // ── pullFromServer ────────────────────────────────────────────────────────
+
+  it('pullFromServer: fetches from server and clears dirty + localStorage', async () => {
+    const store = useOobStore();
+    store.dirty = true;
+    vi.stubGlobal('fetch', mockFetch(MINIMAL_OOB, MINIMAL_LEADERS));
+    await store.pullFromServer();
+
+    expect(store.oob).toMatchObject({ _status: 'available' });
+    expect(store.leaders).toMatchObject({ _status: 'available' });
+    expect(store.dirty).toBe(false);
+    expect(localStorage.removeItem).toHaveBeenCalledWith('lob-oob-editor-v1');
+    expect(localStorage.removeItem).toHaveBeenCalledWith('lob-leaders-editor-v1');
+  });
+
+  it('pullFromServer: does not throw when server is unreachable', async () => {
+    const store = useOobStore();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')));
+    await expect(store.pullFromServer()).resolves.not.toThrow();
+  });
+});
