@@ -1,0 +1,235 @@
+// Pure data-transformation utilities that build the OOB display tree from raw oob.json /
+// leaders.json data.  No Vue reactivity here — these are plain functions that can be
+// unit-tested without mounting any component.
+
+// ── Leaders lookup ─────────────────────────────────────────────────────────────────────
+
+function buildLeadersMap(leaders, side) {
+  const map = {};
+  if (!leaders) return map;
+  const sideLeaders = leaders[side];
+  if (!sideLeaders) return map;
+  Object.values(sideLeaders).forEach((group) => {
+    if (Array.isArray(group)) {
+      group.forEach((l) => {
+        if (l.commandsId) map[l.commandsId] = l;
+      });
+    }
+  });
+  return map;
+}
+
+function withLeader(node, leadersMap) {
+  const leader = leadersMap[node.id];
+  return leader ? { ...node, _leader: leader } : node;
+}
+
+// ── Artillery flattening ───────────────────────────────────────────────────────────────
+// Flatten an artillery object (keyed groups with batteries[]) into a plain batteries[] on
+// the node, removing the intermediate group level.
+
+function flattenArtillery(node) {
+  if (!node.artillery || typeof node.artillery !== 'object' || Array.isArray(node.artillery)) {
+    return node;
+  }
+  const extra = Object.values(node.artillery).flatMap((g) => g.batteries ?? []);
+  return { ...node, artillery: undefined, batteries: [...(node.batteries ?? []), ...extra] };
+}
+
+// ── Corps artillery distribution ───────────────────────────────────────────────────────
+// For Union corps: distribute arty to divisions and brigades, leave unmatched at corps
+// level.
+//
+// Division matching (two patterns):
+//   • New:    key ends with `-{div.id}`         e.g. arty1-1d-9c  → 1d-9c
+//   • Legacy: key = arty{divNum}-{corpsId}      e.g. arty1-1c     → 1d-1c
+//
+// Brigade matching (Kanawha-style, applied after division pass):
+//   • arty-{bdeNum}{divPrefix}g-{corpsId}       e.g. arty-1kg-9c  → 1b-kd-9c
+
+function distributeCorpsArtillery(corps) {
+  if (!corps.artillery || !corps.divisions?.length) return corps;
+  const artyEntries = Object.entries(corps.artillery);
+  const matchedKeys = new Set();
+
+  const divisions = corps.divisions.map((div) => {
+    const divPrefix = div.id.match(/^([^d]+)d-/)?.[1];
+
+    // Division-level match
+    const divMatch = artyEntries.find(
+      ([k]) =>
+        !matchedKeys.has(k) &&
+        (k.endsWith(`-${div.id}`) || (divPrefix && k === `arty${divPrefix}-${corps.id}`))
+    );
+    if (divMatch) matchedKeys.add(divMatch[0]);
+
+    // Brigade-level match: arty-{bdeNum}{divPrefix}g-{corpsId} → {bdeNum}b-{div.id}
+    const brigades = (div.brigades ?? []).map((bde) => {
+      const bdeNum = bde.id.match(/^(\d+)b-/)?.[1];
+      if (!bdeNum || !divPrefix) return bde;
+      const bdeMatch = artyEntries.find(
+        ([k]) => !matchedKeys.has(k) && k === `arty-${bdeNum}${divPrefix}g-${corps.id}`
+      );
+      if (!bdeMatch) return bde;
+      matchedKeys.add(bdeMatch[0]);
+      return { ...bde, batteries: [...(bde.batteries ?? []), ...(bdeMatch[1].batteries ?? [])] };
+    });
+
+    const divBatteries = divMatch
+      ? [...(div.batteries ?? []), ...(divMatch[1].batteries ?? [])]
+      : div.batteries;
+    return { ...div, ...(divBatteries ? { batteries: divBatteries } : {}), brigades };
+  });
+
+  const remainingArty = Object.fromEntries(artyEntries.filter(([k]) => !matchedKeys.has(k)));
+  return {
+    ...corps,
+    artillery: Object.keys(remainingArty).length ? remainingArty : undefined,
+    divisions,
+  };
+}
+
+// ── Union processing ───────────────────────────────────────────────────────────────────
+
+function processUSABrigade(bde, leadersMap) {
+  return withLeader(bde, leadersMap);
+}
+
+function processUSADivision(div, leadersMap) {
+  const withArty = flattenArtillery(div);
+  const brigades = (withArty.brigades ?? []).map((b) => processUSABrigade(b, leadersMap));
+  return withLeader({ ...withArty, brigades }, leadersMap);
+}
+
+function processUSACorps(corps, leadersMap) {
+  const distributed = distributeCorpsArtillery(corps);
+  const withArty = flattenArtillery(distributed);
+  const divisions = (withArty.divisions ?? []).map((d) => processUSADivision(d, leadersMap));
+  return withLeader(
+    {
+      ...withArty,
+      divisions,
+      _hq: { id: corps.id + '-hq', name: `${corps.name} HQ` },
+    },
+    leadersMap
+  );
+}
+
+// Cavalry Division: "Cavalry Division" wrapper with Pleasonton leader + HQ.
+// F/cav is a brigade child with Farnsworth leader and all batteries.
+function processUSACavDiv(cd, leadersMap) {
+  const pleasonton = leadersMap[cd.id];
+  const cavArty = cd.artillery?.['arty-fcav'];
+  const fcavBde = cd.brigades?.[0];
+  const farnsworth = fcavBde ? leadersMap[fcavBde.id] : null;
+  const processedFcav = {
+    ...(fcavBde ?? { id: 'fcav' }),
+    name: 'F/Cav',
+    ...(farnsworth ? { _leader: farnsworth } : {}),
+    batteries: cavArty?.batteries ?? [],
+  };
+  return {
+    id: cd.id,
+    name: 'Cavalry Division',
+    ...(pleasonton ? { _leader: pleasonton } : {}),
+    _hq: { id: cd.id + '-hq', name: 'Cavalry Div HQ' },
+    brigades: [processedFcav],
+  };
+}
+
+// ── Confederate processing ─────────────────────────────────────────────────────────────
+
+function processCSABrigade(bde, leadersMap) {
+  return withLeader(bde, leadersMap);
+}
+
+function divHqName(divName) {
+  return divName
+    .replace(/\s*\([^)]*\)/, '')
+    .replace('Division', 'Div HQ')
+    .trim();
+}
+
+function processCSADivision(div, leadersMap) {
+  const withArty = flattenArtillery(div);
+  const brigades = (withArty.brigades ?? []).map((b) => processCSABrigade(b, leadersMap));
+  return withLeader(
+    {
+      ...withArty,
+      brigades,
+      _hq: { id: div.id + '-hq', name: divHqName(div.name) },
+    },
+    leadersMap
+  );
+}
+
+// ── Top-level entry point ──────────────────────────────────────────────────────────────
+
+/**
+ * Build the display tree for one side from raw oob.json and leaders.json data.
+ * Returns an array of { node, nodeType } entries suitable for OobTreeNode.
+ */
+export function buildDisplayTree(oob, leaders, side) {
+  if (!oob || !leaders) return [];
+  const sideData = oob[side];
+  if (!sideData) return [];
+
+  const leadersMap = buildLeadersMap(leaders, side);
+
+  if (side === 'union') {
+    // Army leaders (McClellan, Burnside) — commandsId is null so not in leadersMap
+    const armyLeaders = leaders?.union?.army ?? [];
+
+    const armyNode = {
+      id: 'usa-army',
+      name: sideData.army ?? 'Army of the Potomac',
+      _leaders: armyLeaders,
+      _hq: { id: 'usa-army-hq', name: 'AotP HQ' },
+      _supply: sideData.supplyTrain,
+      corps: (sideData.corps ?? []).map((c) => processUSACorps(c, leadersMap)),
+      cavalryDivision: sideData.cavalryDivision
+        ? processUSACavDiv(sideData.cavalryDivision, leadersMap)
+        : undefined,
+    };
+
+    return [{ node: armyNode, nodeType: 'army' }];
+  }
+
+  // ── Confederate ──────────────────────────────────────────────────────────────────────
+  // Wing leader (Longstreet) — commandsId "csa-wing"
+  const wingLeader = leaders?.confederate?.wing?.[0] ?? null;
+
+  const independent = sideData.independent
+    ? {
+        node: {
+          id: 'independent',
+          name: 'Independent',
+          regiments: sideData.independent.cavalry ?? [],
+          batteries: sideData.independent.artillery ?? [],
+        },
+        nodeType: 'independent',
+      }
+    : null;
+
+  const reserveArty = sideData.reserveArtillery
+    ? {
+        node: {
+          id: 'reserve-artillery',
+          name: 'Reserve Artillery',
+          batteries: sideData.reserveArtillery.batteries ?? [],
+        },
+        nodeType: 'reserve-arty',
+      }
+    : null;
+
+  const wingNode = {
+    id: 'csa-wing',
+    name: sideData.wing ?? sideData.army ?? 'Left Wing',
+    ...(wingLeader ? { _leader: wingLeader } : {}),
+    _supply: sideData.supplyWagon,
+    divisions: (sideData.divisions ?? []).map((d) => processCSADivision(d, leadersMap)),
+    _formations: [independent, reserveArty].filter(Boolean),
+  };
+
+  return [{ node: wingNode, nodeType: 'wing' }];
+}

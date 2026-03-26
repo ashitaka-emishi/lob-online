@@ -110,7 +110,12 @@ const childEntries = computed(() => {
 
 const hasChildren = computed(() => childEntries.value.length > 0);
 
-const isSelected = computed(() => store.selectedNode === props.node);
+// Compare by ID rather than reference identity: node objects are recreated on every
+// topNodes recompute (side toggle, data reload), so reference equality would always
+// be false after any tree rebuild.
+const isSelected = computed(
+  () => props.node.id != null && store.selectedNode?.id === props.node.id
+);
 
 const BADGE_MAP = {
   army: 'Army',

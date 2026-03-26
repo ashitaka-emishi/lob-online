@@ -10,11 +10,17 @@ const OOB_API_URL = '/api/oob/data';
 const LEADERS_API_URL = '/api/leaders/data';
 const DEBOUNCE_MS = 500;
 
+// Keys that must never appear in a dot-path passed to updateField (M4 / prototype pollution guard).
+const FORBIDDEN_PATH_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 export const useOobStore = defineStore('oob', () => {
   const oob = ref(null);
   const leaders = ref(null);
   const selectedNode = ref(null);
   const dirty = ref(false);
+  // M5: expose sync state so the view can show feedback
+  const isSyncing = ref(false);
+  const syncError = ref(null);
 
   let _debounceTimer = null;
 
@@ -96,10 +102,19 @@ export const useOobStore = defineStore('oob', () => {
 
   /**
    * Update a field by dot-path on either oob or leaders.
-   * path example: 'union.corps.0.name'
+   * The first segment selects the root ('leaders' or anything else → oob).
+   * Example path: 'union.corps.0.name'
+   *
+   * Note: assignment to a *new* nested key that did not exist at initialisation
+   * may not trigger Vue's reactivity in all cases (Vue 3 plain-object limitation).
+   * Prefer named mutation methods (updateCounterRef, updateSuccession) for new
+   * fields; this method is safe for updating existing scalar properties.
    */
   function updateField(path, value) {
     const parts = path.split('.');
+    // M4: guard against prototype pollution via crafted path segments
+    if (parts.some((p) => FORBIDDEN_PATH_KEYS.has(p))) return;
+
     const root = parts[0];
     const data = root === 'leaders' ? leaders : oob;
     if (!data.value) return;
@@ -128,6 +143,8 @@ export const useOobStore = defineStore('oob', () => {
 
   async function pushToServer() {
     if (!oob.value || !leaders.value) return;
+    isSyncing.value = true;
+    syncError.value = null;
     try {
       const [oobRes, leadersRes] = await Promise.all([
         fetch(OOB_API_URL, {
@@ -149,13 +166,19 @@ export const useOobStore = defineStore('oob', () => {
         } catch {
           /* ignore */
         }
+      } else {
+        syncError.value = `Push failed (${oobRes.ok ? leadersRes.status : oobRes.status})`;
       }
-    } catch {
-      /* caller handles UI feedback */
+    } catch (err) {
+      syncError.value = err?.message ?? 'Push failed';
+    } finally {
+      isSyncing.value = false;
     }
   }
 
   async function pullFromServer() {
+    isSyncing.value = true;
+    syncError.value = null;
     try {
       const [oobRes, leadersRes] = await Promise.all([fetch(OOB_API_URL), fetch(LEADERS_API_URL)]);
       if (oobRes.ok && leadersRes.ok) {
@@ -168,9 +191,13 @@ export const useOobStore = defineStore('oob', () => {
         } catch {
           /* ignore */
         }
+      } else {
+        syncError.value = `Pull failed (${oobRes.ok ? leadersRes.status : oobRes.status})`;
       }
-    } catch {
-      /* fall through */
+    } catch (err) {
+      syncError.value = err?.message ?? 'Pull failed';
+    } finally {
+      isSyncing.value = false;
     }
   }
 
@@ -179,6 +206,8 @@ export const useOobStore = defineStore('oob', () => {
     leaders,
     selectedNode,
     dirty,
+    isSyncing,
+    syncError,
     loadData,
     selectNode,
     updateField,

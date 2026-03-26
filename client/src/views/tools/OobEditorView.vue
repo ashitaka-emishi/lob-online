@@ -10,12 +10,12 @@ onMounted(() => {
   store.loadData();
 });
 
-function handlePull() {
-  store.pullFromServer();
+async function handlePull() {
+  await store.pullFromServer();
 }
 
-function handlePush() {
-  store.pushToServer();
+async function handlePush() {
+  await store.pushToServer();
 }
 </script>
 
@@ -35,9 +35,16 @@ function handlePush() {
         </button>
       </div>
       <div class="toolbar-actions">
+        <span v-if="store.syncError" class="sync-error" :title="store.syncError"
+          >⚠ Sync failed</span
+        >
         <span v-if="store.dirty" class="unsaved-marker">●</span>
-        <button class="pull-btn" @click="handlePull">Pull</button>
-        <button class="push-btn" @click="handlePush">Push</button>
+        <button class="pull-btn" :disabled="store.isSyncing" @click="handlePull">
+          {{ store.isSyncing ? '…' : 'Pull' }}
+        </button>
+        <button class="push-btn" :disabled="store.isSyncing" @click="handlePush">
+          {{ store.isSyncing ? '…' : 'Push' }}
+        </button>
       </div>
     </header>
     <div class="panels">
@@ -102,6 +109,12 @@ function handlePush() {
   gap: 0.5rem;
 }
 
+.sync-error {
+  color: #c04040;
+  font-size: 0.8rem;
+  cursor: default;
+}
+
 .unsaved-marker {
   color: #d4a04a;
   font-size: 1rem;
@@ -121,6 +134,12 @@ function handlePush() {
 .pull-btn:hover,
 .push-btn:hover {
   background: #2a2418;
+}
+
+.pull-btn:disabled,
+.push-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .panels {
