@@ -108,7 +108,7 @@ describe('useOobStore', () => {
   it('updateField: updates a top-level oob field and sets dirty', () => {
     const store = useOobStore();
     store.oob = { _status: 'available', union: { army: 'Army of the Potomac', corps: [] } };
-    store.updateField('oob._status', 'draft');
+    store.updateField('_status', 'draft');
     expect(store.oob._status).toBe('draft');
     expect(store.dirty).toBe(true);
   });
@@ -116,14 +116,22 @@ describe('useOobStore', () => {
   it('updateField: updates a nested field', () => {
     const store = useOobStore();
     store.oob = { _status: 'available', union: { army: 'Army of the Potomac', corps: [] } };
-    store.updateField('oob.union.army', 'Updated Army');
+    store.updateField('union.army', 'Updated Army');
     expect(store.oob.union.army).toBe('Updated Army');
+    expect(store.dirty).toBe(true);
+  });
+
+  it('updateField: updates a deeply nested field via bare side-key path', () => {
+    const store = useOobStore();
+    store.oob = { _status: 'available', union: { corps: [{ id: '1c', name: 'Old' }] } };
+    store.updateField('union.corps.0.name', 'New');
+    expect(store.oob.union.corps[0].name).toBe('New');
     expect(store.dirty).toBe(true);
   });
 
   it('updateField: no-ops when oob is null', () => {
     const store = useOobStore();
-    expect(() => store.updateField('oob.union.army', 'X')).not.toThrow();
+    expect(() => store.updateField('union.army', 'X')).not.toThrow();
     expect(store.dirty).toBe(false);
   });
 
@@ -135,7 +143,7 @@ describe('useOobStore', () => {
       _status: 'available',
       union: { corps: [{ id: '1c', name: '1 Corps', counterRef: null }] },
     };
-    store.updateCounterRef('oob.union.corps.0', { front: 'front.jpg', back: 'back.jpg' });
+    store.updateCounterRef('union.corps.0', { front: 'front.jpg', back: 'back.jpg' });
     expect(store.oob.union.corps[0].counterRef).toEqual({ front: 'front.jpg', back: 'back.jpg' });
     expect(store.dirty).toBe(true);
   });

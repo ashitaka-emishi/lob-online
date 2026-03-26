@@ -87,6 +87,16 @@ function getList(face) {
 const activeFace = ref(null); // 'front' | 'back' | null
 const activeIndex = ref(0);
 
+// Reset active slot when the selected node changes (prevents stale activeIndex
+// from writing out-of-bounds list entries as 'undefined' on the new node).
+watch(
+  () => props.nodePath,
+  () => {
+    activeFace.value = null;
+    activeIndex.value = 0;
+  }
+);
+
 // Per-face img error flags (cleared when counterRef changes)
 const imgError = ref({ front: false, back: false });
 watch(

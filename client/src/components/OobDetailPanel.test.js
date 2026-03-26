@@ -314,6 +314,31 @@ describe('OobDetailPanel — supply node', () => {
   });
 });
 
+// ── Number field type coercion ─────────────────────────────────────────────────
+
+describe('OobDetailPanel — number field handling', () => {
+  beforeEach(setup);
+
+  it('passes a parsed number (not a string) to updateField', async () => {
+    const store = setup();
+    store.updateField = vi.fn();
+    const wrapper = mount(OobDetailPanel, {
+      props: {
+        node: BRIGADE_NODE,
+        nodeType: 'brigade',
+        nodePath: 'union.corps.0.divisions.0.brigades.0',
+      },
+    });
+    // Set value directly on the element and trigger change once
+    wrapper.find('.field-number').element.value = '7';
+    await wrapper.find('.field-number').trigger('change');
+    expect(store.updateField).toHaveBeenCalledWith(
+      'union.corps.0.divisions.0.brigades.0.wreckThreshold',
+      7 // number, not string '7'
+    );
+  });
+});
+
 // ── No-path notice ─────────────────────────────────────────────────────────────
 
 describe('OobDetailPanel — path edge cases', () => {

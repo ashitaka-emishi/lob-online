@@ -128,9 +128,9 @@ export const useOobStore = defineStore('oob', () => {
     if (!data.value) return;
 
     let obj = data.value;
-    // If path starts with a store prefix ('oob'/'leaders'), skip it in navigation.
-    // Paths from findNodePath begin directly with the side key (e.g. 'union.corps.0').
-    const navStart = root === 'oob' || root === 'leaders' ? 1 : 0;
+    // Paths use bare side-key format (e.g. 'union.corps.0.name').
+    // For leaders paths, parts[0] is 'leaders' which selects the store above — skip it.
+    const navStart = root === 'leaders' ? 1 : 0;
     // Navigate to parent, stopping before the last key
     for (let i = navStart; i < parts.length - 1; i++) {
       if (obj === null || typeof obj !== 'object') return;

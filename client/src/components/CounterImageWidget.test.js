@@ -136,8 +136,6 @@ describe('CounterImageWidget — slot activation', () => {
 // ── Keyboard cycling ───────────────────────────────────────────────────────────
 
 describe('CounterImageWidget — keyboard cycling', () => {
-  beforeEach(setup);
-
   it('activate auto-assigns first counter when slot is empty', async () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
@@ -203,8 +201,6 @@ describe('CounterImageWidget — keyboard cycling', () => {
 // ── Clear button ───────────────────────────────────────────────────────────────
 
 describe('CounterImageWidget — clear', () => {
-  beforeEach(setup);
-
   it('clear button calls updateCounterRef with null front', async () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
@@ -219,6 +215,28 @@ describe('CounterImageWidget — clear', () => {
       'union.corps.0',
       expect.objectContaining({ front: null })
     );
+  });
+});
+
+// ── Image error recovery ────────────────────────────────────────────────────────
+
+describe('CounterImageWidget — image error recovery', () => {
+  beforeEach(setup);
+
+  it('clears imgError when counterRef.front changes to a new file', async () => {
+    const wrapper = mount(CounterImageWidget, {
+      props: {
+        counterRef: { ...NULL_COUNTER_REF, front: 'CS1-Front_01.jpg' },
+        nodePath: 'union.corps.0',
+      },
+    });
+    await wrapper.find('.thumb').trigger('error');
+    expect(wrapper.findAll('.thumb-placeholder').length).toBeGreaterThanOrEqual(1);
+    await wrapper.setProps({
+      counterRef: { ...NULL_COUNTER_REF, front: 'CS1-Front_02.jpg' },
+    });
+    expect(wrapper.find('.thumb').exists()).toBe(true);
+    expect(wrapper.find('.thumb').attributes('src')).toBe('/counters/CS1-Front_02.jpg');
   });
 });
 
@@ -255,5 +273,54 @@ describe('CounterImageWidget — counter filtering', () => {
     const [, total] = wrapper.find('.slot-count').text().split('/').map(Number);
     // CS1-Back_01, CS1-Back_02 → 2
     expect(total).toBe(2);
+  });
+
+  it('excludes files already assigned to other nodes', async () => {
+    const store = setup();
+    // Mock updateCounterRef so the auto-commit on activate doesn't add to usedFiles
+    store.updateCounterRef = vi.fn();
+    // Pre-assign one front file to a sibling node in the store
+    store.oob = {
+      _status: 'available',
+      union: {
+        corps: [
+          {
+            id: '1c',
+            counterRef: null,
+            divisions: [
+              {
+                id: '1d',
+                counterRef: {
+                  front: 'CS1-Front_01.jpg',
+                  back: null,
+                  frontConfidence: null,
+                  backConfidence: null,
+                },
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const wrapper = mount(CounterImageWidget, {
+      props: { counterRef: null, nodePath: 'union.corps.0' },
+    });
+    await wrapper.findAll('.counter-side')[0].trigger('click');
+    const [, total] = wrapper.find('.slot-count').text().split('/').map(Number);
+    // CS1-Front_01 is taken; CS1-Front_02, U1 copy, U2 copy remain → 3
+    expect(total).toBe(3);
+  });
+
+  it('does not exclude the current node own assignment from its own list', async () => {
+    const wrapper = mount(CounterImageWidget, {
+      props: {
+        counterRef: { ...NULL_COUNTER_REF, front: 'CS1-Front_01.jpg' },
+        nodePath: 'union.corps.0',
+      },
+    });
+    await wrapper.findAll('.counter-side')[0].trigger('click');
+    const [, total] = wrapper.find('.slot-count').text().split('/').map(Number);
+    // CS1-Front_01 is the current value — it must remain in the list → 4
+    expect(total).toBe(4);
   });
 });
