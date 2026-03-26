@@ -45,7 +45,7 @@ Reusable widget that shows front/back counter thumbnails with upload and filenam
 
 ### Verification
 
-- [ ] CounterImageWidget tests pass
+- [x] CounterImageWidget tests pass
 
 ---
 
@@ -73,15 +73,15 @@ Scrollable form rendering type-specific field sets for the selected node.
 
 ### Verification
 
-- [ ] OobDetailPanel tests pass
-- [ ] Detail panel renders visually when a node is selected in the hierarchy tree
+- [x] OobDetailPanel tests pass
+- [x] Detail panel renders visually when a node is selected in the hierarchy tree
 
 ---
 
 ## Final Verification
 
 - [x] All acceptance criteria in spec.md met (except counter upload end-to-end — server route deferred to #191)
-- [x] `npm run test` passes (993 tests)
+- [x] `npm run test` passes (1004 tests)
 - [x] `npm run lint` and `npm run format:check` pass
 - [ ] Counter upload works end-to-end in the browser (pending #191)
 - [x] Ready for review
