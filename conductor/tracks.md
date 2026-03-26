@@ -52,4 +52,6 @@
 
 | [x] | oob-editor-foundation_20260325 | OOB Editor Foundation — Launch Script, Store & Hierarchy Tree | 2026-03-25 | 2026-03-25 |
 
+| [x] | oob-detail-panel_20260325 | OOB Editor — Detail Panel & Counter Image Widget | 2026-03-25 | 2026-03-25 |
+
 <!-- Tracks registered by /conductor:new-track -->
