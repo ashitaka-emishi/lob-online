@@ -105,11 +105,12 @@ function processUSACorps(corps, leadersMap) {
   const distributed = distributeCorpsArtillery(corps);
   const withArty = flattenArtillery(distributed);
   const divisions = (withArty.divisions ?? []).map((d) => processUSADivision(d, leadersMap));
+  const hqNode = corps.hq ?? { id: corps.id + '-hq', name: `${corps.name} HQ` };
   return withLeader(
     {
       ...withArty,
       divisions,
-      _hq: { id: corps.id + '-hq', name: `${corps.name} HQ` },
+      _hq: hqNode,
     },
     leadersMap
   );
@@ -128,11 +129,12 @@ function processUSACavDiv(cd, leadersMap) {
     ...(farnsworth ? { _leader: farnsworth } : {}),
     batteries: cavArty?.batteries ?? [],
   };
+  const hqNode = cd.hq ?? { id: cd.id + '-hq', name: 'Cavalry Div HQ' };
   return {
     id: cd.id,
     name: 'Cavalry Division',
     ...(pleasonton ? { _leader: pleasonton } : {}),
-    _hq: { id: cd.id + '-hq', name: 'Cavalry Div HQ' },
+    _hq: hqNode,
     brigades: [processedFcav],
   };
 }
@@ -153,11 +155,12 @@ function divHqName(divName) {
 function processCSADivision(div, leadersMap) {
   const withArty = flattenArtillery(div);
   const brigades = (withArty.brigades ?? []).map((b) => processCSABrigade(b, leadersMap));
+  const hqNode = div.hq ?? { id: div.id + '-hq', name: divHqName(div.name) };
   return withLeader(
     {
       ...withArty,
       brigades,
-      _hq: { id: div.id + '-hq', name: divHqName(div.name) },
+      _hq: hqNode,
     },
     leadersMap
   );

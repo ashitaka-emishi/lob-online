@@ -15,7 +15,7 @@ const UNION_OOB = {
       name: '1 Corps',
       corpsUnits: [],
       artillery: {
-        'arty1-1c': { name: 'Arty/1/1 Corps', batteries: [{ id: 'bat1', name: '1 NH Lt' }] },
+        'arty1-1c': { name: 'Arty/1/1 Corps', batteries: [{ id: 'bat1', name: '1st NH Lt' }] },
         'arty2-1c': { name: 'Arty/2/1 Corps', batteries: [] },
       },
       divisions: [
@@ -26,7 +26,7 @@ const UNION_OOB = {
             {
               id: '1b-1d-1c',
               name: '1/1/1 (Phelps)',
-              regiments: [{ id: '22ny', name: '22 NY', type: 'infantry' }],
+              regiments: [{ id: '22ny', name: '22nd NY', type: 'infantry' }],
             },
           ],
         },
@@ -40,7 +40,7 @@ const UNION_OOB = {
     brigades: [
       {
         id: 'fcav',
-        regiments: [{ id: '8ill', name: '8 Ill', type: 'cavalry' }],
+        regiments: [{ id: '8ill', name: '8th Ill', type: 'cavalry' }],
       },
     ],
     artillery: {
@@ -226,7 +226,7 @@ describe('OobHierarchyTree — 9th Corps artillery distribution', () => {
               },
               'arty1-1d-9c': {
                 batteries: [
-                  { id: '8mass', name: '8 Mass Lt' },
+                  { id: '8mass', name: '8th Mass Lt' },
                   { id: 'e2us', name: 'E 2 US' },
                 ],
               },
@@ -237,7 +237,7 @@ describe('OobHierarchyTree — 9th Corps artillery distribution', () => {
                 ],
               },
               'arty3-3d-9c': { batteries: [{ id: 'a5us', name: 'A 5 US' }] },
-              'arty-1kg-9c': { batteries: [{ id: '1ohio', name: '1 Ohio Lt' }] },
+              'arty-1kg-9c': { batteries: [{ id: '1ohio', name: '1st Ohio Lt' }] },
               'arty-2kg-9c': { batteries: [{ id: 'simonds', name: 'Simonds Ky' }] },
             },
             divisions: [

@@ -11,7 +11,6 @@ const CounterRef = z
 
 const WeaponType = z.enum(['R', 'M', 'SR', 'C']);
 const GunType = z.enum(['R', 'N', 'H', 'L', 'HvR']);
-const AmmoClass = z.enum(['B', 'C', 'D']);
 const MoraleRating = z.enum(['A', 'B', 'C', 'D']);
 const UnitType = z.enum(['infantry', 'cavalry', 'artillery']);
 
@@ -22,7 +21,6 @@ const InfantryCavalryUnit = z.object({
   morale: MoraleRating,
   weapon: WeaponType,
   strengthPoints: z.number().int().positive(),
-  stragglerBoxes: z.number().int().positive(),
   counterRef: CounterRef.optional(),
   _errata: z.string().optional(),
   _note: z.string().optional(),
@@ -33,26 +31,31 @@ const ArtilleryBattery = z.object({
   name: z.string(),
   gunType: GunType,
   strengthPoints: z.number().int().positive(),
-  ammoClass: AmmoClass,
+  morale: MoraleRating,
   counterRef: CounterRef.optional(),
   _errata: z.string().optional(),
   _note: z.string().optional(),
 });
 
-const Brigade = z.object({
+const HqNode = z.object({
   id: z.string(),
   name: z.string(),
-  morale: MoraleRating,
+  counterRef: CounterRef.optional(),
+});
+
+const Brigade = z.object({
+  id: z.string(),
+  name: z.string().optional(),
   wreckThreshold: z.number().int().positive(),
-  wreckTrackTotal: z.number().int().positive(),
   regiments: z.array(InfantryCavalryUnit),
+  batteries: z.array(ArtilleryBattery).optional(),
   _note: z.string().optional(),
 });
 
 const ArtilleryGroup = z.record(
   z.string(),
   z.object({
-    name: z.string(),
+    name: z.string().optional(),
     batteries: z.array(ArtilleryBattery),
   })
 );
@@ -60,15 +63,17 @@ const ArtilleryGroup = z.record(
 const Division = z.object({
   id: z.string(),
   name: z.string(),
-  divisionStragglerBoxes: z.number().int().positive(),
-  divisionWreckThreshold: z.number().int().positive(),
+  wreckThreshold: z.number().int().positive(),
+  hq: HqNode.optional(),
   artillery: ArtilleryGroup.optional(),
+  batteries: z.array(ArtilleryBattery).optional(),
   brigades: z.array(Brigade),
 });
 
 const Corps = z.object({
   id: z.string(),
   name: z.string(),
+  hq: HqNode.optional(),
   corpsUnits: z.array(InfantryCavalryUnit).optional(),
   artillery: ArtilleryGroup.optional(),
   divisions: z.array(Division),
@@ -77,14 +82,21 @@ const Corps = z.object({
 const CavalryDivision = z.object({
   id: z.string(),
   name: z.string(),
+  hq: HqNode.optional(),
   _note: z.string().optional(),
   artillery: ArtilleryGroup.optional(),
   brigades: z.array(Brigade),
 });
 
+const SupplyNode = z.object({
+  id: z.string(),
+  name: z.string(),
+  counterRef: CounterRef.optional(),
+});
+
 const UnionOOB = z.object({
   army: z.string(),
-  supplyTrain: z.object({ id: z.string(), name: z.string() }),
+  supplyTrain: SupplyNode,
   corps: z.array(Corps),
   cavalryDivision: CavalryDivision,
 });
@@ -92,7 +104,7 @@ const UnionOOB = z.object({
 const ConfederateOOB = z.object({
   army: z.string(),
   wing: z.string(),
-  supplyWagon: z.object({ id: z.string(), name: z.string() }),
+  supplyWagon: SupplyNode,
   independent: z.object({
     _note: z.string().optional(),
     cavalry: z.array(InfantryCavalryUnit),
@@ -109,9 +121,7 @@ const IndependentBrigade = z.object({
   id: z.string(),
   name: z.string(),
   _note: z.string().optional(),
-  morale: MoraleRating,
   wreckThreshold: z.number().int().positive(),
-  wreckTrackTotal: z.number().int().positive(),
   artillery: ArtilleryGroup.optional(),
   regiments: z.array(InfantryCavalryUnit),
 });

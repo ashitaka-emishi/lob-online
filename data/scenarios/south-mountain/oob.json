@@ -17,21 +17,26 @@
     "army": "Army of the Potomac",
     "supplyTrain": {
       "id": "usa-train",
-      "name": "AotP Supply"
+      "name": "AotP Supply",
+      "counterRef": null
     },
     "corps": [
       {
         "id": "1c",
         "name": "1 Corps",
+        "hq": {
+          "id": "1c-hq",
+          "name": "1 Corps HQ",
+          "counterRef": null
+        },
         "corpsUnits": [
           {
             "id": "2ny-cav",
-            "name": "2 NY",
+            "name": "2nd NY",
             "type": "cavalry",
             "morale": "D",
             "weapon": "C",
             "strengthPoints": 3,
-            "stragglerBoxes": 9,
             "counterRef": null
           }
         ],
@@ -41,36 +46,32 @@
             "batteries": [
               {
                 "id": "1nh-lt",
-                "name": "1 NH Lt",
+                "name": "1st NH Lt",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               },
               {
                 "id": "l1ny-lt",
                 "name": "L 1 NY Lt",
                 "gunType": "R",
                 "strengthPoints": 6,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               },
               {
                 "id": "d1ri-lt",
                 "name": "D 1 RI Lt",
                 "gunType": "N",
                 "strengthPoints": 6,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               },
               {
                 "id": "b4us",
                 "name": "B 4 US",
                 "gunType": "N",
                 "strengthPoints": 6,
-                "ammoClass": "B",
                 "_note": "DETACHED to 4/1/1 per scenario setup",
-                "counterRef": null
+                "morale": "B"
               }
             ]
           },
@@ -82,16 +83,14 @@
                 "name": "F 1 Penn Lt",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               },
               {
                 "id": "g-penn-lt",
                 "name": "G Penn Lt",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               }
             ]
           },
@@ -103,24 +102,21 @@
                 "name": "A 1 Penn Lt",
                 "gunType": "N",
                 "strengthPoints": 4,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               },
               {
                 "id": "b1penn-lt",
                 "name": "B 1 Penn Lt",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               },
               {
                 "id": "c5us",
                 "name": "C 5 US",
                 "gunType": "N",
                 "strengthPoints": 4,
-                "ammoClass": "B",
-                "counterRef": null
+                "morale": "B"
               }
             ]
           }
@@ -129,64 +125,61 @@
           {
             "id": "1d-1c",
             "name": "1/1 Division",
-            "divisionStragglerBoxes": 5,
-            "divisionWreckThreshold": 3,
+            "wreckThreshold": 3,
+            "hq": {
+              "id": "1d-1c-hq",
+              "name": "1/1 Div HQ",
+              "counterRef": null
+            },
             "brigades": [
               {
                 "id": "1b-1d-1c",
                 "name": "1/1/1",
-                "morale": "B",
                 "wreckThreshold": 3,
-                "wreckTrackTotal": 5,
                 "regiments": [
                   {
                     "id": "22ny",
-                    "name": "22 NY",
+                    "name": "22nd NY",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 4,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "24ny",
-                    "name": "24 NY",
+                    "name": "24th NY",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 3,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "30ny",
-                    "name": "30 NY",
+                    "name": "30th NY",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 4,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "84ny",
-                    "name": "84 NY",
+                    "name": "84th NY",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 3,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "2us-ss",
-                    "name": "2 US SS",
+                    "name": "2nd US SS",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "SR",
                     "strengthPoints": 2,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -194,48 +187,42 @@
               {
                 "id": "2b-1d-1c",
                 "name": "2/1/1",
-                "morale": "C",
                 "wreckThreshold": 2,
-                "wreckTrackTotal": 4,
                 "regiments": [
                   {
                     "id": "7ind",
-                    "name": "7 Ind",
+                    "name": "7th Ind",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "76ny",
-                    "name": "76 NY",
+                    "name": "76th NY",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 2,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "95ny",
-                    "name": "95 NY",
+                    "name": "95th NY",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "56penn",
-                    "name": "56 Penn",
+                    "name": "56th Penn",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -243,48 +230,42 @@
               {
                 "id": "3b-1d-1c",
                 "name": "3/1/1",
-                "morale": "C",
                 "wreckThreshold": 2,
-                "wreckTrackTotal": 4,
                 "regiments": [
                   {
                     "id": "21ny",
-                    "name": "21 NY",
+                    "name": "21st NY",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 3,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "23ny",
-                    "name": "23 NY",
+                    "name": "23rd NY",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "35ny",
-                    "name": "35 NY",
+                    "name": "35th NY",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "80ny",
-                    "name": "80 NY",
+                    "name": "80th NY",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -292,49 +273,43 @@
               {
                 "id": "4b-1d-1c",
                 "name": "4/1/1",
-                "morale": "A",
                 "wreckThreshold": 3,
-                "wreckTrackTotal": 4,
                 "_note": "Iron Brigade — random event 9 (Brigade of Iron) applies",
                 "regiments": [
                   {
                     "id": "19ind",
-                    "name": "19 Ind",
+                    "name": "19th Ind",
                     "type": "infantry",
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "2wisc",
-                    "name": "2 Wisc",
+                    "name": "2nd Wisc",
                     "type": "infantry",
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 7,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "6wisc",
-                    "name": "6 Wisc",
+                    "name": "6th Wisc",
                     "type": "infantry",
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "7wisc",
-                    "name": "7 Wisc",
+                    "name": "7th Wisc",
                     "type": "infantry",
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -344,54 +319,52 @@
           {
             "id": "2d-1c",
             "name": "2/1 Division",
-            "divisionStragglerBoxes": 3,
-            "divisionWreckThreshold": 2,
+            "wreckThreshold": 2,
+            "hq": {
+              "id": "2d-1c-hq",
+              "name": "2/1 Div HQ",
+              "counterRef": null
+            },
             "brigades": [
               {
                 "id": "1b-2d-1c",
                 "name": "1/2/1",
-                "morale": "C",
                 "wreckThreshold": 2,
-                "wreckTrackTotal": 4,
                 "regiments": [
                   {
                     "id": "97ny",
-                    "name": "97 NY",
+                    "name": "97th NY",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "104ny",
-                    "name": "104 NY",
+                    "name": "104th NY",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "105ny",
-                    "name": "105 NY",
+                    "name": "105th NY",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 4,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "107penn",
-                    "name": "107 Penn",
+                    "name": "107th Penn",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -399,38 +372,33 @@
               {
                 "id": "2b-2d-1c",
                 "name": "2/2/1",
-                "morale": "B",
                 "wreckThreshold": 2,
-                "wreckTrackTotal": 3,
                 "regiments": [
                   {
                     "id": "26ny",
-                    "name": "26 NY",
+                    "name": "26th NY",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "94ny",
-                    "name": "94 NY",
+                    "name": "94th NY",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 4,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "90penn",
-                    "name": "90 Penn",
+                    "name": "90th Penn",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "M",
                     "strengthPoints": 8,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -438,48 +406,42 @@
               {
                 "id": "3b-2d-1c",
                 "name": "3/2/1",
-                "morale": "B",
                 "wreckThreshold": 2,
-                "wreckTrackTotal": 4,
                 "regiments": [
                   {
                     "id": "12mass",
-                    "name": "12 Mass",
+                    "name": "12th Mass",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "13mass",
-                    "name": "13 Mass",
+                    "name": "13th Mass",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 7,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "83ny",
-                    "name": "83 NY",
+                    "name": "83rd NY",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 7,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "11penn",
-                    "name": "11 Penn",
+                    "name": "11th Penn",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -489,54 +451,52 @@
           {
             "id": "3d-1c",
             "name": "3/1 Division",
-            "divisionStragglerBoxes": 3,
-            "divisionWreckThreshold": 2,
+            "wreckThreshold": 2,
+            "hq": {
+              "id": "3d-1c-hq",
+              "name": "3/1 Div HQ",
+              "counterRef": null
+            },
             "brigades": [
               {
                 "id": "1b-3d-1c",
                 "name": "1/3/1",
-                "morale": "B",
                 "wreckThreshold": 3,
-                "wreckTrackTotal": 4,
                 "regiments": [
                   {
                     "id": "1penn-res",
-                    "name": "1 Penn Res",
+                    "name": "1st Penn Res",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 7,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "2penn-res",
-                    "name": "2 Penn Res",
+                    "name": "2nd Penn Res",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "5penn-res",
-                    "name": "5 Penn Res",
+                    "name": "5th Penn Res",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "M",
                     "strengthPoints": 7,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "6penn-res",
-                    "name": "6 Penn Res",
+                    "name": "6th Penn Res",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -544,38 +504,33 @@
               {
                 "id": "2b-3d-1c",
                 "name": "2/3/1",
-                "morale": "C",
                 "wreckThreshold": 2,
-                "wreckTrackTotal": 3,
                 "regiments": [
                   {
                     "id": "4penn-res",
-                    "name": "4 Penn Res",
+                    "name": "4th Penn Res",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "M",
                     "strengthPoints": 3,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "7penn-res",
-                    "name": "7 Penn Res",
+                    "name": "7th Penn Res",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "8penn-res",
-                    "name": "8 Penn Res",
+                    "name": "8th Penn Res",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "M",
                     "strengthPoints": 7,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -583,48 +538,42 @@
               {
                 "id": "3b-3d-1c",
                 "name": "3/3/1",
-                "morale": "C",
                 "wreckThreshold": 2,
-                "wreckTrackTotal": 4,
                 "regiments": [
                   {
                     "id": "9penn-res",
-                    "name": "9 Penn Res",
+                    "name": "9th Penn Res",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "M",
                     "strengthPoints": 7,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "10penn-res",
-                    "name": "10 Penn Res",
+                    "name": "10th Penn Res",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "11penn-res",
-                    "name": "11 Penn Res",
+                    "name": "11th Penn Res",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 4,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "12penn-res",
-                    "name": "12 Penn Res",
+                    "name": "12th Penn Res",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 7,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -636,6 +585,11 @@
       {
         "id": "9c",
         "name": "9 Corps",
+        "hq": {
+          "id": "9c-hq",
+          "name": "9 Corps HQ",
+          "counterRef": null
+        },
         "corpsUnits": [
           {
             "id": "g1me",
@@ -644,29 +598,26 @@
             "morale": "D",
             "weapon": "C",
             "strengthPoints": 1,
-            "stragglerBoxes": 9,
             "_note": "Corps cavalry — cannot fulfill reserve for Fluke Stoppage (SM rule)",
             "counterRef": null
           },
           {
             "id": "6ny-cav",
-            "name": "6 NY",
+            "name": "6th NY",
             "type": "cavalry",
             "morale": "D",
             "weapon": "C",
             "strengthPoints": 10,
-            "stragglerBoxes": 9,
             "_note": "Corps cavalry — cannot fulfill reserve for Fluke Stoppage (SM rule)",
             "counterRef": null
           },
           {
             "id": "3ohio-cav",
-            "name": "3 Ohio",
+            "name": "3rd Ohio",
             "type": "cavalry",
             "morale": "B",
             "weapon": "C",
             "strengthPoints": 1,
-            "stragglerBoxes": 9,
             "_note": "Corps cavalry — cannot fulfill reserve for Fluke Stoppage (SM rule)",
             "counterRef": null
           }
@@ -680,16 +631,14 @@
                 "name": "L 2 NY",
                 "gunType": "R",
                 "strengthPoints": 6,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               },
               {
                 "id": "lm3us",
                 "name": "L&M 3 US",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "ammoClass": "B",
-                "counterRef": null
+                "morale": "B"
               }
             ]
           },
@@ -698,20 +647,18 @@
             "batteries": [
               {
                 "id": "8mass-lt",
-                "name": "8 Mass Lt",
+                "name": "8th Mass Lt",
                 "gunType": "L",
                 "strengthPoints": 6,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               },
               {
                 "id": "e2us",
                 "name": "E 2 US",
                 "gunType": "HvR",
                 "strengthPoints": 4,
-                "ammoClass": "B",
                 "_errata": "Weapon type corrected from R to HvR (SM_Errata #2)",
-                "counterRef": null
+                "morale": "B"
               }
             ]
           },
@@ -723,16 +670,14 @@
                 "name": "D Penn Lt",
                 "gunType": "R",
                 "strengthPoints": 6,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               },
               {
                 "id": "e4us",
                 "name": "E 4 US",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               }
             ]
           },
@@ -744,8 +689,7 @@
                 "name": "A 5 US",
                 "gunType": "N",
                 "strengthPoints": 6,
-                "ammoClass": "B",
-                "counterRef": null
+                "morale": "B"
               }
             ]
           },
@@ -754,11 +698,10 @@
             "batteries": [
               {
                 "id": "1ohio-lt",
-                "name": "1 Ohio Lt",
+                "name": "1st Ohio Lt",
                 "gunType": "R",
                 "strengthPoints": 6,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               }
             ]
           },
@@ -770,8 +713,7 @@
                 "name": "Simonds Ky",
                 "gunType": "R",
                 "strengthPoints": 6,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               }
             ]
           }
@@ -780,64 +722,61 @@
           {
             "id": "1d-9c",
             "name": "1/9 Division",
-            "divisionStragglerBoxes": 2,
-            "divisionWreckThreshold": 1,
+            "wreckThreshold": 1,
+            "hq": {
+              "id": "1d-9c-hq",
+              "name": "1/9 Div HQ",
+              "counterRef": null
+            },
             "brigades": [
               {
                 "id": "1b-1d-9c",
                 "name": "1/1/9",
-                "morale": "B",
                 "wreckThreshold": 3,
-                "wreckTrackTotal": 5,
                 "regiments": [
                   {
                     "id": "28mass",
-                    "name": "28 Mass",
+                    "name": "28th Mass",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 10,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "8mich",
-                    "name": "8 Mich",
+                    "name": "8th Mich",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "17mich",
-                    "name": "17 Mich",
+                    "name": "17th Mich",
                     "type": "infantry",
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 7,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "79ny",
-                    "name": "79 NY",
+                    "name": "79th NY",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "50penn",
-                    "name": "50 Penn",
+                    "name": "50th Penn",
                     "type": "infantry",
                     "morale": "D",
                     "weapon": "R",
                     "strengthPoints": 12,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -845,38 +784,33 @@
               {
                 "id": "2b-1d-9c",
                 "name": "2/1/9",
-                "morale": "C",
                 "wreckThreshold": 2,
-                "wreckTrackTotal": 3,
                 "regiments": [
                   {
                     "id": "46ny",
-                    "name": "46 NY",
+                    "name": "46th NY",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "45penn",
-                    "name": "45 Penn",
+                    "name": "45th Penn",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "M",
                     "strengthPoints": 8,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "100penn",
-                    "name": "100 Penn",
+                    "name": "100th Penn",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 10,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -886,54 +820,52 @@
           {
             "id": "2d-9c",
             "name": "2/9 Division",
-            "divisionStragglerBoxes": 3,
-            "divisionWreckThreshold": 2,
+            "wreckThreshold": 2,
+            "hq": {
+              "id": "2d-9c-hq",
+              "name": "2/9 Div HQ",
+              "counterRef": null
+            },
             "brigades": [
               {
                 "id": "1b-2d-9c",
                 "name": "1/2/9",
-                "morale": "B",
                 "wreckThreshold": 3,
-                "wreckTrackTotal": 4,
                 "regiments": [
                   {
                     "id": "2md",
-                    "name": "2 Md",
+                    "name": "2nd Md",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "6nh",
-                    "name": "6 NH",
+                    "name": "6th NH",
                     "type": "infantry",
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "9nh",
-                    "name": "9 NH",
+                    "name": "9th NH",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "48penn",
-                    "name": "48 Penn",
+                    "name": "48th Penn",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 11,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -941,48 +873,42 @@
               {
                 "id": "2b-2d-9c",
                 "name": "2/2/9",
-                "morale": "C",
                 "wreckThreshold": 3,
-                "wreckTrackTotal": 4,
                 "regiments": [
                   {
                     "id": "21mass",
-                    "name": "21 Mass",
+                    "name": "21st Mass",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "35mass",
-                    "name": "35 Mass",
+                    "name": "35th Mass",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "51ny",
-                    "name": "51 NY",
+                    "name": "51st NY",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "51penn",
-                    "name": "51 Penn",
+                    "name": "51st Penn",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 11,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -992,44 +918,43 @@
           {
             "id": "3d-9c",
             "name": "3/9 Division",
-            "divisionStragglerBoxes": 2,
-            "divisionWreckThreshold": 1,
+            "wreckThreshold": 1,
+            "hq": {
+              "id": "3d-9c-hq",
+              "name": "3/9 Div HQ",
+              "counterRef": null
+            },
             "brigades": [
               {
                 "id": "1b-3d-9c",
                 "name": "1/3/9",
-                "morale": "C",
                 "wreckThreshold": 2,
-                "wreckTrackTotal": 3,
                 "regiments": [
                   {
                     "id": "9ny",
-                    "name": "9 NY",
+                    "name": "9th NY",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "89ny",
-                    "name": "89 NY",
+                    "name": "89th NY",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 10,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "103ny",
-                    "name": "103 NY",
+                    "name": "103rd NY",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -1037,38 +962,33 @@
               {
                 "id": "2b-3d-9c",
                 "name": "2/3/9",
-                "morale": "B",
                 "wreckThreshold": 2,
-                "wreckTrackTotal": 3,
                 "regiments": [
                   {
                     "id": "8conn",
-                    "name": "8 Conn",
+                    "name": "8th Conn",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "11conn",
-                    "name": "11 Conn",
+                    "name": "11th Conn",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 10,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "4ri",
-                    "name": "4 RI",
+                    "name": "4th RI",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -1078,44 +998,43 @@
           {
             "id": "kd-9c",
             "name": "K/9 Division",
-            "divisionStragglerBoxes": 2,
-            "divisionWreckThreshold": 1,
+            "wreckThreshold": 1,
+            "hq": {
+              "id": "kd-9c-hq",
+              "name": "K/9 Div HQ",
+              "counterRef": null
+            },
             "brigades": [
               {
                 "id": "1b-kd-9c",
                 "name": "1/K/9",
-                "morale": "C",
                 "wreckThreshold": 2,
-                "wreckTrackTotal": 4,
                 "regiments": [
                   {
                     "id": "12ohio",
-                    "name": "12 Ohio",
+                    "name": "12th Ohio",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 4,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "23ohio",
-                    "name": "23 Ohio",
+                    "name": "23rd Ohio",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "30ohio",
-                    "name": "30 Ohio",
+                    "name": "30th Ohio",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 13,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
@@ -1125,7 +1044,6 @@
                     "morale": "C",
                     "weapon": "C",
                     "strengthPoints": 2,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   }
                 ]
@@ -1133,39 +1051,34 @@
               {
                 "id": "2b-kd-9c",
                 "name": "2/K/9",
-                "morale": "C",
                 "wreckThreshold": 2,
-                "wreckTrackTotal": 4,
                 "regiments": [
                   {
                     "id": "11ohio",
-                    "name": "11 Ohio",
+                    "name": "11th Ohio",
                     "type": "infantry",
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
                     "id": "28ohio",
-                    "name": "28 Ohio",
+                    "name": "28th Ohio",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 15,
-                    "stragglerBoxes": 9,
                     "_errata": "strengthPoints corrected from 14 to 15 (SM_Errata #4)",
                     "counterRef": null
                   },
                   {
                     "id": "36ohio",
-                    "name": "36 Ohio",
+                    "name": "36th Ohio",
                     "type": "infantry",
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 16,
-                    "stragglerBoxes": 9,
                     "counterRef": null
                   },
                   {
@@ -1175,7 +1088,6 @@
                     "morale": "B",
                     "weapon": "C",
                     "strengthPoints": 2,
-                    "stragglerBoxes": 9,
                     "_errata": "Moved from 1/K/9 to 2/K/9 (SM_Errata #1)",
                     "counterRef": null
                   }
@@ -1190,6 +1102,11 @@
       "id": "cav-div",
       "name": "F/Cav",
       "_note": "Pleasonton's artillery can replenish from any friendly ammo reserve (SM special rule)",
+      "hq": {
+        "id": "cav-div-hq",
+        "name": "Cavalry Div HQ",
+        "counterRef": null
+      },
       "artillery": {
         "arty-fcav": {
           "batteries": [
@@ -1198,8 +1115,7 @@
               "name": "C&G 3 US",
               "gunType": "R",
               "strengthPoints": 6,
-              "ammoClass": "C",
-              "counterRef": null
+              "morale": "C"
             }
           ]
         }
@@ -1207,38 +1123,33 @@
       "brigades": [
         {
           "id": "fcav",
-          "morale": "C",
           "wreckThreshold": 1,
-          "wreckTrackTotal": 3,
           "regiments": [
             {
               "id": "8ill",
-              "name": "8 Ill",
+              "name": "8th Ill",
               "type": "cavalry",
               "morale": "B",
               "weapon": "C",
               "strengthPoints": 12,
-              "stragglerBoxes": 9,
               "counterRef": null
             },
             {
               "id": "3ind",
-              "name": "3 Ind",
+              "name": "3rd Ind",
               "type": "cavalry",
               "morale": "C",
               "weapon": "C",
               "strengthPoints": 7,
-              "stragglerBoxes": 9,
               "counterRef": null
             },
             {
               "id": "1mass",
-              "name": "1 Mass",
+              "name": "1st Mass",
               "type": "cavalry",
               "morale": "D",
               "weapon": "C",
               "strengthPoints": 11,
-              "stragglerBoxes": 9,
               "counterRef": null
             }
           ]
@@ -1251,7 +1162,8 @@
     "wing": "Longstreet's Wing",
     "supplyWagon": {
       "id": "csa-wagon",
-      "name": "Wing Supply Wagon"
+      "name": "Wing Supply Wagon",
+      "counterRef": null
     },
     "independent": {
       "_note": "5th Va Cavalry and Pelham units are Independent (exempt from command radius restrictions). Cannot enter hex with Union units or initiate Close Combat.",
@@ -1263,7 +1175,6 @@
           "morale": "C",
           "weapon": "R",
           "strengthPoints": 7,
-          "stragglerBoxes": 7,
           "_errata": "Morale corrected from B to C (SM_Errata #5)",
           "counterRef": null
         }
@@ -1274,18 +1185,16 @@
           "name": "Pelham A",
           "gunType": "N",
           "strengthPoints": 4,
-          "ammoClass": "C",
           "_note": "Horse artillery — Limbered MA = 12. Can replenish from any friendly ammo reserve (SM special rule)",
-          "counterRef": null
+          "morale": "C"
         },
         {
           "id": "pelham-b",
           "name": "Pelham B",
           "gunType": "R",
           "strengthPoints": 4,
-          "ammoClass": "C",
           "_note": "Can replenish from any friendly ammo reserve (SM special rule)",
-          "counterRef": null
+          "morale": "C"
         }
       ]
     },
@@ -1297,40 +1206,35 @@
           "name": "Blackshears",
           "gunType": "H",
           "strengthPoints": 5,
-          "ammoClass": "D",
-          "counterRef": null
+          "morale": "D"
         },
         {
           "id": "lane",
           "name": "Lane",
           "gunType": "R",
           "strengthPoints": 6,
-          "ammoClass": "D",
-          "counterRef": null
+          "morale": "D"
         },
         {
           "id": "lloyd",
           "name": "Lloyd",
           "gunType": "L",
           "strengthPoints": 3,
-          "ammoClass": "D",
-          "counterRef": null
+          "morale": "D"
         },
         {
           "id": "patterson",
           "name": "Patterson",
           "gunType": "L",
           "strengthPoints": 6,
-          "ammoClass": "D",
-          "counterRef": null
+          "morale": "D"
         },
         {
           "id": "ross",
           "name": "Ross",
           "gunType": "R",
           "strengthPoints": 5,
-          "ammoClass": "D",
-          "counterRef": null
+          "morale": "D"
         }
       ]
     },
@@ -1338,8 +1242,12 @@
       {
         "id": "dh-div",
         "name": "dH Division",
-        "divisionStragglerBoxes": 5,
-        "divisionWreckThreshold": 4,
+        "wreckThreshold": 4,
+        "hq": {
+          "id": "dh-div-hq",
+          "name": "dH Div HQ",
+          "counterRef": null
+        },
         "artillery": {
           "arty-dh": {
             "name": "Arty/dH Div",
@@ -1349,32 +1257,28 @@
                 "name": "Bondurant",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               },
               {
                 "id": "carter",
                 "name": "Carter",
                 "gunType": "H",
                 "strengthPoints": 5,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               },
               {
                 "id": "hardaway",
                 "name": "Hardaway",
                 "gunType": "R",
                 "strengthPoints": 3,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               },
               {
                 "id": "jones",
                 "name": "Jones",
                 "gunType": "N",
                 "strengthPoints": 4,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               }
             ]
           }
@@ -1383,48 +1287,42 @@
           {
             "id": "adh",
             "name": "A/dH",
-            "morale": "A",
             "wreckThreshold": 3,
-            "wreckTrackTotal": 4,
             "regiments": [
               {
                 "id": "2nc",
-                "name": "2 NC",
+                "name": "2nd NC",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 9,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "4nc",
-                "name": "4 NC",
+                "name": "4th NC",
                 "type": "infantry",
                 "morale": "A",
                 "weapon": "M",
                 "strengthPoints": 3,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "14nc",
-                "name": "14 NC",
+                "name": "14th NC",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 6,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "30nc",
-                "name": "30 NC",
+                "name": "30th NC",
                 "type": "infantry",
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 7,
-                "stragglerBoxes": 9,
                 "counterRef": null
               }
             ]
@@ -1432,58 +1330,51 @@
           {
             "id": "cdh",
             "name": "C/dH",
-            "morale": "C",
             "wreckThreshold": 3,
-            "wreckTrackTotal": 5,
             "regiments": [
               {
                 "id": "13ala",
-                "name": "13 Ala",
+                "name": "13th Ala",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 7,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "6ga",
-                "name": "6 Ga",
+                "name": "6th Ga",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 8,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "23ga",
-                "name": "23 Ga",
+                "name": "23rd Ga",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 5,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "27ga",
-                "name": "27 Ga",
+                "name": "27th Ga",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "28ga",
-                "name": "28 Ga",
+                "name": "28th Ga",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 6,
-                "stragglerBoxes": 9,
                 "counterRef": null
               }
             ]
@@ -1491,59 +1382,52 @@
           {
             "id": "gdh",
             "name": "G/dH",
-            "morale": "B",
             "wreckThreshold": 3,
-            "wreckTrackTotal": 5,
             "_note": "DETACHED at start to defend Fox's Gap",
             "regiments": [
               {
                 "id": "5nc",
-                "name": "5 NC",
+                "name": "5th NC",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 7,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "12nc",
-                "name": "12 NC",
+                "name": "12th NC",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 3,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "13nc",
-                "name": "13 NC",
+                "name": "13th NC",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "20nc",
-                "name": "20 NC",
+                "name": "20th NC",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "23nc",
-                "name": "23 NC",
+                "name": "23rd NC",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 5,
-                "stragglerBoxes": 9,
                 "counterRef": null
               }
             ]
@@ -1551,38 +1435,33 @@
           {
             "id": "ridh",
             "name": "Ri/dH",
-            "morale": "B",
             "wreckThreshold": 2,
-            "wreckTrackTotal": 3,
             "regiments": [
               {
                 "id": "44ga",
-                "name": "44 Ga",
+                "name": "44th Ga",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "1nc",
-                "name": "1 NC",
+                "name": "1st NC",
                 "type": "infantry",
                 "morale": "A",
                 "weapon": "M",
                 "strengthPoints": 5,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "3nc",
-                "name": "3 NC",
+                "name": "3rd NC",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 11,
-                "stragglerBoxes": 9,
                 "counterRef": null
               }
             ]
@@ -1590,58 +1469,51 @@
           {
             "id": "rodh",
             "name": "Ro/dH",
-            "morale": "B",
             "wreckThreshold": 3,
-            "wreckTrackTotal": 5,
             "regiments": [
               {
                 "id": "3ala",
-                "name": "3 Ala",
+                "name": "3rd Ala",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 5,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "5ala",
-                "name": "5 Ala",
+                "name": "5th Ala",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "M",
                 "strengthPoints": 4,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "6ala",
-                "name": "6 Ala",
+                "name": "6th Ala",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 11,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "12ala",
-                "name": "12 Ala",
+                "name": "12th Ala",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 6,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "26ala",
-                "name": "26 Ala",
+                "name": "26th Ala",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "M",
                 "strengthPoints": 2,
-                "stragglerBoxes": 9,
                 "counterRef": null
               }
             ]
@@ -1651,8 +1523,12 @@
       {
         "id": "h-div",
         "name": "H Division",
-        "divisionStragglerBoxes": 3,
-        "divisionWreckThreshold": 2,
+        "wreckThreshold": 2,
+        "hq": {
+          "id": "h-div-hq",
+          "name": "H Div HQ",
+          "counterRef": null
+        },
         "artillery": {
           "arty-h": {
             "name": "Arty/H Div",
@@ -1662,24 +1538,21 @@
                 "name": "Bachman",
                 "gunType": "N",
                 "strengthPoints": 6,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               },
               {
                 "id": "garden",
                 "name": "Garden",
                 "gunType": "H",
                 "strengthPoints": 4,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               },
               {
                 "id": "reilly",
                 "name": "Reilly",
                 "gunType": "R",
                 "strengthPoints": 6,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               }
             ]
           }
@@ -1688,48 +1561,42 @@
           {
             "id": "wh",
             "name": "W/H",
-            "morale": "A",
             "wreckThreshold": 4,
-            "wreckTrackTotal": 5,
             "regiments": [
               {
                 "id": "18ga",
-                "name": "18 Ga",
+                "name": "18th Ga",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 5,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "1tex",
-                "name": "1 Tex",
+                "name": "1st Tex",
                 "type": "infantry",
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 5,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "4tex",
-                "name": "4 Tex",
+                "name": "4th Tex",
                 "type": "infantry",
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 5,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "5tex",
-                "name": "5 Tex",
+                "name": "5th Tex",
                 "type": "infantry",
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
@@ -1739,7 +1606,6 @@
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 6,
-                "stragglerBoxes": 9,
                 "counterRef": null
               }
             ]
@@ -1747,48 +1613,42 @@
           {
             "id": "lh",
             "name": "L/H",
-            "morale": "A",
             "wreckThreshold": 3,
-            "wreckTrackTotal": 4,
             "regiments": [
               {
                 "id": "4ala",
-                "name": "4 Ala",
+                "name": "4th Ala",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 6,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "2miss",
-                "name": "2 Miss",
+                "name": "2nd Miss",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 9,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "11miss",
-                "name": "11 Miss",
+                "name": "11th Miss",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 6,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "6nc-h",
-                "name": "6 NC",
+                "name": "6th NC",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 7,
-                "stragglerBoxes": 9,
                 "counterRef": null
               }
             ]
@@ -1798,8 +1658,12 @@
       {
         "id": "j-div",
         "name": "J Division",
-        "divisionStragglerBoxes": 5,
-        "divisionWreckThreshold": 3,
+        "wreckThreshold": 3,
+        "hq": {
+          "id": "j-div-hq",
+          "name": "J Div HQ",
+          "counterRef": null
+        },
         "artillery": {
           "arty-j": {
             "name": "Arty/J Div",
@@ -1809,8 +1673,7 @@
                 "name": "Brown",
                 "gunType": "H",
                 "strengthPoints": 4,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               }
             ]
           }
@@ -1819,48 +1682,42 @@
           {
             "id": "aj",
             "name": "A/J",
-            "morale": "C",
             "wreckThreshold": 3,
-            "wreckTrackTotal": 4,
             "regiments": [
               {
                 "id": "1ga",
-                "name": "1 Ga",
+                "name": "1st Ga",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "7ga",
-                "name": "7 Ga",
+                "name": "7th Ga",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 3,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "8ga",
-                "name": "8 Ga",
+                "name": "8th Ga",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 1,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "9ga",
-                "name": "9 Ga",
+                "name": "9th Ga",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 2,
-                "stragglerBoxes": 9,
                 "counterRef": null
               }
             ]
@@ -1868,38 +1725,33 @@
           {
             "id": "dj",
             "name": "D/J",
-            "morale": "C",
             "wreckThreshold": 3,
-            "wreckTrackTotal": 4,
             "regiments": [
               {
                 "id": "50ga",
-                "name": "50 Ga",
+                "name": "50th Ga",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "51ga",
-                "name": "51 Ga",
+                "name": "51st Ga",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "15sc",
-                "name": "15 SC",
+                "name": "15th SC",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 6,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
@@ -1909,7 +1761,6 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "stragglerBoxes": 9,
                 "counterRef": null
               }
             ]
@@ -1917,59 +1768,52 @@
           {
             "id": "gj",
             "name": "G/J",
-            "morale": "A",
             "wreckThreshold": 3,
-            "wreckTrackTotal": 5,
             "_note": "DETACHED — reinforces Turner's Gap (Order 3)",
             "regiments": [
               {
                 "id": "8va",
-                "name": "8 Va",
+                "name": "8th Va",
                 "type": "infantry",
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "18va",
-                "name": "18 Va",
+                "name": "18th Va",
                 "type": "infantry",
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "19va",
-                "name": "19 Va",
+                "name": "19th Va",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "28va",
-                "name": "28 Va",
+                "name": "28th Va",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 5,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "56va",
-                "name": "56 Va",
+                "name": "56th Va",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "stragglerBoxes": 9,
                 "counterRef": null
               }
             ]
@@ -1977,59 +1821,52 @@
           {
             "id": "kj",
             "name": "K/J",
-            "morale": "B",
             "wreckThreshold": 4,
-            "wreckTrackTotal": 5,
             "_note": "DETACHED — reinforces Turner's Gap (Order 3)",
             "regiments": [
               {
                 "id": "1va",
-                "name": "1 Va",
+                "name": "1st Va",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 2,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "7va",
-                "name": "7 Va",
+                "name": "7th Va",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 2,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "11va",
-                "name": "11 Va",
+                "name": "11th Va",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "17va",
-                "name": "17 Va",
+                "name": "17th Va",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "24va",
-                "name": "24 Va",
+                "name": "24th Va",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "stragglerBoxes": 9,
                 "counterRef": null
               }
             ]
@@ -2037,59 +1874,52 @@
           {
             "id": "wj",
             "name": "W/J",
-            "morale": "C",
             "wreckThreshold": 4,
-            "wreckTrackTotal": 6,
             "_note": "DETACHED — reinforces Turner's Gap (Order 3)",
             "regiments": [
               {
                 "id": "1sc",
-                "name": "1 SC",
+                "name": "1st SC",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 2,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "2sc-rifles",
-                "name": "2 SC Rifles",
+                "name": "2nd SC Rifles",
                 "type": "infantry",
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "5sc",
-                "name": "5 SC",
+                "name": "5th SC",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "6sc",
-                "name": "6 SC",
+                "name": "6th SC",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
                 "id": "4sc-bn",
-                "name": "4 SC Bn",
+                "name": "4th SC Bn",
                 "type": "infantry",
                 "morale": "C",
                 "weapon": "M",
                 "strengthPoints": 2,
-                "stragglerBoxes": 9,
                 "counterRef": null
               },
               {
@@ -2099,7 +1929,6 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "stragglerBoxes": 9,
                 "counterRef": null
               }
             ]
@@ -2112,9 +1941,7 @@
         "id": "evans-bde",
         "name": "Evans Brigade",
         "_note": "Independent brigade — not subordinate to any division. Evans technically commands a division with Hood's brigades but command friction kept them separate (SM 3.3).",
-        "morale": "C",
         "wreckThreshold": 3,
-        "wreckTrackTotal": 5,
         "artillery": {
           "arty-evans": {
             "name": "Evans",
@@ -2124,8 +1951,7 @@
                 "name": "Boyce",
                 "gunType": "H",
                 "strengthPoints": 6,
-                "ammoClass": "C",
-                "counterRef": null
+                "morale": "C"
               }
             ]
           }
@@ -2133,42 +1959,38 @@
         "regiments": [
           {
             "id": "17sc",
-            "name": "17 SC",
+            "name": "17th SC",
             "type": "infantry",
             "morale": "C",
             "weapon": "M",
             "strengthPoints": 3,
-            "stragglerBoxes": 9,
             "counterRef": null
           },
           {
             "id": "18sc",
-            "name": "18 SC",
+            "name": "18th SC",
             "type": "infantry",
             "morale": "C",
             "weapon": "R",
             "strengthPoints": 3,
-            "stragglerBoxes": 9,
             "counterRef": null
           },
           {
             "id": "22sc",
-            "name": "22 SC",
+            "name": "22nd SC",
             "type": "infantry",
             "morale": "C",
             "weapon": "R",
             "strengthPoints": 6,
-            "stragglerBoxes": 9,
             "counterRef": null
           },
           {
             "id": "23sc",
-            "name": "23 SC",
+            "name": "23rd SC",
             "type": "infantry",
             "morale": "C",
             "weapon": "R",
             "strengthPoints": 1,
-            "stragglerBoxes": 9,
             "counterRef": null
           },
           {
@@ -2178,7 +2000,6 @@
             "morale": "C",
             "weapon": "R",
             "strengthPoints": 3,
-            "stragglerBoxes": 9,
             "counterRef": null
           }
         ]
