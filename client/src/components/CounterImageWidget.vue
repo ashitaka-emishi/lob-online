@@ -112,6 +112,9 @@ function activate(face) {
   const current = face === 'front' ? props.counterRef?.front : props.counterRef?.back;
   const idx = current ? list.indexOf(current) : 0;
   activeIndex.value = idx >= 0 ? idx : 0;
+  // If nothing is assigned yet, immediately show the first candidate so the
+  // image is visible without requiring a keypress.
+  if (!current && list.length > 0) commit();
 }
 
 // ── Keyboard cycling ──────────────────────────────────────────────────────────

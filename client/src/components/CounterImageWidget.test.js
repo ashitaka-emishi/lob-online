@@ -138,18 +138,32 @@ describe('CounterImageWidget — slot activation', () => {
 describe('CounterImageWidget — keyboard cycling', () => {
   beforeEach(setup);
 
-  it('ArrowDown cycles to next counter and calls updateCounterRef', async () => {
+  it('activate auto-assigns first counter when slot is empty', async () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
     const wrapper = mount(CounterImageWidget, {
       props: { counterRef: null, nodePath: 'union.corps.0' },
     });
     await wrapper.findAll('.counter-side')[0].trigger('click');
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
-    await wrapper.vm.$nextTick();
-    expect(store.updateCounterRef).toHaveBeenCalled();
+    // Activate should immediately commit the first item in the front list
+    expect(store.updateCounterRef).toHaveBeenCalledTimes(1);
     const [, ref] = store.updateCounterRef.mock.calls[0];
     expect(ref.front).toBeTruthy();
+  });
+
+  it('ArrowDown advances to next counter', async () => {
+    const store = setup();
+    store.updateCounterRef = vi.fn();
+    const wrapper = mount(CounterImageWidget, {
+      props: { counterRef: null, nodePath: 'union.corps.0' },
+    });
+    await wrapper.findAll('.counter-side')[0].trigger('click');
+    const firstFilename = store.updateCounterRef.mock.calls[0][1].front;
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await wrapper.vm.$nextTick();
+    const secondFilename = store.updateCounterRef.mock.calls[1][1].front;
+    expect(secondFilename).toBeTruthy();
+    expect(secondFilename).not.toBe(firstFilename);
   });
 
   it('ArrowUp wraps around and calls updateCounterRef', async () => {
