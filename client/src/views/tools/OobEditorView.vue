@@ -130,8 +130,8 @@ function handlePush() {
 }
 
 .sidebar {
-  width: 320px;
-  min-width: 320px;
+  width: 480px;
+  min-width: 480px;
   border-right: 1px solid #3a3020;
   overflow-y: auto;
   padding: 0.5rem;

@@ -129,6 +129,23 @@ const BADGE_MAP = {
 
 const badgeLabel = computed(() => BADGE_MAP[props.nodeType] ?? props.nodeType);
 
+const RANK_ABBREV = {
+  General: 'Gen',
+  'Lieutenant General': 'Lt Gen',
+  'Major General': 'Maj Gen',
+  'Brigadier General': 'Brig Gen',
+  Colonel: 'Col',
+  'Lieutenant Colonel': 'Lt Col',
+  Major: 'Maj',
+  Captain: 'Cpt',
+};
+
+const rankAbbrev = computed(() =>
+  props.nodeType === 'leader' && props.node.rank
+    ? (RANK_ABBREV[props.node.rank] ?? props.node.rank)
+    : null
+);
+
 function handleSelect() {
   store.selectNode(props.node);
 }
@@ -150,7 +167,10 @@ function toggleExpand(event) {
         {{ expanded ? '▼' : '▶' }}
       </button>
       <span v-else class="expand-spacer" />
-      <span class="node-name">{{ node.name }}</span>
+      <span class="node-name">
+        <span v-if="rankAbbrev" class="leader-rank">{{ rankAbbrev }}</span
+        >{{ node.name }}
+      </span>
       <span :class="['badge', `badge-${nodeType}`]">{{ badgeLabel }}</span>
     </div>
     <div v-if="expanded && hasChildren" class="children">
@@ -266,6 +286,12 @@ function toggleExpand(event) {
 .badge-leader {
   background: #203028;
   color: #60a880;
+}
+
+.leader-rank {
+  color: #7a9080;
+  font-size: 0.75em;
+  margin-right: 0.35em;
 }
 
 .badge-independent {

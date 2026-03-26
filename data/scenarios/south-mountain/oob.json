@@ -134,7 +134,7 @@
             "brigades": [
               {
                 "id": "1b-1d-1c",
-                "name": "1/1/1 (Phelps)",
+                "name": "1/1/1",
                 "morale": "B",
                 "wreckThreshold": 3,
                 "wreckTrackTotal": 5,
@@ -193,7 +193,7 @@
               },
               {
                 "id": "2b-1d-1c",
-                "name": "2/1/1 (Doubleday)",
+                "name": "2/1/1",
                 "morale": "C",
                 "wreckThreshold": 2,
                 "wreckTrackTotal": 4,
@@ -242,7 +242,7 @@
               },
               {
                 "id": "3b-1d-1c",
-                "name": "3/1/1 (Patrick)",
+                "name": "3/1/1",
                 "morale": "C",
                 "wreckThreshold": 2,
                 "wreckTrackTotal": 4,
@@ -291,7 +291,7 @@
               },
               {
                 "id": "4b-1d-1c",
-                "name": "4/1/1 (Gibbon)",
+                "name": "4/1/1",
                 "morale": "A",
                 "wreckThreshold": 3,
                 "wreckTrackTotal": 4,
@@ -349,7 +349,7 @@
             "brigades": [
               {
                 "id": "1b-2d-1c",
-                "name": "1/2/1 (Duryea)",
+                "name": "1/2/1",
                 "morale": "C",
                 "wreckThreshold": 2,
                 "wreckTrackTotal": 4,
@@ -398,7 +398,7 @@
               },
               {
                 "id": "2b-2d-1c",
-                "name": "2/2/1 (Christian)",
+                "name": "2/2/1",
                 "morale": "B",
                 "wreckThreshold": 2,
                 "wreckTrackTotal": 3,
@@ -437,7 +437,7 @@
               },
               {
                 "id": "3b-2d-1c",
-                "name": "3/2/1 (Hartsuff)",
+                "name": "3/2/1",
                 "morale": "B",
                 "wreckThreshold": 2,
                 "wreckTrackTotal": 4,
@@ -494,7 +494,7 @@
             "brigades": [
               {
                 "id": "1b-3d-1c",
-                "name": "1/3/1 (Seymour)",
+                "name": "1/3/1",
                 "morale": "B",
                 "wreckThreshold": 3,
                 "wreckTrackTotal": 4,
@@ -543,7 +543,7 @@
               },
               {
                 "id": "2b-3d-1c",
-                "name": "2/3/1 (Magilton)",
+                "name": "2/3/1",
                 "morale": "C",
                 "wreckThreshold": 2,
                 "wreckTrackTotal": 3,
@@ -582,7 +582,7 @@
               },
               {
                 "id": "3b-3d-1c",
-                "name": "3/3/1 (Gallagher)",
+                "name": "3/3/1",
                 "morale": "C",
                 "wreckThreshold": 2,
                 "wreckTrackTotal": 4,
@@ -785,7 +785,7 @@
             "brigades": [
               {
                 "id": "1b-1d-9c",
-                "name": "1/1/9 (Christ)",
+                "name": "1/1/9",
                 "morale": "B",
                 "wreckThreshold": 3,
                 "wreckTrackTotal": 5,
@@ -844,7 +844,7 @@
               },
               {
                 "id": "2b-1d-9c",
-                "name": "2/1/9 (Welsh)",
+                "name": "2/1/9",
                 "morale": "C",
                 "wreckThreshold": 2,
                 "wreckTrackTotal": 3,
@@ -891,7 +891,7 @@
             "brigades": [
               {
                 "id": "1b-2d-9c",
-                "name": "1/2/9 (Nagle)",
+                "name": "1/2/9",
                 "morale": "B",
                 "wreckThreshold": 3,
                 "wreckTrackTotal": 4,
@@ -940,7 +940,7 @@
               },
               {
                 "id": "2b-2d-9c",
-                "name": "2/2/9 (Ferrero)",
+                "name": "2/2/9",
                 "morale": "C",
                 "wreckThreshold": 3,
                 "wreckTrackTotal": 4,
@@ -997,7 +997,7 @@
             "brigades": [
               {
                 "id": "1b-3d-9c",
-                "name": "1/3/9 (Fairchild)",
+                "name": "1/3/9",
                 "morale": "C",
                 "wreckThreshold": 2,
                 "wreckTrackTotal": 3,
@@ -1036,7 +1036,7 @@
               },
               {
                 "id": "2b-3d-9c",
-                "name": "2/3/9 (Harland)",
+                "name": "2/3/9",
                 "morale": "B",
                 "wreckThreshold": 2,
                 "wreckTrackTotal": 3,
@@ -1083,7 +1083,7 @@
             "brigades": [
               {
                 "id": "1b-kd-9c",
-                "name": "1/K/9 (Scammon)",
+                "name": "1/K/9",
                 "morale": "C",
                 "wreckThreshold": 2,
                 "wreckTrackTotal": 4,
@@ -1132,7 +1132,7 @@
               },
               {
                 "id": "2b-kd-9c",
-                "name": "2/K/9 (Crook)",
+                "name": "2/K/9",
                 "morale": "C",
                 "wreckThreshold": 2,
                 "wreckTrackTotal": 4,
@@ -1188,11 +1188,10 @@
     ],
     "cavalryDivision": {
       "id": "cav-div",
-      "name": "Cavalry Division",
+      "name": "F/Cav",
       "_note": "Pleasonton's artillery can replenish from any friendly ammo reserve (SM special rule)",
       "artillery": {
         "arty-fcav": {
-          "name": "F/Cav",
           "batteries": [
             {
               "id": "cg3us",
@@ -1208,7 +1207,6 @@
       "brigades": [
         {
           "id": "fcav",
-          "name": "F/Cav (Farnsworth)",
           "morale": "C",
           "wreckThreshold": 1,
           "wreckTrackTotal": 3,
@@ -1339,7 +1337,7 @@
     "divisions": [
       {
         "id": "dh-div",
-        "name": "dH Division (D.H. Hill)",
+        "name": "dH Division",
         "divisionStragglerBoxes": 5,
         "divisionWreckThreshold": 4,
         "artillery": {
@@ -1384,7 +1382,7 @@
         "brigades": [
           {
             "id": "adh",
-            "name": "A/dH (G.B. Anderson)",
+            "name": "A/dH",
             "morale": "A",
             "wreckThreshold": 3,
             "wreckTrackTotal": 4,
@@ -1433,7 +1431,7 @@
           },
           {
             "id": "cdh",
-            "name": "C/dH (Colquitt)",
+            "name": "C/dH",
             "morale": "C",
             "wreckThreshold": 3,
             "wreckTrackTotal": 5,
@@ -1492,7 +1490,7 @@
           },
           {
             "id": "gdh",
-            "name": "G/dH (Garland)",
+            "name": "G/dH",
             "morale": "B",
             "wreckThreshold": 3,
             "wreckTrackTotal": 5,
@@ -1552,7 +1550,7 @@
           },
           {
             "id": "ridh",
-            "name": "Ri/dH (Ripley)",
+            "name": "Ri/dH",
             "morale": "B",
             "wreckThreshold": 2,
             "wreckTrackTotal": 3,
@@ -1591,7 +1589,7 @@
           },
           {
             "id": "rodh",
-            "name": "Ro/dH (Rodes)",
+            "name": "Ro/dH",
             "morale": "B",
             "wreckThreshold": 3,
             "wreckTrackTotal": 5,
@@ -1652,7 +1650,7 @@
       },
       {
         "id": "h-div",
-        "name": "H Division (Hood)",
+        "name": "H Division",
         "divisionStragglerBoxes": 3,
         "divisionWreckThreshold": 2,
         "artillery": {
@@ -1689,7 +1687,7 @@
         "brigades": [
           {
             "id": "wh",
-            "name": "W/H (Wofford)",
+            "name": "W/H",
             "morale": "A",
             "wreckThreshold": 4,
             "wreckTrackTotal": 5,
@@ -1748,7 +1746,7 @@
           },
           {
             "id": "lh",
-            "name": "L/H (Law)",
+            "name": "L/H",
             "morale": "A",
             "wreckThreshold": 3,
             "wreckTrackTotal": 4,
@@ -1820,7 +1818,7 @@
         "brigades": [
           {
             "id": "aj",
-            "name": "A/J (G.T. Anderson)",
+            "name": "A/J",
             "morale": "C",
             "wreckThreshold": 3,
             "wreckTrackTotal": 4,
@@ -1869,7 +1867,7 @@
           },
           {
             "id": "dj",
-            "name": "D/J (Drayton)",
+            "name": "D/J",
             "morale": "C",
             "wreckThreshold": 3,
             "wreckTrackTotal": 4,
@@ -1918,7 +1916,7 @@
           },
           {
             "id": "gj",
-            "name": "G/J (Garnett)",
+            "name": "G/J",
             "morale": "A",
             "wreckThreshold": 3,
             "wreckTrackTotal": 5,
@@ -1978,7 +1976,7 @@
           },
           {
             "id": "kj",
-            "name": "K/J (Kemper)",
+            "name": "K/J",
             "morale": "B",
             "wreckThreshold": 4,
             "wreckTrackTotal": 5,
@@ -2038,7 +2036,7 @@
           },
           {
             "id": "wj",
-            "name": "W/J (Walker)",
+            "name": "W/J",
             "morale": "C",
             "wreckThreshold": 4,
             "wreckTrackTotal": 6,
@@ -2112,7 +2110,7 @@
     "independentBrigades": [
       {
         "id": "evans-bde",
-        "name": "Evans Brigade (Evans)",
+        "name": "Evans Brigade",
         "_note": "Independent brigade — not subordinate to any division. Evans technically commands a division with Hood's brigades but command friction kept them separate (SM 3.3).",
         "morale": "C",
         "wreckThreshold": 3,
