@@ -170,8 +170,8 @@ describe('useHexInteraction', () => {
       expect(args.onHexUpdate).toHaveBeenCalledWith(
         expect.objectContaining({ hex: '01.01', hexFeature: { type: 'building' } })
       );
-      // terrain should NOT be touched
-      expect(args.onHexUpdate.mock.calls[0][0].terrain).not.toBe('building');
+      // terrain must remain 'clear' — the original value for hex '01.01'
+      expect(args.onHexUpdate.mock.calls[0][0].terrain).toBe('clear');
     });
 
     it('painting building over woods hex preserves woods terrain (building coexists with terrain)', () => {

@@ -1012,6 +1012,32 @@ describe('HexMapOverlay — unified overlayConfig highlight and state API', () =
     expect(throughLines.length).toBe(0);
   });
 
+  it('through-hex style renders lines for a hex with exactly 2 road edges (boundary positive case)', () => {
+    // Two canonical road edges on the same hex must meet the 2+ threshold and produce lines.
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [
+          {
+            hex: '01.03',
+            terrain: 'clear',
+            edges: { 0: [{ type: 'road' }], 1: [{ type: 'road' }] },
+          },
+        ],
+        overlayConfig: {
+          edgeLine: {
+            alwaysOn: true,
+            style: 'through-hex',
+            featureGroups: [{ types: ['road'], color: '#888', strokeWidth: 2 }],
+          },
+        },
+      },
+    });
+    const throughLines = wrapper.find('.layer-through-hex-lines').findAll('line');
+    // Each edge renders outline + road pass = 2 lines per edge, 2 edges = 4 lines
+    expect(throughLines.length).toBeGreaterThan(0);
+  });
+
   it('bridge glyph text element rendered in layer-bridge-glyphs for bridge edge in through-hex mode', () => {
     // Hex has both a road and a bridge on face 0 — bridge glyph should appear.
     const wrapper = mount(HexMapOverlay, {
@@ -1036,10 +1062,14 @@ describe('HexMapOverlay — unified overlayConfig highlight and state API', () =
     const glyphTexts = wrapper.find('.layer-bridge-glyphs').findAll('text');
     expect(glyphTexts.length).toBe(1);
     expect(glyphTexts[0].text()).toContain('][');
+    expect(glyphTexts[0].attributes('transform')).toContain('rotate');
+    expect(Number.isFinite(parseFloat(glyphTexts[0].attributes('x')))).toBe(true);
+    expect(Number.isFinite(parseFloat(glyphTexts[0].attributes('y')))).toBe(true);
   });
 
   it('ford glyph text element rendered in layer-ford-glyphs for ford edge in along-edge mode', () => {
     // Hex has both a stream and a ford on face 1 — ford glyph should appear.
+    // featureGroups controls line rendering; ford glyph detection scans edges independently.
     const wrapper = mount(HexMapOverlay, {
       props: {
         calibration: BASE_CAL,
@@ -1062,6 +1092,9 @@ describe('HexMapOverlay — unified overlayConfig highlight and state API', () =
     const glyphTexts = wrapper.find('.layer-ford-glyphs').findAll('text');
     expect(glyphTexts.length).toBe(1);
     expect(glyphTexts[0].text()).toContain('][');
+    expect(glyphTexts[0].attributes('transform')).toContain('rotate');
+    expect(Number.isFinite(parseFloat(glyphTexts[0].attributes('x')))).toBe(true);
+    expect(Number.isFinite(parseFloat(glyphTexts[0].attributes('y')))).toBe(true);
   });
 });
 
