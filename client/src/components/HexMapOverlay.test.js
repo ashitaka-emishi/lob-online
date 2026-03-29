@@ -992,6 +992,77 @@ describe('HexMapOverlay — unified overlayConfig highlight and state API', () =
     const throughLines = wrapper.find('.layer-through-hex-lines').findAll('line');
     expect(throughLines.length).toBe(0);
   });
+
+  it('through-hex style renders no lines for a hex with exactly 1 road edge (2+ threshold)', () => {
+    // A single isolated road edge should be suppressed — the threshold requires 2+ road edges.
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [{ hex: '01.03', terrain: 'clear', edges: { 0: [{ type: 'road' }] } }],
+        overlayConfig: {
+          edgeLine: {
+            alwaysOn: true,
+            style: 'through-hex',
+            featureGroups: [{ types: ['road'], color: '#888', strokeWidth: 2 }],
+          },
+        },
+      },
+    });
+    const throughLines = wrapper.find('.layer-through-hex-lines').findAll('line');
+    expect(throughLines.length).toBe(0);
+  });
+
+  it('bridge glyph text element rendered in layer-bridge-glyphs for bridge edge in through-hex mode', () => {
+    // Hex has both a road and a bridge on face 0 — bridge glyph should appear.
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [
+          {
+            hex: '01.03',
+            terrain: 'clear',
+            edges: { 0: [{ type: 'road' }, { type: 'bridge' }], 1: [{ type: 'road' }] },
+          },
+        ],
+        overlayConfig: {
+          edgeLine: {
+            alwaysOn: true,
+            style: 'through-hex',
+            featureGroups: [{ types: ['road'], color: '#888', strokeWidth: 2 }],
+          },
+        },
+      },
+    });
+    const glyphTexts = wrapper.find('.layer-bridge-glyphs').findAll('text');
+    expect(glyphTexts.length).toBe(1);
+    expect(glyphTexts[0].text()).toContain('][');
+  });
+
+  it('ford glyph text element rendered in layer-ford-glyphs for ford edge in along-edge mode', () => {
+    // Hex has both a stream and a ford on face 1 — ford glyph should appear.
+    const wrapper = mount(HexMapOverlay, {
+      props: {
+        calibration: BASE_CAL,
+        hexes: [
+          {
+            hex: '01.03',
+            terrain: 'clear',
+            edges: { 1: [{ type: 'stream' }, { type: 'ford' }] },
+          },
+        ],
+        overlayConfig: {
+          edgeLine: {
+            alwaysOn: true,
+            style: 'along-edge',
+            featureGroups: [{ types: ['stream'], color: '#4a90d9', strokeWidth: 4 }],
+          },
+        },
+      },
+    });
+    const glyphTexts = wrapper.find('.layer-ford-glyphs').findAll('text');
+    expect(glyphTexts.length).toBe(1);
+    expect(glyphTexts[0].text()).toContain('][');
+  });
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
