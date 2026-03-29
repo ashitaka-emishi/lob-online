@@ -136,32 +136,30 @@ describe('CounterImageWidget — slot activation', () => {
 // ── Keyboard cycling ───────────────────────────────────────────────────────────
 
 describe('CounterImageWidget — keyboard cycling', () => {
-  it('activate auto-assigns first counter when slot is empty', async () => {
+  it('activate does NOT commit to store when slot is empty (#211)', async () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
     const wrapper = mount(CounterImageWidget, {
       props: { counterRef: null, nodePath: 'union.corps.0' },
     });
     await wrapper.findAll('.counter-side')[0].trigger('click');
-    // Activate should immediately commit the first item in the front list
-    expect(store.updateCounterRef).toHaveBeenCalledTimes(1);
-    const [, ref] = store.updateCounterRef.mock.calls[0];
-    expect(ref.front).toBeTruthy();
+    // Clicking an empty slot must not write to the store — preview only
+    expect(store.updateCounterRef).not.toHaveBeenCalled();
   });
 
-  it('ArrowDown advances to next counter', async () => {
+  it('ArrowDown commits counter after activation (↑/↓ is the write path)', async () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
     const wrapper = mount(CounterImageWidget, {
       props: { counterRef: null, nodePath: 'union.corps.0' },
     });
     await wrapper.findAll('.counter-side')[0].trigger('click');
-    const firstFilename = store.updateCounterRef.mock.calls[0][1].front;
+    // No commit on activate; first commit happens on ArrowDown
+    expect(store.updateCounterRef).not.toHaveBeenCalled();
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     await wrapper.vm.$nextTick();
-    const secondFilename = store.updateCounterRef.mock.calls[1][1].front;
-    expect(secondFilename).toBeTruthy();
-    expect(secondFilename).not.toBe(firstFilename);
+    expect(store.updateCounterRef).toHaveBeenCalledTimes(1);
+    expect(store.updateCounterRef.mock.calls[0][1].front).toBeTruthy();
   });
 
   it('ArrowUp wraps around and calls updateCounterRef', async () => {
