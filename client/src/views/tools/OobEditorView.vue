@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import { useOobStore } from '../../stores/useOobStore.js';
 import OobHierarchyTree from '../../components/OobHierarchyTree.vue';
 import OobDetailPanel from '../../components/OobDetailPanel.vue';
+import ConfirmDialog from '../../components/ConfirmDialog.vue';
 
 const store = useOobStore();
 const activeSide = ref('union');
@@ -11,12 +12,12 @@ onMounted(() => {
   store.loadData();
 });
 
-async function handlePull() {
-  await store.pullFromServer();
+function handlePull() {
+  store.requestPull();
 }
 
-async function handlePush() {
-  await store.pushToServer();
+function handlePush() {
+  store.requestPush();
 }
 </script>
 
@@ -62,6 +63,22 @@ async function handlePush() {
         />
       </main>
     </div>
+
+    <ConfirmDialog
+      :show="store.showPushConfirm"
+      message="Overwrite server data with local changes? This will replace oob.json and leaders.json on the server."
+      confirm-label="Push"
+      @confirm="store.confirmPush()"
+      @cancel="store.cancelPush()"
+    />
+
+    <ConfirmDialog
+      :show="store.showPullConfirm"
+      message="Pull from server? Unsaved local changes will be discarded."
+      confirm-label="Pull"
+      @confirm="store.confirmPull()"
+      @cancel="store.cancelPull()"
+    />
   </div>
 </template>
 

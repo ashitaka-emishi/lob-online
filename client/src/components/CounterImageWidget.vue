@@ -21,27 +21,15 @@ const store = useOobStore();
 const isUnion = computed(() => props.nodePath?.startsWith('union.') ?? false);
 const isConfederate = computed(() => props.nodePath?.startsWith('confederate.') ?? false);
 
-// ── Already-used filenames ────────────────────────────────────────────────────
-
-function collectUsed(obj, out) {
-  if (!obj || typeof obj !== 'object') return;
-  if (Array.isArray(obj)) {
-    obj.forEach((item) => collectUsed(item, out));
-    return;
-  }
-  if (obj.counterRef) {
-    if (obj.counterRef.front) out.add(obj.counterRef.front);
-    if (obj.counterRef.back) out.add(obj.counterRef.back);
-  }
-  Object.values(obj).forEach((v) => collectUsed(v, out));
+// ── Manifest allowlist for src validation (L1) ────────────────────────────────
+// Guard against loading images from filenames not in the manifest (e.g. from
+// tampered localStorage). O(1) lookup via Set.
+const COUNTER_SET = new Set(ALL_COUNTERS);
+function isKnownFile(name) {
+  return name != null && COUNTER_SET.has(name);
 }
 
-const usedFiles = computed(() => {
-  const out = new Set();
-  if (store.oob) collectUsed(store.oob, out);
-  if (store.leaders) collectUsed(store.leaders, out);
-  return out;
-});
+// ── Already-used filenames — shared computed from store (#209) ────────────────
 
 // ── File classification ───────────────────────────────────────────────────────
 // Front: files with "Front" in name, or cut-outs (U## / C##)
@@ -70,7 +58,7 @@ function buildList(face) {
     if (IS_UNION_CUT.test(name) && isConfederate.value) return false;
     if (IS_CSA_CUT.test(name) && isUnion.value) return false;
     // Exclude files already assigned elsewhere (but keep the current value)
-    if (usedFiles.value.has(name) && name !== currentVal) return false;
+    if (store.usedCounterFiles.has(name) && name !== currentVal) return false;
     return true;
   });
 }
@@ -97,18 +85,12 @@ watch(
   }
 );
 
-// Per-face img error flags (cleared when counterRef changes)
+// Per-face img error flags — reset together on any counterRef change (L3)
 const imgError = ref({ front: false, back: false });
 watch(
-  () => props.counterRef?.front,
+  () => props.counterRef,
   () => {
-    imgError.value = { ...imgError.value, front: false };
-  }
-);
-watch(
-  () => props.counterRef?.back,
-  () => {
-    imgError.value = { ...imgError.value, back: false };
+    imgError.value = { front: false, back: false };
   }
 );
 
@@ -122,9 +104,7 @@ function activate(face) {
   const current = face === 'front' ? props.counterRef?.front : props.counterRef?.back;
   const idx = current ? list.indexOf(current) : 0;
   activeIndex.value = idx >= 0 ? idx : 0;
-  // If nothing is assigned yet, immediately show the first candidate so the
-  // image is visible without requiring a keypress.
-  if (!current && list.length > 0) commit();
+  // Activation is preview-only — use ↑/↓ to commit a selection (#211)
 }
 
 // ── Keyboard cycling ──────────────────────────────────────────────────────────
@@ -191,7 +171,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         <p class="side-label">Front</p>
         <div class="thumb-area">
           <img
-            v-if="counterRef?.front && !imgError.front"
+            v-if="counterRef?.front && isKnownFile(counterRef.front) && !imgError.front"
             :src="`/counters/${counterRef.front}`"
             class="thumb"
             alt="Front counter"
@@ -224,7 +204,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         <p class="side-label">Back</p>
         <div class="thumb-area">
           <img
-            v-if="counterRef?.back && !imgError.back"
+            v-if="counterRef?.back && isKnownFile(counterRef.back) && !imgError.back"
             :src="`/counters/${counterRef.back}`"
             class="thumb"
             alt="Back counter"
@@ -248,7 +228,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         </div>
       </div>
     </div>
-    <p class="hint">Click a slot to select, then ↑ / ↓ to cycle counters</p>
+    <p class="hint">Click a slot to activate, then ↑ / ↓ to assign a counter</p>
   </div>
 </template>
 

@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { ref, computed, toRaw } from 'vue';
 import { defineStore } from 'pinia';
 
 import { findNodePath } from '../utils/findNodePath.js';
@@ -15,21 +15,70 @@ const DEBOUNCE_MS = 500;
 // Keys that must never appear in a dot-path passed to updateField (M4 / prototype pollution guard).
 const FORBIDDEN_PATH_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
+// Structural validation: require union and confederate keys to be non-null objects.
+// Mirrors the top-level shape of oob.json and leaders.json without importing server-side Zod.
+// oob and leaders share the same top-level shape today; kept as a single helper.
+// If the schemas diverge in the future, split into _isValidOobShape / _isValidLeadersShape. (L4)
+function _isValidSidedShape(data) {
+  return (
+    data !== null &&
+    typeof data === 'object' &&
+    !Array.isArray(data) &&
+    data.union !== null &&
+    typeof data.union === 'object' &&
+    data.confederate !== null &&
+    typeof data.confederate === 'object'
+  );
+}
+
 export const useOobStore = defineStore('oob', () => {
   const oob = ref(null);
   const leaders = ref(null);
   const selectedNode = ref(null);
   const selectedNodeType = ref(null);
-  const selectedNodePath = computed(() => {
-    if (!selectedNode.value || !oob.value) return null;
-    return findNodePath(oob.value, selectedNode.value.id);
-  });
+  const selectedNodePath = ref(null);
   const dirty = ref(false);
   // M5: expose sync state so the view can show feedback
   const isSyncing = ref(false);
   const syncError = ref(null);
+  // Confirmation guards — view shows dialog when true; confirm* executes the operation
+  const showPushConfirm = ref(false);
+  const showPullConfirm = ref(false);
 
   let _debounceTimer = null;
+
+  // ── Used counter files ────────────────────────────────────────────────────
+
+  // Version counter incremented only by updateCounterRef — prevents usedCounterFiles
+  // from recomputing on every non-counterRef field edit (L2 perf fix).
+  const _counterRefVersion = ref(0);
+
+  function _collectUsed(obj, out) {
+    if (!obj || typeof obj !== 'object') return;
+    if (Array.isArray(obj)) {
+      obj.forEach((item) => _collectUsed(item, out));
+      return;
+    }
+    if (obj.counterRef) {
+      if (obj.counterRef.front) out.add(obj.counterRef.front);
+      if (obj.counterRef.back) out.add(obj.counterRef.back);
+    }
+    // Skip counterRef during recursive walk to avoid double-visiting it (M2 perf fix).
+    Object.entries(obj).forEach(([k, v]) => {
+      if (k !== 'counterRef') _collectUsed(v, out);
+    });
+  }
+
+  // Depends only on _counterRefVersion (incremented by updateCounterRef) and the oob/leaders
+  // refs themselves (replaced on load/pull). toRaw() prevents deep reactive tracking so that
+  // non-counterRef mutations don't trigger a full tree walk (L2 perf fix).
+  const usedCounterFiles = computed(() => {
+    _counterRefVersion.value; // sole version dependency
+    const out = new Set();
+    if (oob.value) _collectUsed(toRaw(oob.value), out);
+    if (leaders.value) _collectUsed(toRaw(leaders.value), out);
+    return out;
+  });
 
   // ── Draft persistence ──────────────────────────────────────────────────────
 
@@ -54,12 +103,8 @@ export const useOobStore = defineStore('oob', () => {
       if (rawOob && rawLeaders) {
         const parsedOob = JSON.parse(rawOob);
         const parsedLeaders = JSON.parse(rawLeaders);
-        if (
-          parsedOob &&
-          typeof parsedOob === 'object' &&
-          parsedLeaders &&
-          typeof parsedLeaders === 'object'
-        ) {
+        // M1: apply same structural validation as server-fetch paths
+        if (_isValidSidedShape(parsedOob) && _isValidSidedShape(parsedLeaders)) {
           oob.value = parsedOob;
           leaders.value = parsedLeaders;
           return true;
@@ -78,8 +123,14 @@ export const useOobStore = defineStore('oob', () => {
     try {
       const [oobRes, leadersRes] = await Promise.all([fetch(OOB_API_URL), fetch(LEADERS_API_URL)]);
       if (oobRes.ok && leadersRes.ok) {
-        oob.value = await oobRes.json();
-        leaders.value = await leadersRes.json();
+        const parsedOob = await oobRes.json();
+        const parsedLeaders = await leadersRes.json();
+        if (!_isValidSidedShape(parsedOob) || !_isValidSidedShape(parsedLeaders)) {
+          syncError.value = 'Server returned data with an unrecognised shape';
+          return;
+        }
+        oob.value = parsedOob;
+        leaders.value = parsedLeaders;
         dirty.value = false;
         return;
       }
@@ -101,9 +152,16 @@ export const useOobStore = defineStore('oob', () => {
 
   // ── Selection ────────────────────────────────────────────────────────────
 
-  function selectNode(node, nodeType = null) {
+  function selectNode(node, nodeType = null, nodePath = null) {
     selectedNode.value = node;
     selectedNodeType.value = nodeType;
+    if (!node) {
+      selectedNodePath.value = null;
+    } else if (nodePath !== null) {
+      selectedNodePath.value = nodePath;
+    } else {
+      selectedNodePath.value = findNodePath(oob.value, node.id);
+    }
   }
 
   // ── Mutations ────────────────────────────────────────────────────────────
@@ -144,6 +202,7 @@ export const useOobStore = defineStore('oob', () => {
 
   function updateCounterRef(nodePath, counterRef) {
     updateField(nodePath + '.counterRef', counterRef);
+    _counterRefVersion.value++; // signal usedCounterFiles to recompute (L2)
   }
 
   function updateSuccession(unitPath, newIds) {
@@ -152,7 +211,21 @@ export const useOobStore = defineStore('oob', () => {
 
   // ── Sync ──────────────────────────────────────────────────────────────────
 
-  async function pushToServer() {
+  // Push confirmation gate: requestPush → (user confirms) → confirmPush → _executePush (M4)
+  function requestPush() {
+    showPushConfirm.value = true;
+  }
+
+  async function confirmPush() {
+    showPushConfirm.value = false;
+    await _executePush();
+  }
+
+  function cancelPush() {
+    showPushConfirm.value = false;
+  }
+
+  async function _executePush() {
     if (!oob.value || !leaders.value) return;
     isSyncing.value = true;
     syncError.value = null;
@@ -187,20 +260,44 @@ export const useOobStore = defineStore('oob', () => {
     }
   }
 
+  // Pull confirmation gate: requestPull → (user confirms if dirty) → confirmPull → pullFromServer (L5)
+  async function requestPull() {
+    if (dirty.value) {
+      showPullConfirm.value = true;
+    } else {
+      await pullFromServer();
+    }
+  }
+
+  async function confirmPull() {
+    showPullConfirm.value = false;
+    await pullFromServer();
+  }
+
+  function cancelPull() {
+    showPullConfirm.value = false;
+  }
+
   async function pullFromServer() {
     isSyncing.value = true;
     syncError.value = null;
     try {
       const [oobRes, leadersRes] = await Promise.all([fetch(OOB_API_URL), fetch(LEADERS_API_URL)]);
       if (oobRes.ok && leadersRes.ok) {
-        oob.value = await oobRes.json();
-        leaders.value = await leadersRes.json();
-        dirty.value = false;
-        try {
-          localStorage.removeItem(OOB_STORAGE_KEY);
-          localStorage.removeItem(LEADERS_STORAGE_KEY);
-        } catch {
-          /* ignore */
+        const parsedOob = await oobRes.json();
+        const parsedLeaders = await leadersRes.json();
+        if (!_isValidSidedShape(parsedOob) || !_isValidSidedShape(parsedLeaders)) {
+          syncError.value = 'Server returned data with an unrecognised shape';
+        } else {
+          oob.value = parsedOob;
+          leaders.value = parsedLeaders;
+          dirty.value = false;
+          try {
+            localStorage.removeItem(OOB_STORAGE_KEY);
+            localStorage.removeItem(LEADERS_STORAGE_KEY);
+          } catch {
+            /* ignore */
+          }
         }
       } else {
         syncError.value = `Pull failed (${oobRes.ok ? leadersRes.status : oobRes.status})`;
@@ -218,15 +315,23 @@ export const useOobStore = defineStore('oob', () => {
     selectedNode,
     selectedNodeType,
     selectedNodePath,
+    usedCounterFiles,
     dirty,
     isSyncing,
     syncError,
+    showPushConfirm,
+    showPullConfirm,
     loadData,
     selectNode,
     updateField,
     updateCounterRef,
     updateSuccession,
-    pushToServer,
+    requestPush,
+    confirmPush,
+    cancelPush,
+    requestPull,
+    confirmPull,
+    cancelPull,
     pullFromServer,
   };
 });
