@@ -278,9 +278,9 @@ describe('useOobStore', () => {
     expect(store.oob).toStrictEqual(MINIMAL_OOB);
   });
 
-  // ── pushToServer ──────────────────────────────────────────────────────────
+  // ── confirmPush (push execution — pushToServer removed from public API, M4) ──
 
-  it('pushToServer: PUTs both oob and leaders, clears dirty and localStorage on success', async () => {
+  it('confirmPush: PUTs both oob and leaders, clears dirty and localStorage on success', async () => {
     const store = useOobStore();
     store.oob = MINIMAL_OOB;
     store.leaders = MINIMAL_LEADERS;
@@ -294,14 +294,15 @@ describe('useOobStore', () => {
         json: () => Promise.resolve({ ok: true }),
       })
     );
-    await store.pushToServer();
+    store.requestPush();
+    await store.confirmPush();
 
     expect(store.dirty).toBe(false);
     expect(localStorage.removeItem).toHaveBeenCalledWith('lob-oob-editor-v1');
     expect(localStorage.removeItem).toHaveBeenCalledWith('lob-leaders-editor-v1');
   });
 
-  it('pushToServer: does not clear dirty when server returns non-ok', async () => {
+  it('confirmPush: does not clear dirty when server returns non-ok', async () => {
     const store = useOobStore();
     store.oob = MINIMAL_OOB;
     store.leaders = MINIMAL_LEADERS;
@@ -311,9 +312,98 @@ describe('useOobStore', () => {
       'fetch',
       vi.fn().mockResolvedValue({ ok: false, status: 400, json: () => Promise.resolve({}) })
     );
-    await store.pushToServer();
+    store.requestPush();
+    await store.confirmPush();
 
     expect(store.dirty).toBe(true);
+  });
+
+  // ── requestPull / confirmPull / cancelPull (L5) ───────────────────────────
+
+  it('requestPull: calls pullFromServer directly when not dirty', async () => {
+    const store = useOobStore();
+    store.dirty = false;
+    vi.stubGlobal('fetch', mockFetch(MINIMAL_OOB, MINIMAL_LEADERS));
+    await store.requestPull();
+    expect(store.oob).toMatchObject({ _status: 'available' });
+    expect(store.showPullConfirm).toBe(false);
+  });
+
+  it('requestPull: sets showPullConfirm when dirty without fetching', () => {
+    const store = useOobStore();
+    store.dirty = true;
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+    store.requestPull();
+    expect(store.showPullConfirm).toBe(true);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('cancelPull: resets showPullConfirm without fetching', () => {
+    const store = useOobStore();
+    store.dirty = true;
+    vi.stubGlobal('fetch', vi.fn());
+    store.requestPull();
+    store.cancelPull();
+    expect(store.showPullConfirm).toBe(false);
+    expect(vi.mocked(fetch)).not.toHaveBeenCalled();
+  });
+
+  it('confirmPull: resets showPullConfirm and fetches', async () => {
+    const store = useOobStore();
+    store.dirty = true;
+    vi.stubGlobal('fetch', mockFetch(MINIMAL_OOB, MINIMAL_LEADERS));
+    store.requestPull();
+    await store.confirmPull();
+    expect(store.showPullConfirm).toBe(false);
+    expect(store.oob).toMatchObject({ _status: 'available' });
+  });
+
+  // ── localStorage validation (M1) ──────────────────────────────────────────
+
+  it('loadData: rejects malformed localStorage data that lacks union/confederate shape', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 500, json: () => Promise.resolve({}) })
+    );
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key) => {
+        if (key === 'lob-oob-editor-v1') return JSON.stringify({ badShape: true });
+        if (key === 'lob-leaders-editor-v1') return JSON.stringify(MINIMAL_LEADERS);
+        return null;
+      }),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+    const store = useOobStore();
+    await store.loadData();
+    // Falls through to bundled JSON fallback — store is non-null but not the bad shape
+    expect(store.oob).not.toBeNull();
+    expect(store.oob).not.toMatchObject({ badShape: true });
+  });
+
+  // ── usedCounterFiles version tracking (L2) ────────────────────────────────
+
+  it('usedCounterFiles: updates after updateCounterRef but not after unrelated updateField', () => {
+    const store = useOobStore();
+    store.oob = {
+      _status: 'available',
+      union: { corps: [{ id: '1c', name: 'One Corps', counterRef: null }] },
+      confederate: { corps: [] },
+    };
+    store.leaders = { union: { army: [] }, confederate: { army: [] } };
+
+    // Before any counterRef assignment — no used files
+    expect(store.usedCounterFiles.size).toBe(0);
+
+    // After updateCounterRef — should appear
+    store.updateCounterRef('union.corps.0', {
+      front: 'front_x.jpg',
+      back: null,
+      frontConfidence: null,
+      backConfidence: null,
+    });
+    expect(store.usedCounterFiles.has('front_x.jpg')).toBe(true);
   });
 
   // ── pullFromServer ────────────────────────────────────────────────────────

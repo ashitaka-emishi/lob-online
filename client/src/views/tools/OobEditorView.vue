@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import { useOobStore } from '../../stores/useOobStore.js';
 import OobHierarchyTree from '../../components/OobHierarchyTree.vue';
 import OobDetailPanel from '../../components/OobDetailPanel.vue';
+import ConfirmDialog from '../../components/ConfirmDialog.vue';
 
 const store = useOobStore();
 const activeSide = ref('union');
@@ -11,8 +12,8 @@ onMounted(() => {
   store.loadData();
 });
 
-async function handlePull() {
-  await store.pullFromServer();
+function handlePull() {
+  store.requestPull();
 }
 
 function handlePush() {
@@ -63,17 +64,21 @@ function handlePush() {
       </main>
     </div>
 
-    <!-- Push confirmation dialog (#207) -->
-    <div v-if="store.showPushConfirm" class="confirm-overlay" @click.self="store.cancelPush()">
-      <div class="confirm-dialog">
-        <p class="confirm-msg">Overwrite server data with local changes?</p>
-        <p class="confirm-sub">This will replace oob.json and leaders.json on the server.</p>
-        <div class="confirm-actions">
-          <button class="confirm-cancel" @click="store.cancelPush()">Cancel</button>
-          <button class="confirm-ok" @click="store.confirmPush()">Push</button>
-        </div>
-      </div>
-    </div>
+    <ConfirmDialog
+      :show="store.showPushConfirm"
+      message="Overwrite server data with local changes? This will replace oob.json and leaders.json on the server."
+      confirm-label="Push"
+      @confirm="store.confirmPush()"
+      @cancel="store.cancelPush()"
+    />
+
+    <ConfirmDialog
+      :show="store.showPullConfirm"
+      message="Pull from server? Unsaved local changes will be discarded."
+      confirm-label="Pull"
+      @confirm="store.confirmPull()"
+      @cancel="store.cancelPull()"
+    />
   </div>
 </template>
 
@@ -184,66 +189,5 @@ function handlePush() {
 .placeholder {
   color: #6a6050;
   font-style: italic;
-}
-
-.confirm-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.confirm-dialog {
-  background: #1e1c14;
-  border: 1px solid #5a5040;
-  border-radius: 4px;
-  padding: 1.5rem;
-  min-width: 320px;
-  max-width: 420px;
-}
-
-.confirm-msg {
-  margin: 0 0 0.4rem;
-  font-size: 0.95rem;
-  color: #c8b89a;
-}
-
-.confirm-sub {
-  margin: 0 0 1.2rem;
-  font-size: 0.8rem;
-  color: #7a6a50;
-}
-
-.confirm-actions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-}
-
-.confirm-cancel,
-.confirm-ok {
-  padding: 0.3rem 0.9rem;
-  border-radius: 3px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  border: 1px solid #5a5040;
-  background: transparent;
-  color: #a09880;
-}
-
-.confirm-cancel:hover {
-  background: #2a2418;
-}
-
-.confirm-ok {
-  border-color: #8a7040;
-  color: #c8a850;
-}
-
-.confirm-ok:hover {
-  background: #3a2c10;
 }
 </style>

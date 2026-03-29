@@ -21,6 +21,14 @@ const store = useOobStore();
 const isUnion = computed(() => props.nodePath?.startsWith('union.') ?? false);
 const isConfederate = computed(() => props.nodePath?.startsWith('confederate.') ?? false);
 
+// ── Manifest allowlist for src validation (L1) ────────────────────────────────
+// Guard against loading images from filenames not in the manifest (e.g. from
+// tampered localStorage). O(1) lookup via Set.
+const COUNTER_SET = new Set(ALL_COUNTERS);
+function isKnownFile(name) {
+  return name != null && COUNTER_SET.has(name);
+}
+
 // ── Already-used filenames — shared computed from store (#209) ────────────────
 
 // ── File classification ───────────────────────────────────────────────────────
@@ -77,18 +85,12 @@ watch(
   }
 );
 
-// Per-face img error flags (cleared when counterRef changes)
+// Per-face img error flags — reset together on any counterRef change (L3)
 const imgError = ref({ front: false, back: false });
 watch(
-  () => props.counterRef?.front,
+  () => props.counterRef,
   () => {
-    imgError.value = { ...imgError.value, front: false };
-  }
-);
-watch(
-  () => props.counterRef?.back,
-  () => {
-    imgError.value = { ...imgError.value, back: false };
+    imgError.value = { front: false, back: false };
   }
 );
 
@@ -169,7 +171,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         <p class="side-label">Front</p>
         <div class="thumb-area">
           <img
-            v-if="counterRef?.front && !imgError.front"
+            v-if="counterRef?.front && isKnownFile(counterRef.front) && !imgError.front"
             :src="`/counters/${counterRef.front}`"
             class="thumb"
             alt="Front counter"
@@ -202,7 +204,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         <p class="side-label">Back</p>
         <div class="thumb-area">
           <img
-            v-if="counterRef?.back && !imgError.back"
+            v-if="counterRef?.back && isKnownFile(counterRef.back) && !imgError.back"
             :src="`/counters/${counterRef.back}`"
             class="thumb"
             alt="Back counter"
