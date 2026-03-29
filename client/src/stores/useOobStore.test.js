@@ -225,7 +225,7 @@ describe('useOobStore', () => {
     store.requestPush();
     store.cancelPush();
     expect(store.showPushConfirm).toBe(false);
-    expect(global.fetch).not.toHaveBeenCalled();
+    expect(vi.mocked(fetch)).not.toHaveBeenCalled();
   });
 
   it('confirmPush: resets showPushConfirm and performs the push', async () => {
@@ -241,7 +241,7 @@ describe('useOobStore', () => {
     expect(store.showPushConfirm).toBe(true);
     await store.confirmPush();
     expect(store.showPushConfirm).toBe(false);
-    expect(global.fetch).toHaveBeenCalled();
+    expect(vi.mocked(fetch)).toHaveBeenCalled();
     expect(store.dirty).toBe(false);
   });
 
