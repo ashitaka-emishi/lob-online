@@ -170,8 +170,22 @@ describe('useHexInteraction', () => {
       expect(args.onHexUpdate).toHaveBeenCalledWith(
         expect.objectContaining({ hex: '01.01', hexFeature: { type: 'building' } })
       );
-      // terrain should NOT be touched
-      expect(args.onHexUpdate.mock.calls[0][0].terrain).not.toBe('building');
+      // terrain must remain 'clear' — the original value for hex '01.01'
+      expect(args.onHexUpdate.mock.calls[0][0].terrain).toBe('clear');
+    });
+
+    it('painting building over woods hex preserves woods terrain (building coexists with terrain)', () => {
+      // hex '01.02' has terrain:'woods' — painting a building must not overwrite it
+      const args = makeArgs({
+        editorMode: ref('paint'),
+        paintHexFeature: ref({ type: 'building' }),
+      });
+      const { onHexClick } = useHexInteraction(args);
+      onHexClick('01.02', {});
+      expect(args.onHexUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ hex: '01.02', hexFeature: { type: 'building' } })
+      );
+      expect(args.onHexUpdate.mock.calls[0][0].terrain).toBe('woods');
     });
   });
 
