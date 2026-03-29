@@ -128,6 +128,37 @@ describe('useOobStore', () => {
     expect(store.selectedNodePath).toBeNull();
   });
 
+  // ── usedCounterFiles ─────────────────────────────────────────────────────
+
+  it('usedCounterFiles: returns empty Set when oob and leaders are null', () => {
+    const store = useOobStore();
+    expect(store.usedCounterFiles).toBeInstanceOf(Set);
+    expect(store.usedCounterFiles.size).toBe(0);
+  });
+
+  it('usedCounterFiles: collects front and back filenames from oob tree', () => {
+    const store = useOobStore();
+    store.oob = {
+      union: {
+        corps: [
+          {
+            id: '1c',
+            counterRef: {
+              front: 'front_a.jpg',
+              back: 'back_a.jpg',
+              frontConfidence: null,
+              backConfidence: null,
+            },
+          },
+        ],
+      },
+      confederate: { corps: [] },
+    };
+    store.leaders = { union: { army: [] }, confederate: { army: [] } };
+    expect(store.usedCounterFiles.has('front_a.jpg')).toBe(true);
+    expect(store.usedCounterFiles.has('back_a.jpg')).toBe(true);
+  });
+
   // ── updateField ───────────────────────────────────────────────────────────
 
   it('updateField: updates a top-level oob field and sets dirty', () => {

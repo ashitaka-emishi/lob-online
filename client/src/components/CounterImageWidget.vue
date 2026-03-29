@@ -21,27 +21,7 @@ const store = useOobStore();
 const isUnion = computed(() => props.nodePath?.startsWith('union.') ?? false);
 const isConfederate = computed(() => props.nodePath?.startsWith('confederate.') ?? false);
 
-// ── Already-used filenames ────────────────────────────────────────────────────
-
-function collectUsed(obj, out) {
-  if (!obj || typeof obj !== 'object') return;
-  if (Array.isArray(obj)) {
-    obj.forEach((item) => collectUsed(item, out));
-    return;
-  }
-  if (obj.counterRef) {
-    if (obj.counterRef.front) out.add(obj.counterRef.front);
-    if (obj.counterRef.back) out.add(obj.counterRef.back);
-  }
-  Object.values(obj).forEach((v) => collectUsed(v, out));
-}
-
-const usedFiles = computed(() => {
-  const out = new Set();
-  if (store.oob) collectUsed(store.oob, out);
-  if (store.leaders) collectUsed(store.leaders, out);
-  return out;
-});
+// ── Already-used filenames — shared computed from store (#209) ────────────────
 
 // ── File classification ───────────────────────────────────────────────────────
 // Front: files with "Front" in name, or cut-outs (U## / C##)
@@ -70,7 +50,7 @@ function buildList(face) {
     if (IS_UNION_CUT.test(name) && isConfederate.value) return false;
     if (IS_CSA_CUT.test(name) && isUnion.value) return false;
     // Exclude files already assigned elsewhere (but keep the current value)
-    if (usedFiles.value.has(name) && name !== currentVal) return false;
+    if (store.usedCounterFiles.has(name) && name !== currentVal) return false;
     return true;
   });
 }

@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 
 import { findNodePath } from '../utils/findNodePath.js';
@@ -27,6 +27,28 @@ export const useOobStore = defineStore('oob', () => {
   const syncError = ref(null);
 
   let _debounceTimer = null;
+
+  // ── Used counter files ────────────────────────────────────────────────────
+
+  function _collectUsed(obj, out) {
+    if (!obj || typeof obj !== 'object') return;
+    if (Array.isArray(obj)) {
+      obj.forEach((item) => _collectUsed(item, out));
+      return;
+    }
+    if (obj.counterRef) {
+      if (obj.counterRef.front) out.add(obj.counterRef.front);
+      if (obj.counterRef.back) out.add(obj.counterRef.back);
+    }
+    Object.values(obj).forEach((v) => _collectUsed(v, out));
+  }
+
+  const usedCounterFiles = computed(() => {
+    const out = new Set();
+    if (oob.value) _collectUsed(oob.value, out);
+    if (leaders.value) _collectUsed(leaders.value, out);
+    return out;
+  });
 
   // ── Draft persistence ──────────────────────────────────────────────────────
 
@@ -222,6 +244,7 @@ export const useOobStore = defineStore('oob', () => {
     selectedNode,
     selectedNodeType,
     selectedNodePath,
+    usedCounterFiles,
     dirty,
     isSyncing,
     syncError,
