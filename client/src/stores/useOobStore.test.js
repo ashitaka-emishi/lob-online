@@ -204,6 +204,80 @@ describe('useOobStore', () => {
     expect(store.dirty).toBe(true);
   });
 
+  // ── requestPush / confirmPush / cancelPush ────────────────────────────────
+
+  it('requestPush: sets showPushConfirm without calling fetch', () => {
+    const store = useOobStore();
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+    store.oob = MINIMAL_OOB;
+    store.leaders = MINIMAL_LEADERS;
+    store.requestPush();
+    expect(store.showPushConfirm).toBe(true);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('cancelPush: resets showPushConfirm without calling fetch', () => {
+    const store = useOobStore();
+    vi.stubGlobal('fetch', vi.fn());
+    store.oob = MINIMAL_OOB;
+    store.leaders = MINIMAL_LEADERS;
+    store.requestPush();
+    store.cancelPush();
+    expect(store.showPushConfirm).toBe(false);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('confirmPush: resets showPushConfirm and performs the push', async () => {
+    const store = useOobStore();
+    store.oob = MINIMAL_OOB;
+    store.leaders = MINIMAL_LEADERS;
+    store.dirty = true;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve({}) })
+    );
+    store.requestPush();
+    expect(store.showPushConfirm).toBe(true);
+    await store.confirmPush();
+    expect(store.showPushConfirm).toBe(false);
+    expect(global.fetch).toHaveBeenCalled();
+    expect(store.dirty).toBe(false);
+  });
+
+  // ── Zod validation on load ────────────────────────────────────────────────
+
+  it('loadData: sets syncError when server returns invalid oob shape', async () => {
+    let call = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(() => {
+        const data = call++ === 0 ? { notAnOob: true } : MINIMAL_LEADERS;
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(data) });
+      })
+    );
+    const store = useOobStore();
+    await store.loadData();
+    expect(store.syncError).toBeTruthy();
+    expect(store.oob).toBeNull();
+  });
+
+  it('pullFromServer: sets syncError and does not update store when response is invalid', async () => {
+    let call = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(() => {
+        const data = call++ === 0 ? { notAnOob: true } : MINIMAL_LEADERS;
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(data) });
+      })
+    );
+    const store = useOobStore();
+    store.oob = MINIMAL_OOB;
+    await store.pullFromServer();
+    expect(store.syncError).toBeTruthy();
+    expect(store.oob).toStrictEqual(MINIMAL_OOB);
+  });
+
   // ── pushToServer ──────────────────────────────────────────────────────────
 
   it('pushToServer: PUTs both oob and leaders, clears dirty and localStorage on success', async () => {

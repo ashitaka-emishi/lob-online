@@ -15,6 +15,32 @@ const DEBOUNCE_MS = 500;
 // Keys that must never appear in a dot-path passed to updateField (M4 / prototype pollution guard).
 const FORBIDDEN_PATH_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
+// Structural validation: require union and confederate keys to be non-null objects.
+// Mirrors the top-level shape of oob.json and leaders.json without importing server-side Zod.
+function _isValidOobShape(data) {
+  return (
+    data !== null &&
+    typeof data === 'object' &&
+    !Array.isArray(data) &&
+    data.union !== null &&
+    typeof data.union === 'object' &&
+    data.confederate !== null &&
+    typeof data.confederate === 'object'
+  );
+}
+
+function _isValidLeadersShape(data) {
+  return (
+    data !== null &&
+    typeof data === 'object' &&
+    !Array.isArray(data) &&
+    data.union !== null &&
+    typeof data.union === 'object' &&
+    data.confederate !== null &&
+    typeof data.confederate === 'object'
+  );
+}
+
 export const useOobStore = defineStore('oob', () => {
   const oob = ref(null);
   const leaders = ref(null);
@@ -25,6 +51,8 @@ export const useOobStore = defineStore('oob', () => {
   // M5: expose sync state so the view can show feedback
   const isSyncing = ref(false);
   const syncError = ref(null);
+  // Confirmation guard — view shows dialog when true; confirmPush() executes the push
+  const showPushConfirm = ref(false);
 
   let _debounceTimer = null;
 
@@ -97,8 +125,14 @@ export const useOobStore = defineStore('oob', () => {
     try {
       const [oobRes, leadersRes] = await Promise.all([fetch(OOB_API_URL), fetch(LEADERS_API_URL)]);
       if (oobRes.ok && leadersRes.ok) {
-        oob.value = await oobRes.json();
-        leaders.value = await leadersRes.json();
+        const parsedOob = await oobRes.json();
+        const parsedLeaders = await leadersRes.json();
+        if (!_isValidOobShape(parsedOob) || !_isValidLeadersShape(parsedLeaders)) {
+          syncError.value = 'Server returned data with an unrecognised shape';
+          return;
+        }
+        oob.value = parsedOob;
+        leaders.value = parsedLeaders;
         dirty.value = false;
         return;
       }
@@ -178,6 +212,20 @@ export const useOobStore = defineStore('oob', () => {
 
   // ── Sync ──────────────────────────────────────────────────────────────────
 
+  // Push confirmation gate: requestPush → (user confirms) → confirmPush → pushToServer
+  function requestPush() {
+    showPushConfirm.value = true;
+  }
+
+  async function confirmPush() {
+    showPushConfirm.value = false;
+    await pushToServer();
+  }
+
+  function cancelPush() {
+    showPushConfirm.value = false;
+  }
+
   async function pushToServer() {
     if (!oob.value || !leaders.value) return;
     isSyncing.value = true;
@@ -219,14 +267,20 @@ export const useOobStore = defineStore('oob', () => {
     try {
       const [oobRes, leadersRes] = await Promise.all([fetch(OOB_API_URL), fetch(LEADERS_API_URL)]);
       if (oobRes.ok && leadersRes.ok) {
-        oob.value = await oobRes.json();
-        leaders.value = await leadersRes.json();
-        dirty.value = false;
-        try {
-          localStorage.removeItem(OOB_STORAGE_KEY);
-          localStorage.removeItem(LEADERS_STORAGE_KEY);
-        } catch {
-          /* ignore */
+        const parsedOob = await oobRes.json();
+        const parsedLeaders = await leadersRes.json();
+        if (!_isValidOobShape(parsedOob) || !_isValidLeadersShape(parsedLeaders)) {
+          syncError.value = 'Server returned data with an unrecognised shape';
+        } else {
+          oob.value = parsedOob;
+          leaders.value = parsedLeaders;
+          dirty.value = false;
+          try {
+            localStorage.removeItem(OOB_STORAGE_KEY);
+            localStorage.removeItem(LEADERS_STORAGE_KEY);
+          } catch {
+            /* ignore */
+          }
         }
       } else {
         syncError.value = `Pull failed (${oobRes.ok ? leadersRes.status : oobRes.status})`;
@@ -248,11 +302,15 @@ export const useOobStore = defineStore('oob', () => {
     dirty,
     isSyncing,
     syncError,
+    showPushConfirm,
     loadData,
     selectNode,
     updateField,
     updateCounterRef,
     updateSuccession,
+    requestPush,
+    confirmPush,
+    cancelPush,
     pushToServer,
     pullFromServer,
   };
