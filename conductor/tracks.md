@@ -54,6 +54,6 @@
 
 | [x] | oob-detail-panel_20260325 | OOB Editor — Detail Panel & Counter Image Widget | 2026-03-25 | 2026-03-25 |
 
-| [~] | oob-debt-sprint_20260329 | OOB Editor Debt Sprint — Issues #207 #209 #210 #211 | 2026-03-29 | 2026-03-29 |
+| [x] | oob-debt-sprint_20260329 | OOB Editor Debt Sprint — Issues #207 #209 #210 #211 | 2026-03-29 | 2026-03-29 |
 
 <!-- Tracks registered by /conductor:new-track -->

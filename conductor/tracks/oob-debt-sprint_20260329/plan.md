@@ -3,7 +3,7 @@
 **Track ID:** oob-debt-sprint_20260329
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-03-29
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -39,9 +39,9 @@ enters preview mode without writing to the store.
 
 ### Tasks
 
-- [ ] Task 2.1: In `CounterImageWidget.vue` `activate()`, remove `if (!current && list.length > 0) commit()` — the slot should display the first available counter as a preview without persisting (#211)
-- [ ] Task 2.2: Ensure `commit()` is still called on ↑/↓ navigation (existing `cycleUp`/`cycleDown` paths — verify they still commit) (#211)
-- [ ] Task 2.3: Add or update tests — assert that activating an empty slot does NOT call the store mutation, and that cycling does commit (#211)
+- [x] Task 2.1: In `CounterImageWidget.vue` `activate()`, remove `if (!current && list.length > 0) commit()` — the slot should display the first available counter as a preview without persisting (#211)
+- [x] Task 2.2: Ensure `commit()` is still called on ↑/↓ navigation (existing `cycleUp`/`cycleDown` paths — verify they still commit) (#211)
+- [x] Task 2.3: Add or update tests — assert that activating an empty slot does NOT call the store mutation, and that cycling does commit (#211)
 
 ### Verification
 
@@ -56,10 +56,10 @@ parsed data in `loadData`/`pullFromServer`.
 
 ### Tasks
 
-- [ ] Task 3.1: Add `showPushConfirm` ref to `useOobStore`; wrap `pushToServer` — set `showPushConfirm = true` rather than calling push directly; add `confirmPush()` action that performs the actual push and resets the flag (#207)
-- [ ] Task 3.2: Add a confirmation dialog UI in `OobEditorView.vue` (or its toolbar component) that is shown when `showPushConfirm` is true; cancel resets to false, confirm calls `confirmPush()` (#207)
-- [ ] Task 3.3: In `loadData` and `pullFromServer`, validate the parsed JSON against the existing Zod schemas (import oobSchema and leadersSchema from `server/src/schemas/`); set `syncError` on validation failure (#207)
-- [ ] Task 3.4: Add tests — assert push does not fire until confirmed, assert validation failure sets `syncError` and does not update store state (#207)
+- [x] Task 3.1: Add `showPushConfirm` ref to `useOobStore`; wrap `pushToServer` — set `showPushConfirm = true` rather than calling push directly; add `confirmPush()` action that performs the actual push and resets the flag (#207)
+- [x] Task 3.2: Add a confirmation dialog UI in `OobEditorView.vue` (or its toolbar component) that is shown when `showPushConfirm` is true; cancel resets to false, confirm calls `confirmPush()` (#207)
+- [x] Task 3.3: In `loadData` and `pullFromServer`, validate the parsed JSON against the existing Zod schemas (import oobSchema and leadersSchema from `server/src/schemas/`); set `syncError` on validation failure (#207)
+- [x] Task 3.4: Add tests — assert push does not fire until confirmed, assert validation failure sets `syncError` and does not update store state (#207)
 
 ### Verification
 
@@ -69,10 +69,10 @@ parsed data in `loadData`/`pullFromServer`.
 
 ## Final Verification
 
-- [ ] All 6 acceptance criteria from spec met (#207 #209 #210 #211)
-- [ ] `npm run lint` passes
-- [ ] `npm run format:check` passes
-- [ ] `npm run test` passes with ≥70% coverage
+- [x] All 6 acceptance criteria from spec met (#207 #209 #210 #211)
+- [x] `npm run lint` passes
+- [x] `npm run format:check` passes
+- [x] `npm run test` passes with ≥70% coverage
 - [ ] OOB editor visually correct in browser — push/pull, counter slot interaction, tree selection all behave correctly
 - [ ] Ready for `/pr-create`
 
