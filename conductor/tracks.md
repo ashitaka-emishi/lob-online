@@ -46,7 +46,7 @@
 
 | [x] | tech-debt-closeout_20260323 | Tech Debt Closeout — All Open Items | 2026-03-23 | 2026-03-23 |
 
-| [ ] | map-editor-ui-refactor_20260323 | Map Editor UI Refactor — Tool Panel Cleanup & Feature Improvements | 2026-03-23 | 2026-03-23 |
+| [x] | map-editor-ui-refactor_20260323 | Map Editor UI Refactor — Tool Panel Cleanup & Feature Improvements | 2026-03-23 | 2026-03-29 |
 
 | [x] | counter-detect_20260325 | Counter Auto-Detection Script | 2026-03-25 | 2026-03-25 |
 
