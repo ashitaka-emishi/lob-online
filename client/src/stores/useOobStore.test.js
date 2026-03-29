@@ -103,6 +103,31 @@ describe('useOobStore', () => {
     expect(store.selectedNode).toBeNull();
   });
 
+  it('selectNode: stores explicit nodePath when provided (no tree-walk)', () => {
+    const store = useOobStore();
+    const node = { type: 'corps', id: '1c', name: '1 Corps' };
+    store.selectNode(node, 'corps', 'union.corps.0');
+    expect(store.selectedNodePath).toBe('union.corps.0');
+  });
+
+  it('selectNode: falls back to findNodePath when nodePath not provided', () => {
+    const store = useOobStore();
+    store.oob = {
+      _status: 'available',
+      union: { corps: [{ id: '1c', name: '1 Corps' }] },
+      confederate: { corps: [] },
+    };
+    store.selectNode({ id: '1c' }, 'corps');
+    expect(store.selectedNodePath).toBe('union.corps.0');
+  });
+
+  it('selectNode: clears selectedNodePath when called with null', () => {
+    const store = useOobStore();
+    store.selectNode({ id: '1c' }, 'corps', 'union.corps.0');
+    store.selectNode(null);
+    expect(store.selectedNodePath).toBeNull();
+  });
+
   // ── updateField ───────────────────────────────────────────────────────────
 
   it('updateField: updates a top-level oob field and sets dirty', () => {

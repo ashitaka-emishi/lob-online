@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { defineStore } from 'pinia';
 
 import { findNodePath } from '../utils/findNodePath.js';
@@ -20,10 +20,7 @@ export const useOobStore = defineStore('oob', () => {
   const leaders = ref(null);
   const selectedNode = ref(null);
   const selectedNodeType = ref(null);
-  const selectedNodePath = computed(() => {
-    if (!selectedNode.value || !oob.value) return null;
-    return findNodePath(oob.value, selectedNode.value.id);
-  });
+  const selectedNodePath = ref(null);
   const dirty = ref(false);
   // M5: expose sync state so the view can show feedback
   const isSyncing = ref(false);
@@ -101,9 +98,16 @@ export const useOobStore = defineStore('oob', () => {
 
   // ── Selection ────────────────────────────────────────────────────────────
 
-  function selectNode(node, nodeType = null) {
+  function selectNode(node, nodeType = null, nodePath = null) {
     selectedNode.value = node;
     selectedNodeType.value = nodeType;
+    if (!node) {
+      selectedNodePath.value = null;
+    } else if (nodePath !== null) {
+      selectedNodePath.value = nodePath;
+    } else {
+      selectedNodePath.value = findNodePath(oob.value, node.id);
+    }
   }
 
   // ── Mutations ────────────────────────────────────────────────────────────
