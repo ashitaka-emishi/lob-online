@@ -57,6 +57,18 @@ if (process.env.MAP_EDITOR_ENABLED === 'true') {
   const { default: autoDetectConfigRouter } = await import('./routes/autoDetectConfig.js');
   app.use('/api/tools/map-autodetect-config', autoDetectConfigRouter);
   console.log('[server] auto-detect config enabled at /api/tools/map-autodetect-config');
+
+  const { default: oobEditorRouter } = await import('./routes/oobEditor.js');
+  app.use('/api/oob', oobEditorRouter);
+  console.log('[server] oob editor enabled at /api/oob');
+
+  const { default: leadersEditorRouter } = await import('./routes/leadersEditor.js');
+  app.use('/api/leaders', leadersEditorRouter);
+  console.log('[server] leaders editor enabled at /api/leaders');
+
+  const { default: countersRouter } = await import('./routes/counters.js');
+  app.use('/api/counters', countersRouter);
+  console.log('[server] counters enabled at /api/counters');
 }
 
 // Socket.io
