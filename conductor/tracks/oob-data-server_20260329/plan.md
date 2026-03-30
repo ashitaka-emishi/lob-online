@@ -19,21 +19,21 @@ existing schema test to cover the new fields.
 
 ### Tasks
 
-- [ ] Task 1.1: Add `counterRef: CounterRef.optional()` and
+- [x] Task 1.1: Add `counterRef: CounterRef.optional()` and
       `successionIds: z.array(z.string()).optional().default([])` to `Brigade`, `Division`,
       `Corps`, `CavalryDivision`, and `IndependentBrigade` in `oob.schema.js`
-- [ ] Task 1.2: Write failing tests in `oob.schema.test.js` covering: (a) brigade/division/corps
+- [x] Task 1.2: Write failing tests in `oob.schema.test.js` covering: (a) brigade/division/corps
       nodes validate with `successionIds` array and `counterRef` object; (b) missing fields
       default to `[]` / pass as optional
-- [ ] Task 1.3: Patch `oob.json` — add `"successionIds": []` and `"counterRef": null` to all
+- [x] Task 1.3: Patch `oob.json` — add `"successionIds": []` and `"counterRef": null` to all
       ~45 brigade, division, corps, cavalry division, and independent brigade nodes
-- [ ] Task 1.4: Verify `OOBSchema.parse()` accepts the patched `oob.json` without errors (add
+- [x] Task 1.4: Verify `OOBSchema.parse()` accepts the patched `oob.json` without errors (add
       integration assertion to schema test)
 
 ### Verification
 
-- [ ] `npm run test` passes (all existing + new schema tests green)
-- [ ] `OOBSchema.safeParse(oob.json)` returns `success: true`
+- [x] `npm run test` passes (all existing + new schema tests green)
+- [x] `OOBSchema.safeParse(oob.json)` returns `success: true`
 
 ## Phase 2: Server Routes (#191)
 
