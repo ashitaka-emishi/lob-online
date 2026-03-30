@@ -36,6 +36,8 @@ Navigation hub for project context.
 | [counter-detect_20260325](./tracks/counter-detect_20260325/index.md) | Counter Auto-Detection Script | Pending |
 | [oob-editor-foundation_20260325](./tracks/oob-editor-foundation_20260325/index.md) | OOB Editor Foundation — Launch Script, Store & Hierarchy Tree | Complete |
 | [oob-detail-panel_20260325](./tracks/oob-detail-panel_20260325/index.md) | OOB Editor — Detail Panel & Counter Image Widget | Complete |
+| [oob-debt-sprint_20260329](./tracks/oob-debt-sprint_20260329/index.md) | OOB Editor Debt Sprint — Issues #207 #209 #210 #211 | Complete |
+| [oob-data-server_20260329](./tracks/oob-data-server_20260329/index.md) | OOB Data Model Completion and Server Routes | Pending |
 
 ## Getting Started
 

@@ -25,7 +25,7 @@ const io = new Server(httpServer, {
 app.use(helmet());
 app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
 app.use(morgan('dev'));
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 
 // Health check
 app.get('/api/health', (_req, res) => {
@@ -57,6 +57,18 @@ if (process.env.MAP_EDITOR_ENABLED === 'true') {
   const { default: autoDetectConfigRouter } = await import('./routes/autoDetectConfig.js');
   app.use('/api/tools/map-autodetect-config', autoDetectConfigRouter);
   console.log('[server] auto-detect config enabled at /api/tools/map-autodetect-config');
+
+  const { default: oobEditorRouter } = await import('./routes/oobEditor.js');
+  app.use('/api/tools/oob-editor', oobEditorRouter);
+  console.log('[server] oob editor enabled at /api/tools/oob-editor');
+
+  const { default: leadersEditorRouter } = await import('./routes/leadersEditor.js');
+  app.use('/api/tools/leaders-editor', leadersEditorRouter);
+  console.log('[server] leaders editor enabled at /api/tools/leaders-editor');
+
+  const { default: countersRouter } = await import('./routes/counters.js');
+  app.use('/api/tools/counters', countersRouter);
+  console.log('[server] counters enabled at /api/tools/counters');
 }
 
 // Socket.io
