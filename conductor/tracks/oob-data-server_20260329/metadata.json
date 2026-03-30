@@ -2,15 +2,15 @@
   "id": "oob-data-server_20260329",
   "title": "OOB Data Model Completion and Server Routes",
   "type": "feature",
-  "status": "in_progress",
+  "status": "complete",
   "created": "2026-03-29T00:00:00Z",
   "updated": "2026-03-30T00:00:00Z",
   "phases": {
     "total": 2,
-    "completed": 1
+    "completed": 2
   },
   "tasks": {
     "total": 11,
-    "completed": 4
+    "completed": 11
   }
 }

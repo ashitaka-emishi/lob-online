@@ -3,7 +3,7 @@
 **Track ID:** oob-data-server_20260329
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-03-29
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -42,32 +42,32 @@ pattern. Add `multer` for the upload endpoint. Mount all three in `server.js`.
 
 ### Tasks
 
-- [ ] Task 2.1: Write failing tests for `oobEditor.js` — GET returns oob.json body; PUT with
+- [x] Task 2.1: Write failing tests for `oobEditor.js` — GET returns oob.json body; PUT with
       valid body returns 200; PUT with invalid body returns 400; PUT creates a backup file
-- [ ] Task 2.2: Create `server/src/routes/oobEditor.js` — GET `/data` + PUT `/data` with
+- [x] Task 2.2: Create `server/src/routes/oobEditor.js` — GET `/data` + PUT `/data` with
       rate limiter (60/min), OobSchema validation, backup rotation (max 20), `_savedAt` stamp
-- [ ] Task 2.3: Write failing tests for `leadersEditor.js` — same four cases as oobEditor
-- [ ] Task 2.4: Create `server/src/routes/leadersEditor.js` — GET `/data` + PUT `/data`,
+- [x] Task 2.3: Write failing tests for `leadersEditor.js` — same four cases as oobEditor
+- [x] Task 2.4: Create `server/src/routes/leadersEditor.js` — GET `/data` + PUT `/data`,
       same pattern as oobEditor but using LeadersSchema and `leaders.json`
-- [ ] Task 2.5: Add `multer` to `server/package.json`; write failing tests for `counters.js` —
+- [x] Task 2.5: Add `multer` to `server/package.json`; write failing tests for `counters.js` —
       GET `/list` returns array; POST `/upload` saves `.jpg`; POST rejects non-image; POST
       rejects oversized file (>500KB)
-- [ ] Task 2.6: Create `server/src/routes/counters.js` — GET `/list` reads
+- [x] Task 2.6: Create `server/src/routes/counters.js` — GET `/list` reads
       `client/public/counters/`; POST `/upload` with multer (jpg/png only, 500KB limit)
-- [ ] Task 2.7: Mount all three routers in `server.js` under `/api/oob`, `/api/leaders`,
+- [x] Task 2.7: Mount all three routers in `server.js` under `/api/oob`, `/api/leaders`,
       `/api/counters` (same conditional-load pattern as existing routes)
 
 ### Verification
 
-- [ ] `npm run test` passes — all new route test files green
-- [ ] GET `/api/oob/data`, GET `/api/leaders/data`, GET `/api/counters/list` reachable on
+- [x] `npm run test` passes — all new route test files green
+- [x] GET `/api/oob/data`, GET `/api/leaders/data`, GET `/api/counters/list` reachable on
       dev server (manual spot-check)
 
 ## Final Verification
 
-- [ ] All acceptance criteria from spec.md met
-- [ ] `npm run lint`, `npm run format:check`, `npm run test` all pass
-- [ ] Ready for `/pr-create`
+- [x] All acceptance criteria from spec.md met
+- [x] `npm run lint`, `npm run format:check`, `npm run test` all pass
+- [x] Ready for `/pr-create`
 
 ---
 
