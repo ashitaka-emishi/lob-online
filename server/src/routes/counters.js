@@ -1,4 +1,4 @@
-import { readdirSync, mkdirSync } from 'fs';
+import { readdirSync, mkdirSync, writeFileSync } from 'fs';
 import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -13,16 +13,6 @@ const MAX_FILE_SIZE = 500 * 1024; // 500 KB
 
 const router = Router();
 
-const storage = multer.diskStorage({
-  destination(_req, _file, cb) {
-    mkdirSync(COUNTERS_DIR, { recursive: true });
-    cb(null, COUNTERS_DIR);
-  },
-  filename(_req, file, cb) {
-    cb(null, file.originalname);
-  },
-});
-
 function fileFilter(_req, file, cb) {
   const ext = extname(file.originalname).toLowerCase();
   if (ALLOWED_EXTENSIONS.has(ext)) {
@@ -33,7 +23,7 @@ function fileFilter(_req, file, cb) {
 }
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: MAX_FILE_SIZE },
   fileFilter,
 });
@@ -58,6 +48,8 @@ router.post('/upload', (req, res) => {
     if (!req.file) {
       return res.status(400).json({ ok: false, message: 'No valid image file provided' });
     }
+    mkdirSync(COUNTERS_DIR, { recursive: true });
+    writeFileSync(join(COUNTERS_DIR, req.file.originalname), req.file.buffer);
     res.json({ ok: true, filename: req.file.originalname });
   });
 });

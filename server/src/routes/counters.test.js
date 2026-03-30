@@ -4,8 +4,8 @@ import request from 'supertest';
 
 vi.mock('fs', () => ({
   readdirSync: vi.fn(() => []),
-  existsSync: vi.fn(() => true),
   mkdirSync: vi.fn(),
+  writeFileSync: vi.fn(),
 }));
 
 // eslint-disable-next-line import/order
