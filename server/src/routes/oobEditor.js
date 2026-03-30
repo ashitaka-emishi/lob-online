@@ -24,8 +24,12 @@ const oobEditorLimiter = rateLimit({
 router.use(oobEditorLimiter);
 
 router.get('/data', (_req, res) => {
-  const data = JSON.parse(readFileSync(OOB_PATH, 'utf8'));
-  res.json(data);
+  try {
+    const data = JSON.parse(readFileSync(OOB_PATH, 'utf8'));
+    res.json(data);
+  } catch {
+    res.status(500).json({ ok: false, message: 'Failed to read OOB data' });
+  }
 });
 
 router.put('/data', (req, res) => {
@@ -49,8 +53,8 @@ router.put('/data', (req, res) => {
     const backupPath = join(BACKUP_DIR, `oob-${ts}.json`);
     try {
       writeFileSync(backupPath, current);
-    } catch (err) {
-      return res.status(500).json({ ok: false, message: `Backup failed: ${err.message}` });
+    } catch {
+      return res.status(500).json({ ok: false, message: 'Backup failed' });
     }
 
     try {

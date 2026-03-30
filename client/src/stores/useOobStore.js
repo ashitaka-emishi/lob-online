@@ -8,8 +8,8 @@ import leadersFallback from '../../../data/scenarios/south-mountain/leaders.json
 
 const OOB_STORAGE_KEY = 'lob-oob-editor-v1';
 const LEADERS_STORAGE_KEY = 'lob-leaders-editor-v1';
-const OOB_API_URL = '/api/oob/data';
-const LEADERS_API_URL = '/api/leaders/data';
+const OOB_API_URL = '/api/tools/oob-editor/data';
+const LEADERS_API_URL = '/api/tools/leaders-editor/data';
 const DEBOUNCE_MS = 500;
 
 // Keys that must never appear in a dot-path passed to updateField (M4 / prototype pollution guard).
