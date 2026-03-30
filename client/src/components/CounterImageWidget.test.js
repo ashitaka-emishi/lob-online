@@ -387,7 +387,7 @@ describe('CounterImageWidget — leader mode', () => {
   it('successful upload updates promotedFront via updateCounterRef', async () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       json: () => Promise.resolve({ ok: true, filename: 'CS1-Front_01.jpg' }),
     });
 
@@ -410,13 +410,13 @@ describe('CounterImageWidget — leader mode', () => {
       expect.objectContaining({ promotedFront: 'CS1-Front_01.jpg' })
     );
 
-    delete global.fetch;
+    delete globalThis.fetch;
   });
 
   it('failed upload does not call updateCounterRef', async () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       json: () => Promise.resolve({ ok: false, message: 'Upload failed' }),
     });
 
@@ -433,7 +433,7 @@ describe('CounterImageWidget — leader mode', () => {
 
     expect(store.updateCounterRef).not.toHaveBeenCalled();
 
-    delete global.fetch;
+    delete globalThis.fetch;
   });
 
   it('standard front/back slots are still present in leader mode (4 total: 2 standard + 2 promoted)', () => {
