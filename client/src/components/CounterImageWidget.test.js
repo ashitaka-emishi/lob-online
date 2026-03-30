@@ -322,3 +322,125 @@ describe('CounterImageWidget — counter filtering', () => {
     expect(total).toBe(4);
   });
 });
+
+// ── Leader mode ────────────────────────────────────────────────────────────────
+
+const LEADER_COUNTER_REF = {
+  front: null,
+  frontConfidence: null,
+  back: null,
+  backConfidence: null,
+  promotedFront: null,
+  promotedFrontConfidence: null,
+  promotedBack: null,
+  promotedBackConfidence: null,
+};
+
+describe('CounterImageWidget — leader mode', () => {
+  beforeEach(setup);
+
+  it('does NOT render promoted row in default (unit) mode', () => {
+    const wrapper = mount(CounterImageWidget, {
+      props: { counterRef: null, nodePath: 'union.corps.0' },
+    });
+    expect(wrapper.find('.promoted-row').exists()).toBe(false);
+  });
+
+  it('renders promoted row when mode="leader"', () => {
+    const wrapper = mount(CounterImageWidget, {
+      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+    });
+    expect(wrapper.find('.promoted-row').exists()).toBe(true);
+  });
+
+  it('shows placeholder for promoted front and back when null', () => {
+    const wrapper = mount(CounterImageWidget, {
+      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+    });
+    const promoted = wrapper.find('.promoted-row');
+    // Both promoted slots have no filename set — show dash or placeholder
+    expect(promoted.text()).toContain('—');
+  });
+
+  it('shows promotedFront filename when set', () => {
+    const wrapper = mount(CounterImageWidget, {
+      props: {
+        counterRef: { ...LEADER_COUNTER_REF, promotedFront: 'CS1-Front_01.jpg' },
+        nodePath: 'leaders.union.corps.0',
+        mode: 'leader',
+      },
+    });
+    const promoted = wrapper.find('.promoted-row');
+    expect(promoted.text()).toContain('CS1-Front_01.jpg');
+  });
+
+  it('Browse… button triggers hidden file input', async () => {
+    const wrapper = mount(CounterImageWidget, {
+      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+    });
+    const fileInput = wrapper.find('.promoted-file-input');
+    const clickSpy = vi.spyOn(fileInput.element, 'click').mockImplementation(() => {});
+    await wrapper.find('.promoted-browse-btn').trigger('click');
+    expect(clickSpy).toHaveBeenCalled();
+  });
+
+  it('successful upload updates promotedFront via updateCounterRef', async () => {
+    const store = setup();
+    store.updateCounterRef = vi.fn();
+    global.fetch = vi.fn().mockResolvedValue({
+      json: () => Promise.resolve({ ok: true, filename: 'CS1-Front_01.jpg' }),
+    });
+
+    const wrapper = mount(CounterImageWidget, {
+      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+    });
+
+    // Trigger browse for promotedFront
+    await wrapper.findAll('.promoted-browse-btn')[0].trigger('click');
+
+    // Simulate file selection on the hidden input
+    const fileInput = wrapper.find('.promoted-file-input');
+    const file = new File(['x'], 'CS1-Front_01.jpg', { type: 'image/jpeg' });
+    Object.defineProperty(fileInput.element, 'files', { value: [file], configurable: true });
+    await fileInput.trigger('change');
+    await wrapper.vm.$nextTick();
+
+    expect(store.updateCounterRef).toHaveBeenCalledWith(
+      'leaders.union.corps.0',
+      expect.objectContaining({ promotedFront: 'CS1-Front_01.jpg' })
+    );
+
+    delete global.fetch;
+  });
+
+  it('failed upload does not call updateCounterRef', async () => {
+    const store = setup();
+    store.updateCounterRef = vi.fn();
+    global.fetch = vi.fn().mockResolvedValue({
+      json: () => Promise.resolve({ ok: false, message: 'Upload failed' }),
+    });
+
+    const wrapper = mount(CounterImageWidget, {
+      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+    });
+
+    await wrapper.findAll('.promoted-browse-btn')[0].trigger('click');
+    const fileInput = wrapper.find('.promoted-file-input');
+    const file = new File(['x'], 'bad.jpg', { type: 'image/jpeg' });
+    Object.defineProperty(fileInput.element, 'files', { value: [file], configurable: true });
+    await fileInput.trigger('change');
+    await wrapper.vm.$nextTick();
+
+    expect(store.updateCounterRef).not.toHaveBeenCalled();
+
+    delete global.fetch;
+  });
+
+  it('standard front/back slots are still present in leader mode (4 total: 2 standard + 2 promoted)', () => {
+    const wrapper = mount(CounterImageWidget, {
+      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+    });
+    // 2 standard (front/back) + 2 promoted (front/back) = 4
+    expect(wrapper.findAll('.counter-side').length).toBe(4);
+  });
+});

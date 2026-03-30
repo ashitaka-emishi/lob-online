@@ -12,6 +12,10 @@ const props = defineProps({
     type: String,
     default: null,
   },
+  mode: {
+    type: String,
+    default: 'unit', // 'unit' | 'leader'
+  },
 });
 
 const store = useOobStore();
@@ -156,6 +160,41 @@ function clearFace(e, face) {
 
 onMounted(() => window.addEventListener('keydown', onKeydown));
 onUnmounted(() => window.removeEventListener('keydown', onKeydown));
+
+// ── Promoted slots (leader mode only) ────────────────────────────────────────
+
+const promotedFileInput = ref(null);
+const activePromoFace = ref(null); // 'promotedFront' | 'promotedBack'
+
+function browsePromoted(face) {
+  activePromoFace.value = face;
+  promotedFileInput.value?.click();
+}
+
+async function onPromotedFileSelected(e) {
+  const file = e.target.files?.[0];
+  if (!file || !props.nodePath) return;
+
+  const formData = new FormData();
+  formData.append('counter', file);
+
+  const res = await fetch('/api/tools/counters/upload', { method: 'POST', body: formData });
+  const data = await res.json();
+  if (data.ok) {
+    const base = props.counterRef ?? {
+      front: null,
+      frontConfidence: null,
+      back: null,
+      backConfidence: null,
+      promotedFront: null,
+      promotedFrontConfidence: null,
+      promotedBack: null,
+      promotedBackConfidence: null,
+    };
+    store.updateCounterRef(props.nodePath, { ...base, [activePromoFace.value]: data.filename });
+  }
+  e.target.value = '';
+}
 </script>
 
 <template>
@@ -229,6 +268,61 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
       </div>
     </div>
     <p class="hint">Click a slot to activate, then ↑ / ↓ to assign a counter</p>
+
+    <!-- Promoted row (leader mode only) -->
+    <template v-if="mode === 'leader'">
+      <p class="widget-label promoted-label">Promoted Counter</p>
+      <div class="counter-sides promoted-row">
+        <!-- Promoted Front -->
+        <div class="counter-side">
+          <p class="side-label">Front</p>
+          <div class="thumb-area">
+            <img
+              v-if="counterRef?.promotedFront && isKnownFile(counterRef.promotedFront)"
+              :src="`/counters/${counterRef.promotedFront}`"
+              class="thumb"
+              alt="Promoted front counter"
+            />
+            <div v-else class="thumb-placeholder" />
+          </div>
+          <div class="slot-footer">
+            <span class="slot-filename">{{ counterRef?.promotedFront ?? '—' }}</span>
+            <button class="promoted-browse-btn" @click="browsePromoted('promotedFront')">
+              Browse…
+            </button>
+          </div>
+        </div>
+
+        <!-- Promoted Back -->
+        <div class="counter-side">
+          <p class="side-label">Back</p>
+          <div class="thumb-area">
+            <img
+              v-if="counterRef?.promotedBack && isKnownFile(counterRef.promotedBack)"
+              :src="`/counters/${counterRef.promotedBack}`"
+              class="thumb"
+              alt="Promoted back counter"
+            />
+            <div v-else class="thumb-placeholder" />
+          </div>
+          <div class="slot-footer">
+            <span class="slot-filename">{{ counterRef?.promotedBack ?? '—' }}</span>
+            <button class="promoted-browse-btn" @click="browsePromoted('promotedBack')">
+              Browse…
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <input
+        ref="promotedFileInput"
+        type="file"
+        accept="image/jpeg,image/png"
+        class="promoted-file-input"
+        style="display: none"
+        @change="onPromotedFileSelected"
+      />
+    </template>
   </div>
 </template>
 
