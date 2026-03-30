@@ -1,6 +1,11 @@
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+
 import { describe, it, expect } from 'vitest';
 
 import { OOBSchema } from './oob.schema.js';
+
+const OOB_PATH = resolve('data/scenarios/south-mountain/oob.json');
 
 const MINIMAL_UNIT = {
   id: 'test-unit',
@@ -64,6 +69,21 @@ const MINIMAL_OOB = {
     divisions: [],
   },
 };
+
+// ── Integration: real oob.json ────────────────────────────────────────────
+
+describe('OOBSchema — real oob.json (#189)', () => {
+  it('parses south-mountain oob.json without errors', () => {
+    const raw = JSON.parse(readFileSync(OOB_PATH, 'utf8'));
+    const result = OOBSchema.safeParse(raw);
+    if (!result.success) {
+      // Surface the first Zod error for fast diagnosis
+      const first = result.error.issues[0];
+      throw new Error(`oob.json parse failed at ${first.path.join('.')}: ${first.message}`);
+    }
+    expect(result.success).toBe(true);
+  });
+});
 
 // ── Base schema validation ─────────────────────────────────────────────────
 
@@ -212,6 +232,117 @@ describe('OOBSchema — Division', () => {
   });
 });
 
+// ── Brigade — successionIds + counterRef ────────────────────────────────────
+
+describe('OOBSchema — Brigade successionIds and counterRef (#189)', () => {
+  it('defaults successionIds to [] when absent', () => {
+    const result = OOBSchema.safeParse(MINIMAL_OOB);
+    expect(result.success).toBe(true);
+    expect(result.data.union.corps[0].divisions[0].brigades[0].successionIds).toEqual([]);
+  });
+
+  it('accepts brigade with explicit successionIds array', () => {
+    const oob = withBrigade({ ...MINIMAL_BRIGADE, successionIds: ['leader-1', 'leader-2'] });
+    const result = OOBSchema.safeParse(oob);
+    expect(result.success).toBe(true);
+    expect(result.data.union.corps[0].divisions[0].brigades[0].successionIds).toEqual([
+      'leader-1',
+      'leader-2',
+    ]);
+  });
+
+  it('accepts brigade with counterRef null', () => {
+    const oob = withBrigade({ ...MINIMAL_BRIGADE, counterRef: null });
+    expect(OOBSchema.safeParse(oob).success).toBe(true);
+  });
+
+  it('accepts brigade with full counterRef object', () => {
+    const oob = withBrigade({
+      ...MINIMAL_BRIGADE,
+      counterRef: {
+        front: 'US1-Front_10.jpg',
+        frontConfidence: 0.95,
+        back: 'US1-Back_10.jpg',
+        backConfidence: 0.9,
+      },
+    });
+    expect(OOBSchema.safeParse(oob).success).toBe(true);
+  });
+});
+
+// ── Division — successionIds + counterRef ────────────────────────────────────
+
+describe('OOBSchema — Division successionIds and counterRef (#189)', () => {
+  it('defaults successionIds to [] when absent', () => {
+    const result = OOBSchema.safeParse(MINIMAL_OOB);
+    expect(result.success).toBe(true);
+    expect(result.data.union.corps[0].divisions[0].successionIds).toEqual([]);
+  });
+
+  it('accepts division with explicit successionIds array', () => {
+    const oob = withDivision({ ...MINIMAL_DIVISION, successionIds: ['leader-div-1'] });
+    const result = OOBSchema.safeParse(oob);
+    expect(result.success).toBe(true);
+    expect(result.data.union.corps[0].divisions[0].successionIds).toEqual(['leader-div-1']);
+  });
+
+  it('accepts division with counterRef null', () => {
+    const oob = withDivision({ ...MINIMAL_DIVISION, counterRef: null });
+    expect(OOBSchema.safeParse(oob).success).toBe(true);
+  });
+
+  it('accepts division with full counterRef object', () => {
+    const oob = withDivision({
+      ...MINIMAL_DIVISION,
+      counterRef: {
+        front: 'US1-Front_05.jpg',
+        frontConfidence: 0.8,
+        back: null,
+        backConfidence: null,
+      },
+    });
+    expect(OOBSchema.safeParse(oob).success).toBe(true);
+  });
+});
+
+// ── Corps — successionIds + counterRef ───────────────────────────────────────
+
+describe('OOBSchema — Corps successionIds and counterRef (#189)', () => {
+  it('defaults successionIds to [] when absent', () => {
+    const result = OOBSchema.safeParse(MINIMAL_OOB);
+    expect(result.success).toBe(true);
+    expect(result.data.union.corps[0].successionIds).toEqual([]);
+  });
+
+  it('accepts corps with explicit successionIds array', () => {
+    const oob = withCorps({ ...MINIMAL_CORPS, successionIds: ['leader-corps-1'] });
+    const result = OOBSchema.safeParse(oob);
+    expect(result.success).toBe(true);
+    expect(result.data.union.corps[0].successionIds).toEqual(['leader-corps-1']);
+  });
+
+  it('accepts corps with counterRef null', () => {
+    const oob = withCorps({ ...MINIMAL_CORPS, counterRef: null });
+    expect(OOBSchema.safeParse(oob).success).toBe(true);
+  });
+});
+
+// ── IndependentBrigade — successionIds + counterRef ──────────────────────────
+
+describe('OOBSchema — IndependentBrigade successionIds and counterRef (#189)', () => {
+  it('defaults successionIds to [] when absent', () => {
+    const oob = withIndependentBrigade({ ...MINIMAL_BRIGADE });
+    const result = OOBSchema.safeParse(oob);
+    expect(result.success).toBe(true);
+    expect(result.data.confederate.independentBrigades[0].successionIds).toEqual([]);
+  });
+
+  it('accepts independentBrigade with counterRef null', () => {
+    const oob = withIndependentBrigade({ ...MINIMAL_BRIGADE, counterRef: null });
+    expect(OOBSchema.safeParse(oob).success).toBe(true);
+  });
+});
+
 // ── Supply / HQ counterRef ──────────────────────────────────────────────────
 
 describe('OOBSchema — supply and HQ counterRef', () => {
@@ -290,6 +421,16 @@ function oobWithBattery(battery) {
     confederate: {
       ...MINIMAL_OOB.confederate,
       reserveArtillery: { batteries: [battery] },
+    },
+  };
+}
+
+function withIndependentBrigade(bde) {
+  return {
+    ...MINIMAL_OOB,
+    confederate: {
+      ...MINIMAL_OOB.confederate,
+      independentBrigades: [{ ...bde, wreckThreshold: bde.wreckThreshold ?? 2 }],
     },
   };
 }

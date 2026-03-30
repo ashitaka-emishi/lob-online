@@ -10,7 +10,7 @@
   "_notes": {
     "weaponTypes": "R=Rifle, M=Musket, SR=SharpshooterRifle, C=Cavalry carbine. The strengthPoints value IS the starting SP total (equals loss-chart boxes). The stragglerBoxes field (9) is the uniform straggler track for each regiment.",
     "artilleryWeaponTypes": "R=Rifle, N=Napoleon, H=Howitzer, L=LightRifle, HvR=HeavyRifle",
-    "ammoClass": "B=high-quality, C=standard, D=depot/reserve — affects shell/canister supply rates",
+    "ammoClass": "B=high-quality, C=standard, D=depot/reserve \u2014 affects shell/canister supply rates",
     "wreckThreshold": "Number of wrecked regiments at which brigade is considered wrecked (checkmark position on Brigade Loss Chart)"
   },
   "union": {
@@ -182,7 +182,9 @@
                     "strengthPoints": 2,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               },
               {
                 "id": "2b-1d-1c",
@@ -225,7 +227,9 @@
                     "strengthPoints": 5,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               },
               {
                 "id": "3b-1d-1c",
@@ -268,13 +272,15 @@
                     "strengthPoints": 5,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               },
               {
                 "id": "4b-1d-1c",
                 "name": "4/1/1",
                 "wreckThreshold": 3,
-                "_note": "Iron Brigade — random event 9 (Brigade of Iron) applies",
+                "_note": "Iron Brigade \u2014 random event 9 (Brigade of Iron) applies",
                 "regiments": [
                   {
                     "id": "19ind",
@@ -312,9 +318,13 @@
                     "strengthPoints": 8,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           },
           {
             "id": "2d-1c",
@@ -367,7 +377,9 @@
                     "strengthPoints": 5,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               },
               {
                 "id": "2b-2d-1c",
@@ -401,7 +413,9 @@
                     "strengthPoints": 8,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               },
               {
                 "id": "3b-2d-1c",
@@ -444,9 +458,13 @@
                     "strengthPoints": 5,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           },
           {
             "id": "3d-1c",
@@ -499,7 +517,9 @@
                     "strengthPoints": 8,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               },
               {
                 "id": "2b-3d-1c",
@@ -533,7 +553,9 @@
                     "strengthPoints": 7,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               },
               {
                 "id": "3b-3d-1c",
@@ -576,11 +598,17 @@
                     "strengthPoints": 7,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           }
-        ]
+        ],
+        "successionIds": [],
+        "counterRef": null
       },
       {
         "id": "9c",
@@ -598,7 +626,7 @@
             "morale": "D",
             "weapon": "C",
             "strengthPoints": 1,
-            "_note": "Corps cavalry — cannot fulfill reserve for Fluke Stoppage (SM rule)",
+            "_note": "Corps cavalry \u2014 cannot fulfill reserve for Fluke Stoppage (SM rule)",
             "counterRef": null
           },
           {
@@ -608,7 +636,7 @@
             "morale": "D",
             "weapon": "C",
             "strengthPoints": 10,
-            "_note": "Corps cavalry — cannot fulfill reserve for Fluke Stoppage (SM rule)",
+            "_note": "Corps cavalry \u2014 cannot fulfill reserve for Fluke Stoppage (SM rule)",
             "counterRef": null
           },
           {
@@ -618,7 +646,7 @@
             "morale": "B",
             "weapon": "C",
             "strengthPoints": 1,
-            "_note": "Corps cavalry — cannot fulfill reserve for Fluke Stoppage (SM rule)",
+            "_note": "Corps cavalry \u2014 cannot fulfill reserve for Fluke Stoppage (SM rule)",
             "counterRef": null
           }
         ],
@@ -779,7 +807,9 @@
                     "strengthPoints": 12,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               },
               {
                 "id": "2b-1d-9c",
@@ -813,9 +843,13 @@
                     "strengthPoints": 10,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           },
           {
             "id": "2d-9c",
@@ -868,7 +902,9 @@
                     "strengthPoints": 11,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               },
               {
                 "id": "2b-2d-9c",
@@ -911,9 +947,13 @@
                     "strengthPoints": 11,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           },
           {
             "id": "3d-9c",
@@ -957,7 +997,9 @@
                     "strengthPoints": 9,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               },
               {
                 "id": "2b-3d-9c",
@@ -991,9 +1033,13 @@
                     "strengthPoints": 9,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           },
           {
             "id": "kd-9c",
@@ -1046,7 +1092,9 @@
                     "strengthPoints": 2,
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               },
               {
                 "id": "2b-kd-9c",
@@ -1091,11 +1139,17 @@
                     "_errata": "Moved from 1/K/9 to 2/K/9 (SM_Errata #1)",
                     "counterRef": null
                   }
-                ]
+                ],
+                "successionIds": [],
+                "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           }
-        ]
+        ],
+        "successionIds": [],
+        "counterRef": null
       }
     ],
     "cavalryDivision": {
@@ -1152,9 +1206,13 @@
               "strengthPoints": 11,
               "counterRef": null
             }
-          ]
+          ],
+          "successionIds": [],
+          "counterRef": null
         }
-      ]
+      ],
+      "successionIds": [],
+      "counterRef": null
     }
   },
   "confederate": {
@@ -1185,7 +1243,7 @@
           "name": "Pelham A",
           "gunType": "N",
           "strengthPoints": 4,
-          "_note": "Horse artillery — Limbered MA = 12. Can replenish from any friendly ammo reserve (SM special rule)",
+          "_note": "Horse artillery \u2014 Limbered MA = 12. Can replenish from any friendly ammo reserve (SM special rule)",
           "morale": "C"
         },
         {
@@ -1325,7 +1383,9 @@
                 "strengthPoints": 7,
                 "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           },
           {
             "id": "cdh",
@@ -1377,7 +1437,9 @@
                 "strengthPoints": 6,
                 "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           },
           {
             "id": "gdh",
@@ -1430,7 +1492,9 @@
                 "strengthPoints": 5,
                 "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           },
           {
             "id": "ridh",
@@ -1464,7 +1528,9 @@
                 "strengthPoints": 11,
                 "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           },
           {
             "id": "rodh",
@@ -1516,9 +1582,13 @@
                 "strengthPoints": 2,
                 "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           }
-        ]
+        ],
+        "successionIds": [],
+        "counterRef": null
       },
       {
         "id": "h-div",
@@ -1608,7 +1678,9 @@
                 "strengthPoints": 6,
                 "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           },
           {
             "id": "lh",
@@ -1651,9 +1723,13 @@
                 "strengthPoints": 7,
                 "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           }
-        ]
+        ],
+        "successionIds": [],
+        "counterRef": null
       },
       {
         "id": "j-div",
@@ -1720,7 +1796,9 @@
                 "strengthPoints": 2,
                 "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           },
           {
             "id": "dj",
@@ -1763,13 +1841,15 @@
                 "strengthPoints": 4,
                 "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           },
           {
             "id": "gj",
             "name": "G/J",
             "wreckThreshold": 3,
-            "_note": "DETACHED — reinforces Turner's Gap (Order 3)",
+            "_note": "DETACHED \u2014 reinforces Turner's Gap (Order 3)",
             "regiments": [
               {
                 "id": "8va",
@@ -1816,13 +1896,15 @@
                 "strengthPoints": 4,
                 "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           },
           {
             "id": "kj",
             "name": "K/J",
             "wreckThreshold": 4,
-            "_note": "DETACHED — reinforces Turner's Gap (Order 3)",
+            "_note": "DETACHED \u2014 reinforces Turner's Gap (Order 3)",
             "regiments": [
               {
                 "id": "1va",
@@ -1869,13 +1951,15 @@
                 "strengthPoints": 3,
                 "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           },
           {
             "id": "wj",
             "name": "W/J",
             "wreckThreshold": 4,
-            "_note": "DETACHED — reinforces Turner's Gap (Order 3)",
+            "_note": "DETACHED \u2014 reinforces Turner's Gap (Order 3)",
             "regiments": [
               {
                 "id": "1sc",
@@ -1931,16 +2015,20 @@
                 "strengthPoints": 4,
                 "counterRef": null
               }
-            ]
+            ],
+            "successionIds": [],
+            "counterRef": null
           }
-        ]
+        ],
+        "successionIds": [],
+        "counterRef": null
       }
     ],
     "independentBrigades": [
       {
         "id": "evans-bde",
         "name": "Evans Brigade",
-        "_note": "Independent brigade — not subordinate to any division. Evans technically commands a division with Hood's brigades but command friction kept them separate (SM 3.3).",
+        "_note": "Independent brigade \u2014 not subordinate to any division. Evans technically commands a division with Hood's brigades but command friction kept them separate (SM 3.3).",
         "wreckThreshold": 3,
         "artillery": {
           "arty-evans": {
@@ -2002,7 +2090,9 @@
             "strengthPoints": 3,
             "counterRef": null
           }
-        ]
+        ],
+        "successionIds": [],
+        "counterRef": null
       }
     ]
   }
