@@ -3,7 +3,7 @@
 **Track ID:** oob-final-ui_20260330
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-03-30
-**Status:** [ ] Not Started
+**Status:** [~] In Progress
 
 ## Overview
 
@@ -19,14 +19,14 @@ brigade/division/corps detail panels in `OobDetailPanel.vue`.
 
 ### Tasks
 
-- [ ] Task 1.1: Write `SuccessionList.test.js` covering: renders leader names from IDs, shows
+- [x] Task 1.1: Write `SuccessionList.test.js` covering: renders leader names from IDs, shows
       "no succession defined" on empty array, type-ahead search filters by side, add appends
       to list, × removes entry, up/down buttons reorder correctly, changes call
       `store.updateSuccession` with correct path and updated array
-- [ ] Task 1.2: Implement `SuccessionList.vue` — props: `unitPath`, `side`; reads
+- [x] Task 1.2: Implement `SuccessionList.vue` — props: `unitPath`, `side`; reads
       `store.leaders` to resolve names; emits via `store.updateSuccession`; type-ahead input
       with filtered dropdown; × remove; up/down reorder
-- [ ] Task 1.3: Add `SuccessionList` to brigade, division, and corps sections in
+- [x] Task 1.3: Add `SuccessionList` to brigade, division, and corps sections in
       `OobDetailPanel.vue`; extend `OobDetailPanel.test.js` to assert the component is
       rendered for those node types with correct `unitPath` and `side` props
 
@@ -43,11 +43,11 @@ Extend `CounterImageWidget.vue` with a `mode="leader"` prop that adds a Promoted
 
 ### Tasks
 
-- [ ] Task 2.1: Extend `CounterImageWidget.test.js` with leader-mode tests: promoted row
+- [x] Task 2.1: Extend `CounterImageWidget.test.js` with leader-mode tests: promoted row
       renders when `mode="leader"`, promoted slots show placeholder when null, Browse… on
       promoted slot triggers upload and calls `store.updateCounterRef` with `promotedFront` /
       `promotedBack`, filename inputs update store, unit mode (default) unchanged
-- [ ] Task 2.2: Add `mode` prop (`'unit'` | `'leader'`, default `'unit'`) to
+- [x] Task 2.2: Add `mode` prop (`'unit'` | `'leader'`, default `'unit'`) to
       `CounterImageWidget.vue`; render promoted front/back row conditionally when
       `mode === 'leader'`; reuse existing Browse/upload logic for promoted slots
 
@@ -63,11 +63,11 @@ using the leader-variant CounterImageWidget.
 
 ### Tasks
 
-- [ ] Task 3.1: Extend `OobDetailPanel.test.js` with leader node tests: all leader fields
+- [x] Task 3.1: Extend `OobDetailPanel.test.js` with leader node tests: all leader fields
       render (id read-only, name, rank, commandLevel select, commandsId, initiativeRating,
       specialRules textarea, counterRef widget in leader mode), field changes call
       `store.updateField` with correct path, non-leader types unchanged
-- [ ] Task 3.2: Add `isLeader` computed (`props.nodeType === 'leader'`) to
+- [x] Task 3.2: Add `isLeader` computed (`props.nodeType === 'leader'`) to
       `OobDetailPanel.vue`; add leader field section to template; pass `mode="leader"` to
       `CounterImageWidget` for leader nodes; leader path prefix is `leaders.{side}.leaders.{i}`
 
