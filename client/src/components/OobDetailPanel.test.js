@@ -4,9 +4,16 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useOobStore } from '../stores/useOobStore.js';
 import OobDetailPanel from './OobDetailPanel.vue';
 
-// Stub CounterImageWidget to keep tests focused on field rendering
+// Stub CounterImageWidget and SuccessionList to keep tests focused on field rendering
 vi.mock('./CounterImageWidget.vue', () => ({
   default: { template: '<div class="counter-widget-stub" />' },
+}));
+
+vi.mock('./SuccessionList.vue', () => ({
+  default: {
+    props: ['unitPath', 'side', 'successionIds'],
+    template: '<div class="succession-list-stub" :data-unit-path="unitPath" :data-side="side" />',
+  },
 }));
 
 function setup() {
@@ -227,8 +234,8 @@ describe('OobDetailPanel — brigade node', () => {
     // One number input: wreckThreshold
     expect(wrapper.findAll('.field-number').length).toBe(1);
     expect(wrapper.find('.field-number').element.value).toBe('3');
-    // Succession placeholder
-    expect(wrapper.find('.field-placeholder').text()).toContain('SuccessionList');
+    // SuccessionList stub rendered
+    expect(wrapper.find('.succession-list-stub').exists()).toBe(true);
     // No counter widget
     expect(wrapper.find('.counter-widget-stub').exists()).toBe(false);
   });
@@ -350,5 +357,56 @@ describe('OobDetailPanel — path edge cases', () => {
     });
     expect(wrapper.find('.no-path-notice').exists()).toBe(true);
     expect(wrapper.find('.counter-widget-stub').exists()).toBe(false);
+  });
+});
+
+// ── SuccessionList wiring ──────────────────────────────────────────────────────
+
+describe('OobDetailPanel — SuccessionList wiring', () => {
+  beforeEach(setup);
+
+  it('renders SuccessionList for brigade with correct unitPath and side', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: {
+        node: { ...BRIGADE_NODE, successionIds: ['hooker'] },
+        nodeType: 'brigade',
+        nodePath: 'union.corps.0.divisions.0.brigades.0',
+      },
+    });
+    const stub = wrapper.find('.succession-list-stub');
+    expect(stub.exists()).toBe(true);
+    expect(stub.attributes('data-unit-path')).toBe('union.corps.0.divisions.0.brigades.0');
+    expect(stub.attributes('data-side')).toBe('union');
+  });
+
+  it('renders SuccessionList for division with confederate side', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: {
+        node: { ...DIVISION_NODE, successionIds: [] },
+        nodeType: 'division',
+        nodePath: 'confederate.corps.0.divisions.0',
+      },
+    });
+    const stub = wrapper.find('.succession-list-stub');
+    expect(stub.exists()).toBe(true);
+    expect(stub.attributes('data-side')).toBe('confederate');
+  });
+
+  it('renders SuccessionList for corps', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: {
+        node: { ...CORPS_NODE, successionIds: [] },
+        nodeType: 'corps',
+        nodePath: 'union.corps.0',
+      },
+    });
+    expect(wrapper.find('.succession-list-stub').exists()).toBe(true);
+  });
+
+  it('does not render SuccessionList for regiment', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: { node: REGIMENT_NODE, nodeType: 'regiment', nodePath: 'union.corps.0.regiments.0' },
+    });
+    expect(wrapper.find('.succession-list-stub').exists()).toBe(false);
   });
 });

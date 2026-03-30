@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useOobStore } from '../stores/useOobStore.js';
 import CounterImageWidget from './CounterImageWidget.vue';
+import SuccessionList from './SuccessionList.vue';
 
 const props = defineProps({
   node: {
@@ -43,6 +44,9 @@ const isEditable = computed(
 
 // Corps only has a name field — no numeric fields, no counters
 const isCorpsOnly = computed(() => isCorps.value);
+
+// Side derived from nodePath — first segment is 'union' or 'confederate'
+const side = computed(() => props.nodePath?.split('.')[0] ?? 'union');
 
 // ── Field update helpers ──────────────────────────────────────────────────────
 
@@ -197,9 +201,14 @@ function onSelectChange(fieldName, e) {
           />
         </div>
 
-        <div class="field-row">
+        <div class="field-row field-row--top">
           <label class="field-label">Succession</label>
-          <span class="field-placeholder">— SuccessionList (#195) —</span>
+          <SuccessionList
+            v-if="nodePath"
+            :unit-path="nodePath"
+            :side="side"
+            :succession-ids="node.successionIds ?? []"
+          />
         </div>
       </template>
 
@@ -216,15 +225,29 @@ function onSelectChange(fieldName, e) {
           />
         </div>
 
-        <div class="field-row">
+        <div class="field-row field-row--top">
           <label class="field-label">Succession</label>
-          <span class="field-placeholder">— SuccessionList (#195) —</span>
+          <SuccessionList
+            v-if="nodePath"
+            :unit-path="nodePath"
+            :side="side"
+            :succession-ids="node.successionIds ?? []"
+          />
         </div>
       </template>
 
       <!-- ── HQ / Supply counter image ──────────────────────────────────── -->
-      <template v-if="isHqOrSupply || isCorpsOnly">
-        <!-- Corps: name only, no counter -->
+      <!-- ── Corps succession ───────────────────────────────────────────── -->
+      <template v-if="isCorpsOnly">
+        <div class="field-row field-row--top">
+          <label class="field-label">Succession</label>
+          <SuccessionList
+            v-if="nodePath"
+            :unit-path="nodePath"
+            :side="side"
+            :succession-ids="node.successionIds ?? []"
+          />
+        </div>
       </template>
 
       <!-- ── Counter image widget (regiments, batteries, HQ, supply) ────── -->
@@ -250,6 +273,10 @@ function onSelectChange(fieldName, e) {
   color: #6a6050;
   font-style: italic;
   font-size: 0.85rem;
+}
+
+.field-row--top {
+  align-items: flex-start;
 }
 
 .field-row {
