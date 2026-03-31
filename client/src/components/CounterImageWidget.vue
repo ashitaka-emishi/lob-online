@@ -14,16 +14,23 @@ const props = defineProps({
   },
   mode: {
     type: String,
-    default: 'unit', // 'unit' | 'leader'
+    default: 'unit',
+    validator: (v) => ['unit', 'leader'].includes(v),
   },
 });
 
 const store = useOobStore();
 
 // ── Side detection ────────────────────────────────────────────────────────────
+// Leader paths are 'leaders.<side>.<level>.<i>' — side is the second segment.
+// Unit paths are '<side>.<level>.<i>' — side is the first segment.
 
-const isUnion = computed(() => props.nodePath?.startsWith('union.') ?? false);
-const isConfederate = computed(() => props.nodePath?.startsWith('confederate.') ?? false);
+const sideSegment = computed(() => {
+  const parts = props.nodePath?.split('.') ?? [];
+  return parts[0] === 'leaders' ? parts[1] : parts[0];
+});
+const isUnion = computed(() => sideSegment.value === 'union');
+const isConfederate = computed(() => sideSegment.value === 'confederate');
 
 // ── Manifest allowlist for src validation (L1) ────────────────────────────────
 // Guard against loading images from filenames not in the manifest (e.g. from
@@ -90,11 +97,11 @@ watch(
 );
 
 // Per-face img error flags — reset together on any counterRef change (L3)
-const imgError = ref({ front: false, back: false });
+const imgError = ref({ front: false, back: false, promotedFront: false, promotedBack: false });
 watch(
   () => props.counterRef,
   () => {
-    imgError.value = { front: false, back: false };
+    imgError.value = { front: false, back: false, promotedFront: false, promotedBack: false };
   }
 );
 
@@ -132,28 +139,35 @@ function onKeydown(e) {
   }
 }
 
+// Returns the appropriate empty counterRef shape for this mode (HIGH-A1).
+// Must be used as the null-fallback in all three mutation paths (commit, clearFace,
+// onPromotedFileSelected) to prevent promoted fields being dropped by standard-face ops.
+function getDefaultCounterRef() {
+  const base = { front: null, frontConfidence: null, back: null, backConfidence: null };
+  if (props.mode === 'leader') {
+    return {
+      ...base,
+      promotedFront: null,
+      promotedFrontConfidence: null,
+      promotedBack: null,
+      promotedBackConfidence: null,
+    };
+  }
+  return base;
+}
+
 function commit() {
   if (!activeFace.value || !props.nodePath) return;
   const list = getList(activeFace.value);
   const filename = list[activeIndex.value];
-  const base = props.counterRef ?? {
-    front: null,
-    frontConfidence: null,
-    back: null,
-    backConfidence: null,
-  };
+  const base = props.counterRef ?? getDefaultCounterRef();
   store.updateCounterRef(props.nodePath, { ...base, [activeFace.value]: filename });
 }
 
 function clearFace(e, face) {
   e.stopPropagation();
   if (!props.nodePath) return;
-  const base = props.counterRef ?? {
-    front: null,
-    frontConfidence: null,
-    back: null,
-    backConfidence: null,
-  };
+  const base = props.counterRef ?? getDefaultCounterRef();
   store.updateCounterRef(props.nodePath, { ...base, [face]: null });
   if (activeFace.value === face) activeFace.value = null;
 }
@@ -178,22 +192,19 @@ async function onPromotedFileSelected(e) {
   const formData = new FormData();
   formData.append('counter', file);
 
-  const res = await fetch('/api/tools/counters/upload', { method: 'POST', body: formData });
-  const data = await res.json();
-  if (data.ok) {
-    const base = props.counterRef ?? {
-      front: null,
-      frontConfidence: null,
-      back: null,
-      backConfidence: null,
-      promotedFront: null,
-      promotedFrontConfidence: null,
-      promotedBack: null,
-      promotedBackConfidence: null,
-    };
-    store.updateCounterRef(props.nodePath, { ...base, [activePromoFace.value]: data.filename });
+  try {
+    const res = await fetch('/api/tools/counters/upload', { method: 'POST', body: formData });
+    if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+    const data = await res.json();
+    if (data.ok) {
+      const base = props.counterRef ?? getDefaultCounterRef();
+      store.updateCounterRef(props.nodePath, { ...base, [activePromoFace.value]: data.filename });
+    }
+  } catch (err) {
+    console.error('[CounterImageWidget] upload error:', err);
+  } finally {
+    e.target.value = '';
   }
-  e.target.value = '';
 }
 </script>
 
@@ -278,10 +289,15 @@ async function onPromotedFileSelected(e) {
           <p class="side-label">Front</p>
           <div class="thumb-area">
             <img
-              v-if="counterRef?.promotedFront && isKnownFile(counterRef.promotedFront)"
+              v-if="
+                counterRef?.promotedFront &&
+                isKnownFile(counterRef.promotedFront) &&
+                !imgError.promotedFront
+              "
               :src="`/counters/${counterRef.promotedFront}`"
               class="thumb"
               alt="Promoted front counter"
+              @error="imgError.promotedFront = true"
             />
             <div v-else class="thumb-placeholder" />
           </div>
@@ -298,10 +314,15 @@ async function onPromotedFileSelected(e) {
           <p class="side-label">Back</p>
           <div class="thumb-area">
             <img
-              v-if="counterRef?.promotedBack && isKnownFile(counterRef.promotedBack)"
+              v-if="
+                counterRef?.promotedBack &&
+                isKnownFile(counterRef.promotedBack) &&
+                !imgError.promotedBack
+              "
               :src="`/counters/${counterRef.promotedBack}`"
               class="thumb"
               alt="Promoted back counter"
+              @error="imgError.promotedBack = true"
             />
             <div v-else class="thumb-placeholder" />
           </div>

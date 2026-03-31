@@ -20,17 +20,13 @@ const props = defineProps({
 const store = useOobStore();
 
 // ── All leaders for this side, flattened across command levels ────────────────
+// 'army' is intentionally excluded — it is a plain string (army name), not an array of leaders.
+const LEADER_ARRAY_KEYS = ['corps', 'cavalry', 'divisions', 'brigades'];
 
 const allLeaders = computed(() => {
   const sideData = store.leaders?.[props.side];
   if (!sideData) return [];
-  return [
-    ...(Array.isArray(sideData.army) ? sideData.army : []),
-    ...(sideData.corps ?? []),
-    ...(sideData.cavalry ?? []),
-    ...(sideData.divisions ?? []),
-    ...(sideData.brigades ?? []),
-  ];
+  return LEADER_ARRAY_KEYS.flatMap((key) => sideData[key] ?? []);
 });
 
 // ── Resolve IDs to display names ──────────────────────────────────────────────

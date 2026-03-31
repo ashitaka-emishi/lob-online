@@ -60,8 +60,9 @@ export const useOobStore = defineStore('oob', () => {
       return;
     }
     if (obj.counterRef) {
-      if (obj.counterRef.front) out.add(obj.counterRef.front);
-      if (obj.counterRef.back) out.add(obj.counterRef.back);
+      for (const key of ['front', 'back', 'promotedFront', 'promotedBack']) {
+        if (obj.counterRef[key]) out.add(obj.counterRef[key]);
+      }
     }
     // Skip counterRef during recursive walk to avoid double-visiting it (M2 perf fix).
     Object.entries(obj).forEach(([k, v]) => {

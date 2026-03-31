@@ -388,6 +388,7 @@ describe('CounterImageWidget — leader mode', () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
     globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
       json: () => Promise.resolve({ ok: true, filename: 'CS1-Front_01.jpg' }),
     });
 
@@ -417,6 +418,7 @@ describe('CounterImageWidget — leader mode', () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
     globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
       json: () => Promise.resolve({ ok: false, message: 'Upload failed' }),
     });
 

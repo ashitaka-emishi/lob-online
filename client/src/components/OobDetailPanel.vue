@@ -47,8 +47,12 @@ const isEditable = computed(
 // Corps only has a name field — no numeric fields, no counters
 const isCorpsOnly = computed(() => isCorps.value);
 
-// Side derived from nodePath — first segment is 'union' or 'confederate'
-const side = computed(() => props.nodePath?.split('.')[0] ?? 'union');
+// Side derived from nodePath. For unit paths the first segment is the side ('union' /
+// 'confederate'). For leader paths the first segment is 'leaders' and the side is second.
+const side = computed(() => {
+  const parts = props.nodePath?.split('.') ?? [];
+  return parts[0] === 'leaders' ? (parts[1] ?? 'union') : (parts[0] ?? 'union');
+});
 
 // ── Field update helpers ──────────────────────────────────────────────────────
 
