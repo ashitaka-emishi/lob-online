@@ -57,16 +57,16 @@ Add `_savedAt` to the Zod schemas then apply `.strict()`. Closes #221.
 
 ### Tasks
 
-- [ ] Task 3.1: Add optional `_savedAt` field (`z.string().optional()`) to `OOBSchema`
+- [x] Task 3.1: Add optional `_savedAt` field (`z.string().optional()`) to `OOBSchema`
       and `LeadersSchema` in `server/src/schemas/`; update schema tests
-- [ ] Task 3.2: Apply `.strict()` to the top-level `OOBSchema` and `LeadersSchema`
+- [x] Task 3.2: Apply `.strict()` to the top-level `OOBSchema` and `LeadersSchema`
       objects; verify that existing `oob.json` and `leaders.json` still pass validation;
       update schema tests to assert unknown fields are rejected
 
 ### Verification
 
-- [ ] Schema tests green; `oob.json` and `leaders.json` pass `.strict()` parse
-- [ ] `npm run test` passes (full suite)
+- [x] Schema tests green; `oob.json` and `leaders.json` pass `.strict()` parse
+- [x] `npm run test` passes (full suite)
 
 ## Phase 4: Client Architecture and Scale Awareness (score 1–3)
 
