@@ -76,26 +76,26 @@ than a code change. Closes #207, #215, #206, #205, #204, #201.
 
 ### Tasks
 
-- [ ] Task 4.1: Extract `useOobPersistence` composable from `useOobStore.js` mirroring
+- [x] Task 4.1: Extract `useOobPersistence` composable from `useOobStore.js` mirroring
       the `useMapPersistence` pattern — owns: `loadData`, `_executePush`, `pullFromServer`,
       `requestPush`/`confirmPush`/`cancelPush`, `requestPull`/`confirmPull`/`cancelPull`,
       `isSyncing`, `syncError`, `showPushConfirm`, `showPullConfirm`, `_saveToStorage`,
       `_loadFromStorage`, `_scheduleSave`; store retains domain mutations (#207)
-- [ ] Task 4.2: Migrate `OobTreeNode.vue` from `<script>` + `<script setup>` dual pattern
+- [x] Task 4.2: Migrate `OobTreeNode.vue` from `<script>` + `<script setup>` dual pattern
       to single `<script setup>` using `defineOptions({ name: 'OobTreeNode' })` for
       recursive self-reference (#215)
-- [ ] Task 4.3: Convert map editor and scenario editor server routes
+- [x] Task 4.3: Convert map editor and scenario editor server routes
       (`server/src/routes/mapEditor.js`, `scenarioEditor.js`) to use dynamic `import()`
       consistent with oob-editor route lazy-loading (#206)
-- [ ] Task 4.4: Convert `useOobStore.js` bundled JSON fallback imports to dynamic
+- [x] Task 4.4: Convert `useOobStore.js` bundled JSON fallback imports to dynamic
       `import()` inside `loadData`'s L3 fallback branch (#205)
-- [ ] Task 4.5: Close #204 and #201 with "acceptable at South Mountain scale" decision
+- [x] Task 4.5: Close #204 and #201 with "acceptable at South Mountain scale" decision
       comments in the source files; close the GitHub issues (#204, #201)
 
 ### Verification
 
-- [ ] `npm run lint`, `npm run format:check` clean
-- [ ] `npm run test` passes (full suite)
+- [x] `npm run lint`, `npm run format:check` clean
+- [x] `npm run test` passes (full suite)
 - [ ] OOB editor push/pull/sync behavior unchanged (manual smoke test)
 
 ## Final Verification
