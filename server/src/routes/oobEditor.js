@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync } from 'fs';
+import { readFile, writeFile, mkdir, readdir, unlink } from 'fs/promises';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -23,26 +23,26 @@ const oobEditorLimiter = rateLimit({
 
 router.use(oobEditorLimiter);
 
-router.get('/data', (_req, res) => {
+router.get('/data', async (_req, res) => {
   try {
-    const data = JSON.parse(readFileSync(OOB_PATH, 'utf8'));
+    const data = JSON.parse(await readFile(OOB_PATH, 'utf8'));
     res.json(data);
   } catch {
     res.status(500).json({ ok: false, message: 'Failed to read OOB data' });
   }
 });
 
-router.put('/data', (req, res) => {
+router.put('/data', async (req, res) => {
   const result = OOBSchema.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({ ok: false, issues: result.error.issues });
   }
 
-  mkdirSync(BACKUP_DIR, { recursive: true });
+  await mkdir(BACKUP_DIR, { recursive: true });
 
   let current = null;
   try {
-    const raw = readFileSync(OOB_PATH, 'utf8');
+    const raw = await readFile(OOB_PATH, 'utf8');
     if (raw) current = raw;
   } catch {
     /* file may not exist yet */
@@ -52,18 +52,18 @@ router.put('/data', (req, res) => {
     const ts = new Date().toISOString().replace(/[:.]/g, '-');
     const backupPath = join(BACKUP_DIR, `oob-${ts}.json`);
     try {
-      writeFileSync(backupPath, current);
+      await writeFile(backupPath, current);
     } catch {
       return res.status(500).json({ ok: false, message: 'Backup failed' });
     }
 
     try {
-      const files = readdirSync(BACKUP_DIR)
+      const files = (await readdir(BACKUP_DIR))
         .filter((f) => f.startsWith('oob-') && f.endsWith('.json'))
         .sort();
       if (files.length > MAX_BACKUPS) {
         for (const f of files.slice(0, files.length - MAX_BACKUPS)) {
-          unlinkSync(join(BACKUP_DIR, f));
+          await unlink(join(BACKUP_DIR, f));
         }
       }
     } catch {
@@ -73,7 +73,7 @@ router.put('/data', (req, res) => {
 
   const savedAt = Date.now();
   const data = { ...result.data, _savedAt: savedAt };
-  writeFileSync(OOB_PATH, JSON.stringify(data, null, 2));
+  await writeFile(OOB_PATH, JSON.stringify(data, null, 2));
   res.json({ ok: true, _savedAt: savedAt });
 });
 

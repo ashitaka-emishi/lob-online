@@ -218,6 +218,17 @@ describe('useOobStore', () => {
     expect(store.dirty).toBe(false);
   });
 
+  it('updateField: rejects toString and valueOf as path keys (#216)', () => {
+    const store = useOobStore();
+    store.oob = { _status: 'available', union: { army: 'Original' } };
+    store.updateField('union.toString', 'injected');
+    expect(store.dirty).toBe(false);
+    store.updateField('union.valueOf', 'injected');
+    expect(store.dirty).toBe(false);
+    // original data unchanged
+    expect(store.oob.union.army).toBe('Original');
+  });
+
   // ── updateCounterRef ──────────────────────────────────────────────────────
 
   it('updateCounterRef: sets counterRef on a node and marks dirty', () => {

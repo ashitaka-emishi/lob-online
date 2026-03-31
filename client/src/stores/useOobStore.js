@@ -13,7 +13,13 @@ const LEADERS_API_URL = '/api/tools/leaders-editor/data';
 const DEBOUNCE_MS = 500;
 
 // Keys that must never appear in a dot-path passed to updateField (M4 / prototype pollution guard).
-const FORBIDDEN_PATH_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+const FORBIDDEN_PATH_KEYS = new Set([
+  '__proto__',
+  'constructor',
+  'prototype',
+  'toString',
+  'valueOf',
+]);
 
 // Structural validation: require union and confederate keys to be non-null objects.
 // Mirrors the top-level shape of oob.json and leaders.json without importing server-side Zod.

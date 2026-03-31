@@ -49,25 +49,24 @@ router.get('/list', (_req, res) => {
   res.json(files);
 });
 
-router.post('/upload', (req, res) => {
-  upload.single('counter')(req, res, (err) => {
-    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ ok: false, message: 'File exceeds 500 KB limit' });
-    }
-    if (err) {
-      return res.status(500).json({ ok: false, message: err.message });
-    }
-    if (!req.file) {
-      return res.status(400).json({ ok: false, message: 'No valid image file provided' });
-    }
-    const safeFilename = basename(req.file.originalname);
-    const destPath = join(COUNTERS_DIR, safeFilename);
-    if (existsSync(destPath)) {
-      console.warn(`[route] counters/upload: overwriting existing file ${safeFilename}`);
-    }
-    writeFileSync(destPath, req.file.buffer);
-    res.json({ ok: true, filename: safeFilename });
-  });
+router.post('/upload', upload.single('counter'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ ok: false, message: 'No valid image file provided' });
+  }
+  const safeFilename = basename(req.file.originalname);
+  const destPath = join(COUNTERS_DIR, safeFilename);
+  if (existsSync(destPath)) {
+    console.warn(`[route] counters/upload: overwriting existing file ${safeFilename}`);
+  }
+  writeFileSync(destPath, req.file.buffer);
+  res.json({ ok: true, filename: safeFilename });
+});
+
+router.use((err, _req, res, _next) => {
+  if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ ok: false, message: 'File exceeds 500 KB limit' });
+  }
+  res.status(500).json({ ok: false, message: err.message });
 });
 
 export default router;
