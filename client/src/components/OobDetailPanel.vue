@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useOobStore } from '../stores/useOobStore.js';
 import CounterImageWidget from './CounterImageWidget.vue';
+import SuccessionList from './SuccessionList.vue';
 
 const props = defineProps({
   node: {
@@ -31,6 +32,7 @@ const isBrigade = computed(() => props.nodeType === 'brigade');
 const isDivision = computed(() => props.nodeType === 'division');
 const isCorps = computed(() => props.nodeType === 'corps');
 const isHqOrSupply = computed(() => HQ_SUPPLY_TYPES.has(props.nodeType));
+const isLeader = computed(() => props.nodeType === 'leader');
 const isEditable = computed(
   () =>
     isRegiment.value ||
@@ -38,11 +40,19 @@ const isEditable = computed(
     isBrigade.value ||
     isDivision.value ||
     isCorps.value ||
-    isHqOrSupply.value
+    isHqOrSupply.value ||
+    isLeader.value
 );
 
 // Corps only has a name field — no numeric fields, no counters
 const isCorpsOnly = computed(() => isCorps.value);
+
+// Side derived from nodePath. For unit paths the first segment is the side ('union' /
+// 'confederate'). For leader paths the first segment is 'leaders' and the side is second.
+const side = computed(() => {
+  const parts = props.nodePath?.split('.') ?? [];
+  return parts[0] === 'leaders' ? (parts[1] ?? 'union') : (parts[0] ?? 'union');
+});
 
 // ── Field update helpers ──────────────────────────────────────────────────────
 
@@ -197,9 +207,14 @@ function onSelectChange(fieldName, e) {
           />
         </div>
 
-        <div class="field-row">
+        <div class="field-row field-row--top">
           <label class="field-label">Succession</label>
-          <span class="field-placeholder">— SuccessionList (#195) —</span>
+          <SuccessionList
+            v-if="nodePath"
+            :unit-path="nodePath"
+            :side="side"
+            :succession-ids="node.successionIds ?? []"
+          />
         </div>
       </template>
 
@@ -216,15 +231,29 @@ function onSelectChange(fieldName, e) {
           />
         </div>
 
-        <div class="field-row">
+        <div class="field-row field-row--top">
           <label class="field-label">Succession</label>
-          <span class="field-placeholder">— SuccessionList (#195) —</span>
+          <SuccessionList
+            v-if="nodePath"
+            :unit-path="nodePath"
+            :side="side"
+            :succession-ids="node.successionIds ?? []"
+          />
         </div>
       </template>
 
       <!-- ── HQ / Supply counter image ──────────────────────────────────── -->
-      <template v-if="isHqOrSupply || isCorpsOnly">
-        <!-- Corps: name only, no counter -->
+      <!-- ── Corps succession ───────────────────────────────────────────── -->
+      <template v-if="isCorpsOnly">
+        <div class="field-row field-row--top">
+          <label class="field-label">Succession</label>
+          <SuccessionList
+            v-if="nodePath"
+            :unit-path="nodePath"
+            :side="side"
+            :succession-ids="node.successionIds ?? []"
+          />
+        </div>
       </template>
 
       <!-- ── Counter image widget (regiments, batteries, HQ, supply) ────── -->
@@ -235,6 +264,70 @@ function onSelectChange(fieldName, e) {
         <p class="no-path-notice">
           Path not resolvable — counter image editing unavailable for this node.
         </p>
+      </template>
+
+      <!-- ── Leader fields ──────────────────────────────────────────────── -->
+      <template v-if="isLeader">
+        <div class="field-row">
+          <label class="field-label">Rank</label>
+          <input
+            type="text"
+            class="field-input"
+            :value="node.rank ?? ''"
+            @change="onTextChange('rank', $event)"
+          />
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">Command Level</label>
+          <select
+            class="field-select"
+            :value="node.commandLevel ?? ''"
+            @change="onSelectChange('commandLevel', $event)"
+          >
+            <option value="army">Army</option>
+            <option value="corps">Corps</option>
+            <option value="division">Division</option>
+            <option value="brigade">Brigade</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">Commands ID</label>
+          <input
+            type="text"
+            class="field-input"
+            :value="node.commandsId ?? ''"
+            @change="onTextChange('commandsId', $event)"
+          />
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">Initiative Rating</label>
+          <input
+            type="text"
+            class="field-input"
+            :value="node.initiativeRating ?? ''"
+            @change="onTextChange('initiativeRating', $event)"
+          />
+        </div>
+
+        <div class="field-row field-row--top">
+          <label class="field-label">Special Rules</label>
+          <textarea
+            class="field-input field-textarea"
+            :value="node.specialRules ?? ''"
+            @change="onTextChange('specialRules', $event)"
+          />
+        </div>
+
+        <template v-if="nodePath">
+          <CounterImageWidget
+            :counter-ref="node.counterRef ?? null"
+            :node-path="nodePath"
+            mode="leader"
+          />
+        </template>
       </template>
     </template>
   </div>
@@ -250,6 +343,10 @@ function onSelectChange(fieldName, e) {
   color: #6a6050;
   font-style: italic;
   font-size: 0.85rem;
+}
+
+.field-row--top {
+  align-items: flex-start;
 }
 
 .field-row {
@@ -313,5 +410,11 @@ function onSelectChange(fieldName, e) {
   font-size: 0.8rem;
   color: #6a6050;
   font-style: italic;
+}
+
+.field-textarea {
+  flex: 1;
+  min-height: 4rem;
+  resize: vertical;
 }
 </style>

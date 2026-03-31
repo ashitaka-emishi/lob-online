@@ -1,4 +1,4 @@
-import { readdirSync, mkdirSync, writeFileSync } from 'fs';
+import { readdirSync, mkdirSync, writeFileSync, existsSync } from 'fs';
 import { join, extname, basename } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -61,7 +61,11 @@ router.post('/upload', (req, res) => {
       return res.status(400).json({ ok: false, message: 'No valid image file provided' });
     }
     const safeFilename = basename(req.file.originalname);
-    writeFileSync(join(COUNTERS_DIR, safeFilename), req.file.buffer);
+    const destPath = join(COUNTERS_DIR, safeFilename);
+    if (existsSync(destPath)) {
+      console.warn(`[route] counters/upload: overwriting existing file ${safeFilename}`);
+    }
+    writeFileSync(destPath, req.file.buffer);
     res.json({ ok: true, filename: safeFilename });
   });
 });

@@ -6,10 +6,11 @@ vi.mock('fs', () => ({
   readdirSync: vi.fn(() => []),
   mkdirSync: vi.fn(),
   writeFileSync: vi.fn(),
+  existsSync: vi.fn(() => false),
 }));
 
 // eslint-disable-next-line import/order
-import { readdirSync, mkdirSync } from 'fs';
+import { readdirSync, mkdirSync, existsSync } from 'fs';
 
 async function buildApp() {
   const { default: router } = await import('./counters.js');
@@ -105,5 +106,17 @@ describe('POST /upload (counters)', () => {
     const res = await request(app).post('/upload');
     expect(res.status).toBe(400);
     expect(res.body.ok).toBe(false);
+  });
+
+  it('logs a warning when uploading a file that already exists', async () => {
+    existsSync.mockReturnValue(true);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const app = await buildApp();
+    await request(app).post('/upload').attach('counter', Buffer.from('fake-image-data'), {
+      filename: 'existing.jpg',
+      contentType: 'image/jpeg',
+    });
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('overwriting existing file'));
+    warnSpy.mockRestore();
   });
 });

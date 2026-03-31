@@ -159,6 +159,33 @@ describe('useOobStore', () => {
     expect(store.usedCounterFiles.has('back_a.jpg')).toBe(true);
   });
 
+  it('usedCounterFiles: collects promotedFront and promotedBack from leaders tree', () => {
+    const store = useOobStore();
+    store.oob = { union: { corps: [] }, confederate: { corps: [] } };
+    store.leaders = {
+      union: {
+        corps: [
+          {
+            id: 'hooker',
+            counterRef: {
+              front: null,
+              frontConfidence: null,
+              back: null,
+              backConfidence: null,
+              promotedFront: 'promo_front.jpg',
+              promotedFrontConfidence: null,
+              promotedBack: 'promo_back.jpg',
+              promotedBackConfidence: null,
+            },
+          },
+        ],
+      },
+      confederate: { corps: [] },
+    };
+    expect(store.usedCounterFiles.has('promo_front.jpg')).toBe(true);
+    expect(store.usedCounterFiles.has('promo_back.jpg')).toBe(true);
+  });
+
   // ── updateField ───────────────────────────────────────────────────────────
 
   it('updateField: updates a top-level oob field and sets dirty', () => {

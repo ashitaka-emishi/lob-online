@@ -56,5 +56,6 @@
 
 | [x] | oob-debt-sprint_20260329 | OOB Editor Debt Sprint — Issues #207 #209 #210 #211 | 2026-03-29 | 2026-03-29 |
 | [x] | oob-data-server_20260329 | OOB Data Model Completion and Server Routes | 2026-03-29 | 2026-03-29 |
+| [~] | oob-final-ui_20260330 | OOB Editor Final UI — Succession List and Leader Detail Panel | 2026-03-30 | 2026-03-30 |
 
 <!-- Tracks registered by /conductor:new-track -->

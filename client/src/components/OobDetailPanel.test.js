@@ -4,9 +4,16 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useOobStore } from '../stores/useOobStore.js';
 import OobDetailPanel from './OobDetailPanel.vue';
 
-// Stub CounterImageWidget to keep tests focused on field rendering
+// Stub CounterImageWidget and SuccessionList to keep tests focused on field rendering
 vi.mock('./CounterImageWidget.vue', () => ({
   default: { template: '<div class="counter-widget-stub" />' },
+}));
+
+vi.mock('./SuccessionList.vue', () => ({
+  default: {
+    props: ['unitPath', 'side', 'successionIds'],
+    template: '<div class="succession-list-stub" :data-unit-path="unitPath" :data-side="side" />',
+  },
 }));
 
 function setup() {
@@ -60,6 +67,17 @@ const CORPS_NODE = {
   name: '1 Corps',
 };
 
+const LEADER_NODE = {
+  id: 'hooker',
+  name: 'Joseph Hooker',
+  rank: 'Major General',
+  commandLevel: 'corps',
+  commandsId: '1c',
+  initiativeRating: null,
+  specialRules: null,
+  counterRef: null,
+};
+
 const HQ_NODE = {
   id: '1c-hq',
   name: '1 Corps HQ',
@@ -85,11 +103,15 @@ describe('OobDetailPanel — non-editable node types', () => {
     expect(wrapper.find('.field-row').exists()).toBe(false);
   });
 
-  it('shows not-editable message for leader type', () => {
+  it('shows not-editable message for army type only — not for leader', () => {
     const wrapper = mount(OobDetailPanel, {
-      props: { node: { id: 'hooker', name: 'Hooker' }, nodeType: 'leader', nodePath: null },
+      props: {
+        node: LEADER_NODE,
+        nodeType: 'leader',
+        nodePath: 'leaders.union.corps.0',
+      },
     });
-    expect(wrapper.find('.not-editable').exists()).toBe(true);
+    expect(wrapper.find('.not-editable').exists()).toBe(false);
   });
 });
 
@@ -227,8 +249,8 @@ describe('OobDetailPanel — brigade node', () => {
     // One number input: wreckThreshold
     expect(wrapper.findAll('.field-number').length).toBe(1);
     expect(wrapper.find('.field-number').element.value).toBe('3');
-    // Succession placeholder
-    expect(wrapper.find('.field-placeholder').text()).toContain('SuccessionList');
+    // SuccessionList stub rendered
+    expect(wrapper.find('.succession-list-stub').exists()).toBe(true);
     // No counter widget
     expect(wrapper.find('.counter-widget-stub').exists()).toBe(false);
   });
@@ -350,5 +372,163 @@ describe('OobDetailPanel — path edge cases', () => {
     });
     expect(wrapper.find('.no-path-notice').exists()).toBe(true);
     expect(wrapper.find('.counter-widget-stub').exists()).toBe(false);
+  });
+});
+
+// ── SuccessionList wiring ──────────────────────────────────────────────────────
+
+describe('OobDetailPanel — SuccessionList wiring', () => {
+  beforeEach(setup);
+
+  it('renders SuccessionList for brigade with correct unitPath and side', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: {
+        node: { ...BRIGADE_NODE, successionIds: ['hooker'] },
+        nodeType: 'brigade',
+        nodePath: 'union.corps.0.divisions.0.brigades.0',
+      },
+    });
+    const stub = wrapper.find('.succession-list-stub');
+    expect(stub.exists()).toBe(true);
+    expect(stub.attributes('data-unit-path')).toBe('union.corps.0.divisions.0.brigades.0');
+    expect(stub.attributes('data-side')).toBe('union');
+  });
+
+  it('renders SuccessionList for division with confederate side', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: {
+        node: { ...DIVISION_NODE, successionIds: [] },
+        nodeType: 'division',
+        nodePath: 'confederate.corps.0.divisions.0',
+      },
+    });
+    const stub = wrapper.find('.succession-list-stub');
+    expect(stub.exists()).toBe(true);
+    expect(stub.attributes('data-side')).toBe('confederate');
+  });
+
+  it('renders SuccessionList for corps', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: {
+        node: { ...CORPS_NODE, successionIds: [] },
+        nodeType: 'corps',
+        nodePath: 'union.corps.0',
+      },
+    });
+    expect(wrapper.find('.succession-list-stub').exists()).toBe(true);
+  });
+
+  it('does not render SuccessionList for regiment', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: { node: REGIMENT_NODE, nodeType: 'regiment', nodePath: 'union.corps.0.regiments.0' },
+    });
+    expect(wrapper.find('.succession-list-stub').exists()).toBe(false);
+  });
+});
+
+// ── Leader node ────────────────────────────────────────────────────────────────
+
+describe('OobDetailPanel — leader node', () => {
+  beforeEach(setup);
+
+  it('renders id as read-only', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: { node: LEADER_NODE, nodeType: 'leader', nodePath: 'leaders.union.corps.0' },
+    });
+    expect(wrapper.find('.field-readonly').text()).toBe('hooker');
+  });
+
+  it('renders name input with correct value', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: { node: LEADER_NODE, nodeType: 'leader', nodePath: 'leaders.union.corps.0' },
+    });
+    expect(wrapper.find('.field-input[type="text"]').element.value).toBe('Joseph Hooker');
+  });
+
+  it('renders rank input', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: { node: LEADER_NODE, nodeType: 'leader', nodePath: 'leaders.union.corps.0' },
+    });
+    const inputs = wrapper.findAll('.field-input[type="text"]');
+    // name + rank + commandsId + initiativeRating = 4 text inputs
+    expect(inputs.length).toBeGreaterThanOrEqual(2);
+    expect(inputs[1].element.value).toBe('Major General');
+  });
+
+  it('renders commandLevel select with correct value', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: { node: LEADER_NODE, nodeType: 'leader', nodePath: 'leaders.union.corps.0' },
+    });
+    const selects = wrapper.findAll('.field-select');
+    expect(selects.length).toBe(1);
+    expect(selects[0].element.value).toBe('corps');
+  });
+
+  it('renders commandsId input', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: { node: LEADER_NODE, nodeType: 'leader', nodePath: 'leaders.union.corps.0' },
+    });
+    const inputs = wrapper.findAll('.field-input[type="text"]');
+    const commandsInput = inputs.find((i) => i.element.value === '1c');
+    expect(commandsInput).toBeDefined();
+  });
+
+  it('renders specialRules textarea', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: {
+        node: { ...LEADER_NODE, specialRules: 'Flanker' },
+        nodeType: 'leader',
+        nodePath: 'leaders.union.corps.0',
+      },
+    });
+    expect(wrapper.find('textarea').element.value).toBe('Flanker');
+  });
+
+  it('renders counter widget in leader mode when nodePath present', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: { node: LEADER_NODE, nodeType: 'leader', nodePath: 'leaders.union.corps.0' },
+    });
+    expect(wrapper.find('.counter-widget-stub').exists()).toBe(true);
+  });
+
+  it('does not render counter widget when nodePath is null', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: { node: LEADER_NODE, nodeType: 'leader', nodePath: null },
+    });
+    expect(wrapper.find('.counter-widget-stub').exists()).toBe(false);
+  });
+
+  it('calls updateField with leaders-prefixed path on name change', async () => {
+    const store = setup();
+    store.updateField = vi.fn();
+    const wrapper = mount(OobDetailPanel, {
+      props: { node: LEADER_NODE, nodeType: 'leader', nodePath: 'leaders.union.corps.0' },
+    });
+    const nameInput = wrapper.find('.field-input[type="text"]');
+    await nameInput.setValue('J. Hooker');
+    await nameInput.trigger('change');
+    expect(store.updateField).toHaveBeenCalledWith('leaders.union.corps.0.name', 'J. Hooker');
+  });
+
+  it('calls updateField on commandLevel select change', async () => {
+    const store = setup();
+    store.updateField = vi.fn();
+    const wrapper = mount(OobDetailPanel, {
+      props: { node: LEADER_NODE, nodeType: 'leader', nodePath: 'leaders.union.corps.0' },
+    });
+    await wrapper.find('.field-select').setValue('division');
+    await wrapper.find('.field-select').trigger('change');
+    expect(store.updateField).toHaveBeenCalledWith(
+      'leaders.union.corps.0.commandLevel',
+      'division'
+    );
+  });
+
+  it('does not render succession list, wreckThreshold, or morale', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: { node: LEADER_NODE, nodeType: 'leader', nodePath: 'leaders.union.corps.0' },
+    });
+    expect(wrapper.find('.succession-list-stub').exists()).toBe(false);
+    expect(wrapper.findAll('.field-number').length).toBe(0);
   });
 });
