@@ -1,9 +1,7 @@
-<script>
-// Named component so Vue can resolve the self-referencing recursion.
-export default { name: 'OobTreeNode' };
-</script>
-
 <script setup>
+// defineOptions provides the component name so Vue can resolve self-referencing recursion.
+defineOptions({ name: 'OobTreeNode' });
+
 import { ref, computed, inject, watch } from 'vue';
 import { useOobStore } from '../stores/useOobStore.js';
 
@@ -25,7 +23,10 @@ const props = defineProps({
 const store = useOobStore();
 const expanded = ref(true);
 
-// Expand/collapse all — signals provided by OobHierarchyTree
+// Expand/collapse all — signals provided by OobHierarchyTree.
+// Each node installs two watchers on the shared signals. Acceptable at South Mountain
+// scale (~200 nodes, ~400 callbacks per toggle). If the tree grows significantly
+// (1000+ nodes), consider a generation-counter comparison to avoid per-node watchers. (#204)
 const expandSignal = inject('expandSignal', null);
 const collapseSignal = inject('collapseSignal', null);
 if (expandSignal)

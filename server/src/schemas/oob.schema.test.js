@@ -366,6 +366,25 @@ describe('OOBSchema — supply and HQ counterRef', () => {
   });
 });
 
+// ── _savedAt + .strict() (#221) ──────────────────────────────────────────────
+
+describe('OOBSchema — _savedAt and strict mode (#221)', () => {
+  it('accepts OOB with optional _savedAt number', () => {
+    const result = OOBSchema.safeParse({ ...MINIMAL_OOB, _savedAt: Date.now() });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts OOB without _savedAt', () => {
+    const result = OOBSchema.safeParse(MINIMAL_OOB);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects OOB with unknown top-level field', () => {
+    const result = OOBSchema.safeParse({ ...MINIMAL_OOB, _unknownField: 'surprise' });
+    expect(result.success).toBe(false);
+  });
+});
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function withUnit(unit) {

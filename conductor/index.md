@@ -37,7 +37,9 @@ Navigation hub for project context.
 | [oob-editor-foundation_20260325](./tracks/oob-editor-foundation_20260325/index.md) | OOB Editor Foundation — Launch Script, Store & Hierarchy Tree | Complete |
 | [oob-detail-panel_20260325](./tracks/oob-detail-panel_20260325/index.md) | OOB Editor — Detail Panel & Counter Image Widget | Complete |
 | [oob-debt-sprint_20260329](./tracks/oob-debt-sprint_20260329/index.md) | OOB Editor Debt Sprint — Issues #207 #209 #210 #211 | Complete |
-| [oob-data-server_20260329](./tracks/oob-data-server_20260329/index.md) | OOB Data Model Completion and Server Routes | Pending |
+| [oob-data-server_20260329](./tracks/oob-data-server_20260329/index.md) | OOB Data Model Completion and Server Routes | Complete |
+| [oob-final-ui_20260330](./tracks/oob-final-ui_20260330/index.md) | OOB Editor Final UI — Succession List and Leader Detail Panel | Complete |
+| [debt-cleanup_20260331](./tracks/debt-cleanup_20260331/index.md) | Technical Debt Cleanup — All Open Items | Pending |
 
 ## Getting Started
 

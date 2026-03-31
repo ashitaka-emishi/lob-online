@@ -114,3 +114,22 @@ describe('LeadersSchema — counterRef on BaseLeader', () => {
     expect(result.success).toBe(false);
   });
 });
+
+// ── _savedAt + .strict() (#221) ──────────────────────────────────────────────
+
+describe('LeadersSchema — _savedAt and strict mode (#221)', () => {
+  it('accepts leaders with optional _savedAt number', () => {
+    const result = LeadersSchema.safeParse({ ...MINIMAL_LEADERS, _savedAt: Date.now() });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts leaders without _savedAt', () => {
+    const result = LeadersSchema.safeParse(MINIMAL_LEADERS);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects leaders with unknown top-level field', () => {
+    const result = LeadersSchema.safeParse({ ...MINIMAL_LEADERS, _unknownField: 'surprise' });
+    expect(result.success).toBe(false);
+  });
+});

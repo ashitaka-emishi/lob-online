@@ -218,6 +218,17 @@ describe('useOobStore', () => {
     expect(store.dirty).toBe(false);
   });
 
+  it('updateField: rejects toString and valueOf as path keys (#216)', () => {
+    const store = useOobStore();
+    store.oob = { _status: 'available', union: { army: 'Original' } };
+    store.updateField('union.toString', 'injected');
+    expect(store.dirty).toBe(false);
+    store.updateField('union.valueOf', 'injected');
+    expect(store.dirty).toBe(false);
+    // original data unchanged
+    expect(store.oob.union.army).toBe('Original');
+  });
+
   // ── updateCounterRef ──────────────────────────────────────────────────────
 
   it('updateCounterRef: sets counterRef on a node and marks dirty', () => {
@@ -452,5 +463,24 @@ describe('useOobStore', () => {
     const store = useOobStore();
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')));
     await expect(store.pullFromServer()).resolves.not.toThrow();
+  });
+
+  it('pullFromServer: sets syncError and resets isSyncing to false on network failure (#214)', async () => {
+    const store = useOobStore();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network error')));
+    await store.pullFromServer();
+    expect(store.syncError).not.toBeNull();
+    expect(store.isSyncing).toBe(false);
+  });
+
+  it('pullFromServer: sets syncError and resets isSyncing to false on non-ok response (#214)', async () => {
+    const store = useOobStore();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 500, json: () => Promise.resolve({}) })
+    );
+    await store.pullFromServer();
+    expect(store.syncError).not.toBeNull();
+    expect(store.isSyncing).toBe(false);
   });
 });

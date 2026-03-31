@@ -2,16 +2,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 
-vi.mock('fs', () => ({
-  readFileSync: vi.fn(),
-  writeFileSync: vi.fn(),
-  mkdirSync: vi.fn(),
-  readdirSync: vi.fn(() => []),
-  unlinkSync: vi.fn(),
+vi.mock('fs/promises', () => ({
+  readFile: vi.fn(),
+  writeFile: vi.fn(() => Promise.resolve()),
+  mkdir: vi.fn(() => Promise.resolve()),
+  readdir: vi.fn(() => Promise.resolve([])),
+  unlink: vi.fn(() => Promise.resolve()),
 }));
 
 // eslint-disable-next-line import/order
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync } from 'fs';
+import { readFile, writeFile, mkdir, readdir, unlink } from 'fs/promises';
 
 // Minimal valid OOB matching OOBSchema
 const VALID_OOB = {
@@ -82,7 +82,7 @@ async function buildApp() {
 
 describe('GET /data (oobEditor)', () => {
   it('returns parsed JSON from file', async () => {
-    readFileSync.mockReturnValue(JSON.stringify(VALID_OOB));
+    readFile.mockResolvedValue(JSON.stringify(VALID_OOB));
     const app = await buildApp();
     const res = await request(app).get('/data');
     expect(res.status).toBe(200);
@@ -94,7 +94,10 @@ describe('GET /data (oobEditor)', () => {
 describe('PUT /data (oobEditor)', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    readdirSync.mockReturnValue([]);
+    readdir.mockResolvedValue([]);
+    mkdir.mockResolvedValue(undefined);
+    writeFile.mockResolvedValue(undefined);
+    unlink.mockResolvedValue(undefined);
   });
 
   it('accepts valid body, writes file, returns { ok: true }', async () => {
@@ -102,7 +105,7 @@ describe('PUT /data (oobEditor)', () => {
     const res = await request(app).put('/data').send(VALID_OOB);
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
-    expect(writeFileSync).toHaveBeenCalledOnce();
+    expect(writeFile).toHaveBeenCalledOnce();
   });
 
   it('rejects invalid body with 400 and issues array', async () => {
@@ -111,22 +114,22 @@ describe('PUT /data (oobEditor)', () => {
     expect(res.status).toBe(400);
     expect(res.body.ok).toBe(false);
     expect(Array.isArray(res.body.issues)).toBe(true);
-    expect(writeFileSync).not.toHaveBeenCalled();
+    expect(writeFile).not.toHaveBeenCalled();
   });
 
   it('creates backup file before main write when current file exists', async () => {
-    readFileSync.mockReturnValue(JSON.stringify(VALID_OOB));
+    readFile.mockResolvedValue(JSON.stringify(VALID_OOB));
     const app = await buildApp();
     const res = await request(app).put('/data').send(VALID_OOB);
     expect(res.status).toBe(200);
-    expect(writeFileSync).toHaveBeenCalledTimes(2);
+    expect(writeFile).toHaveBeenCalledTimes(2);
   });
 
   it('sets _savedAt on written data', async () => {
     const before = Date.now();
     const app = await buildApp();
     await request(app).put('/data').send(VALID_OOB);
-    const writtenJson = writeFileSync.mock.calls[0][1];
+    const writtenJson = writeFile.mock.calls[0][1];
     const written = JSON.parse(writtenJson);
     expect(written._savedAt).toBeGreaterThanOrEqual(before);
     expect(written._savedAt).toBeLessThanOrEqual(Date.now());
@@ -140,33 +143,31 @@ describe('PUT /data (oobEditor)', () => {
   });
 
   it('returns 500 when backup write throws', async () => {
-    readFileSync.mockReturnValue(JSON.stringify(VALID_OOB));
-    writeFileSync.mockImplementationOnce(() => {
-      throw new Error('disk full');
-    });
+    readFile.mockResolvedValue(JSON.stringify(VALID_OOB));
+    writeFile.mockRejectedValueOnce(new Error('disk full'));
     const app = await buildApp();
     const res = await request(app).put('/data').send(VALID_OOB);
     expect(res.status).toBe(500);
     expect(res.body.ok).toBe(false);
-    expect(writeFileSync).toHaveBeenCalledOnce();
+    expect(writeFile).toHaveBeenCalledOnce();
   });
 
   it('trims backups when count exceeds MAX_BACKUPS (20)', async () => {
-    readFileSync.mockReturnValue(JSON.stringify(VALID_OOB));
+    readFile.mockResolvedValue(JSON.stringify(VALID_OOB));
     const existing = Array.from(
       { length: 21 },
       (_, i) => `oob-2026-03-${String(i + 1).padStart(2, '0')}.json`
     );
-    readdirSync.mockReturnValue(existing);
+    readdir.mockResolvedValue(existing);
     const app = await buildApp();
     await request(app).put('/data').send(VALID_OOB);
-    expect(unlinkSync).toHaveBeenCalledOnce();
+    expect(unlink).toHaveBeenCalledOnce();
   });
 
-  it('creates backup directory via mkdirSync', async () => {
+  it('creates backup directory via mkdir', async () => {
     const app = await buildApp();
     await request(app).put('/data').send(VALID_OOB);
-    expect(mkdirSync).toHaveBeenCalledWith(expect.stringContaining('backups'), {
+    expect(mkdir).toHaveBeenCalledWith(expect.stringContaining('backups'), {
       recursive: true,
     });
   });

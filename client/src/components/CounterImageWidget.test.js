@@ -194,6 +194,35 @@ describe('CounterImageWidget — keyboard cycling', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     expect(store.updateCounterRef).not.toHaveBeenCalled();
   });
+
+  it('commit() is a no-op when nodePath is null — store is never called (#213)', async () => {
+    const store = setup();
+    store.updateCounterRef = vi.fn();
+    const wrapper = mount(CounterImageWidget, {
+      props: { counterRef: null, nodePath: null },
+    });
+    await wrapper.findAll('.counter-side')[0].trigger('click');
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await wrapper.vm.$nextTick();
+    expect(store.updateCounterRef).not.toHaveBeenCalled();
+  });
+
+  it('arrow keys do not cycle counters when focus is inside a form field (#212)', async () => {
+    const store = setup();
+    store.updateCounterRef = vi.fn();
+    const wrapper = mount(CounterImageWidget, {
+      props: { counterRef: null, nodePath: 'union.corps.0' },
+    });
+    await wrapper.findAll('.counter-side')[0].trigger('click');
+    // Dispatch ArrowDown from an INPUT element so e.target.tagName === 'INPUT'
+    // The event bubbles up to the window listener which should bail out early
+    const inputEl = document.createElement('input');
+    document.body.appendChild(inputEl);
+    inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await wrapper.vm.$nextTick();
+    expect(store.updateCounterRef).not.toHaveBeenCalled();
+    document.body.removeChild(inputEl);
+  });
 });
 
 // ── Clear button ───────────────────────────────────────────────────────────────
