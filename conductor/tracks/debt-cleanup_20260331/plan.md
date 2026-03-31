@@ -36,20 +36,20 @@ Three targeted server-side improvements. Closes #222, #220, #216.
 
 ### Tasks
 
-- [ ] Task 2.1: Refactor `server/src/routes/counters.js` — move multer middleware to
+- [x] Task 2.1: Refactor `server/src/routes/counters.js` — move multer middleware to
       route-level (`router.post('/upload', upload.single('counter'), handler)`) instead of
       inline callback; update counters.test.js accordingly (#222)
-- [ ] Task 2.2: Migrate `server/src/routes/oobEditor.js` and `leadersEditor.js` from
+- [x] Task 2.2: Migrate `server/src/routes/oobEditor.js` and `leadersEditor.js` from
       `readFileSync`/`writeFileSync` to `fs.promises` (`readFile`/`writeFile`); update
       route handlers to `async`; update test mocks from sync `vi.mock('fs')` to async
       (`vi.fn(() => Promise.resolve(...))`) (#220)
-- [ ] Task 2.3: Add `'toString'` and `'valueOf'` to `FORBIDDEN_PATH_KEYS` in
+- [x] Task 2.3: Add `'toString'` and `'valueOf'` to `FORBIDDEN_PATH_KEYS` in
       `useOobStore.js`; add test asserting `updateField` rejects these key names (#216)
 
 ### Verification
 
-- [ ] `npm run lint`, `npm run format:check` clean
-- [ ] `npm run test` passes (full suite)
+- [x] `npm run lint`, `npm run format:check` clean
+- [x] `npm run test` passes (full suite)
 
 ## Phase 3: Schema Strengthening (score 2)
 
