@@ -453,4 +453,23 @@ describe('useOobStore', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')));
     await expect(store.pullFromServer()).resolves.not.toThrow();
   });
+
+  it('pullFromServer: sets syncError and resets isSyncing to false on network failure (#214)', async () => {
+    const store = useOobStore();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network error')));
+    await store.pullFromServer();
+    expect(store.syncError).not.toBeNull();
+    expect(store.isSyncing).toBe(false);
+  });
+
+  it('pullFromServer: sets syncError and resets isSyncing to false on non-ok response (#214)', async () => {
+    const store = useOobStore();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 500, json: () => Promise.resolve({}) })
+    );
+    await store.pullFromServer();
+    expect(store.syncError).not.toBeNull();
+    expect(store.isSyncing).toBe(false);
+  });
 });
