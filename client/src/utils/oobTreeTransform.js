@@ -47,6 +47,9 @@ function flattenArtillery(node) {
 // Brigade matching (Kanawha-style, applied after division pass):
 //   • arty-{bdeNum}{divPrefix}g-{corpsId}       e.g. arty-1kg-9c  → 1b-kd-9c
 
+// Acceptable at South Mountain scale (~15 divisions, ~40 brigades, ~20 arty entries).
+// If used with a significantly larger OOB, pre-index artyEntries into a Map for O(1)
+// lookups instead of the current linear scan. (#201)
 function distributeCorpsArtillery(corps) {
   if (!corps.artillery || !corps.divisions?.length) return corps;
   const artyEntries = Object.entries(corps.artillery);
