@@ -3,7 +3,7 @@
 **Track ID:** debt-cleanup_20260331
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-03-31
-**Status:** [ ] Not Started
+**Status:** [~] In Progress
 
 ## Overview
 
@@ -18,17 +18,17 @@ changes — pure green-path additions. Closes #212, #213, #214.
 
 ### Tasks
 
-- [ ] Task 1.1: Add `CounterImageWidget` test — `commit()` is a no-op when `nodePath` is
+- [x] Task 1.1: Add `CounterImageWidget` test — `commit()` is a no-op when `nodePath` is
       null; verify `store.updateCounterRef` is never called (#213)
-- [ ] Task 1.2: Add `CounterImageWidget` test — arrow keys do not cycle counters when
+- [x] Task 1.2: Add `CounterImageWidget` test — arrow keys do not cycle counters when
       focus is inside an INPUT, SELECT, or TEXTAREA element (#212)
-- [ ] Task 1.3: Add `useOobStore` test — `pullFromServer` failure sets `syncError` to a
+- [x] Task 1.3: Add `useOobStore` test — `pullFromServer` failure sets `syncError` to a
       non-null message and resets `isSyncing` to `false` (#214)
 
 ### Verification
 
-- [ ] All new tests green; no existing tests broken
-- [ ] `npm run test` passes (full suite)
+- [x] All new tests green; no existing tests broken
+- [x] `npm run test` passes (full suite)
 
 ## Phase 2: Server Route Hardening (score 1–2)
 
