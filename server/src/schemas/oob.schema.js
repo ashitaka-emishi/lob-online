@@ -140,11 +140,14 @@ const ConfederateOOBWithIndependent = ConfederateOOB.extend({
   independentBrigades: z.array(IndependentBrigade).optional(),
 });
 
-export const OOBSchema = z.object({
-  _status: z.string(),
-  _source: z.string(),
-  _errata_applied: z.array(z.string()),
-  _notes: z.record(z.string(), z.string()).optional(),
-  union: UnionOOB,
-  confederate: ConfederateOOBWithIndependent,
-});
+export const OOBSchema = z
+  .object({
+    _status: z.string(),
+    _source: z.string(),
+    _errata_applied: z.array(z.string()),
+    _notes: z.record(z.string(), z.string()).optional(),
+    _savedAt: z.number().optional(),
+    union: UnionOOB,
+    confederate: ConfederateOOBWithIndependent,
+  })
+  .strict();
