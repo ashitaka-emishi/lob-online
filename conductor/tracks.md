@@ -58,5 +58,6 @@
 | [x] | oob-data-server_20260329 | OOB Data Model Completion and Server Routes | 2026-03-29 | 2026-03-29 |
 | [x] | oob-final-ui_20260330 | OOB Editor Final UI — Succession List and Leader Detail Panel | 2026-03-30 | 2026-03-31 |
 | [x] | debt-cleanup_20260331 | Technical Debt Cleanup — All Open Items | 2026-03-31 | 2026-03-31 |
+| [~] | counter-detect-fix_20260331 | Counter Auto-Detection Script Revision | 2026-03-31 | 2026-03-31 |
 
 <!-- Tracks registered by /conductor:new-track -->
