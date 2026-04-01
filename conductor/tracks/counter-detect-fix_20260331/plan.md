@@ -20,7 +20,7 @@ correct side, not across all 220 units.
 ### Tasks
 
 - [x] Task 1.1: Write `classifyImage(filename)` helper — returns `{ army: 'confederate'|'union'|null,
-    face: 'front'|'back' }` using prefix rules (`C##` → CSA front, `U##` → USA front,
+face: 'front'|'back' }` using prefix rules (`C##` → CSA front, `U##` → USA front,
       `CS1-Front_*` / `CS1-Back_*` → face from name, army via color probe)
 - [x] Task 1.2: Write `detectArmyByColor(client, imagePath)` — lightweight Claude vision call;
       blue-dominant → union, grey/tan → confederate

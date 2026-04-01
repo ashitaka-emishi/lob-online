@@ -10,7 +10,7 @@
   "_notes": {
     "weaponTypes": "R=Rifle, M=Musket, SR=SharpshooterRifle, C=Cavalry carbine. The strengthPoints value IS the starting SP total (equals loss-chart boxes). The stragglerBoxes field (9) is the uniform straggler track for each regiment.",
     "artilleryWeaponTypes": "R=Rifle, N=Napoleon, H=Howitzer, L=LightRifle, HvR=HeavyRifle",
-    "ammoClass": "B=high-quality, C=standard, D=depot/reserve \u2014 affects shell/canister supply rates",
+    "ammoClass": "B=high-quality, C=standard, D=depot/reserve — affects shell/canister supply rates",
     "wreckThreshold": "Number of wrecked regiments at which brigade is considered wrecked (checkmark position on Brigade Loss Chart)"
   },
   "union": {
@@ -37,7 +37,12 @@
             "morale": "D",
             "weapon": "C",
             "strengthPoints": 3,
-            "counterRef": null
+            "counterRef": {
+              "front": "U91 copy.png",
+              "frontConfidence": 0.85,
+              "back": "CS1-Back_127.jpg",
+              "backConfidence": 0.85
+            }
           }
         ],
         "artillery": {
@@ -49,7 +54,13 @@
                 "name": "1st NH Lt",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "U86 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": null,
+                  "backConfidence": null
+                }
               },
               {
                 "id": "l1ny-lt",
@@ -71,7 +82,13 @@
                 "gunType": "N",
                 "strengthPoints": 6,
                 "_note": "DETACHED to 4/1/1 per scenario setup",
-                "morale": "B"
+                "morale": "B",
+                "counterRef": {
+                  "front": "U4.png",
+                  "frontConfidence": 0.92,
+                  "back": null,
+                  "backConfidence": null
+                }
               }
             ]
           },
@@ -83,7 +100,13 @@
                 "name": "F 1 Penn Lt",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "U94 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_136.jpg",
+                  "backConfidence": 0.95
+                }
               },
               {
                 "id": "g-penn-lt",
@@ -144,7 +167,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 4,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "CS1-Front_20.jpg",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_64.jpg",
+                      "backConfidence": 0.85
+                    }
                   },
                   {
                     "id": "24ny",
@@ -162,7 +190,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 4,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U88 copy.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_85.jpg",
+                      "backConfidence": 0.85
+                    }
                   },
                   {
                     "id": "84ny",
@@ -171,7 +204,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 3,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U75 copy.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_33.jpg",
+                      "backConfidence": 0.85
+                    }
                   },
                   {
                     "id": "2us-ss",
@@ -180,7 +218,12 @@
                     "morale": "B",
                     "weapon": "SR",
                     "strengthPoints": 2,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": null,
+                      "frontConfidence": null,
+                      "back": "CS1-Back_126.jpg",
+                      "backConfidence": 0.85
+                    }
                   }
                 ],
                 "successionIds": [],
@@ -198,7 +241,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U86 copy.png",
+                      "frontConfidence": 0.95,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "76ny",
@@ -216,7 +264,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U93 copy.png",
+                      "frontConfidence": 0.85,
+                      "back": "CS1-Back_93.jpg",
+                      "backConfidence": 0.85
+                    }
                   },
                   {
                     "id": "56penn",
@@ -243,7 +296,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 3,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U69 copy.png",
+                      "frontConfidence": 0.95,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "23ny",
@@ -252,7 +310,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U60 copy.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_112.jpg",
+                      "backConfidence": 0.85
+                    }
                   },
                   {
                     "id": "35ny",
@@ -261,7 +324,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U15.png",
+                      "frontConfidence": 0.85,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "80ny",
@@ -270,7 +338,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "CS1-Front_14.jpg",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_69.jpg",
+                      "backConfidence": 0.85
+                    }
                   }
                 ],
                 "successionIds": [],
@@ -280,7 +353,7 @@
                 "id": "4b-1d-1c",
                 "name": "4/1/1",
                 "wreckThreshold": 3,
-                "_note": "Iron Brigade \u2014 random event 9 (Brigade of Iron) applies",
+                "_note": "Iron Brigade — random event 9 (Brigade of Iron) applies",
                 "regiments": [
                   {
                     "id": "19ind",
@@ -289,7 +362,12 @@
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "CS1-Front_05.jpg",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_91.jpg",
+                      "backConfidence": 0.75
+                    }
                   },
                   {
                     "id": "2wisc",
@@ -298,7 +376,12 @@
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 7,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U90 copy.png",
+                      "frontConfidence": 0.92,
+                      "back": "CS1-Back_126.jpg",
+                      "backConfidence": 0.95
+                    }
                   },
                   {
                     "id": "6wisc",
@@ -307,7 +390,12 @@
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U92 copy.png",
+                      "frontConfidence": 0.95,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "7wisc",
@@ -316,7 +404,12 @@
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "CS1-Front_02.jpg",
+                      "frontConfidence": 0.85,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   }
                 ],
                 "successionIds": [],
@@ -348,7 +441,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U71 copy.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_117.jpg",
+                      "backConfidence": 0.85
+                    }
                   },
                   {
                     "id": "104ny",
@@ -357,7 +455,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U36.png",
+                      "frontConfidence": 0.95,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "105ny",
@@ -393,7 +496,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U79 copy.png",
+                      "frontConfidence": 0.95,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "94ny",
@@ -506,7 +614,12 @@
                     "morale": "B",
                     "weapon": "M",
                     "strengthPoints": 7,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U41.png",
+                      "frontConfidence": 0.95,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "6penn-res",
@@ -515,7 +628,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U42.png",
+                      "frontConfidence": 0.95,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   }
                 ],
                 "successionIds": [],
@@ -533,7 +651,12 @@
                     "morale": "C",
                     "weapon": "M",
                     "strengthPoints": 3,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": null,
+                      "frontConfidence": null,
+                      "back": "CS1-Back_62.jpg",
+                      "backConfidence": 0.85
+                    }
                   },
                   {
                     "id": "7penn-res",
@@ -542,7 +665,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U36.png",
+                      "frontConfidence": 0.85,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "8penn-res",
@@ -587,7 +715,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 4,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U48.png",
+                      "frontConfidence": 0.95,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "12penn-res",
@@ -596,7 +729,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 7,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U39.png",
+                      "frontConfidence": 0.95,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   }
                 ],
                 "successionIds": [],
@@ -626,7 +764,7 @@
             "morale": "D",
             "weapon": "C",
             "strengthPoints": 1,
-            "_note": "Corps cavalry \u2014 cannot fulfill reserve for Fluke Stoppage (SM rule)",
+            "_note": "Corps cavalry — cannot fulfill reserve for Fluke Stoppage (SM rule)",
             "counterRef": null
           },
           {
@@ -636,7 +774,7 @@
             "morale": "D",
             "weapon": "C",
             "strengthPoints": 10,
-            "_note": "Corps cavalry \u2014 cannot fulfill reserve for Fluke Stoppage (SM rule)",
+            "_note": "Corps cavalry — cannot fulfill reserve for Fluke Stoppage (SM rule)",
             "counterRef": null
           },
           {
@@ -646,7 +784,7 @@
             "morale": "B",
             "weapon": "C",
             "strengthPoints": 1,
-            "_note": "Corps cavalry \u2014 cannot fulfill reserve for Fluke Stoppage (SM rule)",
+            "_note": "Corps cavalry — cannot fulfill reserve for Fluke Stoppage (SM rule)",
             "counterRef": null
           }
         ],
@@ -873,7 +1011,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U28.png",
+                      "frontConfidence": 0.85,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "6nh",
@@ -891,7 +1034,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U67 copy.png",
+                      "frontConfidence": 0.85,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "48penn",
@@ -986,7 +1134,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 10,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U76 copy.png",
+                      "frontConfidence": 0.95,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "103ny",
@@ -1013,7 +1166,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U78 copy.png",
+                      "frontConfidence": 0.85,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "11conn",
@@ -1108,7 +1266,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U87 copy.png",
+                      "frontConfidence": 0.95,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "28ohio",
@@ -1127,7 +1290,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 16,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U89 copy.png",
+                      "frontConfidence": 0.95,
+                      "back": null,
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "chicago-dgn",
@@ -1186,7 +1354,12 @@
               "morale": "B",
               "weapon": "C",
               "strengthPoints": 12,
-              "counterRef": null
+              "counterRef": {
+                "front": null,
+                "frontConfidence": null,
+                "back": "CS1-Back_135.jpg",
+                "backConfidence": 0.92
+              }
             },
             {
               "id": "3ind",
@@ -1243,7 +1416,7 @@
           "name": "Pelham A",
           "gunType": "N",
           "strengthPoints": 4,
-          "_note": "Horse artillery \u2014 Limbered MA = 12. Can replenish from any friendly ammo reserve (SM special rule)",
+          "_note": "Horse artillery — Limbered MA = 12. Can replenish from any friendly ammo reserve (SM special rule)",
           "morale": "C"
         },
         {
@@ -1264,7 +1437,13 @@
           "name": "Blackshears",
           "gunType": "H",
           "strengthPoints": 5,
-          "morale": "D"
+          "morale": "D",
+          "counterRef": {
+            "front": null,
+            "frontConfidence": null,
+            "back": "CS1-Back_242.jpg",
+            "backConfidence": 0.95
+          }
         },
         {
           "id": "lane",
@@ -1285,7 +1464,13 @@
           "name": "Patterson",
           "gunType": "L",
           "strengthPoints": 6,
-          "morale": "D"
+          "morale": "D",
+          "counterRef": {
+            "front": null,
+            "frontConfidence": null,
+            "back": "CS1-Back_244.jpg",
+            "backConfidence": 0.92
+          }
         },
         {
           "id": "ross",
@@ -1315,7 +1500,13 @@
                 "name": "Bondurant",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "C2 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_143.jpg",
+                  "backConfidence": 0.95
+                }
               },
               {
                 "id": "carter",
@@ -1329,14 +1520,26 @@
                 "name": "Hardaway",
                 "gunType": "R",
                 "strengthPoints": 3,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "C1 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_142.jpg",
+                  "backConfidence": 0.95
+                }
               },
               {
                 "id": "jones",
                 "name": "Jones",
                 "gunType": "N",
                 "strengthPoints": 4,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "CS1-Front_181.jpg",
+                  "frontConfidence": 0.95,
+                  "back": null,
+                  "backConfidence": null
+                }
               }
             ]
           }
@@ -1354,7 +1557,12 @@
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 9,
-                "counterRef": null
+                "counterRef": {
+                  "front": null,
+                  "frontConfidence": null,
+                  "back": "CS1-Back_81.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "4nc",
@@ -1363,7 +1571,12 @@
                 "morale": "A",
                 "weapon": "M",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": null,
+                  "frontConfidence": null,
+                  "back": "CS1-Back_147.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "14nc",
@@ -1372,7 +1585,12 @@
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 6,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C53 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": null,
+                  "backConfidence": null
+                }
               },
               {
                 "id": "30nc",
@@ -1381,7 +1599,12 @@
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 7,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C76 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_40.jpg",
+                  "backConfidence": 0.85
+                }
               }
             ],
             "successionIds": [],
@@ -1399,7 +1622,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 7,
-                "counterRef": null
+                "counterRef": {
+                  "front": null,
+                  "frontConfidence": null,
+                  "back": "CS1-Back_153.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "6ga",
@@ -1408,7 +1636,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 8,
-                "counterRef": null
+                "counterRef": {
+                  "front": "CS1-Front_220.jpg",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_243.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "23ga",
@@ -1426,7 +1659,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C77 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_90.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "28ga",
@@ -1435,7 +1673,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 6,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C7 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_38.jpg",
+                  "backConfidence": 0.85
+                }
               }
             ],
             "successionIds": [],
@@ -1454,7 +1697,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 7,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C75 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": "CS1-Back_59.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "12nc",
@@ -1463,7 +1711,12 @@
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": null,
+                  "frontConfidence": null,
+                  "back": "CS1-Back_165.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "13nc",
@@ -1481,7 +1734,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C17 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": null,
+                  "backConfidence": null
+                }
               },
               {
                 "id": "23nc",
@@ -1490,7 +1748,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 5,
-                "counterRef": null
+                "counterRef": {
+                  "front": null,
+                  "frontConfidence": null,
+                  "back": "CS1-Back_63.jpg",
+                  "backConfidence": 0.85
+                }
               }
             ],
             "successionIds": [],
@@ -1508,7 +1771,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C19 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_197.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "1nc",
@@ -1517,7 +1785,12 @@
                 "morale": "A",
                 "weapon": "M",
                 "strengthPoints": 5,
-                "counterRef": null
+                "counterRef": {
+                  "front": "CS1-Front_93.jpg",
+                  "frontConfidence": 0.85,
+                  "back": "CS1-Back_83.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "3nc",
@@ -1526,7 +1799,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 11,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C21 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_68.jpg",
+                  "backConfidence": 0.85
+                }
               }
             ],
             "successionIds": [],
@@ -1544,7 +1822,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 5,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C22 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": "CS1-Back_172.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "5ala",
@@ -1553,7 +1836,12 @@
                 "morale": "C",
                 "weapon": "M",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C16 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": "CS1-Back_120.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "6ala",
@@ -1562,7 +1850,12 @@
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 11,
-                "counterRef": null
+                "counterRef": {
+                  "front": "CS1-Front_206.jpg",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_230.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "12ala",
@@ -1615,7 +1908,13 @@
                 "name": "Garden",
                 "gunType": "H",
                 "strengthPoints": 4,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "CS1-Front_157.jpg",
+                  "frontConfidence": 0.95,
+                  "back": null,
+                  "backConfidence": null
+                }
               },
               {
                 "id": "reilly",
@@ -1640,7 +1939,12 @@
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 5,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C74 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": null,
+                  "backConfidence": null
+                }
               },
               {
                 "id": "1tex",
@@ -1649,7 +1953,12 @@
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 5,
-                "counterRef": null
+                "counterRef": {
+                  "front": null,
+                  "frontConfidence": null,
+                  "back": "CS1-Back_118.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "4tex",
@@ -1712,7 +2021,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 6,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C72 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": null,
+                  "backConfidence": null
+                }
               },
               {
                 "id": "6nc-h",
@@ -1721,7 +2035,12 @@
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 7,
-                "counterRef": null
+                "counterRef": {
+                  "front": null,
+                  "frontConfidence": null,
+                  "back": "CS1-Back_149.jpg",
+                  "backConfidence": 0.85
+                }
               }
             ],
             "successionIds": [],
@@ -1812,7 +2131,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C32 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": null,
+                  "backConfidence": null
+                }
               },
               {
                 "id": "51ga",
@@ -1821,7 +2145,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C33 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": null,
+                  "backConfidence": null
+                }
               },
               {
                 "id": "15sc",
@@ -1849,7 +2178,7 @@
             "id": "gj",
             "name": "G/J",
             "wreckThreshold": 3,
-            "_note": "DETACHED \u2014 reinforces Turner's Gap (Order 3)",
+            "_note": "DETACHED — reinforces Turner's Gap (Order 3)",
             "regiments": [
               {
                 "id": "8va",
@@ -1904,7 +2233,7 @@
             "id": "kj",
             "name": "K/J",
             "wreckThreshold": 4,
-            "_note": "DETACHED \u2014 reinforces Turner's Gap (Order 3)",
+            "_note": "DETACHED — reinforces Turner's Gap (Order 3)",
             "regiments": [
               {
                 "id": "1va",
@@ -1959,7 +2288,7 @@
             "id": "wj",
             "name": "W/J",
             "wreckThreshold": 4,
-            "_note": "DETACHED \u2014 reinforces Turner's Gap (Order 3)",
+            "_note": "DETACHED — reinforces Turner's Gap (Order 3)",
             "regiments": [
               {
                 "id": "1sc",
@@ -2013,7 +2342,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C51 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": null,
+                  "backConfidence": null
+                }
               }
             ],
             "successionIds": [],
@@ -2028,7 +2362,7 @@
       {
         "id": "evans-bde",
         "name": "Evans Brigade",
-        "_note": "Independent brigade \u2014 not subordinate to any division. Evans technically commands a division with Hood's brigades but command friction kept them separate (SM 3.3).",
+        "_note": "Independent brigade — not subordinate to any division. Evans technically commands a division with Hood's brigades but command friction kept them separate (SM 3.3).",
         "wreckThreshold": 3,
         "artillery": {
           "arty-evans": {
@@ -2052,7 +2386,12 @@
             "morale": "C",
             "weapon": "M",
             "strengthPoints": 3,
-            "counterRef": null
+            "counterRef": {
+              "front": "C65 copy.png",
+              "frontConfidence": 0.95,
+              "back": "CS1-Back_233.jpg",
+              "backConfidence": 0.85
+            }
           },
           {
             "id": "18sc",
@@ -2061,7 +2400,12 @@
             "morale": "C",
             "weapon": "R",
             "strengthPoints": 3,
-            "counterRef": null
+            "counterRef": {
+              "front": "C65 copy.png",
+              "frontConfidence": 0.95,
+              "back": "CS1-Back_235.jpg",
+              "backConfidence": 0.85
+            }
           },
           {
             "id": "22sc",
@@ -2070,7 +2414,12 @@
             "morale": "C",
             "weapon": "R",
             "strengthPoints": 6,
-            "counterRef": null
+            "counterRef": {
+              "front": "CS1-Front_232.jpg",
+              "frontConfidence": 0.95,
+              "back": "CS1-Back_235.jpg",
+              "backConfidence": 0.85
+            }
           },
           {
             "id": "23sc",
@@ -2079,7 +2428,12 @@
             "morale": "C",
             "weapon": "R",
             "strengthPoints": 1,
-            "counterRef": null
+            "counterRef": {
+              "front": null,
+              "frontConfidence": null,
+              "back": "CS1-Back_234.jpg",
+              "backConfidence": 0.85
+            }
           },
           {
             "id": "holcombe",
@@ -2088,7 +2442,12 @@
             "morale": "C",
             "weapon": "R",
             "strengthPoints": 3,
-            "counterRef": null
+            "counterRef": {
+              "front": null,
+              "frontConfidence": null,
+              "back": "CS1-Back_237.jpg",
+              "backConfidence": 0.85
+            }
           }
         ],
         "successionIds": [],

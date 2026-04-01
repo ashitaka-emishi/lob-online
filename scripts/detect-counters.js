@@ -43,7 +43,7 @@ const ROOT = join(__dirname, '..');
 const COUNTERS_DIR = join(ROOT, 'client/public/counters');
 const OOB_PATH = join(ROOT, 'data/scenarios/south-mountain/oob.json');
 const LEADERS_PATH = join(ROOT, 'data/scenarios/south-mountain/leaders.json');
-const CONFIDENCE_THRESHOLD = 0.8;
+const CONFIDENCE_THRESHOLD = 0.0; // write all matches; OOB editor used for manual correction
 const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp']);
 
 const DRY_RUN = process.argv.includes('--dry-run');
@@ -361,10 +361,14 @@ Rules:
   });
 
   const raw = response.content[0]?.text?.trim() ?? '';
-  const text = raw
-    .replace(/^```json\s*/i, '')
-    .replace(/```\s*$/, '')
-    .replace(/\n/g, ' ');
+  // Extract the first {...} JSON object — Claude sometimes appends explanation after the JSON
+  const jsonMatch = raw.match(/\{[^}]*\}/);
+  const text = jsonMatch
+    ? jsonMatch[0]
+    : raw
+        .replace(/^```json\s*/i, '')
+        .replace(/```\s*$/, '')
+        .replace(/\n/g, ' ');
 
   try {
     const parsed = JSON.parse(text);

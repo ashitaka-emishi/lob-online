@@ -29,8 +29,8 @@ remaining low-confidence or null refs.
       side is not encoded in the filename
 - [ ] Claude vision API prompt includes full command chain context
       (army → division → brigade → unit) from the corrected `oob.json` hierarchy
-- [ ] High-confidence matches (≥ 0.80) write `counterRef.front` / `counterRef.back` into
-      `oob.json` / `leaders.json`; low-confidence left null
+- [ ] All matches (confidence ≥ 0.0) write `counterRef.front` / `counterRef.back` into
+      `oob.json` / `leaders.json` with their confidence score; OOB Editor used for manual correction
 - [ ] Both CSA and USA sides processed
 - [ ] Script is idempotent: re-running does not overwrite already-set refs unless `--force`
 - [ ] Summary report prints matched/unmatched counts with confidence scores per image
