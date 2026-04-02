@@ -8,7 +8,16 @@ export default defineConfig({
       {
         test: {
           name: 'server',
-          include: ['server/src/**/*.test.js', 'scripts/**/*.test.js'],
+          include: ['server/src/**/*.test.js'],
+          environment: 'node',
+          globals: true,
+        },
+      },
+      // Dev-tool scripts — Node environment (separate project to avoid coupling to server conventions)
+      {
+        test: {
+          name: 'scripts',
+          include: ['scripts/**/*.test.js'],
           environment: 'node',
           globals: true,
         },

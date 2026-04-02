@@ -14,7 +14,7 @@
  *        determines army (blue tint = Union, grey/tan = Confederate)
  *   3. Build a roster restricted to the classified army
  *   4. Call Claude vision API with the army-filtered roster + full command chain context
- *   5. Write counterRef.front/back + confidence for high-confidence matches (≥ 0.80)
+ *   5. Write counterRef.front/back + confidence for all matches (threshold = 0.0; OOB editor used for manual correction)
  *   6. Skip records where counterRef is already set, unless --force is passed
  *   7. Save updated oob.json and leaders.json
  *   8. Print summary report
@@ -45,6 +45,13 @@ const OOB_PATH = join(ROOT, 'data/scenarios/south-mountain/oob.json');
 const LEADERS_PATH = join(ROOT, 'data/scenarios/south-mountain/leaders.json');
 const CONFIDENCE_THRESHOLD = 0.0; // write all matches; OOB editor used for manual correction
 const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp']);
+const MIME_MAP = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  webp: 'image/webp',
+};
 
 const DRY_RUN = process.argv.includes('--dry-run');
 const FORCE = process.argv.includes('--force');
@@ -90,7 +97,11 @@ export async function detectArmyByColor(client, imagePath) {
   const imageData = readFileSync(imagePath);
   const base64 = imageData.toString('base64');
   const ext = extname(imagePath).toLowerCase().replace('.', '');
-  const mediaType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : `image/${ext}`;
+  const mediaType = MIME_MAP[ext];
+  if (!mediaType) {
+    console.warn(`[detect-counters] Unsupported image type: ${ext} (${imagePath})`);
+    return null;
+  }
 
   const response = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',
@@ -159,8 +170,12 @@ export function collectOOBRecords(oob) {
     }
   }
 
-  // Union: corps → divisions → brigades
+  // Union: supply train + corps → hq, divisions → brigades
+  if (oob.union?.supplyTrain) {
+    addUnit(oob.union.supplyTrain, 'union', { corps: null, division: null, brigade: null });
+  }
   for (const corps of oob.union?.corps ?? []) {
+    if (corps.hq) addUnit(corps.hq, 'union', { corps: corps.name, division: null, brigade: null });
     for (const div of corps.divisions ?? []) walkDivision(div, 'union', corps.name);
     for (const artGroup of Object.values(corps.artillery ?? {})) {
       const chain = { corps: corps.name, division: null, brigade: artGroup.name };
@@ -286,6 +301,25 @@ export function buildRoster(oobMap, leaderMap, army) {
 // ---------------------------------------------------------------------------
 
 /**
+ * Extract the first well-formed JSON object from a string using brace matching.
+ * Handles nested objects and trailing prose after the closing brace.
+ * Returns the matched substring, or null if no object is found.
+ */
+export function extractFirstJson(str) {
+  const start = str.indexOf('{');
+  if (start === -1) return null;
+  let depth = 0;
+  for (let i = start; i < str.length; i++) {
+    if (str[i] === '{') depth++;
+    else if (str[i] === '}') {
+      depth--;
+      if (depth === 0) return str.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
+/**
  * Call Claude vision API to identify the counter in the image.
  * The army is pre-classified; the roster is already filtered to that army.
  *
@@ -295,7 +329,11 @@ export async function identifyCounter(client, imagePath, face, army, roster) {
   const imageData = readFileSync(imagePath);
   const base64 = imageData.toString('base64');
   const ext = extname(imagePath).toLowerCase().replace('.', '');
-  const mediaType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : `image/${ext}`;
+  const mediaType = MIME_MAP[ext];
+  if (!mediaType) {
+    console.warn(`[detect-counters] Unsupported image type: ${ext} (${imagePath})`);
+    return { unitId: null, confidence: 0 };
+  }
 
   const faceDesc =
     face === 'back'
@@ -361,10 +399,11 @@ Rules:
   });
 
   const raw = response.content[0]?.text?.trim() ?? '';
-  // Extract the first {...} JSON object — Claude sometimes appends explanation after the JSON
-  const jsonMatch = raw.match(/\{[^}]*\}/);
-  const text = jsonMatch
-    ? jsonMatch[0]
+  // Extract the first well-formed JSON object, handling nested braces and trailing prose.
+  // Falls back to markdown fence stripping when no JSON object is found.
+  const jsonText = extractFirstJson(raw);
+  const text = jsonText
+    ? jsonText
     : raw
         .replace(/^```json\s*/i, '')
         .replace(/```\s*$/, '')
@@ -464,6 +503,11 @@ async function main() {
 
   for (const filename of imageFiles) {
     const imagePath = join(COUNTERS_DIR, filename);
+    // Guard against path traversal (defensive; readdirSync returns direct children only)
+    if (!imagePath.startsWith(COUNTERS_DIR + '/') && imagePath !== COUNTERS_DIR) {
+      console.warn(`[detect-counters] Skipping suspicious filename: ${filename}`);
+      continue;
+    }
     let { army, face } = classifyImage(filename);
 
     // For CS1-* files where army is not in filename, detect from color
