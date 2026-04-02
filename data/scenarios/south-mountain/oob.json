@@ -10,7 +10,7 @@
   "_notes": {
     "weaponTypes": "R=Rifle, M=Musket, SR=SharpshooterRifle, C=Cavalry carbine. The strengthPoints value IS the starting SP total (equals loss-chart boxes). The stragglerBoxes field (9) is the uniform straggler track for each regiment.",
     "artilleryWeaponTypes": "R=Rifle, N=Napoleon, H=Howitzer, L=LightRifle, HvR=HeavyRifle",
-    "ammoClass": "B=high-quality, C=standard, D=depot/reserve \u2014 affects shell/canister supply rates",
+    "ammoClass": "B=high-quality, C=standard, D=depot/reserve — affects shell/canister supply rates",
     "wreckThreshold": "Number of wrecked regiments at which brigade is considered wrecked (checkmark position on Brigade Loss Chart)"
   },
   "union": {
@@ -18,16 +18,28 @@
     "supplyTrain": {
       "id": "usa-train",
       "name": "AotP Supply",
-      "counterRef": null
+      "counterRef": {
+        "front": "CS1-Front_04.jpg",
+        "frontConfidence": null,
+        "back": null,
+        "backConfidence": null
+      }
     },
     "corps": [
       {
         "id": "1c",
         "name": "1 Corps",
+        "successionIds": [],
+        "counterRef": null,
         "hq": {
           "id": "1c-hq",
           "name": "1 Corps HQ",
-          "counterRef": null
+          "counterRef": {
+            "front": "CS1-Front_07.jpg",
+            "frontConfidence": null,
+            "back": null,
+            "backConfidence": null
+          }
         },
         "corpsUnits": [
           {
@@ -37,7 +49,12 @@
             "morale": "D",
             "weapon": "C",
             "strengthPoints": 3,
-            "counterRef": null
+            "counterRef": {
+              "front": "U1.png",
+              "frontConfidence": 0.85,
+              "back": "CS1-Back_06.jpg",
+              "backConfidence": 0.85
+            }
           }
         ],
         "artillery": {
@@ -49,29 +66,53 @@
                 "name": "1st NH Lt",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "U2.png",
+                  "frontConfidence": 0.85,
+                  "back": "CS1-Back_10.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "l1ny-lt",
                 "name": "L 1 NY Lt",
                 "gunType": "R",
                 "strengthPoints": 6,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "U4.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_12.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "d1ri-lt",
                 "name": "D 1 RI Lt",
                 "gunType": "N",
                 "strengthPoints": 6,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "U3.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_11.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "b4us",
                 "name": "B 4 US",
                 "gunType": "N",
                 "strengthPoints": 6,
-                "_note": "DETACHED to 4/1/1 per scenario setup",
-                "morale": "B"
+                "morale": "B",
+                "counterRef": {
+                  "front": "U5.png",
+                  "frontConfidence": 0.92,
+                  "back": "CS1-Back_13.jpg",
+                  "backConfidence": null
+                },
+                "_note": "DETACHED to 4/1/1 per scenario setup"
               }
             ]
           },
@@ -83,14 +124,26 @@
                 "name": "F 1 Penn Lt",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "U34.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_50.jpg",
+                  "backConfidence": 0.95
+                }
               },
               {
                 "id": "g-penn-lt",
                 "name": "G Penn Lt",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "U35.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_51.jpg",
+                  "backConfidence": null
+                }
               }
             ]
           },
@@ -102,21 +155,39 @@
                 "name": "A 1 Penn Lt",
                 "gunType": "N",
                 "strengthPoints": 4,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "U36.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_53.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "b1penn-lt",
                 "name": "B 1 Penn Lt",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "U37.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_54.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "c5us",
                 "name": "C 5 US",
                 "gunType": "N",
                 "strengthPoints": 4,
-                "morale": "B"
+                "morale": "B",
+                "counterRef": {
+                  "front": "U38.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_55.jpg",
+                  "backConfidence": null
+                }
               }
             ]
           }
@@ -126,6 +197,8 @@
             "id": "1d-1c",
             "name": "1/1 Division",
             "wreckThreshold": 3,
+            "successionIds": [],
+            "counterRef": null,
             "hq": {
               "id": "1d-1c-hq",
               "name": "1/1 Div HQ",
@@ -136,6 +209,8 @@
                 "id": "1b-1d-1c",
                 "name": "1/1/1",
                 "wreckThreshold": 3,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "22ny",
@@ -144,7 +219,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 4,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U6.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_15.jpg",
+                      "backConfidence": 0.85
+                    }
                   },
                   {
                     "id": "24ny",
@@ -153,7 +233,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 3,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U7.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_16.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "30ny",
@@ -162,7 +247,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 4,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U8.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_17.jpg",
+                      "backConfidence": 0.85
+                    }
                   },
                   {
                     "id": "84ny",
@@ -171,7 +261,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 3,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U9.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_18.jpg",
+                      "backConfidence": 0.85
+                    }
                   },
                   {
                     "id": "2us-ss",
@@ -180,16 +275,21 @@
                     "morale": "B",
                     "weapon": "SR",
                     "strengthPoints": 2,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U10.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_19.jpg",
+                      "backConfidence": 0.85
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               },
               {
                 "id": "2b-1d-1c",
                 "name": "2/1/1",
                 "wreckThreshold": 2,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "7ind",
@@ -198,7 +298,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U11.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_21.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "76ny",
@@ -207,7 +312,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 2,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U12.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_22.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "95ny",
@@ -216,7 +326,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U13.png",
+                      "frontConfidence": 0.85,
+                      "back": "CS1-Back_23.jpg",
+                      "backConfidence": 0.85
+                    }
                   },
                   {
                     "id": "56penn",
@@ -225,16 +340,21 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U14.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_24.jpg",
+                      "backConfidence": null
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               },
               {
                 "id": "3b-1d-1c",
                 "name": "3/1/1",
                 "wreckThreshold": 2,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "21ny",
@@ -243,7 +363,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 3,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U15.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_26.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "23ny",
@@ -252,7 +377,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U16.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_27.jpg",
+                      "backConfidence": 0.85
+                    }
                   },
                   {
                     "id": "35ny",
@@ -261,7 +391,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U17.png",
+                      "frontConfidence": 0.85,
+                      "back": "CS1-Back_28.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "80ny",
@@ -270,17 +405,21 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U18.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_29.jpg",
+                      "backConfidence": 0.85
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               },
               {
                 "id": "4b-1d-1c",
                 "name": "4/1/1",
                 "wreckThreshold": 3,
-                "_note": "Iron Brigade \u2014 random event 9 (Brigade of Iron) applies",
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "19ind",
@@ -289,7 +428,12 @@
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U19.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_31.jpg",
+                      "backConfidence": 0.75
+                    }
                   },
                   {
                     "id": "2wisc",
@@ -298,7 +442,12 @@
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 7,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U20.png",
+                      "frontConfidence": 0.92,
+                      "back": "CS1-Back_32.jpg",
+                      "backConfidence": 0.95
+                    }
                   },
                   {
                     "id": "6wisc",
@@ -307,7 +456,12 @@
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U21.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_33.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "7wisc",
@@ -316,20 +470,24 @@
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U22.png",
+                      "frontConfidence": 0.85,
+                      "back": "CS1-Back_34.jpg",
+                      "backConfidence": null
+                    }
                   }
                 ],
-                "successionIds": [],
-                "counterRef": null
+                "_note": "Iron Brigade — random event 9 (Brigade of Iron) applies"
               }
-            ],
-            "successionIds": [],
-            "counterRef": null
+            ]
           },
           {
             "id": "2d-1c",
             "name": "2/1 Division",
             "wreckThreshold": 2,
+            "successionIds": [],
+            "counterRef": null,
             "hq": {
               "id": "2d-1c-hq",
               "name": "2/1 Div HQ",
@@ -340,6 +498,8 @@
                 "id": "1b-2d-1c",
                 "name": "1/2/1",
                 "wreckThreshold": 2,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "97ny",
@@ -348,7 +508,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U23.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_37.jpg",
+                      "backConfidence": 0.85
+                    }
                   },
                   {
                     "id": "104ny",
@@ -357,7 +522,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U24.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_38.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "105ny",
@@ -366,7 +536,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 4,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U25.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_39.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "107penn",
@@ -375,16 +550,21 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U26.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_40.jpg",
+                      "backConfidence": null
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               },
               {
                 "id": "2b-2d-1c",
                 "name": "2/2/1",
                 "wreckThreshold": 2,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "26ny",
@@ -393,7 +573,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U27.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_42.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "94ny",
@@ -402,7 +587,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 4,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U28.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_43.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "90penn",
@@ -411,16 +601,21 @@
                     "morale": "C",
                     "weapon": "M",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U29.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_44.jpg",
+                      "backConfidence": null
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               },
               {
                 "id": "3b-2d-1c",
                 "name": "3/2/1",
                 "wreckThreshold": 2,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "12mass",
@@ -429,7 +624,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U30.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_46.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "13mass",
@@ -438,7 +638,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 7,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U33.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_49.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "83ny",
@@ -447,7 +652,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 7,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U31.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_47.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "11penn",
@@ -456,20 +666,23 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U32.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_48.jpg",
+                      "backConfidence": null
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               }
-            ],
-            "successionIds": [],
-            "counterRef": null
+            ]
           },
           {
             "id": "3d-1c",
             "name": "3/1 Division",
             "wreckThreshold": 2,
+            "successionIds": [],
+            "counterRef": null,
             "hq": {
               "id": "3d-1c-hq",
               "name": "3/1 Div HQ",
@@ -480,6 +693,8 @@
                 "id": "1b-3d-1c",
                 "name": "1/3/1",
                 "wreckThreshold": 3,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "1penn-res",
@@ -488,7 +703,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 7,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U39.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_57.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "2penn-res",
@@ -497,7 +717,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U40.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_58.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "5penn-res",
@@ -506,7 +731,12 @@
                     "morale": "B",
                     "weapon": "M",
                     "strengthPoints": 7,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U41.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_59.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "6penn-res",
@@ -515,16 +745,21 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U42.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_60.jpg",
+                      "backConfidence": null
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               },
               {
                 "id": "2b-3d-1c",
                 "name": "2/3/1",
                 "wreckThreshold": 2,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "4penn-res",
@@ -533,7 +768,12 @@
                     "morale": "C",
                     "weapon": "M",
                     "strengthPoints": 3,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U43.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_62.jpg",
+                      "backConfidence": 0.85
+                    }
                   },
                   {
                     "id": "7penn-res",
@@ -542,7 +782,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U44.png",
+                      "frontConfidence": 0.85,
+                      "back": "CS1-Back_63.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "8penn-res",
@@ -551,16 +796,21 @@
                     "morale": "B",
                     "weapon": "M",
                     "strengthPoints": 7,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U45.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_64.jpg",
+                      "backConfidence": null
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               },
               {
                 "id": "3b-3d-1c",
                 "name": "3/3/1",
                 "wreckThreshold": 2,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "9penn-res",
@@ -569,7 +819,12 @@
                     "morale": "B",
                     "weapon": "M",
                     "strengthPoints": 7,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U46.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_66.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "10penn-res",
@@ -578,7 +833,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U47.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_67.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "11penn-res",
@@ -587,7 +847,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 4,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U48.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_68.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "12penn-res",
@@ -596,27 +861,33 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 7,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U49.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_69.jpg",
+                      "backConfidence": null
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               }
-            ],
-            "successionIds": [],
-            "counterRef": null
+            ]
           }
-        ],
-        "successionIds": [],
-        "counterRef": null
+        ]
       },
       {
         "id": "9c",
         "name": "9 Corps",
+        "successionIds": [],
+        "counterRef": null,
         "hq": {
           "id": "9c-hq",
           "name": "9 Corps HQ",
-          "counterRef": null
+          "counterRef": {
+            "front": "CS1-Front_72.jpg",
+            "frontConfidence": null,
+            "back": null,
+            "backConfidence": null
+          }
         },
         "corpsUnits": [
           {
@@ -626,8 +897,13 @@
             "morale": "D",
             "weapon": "C",
             "strengthPoints": 1,
-            "_note": "Corps cavalry \u2014 cannot fulfill reserve for Fluke Stoppage (SM rule)",
-            "counterRef": null
+            "counterRef": {
+              "front": "U50.png",
+              "frontConfidence": null,
+              "back": "CS1-Back_74.jpg",
+              "backConfidence": null
+            },
+            "_note": "Corps cavalry — cannot fulfill reserve for Fluke Stoppage (SM rule)"
           },
           {
             "id": "6ny-cav",
@@ -636,8 +912,13 @@
             "morale": "D",
             "weapon": "C",
             "strengthPoints": 10,
-            "_note": "Corps cavalry \u2014 cannot fulfill reserve for Fluke Stoppage (SM rule)",
-            "counterRef": null
+            "counterRef": {
+              "front": "U51.png",
+              "frontConfidence": null,
+              "back": "CS1-Back_75.jpg",
+              "backConfidence": null
+            },
+            "_note": "Corps cavalry — cannot fulfill reserve for Fluke Stoppage (SM rule)"
           },
           {
             "id": "3ohio-cav",
@@ -646,8 +927,13 @@
             "morale": "B",
             "weapon": "C",
             "strengthPoints": 1,
-            "_note": "Corps cavalry \u2014 cannot fulfill reserve for Fluke Stoppage (SM rule)",
-            "counterRef": null
+            "counterRef": {
+              "front": "U52.png",
+              "frontConfidence": null,
+              "back": "CS1-Back_76.jpg",
+              "backConfidence": null
+            },
+            "_note": "Corps cavalry — cannot fulfill reserve for Fluke Stoppage (SM rule)"
           }
         ],
         "artillery": {
@@ -659,14 +945,26 @@
                 "name": "L 2 NY",
                 "gunType": "R",
                 "strengthPoints": 6,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "U54.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_78.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "lm3us",
                 "name": "L&M 3 US",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "morale": "B"
+                "morale": "B",
+                "counterRef": {
+                  "front": "U53.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_77.jpg",
+                  "backConfidence": null
+                }
               }
             ]
           },
@@ -678,15 +976,27 @@
                 "name": "8th Mass Lt",
                 "gunType": "L",
                 "strengthPoints": 6,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "U63 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_90.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "e2us",
                 "name": "E 2 US",
                 "gunType": "HvR",
                 "strengthPoints": 4,
-                "_errata": "Weapon type corrected from R to HvR (SM_Errata #2)",
-                "morale": "B"
+                "morale": "B",
+                "counterRef": {
+                  "front": "U64 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_91.jpg",
+                  "backConfidence": null
+                },
+                "_errata": "Weapon type corrected from R to HvR (SM_Errata #2)"
               }
             ]
           },
@@ -698,14 +1008,26 @@
                 "name": "D Penn Lt",
                 "gunType": "R",
                 "strengthPoints": 6,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "U73 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_103.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "e4us",
                 "name": "E 4 US",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "U74 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_104.jpg",
+                  "backConfidence": null
+                }
               }
             ]
           },
@@ -717,7 +1039,13 @@
                 "name": "A 5 US",
                 "gunType": "N",
                 "strengthPoints": 6,
-                "morale": "B"
+                "morale": "B",
+                "counterRef": {
+                  "front": "U81 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_114.jpg",
+                  "backConfidence": null
+                }
               }
             ]
           },
@@ -729,7 +1057,13 @@
                 "name": "1st Ohio Lt",
                 "gunType": "R",
                 "strengthPoints": 6,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "U85 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_120.jpg",
+                  "backConfidence": null
+                }
               }
             ]
           },
@@ -741,7 +1075,13 @@
                 "name": "Simonds Ky",
                 "gunType": "R",
                 "strengthPoints": 6,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "U90 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_126.jpg",
+                  "backConfidence": null
+                }
               }
             ]
           }
@@ -751,6 +1091,8 @@
             "id": "1d-9c",
             "name": "1/9 Division",
             "wreckThreshold": 1,
+            "successionIds": [],
+            "counterRef": null,
             "hq": {
               "id": "1d-9c-hq",
               "name": "1/9 Div HQ",
@@ -761,6 +1103,8 @@
                 "id": "1b-1d-9c",
                 "name": "1/1/9",
                 "wreckThreshold": 3,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "28mass",
@@ -769,7 +1113,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 10,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U55.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_81.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "8mich",
@@ -778,7 +1127,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U56.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_82.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "17mich",
@@ -787,7 +1141,12 @@
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 7,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U57 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_83.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "79ny",
@@ -796,7 +1155,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U58 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_84.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "50penn",
@@ -805,16 +1169,21 @@
                     "morale": "D",
                     "weapon": "R",
                     "strengthPoints": 12,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U59 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_85.jpg",
+                      "backConfidence": null
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               },
               {
                 "id": "2b-1d-9c",
                 "name": "2/1/9",
                 "wreckThreshold": 2,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "46ny",
@@ -823,7 +1192,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U60 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_87.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "45penn",
@@ -832,7 +1206,12 @@
                     "morale": "C",
                     "weapon": "M",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U61 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_88.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "100penn",
@@ -841,20 +1220,23 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 10,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U62 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_89.jpg",
+                      "backConfidence": null
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               }
-            ],
-            "successionIds": [],
-            "counterRef": null
+            ]
           },
           {
             "id": "2d-9c",
             "name": "2/9 Division",
             "wreckThreshold": 2,
+            "successionIds": [],
+            "counterRef": null,
             "hq": {
               "id": "2d-9c-hq",
               "name": "2/9 Div HQ",
@@ -865,6 +1247,8 @@
                 "id": "1b-2d-9c",
                 "name": "1/2/9",
                 "wreckThreshold": 3,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "2md",
@@ -873,7 +1257,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U65 copy.png",
+                      "frontConfidence": 0.85,
+                      "back": "CS1-Back_94.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "6nh",
@@ -882,7 +1271,12 @@
                     "morale": "A",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U66 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_95.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "9nh",
@@ -891,7 +1285,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U67 copy.png",
+                      "frontConfidence": 0.85,
+                      "back": "CS1-Back_96.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "48penn",
@@ -900,16 +1299,21 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 11,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U68 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_97.jpg",
+                      "backConfidence": null
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               },
               {
                 "id": "2b-2d-9c",
                 "name": "2/2/9",
                 "wreckThreshold": 3,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "21mass",
@@ -918,7 +1322,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U69 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_99.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "35mass",
@@ -927,7 +1336,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 6,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U70 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_100.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "51ny",
@@ -936,7 +1350,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U71 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_101.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "51penn",
@@ -945,20 +1364,23 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 11,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U72 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_102.jpg",
+                      "backConfidence": null
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               }
-            ],
-            "successionIds": [],
-            "counterRef": null
+            ]
           },
           {
             "id": "3d-9c",
             "name": "3/9 Division",
             "wreckThreshold": 1,
+            "successionIds": [],
+            "counterRef": null,
             "hq": {
               "id": "3d-9c-hq",
               "name": "3/9 Div HQ",
@@ -969,6 +1391,8 @@
                 "id": "1b-3d-9c",
                 "name": "1/3/9",
                 "wreckThreshold": 2,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "9ny",
@@ -977,7 +1401,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U75 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_107.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "89ny",
@@ -986,7 +1415,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 10,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U76 copy.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_108.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "103ny",
@@ -995,16 +1429,21 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U77 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_109.jpg",
+                      "backConfidence": null
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               },
               {
                 "id": "2b-3d-9c",
                 "name": "2/3/9",
                 "wreckThreshold": 2,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "8conn",
@@ -1013,7 +1452,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 8,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U78 copy.png",
+                      "frontConfidence": 0.85,
+                      "back": "CS1-Back_111.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "11conn",
@@ -1022,7 +1466,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 10,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U79 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_112.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "4ri",
@@ -1031,20 +1480,23 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U80 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_113.jpg",
+                      "backConfidence": null
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               }
-            ],
-            "successionIds": [],
-            "counterRef": null
+            ]
           },
           {
             "id": "kd-9c",
             "name": "K/9 Division",
             "wreckThreshold": 1,
+            "successionIds": [],
+            "counterRef": null,
             "hq": {
               "id": "kd-9c-hq",
               "name": "K/9 Div HQ",
@@ -1055,6 +1507,8 @@
                 "id": "1b-kd-9c",
                 "name": "1/K/9",
                 "wreckThreshold": 2,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "12ohio",
@@ -1063,7 +1517,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 4,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U82 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_117.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "23ohio",
@@ -1072,7 +1531,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 5,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U83 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_118.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "30ohio",
@@ -1081,7 +1545,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 13,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U84 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_119.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "wva",
@@ -1090,16 +1559,21 @@
                     "morale": "C",
                     "weapon": "C",
                     "strengthPoints": 2,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U86 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_121.jpg",
+                      "backConfidence": null
+                    }
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               },
               {
                 "id": "2b-kd-9c",
                 "name": "2/K/9",
                 "wreckThreshold": 2,
+                "successionIds": [],
+                "counterRef": null,
                 "regiments": [
                   {
                     "id": "11ohio",
@@ -1108,7 +1582,12 @@
                     "morale": "B",
                     "weapon": "R",
                     "strengthPoints": 9,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U87 copy.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_123.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "28ohio",
@@ -1117,8 +1596,13 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 15,
-                    "_errata": "strengthPoints corrected from 14 to 15 (SM_Errata #4)",
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U88 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_124.jpg",
+                      "backConfidence": null
+                    },
+                    "_errata": "strengthPoints corrected from 14 to 15 (SM_Errata #4)"
                   },
                   {
                     "id": "36ohio",
@@ -1127,7 +1611,12 @@
                     "morale": "C",
                     "weapon": "R",
                     "strengthPoints": 16,
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U89 copy.png",
+                      "frontConfidence": 0.95,
+                      "back": "CS1-Back_125.jpg",
+                      "backConfidence": null
+                    }
                   },
                   {
                     "id": "chicago-dgn",
@@ -1136,31 +1625,37 @@
                     "morale": "B",
                     "weapon": "C",
                     "strengthPoints": 2,
-                    "_errata": "Moved from 1/K/9 to 2/K/9 (SM_Errata #1)",
-                    "counterRef": null
+                    "counterRef": {
+                      "front": "U91 copy.png",
+                      "frontConfidence": null,
+                      "back": "CS1-Back_127.jpg",
+                      "backConfidence": null
+                    },
+                    "_errata": "Moved from 1/K/9 to 2/K/9 (SM_Errata #1)"
                   }
-                ],
-                "successionIds": [],
-                "counterRef": null
+                ]
               }
-            ],
-            "successionIds": [],
-            "counterRef": null
+            ]
           }
-        ],
-        "successionIds": [],
-        "counterRef": null
+        ]
       }
     ],
     "cavalryDivision": {
       "id": "cav-div",
       "name": "F/Cav",
-      "_note": "Pleasonton's artillery can replenish from any friendly ammo reserve (SM special rule)",
+      "successionIds": [],
+      "counterRef": null,
       "hq": {
         "id": "cav-div-hq",
         "name": "Cavalry Div HQ",
-        "counterRef": null
+        "counterRef": {
+          "front": "CS1-Front_131.jpg",
+          "frontConfidence": null,
+          "back": null,
+          "backConfidence": null
+        }
       },
+      "_note": "Pleasonton's artillery can replenish from any friendly ammo reserve (SM special rule)",
       "artillery": {
         "arty-fcav": {
           "batteries": [
@@ -1169,7 +1664,13 @@
               "name": "C&G 3 US",
               "gunType": "R",
               "strengthPoints": 6,
-              "morale": "C"
+              "morale": "C",
+              "counterRef": {
+                "front": "U92 copy.png",
+                "frontConfidence": null,
+                "back": "CS1-Back_133.jpg",
+                "backConfidence": null
+              }
             }
           ]
         }
@@ -1178,6 +1679,8 @@
         {
           "id": "fcav",
           "wreckThreshold": 1,
+          "successionIds": [],
+          "counterRef": null,
           "regiments": [
             {
               "id": "8ill",
@@ -1186,7 +1689,12 @@
               "morale": "B",
               "weapon": "C",
               "strengthPoints": 12,
-              "counterRef": null
+              "counterRef": {
+                "front": "U93 copy.png",
+                "frontConfidence": null,
+                "back": "CS1-Back_134.jpg",
+                "backConfidence": 0.92
+              }
             },
             {
               "id": "3ind",
@@ -1195,7 +1703,12 @@
               "morale": "C",
               "weapon": "C",
               "strengthPoints": 7,
-              "counterRef": null
+              "counterRef": {
+                "front": "U94 copy.png",
+                "frontConfidence": null,
+                "back": "CS1-Back_135.jpg",
+                "backConfidence": null
+              }
             },
             {
               "id": "1mass",
@@ -1204,15 +1717,16 @@
               "morale": "D",
               "weapon": "C",
               "strengthPoints": 11,
-              "counterRef": null
+              "counterRef": {
+                "front": "U95 copy.png",
+                "frontConfidence": null,
+                "back": "CS1-Back_136.jpg",
+                "backConfidence": null
+              }
             }
-          ],
-          "successionIds": [],
-          "counterRef": null
+          ]
         }
-      ],
-      "successionIds": [],
-      "counterRef": null
+      ]
     }
   },
   "confederate": {
@@ -1221,7 +1735,12 @@
     "supplyWagon": {
       "id": "csa-wagon",
       "name": "Wing Supply Wagon",
-      "counterRef": null
+      "counterRef": {
+        "front": "CS1-Front_178.jpg",
+        "frontConfidence": null,
+        "back": null,
+        "backConfidence": null
+      }
     },
     "independent": {
       "_note": "5th Va Cavalry and Pelham units are Independent (exempt from command radius restrictions). Cannot enter hex with Union units or initiate Close Combat.",
@@ -1233,8 +1752,13 @@
           "morale": "C",
           "weapon": "R",
           "strengthPoints": 7,
-          "_errata": "Morale corrected from B to C (SM_Errata #5)",
-          "counterRef": null
+          "counterRef": {
+            "front": "C75 copy.png",
+            "frontConfidence": null,
+            "back": null,
+            "backConfidence": null
+          },
+          "_errata": "Morale corrected from B to C (SM_Errata #5)"
         }
       ],
       "artillery": [
@@ -1243,16 +1767,28 @@
           "name": "Pelham A",
           "gunType": "N",
           "strengthPoints": 4,
-          "_note": "Horse artillery \u2014 Limbered MA = 12. Can replenish from any friendly ammo reserve (SM special rule)",
-          "morale": "C"
+          "morale": "C",
+          "counterRef": {
+            "front": "C76 copy.png",
+            "frontConfidence": null,
+            "back": null,
+            "backConfidence": null
+          },
+          "_note": "Horse artillery — Limbered MA = 12. Can replenish from any friendly ammo reserve (SM special rule)"
         },
         {
           "id": "pelham-b",
           "name": "Pelham B",
           "gunType": "R",
           "strengthPoints": 4,
-          "_note": "Can replenish from any friendly ammo reserve (SM special rule)",
-          "morale": "C"
+          "morale": "C",
+          "counterRef": {
+            "front": "C77 copy.png",
+            "frontConfidence": null,
+            "back": null,
+            "backConfidence": null
+          },
+          "_note": "Can replenish from any friendly ammo reserve (SM special rule)"
         }
       ]
     },
@@ -1264,35 +1800,65 @@
           "name": "Blackshears",
           "gunType": "H",
           "strengthPoints": 5,
-          "morale": "D"
+          "morale": "D",
+          "counterRef": {
+            "front": "C72 copy.png",
+            "frontConfidence": null,
+            "back": "CS1-Back_242.jpg",
+            "backConfidence": 0.95
+          }
         },
         {
           "id": "lane",
           "name": "Lane",
           "gunType": "R",
           "strengthPoints": 6,
-          "morale": "D"
+          "morale": "D",
+          "counterRef": {
+            "front": "C70 copy.png",
+            "frontConfidence": null,
+            "back": null,
+            "backConfidence": null
+          }
         },
         {
           "id": "lloyd",
           "name": "Lloyd",
           "gunType": "L",
           "strengthPoints": 3,
-          "morale": "D"
+          "morale": "D",
+          "counterRef": {
+            "front": "C71 copy.png",
+            "frontConfidence": null,
+            "back": null,
+            "backConfidence": null
+          }
         },
         {
           "id": "patterson",
           "name": "Patterson",
           "gunType": "L",
           "strengthPoints": 6,
-          "morale": "D"
+          "morale": "D",
+          "counterRef": {
+            "front": "C74 copy.png",
+            "frontConfidence": null,
+            "back": "CS1-Back_244.jpg",
+            "backConfidence": 0.92
+          }
         },
         {
           "id": "ross",
           "name": "Ross",
           "gunType": "R",
           "strengthPoints": 5,
-          "morale": "D"
+          "morale": "D",
+          "counterRef": {
+            "front": "C73 copy.png",
+            "frontConfidence": null,
+            "back": null,
+            "backConfidence": null
+          }
         }
       ]
     },
@@ -1301,10 +1867,17 @@
         "id": "dh-div",
         "name": "dH Division",
         "wreckThreshold": 4,
+        "successionIds": [],
+        "counterRef": null,
         "hq": {
           "id": "dh-div-hq",
           "name": "dH Div HQ",
-          "counterRef": null
+          "counterRef": {
+            "front": "CS1-Front_173.jpg",
+            "frontConfidence": null,
+            "back": null,
+            "backConfidence": null
+          }
         },
         "artillery": {
           "arty-dh": {
@@ -1315,28 +1888,52 @@
                 "name": "Bondurant",
                 "gunType": "R",
                 "strengthPoints": 4,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "C2 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_143.jpg",
+                  "backConfidence": 0.95
+                }
               },
               {
                 "id": "carter",
                 "name": "Carter",
                 "gunType": "H",
                 "strengthPoints": 5,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "C4 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_145.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "hardaway",
                 "name": "Hardaway",
                 "gunType": "R",
                 "strengthPoints": 3,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "C1 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_142.jpg",
+                  "backConfidence": 0.95
+                }
               },
               {
                 "id": "jones",
                 "name": "Jones",
                 "gunType": "N",
                 "strengthPoints": 4,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "C3 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_144.jpg",
+                  "backConfidence": null
+                }
               }
             ]
           }
@@ -1346,6 +1943,8 @@
             "id": "adh",
             "name": "A/dH",
             "wreckThreshold": 3,
+            "successionIds": [],
+            "counterRef": null,
             "regiments": [
               {
                 "id": "2nc",
@@ -1354,7 +1953,12 @@
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 9,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C5 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_147.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "4nc",
@@ -1363,7 +1967,12 @@
                 "morale": "A",
                 "weapon": "M",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C6 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_148.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "14nc",
@@ -1372,7 +1981,12 @@
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 6,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C7 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": "CS1-Back_149.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "30nc",
@@ -1381,16 +1995,21 @@
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 7,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C8 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_150.jpg",
+                  "backConfidence": 0.85
+                }
               }
-            ],
-            "successionIds": [],
-            "counterRef": null
+            ]
           },
           {
             "id": "cdh",
             "name": "C/dH",
             "wreckThreshold": 3,
+            "successionIds": [],
+            "counterRef": null,
             "regiments": [
               {
                 "id": "13ala",
@@ -1399,7 +2018,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 7,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C9 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_152.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "6ga",
@@ -1408,7 +2032,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 8,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C10 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_153.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "23ga",
@@ -1417,7 +2046,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 5,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C11 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_154.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "27ga",
@@ -1426,7 +2060,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C12 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_155.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "28ga",
@@ -1435,17 +2074,21 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 6,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C13 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_156.jpg",
+                  "backConfidence": 0.85
+                }
               }
-            ],
-            "successionIds": [],
-            "counterRef": null
+            ]
           },
           {
             "id": "gdh",
             "name": "G/dH",
             "wreckThreshold": 3,
-            "_note": "DETACHED at start to defend Fox's Gap",
+            "successionIds": [],
+            "counterRef": null,
             "regiments": [
               {
                 "id": "5nc",
@@ -1454,7 +2097,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 7,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C14 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": "CS1-Back_158.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "12nc",
@@ -1463,7 +2111,12 @@
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C15 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_159.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "13nc",
@@ -1472,7 +2125,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C16 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_160.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "20nc",
@@ -1481,7 +2139,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C17 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_161.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "23nc",
@@ -1490,16 +2153,22 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 5,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C18 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_162.jpg",
+                  "backConfidence": 0.85
+                }
               }
             ],
-            "successionIds": [],
-            "counterRef": null
+            "_note": "DETACHED at start to defend Fox's Gap"
           },
           {
             "id": "ridh",
             "name": "Ri/dH",
             "wreckThreshold": 2,
+            "successionIds": [],
+            "counterRef": null,
             "regiments": [
               {
                 "id": "44ga",
@@ -1508,7 +2177,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C19 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_164.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "1nc",
@@ -1517,7 +2191,12 @@
                 "morale": "A",
                 "weapon": "M",
                 "strengthPoints": 5,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C20 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": "CS1-Back_165.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "3nc",
@@ -1526,16 +2205,21 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 11,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C21 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_166.jpg",
+                  "backConfidence": 0.85
+                }
               }
-            ],
-            "successionIds": [],
-            "counterRef": null
+            ]
           },
           {
             "id": "rodh",
             "name": "Ro/dH",
             "wreckThreshold": 3,
+            "successionIds": [],
+            "counterRef": null,
             "regiments": [
               {
                 "id": "3ala",
@@ -1544,7 +2228,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 5,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C22 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": "CS1-Back_168.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "5ala",
@@ -1553,7 +2242,12 @@
                 "morale": "C",
                 "weapon": "M",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C23 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": "CS1-Back_169.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "6ala",
@@ -1562,7 +2256,12 @@
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 11,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C24 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_170.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "12ala",
@@ -1571,7 +2270,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 6,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C25 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_171.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "26ala",
@@ -1580,24 +2284,32 @@
                 "morale": "C",
                 "weapon": "M",
                 "strengthPoints": 2,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C26 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_172.jpg",
+                  "backConfidence": null
+                }
               }
-            ],
-            "successionIds": [],
-            "counterRef": null
+            ]
           }
-        ],
-        "successionIds": [],
-        "counterRef": null
+        ]
       },
       {
         "id": "h-div",
         "name": "H Division",
         "wreckThreshold": 2,
+        "successionIds": [],
+        "counterRef": null,
         "hq": {
           "id": "h-div-hq",
           "name": "H Div HQ",
-          "counterRef": null
+          "counterRef": {
+            "front": "CS1-Front_231.jpg",
+            "frontConfidence": null,
+            "back": null,
+            "backConfidence": null
+          }
         },
         "artillery": {
           "arty-h": {
@@ -1608,21 +2320,39 @@
                 "name": "Bachman",
                 "gunType": "N",
                 "strengthPoints": 6,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "C52 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_217.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "garden",
                 "name": "Garden",
                 "gunType": "H",
                 "strengthPoints": 4,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "C53 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_218.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "reilly",
                 "name": "Reilly",
                 "gunType": "R",
                 "strengthPoints": 6,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "C54 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_219.jpg",
+                  "backConfidence": null
+                }
               }
             ]
           }
@@ -1632,6 +2362,8 @@
             "id": "wh",
             "name": "W/H",
             "wreckThreshold": 4,
+            "successionIds": [],
+            "counterRef": null,
             "regiments": [
               {
                 "id": "18ga",
@@ -1640,7 +2372,12 @@
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 5,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C55 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_221.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "1tex",
@@ -1649,7 +2386,12 @@
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 5,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C57 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_223.jpg",
+                  "backConfidence": 0.85
+                }
               },
               {
                 "id": "4tex",
@@ -1658,7 +2400,12 @@
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 5,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C58 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_224.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "5tex",
@@ -1667,7 +2414,12 @@
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C59 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_225.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "hampton-lgn",
@@ -1676,16 +2428,21 @@
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 6,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C56 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_222.jpg",
+                  "backConfidence": null
+                }
               }
-            ],
-            "successionIds": [],
-            "counterRef": null
+            ]
           },
           {
             "id": "lh",
             "name": "L/H",
             "wreckThreshold": 3,
+            "successionIds": [],
+            "counterRef": null,
             "regiments": [
               {
                 "id": "4ala",
@@ -1694,7 +2451,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 6,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C60 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_227.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "2miss",
@@ -1703,7 +2465,12 @@
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 9,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C61 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_228.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "11miss",
@@ -1712,7 +2479,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 6,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C62 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": "CS1-Back_229.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "6nc-h",
@@ -1721,24 +2493,32 @@
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 7,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C63 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_230.jpg",
+                  "backConfidence": 0.85
+                }
               }
-            ],
-            "successionIds": [],
-            "counterRef": null
+            ]
           }
-        ],
-        "successionIds": [],
-        "counterRef": null
+        ]
       },
       {
         "id": "j-div",
         "name": "J Division",
         "wreckThreshold": 3,
+        "successionIds": [],
+        "counterRef": null,
         "hq": {
           "id": "j-div-hq",
           "name": "J Div HQ",
-          "counterRef": null
+          "counterRef": {
+            "front": "CS1-Front_183.jpg",
+            "frontConfidence": null,
+            "back": null,
+            "backConfidence": null
+          }
         },
         "artillery": {
           "arty-j": {
@@ -1749,7 +2529,13 @@
                 "name": "Brown",
                 "gunType": "H",
                 "strengthPoints": 4,
-                "morale": "C"
+                "morale": "C",
+                "counterRef": {
+                  "front": "C27 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_182.jpg",
+                  "backConfidence": null
+                }
               }
             ]
           }
@@ -1759,6 +2545,8 @@
             "id": "aj",
             "name": "A/J",
             "wreckThreshold": 3,
+            "successionIds": [],
+            "counterRef": null,
             "regiments": [
               {
                 "id": "1ga",
@@ -1767,7 +2555,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C28 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_185.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "7ga",
@@ -1776,7 +2569,12 @@
                 "morale": "B",
                 "weapon": "M",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C29 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_186.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "8ga",
@@ -1785,7 +2583,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 1,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C30 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_187.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "9ga",
@@ -1794,16 +2597,21 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 2,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C31 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_188.jpg",
+                  "backConfidence": null
+                }
               }
-            ],
-            "successionIds": [],
-            "counterRef": null
+            ]
           },
           {
             "id": "dj",
             "name": "D/J",
             "wreckThreshold": 3,
+            "successionIds": [],
+            "counterRef": null,
             "regiments": [
               {
                 "id": "50ga",
@@ -1812,7 +2620,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C32 copy.png",
+                  "frontConfidence": 0.95,
+                  "back": "CS1-Back_190.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "51ga",
@@ -1821,7 +2634,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C33 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": "CS1-Back_191.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "15sc",
@@ -1830,7 +2648,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 6,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C34 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_192.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "phillips-lgn",
@@ -1839,17 +2662,21 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C35 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_193.jpg",
+                  "backConfidence": null
+                }
               }
-            ],
-            "successionIds": [],
-            "counterRef": null
+            ]
           },
           {
             "id": "gj",
             "name": "G/J",
             "wreckThreshold": 3,
-            "_note": "DETACHED \u2014 reinforces Turner's Gap (Order 3)",
+            "successionIds": [],
+            "counterRef": null,
             "regiments": [
               {
                 "id": "8va",
@@ -1858,7 +2685,12 @@
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C36 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_195.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "18va",
@@ -1867,7 +2699,12 @@
                 "morale": "A",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C37 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_196.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "19va",
@@ -1876,7 +2713,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C38 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_197.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "28va",
@@ -1885,7 +2727,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 5,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C39 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_198.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "56va",
@@ -1894,17 +2741,22 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C40 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_199.jpg",
+                  "backConfidence": null
+                }
               }
             ],
-            "successionIds": [],
-            "counterRef": null
+            "_note": "DETACHED — reinforces Turner's Gap (Order 3)"
           },
           {
             "id": "kj",
             "name": "K/J",
             "wreckThreshold": 4,
-            "_note": "DETACHED \u2014 reinforces Turner's Gap (Order 3)",
+            "successionIds": [],
+            "counterRef": null,
             "regiments": [
               {
                 "id": "1va",
@@ -1913,7 +2765,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 2,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C41 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_201.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "7va",
@@ -1922,7 +2779,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 2,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C42 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_202.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "11va",
@@ -1931,7 +2793,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C43 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_203.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "17va",
@@ -1940,7 +2807,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C44 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_204.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "24va",
@@ -1949,17 +2821,22 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C45 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_205.jpg",
+                  "backConfidence": null
+                }
               }
             ],
-            "successionIds": [],
-            "counterRef": null
+            "_note": "DETACHED — reinforces Turner's Gap (Order 3)"
           },
           {
             "id": "wj",
             "name": "W/J",
             "wreckThreshold": 4,
-            "_note": "DETACHED \u2014 reinforces Turner's Gap (Order 3)",
+            "successionIds": [],
+            "counterRef": null,
             "regiments": [
               {
                 "id": "1sc",
@@ -1968,7 +2845,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 2,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C46 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_207.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "2sc-rifles",
@@ -1977,7 +2859,12 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C47 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_208.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "5sc",
@@ -1986,7 +2873,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C48 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_209.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "6sc",
@@ -1995,7 +2887,12 @@
                 "morale": "C",
                 "weapon": "R",
                 "strengthPoints": 3,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C49 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_210.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "4sc-bn",
@@ -2004,7 +2901,12 @@
                 "morale": "C",
                 "weapon": "M",
                 "strengthPoints": 2,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C50 copy.png",
+                  "frontConfidence": null,
+                  "back": "CS1-Back_211.jpg",
+                  "backConfidence": null
+                }
               },
               {
                 "id": "palmetto",
@@ -2013,23 +2915,27 @@
                 "morale": "B",
                 "weapon": "R",
                 "strengthPoints": 4,
-                "counterRef": null
+                "counterRef": {
+                  "front": "C51 copy.png",
+                  "frontConfidence": 0.85,
+                  "back": "CS1-Back_212.jpg",
+                  "backConfidence": null
+                }
               }
             ],
-            "successionIds": [],
-            "counterRef": null
+            "_note": "DETACHED — reinforces Turner's Gap (Order 3)"
           }
-        ],
-        "successionIds": [],
-        "counterRef": null
+        ]
       }
     ],
     "independentBrigades": [
       {
         "id": "evans-bde",
         "name": "Evans Brigade",
-        "_note": "Independent brigade \u2014 not subordinate to any division. Evans technically commands a division with Hood's brigades but command friction kept them separate (SM 3.3).",
+        "_note": "Independent brigade — not subordinate to any division. Evans technically commands a division with Hood's brigades but command friction kept them separate (SM 3.3).",
         "wreckThreshold": 3,
+        "successionIds": [],
+        "counterRef": null,
         "artillery": {
           "arty-evans": {
             "name": "Evans",
@@ -2052,7 +2958,12 @@
             "morale": "C",
             "weapon": "M",
             "strengthPoints": 3,
-            "counterRef": null
+            "counterRef": {
+              "front": "C65 copy.png",
+              "frontConfidence": 0.95,
+              "back": "CS1-Back_233.jpg",
+              "backConfidence": 0.85
+            }
           },
           {
             "id": "18sc",
@@ -2061,7 +2972,12 @@
             "morale": "C",
             "weapon": "R",
             "strengthPoints": 3,
-            "counterRef": null
+            "counterRef": {
+              "front": "C65 copy.png",
+              "frontConfidence": 0.95,
+              "back": "CS1-Back_235.jpg",
+              "backConfidence": 0.85
+            }
           },
           {
             "id": "22sc",
@@ -2070,7 +2986,12 @@
             "morale": "C",
             "weapon": "R",
             "strengthPoints": 6,
-            "counterRef": null
+            "counterRef": {
+              "front": "CS1-Front_232.jpg",
+              "frontConfidence": 0.95,
+              "back": "CS1-Back_235.jpg",
+              "backConfidence": 0.85
+            }
           },
           {
             "id": "23sc",
@@ -2079,7 +3000,12 @@
             "morale": "C",
             "weapon": "R",
             "strengthPoints": 1,
-            "counterRef": null
+            "counterRef": {
+              "front": null,
+              "frontConfidence": null,
+              "back": "CS1-Back_234.jpg",
+              "backConfidence": 0.85
+            }
           },
           {
             "id": "holcombe",
@@ -2088,12 +3014,16 @@
             "morale": "C",
             "weapon": "R",
             "strengthPoints": 3,
-            "counterRef": null
+            "counterRef": {
+              "front": null,
+              "frontConfidence": null,
+              "back": "CS1-Back_237.jpg",
+              "backConfidence": 0.85
+            }
           }
-        ],
-        "successionIds": [],
-        "counterRef": null
+        ]
       }
     ]
-  }
+  },
+  "_savedAt": 1775108660059
 }

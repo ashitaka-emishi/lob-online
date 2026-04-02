@@ -3,7 +3,7 @@
 **Track ID:** debt-cleanup_20260331
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-03-31
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -96,14 +96,14 @@ than a code change. Closes #207, #215, #206, #205, #204, #201.
 
 - [x] `npm run lint`, `npm run format:check` clean
 - [x] `npm run test` passes (full suite)
-- [ ] OOB editor push/pull/sync behavior unchanged (manual smoke test)
+- [x] OOB editor push/pull/sync behavior unchanged (manual smoke test)
 
 ## Final Verification
 
-- [ ] All 13 acceptance criteria issues closed
-- [ ] `docs/tech-debt/report.md` updated to 0 open items, net score 0
-- [ ] `npm run lint`, `npm run format:check`, `npm run test` green
-- [ ] Ready for `/pr-create` (one PR per phase, or bundled — user choice)
+- [x] All 13 acceptance criteria issues closed
+- [x] `docs/tech-debt/report.md` updated to 0 open items, net score 0
+- [x] `npm run lint`, `npm run format:check`, `npm run test` green
+- [x] Ready for `/pr-create` (one PR per phase, or bundled — user choice)
 
 ---
 

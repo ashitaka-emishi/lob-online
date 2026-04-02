@@ -18,13 +18,13 @@
         "commandLevel": "army",
         "commandsId": null,
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalTime": "15:00",
           "arrivalNote": "Until McClellan arrives, Union orders may only be issued by leader initiative (SM 2.1).",
           "casualtyEffect": "If McClellan becomes a casualty, Burnside assumes army command and all Burnside restrictions are lifted."
-        },
-        "counterRef": null
+        }
       },
       {
         "id": "burnside",
@@ -33,12 +33,12 @@
         "commandLevel": "wing",
         "commandsId": null,
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "supernumerary": true,
           "restrictions": "Burnside may NOT issue or receive orders and may NOT use initiative until: (a) McClellan becomes a casualty and Burnside assumes army command, or (b) Reno becomes a casualty and Burnside takes 9 Corps command (SM 2.1).",
           "canTake9Corps": true
-        },
-        "counterRef": null
+        }
       }
     ],
     "corps": [
@@ -49,10 +49,10 @@
         "commandLevel": "corps",
         "commandsId": "1c",
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "detachmentAllowed": "1 Corps may detach one Division; each 1 Corps Division may detach one Brigade (SM 2.3)."
-        },
-        "counterRef": null
+        }
       },
       {
         "id": "reno",
@@ -61,11 +61,11 @@
         "commandLevel": "corps",
         "commandsId": "9c",
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "detachmentAllowed": "9 Corps may detach a maximum of two Divisions; may NOT detach Brigades (SM 2.3).",
           "casualtyEffect": "If Reno becomes a casualty, Burnside assumes 9 Corps command (all Burnside restrictions lifted)."
-        },
-        "counterRef": null
+        }
       }
     ],
     "cavalry": [
@@ -76,11 +76,11 @@
         "commandLevel": "division",
         "commandsId": "cav-div",
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "artilleryReplenishFromAnyReserve": true,
           "replenishNote": "Pleasonton's artillery (C&G 3 US) may replenish from any friendly ammo reserve, not just the assigned corps reserve (SM override, LOBv2_GameSpecificUpdates.pdf)."
-        },
-        "counterRef": null
+        }
       }
     ],
     "divisions": [
@@ -100,7 +100,16 @@
         "commandLevel": "division",
         "commandsId": "2d-1c",
         "initiativeRating": null,
-        "counterRef": null
+        "counterRef": {
+          "front": "CS1-Front_35.jpg",
+          "frontConfidence": 1,
+          "back": null,
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        }
       },
       {
         "id": "meade",
@@ -109,7 +118,16 @@
         "commandLevel": "division",
         "commandsId": "3d-1c",
         "initiativeRating": null,
-        "counterRef": null
+        "counterRef": {
+          "front": "CS1-Front_52.jpg",
+          "frontConfidence": 0.95,
+          "back": null,
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        }
       },
       {
         "id": "willcox",
@@ -118,7 +136,16 @@
         "commandLevel": "division",
         "commandsId": "1d-9c",
         "initiativeRating": null,
-        "counterRef": null
+        "counterRef": {
+          "front": "CS1-Front_79.jpg",
+          "frontConfidence": 0.95,
+          "back": null,
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        }
       },
       {
         "id": "sturgis",
@@ -171,7 +198,16 @@
         "commandLevel": "brigade",
         "commandsId": "3b-1d-1c",
         "initiativeRating": null,
-        "counterRef": null
+        "counterRef": {
+          "front": "CS1-Front_25.jpg",
+          "frontConfidence": 0.95,
+          "back": null,
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        }
       },
       {
         "id": "gibbon",
@@ -179,11 +215,20 @@
         "commandLevel": "brigade",
         "commandsId": "4b-1d-1c",
         "initiativeRating": null,
+        "counterRef": {
+          "front": "CS1-Front_30.jpg",
+          "frontConfidence": 0.95,
+          "back": null,
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "ironBrigade": true,
           "randomEvent9": "Brigade of Iron — all units in Gibbon's Brigade may ignore unfavorable Morale results during current Union player turn (SM 7.2 event 9)."
-        },
-        "counterRef": null
+        }
       },
       {
         "id": "duryea",
@@ -215,7 +260,16 @@
         "commandLevel": "brigade",
         "commandsId": "1b-3d-1c",
         "initiativeRating": null,
-        "counterRef": null
+        "counterRef": {
+          "front": "CS1-Front_56.jpg",
+          "frontConfidence": 0.95,
+          "back": null,
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        }
       },
       {
         "id": "magilton",
@@ -295,7 +349,16 @@
         "commandLevel": "brigade",
         "commandsId": "2b-kd-9c",
         "initiativeRating": null,
-        "counterRef": null
+        "counterRef": {
+          "front": "CS1-Front_122.jpg",
+          "frontConfidence": 0,
+          "back": null,
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        }
       },
       {
         "id": "farnsworth",
@@ -317,6 +380,7 @@
         "commandLevel": "wing",
         "commandsId": "csa-wing",
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalTime": "17:00",
@@ -327,8 +391,7 @@
           "noReplacement": true,
           "casualtyEffect": "If Longstreet becomes a casualty, there is no replacement — Confederate forces continue as separate commands (SM 3.1).",
           "looseCannonImmunityRevoked": "When Longstreet arrives, D.H. Hill's Loose Cannon immunity is revoked and Hill reverts to normal division command (SM 3.2)."
-        },
-        "counterRef": null
+        }
       }
     ],
     "divisions": [
@@ -339,14 +402,14 @@
         "commandLevel": "division",
         "commandsId": "dh-div",
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "looseCannonImmunity": true,
           "looseCannonNote": "D.H. Hill is the ONLY leader in the game who may ignore Loose Cannon initiative results. This immunity is active until Longstreet arrives at 5pm, at which point it is revoked (SM 3.2).",
           "expandedInitiativeScope": "Until Longstreet arrives, Hill may use initiative to issue orders to any Division leader or Brigade leader he is stacked with. On success: issue ONE order to a Division leader (may be Hill himself) OR orders to any TWO Brigade leaders (SM 3.2).",
           "randomEvent2": "Roll on Leader Loss Table. If Wounded, Hill is placed on division HQ (must remain there) and continues to issue orders with initiative rating of 3 (SM 7.1 event 2).",
           "randomEvent3and12": "Hill may not attempt Initiative for next 2 turns (SM 7.1 events 3 & 12)."
-        },
-        "counterRef": null
+        }
       },
       {
         "id": "hood",
@@ -355,13 +418,22 @@
         "commandLevel": "division",
         "commandsId": "h-div",
         "initiativeRating": null,
+        "counterRef": {
+          "front": "CS1-Front_216.jpg",
+          "frontConfidence": 1,
+          "back": null,
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalTime": "17:00",
           "arrivalNote": "Hood arrives at 5pm with his two brigades (Wofford and Law). Detachments are not allowed for Hood's division (SM 3.3).",
           "detachmentAllowed": false
-        },
-        "counterRef": null
+        }
       },
       {
         "id": "dr-jones",
@@ -370,12 +442,12 @@
         "commandLevel": "division",
         "commandsId": "j-div",
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
           "detachmentAllowed": "D.R. Jones division may detach up to three Brigades (SM 3.3).",
           "arrivalNote": "Reinforces per scenario reinforcement schedule."
-        },
-        "counterRef": null
+        }
       }
     ],
     "brigades": [
@@ -404,11 +476,11 @@
         "commandLevel": "brigade",
         "commandsId": "gdh",
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "detachedAtStart": true,
           "detachedNote": "Garland's brigade is DETACHED at scenario start to defend Fox's Gap (SM setup)."
-        },
-        "counterRef": null
+        }
       },
       {
         "id": "ripley",
@@ -435,11 +507,11 @@
         "commandLevel": "brigade",
         "commandsId": "wh",
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalTime": "17:00"
-        },
-        "counterRef": null
+        }
       },
       {
         "id": "law",
@@ -448,11 +520,11 @@
         "commandLevel": "brigade",
         "commandsId": "lh",
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalTime": "17:00"
-        },
-        "counterRef": null
+        }
       },
       {
         "id": "gt-anderson",
@@ -461,11 +533,11 @@
         "commandLevel": "brigade",
         "commandsId": "aj",
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalNote": "Reinforces per scenario reinforcement schedule."
-        },
-        "counterRef": null
+        }
       },
       {
         "id": "drayton",
@@ -474,11 +546,11 @@
         "commandLevel": "brigade",
         "commandsId": "dj",
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalNote": "Reinforces per scenario reinforcement schedule."
-        },
-        "counterRef": null
+        }
       },
       {
         "id": "garnett",
@@ -487,11 +559,11 @@
         "commandLevel": "brigade",
         "commandsId": "gj",
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "detachedAtStart": true,
           "detachedNote": "Garnett's brigade is DETACHED at scenario start — reinforces Turner's Gap as Order 3 (SM setup)."
-        },
-        "counterRef": null
+        }
       },
       {
         "id": "kemper",
@@ -500,11 +572,11 @@
         "commandLevel": "brigade",
         "commandsId": "kj",
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalNote": "Reinforces per scenario reinforcement schedule."
-        },
-        "counterRef": null
+        }
       },
       {
         "id": "walker",
@@ -513,11 +585,11 @@
         "commandLevel": "brigade",
         "commandsId": "wj",
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalNote": "Reinforces per scenario reinforcement schedule."
-        },
-        "counterRef": null
+        }
       },
       {
         "id": "evans",
@@ -526,12 +598,13 @@
         "commandLevel": "brigade",
         "commandsId": "evans-bde",
         "initiativeRating": null,
+        "counterRef": null,
         "specialRules": {
           "independentBrigade": true,
           "independentNote": "Evans commands an independent brigade, technically a division with Hood's two brigades attached. Separated from Hood due to command friction over captured ambulances. (SM 3.3 / historical note)"
-        },
-        "counterRef": null
+        }
       }
     ]
-  }
+  },
+  "_savedAt": 1775108660059
 }

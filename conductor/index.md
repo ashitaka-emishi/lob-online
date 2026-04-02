@@ -32,14 +32,15 @@ Navigation hub for project context.
 | [map-editor-tool-closeout_20260323](./tracks/map-editor-tool-closeout_20260323/index.md) | Map Editor Tool Closeout — Issues #137 #138 #139 #140 #141 #142 | Complete |
 | [tech-debt-closeout_20260323](./tracks/tech-debt-closeout_20260323/index.md) | Tech Debt Closeout — All Open Items | Complete |
 
-| [map-editor-ui-refactor_20260323](./tracks/map-editor-ui-refactor_20260323/index.md) | Map Editor UI Refactor — Tool Panel Cleanup & Feature Improvements | Pending |
-| [counter-detect_20260325](./tracks/counter-detect_20260325/index.md) | Counter Auto-Detection Script | Pending |
+| [map-editor-ui-refactor_20260323](./tracks/map-editor-ui-refactor_20260323/index.md) | Map Editor UI Refactor — Tool Panel Cleanup & Feature Improvements | Complete |
+| [counter-detect_20260325](./tracks/counter-detect_20260325/index.md) | Counter Auto-Detection Script | Complete |
 | [oob-editor-foundation_20260325](./tracks/oob-editor-foundation_20260325/index.md) | OOB Editor Foundation — Launch Script, Store & Hierarchy Tree | Complete |
 | [oob-detail-panel_20260325](./tracks/oob-detail-panel_20260325/index.md) | OOB Editor — Detail Panel & Counter Image Widget | Complete |
 | [oob-debt-sprint_20260329](./tracks/oob-debt-sprint_20260329/index.md) | OOB Editor Debt Sprint — Issues #207 #209 #210 #211 | Complete |
 | [oob-data-server_20260329](./tracks/oob-data-server_20260329/index.md) | OOB Data Model Completion and Server Routes | Complete |
 | [oob-final-ui_20260330](./tracks/oob-final-ui_20260330/index.md) | OOB Editor Final UI — Succession List and Leader Detail Panel | Complete |
-| [debt-cleanup_20260331](./tracks/debt-cleanup_20260331/index.md) | Technical Debt Cleanup — All Open Items | Pending |
+| [debt-cleanup_20260331](./tracks/debt-cleanup_20260331/index.md) | Technical Debt Cleanup — All Open Items | Complete |
+| [counter-detect-fix_20260331](./tracks/counter-detect-fix_20260331/index.md) | Counter Auto-Detection Script Revision | Complete |
 
 ## Getting Started
 

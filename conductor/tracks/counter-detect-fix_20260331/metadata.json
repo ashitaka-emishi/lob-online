@@ -1,0 +1,16 @@
+{
+  "id": "counter-detect-fix_20260331",
+  "title": "Counter Auto-Detection Script Revision",
+  "type": "bug",
+  "status": "pending",
+  "created": "2026-03-31T00:00:00.000Z",
+  "updated": "2026-03-31T00:00:00.000Z",
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 12,
+    "completed": 0
+  }
+}
