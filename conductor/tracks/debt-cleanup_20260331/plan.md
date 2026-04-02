@@ -18,17 +18,17 @@ changes — pure green-path additions. Closes #212, #213, #214.
 
 ### Tasks
 
-- [ ] Task 1.1: Add `CounterImageWidget` test — `commit()` is a no-op when `nodePath` is
+- [x] Task 1.1: Add `CounterImageWidget` test — `commit()` is a no-op when `nodePath` is
       null; verify `store.updateCounterRef` is never called (#213)
-- [ ] Task 1.2: Add `CounterImageWidget` test — arrow keys do not cycle counters when
+- [x] Task 1.2: Add `CounterImageWidget` test — arrow keys do not cycle counters when
       focus is inside an INPUT, SELECT, or TEXTAREA element (#212)
-- [ ] Task 1.3: Add `useOobStore` test — `pullFromServer` failure sets `syncError` to a
+- [x] Task 1.3: Add `useOobStore` test — `pullFromServer` failure sets `syncError` to a
       non-null message and resets `isSyncing` to `false` (#214)
 
 ### Verification
 
-- [ ] All new tests green; no existing tests broken
-- [ ] `npm run test` passes (full suite)
+- [x] All new tests green; no existing tests broken
+- [x] `npm run test` passes (full suite)
 
 ## Phase 2: Server Route Hardening (score 1–2)
 
@@ -36,20 +36,20 @@ Three targeted server-side improvements. Closes #222, #220, #216.
 
 ### Tasks
 
-- [ ] Task 2.1: Refactor `server/src/routes/counters.js` — move multer middleware to
+- [x] Task 2.1: Refactor `server/src/routes/counters.js` — move multer middleware to
       route-level (`router.post('/upload', upload.single('counter'), handler)`) instead of
       inline callback; update counters.test.js accordingly (#222)
-- [ ] Task 2.2: Migrate `server/src/routes/oobEditor.js` and `leadersEditor.js` from
+- [x] Task 2.2: Migrate `server/src/routes/oobEditor.js` and `leadersEditor.js` from
       `readFileSync`/`writeFileSync` to `fs.promises` (`readFile`/`writeFile`); update
       route handlers to `async`; update test mocks from sync `vi.mock('fs')` to async
       (`vi.fn(() => Promise.resolve(...))`) (#220)
-- [ ] Task 2.3: Add `'toString'` and `'valueOf'` to `FORBIDDEN_PATH_KEYS` in
+- [x] Task 2.3: Add `'toString'` and `'valueOf'` to `FORBIDDEN_PATH_KEYS` in
       `useOobStore.js`; add test asserting `updateField` rejects these key names (#216)
 
 ### Verification
 
-- [ ] `npm run lint`, `npm run format:check` clean
-- [ ] `npm run test` passes (full suite)
+- [x] `npm run lint`, `npm run format:check` clean
+- [x] `npm run test` passes (full suite)
 
 ## Phase 3: Schema Strengthening (score 2)
 
@@ -57,16 +57,16 @@ Add `_savedAt` to the Zod schemas then apply `.strict()`. Closes #221.
 
 ### Tasks
 
-- [ ] Task 3.1: Add optional `_savedAt` field (`z.string().optional()`) to `OOBSchema`
+- [x] Task 3.1: Add optional `_savedAt` field (`z.string().optional()`) to `OOBSchema`
       and `LeadersSchema` in `server/src/schemas/`; update schema tests
-- [ ] Task 3.2: Apply `.strict()` to the top-level `OOBSchema` and `LeadersSchema`
+- [x] Task 3.2: Apply `.strict()` to the top-level `OOBSchema` and `LeadersSchema`
       objects; verify that existing `oob.json` and `leaders.json` still pass validation;
       update schema tests to assert unknown fields are rejected
 
 ### Verification
 
-- [ ] Schema tests green; `oob.json` and `leaders.json` pass `.strict()` parse
-- [ ] `npm run test` passes (full suite)
+- [x] Schema tests green; `oob.json` and `leaders.json` pass `.strict()` parse
+- [x] `npm run test` passes (full suite)
 
 ## Phase 4: Client Architecture and Scale Awareness (score 1–3)
 
@@ -76,34 +76,34 @@ than a code change. Closes #207, #215, #206, #205, #204, #201.
 
 ### Tasks
 
-- [ ] Task 4.1: Extract `useOobPersistence` composable from `useOobStore.js` mirroring
+- [x] Task 4.1: Extract `useOobPersistence` composable from `useOobStore.js` mirroring
       the `useMapPersistence` pattern — owns: `loadData`, `_executePush`, `pullFromServer`,
       `requestPush`/`confirmPush`/`cancelPush`, `requestPull`/`confirmPull`/`cancelPull`,
       `isSyncing`, `syncError`, `showPushConfirm`, `showPullConfirm`, `_saveToStorage`,
       `_loadFromStorage`, `_scheduleSave`; store retains domain mutations (#207)
-- [ ] Task 4.2: Migrate `OobTreeNode.vue` from `<script>` + `<script setup>` dual pattern
+- [x] Task 4.2: Migrate `OobTreeNode.vue` from `<script>` + `<script setup>` dual pattern
       to single `<script setup>` using `defineOptions({ name: 'OobTreeNode' })` for
       recursive self-reference (#215)
-- [ ] Task 4.3: Convert map editor and scenario editor server routes
+- [x] Task 4.3: Convert map editor and scenario editor server routes
       (`server/src/routes/mapEditor.js`, `scenarioEditor.js`) to use dynamic `import()`
       consistent with oob-editor route lazy-loading (#206)
-- [ ] Task 4.4: Convert `useOobStore.js` bundled JSON fallback imports to dynamic
+- [x] Task 4.4: Convert `useOobStore.js` bundled JSON fallback imports to dynamic
       `import()` inside `loadData`'s L3 fallback branch (#205)
-- [ ] Task 4.5: Close #204 and #201 with "acceptable at South Mountain scale" decision
+- [x] Task 4.5: Close #204 and #201 with "acceptable at South Mountain scale" decision
       comments in the source files; close the GitHub issues (#204, #201)
 
 ### Verification
 
-- [ ] `npm run lint`, `npm run format:check` clean
-- [ ] `npm run test` passes (full suite)
-- [ ] OOB editor push/pull/sync behavior unchanged (manual smoke test)
+- [x] `npm run lint`, `npm run format:check` clean
+- [x] `npm run test` passes (full suite)
+- [x] OOB editor push/pull/sync behavior unchanged (manual smoke test)
 
 ## Final Verification
 
-- [ ] All 13 acceptance criteria issues closed
-- [ ] `docs/tech-debt/report.md` updated to 0 open items, net score 0
-- [ ] `npm run lint`, `npm run format:check`, `npm run test` green
-- [ ] Ready for `/pr-create` (one PR per phase, or bundled — user choice)
+- [x] All 13 acceptance criteria issues closed
+- [x] `docs/tech-debt/report.md` updated to 0 open items, net score 0
+- [x] `npm run lint`, `npm run format:check`, `npm run test` green
+- [x] Ready for `/pr-create` (one PR per phase, or bundled — user choice)
 
 ---
 
