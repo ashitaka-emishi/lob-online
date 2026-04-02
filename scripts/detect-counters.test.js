@@ -6,11 +6,11 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import {
   classifyImage,
   detectArmyByColor,
   collectOOBRecords,
-  collectLeaderRecords,
   buildRoster,
   writeCounterRef,
 } from './detect-counters.js';
