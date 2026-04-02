@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-03-31 after PR #223._
+_Last updated: 2026-04-02 after PR #227._
 
 ---
 
@@ -11,7 +11,7 @@ _Last updated: 2026-03-31 after PR #223._
 | Open debt items                  | 13                                                                   |
 | Cumulative debt score (net open) | 19                                                                   |
 | Highest-risk item                | Extract shared persistence composable for OOB editor (#207, score 3) |
-| PRs tracked                      | 65                                                                   |
+| PRs tracked                      | 66                                                                   |
 
 ---
 
@@ -90,6 +90,7 @@ _Last updated: 2026-03-31 after PR #223._
 | 2026-03-29 | PR #218 (resolved #202) | -2                   | 95                       |
 | 2026-03-30 | PR #219                 | 5                    | 100                      |
 | 2026-03-31 | PR #223                 | 0                    | 100                      |
+| 2026-04-02 | PR #227                 | 0                    | 100                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -99,7 +100,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is 
 
 Elevated risk. Several deferred items introduce architectural compromise and sub-optimal patterns that will slow future phases if not addressed.
 
-PR #218 (OOB editor debt sprint) resolved 11 points across 5 items, dropping net open debt from 25 to 14. PR #219 (OOB data model and server routes) added 5 new points across 3 items, bringing net open debt to 19. PR #223 (OOB editor final UI) fixed all 12 team-review findings in place, including two high-severity correctness bugs (side detection and base-object shape in leader mode) and three medium-severity issues (fetch error handling, store tracking of promoted counters, and latent `side` computed bug) — net open debt unchanged at 19. The single score-3 item is #207 (missing persistence composable), which was partially addressed in PR #218 — push confirmation and structural validation are now in place, but the composable extraction and offline detection remain. Current debt is concentrated in three categories: (1) architectural responsibility placement (#207, #221 — persistence logic embedded in store, open schemas on PUT endpoints); (2) minor async/performance improvements (#220 — async I/O in editor routes); and (3) test coverage gaps (#214, #213, #212 — untested guard paths that work correctly today but could regress silently).
+PR #218 (OOB editor debt sprint) resolved 11 points across 5 items, dropping net open debt from 25 to 14. PR #219 (OOB data model and server routes) added 5 new points across 3 items, bringing net open debt to 19. PR #223 (OOB editor final UI) fixed all 12 team-review findings in place — net open debt unchanged at 19. PR #227 (counter auto-detection script revision) fixed all 13 team-review findings in place, including two correctness bugs (`collectOOBRecords` missing `supplyTrain` and corps `hq` nodes that caused silent id-not-found failures), one security finding (path traversal guard), a fragile regex replaced with a brace-matching JSON extractor, and MIME type dynamic interpolation replaced with an explicit allowlist — net open debt unchanged at 19. The single score-3 item is #207 (missing persistence composable), which was partially addressed in PR #218 — push confirmation and structural validation are now in place, but the composable extraction and offline detection remain. Current debt is concentrated in three categories: (1) architectural responsibility placement (#207, #221 — persistence logic embedded in store, open schemas on PUT endpoints); (2) minor async/performance improvements (#220 — async I/O in editor routes); and (3) test coverage gaps (#214, #213, #212 — untested guard paths that work correctly today but could regress silently).
 
 ---
 
