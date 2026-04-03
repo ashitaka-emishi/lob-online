@@ -29,7 +29,9 @@ function collapseAll() {
 }
 
 // ── Top-level node list ───────────────────────────────────────────────────────
-const topNodes = computed(() => buildDisplayTree(store.oob, store.leaders, props.side));
+const topNodes = computed(() =>
+  buildDisplayTree(store.oob, store.leaders, store.succession, props.side)
+);
 </script>
 
 <template>

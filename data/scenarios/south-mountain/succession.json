@@ -1,0 +1,53 @@
+{
+  "_status": "available",
+  "_source": "SM_Rules.pdf sections 2.1, 2.2, 3.1–3.5",
+  "_notes": {
+    "commandValue": "Left number on the promoted/variant counter. Usually 0 for an out-of-depth replacement.",
+    "moraleValue": "Right number on the promoted/variant counter. Usually 1 for an out-of-depth replacement.",
+    "baseLeaderId": "ID of the base leader record in leaders.json that this variant is derived from."
+  },
+  "union": [
+    {
+      "id": "burnside-9corps",
+      "name": "Ambrose E. Burnside (9 Corps)",
+      "baseLeaderId": "burnside",
+      "rank": "Major General",
+      "commandLevel": "corps",
+      "commandsId": "9c",
+      "commandValue": null,
+      "moraleValue": null,
+      "counterRef": null,
+      "specialRules": {
+        "activationCondition": "Replaces Reno when Reno becomes a casualty (SM 2.1). All Burnside restrictions are lifted upon activation."
+      }
+    },
+    {
+      "id": "burnside-aotp",
+      "name": "Ambrose E. Burnside (AotP)",
+      "baseLeaderId": "burnside",
+      "rank": "Major General",
+      "commandLevel": "army",
+      "commandsId": null,
+      "commandValue": null,
+      "moraleValue": null,
+      "counterRef": null,
+      "specialRules": {
+        "activationCondition": "Replaces McClellan when McClellan becomes a casualty (SM 2.1). All Burnside restrictions are lifted upon activation."
+      }
+    }
+  ],
+  "confederate": [
+    {
+      "id": "walker-promoted",
+      "name": "Col Joseph Walker (Promoted)",
+      "baseLeaderId": "walker",
+      "rank": "Colonel",
+      "commandLevel": "brigade",
+      "commandsId": null,
+      "commandValue": 0,
+      "moraleValue": 1,
+      "counterRef": null,
+      "specialRules": null
+    }
+  ]
+}

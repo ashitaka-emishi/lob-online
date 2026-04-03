@@ -16,12 +16,13 @@ const FORBIDDEN_PATH_KEYS = new Set([
 export const useOobStore = defineStore('oob', () => {
   const oob = ref(null);
   const leaders = ref(null);
+  const succession = ref(null);
   const selectedNode = ref(null);
   const selectedNodeType = ref(null);
   const selectedNodePath = ref(null);
   const dirty = ref(false);
 
-  const persistence = useOobPersistence({ oob, leaders, dirty });
+  const persistence = useOobPersistence({ oob, leaders, succession, dirty });
 
   // ── Used counter files ────────────────────────────────────────────────────
 
@@ -54,6 +55,7 @@ export const useOobStore = defineStore('oob', () => {
     const out = new Set();
     if (oob.value) _collectUsed(toRaw(oob.value), out);
     if (leaders.value) _collectUsed(toRaw(leaders.value), out);
+    if (succession.value) _collectUsed(toRaw(succession.value), out);
     return out;
   });
 
@@ -119,6 +121,7 @@ export const useOobStore = defineStore('oob', () => {
   return {
     oob,
     leaders,
+    succession,
     selectedNode,
     selectedNodeType,
     selectedNodePath,
