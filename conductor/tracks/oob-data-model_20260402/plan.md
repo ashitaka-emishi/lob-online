@@ -3,7 +3,7 @@
 **Track ID:** oob-data-model_20260402
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-04-02
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -24,8 +24,8 @@ Rename `initiativeRating` → `commandValue` + `moraleValue` across leaders.json
 
 ### Verification
 
-- [ ] `npm run test` passes with no schema validation errors
-- [ ] No `initiativeRating` references remain in `data/` or `server/`
+- [x] `npm run test` passes with no schema validation errors
+- [x] No `initiativeRating` references remain in `data/` or `server/`
 
 ## Phase 2: Corps Supply Units (#234)
 
@@ -40,9 +40,9 @@ Add `supply` entries to 1 Corps and 9 Corps in oob.json and update the OOB Zod s
 
 ### Verification
 
-- [ ] `npm run test` passes
-- [ ] Supply nodes appear in the editor tree under 1 Corps and 9 Corps
-- [ ] Clicking a supply node opens the detail panel without errors
+- [x] `npm run test` passes
+- [x] Supply nodes appear in the editor tree under 1 Corps and 9 Corps
+- [x] Clicking a supply node opens the detail panel without errors
 
 ## Phase 3: succession.json — New File, Schema, Routes, Store, Tree (#235)
 
@@ -51,29 +51,29 @@ and update SuccessionList to resolve from both sources.
 
 ### Tasks
 
-- [ ] Task 3.1: Create `data/scenarios/south-mountain/succession.json` with all known Union promoted/variant entries (Walker Promoted, Burnside Wing/9Corps/AotP) and an empty CSA array
-- [ ] Task 3.2: Create `server/src/schemas/succession.schema.js` (Zod) — array of variant leader records per side
-- [ ] Task 3.3: Create `server/src/routes/successionEditor.js` — `GET /api/succession/data` and `PUT /api/succession/data`, same pattern as leadersEditor.js
-- [ ] Task 3.4: Create `server/src/routes/successionEditor.test.js`
-- [ ] Task 3.5: Mount the succession route in `server/src/index.js`
-- [ ] Task 3.6: Add `succession` state and actions to `useOobStore.js` — load alongside oob/leaders, localStorage key `lob-succession-editor-v1`, push/pull support
-- [ ] Task 3.7: Update `SuccessionList.vue` — resolve leader names by checking `leaders` store first, then `succession` store; show a "(variant)" label on succession entries
-- [ ] Task 3.8: Update `OobTreeNode.vue` to render succession variant nodes as siblings beneath their base leader node, with a distinct badge
+- [x] Task 3.1: Create `data/scenarios/south-mountain/succession.json` with all known Union promoted/variant entries (Walker Promoted, Burnside Wing/9Corps/AotP) and an empty CSA array
+- [x] Task 3.2: Create `server/src/schemas/succession.schema.js` (Zod) — array of variant leader records per side
+- [x] Task 3.3: Create `server/src/routes/successionEditor.js` — `GET /api/succession/data` and `PUT /api/succession/data`, same pattern as leadersEditor.js
+- [x] Task 3.4: Create `server/src/routes/successionEditor.test.js`
+- [x] Task 3.5: Mount the succession route in `server/src/index.js`
+- [x] Task 3.6: Add `succession` state and actions to `useOobStore.js` — load alongside oob/leaders, localStorage key `lob-succession-editor-v1`, push/pull support
+- [x] Task 3.7: Update `SuccessionList.vue` — resolve leader names by checking `leaders` store first, then `succession` store; show a "(variant)" label on succession entries
+- [x] Task 3.8: Update `OobTreeNode.vue` to render succession variant nodes as siblings beneath their base leader node, with a distinct badge
 
 ### Verification
 
-- [ ] `npm run test` passes including successionEditor routes
-- [ ] `succession.json` loads without Zod errors on server start
-- [ ] Succession variant nodes appear in the tree under their base leader
-- [ ] `SuccessionList.vue` displays correct names for IDs from both sources
-- [ ] Pull/Push round-trips succession data correctly
+- [x] `npm run test` passes including successionEditor routes
+- [x] `succession.json` loads without Zod errors on server start
+- [x] Succession variant nodes appear in the tree under their base leader
+- [x] `SuccessionList.vue` displays correct names for IDs from both sources
+- [x] Pull/Push round-trips succession data correctly
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met
-- [ ] `npm run lint && npm run format:check && npm run test` all pass
-- [ ] No `initiativeRating` in codebase
-- [ ] Ready for OOB editor UI track (##228–232)
+- [x] All acceptance criteria in spec.md met
+- [x] `npm run lint && npm run format:check && npm run test` all pass
+- [x] No `initiativeRating` in codebase
+- [x] Ready for OOB editor UI track (##228–232)
 
 ---
 

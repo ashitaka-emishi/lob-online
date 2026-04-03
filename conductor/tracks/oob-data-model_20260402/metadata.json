@@ -2,15 +2,20 @@
   "id": "oob-data-model_20260402",
   "title": "OOB Data Model — Leader Ratings, Supply Units, and Succession Variants",
   "type": "feature",
-  "status": "pending",
+  "status": "complete",
   "created": "2026-04-02T00:00:00.000Z",
-  "updated": "2026-04-02T00:00:00.000Z",
+  "updated": "2026-04-02T23:15:00.000Z",
   "phases": {
     "total": 3,
-    "completed": 0
+    "completed": 3
   },
   "tasks": {
     "total": 15,
-    "completed": 0
-  }
+    "completed": 15
+  },
+  "commits": [
+    "feat(oob-data-model): Phase 1 — replace initiativeRating with commandValue + moraleValue (#233)",
+    "feat(oob-data-model): Phase 2 — corps supply units schema, data, and tree rendering (#234)",
+    "feat(oob-data-model): Phase 3 — succession.json, server route, and tree rendering (#235)"
+  ]
 }
