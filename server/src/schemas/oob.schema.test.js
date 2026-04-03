@@ -364,6 +364,36 @@ describe('OOBSchema — supply and HQ counterRef', () => {
     });
     expect(OOBSchema.safeParse(oob).success).toBe(true);
   });
+
+  it('accepts corps with supply node (#234)', () => {
+    const oob = withCorps({
+      ...MINIMAL_CORPS,
+      supply: { id: 'test-corps-supply', name: 'Test Corps Supply' },
+    });
+    expect(OOBSchema.safeParse(oob).success).toBe(true);
+  });
+
+  it('accepts corps with supply node including full counterRef (#234)', () => {
+    const oob = withCorps({
+      ...MINIMAL_CORPS,
+      supply: {
+        id: 'test-corps-supply',
+        name: 'Test Corps Supply',
+        counterRef: {
+          front: 'CS1-Front_08.jpg',
+          frontConfidence: 0.9,
+          back: null,
+          backConfidence: null,
+        },
+      },
+    });
+    expect(OOBSchema.safeParse(oob).success).toBe(true);
+  });
+
+  it('accepts corps without supply node — supply is optional (#234)', () => {
+    const oob = withCorps({ ...MINIMAL_CORPS });
+    expect(OOBSchema.safeParse(oob).success).toBe(true);
+  });
 });
 
 // ── _savedAt + .strict() (#221) ──────────────────────────────────────────────

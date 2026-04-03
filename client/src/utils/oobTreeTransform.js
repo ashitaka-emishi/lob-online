@@ -114,6 +114,7 @@ function processUSACorps(corps, leadersMap) {
       ...withArty,
       divisions,
       _hq: hqNode,
+      ...(corps.supply ? { _supply: corps.supply } : {}),
     },
     leadersMap
   );

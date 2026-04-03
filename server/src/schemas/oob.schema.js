@@ -43,6 +43,12 @@ const HqNode = z.object({
   counterRef: CounterRef.optional(),
 });
 
+const SupplyNode = z.object({
+  id: z.string(),
+  name: z.string(),
+  counterRef: CounterRef.optional(),
+});
+
 const Brigade = z.object({
   id: z.string(),
   name: z.string().optional(),
@@ -80,6 +86,7 @@ const Corps = z.object({
   successionIds: z.array(z.string()).optional().default([]),
   counterRef: CounterRef.optional(),
   hq: HqNode.optional(),
+  supply: SupplyNode.optional(),
   corpsUnits: z.array(InfantryCavalryUnit).optional(),
   artillery: ArtilleryGroup.optional(),
   divisions: z.array(Division),
@@ -94,12 +101,6 @@ const CavalryDivision = z.object({
   _note: z.string().optional(),
   artillery: ArtilleryGroup.optional(),
   brigades: z.array(Brigade),
-});
-
-const SupplyNode = z.object({
-  id: z.string(),
-  name: z.string(),
-  counterRef: CounterRef.optional(),
 });
 
 const UnionOOB = z.object({

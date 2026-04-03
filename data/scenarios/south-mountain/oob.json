@@ -41,6 +41,16 @@
             "backConfidence": null
           }
         },
+        "supply": {
+          "id": "1c-supply",
+          "name": "1 Corps Supply",
+          "counterRef": {
+            "front": null,
+            "frontConfidence": null,
+            "back": null,
+            "backConfidence": null
+          }
+        },
         "corpsUnits": [
           {
             "id": "2ny-cav",
@@ -884,6 +894,16 @@
           "name": "9 Corps HQ",
           "counterRef": {
             "front": "CS1-Front_72.jpg",
+            "frontConfidence": null,
+            "back": null,
+            "backConfidence": null
+          }
+        },
+        "supply": {
+          "id": "9c-supply",
+          "name": "9 Corps Supply",
+          "counterRef": {
+            "front": null,
             "frontConfidence": null,
             "back": null,
             "backConfidence": null
