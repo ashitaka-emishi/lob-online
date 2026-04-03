@@ -41,7 +41,8 @@ Navigation hub for project context.
 | [oob-final-ui_20260330](./tracks/oob-final-ui_20260330/index.md) | OOB Editor Final UI — Succession List and Leader Detail Panel | Complete |
 | [debt-cleanup_20260331](./tracks/debt-cleanup_20260331/index.md) | Technical Debt Cleanup — All Open Items | Complete |
 | [counter-detect-fix_20260331](./tracks/counter-detect-fix_20260331/index.md) | Counter Auto-Detection Script Revision | Complete |
-| [oob-data-model_20260402](./tracks/oob-data-model_20260402/index.md) | OOB Data Model — Leader Ratings, Supply Units, and Succession Variants | Pending |
+| [oob-data-model_20260402](./tracks/oob-data-model_20260402/index.md) | OOB Data Model — Leader Ratings, Supply Units, and Succession Variants | Complete |
+| [quick-debt-cleanup_20260403](./tracks/quick-debt-cleanup_20260403/index.md) | Quick Debt Cleanup — Score-1 Trivials + PR #236 Test Gaps | Pending |
 
 ## Getting Started
 
