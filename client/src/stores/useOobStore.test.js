@@ -4,11 +4,34 @@ import { useOobStore } from './useOobStore.js';
 
 const MINIMAL_OOB = { _status: 'available', union: { corps: [] }, confederate: { corps: [] } };
 const MINIMAL_LEADERS = { _status: 'available', union: { army: [] }, confederate: { army: [] } };
+const MINIMAL_SUCCESSION = {
+  _status: 'draft',
+  _source: 'test',
+  union: [],
+  confederate: [
+    {
+      id: 'walker-promoted',
+      name: 'Col Joseph Walker (Promoted)',
+      baseLeaderId: 'walker',
+      commandLevel: 'brigade',
+      commandsId: null,
+      commandValue: 0,
+      moraleValue: 1,
+    },
+  ],
+};
 
-function mockFetch(oobData, leadersData, ok = true) {
+// Returns a fetch mock that sequences: call 0 → oobData, call 1 → leadersData,
+// call 2+ → successionData (null means succession endpoint returns the same ok status
+// but with leadersData shape, which will fail validation and leave succession null).
+function mockFetch(oobData, leadersData, successionData = null, ok = true) {
   let call = 0;
   return vi.fn().mockImplementation(() => {
-    const data = call++ === 0 ? oobData : leadersData;
+    let data;
+    if (call === 0) data = oobData;
+    else if (call === 1) data = leadersData;
+    else data = successionData ?? {};
+    call++;
     return Promise.resolve({
       ok,
       status: ok ? 200 : 500,
@@ -482,5 +505,58 @@ describe('useOobStore', () => {
     await store.pullFromServer();
     expect(store.syncError).not.toBeNull();
     expect(store.isSyncing).toBe(false);
+  });
+
+  // ── succession state (#239) ───────────────────────────────────────────────
+
+  it('initialises with null succession', () => {
+    const store = useOobStore();
+    expect(store.succession).toBeNull();
+  });
+
+  it('loadData: populates succession when server returns valid succession shape', async () => {
+    vi.stubGlobal('fetch', mockFetch(MINIMAL_OOB, MINIMAL_LEADERS, MINIMAL_SUCCESSION));
+    const store = useOobStore();
+    await store.loadData();
+    expect(store.succession).not.toBeNull();
+    expect(Array.isArray(store.succession.confederate)).toBe(true);
+    expect(store.succession.confederate[0].id).toBe('walker-promoted');
+  });
+
+  it('loadData: leaves succession null when server returns invalid succession shape', async () => {
+    vi.stubGlobal('fetch', mockFetch(MINIMAL_OOB, MINIMAL_LEADERS, { not: 'valid' }));
+    const store = useOobStore();
+    await store.loadData();
+    // oob and leaders loaded, but succession shape invalid → remains null
+    expect(store.oob).not.toBeNull();
+    expect(store.succession).toBeNull();
+  });
+
+  it('pullFromServer: populates succession on success', async () => {
+    vi.stubGlobal('fetch', mockFetch(MINIMAL_OOB, MINIMAL_LEADERS, MINIMAL_SUCCESSION));
+    const store = useOobStore();
+    store.dirty = true;
+    await store.pullFromServer();
+    expect(store.succession).not.toBeNull();
+    expect(store.succession.union).toEqual([]);
+  });
+
+  it('confirmPush: also PUTs succession when it is set', async () => {
+    const store = useOobStore();
+    store.oob = MINIMAL_OOB;
+    store.leaders = MINIMAL_LEADERS;
+    store.succession = MINIMAL_SUCCESSION;
+    store.dirty = true;
+
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve({ ok: true }) });
+    vi.stubGlobal('fetch', fetchSpy);
+    store.requestPush();
+    await store.confirmPush();
+
+    // oob PUT + leaders PUT + succession PUT = 3 fetch calls
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
+    expect(store.dirty).toBe(false);
   });
 });

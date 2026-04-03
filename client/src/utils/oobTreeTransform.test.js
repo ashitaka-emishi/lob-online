@@ -38,11 +38,11 @@ const EMPTY_LEADERS = { union: {}, confederate: {} };
 
 describe('buildDisplayTree — union top-level', () => {
   it('returns empty array when oob is null', () => {
-    expect(buildDisplayTree(null, EMPTY_LEADERS, 'union')).toEqual([]);
+    expect(buildDisplayTree(null, EMPTY_LEADERS, null, 'union')).toEqual([]);
   });
 
   it('returns empty array when leaders is null', () => {
-    expect(buildDisplayTree(makeOob(), null, 'union')).toEqual([]);
+    expect(buildDisplayTree(makeOob(), null, null, 'union')).toEqual([]);
   });
 
   it('returns a single army node at the root', () => {
@@ -185,5 +185,146 @@ describe('buildDisplayTree — succession variants (#235)', () => {
     const tree = buildDisplayTree(OOB_WITH_WJ_BRIGADE, LEADERS_WITH_BRIGADE, null, 'confederate');
     const brigade = tree[0].node.divisions[0].brigades[0];
     expect(brigade._leader._variants).toBeUndefined();
+  });
+});
+
+// ── buildDisplayTree — union-side succession variants (#246) ──────────────────
+
+const LEADERS_WITH_UNION_BRIGADE = {
+  union: {
+    brigades: [{ id: 'reno', name: 'Jesse Reno', commandsId: 'reno-bde', commandLevel: 'brigade' }],
+  },
+  confederate: {},
+};
+
+const OOB_WITH_RENO_BRIGADE = {
+  union: {
+    army: 'Army of the Potomac',
+    supplyTrain: { id: 'usa-train', name: 'AotP Supply' },
+    corps: [
+      {
+        ...MINIMAL_CORPS,
+        id: '9c',
+        divisions: [
+          {
+            id: '1d-9c',
+            name: '1st Division (9 Corps)',
+            wreckThreshold: 2,
+            brigades: [
+              { id: 'reno-bde', name: "Reno's Brigade", wreckThreshold: 2, regiments: [] },
+            ],
+          },
+        ],
+      },
+    ],
+    cavalryDivision: MINIMAL_CAV_DIV,
+  },
+  confederate: makeOob().confederate,
+};
+
+const SUCCESSION_WITH_UNION_VARIANT = {
+  union: [
+    {
+      id: 'reno-promoted',
+      name: 'Brig Gen Jesse Reno (Promoted)',
+      baseLeaderId: 'reno',
+      commandLevel: 'brigade',
+      commandsId: null,
+      commandValue: 0,
+      moraleValue: 1,
+    },
+  ],
+  confederate: [],
+};
+
+describe('buildDisplayTree — union-side succession variants (#246)', () => {
+  it('union brigade leader with matching variant has _variants attached', () => {
+    const tree = buildDisplayTree(
+      OOB_WITH_RENO_BRIGADE,
+      LEADERS_WITH_UNION_BRIGADE,
+      SUCCESSION_WITH_UNION_VARIANT,
+      'union'
+    );
+    const brigade = tree[0].node.corps[0].divisions[0].brigades[0];
+    expect(brigade._leader).toBeDefined();
+    expect(brigade._leader._variants).toHaveLength(1);
+    expect(brigade._leader._variants[0].id).toBe('reno-promoted');
+  });
+
+  it('union brigade leader without succession has no _variants', () => {
+    const tree = buildDisplayTree(
+      OOB_WITH_RENO_BRIGADE,
+      LEADERS_WITH_UNION_BRIGADE,
+      { union: [], confederate: [] },
+      'union'
+    );
+    const brigade = tree[0].node.corps[0].divisions[0].brigades[0];
+    expect(brigade._leader).toBeDefined();
+    expect(brigade._leader._variants).toBeUndefined();
+  });
+});
+
+// ── buildDisplayTree — cavalry division Pleasonton variants (#246) ────────────
+
+const LEADERS_WITH_PLEASONTON = {
+  union: {
+    cavalry: [
+      {
+        id: 'pleasonton',
+        name: 'Alfred Pleasonton',
+        commandsId: 'cav-div',
+        commandLevel: 'cavalry',
+      },
+    ],
+  },
+  confederate: {},
+};
+
+const SUCCESSION_WITH_PLEASONTON_VARIANT = {
+  union: [
+    {
+      id: 'pleasonton-promoted',
+      name: 'Brig Gen Alfred Pleasonton (Promoted)',
+      baseLeaderId: 'pleasonton',
+      commandLevel: 'cavalry',
+      commandsId: null,
+      commandValue: 0,
+      moraleValue: 1,
+    },
+  ],
+  confederate: [],
+};
+
+describe('buildDisplayTree — cavalry division Pleasonton variants (#246)', () => {
+  it('Pleasonton leader with a succession variant has _variants on cavalry division _leader', () => {
+    const tree = buildDisplayTree(
+      makeOob(),
+      LEADERS_WITH_PLEASONTON,
+      SUCCESSION_WITH_PLEASONTON_VARIANT,
+      'union'
+    );
+    const cavDiv = tree[0].node.cavalryDivision;
+    expect(cavDiv._leader).toBeDefined();
+    expect(cavDiv._leader.id).toBe('pleasonton');
+    expect(cavDiv._leader._variants).toHaveLength(1);
+    expect(cavDiv._leader._variants[0].id).toBe('pleasonton-promoted');
+  });
+
+  it('Pleasonton without succession variants has no _variants', () => {
+    const tree = buildDisplayTree(
+      makeOob(),
+      LEADERS_WITH_PLEASONTON,
+      { union: [], confederate: [] },
+      'union'
+    );
+    const cavDiv = tree[0].node.cavalryDivision;
+    expect(cavDiv._leader).toBeDefined();
+    expect(cavDiv._leader._variants).toBeUndefined();
+  });
+
+  it('cavalry division without Pleasonton in leaders has no _leader', () => {
+    const tree = buildDisplayTree(makeOob(), EMPTY_LEADERS, null, 'union');
+    const cavDiv = tree[0].node.cavalryDivision;
+    expect(cavDiv._leader).toBeUndefined();
   });
 });
