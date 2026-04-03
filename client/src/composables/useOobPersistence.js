@@ -178,8 +178,9 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
           })
         );
       }
-      const [oobRes, leadersRes] = await Promise.all(fetches);
-      if (oobRes.ok && leadersRes.ok) {
+      const results = await Promise.all(fetches);
+      const failedRes = results.find((r) => !r.ok);
+      if (!failedRes) {
         dirty.value = false;
         try {
           localStorage.removeItem(OOB_STORAGE_KEY);
@@ -189,7 +190,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
           /* ignore */
         }
       } else {
-        syncError.value = `Push failed (${oobRes.ok ? leadersRes.status : oobRes.status})`;
+        syncError.value = `Push failed (${failedRes.status})`;
       }
     } catch (err) {
       syncError.value = err?.message ?? 'Push failed';
