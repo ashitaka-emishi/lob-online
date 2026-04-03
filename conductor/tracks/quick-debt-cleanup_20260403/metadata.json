@@ -1,0 +1,22 @@
+{
+  "id": "quick-debt-cleanup_20260403",
+  "title": "Quick Debt Cleanup — Score-1 Trivials + PR #236 Test Gaps",
+  "type": "chore",
+  "status": "complete",
+  "created": "2026-04-03T00:00:00.000Z",
+  "updated": "2026-04-03T07:12:00.000Z",
+  "current_phase": 2,
+  "current_task": "2.6",
+  "phases": {
+    "total": 2,
+    "completed": 2
+  },
+  "tasks": {
+    "total": 14,
+    "completed": 14
+  },
+  "commits": [
+    "9db283e: chore(oob): score-1 trivials — comments, rename, tests, restored counter file",
+    "596a8f3: test(oob): close PR #236 test gaps — succession schema, tree transform, store, components"
+  ]
+}
