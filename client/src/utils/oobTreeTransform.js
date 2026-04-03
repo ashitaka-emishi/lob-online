@@ -32,6 +32,10 @@ function buildVariantsMap(succession, side) {
   return map;
 }
 
+// _variants is attached to the leader object itself (node._leader._variants) rather than
+// as a flat sibling on the parent node alongside _supply/_hq/_leader. This is intentional:
+// variants are properties of the leader — who can command the unit — not of the unit itself.
+// OobTreeNode renders them as siblings beneath the base leader row, not beneath the unit row.
 function withLeader(node, leadersMap, variantsMap = {}) {
   const leader = leadersMap[node.id];
   if (!leader) return node;

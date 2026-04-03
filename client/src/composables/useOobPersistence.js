@@ -8,9 +8,16 @@ const LEADERS_API_URL = '/api/tools/leaders-editor/data';
 const SUCCESSION_API_URL = '/api/tools/succession-editor/data';
 const DEBOUNCE_MS = 500;
 
-// Structural validation: require union and confederate keys to be non-null objects.
-// Mirrors the top-level shape of oob.json and leaders.json without importing server-side Zod.
-function _isValidSidedShape(data) {
+// Two shape families used by the OOB editor data files:
+//
+//   _isValidSidedObjectShape — oob.json and leaders.json: { union: { ... }, confederate: { ... } }
+//     Both sides are non-null objects (objects-of-arrays keyed by command level).
+//
+//   _isValidSuccessionShape — succession.json: { union: [...], confederate: [...] }
+//     Both sides are flat arrays of variant records (no sub-categorisation needed).
+//
+// Keep these validators in sync with their corresponding Zod schemas on the server.
+function _isValidSidedObjectShape(data) {
   return (
     data !== null &&
     typeof data === 'object' &&
@@ -80,7 +87,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
       if (rawOob && rawLeaders) {
         const parsedOob = JSON.parse(rawOob);
         const parsedLeaders = JSON.parse(rawLeaders);
-        if (_isValidSidedShape(parsedOob) && _isValidSidedShape(parsedLeaders)) {
+        if (_isValidSidedObjectShape(parsedOob) && _isValidSidedObjectShape(parsedLeaders)) {
           oob.value = parsedOob;
           leaders.value = parsedLeaders;
           if (rawSuccession) {
@@ -111,7 +118,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
       if (oobRes.ok && leadersRes.ok) {
         const parsedOob = await oobRes.json();
         const parsedLeaders = await leadersRes.json();
-        if (!_isValidSidedShape(parsedOob) || !_isValidSidedShape(parsedLeaders)) {
+        if (!_isValidSidedObjectShape(parsedOob) || !_isValidSidedObjectShape(parsedLeaders)) {
           syncError.value = 'Server returned data with an unrecognised shape';
           return;
         }
@@ -225,7 +232,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
       if (oobRes.ok && leadersRes.ok) {
         const parsedOob = await oobRes.json();
         const parsedLeaders = await leadersRes.json();
-        if (!_isValidSidedShape(parsedOob) || !_isValidSidedShape(parsedLeaders)) {
+        if (!_isValidSidedObjectShape(parsedOob) || !_isValidSidedObjectShape(parsedLeaders)) {
           syncError.value = 'Server returned data with an unrecognised shape';
         } else {
           oob.value = parsedOob;

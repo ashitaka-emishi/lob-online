@@ -200,3 +200,90 @@ describe('SuccessionList — type-ahead add', () => {
     expect(wrapper.find('.succession-search').element.value).toBe('');
   });
 });
+
+// ── isVariant tag (#240) ───────────────────────────────────────────────────────
+
+const SUCCESSION_FIXTURE = {
+  union: [
+    {
+      id: 'reno-promoted',
+      name: 'Brig Gen Jesse Reno (Promoted)',
+      baseLeaderId: 'reno',
+      commandLevel: 'corps',
+      commandsId: null,
+      commandValue: 0,
+      moraleValue: 1,
+    },
+  ],
+  confederate: [],
+};
+
+describe('SuccessionList — isVariant tag (#240)', () => {
+  it('shows (variant) tag when succession ID is a variant', () => {
+    const store = setup();
+    store.succession = SUCCESSION_FIXTURE;
+    const wrapper = mount(SuccessionList, {
+      props: { unitPath: UNIT_PATH, side: 'union', successionIds: ['reno-promoted'] },
+    });
+    expect(wrapper.find('.variant-tag').exists()).toBe(true);
+    expect(wrapper.find('.variant-tag').text()).toContain('variant');
+  });
+
+  it('does not show (variant) tag for a base leader ID', () => {
+    const store = setup();
+    store.succession = SUCCESSION_FIXTURE;
+    const wrapper = mount(SuccessionList, {
+      props: { unitPath: UNIT_PATH, side: 'union', successionIds: ['hooker'] },
+    });
+    expect(wrapper.find('.variant-tag').exists()).toBe(false);
+  });
+
+  it('mixes base and variant items correctly in the same list', () => {
+    const store = setup();
+    store.succession = SUCCESSION_FIXTURE;
+    const wrapper = mount(SuccessionList, {
+      props: { unitPath: UNIT_PATH, side: 'union', successionIds: ['hooker', 'reno-promoted'] },
+    });
+    const items = wrapper.findAll('.succession-item');
+    expect(items).toHaveLength(2);
+    expect(items[0].find('.variant-tag').exists()).toBe(false);
+    expect(items[1].find('.variant-tag').exists()).toBe(true);
+  });
+});
+
+// ── allLeaders merge — variants in type-ahead (#240) ──────────────────────────
+
+describe('SuccessionList — allLeaders merges succession variants into search (#240)', () => {
+  it('succession variant name appears in type-ahead suggestions', async () => {
+    const store = setup();
+    store.succession = SUCCESSION_FIXTURE;
+    const wrapper = mount(SuccessionList, {
+      props: { unitPath: UNIT_PATH, side: 'union', successionIds: [] },
+    });
+    await wrapper.find('.succession-search').setValue('promoted');
+    expect(wrapper.find('.suggestions').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Brig Gen Jesse Reno (Promoted)');
+  });
+
+  it('succession variant already in list is excluded from suggestions', async () => {
+    const store = setup();
+    store.succession = SUCCESSION_FIXTURE;
+    const wrapper = mount(SuccessionList, {
+      props: { unitPath: UNIT_PATH, side: 'union', successionIds: ['reno-promoted'] },
+    });
+    await wrapper.find('.succession-search').setValue('promoted');
+    expect(wrapper.findAll('.suggestion-item')).toHaveLength(0);
+  });
+
+  it('clicking a variant suggestion appends its id via updateSuccession', async () => {
+    const store = setup();
+    store.succession = SUCCESSION_FIXTURE;
+    store.updateSuccession = vi.fn();
+    const wrapper = mount(SuccessionList, {
+      props: { unitPath: UNIT_PATH, side: 'union', successionIds: [] },
+    });
+    await wrapper.find('.succession-search').setValue('promoted');
+    await wrapper.find('.suggestion-item').trigger('click');
+    expect(store.updateSuccession).toHaveBeenCalledWith(UNIT_PATH, ['reno-promoted']);
+  });
+});

@@ -59,6 +59,13 @@ describe('GET /data (successionEditor)', () => {
     expect(res.body.union[0].id).toBe('burnside-9corps');
     expect(res.body.confederate[0].id).toBe('walker-promoted');
   });
+
+  it('returns 500 when file cannot be read', async () => {
+    readFile.mockRejectedValue(Object.assign(new Error('ENOENT'), { code: 'ENOENT' }));
+    const app = await buildApp();
+    const res = await request(app).get('/data');
+    expect(res.status).toBe(500);
+  });
 });
 
 describe('PUT /data (successionEditor)', () => {
