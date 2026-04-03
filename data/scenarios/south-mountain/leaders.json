@@ -2,7 +2,8 @@
   "_status": "available",
   "_source": "SM_Rules.pdf sections 2.1, 2.2, 3.1–3.5, 7.1, 7.2",
   "_notes": {
-    "initiativeRating": "Physical counter value (die-roll rating for initiative). Not published in source PDFs — set to null pending counter scan.",
+    "commandValue": "Left number on the leader counter (used for orders/command). Not published in source PDFs — set to null pending counter scan.",
+    "moraleValue": "Right number on the leader counter (used for morale checks). Equal to commandValue when only one number is printed. Not published in source PDFs — set to null pending counter scan.",
     "commandRadius": "Base LoB v2.0 values (MP): army=12, corps=8, division=6, brigade=3. SM does not override these.",
     "woundedPenalty": "Per random event rules: Wounded leader is placed on HQ and rating reduced by -1 for remainder of game.",
     "looseCannonImmunity": "SM 3.2: D.H. Hill is the ONLY leader who may ignore Loose Cannon initiative results. This immunity is revoked when Longstreet arrives at 5pm.",
@@ -17,7 +18,8 @@
         "rank": "Major General",
         "commandLevel": "army",
         "commandsId": null,
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
@@ -32,7 +34,8 @@
         "rank": "Major General",
         "commandLevel": "wing",
         "commandsId": null,
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "supernumerary": true,
@@ -48,7 +51,8 @@
         "rank": "Major General",
         "commandLevel": "corps",
         "commandsId": "1c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "detachmentAllowed": "1 Corps may detach one Division; each 1 Corps Division may detach one Brigade (SM 2.3)."
@@ -60,7 +64,8 @@
         "rank": "Major General",
         "commandLevel": "corps",
         "commandsId": "9c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "detachmentAllowed": "9 Corps may detach a maximum of two Divisions; may NOT detach Brigades (SM 2.3).",
@@ -75,7 +80,8 @@
         "rank": "Brigadier General",
         "commandLevel": "division",
         "commandsId": "cav-div",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "artilleryReplenishFromAnyReserve": true,
@@ -90,7 +96,8 @@
         "rank": "Brigadier General",
         "commandLevel": "division",
         "commandsId": "1d-1c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -99,7 +106,8 @@
         "rank": "Brigadier General",
         "commandLevel": "division",
         "commandsId": "2d-1c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": {
           "front": "CS1-Front_35.jpg",
           "frontConfidence": 1,
@@ -117,7 +125,8 @@
         "rank": "Brigadier General",
         "commandLevel": "division",
         "commandsId": "3d-1c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": {
           "front": "CS1-Front_52.jpg",
           "frontConfidence": 0.95,
@@ -135,7 +144,8 @@
         "rank": "Brigadier General",
         "commandLevel": "division",
         "commandsId": "1d-9c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": {
           "front": "CS1-Front_79.jpg",
           "frontConfidence": 0.95,
@@ -153,7 +163,8 @@
         "rank": "Brigadier General",
         "commandLevel": "division",
         "commandsId": "2d-9c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -162,7 +173,8 @@
         "rank": "Brigadier General",
         "commandLevel": "division",
         "commandsId": "3d-9c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -171,7 +183,8 @@
         "rank": "Brigadier General",
         "commandLevel": "division",
         "commandsId": "kd-9c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       }
     ],
@@ -181,7 +194,8 @@
         "name": "Walter Phelps Jr.",
         "commandLevel": "brigade",
         "commandsId": "1b-1d-1c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -189,7 +203,8 @@
         "name": "Abner Doubleday",
         "commandLevel": "brigade",
         "commandsId": "2b-1d-1c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -197,7 +212,8 @@
         "name": "Marsena R. Patrick",
         "commandLevel": "brigade",
         "commandsId": "3b-1d-1c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": {
           "front": "CS1-Front_25.jpg",
           "frontConfidence": 0.95,
@@ -214,7 +230,8 @@
         "name": "John Gibbon",
         "commandLevel": "brigade",
         "commandsId": "4b-1d-1c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": {
           "front": "CS1-Front_30.jpg",
           "frontConfidence": 0.95,
@@ -235,7 +252,8 @@
         "name": "Abram Duryea",
         "commandLevel": "brigade",
         "commandsId": "1b-2d-1c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -243,7 +261,8 @@
         "name": "William H. Christian",
         "commandLevel": "brigade",
         "commandsId": "2b-2d-1c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -251,7 +270,8 @@
         "name": "George L. Hartsuff",
         "commandLevel": "brigade",
         "commandsId": "3b-2d-1c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -259,7 +279,8 @@
         "name": "Truman Seymour",
         "commandLevel": "brigade",
         "commandsId": "1b-3d-1c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": {
           "front": "CS1-Front_56.jpg",
           "frontConfidence": 0.95,
@@ -276,7 +297,8 @@
         "name": "Albert L. Magilton",
         "commandLevel": "brigade",
         "commandsId": "2b-3d-1c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -284,7 +306,8 @@
         "name": "Thomas F. Gallagher",
         "commandLevel": "brigade",
         "commandsId": "3b-3d-1c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -292,7 +315,8 @@
         "name": "Benjamin C. Christ",
         "commandLevel": "brigade",
         "commandsId": "1b-1d-9c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -300,7 +324,8 @@
         "name": "Thomas Welsh",
         "commandLevel": "brigade",
         "commandsId": "2b-1d-9c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -308,7 +333,8 @@
         "name": "James Nagle",
         "commandLevel": "brigade",
         "commandsId": "1b-2d-9c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -316,7 +342,8 @@
         "name": "Edward Ferrero",
         "commandLevel": "brigade",
         "commandsId": "2b-2d-9c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -324,7 +351,8 @@
         "name": "Harrison S. Fairchild",
         "commandLevel": "brigade",
         "commandsId": "1b-3d-9c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -332,7 +360,8 @@
         "name": "Edward Harland",
         "commandLevel": "brigade",
         "commandsId": "2b-3d-9c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -340,7 +369,8 @@
         "name": "Eliakim P. Scammon",
         "commandLevel": "brigade",
         "commandsId": "1b-kd-9c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -348,7 +378,8 @@
         "name": "George Crook",
         "commandLevel": "brigade",
         "commandsId": "2b-kd-9c",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": {
           "front": "CS1-Front_122.jpg",
           "frontConfidence": 0,
@@ -365,7 +396,8 @@
         "name": "Elon J. Farnsworth",
         "commandLevel": "brigade",
         "commandsId": "fcav",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       }
     ]
@@ -379,7 +411,8 @@
         "rank": "Major General",
         "commandLevel": "wing",
         "commandsId": "csa-wing",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
@@ -401,7 +434,8 @@
         "rank": "Major General",
         "commandLevel": "division",
         "commandsId": "dh-div",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "looseCannonImmunity": true,
@@ -417,7 +451,8 @@
         "rank": "Brigadier General",
         "commandLevel": "division",
         "commandsId": "h-div",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": {
           "front": "CS1-Front_216.jpg",
           "frontConfidence": 1,
@@ -441,7 +476,8 @@
         "rank": "Brigadier General",
         "commandLevel": "division",
         "commandsId": "j-div",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
@@ -457,7 +493,8 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "adh",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -466,7 +503,8 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "cdh",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -475,7 +513,8 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "gdh",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "detachedAtStart": true,
@@ -488,7 +527,8 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "ridh",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -497,7 +537,8 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "rodh",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null
       },
       {
@@ -506,7 +547,8 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "wh",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
@@ -519,7 +561,8 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "lh",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
@@ -532,7 +575,8 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "aj",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
@@ -545,7 +589,8 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "dj",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
@@ -558,7 +603,8 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "gj",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "detachedAtStart": true,
@@ -571,7 +617,8 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "kj",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
@@ -584,7 +631,8 @@
         "rank": "Colonel",
         "commandLevel": "brigade",
         "commandsId": "wj",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "arrivedOnMap": false,
@@ -597,7 +645,8 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "evans-bde",
-        "initiativeRating": null,
+        "commandValue": null,
+        "moraleValue": null,
         "counterRef": null,
         "specialRules": {
           "independentBrigade": true,
