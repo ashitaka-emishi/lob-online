@@ -73,7 +73,8 @@ const LEADER_NODE = {
   rank: 'Major General',
   commandLevel: 'corps',
   commandsId: '1c',
-  initiativeRating: null,
+  commandValue: null,
+  moraleValue: null,
   specialRules: null,
   counterRef: null,
 };
@@ -450,7 +451,7 @@ describe('OobDetailPanel — leader node', () => {
       props: { node: LEADER_NODE, nodeType: 'leader', nodePath: 'leaders.union.corps.0' },
     });
     const inputs = wrapper.findAll('.field-input[type="text"]');
-    // name + rank + commandsId + initiativeRating = 4 text inputs
+    // name + rank + commandsId (text inputs); commandValue + moraleValue are number inputs
     expect(inputs.length).toBeGreaterThanOrEqual(2);
     expect(inputs[1].element.value).toBe('Major General');
   });
@@ -524,11 +525,12 @@ describe('OobDetailPanel — leader node', () => {
     );
   });
 
-  it('does not render succession list, wreckThreshold, or morale', () => {
+  it('does not render succession list or morale select; renders commandValue and moraleValue number inputs', () => {
     const wrapper = mount(OobDetailPanel, {
       props: { node: LEADER_NODE, nodeType: 'leader', nodePath: 'leaders.union.corps.0' },
     });
     expect(wrapper.find('.succession-list-stub').exists()).toBe(false);
-    expect(wrapper.findAll('.field-number').length).toBe(0);
+    // commandValue + moraleValue
+    expect(wrapper.findAll('.field-number').length).toBe(2);
   });
 });

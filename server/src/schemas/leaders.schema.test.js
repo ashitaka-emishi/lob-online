@@ -7,7 +7,8 @@ const MINIMAL_LEADER = {
   name: 'Test Leader',
   commandLevel: 'brigade',
   commandsId: null,
-  initiativeRating: null,
+  commandValue: null,
+  moraleValue: null,
 };
 
 const MINIMAL_LEADERS = {

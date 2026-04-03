@@ -19,9 +19,25 @@ function buildLeadersMap(leaders, side) {
   return map;
 }
 
-function withLeader(node, leadersMap) {
+// Build a map of baseLeaderId → [variant, ...] from succession data.
+function buildVariantsMap(succession, side) {
+  const map = {};
+  if (!succession) return map;
+  const variants = succession[side];
+  if (!Array.isArray(variants)) return map;
+  variants.forEach((v) => {
+    if (!map[v.baseLeaderId]) map[v.baseLeaderId] = [];
+    map[v.baseLeaderId].push(v);
+  });
+  return map;
+}
+
+function withLeader(node, leadersMap, variantsMap = {}) {
   const leader = leadersMap[node.id];
-  return leader ? { ...node, _leader: leader } : node;
+  if (!leader) return node;
+  const variants = variantsMap[leader.id];
+  const leaderWithVariants = variants?.length ? { ...leader, _variants: variants } : leader;
+  return { ...node, _leader: leaderWithVariants };
 }
 
 // ── Artillery flattening ───────────────────────────────────────────────────────────────
@@ -94,34 +110,40 @@ function distributeCorpsArtillery(corps) {
 
 // ── Union processing ───────────────────────────────────────────────────────────────────
 
-function processUSABrigade(bde, leadersMap) {
-  return withLeader(bde, leadersMap);
+function processUSABrigade(bde, leadersMap, variantsMap) {
+  return withLeader(bde, leadersMap, variantsMap);
 }
 
-function processUSADivision(div, leadersMap) {
+function processUSADivision(div, leadersMap, variantsMap) {
   const withArty = flattenArtillery(div);
-  const brigades = (withArty.brigades ?? []).map((b) => processUSABrigade(b, leadersMap));
-  return withLeader({ ...withArty, brigades }, leadersMap);
+  const brigades = (withArty.brigades ?? []).map((b) =>
+    processUSABrigade(b, leadersMap, variantsMap)
+  );
+  return withLeader({ ...withArty, brigades }, leadersMap, variantsMap);
 }
 
-function processUSACorps(corps, leadersMap) {
+function processUSACorps(corps, leadersMap, variantsMap) {
   const distributed = distributeCorpsArtillery(corps);
   const withArty = flattenArtillery(distributed);
-  const divisions = (withArty.divisions ?? []).map((d) => processUSADivision(d, leadersMap));
+  const divisions = (withArty.divisions ?? []).map((d) =>
+    processUSADivision(d, leadersMap, variantsMap)
+  );
   const hqNode = corps.hq ?? { id: corps.id + '-hq', name: `${corps.name} HQ` };
   return withLeader(
     {
       ...withArty,
       divisions,
       _hq: hqNode,
+      ...(corps.supply ? { _supply: corps.supply } : {}),
     },
-    leadersMap
+    leadersMap,
+    variantsMap
   );
 }
 
 // Cavalry Division: "Cavalry Division" wrapper with Pleasonton leader + HQ.
 // F/cav is a brigade child with Farnsworth leader and all batteries.
-function processUSACavDiv(cd, leadersMap) {
+function processUSACavDiv(cd, leadersMap, variantsMap) {
   const pleasonton = leadersMap[cd.id];
   const cavArty = cd.artillery?.['arty-fcav'];
   const fcavBde = cd.brigades?.[0];
@@ -133,10 +155,17 @@ function processUSACavDiv(cd, leadersMap) {
     batteries: cavArty?.batteries ?? [],
   };
   const hqNode = cd.hq ?? { id: cd.id + '-hq', name: 'Cavalry Div HQ' };
+  const pleasontonVariants = pleasonton ? (variantsMap[pleasonton.id] ?? []) : [];
   return {
     id: cd.id,
     name: 'Cavalry Division',
-    ...(pleasonton ? { _leader: pleasonton } : {}),
+    ...(pleasonton
+      ? {
+          _leader: pleasontonVariants.length
+            ? { ...pleasonton, _variants: pleasontonVariants }
+            : pleasonton,
+        }
+      : {}),
     _hq: hqNode,
     brigades: [processedFcav],
   };
@@ -144,8 +173,8 @@ function processUSACavDiv(cd, leadersMap) {
 
 // ── Confederate processing ─────────────────────────────────────────────────────────────
 
-function processCSABrigade(bde, leadersMap) {
-  return withLeader(bde, leadersMap);
+function processCSABrigade(bde, leadersMap, variantsMap) {
+  return withLeader(bde, leadersMap, variantsMap);
 }
 
 function divHqName(divName) {
@@ -155,9 +184,11 @@ function divHqName(divName) {
     .trim();
 }
 
-function processCSADivision(div, leadersMap) {
+function processCSADivision(div, leadersMap, variantsMap) {
   const withArty = flattenArtillery(div);
-  const brigades = (withArty.brigades ?? []).map((b) => processCSABrigade(b, leadersMap));
+  const brigades = (withArty.brigades ?? []).map((b) =>
+    processCSABrigade(b, leadersMap, variantsMap)
+  );
   const hqNode = div.hq ?? { id: div.id + '-hq', name: divHqName(div.name) };
   return withLeader(
     {
@@ -165,22 +196,24 @@ function processCSADivision(div, leadersMap) {
       brigades,
       _hq: hqNode,
     },
-    leadersMap
+    leadersMap,
+    variantsMap
   );
 }
 
 // ── Top-level entry point ──────────────────────────────────────────────────────────────
 
 /**
- * Build the display tree for one side from raw oob.json and leaders.json data.
+ * Build the display tree for one side from raw oob.json, leaders.json, and succession.json data.
  * Returns an array of { node, nodeType } entries suitable for OobTreeNode.
  */
-export function buildDisplayTree(oob, leaders, side) {
+export function buildDisplayTree(oob, leaders, succession, side) {
   if (!oob || !leaders) return [];
   const sideData = oob[side];
   if (!sideData) return [];
 
   const leadersMap = buildLeadersMap(leaders, side);
+  const variantsMap = buildVariantsMap(succession, side);
 
   if (side === 'union') {
     // Army leaders (McClellan, Burnside) — commandsId is null so not in leadersMap
@@ -192,9 +225,9 @@ export function buildDisplayTree(oob, leaders, side) {
       _leaders: armyLeaders,
       _hq: { id: 'usa-army-hq', name: 'AotP HQ' },
       _supply: sideData.supplyTrain,
-      corps: (sideData.corps ?? []).map((c) => processUSACorps(c, leadersMap)),
+      corps: (sideData.corps ?? []).map((c) => processUSACorps(c, leadersMap, variantsMap)),
       cavalryDivision: sideData.cavalryDivision
-        ? processUSACavDiv(sideData.cavalryDivision, leadersMap)
+        ? processUSACavDiv(sideData.cavalryDivision, leadersMap, variantsMap)
         : undefined,
     };
 
@@ -233,7 +266,9 @@ export function buildDisplayTree(oob, leaders, side) {
     name: sideData.wing ?? sideData.army ?? 'Left Wing',
     ...(wingLeader ? { _leader: wingLeader } : {}),
     _supply: sideData.supplyWagon,
-    divisions: (sideData.divisions ?? []).map((d) => processCSADivision(d, leadersMap)),
+    divisions: (sideData.divisions ?? []).map((d) =>
+      processCSADivision(d, leadersMap, variantsMap)
+    ),
     _formations: [independent, reserveArty].filter(Boolean),
   };
 

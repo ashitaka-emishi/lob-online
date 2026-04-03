@@ -66,6 +66,10 @@ if (process.env.MAP_EDITOR_ENABLED === 'true') {
   app.use('/api/tools/leaders-editor', leadersEditorRouter);
   console.log('[server] leaders editor enabled at /api/tools/leaders-editor');
 
+  const { default: successionEditorRouter } = await import('./routes/successionEditor.js');
+  app.use('/api/tools/succession-editor', successionEditorRouter);
+  console.log('[server] succession editor enabled at /api/tools/succession-editor');
+
   const { default: countersRouter } = await import('./routes/counters.js');
   app.use('/api/tools/counters', countersRouter);
   console.log('[server] counters enabled at /api/tools/counters');

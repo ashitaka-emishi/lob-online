@@ -25,18 +25,21 @@ const LEADER_ARRAY_KEYS = ['corps', 'cavalry', 'divisions', 'brigades'];
 
 const allLeaders = computed(() => {
   const sideData = store.leaders?.[props.side];
-  if (!sideData) return [];
-  return LEADER_ARRAY_KEYS.flatMap((key) => sideData[key] ?? []);
+  const base = sideData ? LEADER_ARRAY_KEYS.flatMap((key) => sideData[key] ?? []) : [];
+  const variants = store.succession?.[props.side] ?? [];
+  return [...base, ...variants];
 });
 
 // ── Resolve IDs to display names ──────────────────────────────────────────────
 
-const resolvedItems = computed(() =>
-  props.successionIds.map((id) => ({
+const resolvedItems = computed(() => {
+  const variantIds = new Set((store.succession?.[props.side] ?? []).map((v) => v.id));
+  return props.successionIds.map((id) => ({
     id,
     name: allLeaders.value.find((l) => l.id === id)?.name ?? id,
-  }))
-);
+    isVariant: variantIds.has(id),
+  }));
+});
 
 // ── Type-ahead search ─────────────────────────────────────────────────────────
 
@@ -83,7 +86,9 @@ function moveDown(idx) {
     <p v-if="resolvedItems.length === 0" class="empty-notice">no succession defined</p>
 
     <div v-for="(item, idx) in resolvedItems" :key="item.id" class="succession-item">
-      <span class="item-name">{{ item.name }}</span>
+      <span class="item-name"
+        >{{ item.name }}<span v-if="item.isVariant" class="variant-tag"> (variant)</span></span
+      >
       <div class="item-actions">
         <button class="move-up-btn" title="Move up" @click="moveUp(idx)">↑</button>
         <button class="move-down-btn" title="Move down" @click="moveDown(idx)">↓</button>
@@ -136,6 +141,12 @@ function moveDown(idx) {
   flex: 1;
   font-size: 0.8rem;
   color: #c8b89a;
+}
+
+.variant-tag {
+  font-size: 0.7rem;
+  color: #7070b0;
+  font-style: italic;
 }
 
 .item-actions {

@@ -48,11 +48,20 @@ const childEntries = computed(() => {
   // Single commander (corps/division level)
   if (n._leader) {
     children.push({ node: n._leader, nodeType: 'leader' });
+    // Succession variants — siblings beneath the base leader
+    if (n._leader._variants) {
+      n._leader._variants.forEach((v) => children.push({ node: v, nodeType: 'leader-variant' }));
+    }
   }
 
   // Multiple commanders (e.g. cavalry division with div + bde leaders)
   if (n._leaders) {
-    n._leaders.forEach((l) => children.push({ node: l, nodeType: 'leader' }));
+    n._leaders.forEach((l) => {
+      children.push({ node: l, nodeType: 'leader' });
+      if (l._variants) {
+        l._variants.forEach((v) => children.push({ node: v, nodeType: 'leader-variant' }));
+      }
+    });
   }
 
   // Synthetic HQ child (USA corps/army, CSA divisions)
@@ -133,6 +142,7 @@ const BADGE_MAP = {
   battery: 'Btry',
   cavalry: 'Cav',
   leader: 'Ldr',
+  'leader-variant': 'Var',
   infantry: 'Inf',
   artillery: 'Arty',
   unit: 'Unit',
@@ -300,6 +310,11 @@ function toggleExpand(event) {
 .badge-leader {
   background: #203028;
   color: #60a880;
+}
+
+.badge-leader-variant {
+  background: #282038;
+  color: #8070b0;
 }
 
 .leader-rank {

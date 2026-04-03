@@ -21,7 +21,8 @@ const BaseLeader = z.object({
   rank: z.string().optional(),
   commandLevel: CommandLevel,
   commandsId: z.string().nullable(),
-  initiativeRating: z.number().int().nullable(),
+  commandValue: z.number().int().nullable(),
+  moraleValue: z.number().int().nullable(),
   counterRef: LeaderCounterRef.optional(),
   specialRules: z.record(z.string(), z.unknown()).optional(),
 });

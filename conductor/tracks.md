@@ -60,4 +60,6 @@
 | [x] | debt-cleanup_20260331 | Technical Debt Cleanup — All Open Items | 2026-03-31 | 2026-03-31 |
 | [x] | counter-detect-fix_20260331 | Counter Auto-Detection Script Revision | 2026-03-31 | 2026-03-31 |
 
+| [x] | oob-data-model_20260402 | OOB Data Model — Leader Ratings, Supply Units, and Succession Variants | 2026-04-02 | 2026-04-02 |
+
 <!-- Tracks registered by /conductor:new-track -->

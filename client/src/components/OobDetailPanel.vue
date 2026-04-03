@@ -303,12 +303,22 @@ function onSelectChange(fieldName, e) {
         </div>
 
         <div class="field-row">
-          <label class="field-label">Initiative Rating</label>
+          <label class="field-label">Command Value</label>
           <input
-            type="text"
-            class="field-input"
-            :value="node.initiativeRating ?? ''"
-            @change="onTextChange('initiativeRating', $event)"
+            type="number"
+            class="field-input field-number"
+            :value="node.commandValue ?? ''"
+            @change="onNumberChange('commandValue', $event)"
+          />
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">Morale Value</label>
+          <input
+            type="number"
+            class="field-input field-number"
+            :value="node.moraleValue ?? ''"
+            @change="onNumberChange('moraleValue', $event)"
           />
         </div>
 

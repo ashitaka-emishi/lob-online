@@ -2,8 +2,10 @@ import { ref } from 'vue';
 
 const OOB_STORAGE_KEY = 'lob-oob-editor-v1';
 const LEADERS_STORAGE_KEY = 'lob-leaders-editor-v1';
+const SUCCESSION_STORAGE_KEY = 'lob-succession-editor-v1';
 const OOB_API_URL = '/api/tools/oob-editor/data';
 const LEADERS_API_URL = '/api/tools/leaders-editor/data';
+const SUCCESSION_API_URL = '/api/tools/succession-editor/data';
 const DEBOUNCE_MS = 500;
 
 // Structural validation: require union and confederate keys to be non-null objects.
@@ -20,6 +22,17 @@ function _isValidSidedShape(data) {
   );
 }
 
+// Succession shape: union and confederate are arrays (not objects).
+function _isValidSuccessionShape(data) {
+  return (
+    data !== null &&
+    typeof data === 'object' &&
+    !Array.isArray(data) &&
+    Array.isArray(data.union) &&
+    Array.isArray(data.confederate)
+  );
+}
+
 /**
  * OOB/leaders data fetch, save, draft, push, and pull state + logic.
  *
@@ -28,11 +41,12 @@ function _isValidSidedShape(data) {
  * _saveToStorage, _loadFromStorage, _scheduleSave.
  *
  * @param {object} args
- * @param {import('vue').Ref} args.oob    - oob data ref (written on load/pull)
- * @param {import('vue').Ref} args.leaders - leaders data ref (written on load/pull)
- * @param {import('vue').Ref} args.dirty   - dirty flag ref (written on push/pull/load)
+ * @param {import('vue').Ref} args.oob        - oob data ref (written on load/pull)
+ * @param {import('vue').Ref} args.leaders    - leaders data ref (written on load/pull)
+ * @param {import('vue').Ref} args.succession - succession data ref (written on load/pull)
+ * @param {import('vue').Ref} args.dirty      - dirty flag ref (written on push/pull/load)
  */
-export function useOobPersistence({ oob, leaders, dirty }) {
+export function useOobPersistence({ oob, leaders, succession, dirty }) {
   const isSyncing = ref(false);
   const syncError = ref(null);
   const showPushConfirm = ref(false);
@@ -46,6 +60,8 @@ export function useOobPersistence({ oob, leaders, dirty }) {
     try {
       if (oob.value) localStorage.setItem(OOB_STORAGE_KEY, JSON.stringify(oob.value));
       if (leaders.value) localStorage.setItem(LEADERS_STORAGE_KEY, JSON.stringify(leaders.value));
+      if (succession.value)
+        localStorage.setItem(SUCCESSION_STORAGE_KEY, JSON.stringify(succession.value));
     } catch {
       /* ignore storage errors */
     }
@@ -60,12 +76,19 @@ export function useOobPersistence({ oob, leaders, dirty }) {
     try {
       const rawOob = localStorage.getItem(OOB_STORAGE_KEY);
       const rawLeaders = localStorage.getItem(LEADERS_STORAGE_KEY);
+      const rawSuccession = localStorage.getItem(SUCCESSION_STORAGE_KEY);
       if (rawOob && rawLeaders) {
         const parsedOob = JSON.parse(rawOob);
         const parsedLeaders = JSON.parse(rawLeaders);
         if (_isValidSidedShape(parsedOob) && _isValidSidedShape(parsedLeaders)) {
           oob.value = parsedOob;
           leaders.value = parsedLeaders;
+          if (rawSuccession) {
+            const parsedSuccession = JSON.parse(rawSuccession);
+            if (_isValidSuccessionShape(parsedSuccession)) {
+              succession.value = parsedSuccession;
+            }
+          }
           return true;
         }
       }
@@ -80,7 +103,11 @@ export function useOobPersistence({ oob, leaders, dirty }) {
   async function loadData() {
     // L1: try server
     try {
-      const [oobRes, leadersRes] = await Promise.all([fetch(OOB_API_URL), fetch(LEADERS_API_URL)]);
+      const [oobRes, leadersRes, successionRes] = await Promise.all([
+        fetch(OOB_API_URL),
+        fetch(LEADERS_API_URL),
+        fetch(SUCCESSION_API_URL),
+      ]);
       if (oobRes.ok && leadersRes.ok) {
         const parsedOob = await oobRes.json();
         const parsedLeaders = await leadersRes.json();
@@ -90,6 +117,10 @@ export function useOobPersistence({ oob, leaders, dirty }) {
         }
         oob.value = parsedOob;
         leaders.value = parsedLeaders;
+        if (successionRes.ok) {
+          const parsedSuccession = await successionRes.json();
+          if (_isValidSuccessionShape(parsedSuccession)) succession.value = parsedSuccession;
+        }
         dirty.value = false;
         return;
       }
@@ -104,12 +135,18 @@ export function useOobPersistence({ oob, leaders, dirty }) {
     }
 
     // L3: bundled JSON fallback (dynamic import — chunk only loaded if server + storage both fail)
-    const [{ default: oobFallback }, { default: leadersFallback }] = await Promise.all([
+    const [
+      { default: oobFallback },
+      { default: leadersFallback },
+      { default: successionFallback },
+    ] = await Promise.all([
       import('../../../data/scenarios/south-mountain/oob.json'),
       import('../../../data/scenarios/south-mountain/leaders.json'),
+      import('../../../data/scenarios/south-mountain/succession.json'),
     ]);
     oob.value = oobFallback;
     leaders.value = leadersFallback;
+    succession.value = successionFallback;
     dirty.value = false;
   }
 
@@ -120,7 +157,7 @@ export function useOobPersistence({ oob, leaders, dirty }) {
     isSyncing.value = true;
     syncError.value = null;
     try {
-      const [oobRes, leadersRes] = await Promise.all([
+      const fetches = [
         fetch(OOB_API_URL, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -131,17 +168,29 @@ export function useOobPersistence({ oob, leaders, dirty }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(leaders.value),
         }),
-      ]);
-      if (oobRes.ok && leadersRes.ok) {
+      ];
+      if (succession.value) {
+        fetches.push(
+          fetch(SUCCESSION_API_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(succession.value),
+          })
+        );
+      }
+      const results = await Promise.all(fetches);
+      const failedRes = results.find((r) => !r.ok);
+      if (!failedRes) {
         dirty.value = false;
         try {
           localStorage.removeItem(OOB_STORAGE_KEY);
           localStorage.removeItem(LEADERS_STORAGE_KEY);
+          localStorage.removeItem(SUCCESSION_STORAGE_KEY);
         } catch {
           /* ignore */
         }
       } else {
-        syncError.value = `Push failed (${oobRes.ok ? leadersRes.status : oobRes.status})`;
+        syncError.value = `Push failed (${failedRes.status})`;
       }
     } catch (err) {
       syncError.value = err?.message ?? 'Push failed';
@@ -168,7 +217,11 @@ export function useOobPersistence({ oob, leaders, dirty }) {
     isSyncing.value = true;
     syncError.value = null;
     try {
-      const [oobRes, leadersRes] = await Promise.all([fetch(OOB_API_URL), fetch(LEADERS_API_URL)]);
+      const [oobRes, leadersRes, successionRes] = await Promise.all([
+        fetch(OOB_API_URL),
+        fetch(LEADERS_API_URL),
+        fetch(SUCCESSION_API_URL),
+      ]);
       if (oobRes.ok && leadersRes.ok) {
         const parsedOob = await oobRes.json();
         const parsedLeaders = await leadersRes.json();
@@ -177,10 +230,15 @@ export function useOobPersistence({ oob, leaders, dirty }) {
         } else {
           oob.value = parsedOob;
           leaders.value = parsedLeaders;
+          if (successionRes.ok) {
+            const parsedSuccession = await successionRes.json();
+            if (_isValidSuccessionShape(parsedSuccession)) succession.value = parsedSuccession;
+          }
           dirty.value = false;
           try {
             localStorage.removeItem(OOB_STORAGE_KEY);
             localStorage.removeItem(LEADERS_STORAGE_KEY);
+            localStorage.removeItem(SUCCESSION_STORAGE_KEY);
           } catch {
             /* ignore */
           }
