@@ -61,7 +61,9 @@
 | [x] | counter-detect-fix_20260331 | Counter Auto-Detection Script Revision | 2026-03-31 | 2026-03-31 |
 
 | [x] | oob-data-model_20260402 | OOB Data Model — Leader Ratings, Supply Units, and Succession Variants | 2026-04-02 | 2026-04-02 |
-| [ ] | quick-debt-cleanup_20260403 | Quick Debt Cleanup — Score-1 Trivials + PR #236 Test Gaps | 2026-04-03 | 2026-04-03 |
+| [x] | quick-debt-cleanup_20260403 | Quick Debt Cleanup — Score-1 Trivials + PR #236 Test Gaps | 2026-04-03 | 2026-04-03 |
+
+| [x] | oob-ui-fixes_20260403 | OOB Editor UI Bug Fixes (#228 #229 #230 #231 #232) | 2026-04-03 | 2026-04-03 |
 
 | [x] | m2-debt-sprint_20260409 | M2 Debt Sprint — Score-3 Items (#237 #245 #247) | 2026-04-09 | 2026-04-09 |
 
