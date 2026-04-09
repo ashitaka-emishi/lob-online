@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { join } from 'path';
+
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 import { z } from 'zod';
@@ -14,7 +15,6 @@ vi.mock('fs/promises', () => ({
 
 // eslint-disable-next-line import/order
 import { readFile, writeFile, mkdir, readdir, unlink } from 'fs/promises';
-// eslint-disable-next-line import/order
 import { createEditorRoute } from './editorRouteFactory.js';
 
 const TEST_SCHEMA = z.object({ name: z.string() });
