@@ -18,3 +18,7 @@
   load time. No TypeScript — runtime validation is the type safety strategy.
 - **CI gates:** `npm run lint`, `npm run format:check`, and `npm run test` must all pass before
   merge. The `/dev-build` skill runs these three checks locally in order.
+- **Tech-debt fixes must not generate new debt:** A PR that closes debt items must not introduce
+  new deferred findings. If a review surfaces new issues during a debt-cleanup PR, fix them
+  in-place before merging — do not file them as follow-up issues. The debt register should only
+  ever decrease after a debt sprint.

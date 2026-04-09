@@ -2,28 +2,39 @@ import { readFile, writeFile, mkdir, readdir, unlink } from 'fs/promises';
 import { join } from 'path';
 
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
+
+/**
+ * Shared rate-limiter configuration for all editor routes.
+ * Keep all five callers aligned; change this one function to update all.
+ */
+export function createEditorLimiter() {
+  return rateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+}
 
 /**
  * Creates an Express Router with GET /data and PUT /data handlers for a JSON
  * editor route. The PUT handler validates with the supplied Zod schema, rotates
- * backups, and writes the file atomically with a `_savedAt` timestamp.
+ * backups, and writes the file with a `_savedAt` timestamp.
+ *
+ * **Prefix uniqueness:** `filePrefix` must be unique across all callers that
+ * share the same `backupDir`. The backup-rotation filter matches files by
+ * `${filePrefix}-*.json`, so overlapping prefixes (e.g. `"map"` and `"map-overlay"`)
+ * will cause incorrect trimming.
  *
  * @param {object} opts
  * @param {import('zod').ZodTypeAny} opts.schema      - Zod schema for PUT body validation
  * @param {string}  opts.filePath                     - Absolute path to the JSON data file
- * @param {string}  opts.filePrefix                   - Prefix used for backup filenames (e.g. 'oob')
+ * @param {string}  opts.filePrefix                   - Unique prefix for backup filenames (e.g. 'oob')
  * @param {string}  opts.backupDir                    - Absolute path to the backup directory
  * @param {number}  [opts.maxBackups=20]              - Maximum number of backup files to keep
- * @param {string}  [opts.readErrorMessage]           - Custom 500 message on GET failure
  */
-export function createEditorRoute({
-  schema,
-  filePath,
-  filePrefix,
-  backupDir,
-  maxBackups = 20,
-  readErrorMessage,
-}) {
+export function createEditorRoute({ schema, filePath, filePrefix, backupDir, maxBackups = 20 }) {
   const router = Router();
 
   router.get('/data', async (_req, res) => {
@@ -31,9 +42,7 @@ export function createEditorRoute({
       const data = JSON.parse(await readFile(filePath, 'utf8'));
       res.json(data);
     } catch {
-      res
-        .status(500)
-        .json({ ok: false, message: readErrorMessage ?? `Failed to read ${filePrefix} data` });
+      res.status(500).json({ ok: false, message: `Failed to read ${filePrefix} data` });
     }
   });
 
@@ -67,9 +76,8 @@ export function createEditorRoute({
           .filter((f) => f.startsWith(`${filePrefix}-`) && f.endsWith('.json'))
           .sort();
         if (files.length > maxBackups) {
-          for (const f of files.slice(0, files.length - maxBackups)) {
-            await unlink(join(backupDir, f));
-          }
+          const toDelete = files.slice(0, files.length - maxBackups);
+          await Promise.all(toDelete.map((f) => unlink(join(backupDir, f))));
         }
       } catch {
         /* ignore trim errors */

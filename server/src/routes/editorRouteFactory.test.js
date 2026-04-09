@@ -52,10 +52,10 @@ describe('createEditorRoute — GET /data', () => {
     expect(res.body.ok).toBe(false);
   });
 
-  it('uses custom readErrorMessage when provided', async () => {
+  it('uses filePrefix in default error message', async () => {
     readFile.mockRejectedValue(new Error('fail'));
-    const res = await request(buildApp({ readErrorMessage: 'custom error' })).get('/data');
-    expect(res.body.message).toBe('custom error');
+    const res = await request(buildApp()).get('/data');
+    expect(res.body.message).toContain(FILE_PREFIX);
   });
 });
 
