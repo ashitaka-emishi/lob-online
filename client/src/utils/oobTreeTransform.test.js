@@ -328,3 +328,68 @@ describe('buildDisplayTree — cavalry division Pleasonton variants (#246)', () 
     expect(cavDiv._leader).toBeUndefined();
   });
 });
+
+// ── buildDisplayTree — F/Cav Farnsworth variants (#237) ──────────────────────
+
+const LEADERS_WITH_FARNSWORTH = {
+  union: {
+    cavalry: [
+      {
+        id: 'test-brig',
+        name: 'Elon Farnsworth',
+        commandsId: 'test-brig',
+        commandLevel: 'brigade',
+      },
+    ],
+  },
+  confederate: {},
+};
+
+const SUCCESSION_WITH_FARNSWORTH_VARIANT = {
+  union: [
+    {
+      id: 'farnsworth-promoted',
+      name: 'Brig Gen Elon Farnsworth (Promoted)',
+      baseLeaderId: 'test-brig',
+      commandLevel: 'brigade',
+      commandsId: null,
+      commandValue: 1,
+      moraleValue: 1,
+    },
+  ],
+  confederate: [],
+};
+
+describe('buildDisplayTree — F/Cav Farnsworth variants (#237)', () => {
+  it('Farnsworth brigade node gets _leader when present in leaders', () => {
+    const tree = buildDisplayTree(makeOob(), LEADERS_WITH_FARNSWORTH, null, 'union');
+    const fcav = tree[0].node.cavalryDivision.brigades[0];
+    expect(fcav._leader).toBeDefined();
+    expect(fcav._leader.id).toBe('test-brig');
+  });
+
+  it('Farnsworth brigade node gets _leader._variants when succession variant exists', () => {
+    const tree = buildDisplayTree(
+      makeOob(),
+      LEADERS_WITH_FARNSWORTH,
+      SUCCESSION_WITH_FARNSWORTH_VARIANT,
+      'union'
+    );
+    const fcav = tree[0].node.cavalryDivision.brigades[0];
+    expect(fcav._leader).toBeDefined();
+    expect(fcav._leader._variants).toHaveLength(1);
+    expect(fcav._leader._variants[0].id).toBe('farnsworth-promoted');
+  });
+
+  it('Pleasonton variants still render after processUSACavDiv refactor (regression)', () => {
+    const tree = buildDisplayTree(
+      makeOob(),
+      LEADERS_WITH_PLEASONTON,
+      SUCCESSION_WITH_PLEASONTON_VARIANT,
+      'union'
+    );
+    const cavDiv = tree[0].node.cavalryDivision;
+    expect(cavDiv._leader.id).toBe('pleasonton');
+    expect(cavDiv._leader._variants).toHaveLength(1);
+  });
+});
