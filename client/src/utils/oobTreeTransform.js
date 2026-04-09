@@ -146,33 +146,21 @@ function processUSACorps(corps, leadersMap, variantsMap) {
 }
 
 // Cavalry Division: "Cavalry Division" wrapper with Pleasonton leader + HQ.
-// F/cav is a brigade child with Farnsworth leader and all batteries.
+// F/cav is a brigade child with Farnsworth leader (including variants) and all batteries.
 function processUSACavDiv(cd, leadersMap, variantsMap) {
-  const pleasonton = leadersMap[cd.id];
   const cavArty = cd.artillery?.['arty-fcav'];
   const fcavBde = cd.brigades?.[0];
-  const farnsworth = fcavBde ? leadersMap[fcavBde.id] : null;
-  const processedFcav = {
-    ...(fcavBde ?? { id: 'fcav' }),
-    name: 'F/Cav',
-    ...(farnsworth ? { _leader: farnsworth } : {}),
-    batteries: cavArty?.batteries ?? [],
-  };
+  const processedFcav = withLeader(
+    { ...(fcavBde ?? { id: 'fcav' }), name: 'F/Cav', batteries: cavArty?.batteries ?? [] },
+    leadersMap,
+    variantsMap
+  );
   const hqNode = cd.hq ?? { id: cd.id + '-hq', name: 'Cavalry Div HQ' };
-  const pleasontonVariants = pleasonton ? (variantsMap[pleasonton.id] ?? []) : [];
-  return {
-    id: cd.id,
-    name: 'Cavalry Division',
-    ...(pleasonton
-      ? {
-          _leader: pleasontonVariants.length
-            ? { ...pleasonton, _variants: pleasontonVariants }
-            : pleasonton,
-        }
-      : {}),
-    _hq: hqNode,
-    brigades: [processedFcav],
-  };
+  return withLeader(
+    { id: cd.id, name: 'Cavalry Division', _hq: hqNode, brigades: [processedFcav] },
+    leadersMap,
+    variantsMap
+  );
 }
 
 // ── Confederate processing ─────────────────────────────────────────────────────────────
