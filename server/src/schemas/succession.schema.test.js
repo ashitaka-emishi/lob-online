@@ -1,23 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import { SuccessionSchema } from './succession.schema.js';
-
-const MINIMAL_VARIANT = {
-  id: 'walker-promoted',
-  name: 'Col Joseph Walker (Promoted)',
-  baseLeaderId: 'walker',
-  commandLevel: 'brigade',
-  commandsId: null,
-  commandValue: 0,
-  moraleValue: 1,
-};
-
-const MINIMAL_SUCCESSION = {
-  _status: 'draft',
-  _source: 'test',
-  union: [],
-  confederate: [MINIMAL_VARIANT],
-};
+import { MINIMAL_VARIANT, MINIMAL_SUCCESSION } from './succession.fixtures.js';
 
 describe('SuccessionSchema — top-level structure', () => {
   it('accepts minimal valid payload', () => {
