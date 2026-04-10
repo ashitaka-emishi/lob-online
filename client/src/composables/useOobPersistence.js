@@ -1,5 +1,7 @@
 import { ref } from 'vue';
 
+import { isValidSidedObjectShape, isValidSuccessionShape } from './oobValidators.js';
+
 const OOB_STORAGE_KEY = 'lob-oob-editor-v1';
 const LEADERS_STORAGE_KEY = 'lob-leaders-editor-v1';
 const SUCCESSION_STORAGE_KEY = 'lob-succession-editor-v1';
@@ -7,38 +9,6 @@ const OOB_API_URL = '/api/tools/oob-editor/data';
 const LEADERS_API_URL = '/api/tools/leaders-editor/data';
 const SUCCESSION_API_URL = '/api/tools/succession-editor/data';
 const DEBOUNCE_MS = 500;
-
-// Two shape families used by the OOB editor data files:
-//
-//   _isValidSidedObjectShape — oob.json and leaders.json: { union: { ... }, confederate: { ... } }
-//     Both sides are non-null objects (objects-of-arrays keyed by command level).
-//
-//   _isValidSuccessionShape — succession.json: { union: [...], confederate: [...] }
-//     Both sides are flat arrays of variant records (no sub-categorisation needed).
-//
-// Keep these validators in sync with their corresponding Zod schemas on the server.
-function _isValidSidedObjectShape(data) {
-  return (
-    data !== null &&
-    typeof data === 'object' &&
-    !Array.isArray(data) &&
-    data.union !== null &&
-    typeof data.union === 'object' &&
-    data.confederate !== null &&
-    typeof data.confederate === 'object'
-  );
-}
-
-// Succession shape: union and confederate are arrays (not objects).
-function _isValidSuccessionShape(data) {
-  return (
-    data !== null &&
-    typeof data === 'object' &&
-    !Array.isArray(data) &&
-    Array.isArray(data.union) &&
-    Array.isArray(data.confederate)
-  );
-}
 
 /**
  * OOB/leaders data fetch, save, draft, push, and pull state + logic.
@@ -87,12 +57,12 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
       if (rawOob && rawLeaders) {
         const parsedOob = JSON.parse(rawOob);
         const parsedLeaders = JSON.parse(rawLeaders);
-        if (_isValidSidedObjectShape(parsedOob) && _isValidSidedObjectShape(parsedLeaders)) {
+        if (isValidSidedObjectShape(parsedOob) && isValidSidedObjectShape(parsedLeaders)) {
           oob.value = parsedOob;
           leaders.value = parsedLeaders;
           if (rawSuccession) {
             const parsedSuccession = JSON.parse(rawSuccession);
-            if (_isValidSuccessionShape(parsedSuccession)) {
+            if (isValidSuccessionShape(parsedSuccession)) {
               succession.value = parsedSuccession;
             }
           }
@@ -118,7 +88,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
       if (oobRes.ok && leadersRes.ok) {
         const parsedOob = await oobRes.json();
         const parsedLeaders = await leadersRes.json();
-        if (!_isValidSidedObjectShape(parsedOob) || !_isValidSidedObjectShape(parsedLeaders)) {
+        if (!isValidSidedObjectShape(parsedOob) || !isValidSidedObjectShape(parsedLeaders)) {
           syncError.value = 'Server returned data with an unrecognised shape';
           return;
         }
@@ -126,7 +96,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
         leaders.value = parsedLeaders;
         if (successionRes.ok) {
           const parsedSuccession = await successionRes.json();
-          if (_isValidSuccessionShape(parsedSuccession)) succession.value = parsedSuccession;
+          if (isValidSuccessionShape(parsedSuccession)) succession.value = parsedSuccession;
         }
         dirty.value = false;
         return;
@@ -232,14 +202,14 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
       if (oobRes.ok && leadersRes.ok) {
         const parsedOob = await oobRes.json();
         const parsedLeaders = await leadersRes.json();
-        if (!_isValidSidedObjectShape(parsedOob) || !_isValidSidedObjectShape(parsedLeaders)) {
+        if (!isValidSidedObjectShape(parsedOob) || !isValidSidedObjectShape(parsedLeaders)) {
           syncError.value = 'Server returned data with an unrecognised shape';
         } else {
           oob.value = parsedOob;
           leaders.value = parsedLeaders;
           if (successionRes.ok) {
             const parsedSuccession = await successionRes.json();
-            if (_isValidSuccessionShape(parsedSuccession)) succession.value = parsedSuccession;
+            if (isValidSuccessionShape(parsedSuccession)) succession.value = parsedSuccession;
           }
           dirty.value = false;
           try {
