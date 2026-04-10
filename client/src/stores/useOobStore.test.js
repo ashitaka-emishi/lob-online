@@ -4,6 +4,8 @@ import { useOobStore } from './useOobStore.js';
 
 const MINIMAL_OOB = { _status: 'available', union: { corps: [] }, confederate: { corps: [] } };
 const MINIMAL_LEADERS = { _status: 'available', union: { army: [] }, confederate: { army: [] } };
+// Mirrors server/src/schemas/succession.fixtures.js — duplicated here because server-only
+// fixture files cannot be imported in the client (jsdom) test environment.
 const MINIMAL_SUCCESSION = {
   _status: 'draft',
   _source: 'test',

@@ -25,8 +25,10 @@ export function isValidSidedObjectShape(data) {
     !Array.isArray(data) &&
     data.union !== null &&
     typeof data.union === 'object' &&
+    !Array.isArray(data.union) &&
     data.confederate !== null &&
-    typeof data.confederate === 'object'
+    typeof data.confederate === 'object' &&
+    !Array.isArray(data.confederate)
   );
 }
 

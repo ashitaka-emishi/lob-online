@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /**
- * Shared schema primitives used across leaders.schema.js and succession.schema.js.
+ * Shared schema primitives used across oob.schema.js, leaders.schema.js, and succession.schema.js.
  * Import from this module instead of redefining locally.
  */
 
@@ -13,6 +13,11 @@ const _baseCounterRefFields = {
   back: z.string().nullable(),
   backConfidence: z.number().min(0).max(1).nullable(),
 };
+
+/**
+ * Counter ref for unit/node records (oob.json) — base four fields only.
+ */
+export const BaseCounterRef = z.object({ ..._baseCounterRefFields }).nullable();
 
 /**
  * Counter ref for leader records — all eight fields present (promoted fields required/nullable).

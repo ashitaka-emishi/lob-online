@@ -167,4 +167,9 @@ describe('LeadersSchema — specialRules values (#258)', () => {
     const result = LeadersSchema.safeParse(withLeaderSpecialRules({ list: [1, 2, 3] }));
     expect(result.success).toBe(false);
   });
+
+  it('rejects numeric values in specialRules', () => {
+    const result = LeadersSchema.safeParse(withLeaderSpecialRules({ turnLimit: 5 }));
+    expect(result.success).toBe(false);
+  });
 });

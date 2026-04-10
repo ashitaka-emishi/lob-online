@@ -15,15 +15,16 @@ import { fileURLToPath } from 'url';
 import { join } from 'path';
 
 import { describe, it, expect } from 'vitest';
+// Client validators are pure JS (no Vue) — importable from server test environment.
+// @client alias is defined in vitest.config.js → server project → resolve.alias.
+import {
+  isValidSidedObjectShape,
+  isValidSuccessionShape,
+} from '@client/composables/oobValidators.js';
 
 import { OOBSchema } from './oob.schema.js';
 import { LeadersSchema } from './leaders.schema.js';
 import { SuccessionSchema } from './succession.schema.js';
-// Client validators are pure JS (no Vue) — importable from server test environment.
-import {
-  isValidSidedObjectShape,
-  isValidSuccessionShape,
-} from '../../../client/src/composables/oobValidators.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const DATA_DIR = join(__dirname, '../../../data/scenarios/south-mountain');
@@ -64,6 +65,12 @@ describe('OOBSchema / isValidSidedObjectShape contract (#257)', () => {
 
   it('client validator rejects array (not a sided object)', () => {
     expect(isValidSidedObjectShape([])).toBe(false);
+  });
+
+  it('client validator rejects object with array sides (server schema also rejects)', () => {
+    const bad = { union: [], confederate: [] };
+    expect(OOBSchema.safeParse(bad).success).toBe(false);
+    expect(isValidSidedObjectShape(bad)).toBe(false);
   });
 });
 

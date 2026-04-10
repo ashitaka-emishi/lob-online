@@ -1,3 +1,5 @@
+import { resolve } from 'path';
+
 import { defineConfig } from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
 
@@ -6,6 +8,11 @@ export default defineConfig({
     projects: [
       // Server-side tests — Node environment
       {
+        resolve: {
+          // @client alias makes the cross-layer import in oob-client-contract.test.js explicit
+          // and resilient to client directory restructuring.
+          alias: { '@client': resolve(import.meta.dirname, 'client/src') },
+        },
         test: {
           name: 'server',
           include: ['server/src/**/*.test.js'],

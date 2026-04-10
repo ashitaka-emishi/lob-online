@@ -68,6 +68,7 @@ describe('createEditorRoute — PUT /data', () => {
     writeFile.mockResolvedValue(undefined);
     readdir.mockResolvedValue([]);
     unlink.mockResolvedValue(undefined);
+    rename.mockResolvedValue(undefined);
   });
 
   it('accepts valid body, writes file, returns { ok: true }', async () => {
@@ -153,6 +154,14 @@ describe('createEditorRoute — PUT /data', () => {
     writeFile.mockRejectedValueOnce(new Error('disk full'));
     const res = await request(buildApp()).put('/data').send(VALID_BODY);
     expect(res.status).toBe(500);
+    expect(unlink).toHaveBeenCalledWith(FILE_PATH + '.tmp');
+  });
+
+  it('cleans up .tmp and returns 500 when rename fails after successful write (#251)', async () => {
+    rename.mockRejectedValueOnce(new Error('EXDEV'));
+    const res = await request(buildApp()).put('/data').send(VALID_BODY);
+    expect(res.status).toBe(500);
+    expect(writeFile).toHaveBeenCalledWith(FILE_PATH + '.tmp', expect.any(String));
     expect(unlink).toHaveBeenCalledWith(FILE_PATH + '.tmp');
   });
 });

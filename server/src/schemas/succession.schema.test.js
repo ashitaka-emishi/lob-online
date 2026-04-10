@@ -148,4 +148,9 @@ describe('SuccessionSchema — specialRules values (#258)', () => {
     const result = SuccessionSchema.safeParse(withVariantSpecialRules({ list: ['x'] }));
     expect(result.success).toBe(false);
   });
+
+  it('rejects numeric values in specialRules', () => {
+    const result = SuccessionSchema.safeParse(withVariantSpecialRules({ turnLimit: 5 }));
+    expect(result.success).toBe(false);
+  });
 });

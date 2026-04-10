@@ -78,6 +78,26 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
 
   // ── Load ──────────────────────────────────────────────────────────────────
 
+  // Shared helper: parse, validate shapes, assign refs, clear dirty + isOffline.
+  // Sets syncError on shape mismatch. Returns true on success, false otherwise.
+  async function _applyServerResponses(oobRes, leadersRes, successionRes) {
+    const parsedOob = await oobRes.json();
+    const parsedLeaders = await leadersRes.json();
+    if (!isValidSidedObjectShape(parsedOob) || !isValidSidedObjectShape(parsedLeaders)) {
+      syncError.value = 'Server returned data with an unrecognised shape';
+      return false;
+    }
+    oob.value = parsedOob;
+    leaders.value = parsedLeaders;
+    if (successionRes.ok) {
+      const parsedSuccession = await successionRes.json();
+      if (isValidSuccessionShape(parsedSuccession)) succession.value = parsedSuccession;
+    }
+    dirty.value = false;
+    isOffline.value = false;
+    return true;
+  }
+
   async function loadData() {
     // L1: try server
     try {
@@ -87,20 +107,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
         fetch(SUCCESSION_API_URL),
       ]);
       if (oobRes.ok && leadersRes.ok) {
-        const parsedOob = await oobRes.json();
-        const parsedLeaders = await leadersRes.json();
-        if (!isValidSidedObjectShape(parsedOob) || !isValidSidedObjectShape(parsedLeaders)) {
-          syncError.value = 'Server returned data with an unrecognised shape';
-          return;
-        }
-        oob.value = parsedOob;
-        leaders.value = parsedLeaders;
-        if (successionRes.ok) {
-          const parsedSuccession = await successionRes.json();
-          if (isValidSuccessionShape(parsedSuccession)) succession.value = parsedSuccession;
-        }
-        dirty.value = false;
-        isOffline.value = false;
+        await _applyServerResponses(oobRes, leadersRes, successionRes);
         return;
       }
     } catch {
@@ -204,19 +211,8 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
         fetch(SUCCESSION_API_URL),
       ]);
       if (oobRes.ok && leadersRes.ok) {
-        const parsedOob = await oobRes.json();
-        const parsedLeaders = await leadersRes.json();
-        if (!isValidSidedObjectShape(parsedOob) || !isValidSidedObjectShape(parsedLeaders)) {
-          syncError.value = 'Server returned data with an unrecognised shape';
-        } else {
-          oob.value = parsedOob;
-          leaders.value = parsedLeaders;
-          if (successionRes.ok) {
-            const parsedSuccession = await successionRes.json();
-            if (isValidSuccessionShape(parsedSuccession)) succession.value = parsedSuccession;
-          }
-          dirty.value = false;
-          isOffline.value = false;
+        const assigned = await _applyServerResponses(oobRes, leadersRes, successionRes);
+        if (assigned) {
           try {
             localStorage.removeItem(OOB_STORAGE_KEY);
             localStorage.removeItem(LEADERS_STORAGE_KEY);
