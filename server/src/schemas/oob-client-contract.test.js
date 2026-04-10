@@ -10,16 +10,16 @@
  * This test anchors that contract: valid server-parsed objects pass client validation,
  * and structurally invalid objects fail both.
  */
-import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { join } from 'path';
 
+import { describe, it, expect } from 'vitest';
+
 import { OOBSchema } from './oob.schema.js';
 import { LeadersSchema } from './leaders.schema.js';
 import { SuccessionSchema } from './succession.schema.js';
-
-// Import the client validators directly — they are pure JS with no Vue dependency.
+// Client validators are pure JS (no Vue) — importable from server test environment.
 import {
   isValidSidedObjectShape,
   isValidSuccessionShape,
