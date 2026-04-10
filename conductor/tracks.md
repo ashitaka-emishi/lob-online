@@ -70,6 +70,4 @@
 
 | [x] | hld-milestone-plan_20260410 | HLD Update — Implementation Status + M3–M8 Milestone Plan | 2026-04-10 | 2026-04-10 |
 
-| [ ] | m3-rules-foundation_20260410 | M3 — Rules Engine Foundation + Testing Tools | 2026-04-10 | 2026-04-10 |
-
 <!-- Tracks registered by /conductor:new-track -->
