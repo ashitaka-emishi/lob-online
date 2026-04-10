@@ -66,5 +66,6 @@
 | [x] | oob-ui-fixes_20260403 | OOB Editor UI Bug Fixes (#228 #229 #230 #231 #232) | 2026-04-03 | 2026-04-03 |
 
 | [x] | m2-debt-sprint_20260409 | M2 Debt Sprint — Score-3 Items (#237 #245 #247) | 2026-04-09 | 2026-04-09 |
+| [x] | m2-closeout_20260409 | M2 Closeout Debt Sprint | 2026-04-09 | 2026-04-10 |
 
 <!-- Tracks registered by /conductor:new-track -->

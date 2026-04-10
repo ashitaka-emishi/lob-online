@@ -5,6 +5,7 @@ import request from 'supertest';
 vi.mock('fs/promises', () => ({
   readFile: vi.fn(),
   writeFile: vi.fn(() => Promise.resolve()),
+  rename: vi.fn(() => Promise.resolve()),
   mkdir: vi.fn(() => Promise.resolve()),
   readdir: vi.fn(() => Promise.resolve([])),
   unlink: vi.fn(() => Promise.resolve()),

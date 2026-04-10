@@ -11,10 +11,11 @@ vi.mock('fs/promises', () => ({
   mkdir: vi.fn(() => Promise.resolve()),
   readdir: vi.fn(() => Promise.resolve([])),
   unlink: vi.fn(() => Promise.resolve()),
+  rename: vi.fn(() => Promise.resolve()),
 }));
 
 // eslint-disable-next-line import/order
-import { readFile, writeFile, mkdir, readdir, unlink } from 'fs/promises';
+import { readFile, writeFile, mkdir, readdir, unlink, rename } from 'fs/promises';
 import { createEditorRoute } from './editorRouteFactory.js';
 
 const TEST_SCHEMA = z.object({ name: z.string() });
@@ -67,6 +68,7 @@ describe('createEditorRoute — PUT /data', () => {
     writeFile.mockResolvedValue(undefined);
     readdir.mockResolvedValue([]);
     unlink.mockResolvedValue(undefined);
+    rename.mockResolvedValue(undefined);
   });
 
   it('accepts valid body, writes file, returns { ok: true }', async () => {
@@ -136,5 +138,30 @@ describe('createEditorRoute — PUT /data', () => {
   it('calls mkdir on backupDir with recursive: true', async () => {
     await request(buildApp()).put('/data').send(VALID_BODY);
     expect(mkdir).toHaveBeenCalledWith(BACKUP_DIR, { recursive: true });
+  });
+
+  // ── Atomic writes (#251) ────────────────────────────────────────────────────
+
+  it('writes to .tmp path then renames to final path (#251)', async () => {
+    const res = await request(buildApp()).put('/data').send(VALID_BODY);
+    expect(res.status).toBe(200);
+    const tmpPath = FILE_PATH + '.tmp';
+    expect(writeFile).toHaveBeenCalledWith(tmpPath, expect.any(String));
+    expect(rename).toHaveBeenCalledWith(tmpPath, FILE_PATH);
+  });
+
+  it('cleans up .tmp file when main writeFile fails (#251)', async () => {
+    writeFile.mockRejectedValueOnce(new Error('disk full'));
+    const res = await request(buildApp()).put('/data').send(VALID_BODY);
+    expect(res.status).toBe(500);
+    expect(unlink).toHaveBeenCalledWith(FILE_PATH + '.tmp');
+  });
+
+  it('cleans up .tmp and returns 500 when rename fails after successful write (#251)', async () => {
+    rename.mockRejectedValueOnce(new Error('EXDEV'));
+    const res = await request(buildApp()).put('/data').send(VALID_BODY);
+    expect(res.status).toBe(500);
+    expect(writeFile).toHaveBeenCalledWith(FILE_PATH + '.tmp', expect.any(String));
+    expect(unlink).toHaveBeenCalledWith(FILE_PATH + '.tmp');
   });
 });

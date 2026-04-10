@@ -1,0 +1,16 @@
+{
+  "id": "m2-closeout_20260409",
+  "title": "M2 Closeout Debt Sprint",
+  "type": "chore",
+  "status": "complete",
+  "created": "2026-04-09T00:00:00.000Z",
+  "updated": "2026-04-10T05:09:09.680Z",
+  "phases": {
+    "total": 4,
+    "completed": 4
+  },
+  "tasks": {
+    "total": 13,
+    "completed": 13
+  }
+}

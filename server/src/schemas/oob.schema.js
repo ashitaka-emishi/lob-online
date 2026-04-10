@@ -1,13 +1,8 @@
 import { z } from 'zod';
 
-const CounterRef = z
-  .object({
-    front: z.string().nullable(),
-    frontConfidence: z.number().min(0).max(1).nullable(),
-    back: z.string().nullable(),
-    backConfidence: z.number().min(0).max(1).nullable(),
-  })
-  .nullable();
+import { BaseCounterRef } from './shared.schema.js';
+
+const CounterRef = BaseCounterRef;
 
 const WeaponType = z.enum(['R', 'M', 'SR', 'C']);
 const GunType = z.enum(['R', 'N', 'H', 'L', 'HvR']);

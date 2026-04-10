@@ -4,6 +4,8 @@ import { useOobStore } from './useOobStore.js';
 
 const MINIMAL_OOB = { _status: 'available', union: { corps: [] }, confederate: { corps: [] } };
 const MINIMAL_LEADERS = { _status: 'available', union: { army: [] }, confederate: { army: [] } };
+// Mirrors server/src/schemas/succession.fixtures.js — duplicated here because server-only
+// fixture files cannot be imported in the client (jsdom) test environment.
 const MINIMAL_SUCCESSION = {
   _status: 'draft',
   _source: 'test',
@@ -21,17 +23,20 @@ const MINIMAL_SUCCESSION = {
   ],
 };
 
-// Returns a fetch mock that sequences: call 0 → oobData, call 1 → leadersData,
-// call 2+ → successionData (null means succession endpoint returns the same ok status
-// but with leadersData shape, which will fail validation and leave succession null).
+const OOB_URL = '/api/tools/oob-editor/data';
+const LEADERS_URL = '/api/tools/leaders-editor/data';
+const SUCCESSION_URL = '/api/tools/succession-editor/data';
+
+// Returns a fetch mock dispatched by URL — immune to fetch call-order changes (#254).
+// successionData=null means the succession endpoint returns {} with ok=true, which
+// fails client shape validation and leaves store.succession null.
 function mockFetch(oobData, leadersData, successionData = null, ok = true) {
-  let call = 0;
-  return vi.fn().mockImplementation(() => {
+  return vi.fn().mockImplementation((url) => {
     let data;
-    if (call === 0) data = oobData;
-    else if (call === 1) data = leadersData;
-    else data = successionData ?? {};
-    call++;
+    if (url === OOB_URL) data = oobData;
+    else if (url === LEADERS_URL) data = leadersData;
+    else if (url === SUCCESSION_URL) data = successionData ?? {};
+    else data = {};
     return Promise.resolve({
       ok,
       status: ok ? 200 : 500,
@@ -309,14 +314,7 @@ describe('useOobStore', () => {
   // ── Zod validation on load ────────────────────────────────────────────────
 
   it('loadData: sets syncError when server returns invalid oob shape', async () => {
-    let call = 0;
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockImplementation(() => {
-        const data = call++ === 0 ? { notAnOob: true } : MINIMAL_LEADERS;
-        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(data) });
-      })
-    );
+    vi.stubGlobal('fetch', mockFetch({ notAnOob: true }, MINIMAL_LEADERS));
     const store = useOobStore();
     await store.loadData();
     expect(store.syncError).toBeTruthy();
@@ -324,14 +322,7 @@ describe('useOobStore', () => {
   });
 
   it('pullFromServer: sets syncError and does not update store when response is invalid', async () => {
-    let call = 0;
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockImplementation(() => {
-        const data = call++ === 0 ? { notAnOob: true } : MINIMAL_LEADERS;
-        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(data) });
-      })
-    );
+    vi.stubGlobal('fetch', mockFetch({ notAnOob: true }, MINIMAL_LEADERS));
     const store = useOobStore();
     store.oob = MINIMAL_OOB;
     await store.pullFromServer();
