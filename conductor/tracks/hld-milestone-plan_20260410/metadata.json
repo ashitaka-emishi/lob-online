@@ -1,0 +1,16 @@
+{
+  "id": "hld-milestone-plan_20260410",
+  "title": "HLD Update — Implementation Status + M3–M8 Milestone Plan",
+  "type": "chore",
+  "status": "complete",
+  "created": "2026-04-10T00:00:00.000Z",
+  "updated": "2026-04-10T00:00:00.000Z",
+  "phases": {
+    "total": 4,
+    "completed": 4
+  },
+  "tasks": {
+    "total": 13,
+    "completed": 13
+  }
+}

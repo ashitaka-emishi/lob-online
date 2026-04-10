@@ -68,4 +68,6 @@
 | [x] | m2-debt-sprint_20260409 | M2 Debt Sprint — Score-3 Items (#237 #245 #247) | 2026-04-09 | 2026-04-09 |
 | [x] | m2-closeout_20260409 | M2 Closeout Debt Sprint | 2026-04-09 | 2026-04-10 |
 
+| [x] | hld-milestone-plan_20260410 | HLD Update — Implementation Status + M3–M8 Milestone Plan | 2026-04-10 | 2026-04-10 |
+
 <!-- Tracks registered by /conductor:new-track -->

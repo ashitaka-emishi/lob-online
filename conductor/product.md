@@ -25,4 +25,14 @@ Wargame enthusiasts familiar with the _Line of Battle_ ruleset who want to play 
 
 ## Current Phase
 
-Phase 1 scaffold complete. Tech stack established, data JSON files and Zod schemas built, map editor and scenario editor dev tools complete with full test coverage. Game logic (rules engine, auth, multiplayer) planned for subsequent phases.
+M2 complete. All dev tools are done: map editor (full terrain/elevation/edge/wedge editing,
+LOS test panel, push/pull sync), scenario editor (turn structure, lighting schedule, rules
+flags), OOB editor (command hierarchy, unit detail, leader succession, counter images), and
+counter auto-detection script. All five JSON data files have Zod schemas and Vitest coverage.
+Terrain digitization for South Mountain is in progress.
+
+**Starting M3 — Rules Engine Foundation + Map Testing Tools.** This milestone delivers the
+pure-JS engine core (`hex.js`, `scenario.js`, `movement.js`, `los.js`) with full test
+coverage, plus a Movement Test Panel in the map editor for interactive validation of movement
+paths on the digitized map. See `docs/designs/high-level-design.md` §2 for the full M3–M8
+milestone plan.

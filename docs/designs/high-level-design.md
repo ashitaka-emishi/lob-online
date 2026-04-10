@@ -23,15 +23,27 @@
 
 ---
 
-> **Implementation Status (as of 2026-03-18)**
+> **Implementation Status (as of 2026-04-10) — M2 Complete**
 >
-> **Completed:** tech stack selection, server scaffold (Express + Socket.io), data models (all four JSON files), Zod validation schemas, Vitest test suites (server + client), ESLint/Prettier configuration, GitHub Actions CI pipeline, map editor dev tool (accordion-driven tool panels activating editorMode on open/close; ElevationToolPanel with fixed-target slider, click-to-set, and clear-all; TerrainToolPanel with building unicode icon overlay and clear-all; LinearFeaturePanel with click-only edge painting for roads, streams, and contours, bridge/ford as validated edge types, road double-line outline rendering with 2+-edge threshold; WedgeEditor in dedicated accordion; cardinal direction labels on north-offset SVG picker; elevation levels input; layer system; LOS test panel; localStorage autosave; versioned server backups; offline fallback; push/pull sync UX with confirmation dialogs), scenario editor dev tool (turn structure, lighting schedule, rules fields — same push/pull sync pattern), extended `scenario.json` with lighting schedule and rules fields.
+> **M1 — Scaffold (complete):** tech stack selection, server scaffold (Express + Socket.io),
+> data models (five JSON files: map, scenario, oob, leaders, succession), Zod validation schemas,
+> Vitest test suites (server + client), ESLint/Prettier configuration, GitHub Actions CI pipeline.
 >
-> **In progress:** terrain data digitization (ongoing field entry for South Mountain map hexes).
+> **M2 — Dev Tools (complete):** map editor dev tool (full accordion panel suite: elevation,
+> terrain, linear features, wedge editor, LOS test panel; click/paint modes; layer toggles;
+> localStorage autosave; versioned server backups; offline fallback; push/pull sync UX);
+> scenario editor dev tool (turn structure, lighting schedule, rules fields);
+> OOB editor dev tool (command hierarchy tree, unit detail panel, leader succession, counter
+> image widget); counter auto-detection script; extended `scenario.json` with full movement
+> cost chart, lighting schedule, rules flags, setup positions, reinforcements, VP tables,
+> and random event tables.
 >
-> **Planned:** Discord OAuth auth, game rules engine, DigitalOcean Spaces persistence, multiplayer coordination, frontend game UI; OOB editor dev tool (unit stats, leader ratings, brigade hierarchy).
+> **In progress:** terrain data digitization (ongoing hex entry for South Mountain map).
 >
-> Sections describing completed work are accurate to the implementation. Sections describing planned work reflect design intent and may evolve.
+> **Next:** M3 — Rules Engine Foundation + Map Testing Tools (see §2 for full milestone plan).
+>
+> Sections describing completed work are accurate to the implementation. Sections describing
+> planned work reflect design intent and may evolve.
 
 ---
 
@@ -165,68 +177,355 @@ A session that starts live on Saturday, continues asynchronously via Discord not
 
 ## 2. Phased Development Plan
 
-### Phase 1 — MVP (ship a complete, playable game)
+### Milestone Overview
 
-**What is built:**
+| Milestone | Status  | Goal                                                |
+| --------- | ------- | --------------------------------------------------- |
+| M1        | ✅ Done | Initial scaffold — tech stack, server, CI, schemas  |
+| M2        | ✅ Done | Dev tools — map editor, scenario editor, OOB editor |
+| M3        | 🔜 Next | Rules engine foundation + map testing tools         |
+| M4        | Planned | Auth + game API + local persistence                 |
+| M5        | Planned | Turn structure + orders + game map UI               |
+| M6        | Planned | Combat + morale                                     |
+| M7        | Planned | Special rules + victory conditions                  |
+| M8        | Planned | Production persistence + multiplayer                |
 
-- Discord OAuth2 login (`passport-discord`), JWT cookie session
-- Full Express REST API (`/auth`, `/api/v1/games`, `/api/v1/map`)
-- Rules engine covering the complete South Mountain scenario: movement, fire combat, close combat, morale, orders/command, artillery, VP tracking, all 10 SM rule overrides, all 4 errata corrections
-- Vue 3 + Vite + Pinia frontend
-- SVG hex map with Honeycomb.js — click to select units, click to move, click to fire
-- DigitalOcean Spaces persistence (game state + history JSON)
-- SQLite for user records and game index
-- Socket.io real-time updates for live sessions
-- Discord webhook async notifications (optional per game)
-- `dotenv`, `helmet`, `cors`, `morgan`, Zod validation
-- Vitest test suite, ESLint + Prettier configured
+M3–M8 together deliver the playable South Mountain MVP. M9+ covers Enhanced Experience
+(Discord DMs, replay viewer, mobile layout) and Extended Content (additional scenarios,
+spectator mode, AI opponent).
 
-**What is explicitly deferred:**
+### Rule Section Coverage
 
-- Discord bot DMs (private per-player notifications) — Phase 2
-- Replay/history viewer — Phase 2
-- Scenarios other than South Mountain — Phase 3
-- Spectator mode — Phase 3
-- AI opponent — Phase 3
-- Mobile-optimised layout — Phase 2
+Tracks which LOB v2.0 and SM rule sections are covered in each milestone and their current
+status. "Engine" = pure-JS module implemented and unit-tested (testable via dev tools).
+"Loop" = wired into the live game dispatch/action pipeline.
 
-**Acceptance criteria:**
-
-- Two players can log in with Discord accounts
-- Players can create a game, invite an opponent (share game link), and play a full South Mountain scenario to completion
-- All SM rule overrides and errata corrections are enforced by the server; illegal moves are rejected with a clear error code
-- A game started in async mode survives a server restart and is fully recoverable
-- The SVG map renders all hexes with correct terrain; units can be selected and actions submitted by clicking
+| Rule Section      | Topic                                                                | Engine   | Loop  | Status  |
+| ----------------- | -------------------------------------------------------------------- | -------- | ----- | ------- |
+| LOB §2            | Sequence of Play — turn phases, Command/Activity/Rally               | —        | M5    | Planned |
+| LOB §3            | Movement — terrain costs, formations, road movement, ZOC             | M3       | M5    | Planned |
+| LOB §4            | Line of Sight — Slope Table, height modifiers                        | M3       | M3    | Planned |
+| LOB §5            | Fire Combat — Combat Table, Opening Volley, column shifts, depletion | M3       | M6    | Planned |
+| LOB §6            | Morale — Morale Table, state transitions, cascade                    | M3       | M6    | Planned |
+| LOB §7            | Close Combat — Closing Roll, charge sequence, charge modifiers       | M3       | M6    | Planned |
+| LOB §8            | Rally Phase — CBF removal, morale recovery                           | —        | M6    | Planned |
+| LOB §9.1          | Artillery — limbering, supply, depletion, artillery leaders          | M3 (ref) | M7    | Planned |
+| LOB §9.1a         | Leader Loss Table                                                    | M3       | M6    | Planned |
+| LOB §9.1e         | Zero Rule (attack MA roll)                                           | M3       | M6    | Planned |
+| LOB §9.3          | Loss Recovery (midnight 25% rule)                                    | —        | M7    | Planned |
+| LOB §9.4          | Open Order — movement/combat/ZOC effects                             | M3 (ref) | M5/M6 | Planned |
+| LOB §10.6         | Command Roll + Order Acceptance                                      | M3       | M5    | Planned |
+| LOB §10.6a        | Order Delivery (turn delay calculator)                               | M3       | M5    | Planned |
+| LOB §10.7b        | Fluke Stoppage                                                       | M3       | M5    | Planned |
+| LOB §10.7c        | Reserve Requirements                                                 | M3 (ref) | M5    | Planned |
+| LOB §10.8c        | Attack Recovery                                                      | M3       | M7    | Planned |
+| LOB §11           | Victory Conditions — hex control, terrain VP, wreck VP               | —        | M7    | Planned |
+| SM §1.1           | Special Slope Rule (50 ft contour, vertical impassable)              | M3       | M3    | Planned |
+| SM Override       | Longstreet initiative, Normal army commander rating                  | —        | M5    | Planned |
+| SM Override       | At-start Complex Defense → Move orders                               | —        | M4    | Planned |
+| SM Override       | Trees +1 LOS height (not +3)                                         | M3       | M3    | Planned |
+| SM §3.6           | Artillery supply trace + Pelham/Pleasonton replenishment             | M3 (ref) | M7    | Planned |
+| SM §3.x           | Setup positions, detachment rules                                    | —        | M4    | Planned |
+| SM Reinforcements | Fixed-time arrival scheduling                                        | —        | M4    | Planned |
+| SM Reinforcements | Variable arrival (Force A/B roll)                                    | —        | M7    | Planned |
+| SM Random Events  | Confederate and Union event tables                                   | M3 (ref) | M7    | Planned |
+| SM VP             | Terrain hex VP, wreck VP, 7-outcome victory table                    | —        | M7    | Planned |
+| SM Errata         | 5 official corrections (Chicago Dragoons, E/2 US, etc.)              | —        | M4    | Planned |
 
 ---
 
-### Phase 2 — Enhanced Experience
+### M3 — Rules Engine Foundation + Testing Tools
 
-**What is built:**
+**Goal:** Implement the complete LOB v2.0 rules engine foundation — all map-based rules
+(movement, LOS) and all game tables (combat, morale, command, etc.) — delivered as pure-JS
+modules with full test coverage. Two standalone dev tools expose them interactively:
+`/tools/map-test` for map-based rules and `/tools/table-test` for all table lookups.
 
-- Discord bot registered with per-user DMs (private turn notifications replacing shared webhook)
-- Action history viewer / replay mode — step through past actions on the map
-- Improved map UX: move highlighting, valid-target overlay, animated unit movement
-- Better error feedback: inline rules violation messages on the map
-- Mobile-responsive layout
-- Game lobby — see open games, join as second player
-- Game abandonment / forfeit handling
+**Rule sections implemented:**
+
+| Section                        | Coverage                                                                                                                                            |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| §3 Terrain Effects on Movement | Full SM movement chart, formation rules, road movement, slope/stream hexsides                                                                       |
+| §4 Line of Sight               | Full LOS algorithm with Slope Table; all terrain height modifiers (woods +3, orchards +1, town +2, crests +1); SM override: trees +1 not +3         |
+| §5 Fire Combat                 | Combat Table (5.6), Opening Volley Table (5.4), all column shifts (range, firepower, weapon type, target), Threshold Value Chart                    |
+| §6 Morale                      | Morale Table (6.1) with all modifiers; Morale State Effects Chart; Additive Morale Effects Chart (6.2a) — state transitions                         |
+| §7 Close Combat                | Closing Roll Table (3.5); Additional Charge Modifiers (7.0g)                                                                                        |
+| §9 Leader Loss + Special       | Leader Loss Table (9.1a); Zero Rule (9.1e); weapon and artillery type reference data                                                                |
+| §10 Command                    | Command Roll Table (10.6); Order Delivery calculator (10.6a); Fluke Stoppage Table (10.7b); Attack Recovery Table (10.8c); Command Radius reference |
+| Reference charts               | Formation Effects Chart; Activity Effects Chart; Morale State Effects Chart                                                                         |
+
+**Deliverables — engine modules:**
+
+Map-based (require loaded `map.json` + `scenario.json`):
+
+- `server/src/engine/hex.js` — neighbor lookup, distance, path finding (Honeycomb.js wrappers)
+- `server/src/engine/scenario.js` — load `scenario.json`; expose rule flags to all modules
+- `server/src/engine/movement.js` — movement cost calculator (terrain + hexside + elevation);
+  lowest-cost path finder (Dijkstra); movement range (all reachable hexes with costs)
+- `server/src/engine/los.js` — LOS algorithm with full Slope Table; all height modifiers;
+  SM tree height override (+1 not +3)
+
+Table-based (pure functions, no map data required):
+
+- `server/src/engine/tables/combat.js` — Combat Table §5.6, Opening Volley §5.4, all column
+  shifts (range, weapon type, firepower shifts), Threshold Value Chart
+- `server/src/engine/tables/morale.js` — Morale Table §6.1 with all modifiers; state effects;
+  Additive Morale Effects Chart §6.2a (state transitions on new results)
+- `server/src/engine/tables/charge.js` — Closing Roll Table §3.5; Additional Charge Modifiers §7.0g
+- `server/src/engine/tables/command.js` — Command Roll Table §10.6; Order Delivery §10.6a;
+  Fluke Stoppage §10.7b; Attack Recovery §10.8c; Zero Rule §9.1e
+- `server/src/engine/tables/leader-loss.js` — Leader Loss Table §9.1a (Other/Capture/Defender/Attacker)
+- `server/src/engine/tables/weapons.js` — weapon characteristics reference (small arms and
+  artillery types, max ranges, ammo types); Formation Effects Chart; Activity Effects Chart
+- Full Vitest coverage for all modules — every table cell verified with known inputs/outputs
+
+**Deliverables — Map Test Tool (`/tools/map-test`):**
+
+Standalone dev tool page with the hex map in read-only mode. Guarded by `MAP_EDITOR_ENABLED=true`.
+
+- **Movement Path Panel** — click start/end hex, select unit type/formation; highlights
+  lowest-cost path on map; shows per-hex cost table (terrain + hexside costs + running total);
+  impassable paths shown explicitly
+- **Movement Range Overlay** — click any hex, select unit type/formation; shades all reachable
+  hexes by MP bucket (≤4, 5–6, at limit); vertical-slope hexes shown as unreachable
+- **Hex Inspector Panel** — click any hex; shows terrain type, base elevation, hexside types
+  per direction, and computed movement cost for every unit type
+- **LOS Panel** (migrated from map editor) — click two hexes; shows can-see/blocked result
+  plus plain-language explanation of the first blocking element (hex, terrain type, or
+  elevation); uses `engine/los.js`
+
+Server API (read-only):
+
+```
+GET /api/tools/map-test/movement-path   {startHex, endHex, unitType, formation}
+    → { path, costs:[{hex,terrainCost,hexsideCost,total}], totalCost, impassable }
+
+GET /api/tools/map-test/movement-range  {hex, unitType, formation}
+    → { reachable:[{hex,cost}] }
+
+GET /api/tools/map-test/los             {fromHex, toHex}
+    → { canSee, blockedBy:{hex,reason}|null, trace:[hexId] }
+```
+
+**Deliverables — Table Test Tool (`/tools/table-test`):**
+
+Standalone dev tool page — no hex map. Each panel inputs parameters and dice rolls, calls
+a server endpoint, and displays the result with a step-by-step modifier breakdown.
+Guarded by `MAP_EDITOR_ENABLED=true`. Launch with `npm run dev:map-editor`.
+
+| Panel                   | Inputs                                                                                            | Output                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Combat Table            | effective SPs, column shifts (range/weapon/terrain/etc.), 2d6 roll                                | result cell (−/m/1–4), morale check flag, depletion flag |
+| Opening Volley          | range, charge flag, shift-only flag, 1d6 roll                                                     | SP loss (0/1/2)                                          |
+| Morale Table            | morale rating A–F, all modifiers (shaken, wrecked, rear, night, etc.), 2d6 roll                   | new state, retreat hexes, SP loss, leader loss check     |
+| Morale State Transition | current state, new result                                                                         | resolved new state (Additive Morale chart)               |
+| Closing Roll            | morale rating, modifiers (blood lust, rear, shaken, arty w/ canister, breastworks adj.), 1d6 roll | pass/fail                                                |
+| Leader Loss             | situation (other/capture/defender/attacker), sharpshooter flag, 2d6 roll                          | no effect/captured/wounded/killed                        |
+| Command Roll            | leader command value, reserve/deployment flag, 2d6 roll                                           | yes/no                                                   |
+| Order Delivery          | army CO awareness type, distance category                                                         | turns to deliver                                         |
+| Fluke Stoppage          | leader command value, has reserve, is night, 2d6 roll                                             | base check result + second roll if needed                |
+| Attack Recovery         | division status (no wrecked/wrecked/has dead), leader command value, 2d6 roll                     | no recovery/attack recovery                              |
+| Zero Rule               | —                                                                                                 | 1d6 roll → no MA / half MA / full MA                     |
+
+Server API (POST — pure computation, no state):
+
+```
+POST /api/tools/table-test/combat          → result, modifierBreakdown
+POST /api/tools/table-test/opening-volley  → spLoss
+POST /api/tools/table-test/morale          → newState, retreats, losses, leaderLossCheck
+POST /api/tools/table-test/morale-transition → resolvedState
+POST /api/tools/table-test/closing-roll    → pass, threshold
+POST /api/tools/table-test/leader-loss     → result
+POST /api/tools/table-test/command-roll    → yes, modifiedRoll
+POST /api/tools/table-test/order-delivery  → turnsToDeliver
+POST /api/tools/table-test/fluke-stoppage  → basePass, stoppage, rolls
+POST /api/tools/table-test/attack-recovery → result, rolls
+POST /api/tools/table-test/zero-rule       → ma
+```
 
 **Acceptance criteria:**
 
-- Players receive a Discord DM when it's their turn
-- A completed game can be replayed action-by-action
-- The app is usable on a tablet
+- Every table cell verifiable: known (input → output) pairs tested for Combat Table, Morale
+  Table, and all command tables using Vitest
+- Table Test Tool panels reproduce known SM game results (cross-checked against rulebook examples)
+- Movement costs match SM movement chart for all unit type + formation + terrain combinations
+- LOS results and blocking reasons match manual verification on known SM map hex pairs
+- Movement range overlay correctly marks vertical-slope hexes as unreachable
+
+**Notes:**
+
+- The `movementCosts` block in `scenario.json` is authoritative — fixed digitization of the
+  SM Rules PDF, not tunable via the scenario editor
+- The LOS panel migrates out of the map editor (`LosTestPanel.vue` removed from that tool)
+  and is re-implemented in the Map Test Tool using the formal `engine/los.js`
+- All combat/morale/command table modules are self-contained with no game-state dependencies —
+  M5/M6 simply import and call them; no rework needed
 
 ---
 
-### Phase 3 — Extended Content
+### M4 — Auth + Game API + Local Persistence
 
-**What is built:**
+**Goal:** Discord OAuth login, game creation/join, and a file-based game state store
+(swapped for DigitalOcean Spaces in M8).
 
-- Additional LoB scenarios (scenario data JSON + any scenario-specific rule overrides)
-- Spectator mode (read-only game view)
-- AI opponent (stretch goal — even a random-legal-move AI has value for testing)
+**Rule sections (loop):** No new engine tables. Scenario data wired into game state initialization.
+
+| Section           | What gets wired                                                                                 |
+| ----------------- | ----------------------------------------------------------------------------------------------- |
+| SM Override       | At-start Complex Defense → Move order substitution applied on game init                         |
+| SM §3.x           | Unit setup positions read from `scenario.json setup`; units placed on board                     |
+| SM Errata         | 5 corrections applied to initial unit state (Chicago Dragoons designation, E/2 US rating, etc.) |
+| SM Reinforcements | Fixed-time arrival schedule loaded; units queued for entry on correct turn                      |
+
+**Deliverables:**
+
+- Discord OAuth2 + JWT cookie auth (`passport-discord`)
+- SQLite schema: `users` and `games` tables (`better-sqlite3`)
+- Game API routes: `POST /games`, `GET /games`, `GET /games/:id`, `POST /games/:id/join`
+- Game state initializer — place units from `scenario.json` `setup`, schedule `reinforcements`
+- Local file persistence (`data/games/{id}/state.json`) as a dev-time stand-in for Spaces
+- Basic game lobby UI (Vue): list open games, create game, join game
+
+**Acceptance criteria:**
+
+- Two Discord accounts can log in and create/join a game
+- `GET /games/:id` returns the correct initial unit positions from scenario setup data
+- Game state persists across server restarts (local file)
+
+---
+
+### M5 — Turn Structure + Orders + Game Map UI
+
+**Goal:** Turn phase state machine, order acceptance/initiative system, and the
+basic frontend game view with units rendered on the hex map.
+
+**Rule sections (loop):** M3 command/movement tables wired into the live game dispatch.
+
+| Section     | What gets wired                                                                                                                                       |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LOB §2      | Full Sequence of Play — Command Phase (orders, fluke stoppage), Activity Phase (movement + combat gate), Rally Phase; first/second player alternation |
+| LOB §3      | Movement enforcement — ZOC entry/exit costs, stacking limits, unit facing; road movement eligibility                                                  |
+| LOB §9.4    | Open Order movement rules — free EZOC entry/exit, no Opening Volley on withdrawal                                                                     |
+| LOB §10.6   | Command Roll gating order acceptance; order delivery turn delay                                                                                       |
+| LOB §10.6a  | Order Delivery — turns-to-deliver calculator applied each Command Phase                                                                               |
+| LOB §10.7b  | Fluke Stoppage — checked each Command Phase for divisions on Attack orders                                                                            |
+| SM Override | Longstreet initiative rule — CSA never rolls initiative when Longstreet commands                                                                      |
+| SM Override | RSS initiative system used (not standard LoB)                                                                                                         |
+
+**Deliverables:**
+
+- `server/src/engine/orders.js` — order types, acceptance check, initiative roll (RSS/LoB systems)
+- `server/src/engine/index.js` — `dispatch(state, action)` router + turn phase state machine
+- `POST /games/:id/actions` API endpoint
+- Vue game view: SVG hex map with units rendered as counter images, click to select unit,
+  selected unit panel showing unit stats
+- Pinia game store: load state, submit action, apply server state
+
+**Acceptance criteria:**
+
+- Initiative roll correctly uses RSS system (per `scenario.json initiativeSystem`)
+- Order acceptance table correctly gates unit activation
+- Units appear on the map at their start positions; clicking selects them
+
+---
+
+### M6 — Combat + Morale
+
+**Goal:** Fire combat, close combat, and morale cascade.
+
+**Rule sections (loop):** M3 combat/morale tables wired into the live game dispatch.
+
+| Section   | What gets wired                                                                                                                                                  |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LOB §5    | Fire combat — LOS + range validation, effective SP calculation (DG ×½), column shift resolution, Opening Volley on advance, depletion trigger, low/no ammo state |
+| LOB §6    | Morale — check triggered by combat results; state transition via Additive Morale chart; cascade up brigade → division hierarchy; rout/wrecked determination      |
+| LOB §7    | Close combat / charge — Closing Roll, Opening Volley, 1 SP defender loss, Additional Charge Modifiers, retreat-into-EZOC losses                                  |
+| LOB §8    | Rally Phase — CBF marker removal; morale state improvement for rallied units                                                                                     |
+| LOB §9.1a | Leader Loss — checked after any m+ combat result or close combat                                                                                                 |
+| LOB §9.1e | Zero Rule — MA roll for brigades on Attack orders each activation                                                                                                |
+| LOB §9.4  | Open Order in combat — Open Order Capable column on combat table; automatic Closing Roll success; no Opening Volley on withdrawal                                |
+
+**Deliverables:**
+
+- `server/src/engine/combat/fire.js` — fire combat table, range/LOS check, terrain modifiers,
+  flank fire, ammo state (low ammo / no ammo)
+- `server/src/engine/combat/melee.js` — close combat resolution
+- `server/src/engine/morale.js` — morale check, straggler results, cascade up brigade →
+  division hierarchy, rout/wrecked states
+- Frontend: click enemy unit to fire (range/LOS validation highlighted on map), adjacent
+  unit for melee, combat result panel, morale state display on counter
+
+**Acceptance criteria:**
+
+- Fire combat modifiers (terrain, range, flank, leader, ammo) match LOB v2.0 tables
+- Morale cascade correctly propagates through brigade → division → corps hierarchy
+- All SM-specific combat overrides enforced (e.g. SM movement chart, slope impassability)
+
+---
+
+### M7 — Special Rules + Victory Conditions
+
+**Goal:** Artillery, VP tracking, random events, variable reinforcements, and victory
+condition evaluation. A full South Mountain game can now be played to completion.
+
+**Rule sections (loop):** Remaining SM-specific rules and all end-of-turn accounting wired in.
+
+| Section           | What gets wired                                                                                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| LOB §9.1          | Artillery — limbering/unlimbering (5-hex / 4-hex with arty leader), canister vs shell selection, battery depletion, artillery leader posting and second/third shot rules |
+| LOB §9.3          | Loss Recovery — 1 SP or 25% recovery per regiment/battery during midnight Rally Phase                                                                                    |
+| LOB §10.8c        | Attack Recovery — divisional check at start of each Command Phase                                                                                                        |
+| LOB §11           | Victory Conditions — end-of-turn VP tally, 7-outcome result lookup                                                                                                       |
+| SM §3.6           | Artillery supply trace to Wing Wagon or west-edge road hex; Pelham + Pleasonton replenish from any friendly ammo reserve                                                 |
+| SM §4+            | Random event resolution — 2d6 roll + table lookup for both sides each Command Phase                                                                                      |
+| SM Reinforcements | Variable arrival — Force A/B 1d6 roll with lookup table; units enter on resolved turn                                                                                    |
+| SM VP             | Terrain hex control VP, per-formation wreck VP (brigade, artillery, named formations)                                                                                    |
+
+**Deliverables:**
+
+- `server/src/engine/artillery.js` — limbering/unlimbering, canister vs shell selection,
+  supply trace, artillery replenishment (SM §3.6: Pelham replenishes from any friendly reserve)
+- `server/src/engine/vp.js` — hex control tracking, terrain VP, wreck VP per-formation,
+  end-of-turn victory condition check against `scenario.json victoryConditions`
+- Random event table resolution — roll + lookup for both confederate and union tables
+- Variable reinforcement arrival — Force A/B dice roll with lookup table
+- Frontend: VP tracker panel, reinforcement arrival notification toast, game-complete screen
+  showing result label and final VP totals
+
+**Acceptance criteria:**
+
+- Artillery special rules enforced (SM §3.6 supply, Pelham/Pleasonton replenishment, wagon supply)
+- VP totals match manual calculation after each turn
+- Game correctly identifies all 7 victory outcome labels
+- A full 45-turn South Mountain game can be played to completion with all rules enforced
+
+---
+
+### M8 — Production Persistence + Multiplayer
+
+**Rule sections:** None — all LOB v2.0 and SM rules are complete after M7. This milestone
+is infrastructure only: persistence, real-time communication, and notifications.
+
+**Goal:** Swap local file persistence for DigitalOcean Spaces, add Socket.io real-time
+updates, and Discord webhook async notifications. Production-ready MVP.
+
+**Deliverables:**
+
+- `server/src/store/spaces.js` — DO Spaces client (S3-compatible); `saveGameState`,
+  `loadGameState`, `appendHistory`
+- `server/src/store/sqlite.js` — `better-sqlite3` user + game index; all store queries
+- `server/src/store/index.js` — unified store API (drop-in replacement for local file store)
+- `server/src/notifications/discord.js` — `notifyWebhook(url, payload)` via plain fetch
+- Socket.io server: room-per-game, `game:state-updated` emit after each action
+- Vue: Socket.io client, real-time Pinia store update on `game:state-updated`
+- Discord webhook URL stored in SQLite `games` table, configurable at game creation
+
+**Acceptance criteria:**
+
+- Game state survives server restart (loaded from Spaces on each request)
+- Both players receive real-time map/state updates when both are online simultaneously
+- Discord webhook fires on each action when configured; PBEM flow works without both players online
+- History log grows correctly (`000001.json`, `000002.json`, …) in Spaces
 
 ---
 
@@ -262,13 +561,31 @@ A session that starts live on Saturday, continues asynchronously via Discord not
   GET  /api/tools/scenario-editor/data     → read scenario.json
   PUT  /api/tools/scenario-editor/data     → write scenario.json (Zod-validated)
 
-/tools/oob-editor                 (mounted only when MAP_EDITOR_ENABLED=true) — planned
+/tools/oob-editor                 (mounted only when MAP_EDITOR_ENABLED=true)
   GET  /api/oob/data               → read oob.json
   PUT  /api/oob/data               → write oob.json (Zod-validated)
   GET  /api/leaders/data           → read leaders.json
   PUT  /api/leaders/data           → write leaders.json (Zod-validated)
   GET  /api/counters/list          → list counter image filenames
   POST /api/counters/upload        → save counter image to client/public/counters/
+
+/tools/map-test                   (mounted only when MAP_EDITOR_ENABLED=true) — M3
+  GET  /api/tools/map-test/movement-path   → { path, costs, totalCost, impassable }
+  GET  /api/tools/map-test/movement-range  → { reachable: [{ hex, cost }] }
+  GET  /api/tools/map-test/los             → { canSee, blockedBy, trace }
+
+/tools/table-test                 (mounted only when MAP_EDITOR_ENABLED=true) — M3
+  POST /api/tools/table-test/combat          → { result, modifierBreakdown }
+  POST /api/tools/table-test/opening-volley  → { spLoss }
+  POST /api/tools/table-test/morale          → { newState, retreats, losses, leaderLossCheck }
+  POST /api/tools/table-test/morale-transition → { resolvedState }
+  POST /api/tools/table-test/closing-roll    → { pass, threshold }
+  POST /api/tools/table-test/leader-loss     → { result }
+  POST /api/tools/table-test/command-roll    → { yes, modifiedRoll }
+  POST /api/tools/table-test/order-delivery  → { turnsToDeliver }
+  POST /api/tools/table-test/fluke-stoppage  → { basePass, stoppage, rolls }
+  POST /api/tools/table-test/attack-recovery → { result, rolls }
+  POST /api/tools/table-test/zero-rule       → { ma }
 ```
 
 > **Tool toggle pattern:** The map editor routes are guarded by a `MAP_EDITOR_ENABLED` environment variable. In `server.js`, if the flag is set, the router is imported with a dynamic `await import(...)` and mounted. This keeps the map editor completely absent from production bundles. The Vue route `/tools/map-editor` is always present in the client router but the API backing it requires the env flag.
@@ -1303,11 +1620,14 @@ lob-online/
 
 ## 10. Data Preparation Tools
 
-This section describes the dev-only tooling required to prepare accurate game data. Non-trivial tooling is needed to ensure the map digitisation and unit statistics are correct before any game logic is implemented. The tools must cover:
+This section describes the dev-only tooling required to prepare accurate game data and
+validate rules engine behaviour. All tools are guarded by `MAP_EDITOR_ENABLED=true` in `.env`
+and are never active in production.
 
 - **Map digitisation** — convert the paper map image to `map.json` hex terrain data _(Map Editor — implemented)_
 - **Scenario configuration** — edit turn structure, lighting schedule, visibility settings, and scenario-level rules overrides in `scenario.json` _(Scenario Editor — implemented)_
-- **Order of battle editing** — inspect and correct unit stats, brigade/division hierarchy, wreck thresholds, and leader ratings across `oob.json` and `leaders.json` _(OOB Editor — planned)_
+- **Order of battle editing** — inspect and correct unit stats, brigade/division hierarchy, wreck thresholds, and leader ratings across `oob.json` and `leaders.json` _(OOB Editor — implemented)_
+- **Rules engine validation** — interactively test movement costs, movement range, and LOS against the digitized map using the live engine _(Map Test Tool — M3)_
 - **AI-generated data inspection** — review AI-produced datasets (tables, reinforcement schedules, terrain assignments) before committing them to the canonical data files
 
 ### Map Editor
@@ -1415,7 +1735,148 @@ brigade/division/corps nodes in `oob.json` and `counterRef` filename linkage to 
 leader records. A `scripts/detect-counters.js` script will use AI image analysis to
 pre-populate counter linkages from `docs/reference/src-counters-sm/`.
 
-Routes: `/api/oob/data`, `/api/leaders/data`, `/api/counters/list|upload` — planned.
+Routes: `/api/oob/data`, `/api/leaders/data`, `/api/counters/list|upload`.
+
+---
+
+### Map Test Tool
+
+The Map Test Tool is a read-only dev tool for validating the M3 rules engine against the
+digitized South Mountain map. It shares the hex map renderer with the map editor but has
+no editing capability — its sole purpose is interactive rule verification.
+
+**Route:** `/tools/map-test` (client) · `GET /api/tools/map-test/*` (server)
+
+**Launch:** same server process as the map editor (`npm run dev:map-editor`); accessible
+at `http://localhost:5173/tools/map-test` when `MAP_EDITOR_ENABLED=true`.
+
+**Architecture:**
+
+```
+MapTestView.vue              ← orchestrator; reads map.json + scenario.json (read-only)
+  ├── HexMapOverlay.vue      ← shared component from map editor (read-only mode)
+  ├── MovementTestPanel.vue  ← path calculator + range overlay; calls /api/tools/map-test/*
+  ├── HexInspectorPanel.vue  ← shows raw engine-visible data for clicked hex
+  └── LosTestPanel.vue       ← migrated from map editor; uses engine/los.js via API
+```
+
+**Panels:**
+
+| Panel          | Inputs                                   | Output                                                                             |
+| -------------- | ---------------------------------------- | ---------------------------------------------------------------------------------- |
+| Movement Path  | start hex, end hex, unit type, formation | Path highlighted on map; per-hex cost table; total MP                              |
+| Movement Range | hex, unit type, formation                | All reachable hexes shaded by cost bucket; impassable hexes shown                  |
+| Hex Inspector  | clicked hex                              | Terrain type, elevation, hexside types per direction, computed costs per unit type |
+| LOS            | from hex, to hex                         | Can-see / blocked; first blocking element (hex, terrain, or elevation); full trace |
+
+**Server routes:**
+
+```
+GET /api/tools/map-test/movement-path
+  Query: startHex, endHex, unitType, formation
+  Returns: { path: [hexId], costs: [{hex, terrainCost, hexsideCost, total}], totalCost, impassable }
+
+GET /api/tools/map-test/movement-range
+  Query: hex, unitType, formation
+  Returns: { reachable: [{ hex, cost }] }
+
+GET /api/tools/map-test/los
+  Query: fromHex, toHex
+  Returns: { canSee: boolean, blockedBy: { hex, reason } | null, trace: [hexId] }
+```
+
+All three endpoints call the corresponding `engine/movement.js` and `engine/los.js` functions
+directly — no game state required, only the loaded `map.json` and `scenario.json`.
+
+**Note:** The `LosTestPanel.vue` that previously lived in the map editor is removed from
+that tool and re-implemented here using the formal `engine/los.js` rather than the ad-hoc
+prototype. The map editor loses its LOS tab; the Map Test Tool becomes the single place
+for map-based rules validation.
+
+---
+
+### Table Test Tool
+
+The Table Test Tool is a standalone dev tool for interactively testing all LOB v2.0 game
+tables — combat, morale, command, and leader loss — against the formal engine implementations.
+No hex map is displayed; each panel is a self-contained form that inputs parameters and dice
+rolls, calls a server endpoint, and returns a result with a full modifier breakdown.
+
+**Route:** `/tools/table-test` (client) · `POST /api/tools/table-test/*` (server)
+
+**Launch:** same server process as the map editor (`npm run dev:map-editor`); accessible
+at `http://localhost:5173/tools/table-test` when `MAP_EDITOR_ENABLED=true`.
+
+**Architecture:**
+
+```
+TableTestView.vue
+  ├── CombatTablePanel.vue        ← §5.6: SPs, column shifts, 2d6 → result + depletion flag
+  ├── OpeningVolleyPanel.vue      ← §5.4: range, charge flag, 1d6 → SP loss
+  ├── MoraleTablePanel.vue        ← §6.1: rating A–F, all modifiers, 2d6 → state + retreats/losses
+  ├── MoraleTransitionPanel.vue   ← §6.2a: current state × new result → resolved state
+  ├── ClosingRollPanel.vue        ← §3.5: morale rating, modifiers, 1d6 → pass/fail
+  ├── LeaderLossPanel.vue         ← §9.1a: situation, sharpshooter flag, 2d6 → result
+  ├── CommandRollPanel.vue        ← §10.6: command value, reserve flag, 2d6 → yes/no
+  ├── OrderDeliveryPanel.vue      ← §10.6a: CO awareness, distance → turns to deliver
+  ├── FlukeStoppagePanel.vue      ← §10.7b: command value, reserve, night, 2d6 → pass/stoppage
+  ├── AttackRecoveryPanel.vue     ← §10.8c: division status, command value, 2d6 → result
+  └── ZeroRulePanel.vue           ← §9.1e: 1d6 → no MA / half MA / full MA
+```
+
+Each panel shows:
+
+1. Input fields for all parameters (dropdowns, checkboxes, or numeric dice roll entry)
+2. An optional "Roll for me" button that generates random dice
+3. The result, with a step-by-step modifier breakdown listing each modifier applied and its value
+
+**Server routes:** all POST, pure computation, no game state:
+
+```
+POST /api/tools/table-test/combat
+  Body: { sps, columnShifts:[{reason, amount}], roll }
+  Returns: { result, finalColumn, modifierBreakdown, moraleCheckRequired, depletionFlag }
+
+POST /api/tools/table-test/opening-volley
+  Body: { range, isCharge, isShiftOnly, roll }
+  Returns: { spLoss }
+
+POST /api/tools/table-test/morale
+  Body: { rating, modifiers:{shaken,wrecked,rear,night,small,cowardlyLegs,artyCav,...}, roll }
+  Returns: { newState, retreatHexes, spLoss, leaderLossCheck }
+
+POST /api/tools/table-test/morale-transition
+  Body: { currentState, newResult }
+  Returns: { resolvedState }
+
+POST /api/tools/table-test/closing-roll
+  Body: { morale, modifiers:{bloodLust,rear,shaken,artryCanister,breastworksAdj}, roll }
+  Returns: { pass, threshold, modifiedRoll }
+
+POST /api/tools/table-test/leader-loss
+  Body: { situation, sharpshooterCapable, roll }
+  Returns: { result }   -- "noEffect" | "captured" | "wounded" | "killed"
+
+POST /api/tools/table-test/command-roll
+  Body: { commandValue, isReserveOrDeployment, roll }
+  Returns: { yes, modifiedRoll }
+
+POST /api/tools/table-test/order-delivery
+  Body: { awarenessType, distanceCategory }
+  Returns: { turnsToDeliver }
+
+POST /api/tools/table-test/fluke-stoppage
+  Body: { commandValue, hasReserve, isNight, roll }
+  Returns: { basePass, stoppage, secondRoll }
+
+POST /api/tools/table-test/attack-recovery
+  Body: { divisionStatus, commandValue, roll }
+  Returns: { result, secondRoll }   -- "noRecovery" | "attackRecovery"
+
+POST /api/tools/table-test/zero-rule
+  Body: { roll }
+  Returns: { ma }   -- "none" | "half" | "full"
+```
 
 ---
 
