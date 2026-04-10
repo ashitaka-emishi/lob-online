@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **lob-online** is an online game implementation of the _Line of Battle v2.0_ wargame system (Multi-Man Publishing). The first game being implemented is _South Mountain_ (RSS #4), chosen because it is a smaller, more tractable battle.
 
-**Current state:** Phase 1 scaffold complete. The tech stack is established (Node.js/Express/Socket.io server, Vue 3/Vite/Pinia client), and the following are all built and tested: five data JSON files with Zod schemas, a fully-featured hex map editor dev tool (accordion-driven tool panels for elevation/terrain/linear-features/wedge editing, click-only tool interactions, bulk terrain/edge clear operations, building unicode icon overlay, cardinal direction labels on north-offset picker, layer toggles, localStorage autosave, versioned server backups, offline fallback, and push/pull sync UX), a scenario editor dev tool (turn structure, lighting schedule, and rules fields with the same push/pull sync pattern), extended `scenario.json` with lighting schedule and rules fields, Vitest test suites for both server and client, ESLint/Prettier config, and a GitHub Actions CI pipeline. Game logic (rules engine, auth, multiplayer) is planned for subsequent phases.
+**Current state:** M2 complete. All dev tools are done (map editor, scenario editor, OOB editor). Five data JSON files with Zod schemas and full Vitest coverage. Starting M3 — rules engine foundation (`engine/hex.js`, `movement.js`, `los.js`) and a new Map Test Tool (`/tools/map-test`) for interactive validation. See `docs/designs/high-level-design.md` §2 for the M3–M8 milestone plan.
 
 ## Reference Library
 
@@ -20,13 +20,17 @@ For the full source-document inventory and data-file manifest, see
 
 ### Developer Tools
 
-Three dev-only tools are available (two implemented, one designed), all guarded by `MAP_EDITOR_ENABLED=true` in `.env`.
+Four dev-only tools, all guarded by `MAP_EDITOR_ENABLED=true` in `.env`.
 
 **Map editor** (`/tools/map-editor`) — digitize `docs/reference/sm-map.jpg` into `map.json` terrain data. Launch with `npm run dev:map-editor`.
 
 **Scenario editor** (`/tools/scenario-editor`) — edit `scenario.json` fields: turn structure, lighting schedule (day/twilight/night by start turn), and rules fields (night visibility cap, fluke stoppage grace period, initiative system, loose cannon, loss recovery, random events). See `docs/designs/scenario-editor-design.md` for the full spec. Launch with `npm run dev:map-editor`.
 
-**OOB editor** (`/tools/oob-editor`) — view and edit the full command hierarchy, unit stats, leader succession, and counter image linkages in `oob.json` and `leaders.json`. See `docs/designs/oob-editor-design.md` for the full spec. Launch with `npm run dev:oob-editor` (not yet implemented).
+**OOB editor** (`/tools/oob-editor`) — view and edit the full command hierarchy, unit stats, leader succession, and counter image linkages in `oob.json` and `leaders.json`. See `docs/designs/oob-editor-design.md` for the full spec. Launch with `npm run dev:oob-editor`.
+
+**Map test tool** (`/tools/map-test`) — read-only rules validation tool for map-based rules. Four panels: Movement Path (lowest-cost path + per-hex cost breakdown between two clicked hexes), Movement Range (shade all reachable hexes by MP bucket for a selected unit), Hex Inspector (raw terrain/elevation/hexside data the engine sees), and LOS (can-see result + plain-language blocking explanation). Backed by `engine/movement.js` and `engine/los.js`. Planned for M3. Launch with `npm run dev:map-editor`.
+
+**Table test tool** (`/tools/table-test`) — standalone rules validation tool for all LOB v2.0 game tables. No map — input panels for each table (Combat, Opening Volley, Morale, Morale Transition, Closing Roll, Leader Loss, Command Roll, Order Delivery, Fluke Stoppage, Attack Recovery, Zero Rule). Enter parameters and dice rolls; see the result with a full modifier breakdown. Backed by `engine/tables/*`. Planned for M3. Launch with `npm run dev:map-editor`.
 
 - **Enable:** set `MAP_EDITOR_ENABLED=true` in `.env`
 

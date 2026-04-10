@@ -44,6 +44,8 @@ Navigation hub for project context.
 | [oob-data-model_20260402](./tracks/oob-data-model_20260402/index.md) | OOB Data Model — Leader Ratings, Supply Units, and Succession Variants | Complete |
 | [quick-debt-cleanup_20260403](./tracks/quick-debt-cleanup_20260403/index.md) | Quick Debt Cleanup — Score-1 Trivials + PR #236 Test Gaps | Pending |
 | [m2-closeout_20260409](./tracks/m2-closeout_20260409/index.md) | M2 Closeout Debt Sprint | Complete |
+| [hld-milestone-plan_20260410](./tracks/hld-milestone-plan_20260410/index.md) | HLD Update — Implementation Status + M3–M8 Milestone Plan | Complete |
+| [m3-rules-foundation_20260410](./tracks/m3-rules-foundation_20260410/index.md) | M3 — Rules Engine Foundation + Testing Tools | Pending |
 
 ## Getting Started
 
