@@ -1,19 +1,6 @@
 import { z } from 'zod';
 
-const CommandLevel = z.enum(['army', 'wing', 'corps', 'division', 'brigade', 'cavalry']);
-
-const SuccessionCounterRef = z
-  .object({
-    front: z.string().nullable(),
-    frontConfidence: z.number().min(0).max(1).nullable(),
-    back: z.string().nullable(),
-    backConfidence: z.number().min(0).max(1).nullable(),
-    promotedFront: z.string().nullable().optional(),
-    promotedFrontConfidence: z.number().min(0).max(1).nullable().optional(),
-    promotedBack: z.string().nullable().optional(),
-    promotedBackConfidence: z.number().min(0).max(1).nullable().optional(),
-  })
-  .nullable();
+import { CommandLevel, SuccessionCounterRef } from './shared.schema.js';
 
 const SuccessionVariant = z.object({
   id: z.string(),
@@ -25,7 +12,10 @@ const SuccessionVariant = z.object({
   commandValue: z.number().int().nullable(),
   moraleValue: z.number().int().nullable(),
   counterRef: SuccessionCounterRef.optional(),
-  specialRules: z.record(z.string(), z.unknown()).nullable().optional(),
+  specialRules: z
+    .record(z.string(), z.union([z.string(), z.boolean()]))
+    .nullable()
+    .optional(),
 });
 
 export const SuccessionSchema = z

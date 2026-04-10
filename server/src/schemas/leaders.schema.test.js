@@ -134,3 +134,37 @@ describe('LeadersSchema — _savedAt and strict mode (#221)', () => {
     expect(result.success).toBe(false);
   });
 });
+
+// ── specialRules constraint (#258) ───────────────────────────────────────────
+
+describe('LeadersSchema — specialRules values (#258)', () => {
+  function withLeaderSpecialRules(specialRules) {
+    return {
+      ...MINIMAL_LEADERS,
+      union: {
+        ...MINIMAL_LEADERS.union,
+        brigades: [{ ...MINIMAL_LEADER, specialRules }],
+      },
+    };
+  }
+
+  it('accepts string values in specialRules', () => {
+    const result = LeadersSchema.safeParse(withLeaderSpecialRules({ rule: 'text description' }));
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts boolean values in specialRules', () => {
+    const result = LeadersSchema.safeParse(withLeaderSpecialRules({ looseCannon: true }));
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects object values in specialRules', () => {
+    const result = LeadersSchema.safeParse(withLeaderSpecialRules({ nested: { a: 1 } }));
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects array values in specialRules', () => {
+    const result = LeadersSchema.safeParse(withLeaderSpecialRules({ list: [1, 2, 3] }));
+    expect(result.success).toBe(false);
+  });
+});

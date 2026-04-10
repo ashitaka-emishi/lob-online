@@ -135,3 +135,33 @@ describe('SuccessionSchema — SuccessionCounterRef', () => {
     expect(result.success).toBe(false);
   });
 });
+
+// ── specialRules constraint (#258) ───────────────────────────────────────────
+
+describe('SuccessionSchema — specialRules values (#258)', () => {
+  function withVariantSpecialRules(specialRules) {
+    return { ...MINIMAL_SUCCESSION, confederate: [{ ...MINIMAL_VARIANT, specialRules }] };
+  }
+
+  it('accepts string values in specialRules', () => {
+    const result = SuccessionSchema.safeParse(
+      withVariantSpecialRules({ rule: 'text description' })
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts boolean values in specialRules', () => {
+    const result = SuccessionSchema.safeParse(withVariantSpecialRules({ looseCannon: false }));
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects object values in specialRules', () => {
+    const result = SuccessionSchema.safeParse(withVariantSpecialRules({ nested: { a: 1 } }));
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects array values in specialRules', () => {
+    const result = SuccessionSchema.safeParse(withVariantSpecialRules({ list: ['x'] }));
+    expect(result.success).toBe(false);
+  });
+});

@@ -1,19 +1,6 @@
 import { z } from 'zod';
 
-const CommandLevel = z.enum(['army', 'wing', 'corps', 'division', 'brigade', 'cavalry']);
-
-const LeaderCounterRef = z
-  .object({
-    front: z.string().nullable(),
-    frontConfidence: z.number().min(0).max(1).nullable(),
-    back: z.string().nullable(),
-    backConfidence: z.number().min(0).max(1).nullable(),
-    promotedFront: z.string().nullable(),
-    promotedFrontConfidence: z.number().min(0).max(1).nullable(),
-    promotedBack: z.string().nullable(),
-    promotedBackConfidence: z.number().min(0).max(1).nullable(),
-  })
-  .nullable();
+import { CommandLevel, LeaderCounterRef } from './shared.schema.js';
 
 const BaseLeader = z.object({
   id: z.string(),
@@ -24,7 +11,7 @@ const BaseLeader = z.object({
   commandValue: z.number().int().nullable(),
   moraleValue: z.number().int().nullable(),
   counterRef: LeaderCounterRef.optional(),
-  specialRules: z.record(z.string(), z.unknown()).optional(),
+  specialRules: z.record(z.string(), z.union([z.string(), z.boolean()])).optional(),
 });
 
 export const LeadersSchema = z
