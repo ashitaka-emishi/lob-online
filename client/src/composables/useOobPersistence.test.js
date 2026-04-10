@@ -201,6 +201,72 @@ describe('confirmPush', () => {
   });
 });
 
+// ── loadData — isOffline (#207) ───────────────────────────────────────────────
+
+describe('loadData — isOffline flag (#207)', () => {
+  it('isOffline is false after successful server load', async () => {
+    vi.stubGlobal(
+      'fetch',
+      makeFetch({
+        [OOB_URL]: { ok: true, data: VALID_OOB },
+        [LEADERS_URL]: { ok: true, data: VALID_LEADERS },
+        [SUCCESSION_URL]: { ok: true, data: VALID_SUCCESSION },
+      })
+    );
+    const refs = makeRefs();
+    const { loadData, isOffline } = useOobPersistence(refs);
+    await loadData();
+    expect(isOffline.value).toBe(false);
+  });
+
+  it('isOffline is true after localStorage fallback load', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+    localStorage.setItem(OOB_KEY, JSON.stringify(VALID_OOB));
+    localStorage.setItem(LEADERS_KEY, JSON.stringify(VALID_LEADERS));
+    const refs = makeRefs();
+    const { loadData, isOffline } = useOobPersistence(refs);
+    await loadData();
+    expect(isOffline.value).toBe(true);
+    expect(refs.oob.value).toEqual(VALID_OOB);
+  });
+
+  it('pullFromServer clears isOffline on success', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+    localStorage.setItem(OOB_KEY, JSON.stringify(VALID_OOB));
+    localStorage.setItem(LEADERS_KEY, JSON.stringify(VALID_LEADERS));
+    const refs = makeRefs();
+    const { loadData, pullFromServer, isOffline } = useOobPersistence(refs);
+    await loadData();
+    expect(isOffline.value).toBe(true);
+
+    vi.stubGlobal(
+      'fetch',
+      makeFetch({
+        [OOB_URL]: { ok: true, data: VALID_OOB },
+        [LEADERS_URL]: { ok: true, data: VALID_LEADERS },
+        [SUCCESSION_URL]: { ok: true, data: VALID_SUCCESSION },
+      })
+    );
+    await pullFromServer();
+    expect(isOffline.value).toBe(false);
+  });
+
+  it('push is blocked when isOffline is true', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+    localStorage.setItem(OOB_KEY, JSON.stringify(VALID_OOB));
+    localStorage.setItem(LEADERS_KEY, JSON.stringify(VALID_LEADERS));
+    const refs = { ...makeRefs(), oob: ref(VALID_OOB), leaders: ref(VALID_LEADERS) };
+    const { loadData, confirmPush, isOffline } = useOobPersistence(refs);
+    await loadData();
+    expect(isOffline.value).toBe(true);
+
+    const fetchSpy = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+    vi.stubGlobal('fetch', fetchSpy);
+    await confirmPush();
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});
+
 // ── pullFromServer ────────────────────────────────────────────────────────────
 
 describe('pullFromServer', () => {

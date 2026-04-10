@@ -26,6 +26,7 @@ const DEBOUNCE_MS = 500;
 export function useOobPersistence({ oob, leaders, succession, dirty }) {
   const isSyncing = ref(false);
   const syncError = ref(null);
+  const isOffline = ref(false);
   const showPushConfirm = ref(false);
   const showPullConfirm = ref(false);
 
@@ -99,6 +100,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
           if (isValidSuccessionShape(parsedSuccession)) succession.value = parsedSuccession;
         }
         dirty.value = false;
+        isOffline.value = false;
         return;
       }
     } catch {
@@ -108,6 +110,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
     // L2: try localStorage
     if (_loadFromStorage()) {
       dirty.value = false;
+      isOffline.value = true;
       return;
     }
 
@@ -131,6 +134,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
 
   async function _executePush() {
     if (!oob.value || !leaders.value) return;
+    if (isOffline.value) return;
     isSyncing.value = true;
     syncError.value = null;
     try {
@@ -212,6 +216,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
             if (isValidSuccessionShape(parsedSuccession)) succession.value = parsedSuccession;
           }
           dirty.value = false;
+          isOffline.value = false;
           try {
             localStorage.removeItem(OOB_STORAGE_KEY);
             localStorage.removeItem(LEADERS_STORAGE_KEY);
@@ -251,6 +256,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
   return {
     isSyncing,
     syncError,
+    isOffline,
     showPushConfirm,
     showPullConfirm,
     loadData,
