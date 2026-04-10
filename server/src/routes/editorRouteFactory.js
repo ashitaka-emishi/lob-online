@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, readdir, unlink } from 'fs/promises';
+import { readFile, writeFile, rename, mkdir, readdir, unlink } from 'fs/promises';
 import { join } from 'path';
 
 import { Router } from 'express';
@@ -86,9 +86,16 @@ export function createEditorRoute({ schema, filePath, filePrefix, backupDir, max
 
     const savedAt = Date.now();
     const data = { ...result.data, _savedAt: savedAt };
+    const tmpPath = filePath + '.tmp';
     try {
-      await writeFile(filePath, JSON.stringify(data, null, 2));
+      await writeFile(tmpPath, JSON.stringify(data, null, 2));
+      await rename(tmpPath, filePath);
     } catch {
+      try {
+        await unlink(tmpPath);
+      } catch {
+        /* .tmp may not exist if writeFile failed before creating it */
+      }
       return res.status(500).json({ ok: false, message: 'Write failed' });
     }
     res.json({ ok: true, _savedAt: savedAt });
