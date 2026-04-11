@@ -12,7 +12,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { computeLOS } from './los.js';
-import { loadMap } from './movement.js';
+import { loadMap } from './map.js';
 import { loadScenario } from './scenario.js';
 
 // ─── Shared fixtures ───────────────────────────────────────────────────────────

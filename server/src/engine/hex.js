@@ -229,6 +229,60 @@ export function hexLine(hexAId, hexBId, gridSpec) {
   return results;
 }
 
+// ─── Binary min-heap ───────────────────────────────────────────────────────────
+
+/**
+ * Simple array-backed binary min-heap for [cost, hexId] pairs.
+ * Reduces Dijkstra complexity from O(V²) to O((V+E) log V).
+ */
+class MinHeap {
+  constructor() {
+    this._data = [];
+  }
+
+  get length() {
+    return this._data.length;
+  }
+
+  push(item) {
+    this._data.push(item);
+    this._bubbleUp(this._data.length - 1);
+  }
+
+  pop() {
+    const top = this._data[0];
+    const last = this._data.pop();
+    if (this._data.length > 0) {
+      this._data[0] = last;
+      this._sinkDown(0);
+    }
+    return top;
+  }
+
+  _bubbleUp(i) {
+    while (i > 0) {
+      const parent = (i - 1) >> 1;
+      if (this._data[parent][0] <= this._data[i][0]) break;
+      [this._data[parent], this._data[i]] = [this._data[i], this._data[parent]];
+      i = parent;
+    }
+  }
+
+  _sinkDown(i) {
+    const n = this._data.length;
+    while (true) {
+      let smallest = i;
+      const l = 2 * i + 1;
+      const r = 2 * i + 2;
+      if (l < n && this._data[l][0] < this._data[smallest][0]) smallest = l;
+      if (r < n && this._data[r][0] < this._data[smallest][0]) smallest = r;
+      if (smallest === i) break;
+      [this._data[smallest], this._data[i]] = [this._data[i], this._data[smallest]];
+      i = smallest;
+    }
+  }
+}
+
 // ─── Dijkstra ──────────────────────────────────────────────────────────────────
 
 /**
@@ -237,6 +291,8 @@ export function hexLine(hexAId, hexBId, gridSpec) {
  * Used by movement.js for both path-finding and movement range. The caller
  * supplies a costFn that encodes all movement rules (terrain, hexsides,
  * elevation, formation, unit type, etc.).
+ *
+ * Uses a binary min-heap priority queue: O((V+E) log V) vs O(V²) for a plain array.
  *
  * @param {string} startHex - starting hex ID
  * @param {(fromHexId: string, toHexId: string, dirIndex: number) => number} costFn
@@ -249,24 +305,16 @@ export function hexLine(hexAId, hexBId, gridSpec) {
  *   `prev` maps hexId → predecessor hexId (null for start).
  */
 export function dijkstra(startHex, costFn, maxCost, gridSpec) {
-  // Simple binary-heap-less Dijkstra using a sorted array as a priority queue.
-  // Adequate for SM's 64×35 = 2240-hex map; can upgrade to a heap if profiling warrants it.
   const costs = new Map([[startHex, 0]]);
   const prev = new Map([[startHex, null]]);
   // [cost, hexId]
-  const queue = [[0, startHex]];
+  const queue = new MinHeap();
+  queue.push([0, startHex]);
 
   while (queue.length > 0) {
-    // Pop the entry with the smallest cost
-    let minIdx = 0;
-    for (let i = 1; i < queue.length; i++) {
-      if (queue[i][0] < queue[minIdx][0]) minIdx = i;
-    }
-    const [curCost, curHex] = queue[minIdx];
-    queue.splice(minIdx, 1);
+    const [curCost, curHex] = queue.pop();
 
     if (curCost > (costs.get(curHex) ?? Infinity)) continue; // stale entry
-
     if (curCost > maxCost) continue;
 
     for (const { hexId: neighbor, dirIndex } of hexNeighbors(curHex, gridSpec)) {
@@ -300,8 +348,9 @@ export function reconstructPath(targetHex, prev) {
   const path = [];
   let current = targetHex;
   while (current !== null) {
-    path.unshift(current);
+    path.push(current);
     current = prev.get(current);
   }
+  path.reverse();
   return path;
 }

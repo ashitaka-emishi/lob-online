@@ -10,68 +10,12 @@
  * See map.schema.js for the authoritative definition.
  */
 
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { fileURLToPath } from 'url';
-
-import { ELEVATION_TYPES, MapSchema, ROUTE_TYPES } from '../schemas/map.schema.js';
+import { ELEVATION_TYPES, ROUTE_TYPES } from '../schemas/map.schema.js';
 import { dijkstra, OPPOSITE_DIR_INDEX, reconstructPath } from './hex.js';
+import { buildHexIndex, loadMap } from './map.js';
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-
-/** Default path to map.json, relative to this file. */
-const DEFAULT_MAP_PATH = join(__dirname, '../../../data/scenarios/south-mountain/map.json');
-
-// ─── Map loader ────────────────────────────────────────────────────────────────
-
-/**
- * Load and validate map.json.
- * Returns a frozen plain object. Call once at startup; pass the result to engine functions.
- *
- * @param {string} [mapPath] - Override the default path (for tests).
- * @returns {import('zod').infer<typeof MapSchema>} Validated, frozen map data.
- * @throws {Error} If the file is missing, unreadable, or fails Zod validation.
- */
-export function loadMap(mapPath = DEFAULT_MAP_PATH) {
-  let raw;
-  try {
-    raw = readFileSync(mapPath, 'utf8');
-  } catch (err) {
-    throw new Error(`movement.js: failed to read map file at "${mapPath}": ${err.message}`);
-  }
-
-  let parsed;
-  try {
-    parsed = JSON.parse(raw);
-  } catch (err) {
-    throw new Error(`movement.js: failed to parse JSON at "${mapPath}": ${err.message}`);
-  }
-
-  const result = MapSchema.safeParse(parsed);
-  if (!result.success) {
-    const issues = result.error.issues.map((i) => `  ${i.path.join('.')}: ${i.message}`).join('\n');
-    throw new Error(`movement.js: map.json failed schema validation:\n${issues}`);
-  }
-
-  return Object.freeze(result.data);
-}
-
-// ─── Hex index ─────────────────────────────────────────────────────────────────
-
-/**
- * Build a Map<hexId, hexEntry> from loaded map data for O(1) lookup.
- * Call once after loadMap(); pass the result to hexEntryCost and friends.
- *
- * @param {object} mapData - result of loadMap()
- * @returns {Map<string, object>}
- */
-export function buildHexIndex(mapData) {
-  const index = new Map();
-  for (const hex of Object.values(mapData.hexes)) {
-    index.set(hex.hex, hex);
-  }
-  return index;
-}
+// Re-export so callers that loaded map data via this module continue to work.
+export { buildHexIndex, loadMap };
 
 // ─── Internal helpers ──────────────────────────────────────────────────────────
 
@@ -284,8 +228,9 @@ export function hexEntryCost(fromHexId, toHexId, dirIndex, formation, scenario, 
  * @param {string} startHexId
  * @param {string} endHexId
  * @param {string} formation
- * @param {object} scenario   - result of loadScenario()
- * @param {object} mapData    - result of loadMap()
+ * @param {object} scenario          - result of loadScenario()
+ * @param {object} mapData           - result of loadMap()
+ * @param {Map<string, object>} [hexIndex] - pre-built hex index; built from mapData if omitted
  * @returns {{
  *   path: string[]|null,
  *   costs: Array<{hex: string, terrainCost: number, hexsideCost: number, total: number}>,
@@ -293,12 +238,12 @@ export function hexEntryCost(fromHexId, toHexId, dirIndex, formation, scenario, 
  *   impassable: boolean
  * }}
  */
-export function movementPath(startHexId, endHexId, formation, scenario, mapData) {
-  const hexIndex = buildHexIndex(mapData);
+export function movementPath(startHexId, endHexId, formation, scenario, mapData, hexIndex = null) {
+  const idx = hexIndex ?? buildHexIndex(mapData);
   const gridSpec = mapData.gridSpec;
 
   const costFn = (fromId, toId, dirIndex) =>
-    hexEntryCost(fromId, toId, dirIndex, formation, scenario, hexIndex);
+    hexEntryCost(fromId, toId, dirIndex, formation, scenario, idx);
 
   const { costs, prev } = dijkstra(startHexId, costFn, Infinity, gridSpec);
 
@@ -338,12 +283,13 @@ export function movementPath(startHexId, endHexId, formation, scenario, mapData)
  *
  * @param {string} startHexId
  * @param {string} formation
- * @param {object} scenario   - result of loadScenario()
- * @param {object} mapData    - result of loadMap()
+ * @param {object} scenario          - result of loadScenario()
+ * @param {object} mapData           - result of loadMap()
+ * @param {Map<string, object>} [hexIndex] - pre-built hex index; built from mapData if omitted
  * @returns {Array<{hex: string, cost: number}>} sorted by cost ascending
  */
-export function movementRange(startHexId, formation, scenario, mapData) {
-  const hexIndex = buildHexIndex(mapData);
+export function movementRange(startHexId, formation, scenario, mapData, hexIndex = null) {
+  const idx = hexIndex ?? buildHexIndex(mapData);
   const gridSpec = mapData.gridSpec;
   const formationKey = resolveFormationKey(formation);
 
@@ -354,7 +300,7 @@ export function movementRange(startHexId, formation, scenario, mapData) {
     0;
 
   const costFn = (fromId, toId, dirIndex) =>
-    hexEntryCost(fromId, toId, dirIndex, formation, scenario, hexIndex);
+    hexEntryCost(fromId, toId, dirIndex, formation, scenario, idx);
 
   const { costs } = dijkstra(startHexId, costFn, allowance, gridSpec);
 

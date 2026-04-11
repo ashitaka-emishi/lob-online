@@ -10,6 +10,7 @@
  */
 
 import { hexLine } from './hex.js';
+import { buildHexIndex } from './map.js';
 
 // ─── Terrain height constants ──────────────────────────────────────────────────
 
@@ -86,13 +87,14 @@ function getGroundHeight(hex) {
  * @param {string} toHexId   - target hex ID, e.g. "24.18"
  * @param {object} mapData   - result of loadMap()
  * @param {object} scenario  - result of loadScenario()
+ * @param {Map<string, object>} [hexIndex] - pre-built hex index; built from mapData if omitted
  * @returns {{
  *   canSee: boolean,
  *   blockedBy: { hex: string, reason: string } | null,
  *   trace: string[]
  * }}
  */
-export function computeLOS(fromHexId, toHexId, mapData, scenario) {
+export function computeLOS(fromHexId, toHexId, mapData, scenario, hexIndex = null) {
   // LOB §4.0 — a unit can always see its own hex
   if (fromHexId === toHexId) {
     return { canSee: true, blockedBy: null, trace: [fromHexId] };
@@ -103,11 +105,8 @@ export function computeLOS(fromHexId, toHexId, mapData, scenario) {
   // SM §1.4 — treeLosHeight: South Mountain overrides standard LOB +3 with +1
   const treeLosHeight = scenario.rules?.treeLosHeight ?? 1;
 
-  // Build hex index for O(1) lookup
-  const hexIndex = new Map();
-  for (const hex of mapData.hexes) {
-    hexIndex.set(hex.hex, hex);
-  }
+  // Build hex index for O(1) lookup (caller may supply a pre-built index for efficiency)
+  const idx = hexIndex ?? buildHexIndex(mapData);
 
   const trace = hexLine(fromHexId, toHexId, gridSpec);
   const n = trace.length;
@@ -118,15 +117,15 @@ export function computeLOS(fromHexId, toHexId, mapData, scenario) {
   }
 
   // End Point heights: ground elevation only, no terrain bonus (LOB §4.0)
-  const fromHex = hexIndex.get(fromHexId);
-  const toHex = hexIndex.get(toHexId);
+  const fromHex = idx.get(fromHexId);
+  const toHex = idx.get(toHexId);
   const observerHeight = getGroundHeight(fromHex);
   const targetHeight = getGroundHeight(toHex);
 
   // Check each intermediate hex for LOS blockage
   for (let i = 1; i < n - 1; i++) {
     const hexId = trace[i];
-    const hex = hexIndex.get(hexId);
+    const hex = idx.get(hexId);
     const terrain = hex?.terrain ?? 'unknown';
 
     // t = 0 at observer, t = 1 at target
