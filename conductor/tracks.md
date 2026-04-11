@@ -72,4 +72,6 @@
 
 | [x] | m3-engine_20260410 | M3 Engine Modules — hex, scenario, movement, LOS, and game tables | 2026-04-10 | 2026-04-11 |
 
+| [~] | map-test-tool_20260411 | Map Test Tool | 2026-04-11 | 2026-04-11 |
+
 <!-- Tracks registered by /conductor:new-track -->

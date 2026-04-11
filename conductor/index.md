@@ -45,6 +45,8 @@ Navigation hub for project context.
 | [quick-debt-cleanup_20260403](./tracks/quick-debt-cleanup_20260403/index.md) | Quick Debt Cleanup — Score-1 Trivials + PR #236 Test Gaps | Pending |
 | [m2-closeout_20260409](./tracks/m2-closeout_20260409/index.md) | M2 Closeout Debt Sprint | Complete |
 | [hld-milestone-plan_20260410](./tracks/hld-milestone-plan_20260410/index.md) | HLD Update — Implementation Status + M3–M8 Milestone Plan | Complete |
+| [m3-engine_20260410](./tracks/m3-engine_20260410/index.md) | M3 Engine Modules — hex, scenario, movement, LOS, and game tables | Complete |
+| [map-test-tool_20260411](./tracks/map-test-tool_20260411/index.md) | Map Test Tool | Pending |
 
 ## Getting Started
 

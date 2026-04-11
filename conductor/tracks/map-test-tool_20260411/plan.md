@@ -171,16 +171,16 @@ the Map Test Tool.
 
 ### Tasks
 
-- [ ] Task 5.1: Identify and remove `LosTestPanel.vue` (or equivalent) from the map editor
+- [x] Task 5.1: Identify and remove `LosTestPanel.vue` (or equivalent) from the map editor
       — delete the file and remove its import/registration from `MapEditorView.vue`
-- [ ] Task 5.2: Remove any server routes in `mapEditor.js` that existed solely to back
-      the prototype LOS panel (if any)
-- [ ] Task 5.3: Update `MapEditorView.test.js` — remove any tests covering the LOS tab
-- [ ] Task 5.4: Verify the map editor still loads cleanly with no LOS tab present
+- [x] Task 5.2: Remove any server routes in `mapEditor.js` that existed solely to back
+      the prototype LOS panel (if any) — none found
+- [x] Task 5.3: Update `MapEditorView.test.js` — remove any tests covering the LOS tab
+- [x] Task 5.4: Verify the map editor still loads cleanly with no LOS tab present
 
 ### Verification
 
-- [ ] `npm run test` — all tests green (no orphaned LOS references)
+- [x] `npm run test` — all tests green (1712 passing, no orphaned LOS references)
 - [ ] Manual: map editor loads at `/tools/map-editor`; no LOS tab visible
 
 ---
