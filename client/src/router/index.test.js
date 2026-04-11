@@ -20,6 +20,12 @@ describe('router', () => {
     expect(oobEditor).toBeDefined();
   });
 
+  it('has a route for /tools/map-test', () => {
+    const routes = router.getRoutes();
+    const mapTest = routes.find((r) => r.path === '/tools/map-test');
+    expect(mapTest).toBeDefined();
+  });
+
   it('exports a router instance', () => {
     expect(router).toBeTruthy();
     expect(typeof router.push).toBe('function');
