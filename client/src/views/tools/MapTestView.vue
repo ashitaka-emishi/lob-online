@@ -1,7 +1,12 @@
 <script setup>
-import { ref, computed, provide, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import HexMapOverlay from '../../components/HexMapOverlay.vue';
 import { useCalibration } from '../../composables/useCalibration.js';
+import MovementPathPanel from '../../components/tools/map-test/MovementPathPanel.vue';
+import MovementRangePanel from '../../components/tools/map-test/MovementRangePanel.vue';
+import HexInspectorPanel from '../../components/tools/map-test/HexInspectorPanel.vue';
+import LosPanel from '../../components/tools/map-test/LosPanel.vue';
+import CommandRangePanel from '../../components/tools/map-test/CommandRangePanel.vue';
 
 // ── Map data ──────────────────────────────────────────────────────────────────
 
@@ -38,28 +43,21 @@ const activePanelId = ref('movement-path');
 
 const overlayConfig = ref({});
 
-function setOverlayConfig(cfg) {
-  overlayConfig.value = cfg;
-}
-
 // ── Hex click routing ─────────────────────────────────────────────────────────
 
-// Panels receive hex clicks via provide/inject.
-// Each panel inject()s 'onHexClick' and registers a handler; the active panel's
-// handler is stored here and invoked by the hex-click event from HexMapOverlay.
-const hexClickHandlers = {};
-
-function registerHexClickHandler(panelId, fn) {
-  hexClickHandlers[panelId] = fn;
-}
+// clickedHexId is passed as a prop to the active panel component.
+// Each panel watches for changes and accumulates clicks internally.
+const clickedHexId = ref(null);
 
 function onHexClick(hexId) {
-  const handler = hexClickHandlers[activePanelId.value];
-  if (handler) handler(hexId);
+  clickedHexId.value = hexId;
 }
 
-provide('registerHexClickHandler', registerHexClickHandler);
-provide('setOverlayConfig', setOverlayConfig);
+function onTabChange(panelId) {
+  activePanelId.value = panelId;
+  clickedHexId.value = null;
+  overlayConfig.value = {};
+}
 
 // ── Hexes for overlay ─────────────────────────────────────────────────────────
 
@@ -82,7 +80,7 @@ const hexes = computed(() => mapData.value?.hexes ?? []);
           :key="panel.id"
           class="tab-btn"
           :class="{ active: activePanelId === panel.id }"
-          @click="activePanelId = panel.id"
+          @click="onTabChange(panel.id)"
         >
           {{ panel.label }}
         </button>
@@ -102,10 +100,31 @@ const hexes = computed(() => mapData.value?.hexes ?? []);
         </div>
 
         <aside class="panel-area">
-          <!-- Panel components are mounted in Phase 4 -->
-          <div class="panel-placeholder">
-            <p>Panel: {{ activePanelId }}</p>
-          </div>
+          <MovementPathPanel
+            v-if="activePanelId === 'movement-path'"
+            :clicked-hex-id="clickedHexId"
+            @overlay-update="overlayConfig = $event"
+          />
+          <MovementRangePanel
+            v-else-if="activePanelId === 'movement-range'"
+            :clicked-hex-id="clickedHexId"
+            @overlay-update="overlayConfig = $event"
+          />
+          <HexInspectorPanel
+            v-else-if="activePanelId === 'hex-inspector'"
+            :clicked-hex-id="clickedHexId"
+            @overlay-update="overlayConfig = $event"
+          />
+          <LosPanel
+            v-else-if="activePanelId === 'los'"
+            :clicked-hex-id="clickedHexId"
+            @overlay-update="overlayConfig = $event"
+          />
+          <CommandRangePanel
+            v-else-if="activePanelId === 'command-range'"
+            :clicked-hex-id="clickedHexId"
+            @overlay-update="overlayConfig = $event"
+          />
         </aside>
       </div>
     </div>
@@ -192,11 +211,5 @@ const hexes = computed(() => mapData.value?.hexes ?? []);
   border-left: 1px solid #333;
   background: #1e1e1e;
   overflow-y: auto;
-}
-
-.panel-placeholder {
-  padding: 16px;
-  color: #888;
-  font-size: 13px;
 }
 </style>
