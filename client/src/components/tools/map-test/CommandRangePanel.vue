@@ -13,9 +13,9 @@ const COMMANDER_LEVELS = ['brigade', 'division', 'corps', 'army'];
 
 // Zone fill colours
 const ZONE_COLORS = {
-  within: 'rgba(0,200,80,0.40)', // within radius — green
-  beyond: 'rgba(220,140,0,0.35)', // beyond radius — amber
-  beyondFar: 'rgba(160,40,40,0.35)', // beyond radius far — red
+  within: 'rgba(0,200,80,0.50)', // within radius — green
+  beyond: 'rgba(220,140,0,0.45)', // beyond radius — amber
+  beyondFar: 'rgba(160,40,40,0.45)', // beyond radius far — red
 };
 
 // ── State ──────────────────────────────────────────────────────────────────────
@@ -54,20 +54,23 @@ async function runQuery() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     result.value = await res.json();
 
-    // Build lookup sets for overlay
+    // Snapshot all three zones into Sets at emit time so fillFn never touches
+    // the reactive result ref (which resets to null when a new query starts).
     const withinSet = new Set(result.value.withinRadius);
     const beyondSet = new Set(result.value.beyondRadius);
+    const beyondFarSet = new Set(result.value.beyondRadiusFar);
+    const origin = originHex.value;
 
     emit('overlay-update', {
       hexFill: {
         alwaysOn: true,
         fillFn: (cell) => {
           const id = cell.gameId ?? cell.id;
-          if (id === originHex.value) return 'rgba(0,180,255,0.6)';
+          if (id === origin) return 'rgba(0,180,255,0.6)';
           if (withinSet.has(id)) return ZONE_COLORS.within;
           if (beyondSet.has(id)) return ZONE_COLORS.beyond;
-          // beyondRadiusFar hexes get the far colour
-          return result.value.beyondRadiusFar.includes(id) ? ZONE_COLORS.beyondFar : null;
+          if (beyondFarSet.has(id)) return ZONE_COLORS.beyondFar;
+          return null;
         },
       },
     });
