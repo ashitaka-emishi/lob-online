@@ -111,70 +111,70 @@ navigations — no cross-panel state.
 
 ### Tasks
 
-- [ ] Task 3.1: Create `CombatPanel.vue`
+- [x] Task 3.1: Create `CombatPanel.vue`
   - Inputs: effectiveSPs (number), netColumnShifts (number), diceRoll (2d6 = 2–12)
   - Submit → POST `/api/tools/table-test/combat`
   - Display: final column, result cell (−/m/1–4), morale check flag, depletion flag,
     modifier breakdown list
 
-- [ ] Task 3.2: Create `OpeningVolleyPanel.vue`
+- [x] Task 3.2: Create `OpeningVolleyPanel.vue`
   - Inputs: condition select (`chargeInProgress` | `rangeOnly` | `shiftOnly`), diceRoll (1d6)
   - Submit → POST `/api/tools/table-test/opening-volley`
   - Display: SP loss (0/1/2)
 
-- [ ] Task 3.3: Create `MoralePanel.vue`
+- [x] Task 3.3: Create `MoralePanel.vue`
   - Inputs: rating select (A–F), modifier checkboxes (shaken, wrecked, rear, night,
     etc. from `MORALE_MODIFIERS`), diceRoll (2d6)
   - Submit → POST `/api/tools/table-test/morale`
   - Display: raw result, effective roll, new state, retreat hexes, SP loss,
     leader loss check, modifier breakdown
 
-- [ ] Task 3.4: Create `MoraleTransitionPanel.vue`
+- [x] Task 3.4: Create `MoraleTransitionPanel.vue`
   - Inputs: currentState select (`bl`/`normal`/`shaken`/`dg`/`rout`), incomingResult
     select (same set)
   - Submit → POST `/api/tools/table-test/morale-transition`
   - Display: resolved new state
 
-- [ ] Task 3.5: Create `ClosingRollPanel.vue`
+- [x] Task 3.5: Create `ClosingRollPanel.vue`
   - Inputs: moraleRating select (A–F), modifier checkboxes (bloodLust, rear, shaken,
     artilleryWithCanister, breastworksAdjacent, from `CLOSING_ROLL_MODIFIERS`), diceRoll (1d6)
   - Submit → POST `/api/tools/table-test/closing-roll`
   - Display: pass/fail badge, threshold, modified roll, modifier breakdown
 
-- [ ] Task 3.6: Create `LeaderLossPanel.vue`
+- [x] Task 3.6: Create `LeaderLossPanel.vue`
   - Inputs: situation select (`other`/`capture`/`defender`/`attacker`),
     isSharpshooter toggle, diceRoll (2d6)
   - Submit → POST `/api/tools/table-test/leader-loss`
   - Display: result (no effect / captured / wounded / killed)
 
-- [ ] Task 3.7: Create `CommandRollPanel.vue`
+- [x] Task 3.7: Create `CommandRollPanel.vue`
   - Inputs: commandValue (number 1–6), isReserve toggle, isDeployment toggle, diceRoll (2d6)
   - Submit → POST `/api/tools/table-test/command-roll`
   - Display: pass/fail badge, modified roll, threshold
 
-- [ ] Task 3.8: Create `OrderDeliveryPanel.vue`
+- [x] Task 3.8: Create `OrderDeliveryPanel.vue`
   - Inputs: armyCOType select (from `AWARENESS_TURNS` keys), distanceCategory select
     (from `DISTANCE_TURNS` keys), isReserveOrder toggle
   - Submit → POST `/api/tools/table-test/order-delivery`
   - Display: turns to deliver
 
-- [ ] Task 3.9: Create `FlukestoppagePanel.vue`
+- [x] Task 3.9: Create `FlukestoppagePanel.vue`
   - Inputs: commandValue (number 1–6), hasReserve toggle, isNight toggle, diceRoll (2d6)
   - Submit → POST `/api/tools/table-test/fluke-stoppage`
   - Display: base pass result, stoppage flag, all dice rolls used
 
-- [ ] Task 3.10: Create `AttackRecoveryPanel.vue`
+- [x] Task 3.10: Create `AttackRecoveryPanel.vue`
   - Inputs: divisionStatus select (`noWrecked`/`wrecked`/`hasDead`), commandValue
     (number 1–6), step1Roll (2d6), step2Roll (2d6, shown only if step 1 passes)
   - Submit → POST `/api/tools/table-test/attack-recovery`
   - Display: result (no recovery / attack recovery), rolls used
 
-- [ ] Task 3.11: Create `ZeroRulePanel.vue`
+- [x] Task 3.11: Create `ZeroRulePanel.vue`
   - Inputs: diceRoll (1d6)
   - Submit → POST `/api/tools/table-test/zero-rule`
   - Display: MA result (no MA / half MA / full MA)
 
-- [ ] Task 3.12: Write Vitest tests for each panel (one file per panel)
+- [x] Task 3.12: Write Vitest tests for each panel (one file per panel)
   - Renders without error with no submission
   - Displays loading state while POST in flight
   - Displays result correctly given mocked API response
@@ -182,16 +182,16 @@ navigations — no cross-panel state.
 
 ### Verification
 
-- [ ] `npm run test` — all panel tests green
-- [ ] `npm run lint && npm run format:check` — clean
+- [x] `npm run test` — all panel tests green (1827 total, 69 new)
+- [x] `npm run lint && npm run format:check` — clean
 
 ---
 
 ## Final Verification
 
 - [ ] All acceptance criteria in spec.md met
-- [ ] `npm run test` — full suite green
-- [ ] `npm run lint && npm run format:check` — clean
+- [x] `npm run test` — full suite green (1827 passing)
+- [x] `npm run lint && npm run format:check` — clean
 - [ ] Manual: navigate to `/tools/table-test`; all 11 panels reachable and functional
 - [ ] Ready for `/pr-create`
 

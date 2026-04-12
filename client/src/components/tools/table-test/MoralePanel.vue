@@ -1,16 +1,188 @@
 <script setup>
-// LOB §6.1 — Morale Table panel
-// Full implementation in Phase 3 (table-test-tool_20260412)
+// LOB §6.1 — Morale Table
+import { ref, computed } from 'vue';
+
+const RATINGS = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+const rating = ref('');
+const diceRoll = ref('');
+
+// Modifier flags — LOB §6.1 Morale Table Modifiers
+const modifiers = ref({
+  leaderMoraleValue: 0,
+  isShakenOrDG: false,
+  isWrecked: false,
+  isRear: false,
+  isSmall: false,
+  cowardlyLegs: false,
+  isNight: false,
+  isArtilleryOrCavalryFromSmallArms: false,
+  hasProtectiveTerrain: false,
+  range: 0,
+});
+
+const result = ref(null);
+const loading = ref(false);
+const error = ref(null);
+
+const canSubmit = computed(() => rating.value !== '' && diceRoll.value !== '' && !loading.value);
+
+async function submit() {
+  if (!canSubmit.value) return;
+  loading.value = true;
+  error.value = null;
+  result.value = null;
+
+  try {
+    const res = await fetch('/api/tools/table-test/morale', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        rating: rating.value,
+        modifiers: { ...modifiers.value },
+        diceRoll: Number(diceRoll.value),
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error ?? `HTTP ${res.status}`);
+    }
+    result.value = await res.json();
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    loading.value = false;
+  }
+}
+
+function reset() {
+  rating.value = '';
+  diceRoll.value = '';
+  modifiers.value = {
+    leaderMoraleValue: 0,
+    isShakenOrDG: false,
+    isWrecked: false,
+    isRear: false,
+    isSmall: false,
+    cowardlyLegs: false,
+    isNight: false,
+    isArtilleryOrCavalryFromSmallArms: false,
+    hasProtectiveTerrain: false,
+    range: 0,
+  };
+  result.value = null;
+  error.value = null;
+}
 </script>
 
 <template>
-  <div class="panel-stub">Morale Panel</div>
+  <div class="panel morale-panel">
+    <div class="panel-header">Morale Table <span class="rule-ref">LOB §6.1</span></div>
+
+    <div class="form">
+      <label class="field">
+        <span class="field-label">Morale Rating</span>
+        <select v-model="rating">
+          <option value="" disabled>Select rating…</option>
+          <option v-for="r in RATINGS" :key="r" :value="r">{{ r }}</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Dice Roll (2d6)</span>
+        <input v-model="diceRoll" type="number" min="2" max="12" placeholder="2–12" />
+      </label>
+
+      <div class="field">
+        <span class="field-label">Modifiers</span>
+        <div class="checkbox-row">
+          <label class="checkbox-label">
+            <input v-model="modifiers.isShakenOrDG" type="checkbox" />
+            Shaken or DG (+{{ 1 }})
+          </label>
+          <label class="checkbox-label">
+            <input v-model="modifiers.isWrecked" type="checkbox" />
+            Wrecked (+2)
+          </label>
+          <label class="checkbox-label">
+            <input v-model="modifiers.isRear" type="checkbox" />
+            Rear Attack (+2)
+          </label>
+          <label class="checkbox-label">
+            <input v-model="modifiers.isSmall" type="checkbox" />
+            Small Unit (+1)
+          </label>
+          <label class="checkbox-label">
+            <input v-model="modifiers.cowardlyLegs" type="checkbox" />
+            Cowardly Legs (+2)
+          </label>
+          <label class="checkbox-label">
+            <input v-model="modifiers.isNight" type="checkbox" />
+            Night (+2)
+          </label>
+          <label class="checkbox-label">
+            <input v-model="modifiers.isArtilleryOrCavalryFromSmallArms" type="checkbox" />
+            Arty/Cav from Small Arms (+1)
+          </label>
+          <label class="checkbox-label">
+            <input v-model="modifiers.hasProtectiveTerrain" type="checkbox" />
+            Protective Terrain (−2)
+          </label>
+        </div>
+      </div>
+
+      <label class="field">
+        <span class="field-label">Leader Morale Value (subtracts)</span>
+        <input
+          v-model="modifiers.leaderMoraleValue"
+          type="number"
+          min="0"
+          max="4"
+          placeholder="0"
+        />
+      </label>
+
+      <label class="field">
+        <span class="field-label">Range (for range 10+ rule)</span>
+        <input v-model="modifiers.range" type="number" min="0" placeholder="0" />
+      </label>
+
+      <div class="actions">
+        <button :disabled="!canSubmit" @click="submit">Roll</button>
+        <button class="reset-btn" @click="reset">Reset</button>
+      </div>
+    </div>
+
+    <div v-if="loading" class="loading">Computing morale result…</div>
+    <div v-if="error" class="error">{{ error }}</div>
+
+    <div v-if="result" class="result">
+      <div class="data-row">
+        <span class="label">Effective Roll</span>
+        <span class="value">{{ result.effectiveRoll }}</span>
+      </div>
+      <div class="data-row">
+        <span class="label">Result Type</span>
+        <span class="value">{{ result.type }}</span>
+      </div>
+      <div class="data-row">
+        <span class="label">Retreat Hexes</span>
+        <span class="value">{{ result.retreatHexes }}</span>
+      </div>
+      <div class="data-row">
+        <span class="label">SP Loss</span>
+        <span class="value">{{ result.spLoss }}</span>
+      </div>
+      <div class="data-row">
+        <span class="label">Leader Loss Check</span>
+        <span class="value badge" :class="result.leaderLossCheck ? 'yes' : 'no'">
+          {{ result.leaderLossCheck ? 'Yes' : 'No' }}
+        </span>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.panel-stub {
-  padding: 1rem;
-  color: #a09880;
-  font-size: 0.85rem;
-}
+@import './panel-base.css';
 </style>
