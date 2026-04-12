@@ -29,7 +29,7 @@ onMounted(async () => {
 
 const { calibration } = useCalibration();
 
-// ── Map image natural size (updated once the <img> loads) ─────────────────────
+// ── Map image natural size ────────────────────────────────────────────────────
 
 const imgNaturalWidth = ref(1400);
 const imgNaturalHeight = ref(900);
@@ -51,24 +51,22 @@ const PANELS = [
 
 const activePanelId = ref('movement-path');
 
+function togglePanel(id) {
+  activePanelId.value = activePanelId.value === id ? null : id;
+  clickedHexId.value = null;
+  overlayConfig.value = {};
+}
+
 // ── Overlay config (updated by active panel) ──────────────────────────────────
 
 const overlayConfig = ref({});
 
 // ── Hex click routing ─────────────────────────────────────────────────────────
 
-// clickedHexId is passed as a prop to the active panel component.
-// Each panel watches for changes and accumulates clicks internally.
 const clickedHexId = ref(null);
 
 function onHexClick(hexId) {
   clickedHexId.value = hexId;
-}
-
-function onTabChange(panelId) {
-  activePanelId.value = panelId;
-  clickedHexId.value = null;
-  overlayConfig.value = {};
 }
 
 // ── Hexes for overlay ─────────────────────────────────────────────────────────
@@ -78,85 +76,87 @@ const hexes = computed(() => mapData.value?.hexes ?? []);
 
 <template>
   <div class="map-test-view">
-    <header class="toolbar">
+    <!-- Header -->
+    <header class="editor-header">
       <span class="title">Map Test Tool</span>
+      <span class="spacer" />
+      <a class="nav-link" href="/tools/map-editor">Map Editor</a>
     </header>
 
     <div v-if="fetchError" class="fetch-error">{{ fetchError }}</div>
 
-    <div v-else class="layout">
-      <!-- Panel selector -->
-      <nav class="panel-tabs">
-        <button
+    <!-- Body: sidebar left, map right -->
+    <div v-else class="editor-body">
+      <!-- Left: panel sidebar -->
+      <div class="panel-pane">
+        <div
           v-for="panel in PANELS"
           :key="panel.id"
-          class="tab-btn"
-          :class="{ active: activePanelId === panel.id }"
-          @click="onTabChange(panel.id)"
+          class="accordion-section accordion-hex"
+          :class="{ 'accordion-flex': activePanelId === panel.id }"
         >
-          {{ panel.label }}
-        </button>
-      </nav>
-
-      <!-- Map + panel side-by-side -->
-      <div class="main-area">
-        <!-- Scrollable map pane with background image -->
-        <div class="map-pane">
-          <div
-            class="map-container"
-            :style="{
-              width: imgNaturalWidth * calibration.imageScale + 'px',
-              height: imgNaturalHeight * calibration.imageScale + 'px',
-            }"
-          >
-            <img
-              alt="South Mountain map"
-              draggable="false"
-              :src="MAP_IMAGE"
-              :width="imgNaturalWidth * calibration.imageScale"
-              :height="imgNaturalHeight * calibration.imageScale"
-              @load="onImageLoad"
+          <button class="accordion-header" @click="togglePanel(panel.id)">
+            <span>{{ panel.label }}</span>
+            <span class="accordion-chevron">{{ activePanelId === panel.id ? '▾' : '▸' }}</span>
+          </button>
+          <div v-if="activePanelId === panel.id" class="accordion-hex-content">
+            <MovementPathPanel
+              v-if="panel.id === 'movement-path'"
+              :clicked-hex-id="clickedHexId"
+              @overlay-update="overlayConfig = $event"
             />
-            <HexMapOverlay
-              v-if="mapData"
-              :calibration="calibration"
-              :hexes="hexes"
-              :image-width="imgNaturalWidth"
-              :image-height="imgNaturalHeight"
-              :overlay-config="overlayConfig"
-              :interaction-enabled="true"
-              @hex-click="onHexClick"
+            <MovementRangePanel
+              v-else-if="panel.id === 'movement-range'"
+              :clicked-hex-id="clickedHexId"
+              @overlay-update="overlayConfig = $event"
+            />
+            <HexInspectorPanel
+              v-else-if="panel.id === 'hex-inspector'"
+              :clicked-hex-id="clickedHexId"
+              @overlay-update="overlayConfig = $event"
+            />
+            <LosPanel
+              v-else-if="panel.id === 'los'"
+              :clicked-hex-id="clickedHexId"
+              @overlay-update="overlayConfig = $event"
+            />
+            <CommandRangePanel
+              v-else-if="panel.id === 'command-range'"
+              :clicked-hex-id="clickedHexId"
+              @overlay-update="overlayConfig = $event"
             />
           </div>
         </div>
+      </div>
 
-        <aside class="panel-area">
-          <MovementPathPanel
-            v-if="activePanelId === 'movement-path'"
-            :clicked-hex-id="clickedHexId"
-            @overlay-update="overlayConfig = $event"
+      <!-- Right: scrollable map -->
+      <div class="map-pane">
+        <div
+          class="map-container"
+          :style="{
+            width: imgNaturalWidth * calibration.imageScale + 'px',
+            height: imgNaturalHeight * calibration.imageScale + 'px',
+          }"
+        >
+          <img
+            alt="South Mountain map"
+            draggable="false"
+            :src="MAP_IMAGE"
+            :width="imgNaturalWidth * calibration.imageScale"
+            :height="imgNaturalHeight * calibration.imageScale"
+            @load="onImageLoad"
           />
-          <MovementRangePanel
-            v-else-if="activePanelId === 'movement-range'"
-            :clicked-hex-id="clickedHexId"
-            @overlay-update="overlayConfig = $event"
+          <HexMapOverlay
+            v-if="mapData"
+            :calibration="calibration"
+            :hexes="hexes"
+            :image-width="imgNaturalWidth"
+            :image-height="imgNaturalHeight"
+            :overlay-config="overlayConfig"
+            :interaction-enabled="true"
+            @hex-click="onHexClick"
           />
-          <HexInspectorPanel
-            v-else-if="activePanelId === 'hex-inspector'"
-            :clicked-hex-id="clickedHexId"
-            @overlay-update="overlayConfig = $event"
-          />
-          <LosPanel
-            v-else-if="activePanelId === 'los'"
-            :clicked-hex-id="clickedHexId"
-            @overlay-update="overlayConfig = $event"
-          />
-          <CommandRangePanel
-            v-else-if="activePanelId === 'command-range'"
-            :clicked-hex-id="clickedHexId"
-            @overlay-update="overlayConfig = $event"
-          />
-        </aside>
+        </div>
       </div>
     </div>
   </div>
@@ -166,67 +166,63 @@ const hexes = computed(() => mapData.value?.hexes ?? []);
 .map-test-view {
   display: flex;
   flex-direction: column;
+  width: 100vw;
   height: 100vh;
-  overflow: hidden;
+  background: #1a1a1a;
+  color: #e0d8c8;
+  font-family: Georgia, serif;
 }
 
-.toolbar {
+.editor-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  background: #1e1e1e;
-  border-bottom: 1px solid #333;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: #2a2a2a;
+  border-bottom: 1px solid #444;
   flex-shrink: 0;
 }
 
 .title {
-  font-weight: 600;
-  font-size: 14px;
-  color: #ccc;
+  font-size: 1rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.nav-link {
+  color: #a09880;
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  color: #e0d8c8;
 }
 
 .fetch-error {
-  padding: 16px;
-  color: #f87171;
-  background: #1e1e1e;
+  padding: 0.4rem 1rem;
+  background: #3a1a1a;
+  border-bottom: 1px solid #663333;
+  font-size: 0.8rem;
+  color: #c06060;
 }
 
-.layout {
+.editor-body {
   display: flex;
-  flex-direction: column;
   flex: 1;
   overflow: hidden;
 }
 
-.panel-tabs {
-  display: flex;
-  gap: 2px;
-  padding: 4px 8px;
-  background: #252526;
-  border-bottom: 1px solid #333;
+.panel-pane {
+  width: 260px;
   flex-shrink: 0;
-}
-
-.tab-btn {
-  padding: 4px 12px;
-  background: #2d2d2d;
-  border: 1px solid #444;
-  border-radius: 3px;
-  color: #ccc;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.tab-btn.active {
-  background: #094771;
-  border-color: #1177bb;
-  color: #fff;
-}
-
-.main-area {
+  border-right: 1px solid #444;
   display: flex;
-  flex: 1;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -245,11 +241,52 @@ const hexes = computed(() => mapData.value?.hexes ?? []);
   display: block;
 }
 
-.panel-area {
-  width: 320px;
+.accordion-section {
+  border-bottom: 1px solid #444;
   flex-shrink: 0;
-  border-left: 1px solid #333;
-  background: #1e1e1e;
+  display: flex;
+  flex-direction: column;
+}
+
+.accordion-hex {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.accordion-flex {
+  flex: 1;
+}
+
+.accordion-hex-content {
+  flex: 1;
   overflow-y: auto;
+  min-height: 0;
+}
+
+.accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  background: #252525;
+  border: none;
+  border-bottom: 1px solid #3a3a3a;
+  color: #a09880;
+  cursor: pointer;
+  font-size: 0.78rem;
+  text-align: left;
+}
+
+.accordion-header:hover {
+  background: #2e2e2e;
+  color: #e0d8c8;
+}
+
+.accordion-chevron {
+  font-size: 0.7rem;
+  color: #666;
 }
 </style>
