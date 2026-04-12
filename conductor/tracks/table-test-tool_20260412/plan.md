@@ -77,13 +77,13 @@ just the page with a panel selector and an active panel slot.
 
 ### Tasks
 
-- [ ] Task 2.1: Add route in `client/src/router/index.js`
+- [x] Task 2.1: Add route in `client/src/router/index.js`
   - `{ path: '/tools/table-test', component: () => import('../views/tools/TableTestView.vue') }`
 
-- [ ] Task 2.2: Add router test in `client/src/router/index.test.js`
+- [x] Task 2.2: Add router test in `client/src/router/index.test.js`
   - `has a route for /tools/table-test`
 
-- [ ] Task 2.3: Create `client/src/views/tools/TableTestView.vue`
+- [x] Task 2.3: Create `client/src/views/tools/TableTestView.vue`
   - `<script setup>` — no map data needed
   - Panel selector (tabs): Combat | Opening Volley | Morale | Morale Transition |
     Closing Roll | Leader Loss | Command Roll | Order Delivery | Fluke Stoppage |
@@ -91,15 +91,15 @@ just the page with a panel selector and an active panel slot.
   - Active panel rendered via `<component :is="activePanel" />`
   - No hex map, no hex click events
 
-- [ ] Task 2.4: Create `client/src/views/tools/TableTestView.test.js`
+- [x] Task 2.4: Create `client/src/views/tools/TableTestView.test.js`
   - Renders without error
   - Panel selector shows all 11 panel names
   - Switching panel tabs updates the active panel
 
 ### Verification
 
-- [ ] `npm run test` — shell tests green
-- [ ] `npm run lint && npm run format:check` — clean
+- [x] `npm run test` — shell tests green (1758 total, 6 new)
+- [x] `npm run lint && npm run format:check` — clean
 
 ---
 
