@@ -1,17 +1,17 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-04-11 after PR #283._
+_Last updated: 2026-04-12 after PR #297._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                                            |
-| -------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Open debt items                  | 23                                                                                               |
-| Cumulative debt score (net open) | 43                                                                                               |
-| Highest-risk item                | engine: LOS terrain heights hardcoded; should be data-driven like movement costs (#289, score 3) |
-| PRs tracked                      | 102                                                                                              |
+| Metric                           | Value                                                                                                     |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Open debt items                  | 30                                                                                                        |
+| Cumulative debt score (net open) | 60                                                                                                        |
+| Highest-risk item                | map-test: decouple MapTestView from map-editor data endpoint — silent cross-tool coupling (#303, score 3) |
+| PRs tracked                      | 103                                                                                                       |
 
 ---
 
@@ -121,6 +121,7 @@ _Last updated: 2026-04-11 after PR #283._
 | 2026-04-10 | PR #262 (resolved #216) | -2                   | 142                      |
 | 2026-04-10 | PR #262 (resolved #214) | -2                   | 142                      |
 | 2026-04-11 | PR #283                 | 27                   | 169                      |
+| 2026-04-12 | PR #297                 | 17                   | 186                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -128,15 +129,15 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is 
 
 ## Risk Assessment
 
-Elevated risk. Engine debt added in PR #283 team review raises net open score to 43. Four high-severity findings (H1–H4) were fixed in-place before merge; 13 items were deferred.
+High risk. Net open score has reached 60 across 30 items. Immediate attention recommended before M4 socket/game-loop work begins.
 
-PR #283 (M3 engine modules) introduced 27 points of new debt across 13 items covering security input validation, architecture (missing `formations.js`, LOS hardcoded terrain heights, inconsistent parameter ordering), and performance (noEffectTerrain Set allocation, early-termination missing).
+PR #297 (Map Test Tool) added 17 points of new debt across 7 deferred items: three score-3 architectural concerns (missing MapTestView test coverage, missing hex-ID input validation, cross-tool data endpoint coupling) and four score-2 items (shared CSS extraction, mockFetch test utility, lazy data load, dynamic component dispatch).
 
-The three highest-priority engine items for M4 are: #289 (LOS terrain heights hardcoded — blocks new scenario support), #288 (cost breakdown hexsideCost always 0 — blocks Map Test Tool accurate display), and #284 (path traversal risk in loaders — security hardening before production routes exist).
+The highest-priority items for M4 readiness are: #303 (MapTestView fetches from map-editor endpoint — silent cross-tool breakage), #302 (no hex-ID format validation — NaN propagation risk), #300 (no MapTestView orchestration tests — refactor hazard), and the carry-forward engine items #289 (LOS terrain heights hardcoded), #288 (hexsideCost always 0 — misleads Map Test Tool display), and #284 (path traversal risk in loaders).
 
-The three legacy OOB score-3 items (#247 #245 #237) remain open. These were scheduled before game engine work began but have not been addressed. Recommend bundling them into a debt sprint alongside the score-3 engine items before M4 socket/game-loop work starts.
+The three legacy OOB score-3 items (#247 #245 #237) remain open. Recommend bundling them into a debt sprint alongside the score-3 engine and map-test items before M4 begins.
 
-Current debt is concentrated in **five score-3 architectural gaps** (#289 #288 #284 #247 #245 #237 — note #237 is also score-3), **eight score-2 engine items** (#285 #287 #290 #291 #292 #294 #295 #296), and **three score-1 minor items** (#286 #293 plus legacy #260 #259 #256 #255 #205 #204 #201).
+Current debt is concentrated in **nine score-3 items** (map-test cross-tool coupling, input validation, test coverage gaps; engine LOS/cost/security items; OOB architecture), **twelve score-2 items** (map-test UI/test hygiene plus engine performance and correctness), and **nine score-1 minor items** (engine guards and legacy test style issues).
 
 ---
 
@@ -146,12 +147,19 @@ _Ordered by score descending (ties: newest first). Resolved items are removed._
 
 | Score | Issue | Title                                                                                              | PR Introduced | Assessment                                                                                                                                                                                                                                                                                                           |
 | ----- | ----- | -------------------------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3     | #303  | map-test: decouple MapTestView from map-editor data endpoint — silent cross-tool coupling          | PR #297       | `MapTestView.vue` fetches from `/api/tools/map-editor/data`. If the map-editor route is renamed or split, map-test silently breaks with no compile-time or test-time warning. Cross-tool implicit coupling that will cause hard-to-diagnose failures when tool routes diverge.                                       |
+| 3     | #302  | map-test: add hex-ID format validation before engine calls                                         | PR #297       | All five map-test route handlers accept hex IDs directly from query strings with no format guard. A malformed hex ID reaches engine code and can propagate NaN through Dijkstra cost comparisons, producing silent incorrect results rather than a clean error.                                                      |
+| 3     | #300  | map-test: add MapTestView orchestration tests (togglePanel, overlay routing)                       | PR #297       | `MapTestView.vue` orchestrator has no test coverage. `togglePanel`, overlay routing, and click dispatch are untested. A future accordion/panel refactor could silently break tab-switch state reset behavior with no failing tests to catch it.                                                                      |
 | 3     | #289  | engine: LOS terrain heights hardcoded; should be data-driven like movement costs                   | PR #283       | `TERRAIN_LOS_HEIGHT_FLAG` in `los.js` hardcodes terrain → LOS height bonus. Movement costs are fully data-driven from `scenario.json`. New terrain types silently get 0 LOS bonus. Blocks adding terrain for new scenarios without a code change.                                                                    |
 | 3     | #288  | engine: movementPath cost breakdown always sets hexsideCost: 0                                     | PR #283       | Return type promises `{terrainCost, hexsideCost, total}` per step but `hexsideCost` is always 0; full step cost is in `terrainCost`. Map Test Tool (planned M3) will display misleading per-hex breakdowns.                                                                                                          |
 | 3     | #284  | engine: path traversal risk in loadMap/loadScenario — add directory containment guard              | PR #283       | Both loader functions accept arbitrary string paths with no directory containment check. Public signature allows future callers to pass user-supplied input. Error messages also leak internal file paths.                                                                                                           |
 | 3     | #247  | test(useOobPersistence): add dedicated test coverage for succession paths                          | PR #236       | No `useOobPersistence.test.js`. Core composable for all data I/O extended in PR #236 with no dedicated tests. Untested: `_isValidSuccessionShape` rejection, localStorage partial load, push skipping null succession, pull with succession endpoint down. Partial-failure paths could silently corrupt store state. |
 | 3     | #245  | refactor(server/routes): extract editorRouteFactory                                                | PR #236       | `successionEditor.js` is the third near-verbatim copy of `leadersEditor.js`. Backup rotation logic duplicated across 3 route files. A bug fix must be applied independently in each. Third copy is the standard extraction threshold.                                                                                |
 | 3     | #237  | fix(oobTreeTransform): processUSACavDiv should delegate to withLeader                              | PR #236       | `processUSACavDiv` inlines variant-attachment logic; Farnsworth has no variant support at all. Any future change to `withLeader` silently diverges. Succession variants for Farnsworth will never render until fixed.                                                                                                |
+| 2     | #304  | map-test: move module-level data load in mapTest.js into lazy route setup                          | PR #297       | `loadMap()`, `loadScenario()`, and `buildHexIndex()` called at module import time. A data-load failure throws during server startup with no HTTP error path, making root-cause diagnosis harder than a request-time 500 would be.                                                                                    |
+| 2     | #301  | map-test: replace v-if panel dispatch table with dynamic component                                 | PR #297       | Adding a sixth panel requires editing both the `PANELS` array and the v-if/v-else-if template block. Low coupling risk today but becomes maintenance friction as M4 adds more tool panels.                                                                                                                           |
+| 2     | #299  | map-test: extract mockFetch test utility shared by all five panel tests                            | PR #297       | `vi.stubGlobal('fetch', ...)` helper duplicated across all five panel test files. A mock contract change must be applied independently in five places; easy to miss one.                                                                                                                                             |
+| 2     | #298  | map-test: extract shared panel CSS across five SFCs                                                | PR #297       | Identical scoped CSS for `.panel`, `.panel-header`, `.hint`, `.clear-btn`, `.loading`, `.error` duplicated across all five panel SFCs. A visual consistency fix requires touching five files simultaneously.                                                                                                         |
 | 2     | #296  | engine: noEffectTerrain Set allocated inside hexEntryCost hot loop                                 | PR #283       | `new Set(noEffectTerrain ?? [])` created inside `hexEntryCost` on every Dijkstra edge expansion (~13K calls per query). ~780K allocations per turn for 60-unit movement ranges.                                                                                                                                      |
 | 2     | #295  | engine: Dijkstra lacks early termination for point-to-point queries                                | PR #283       | `movementPath` passes `Infinity` maxCost, exploring the entire reachable graph even for single target queries. Add optional `targetHex` to `dijkstra()` for 2–5× speedup on nearby pairs.                                                                                                                            |
 | 2     | #294  | engine: hex.js hot-path allocations — memoize formatHexId/parseHexId                               | PR #283       | `parseHexId` and `formatHexId` called ~13K+ times per Dijkstra run; each creates temporary array/string allocations. Pre-compute a 2D ID grid at startup. Only worth addressing if profiling confirms bottleneck after H1/H2 fixes.                                                                                  |
