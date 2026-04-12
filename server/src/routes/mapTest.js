@@ -50,6 +50,12 @@ router.get('/movement-path', (req, res) => {
       .status(400)
       .json({ error: `Invalid formation. Valid values: ${[...VALID_FORMATIONS].join(', ')}` });
   }
+  if (!hexIndex.has(startHex)) {
+    return res.status(400).json({ error: 'startHex not found in map data' });
+  }
+  if (!hexIndex.has(endHex)) {
+    return res.status(400).json({ error: 'endHex not found in map data' });
+  }
 
   try {
     const result = movementPath(startHex, endHex, formation, scenario, mapData, hexIndex);
@@ -72,6 +78,9 @@ router.get('/movement-range', (req, res) => {
     return res
       .status(400)
       .json({ error: `Invalid formation. Valid values: ${[...VALID_FORMATIONS].join(', ')}` });
+  }
+  if (!hexIndex.has(hex)) {
+    return res.status(400).json({ error: 'hex not found in map data' });
   }
 
   try {
@@ -114,6 +123,12 @@ router.get('/los', (req, res) => {
   if (!fromHex || !toHex) {
     return res.status(400).json({ error: 'fromHex and toHex are required' });
   }
+  if (!hexIndex.has(fromHex)) {
+    return res.status(400).json({ error: 'fromHex not found in map data' });
+  }
+  if (!hexIndex.has(toHex)) {
+    return res.status(400).json({ error: 'toHex not found in map data' });
+  }
 
   try {
     const result = computeLOS(fromHex, toHex, mapData, scenario);
@@ -136,6 +151,9 @@ router.get('/command-range', (req, res) => {
     return res.status(400).json({
       error: `Invalid commanderLevel. Valid values: ${[...VALID_COMMANDER_LEVELS].join(', ')}`,
     });
+  }
+  if (!hexIndex.has(hex)) {
+    return res.status(400).json({ error: 'hex not found in map data' });
   }
 
   try {

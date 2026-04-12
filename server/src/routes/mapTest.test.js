@@ -47,9 +47,24 @@ const MOCK_HEX = {
   hexsides: [],
 };
 
+const MOCK_HEX_11 = {
+  hex: '10.11',
+  terrain: 'clear',
+  elevation: 0,
+  wedgeElevations: [],
+  hexsides: [],
+};
+const MOCK_HEX_12 = {
+  hex: '10.12',
+  terrain: 'clear',
+  elevation: 0,
+  wedgeElevations: [],
+  hexsides: [],
+};
+
 const MOCK_MAP = {
   gridSpec: { cols: 64, rows: 35 },
-  hexes: [MOCK_HEX],
+  hexes: [MOCK_HEX, MOCK_HEX_11, MOCK_HEX_12],
   vpHexes: [],
   elevationSystem: { baseElevation: 500, contourInterval: 50 },
 };
@@ -69,7 +84,13 @@ async function buildApp() {
 beforeEach(() => {
   loadMap.mockReturnValue(MOCK_MAP);
   loadScenario.mockReturnValue(MOCK_SCENARIO);
-  buildHexIndex.mockReturnValue(new Map([['10.10', MOCK_HEX]]));
+  buildHexIndex.mockReturnValue(
+    new Map([
+      ['10.10', MOCK_HEX],
+      ['10.11', MOCK_HEX_11],
+      ['10.12', MOCK_HEX_12],
+    ])
+  );
 });
 
 afterEach(() => {
