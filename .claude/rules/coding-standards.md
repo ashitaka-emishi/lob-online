@@ -22,3 +22,14 @@
   new deferred findings. If a review surfaces new issues during a debt-cleanup PR, fix them
   in-place before merging — do not file them as follow-up issues. The debt register should only
   ever decrease after a debt sprint.
+- **Rule traceability (core philosophy):** Every game rule implemented in code must have a
+  comment citing the exact rule reference — section number, table name, or clause. The goal
+  is full traceability: when the game is complete, every LOB v2.0 and SM rule reference should
+  appear as a comment at the point of implementation. Multiple code locations may cite the same
+  rule. When a rule spans multiple functions, cite it at each one.
+  - Format: `// LOB §3.2 — terrain cost for woods in line formation`
+  - Format: `// SM §1.1 — Special Slope Rule: 50-ft contour, vertical slopes impassable`
+  - Format: `// LOB §5.6 — Combat Table column shifts`
+  - This applies to all engine modules, table modules, and any future game logic.
+  - When touching existing code that implements a rule but lacks a citation, add the comment
+    in the same PR — do not defer it.

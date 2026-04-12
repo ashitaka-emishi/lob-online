@@ -73,7 +73,17 @@ if (process.env.MAP_EDITOR_ENABLED === 'true') {
   const { default: countersRouter } = await import('./routes/counters.js');
   app.use('/api/tools/counters', countersRouter);
   console.log('[server] counters enabled at /api/tools/counters');
+
+  const { default: mapTestRouter } = await import('./routes/mapTest.js');
+  app.use('/api/tools/map-test', mapTestRouter);
+  console.log('[server] map test tool enabled at /tools/map-test');
 }
+
+// Global error handler — must be registered after all routes
+app.use((err, _req, res, _next) => {
+  console.error('[server] unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 // Socket.io
 io.on('connection', (socket) => {

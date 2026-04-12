@@ -1,0 +1,119 @@
+# Specification: Map Test Tool
+
+**Track ID:** map-test-tool_20260411
+**Type:** Feature
+**Created:** 2026-04-11
+**Status:** Draft
+
+## Summary
+
+Build the Map Test Tool (`/tools/map-test`) — a read-only dev tool with five interactive
+panels for validating movement, LOS, and command range rules against the digitized South
+Mountain map using the live engine modules.
+
+## Context
+
+M3 engine modules are complete (`hex.js`, `movement.js`, `los.js`, all six table modules,
+1670 tests). The Map Test Tool is the first of two M3 dev tools that expose those modules
+interactively. The second (Table Test Tool) is a separate track.
+
+The map editor currently contains a prototype LOS tab (`LosTestPanel.vue`). This track
+migrates LOS to the formal tool and removes the tab from the map editor.
+
+No command range spatial query exists yet — `withinRadius`/`beyondRadius` in `command.js`
+are enum keys for order delivery, not a hex-distance function. A new `engine/command-range.js`
+is required.
+
+## User Story
+
+As a developer, I want an interactive tool that tests movement, LOS, and command range
+rules against the actual digitized map so that I can validate the engine in the real game
+environment.
+
+## Acceptance Criteria
+
+- [ ] All five panels render and function correctly when `MAP_EDITOR_ENABLED=true`
+- [ ] Movement Path returns the correct lowest-cost path with per-hex cost breakdown for
+      every unit type / formation combination
+- [ ] Movement Range correctly marks vertical-slope hexes as unreachable and shades
+      reachable hexes by MP bucket
+- [ ] LOS panel shows can-see / blocked result with blocking hex and plain-language reason
+- [ ] Command Range panel shades hexes by zone (within radius, beyond radius, beyond
+      radius + 50 hex far threshold)
+- [ ] LOS tab removed from map editor; Map Test Tool is the single map-based validation
+      location
+- [ ] `engine/command-range.js` implements the spatial command range query, authored after
+      a `domain-expert` consultation to verify radius values per commander level/type
+
+## Dependencies
+
+- `server/src/engine/hex.js` — neighbor graph, distance
+- `server/src/engine/movement.js` — `movementPath`, `movementRange`, `hexEntryCost`
+- `server/src/engine/los.js` — `computeLOS`
+- `server/src/engine/map.js` — map data loader
+- `server/src/engine/scenario.js` — scenario data loader
+- `client/src/components/HexMapOverlay.vue` — shared map renderer (read-only mode)
+- Existing map editor route/tool infrastructure for MAP_EDITOR_ENABLED guard pattern
+
+## Out of Scope
+
+- Table Test Tool and any non-map testing panels
+- Any editing or write operations on map or scenario data
+- Game state, unit placement, or live game integration
+- Mobile layout or production deployment
+
+## Technical Notes
+
+**Five panels:**
+
+1. **Movement Path** — click start + end hex, select unit type + formation; calls
+   `GET /api/tools/map-test/movement-path`; renders path overlay + per-hex cost table
+2. **Movement Range** — click a hex, select unit type + formation; calls
+   `GET /api/tools/map-test/movement-range`; shades reachable hexes by MP bucket
+3. **Hex Inspector** — click any hex; calls `GET /api/tools/map-test/hex-info`; displays
+   raw terrain, elevation, hexside data the engine sees
+4. **LOS** — click observer + target hex; calls `GET /api/tools/map-test/los`; shows
+   can-see result, blocking hex, and reason
+5. **Command Range** — click a hex (commander position), select commander level/type; calls
+   `GET /api/tools/map-test/command-range`; shades hexes by zone (within / beyond / far)
+
+**Server API (all GET, all read-only):**
+
+```
+GET /api/tools/map-test/movement-path   {startHex, endHex, unitType, formation}
+    → { path, costs:[{hex,terrainCost,hexsideCost,total}], totalCost, impassable }
+
+GET /api/tools/map-test/movement-range  {hex, unitType, formation}
+    → { reachable:[{hex,cost}] }
+
+GET /api/tools/map-test/hex-info        {hex}
+    → { terrain, elevation, wedgeElevations, hexsides }
+
+GET /api/tools/map-test/los             {fromHex, toHex}
+    → { canSee, blockedBy:{hex,reason}|null, trace:[hexId] }
+
+GET /api/tools/map-test/command-range   {hex, commanderLevel}
+    → { withinRadius:[hexId], beyondRadius:[hexId], beyondRadiusFar:[hexId] }
+```
+
+**Architecture:**
+
+```
+MapTestView.vue                ← orchestrator; read-only map.json + scenario.json
+  ├── HexMapOverlay.vue        ← shared from map editor (read-only mode)
+  ├── MovementPathPanel.vue
+  ├── MovementRangePanel.vue
+  ├── HexInspectorPanel.vue
+  ├── LosPanel.vue             ← replaces LosTestPanel.vue in map editor
+  └── CommandRangePanel.vue
+```
+
+**Consult `domain-expert`** before coding `engine/command-range.js` to verify:
+
+- Command radius values per commander level (brigade / division / corps / army)
+- Whether radius is measured in hex distance or some other metric
+- SM-specific overrides if any
+
+---
+
+_Generated by Conductor. Review and edit as needed._

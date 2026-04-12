@@ -17,6 +17,7 @@
     "dev:server": "npm run dev -w server",
     "dev:client": "npm run dev -w client",
     "dev:map-editor": "bash scripts/map-editor.sh",
+    "dev:map-test": "bash scripts/map-test.sh",
     "dev:oob-editor": "bash scripts/oob-editor.sh",
     "build": "npm run build -w client",
     "validate-data": "node scripts/validate-data.js",

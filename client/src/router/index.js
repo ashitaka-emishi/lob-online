@@ -11,5 +11,6 @@ export default createRouter({
       component: () => import('../views/tools/ScenarioEditorView.vue'),
     },
     { path: '/tools/oob-editor', component: () => import('../views/tools/OobEditorView.vue') },
+    { path: '/tools/map-test', component: () => import('../views/tools/MapTestView.vue') },
   ],
 });

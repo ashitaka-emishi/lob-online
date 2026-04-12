@@ -12,7 +12,6 @@ import {
 const BASE_EDGE_GROUPS = [...STREAM_WALL_GROUPS, ...CONTOUR_GROUPS];
 import CalibrationControls from '../../components/CalibrationControls.vue';
 import ElevationSystemControls from '../../components/ElevationSystemControls.vue';
-import LosTestPanel from '../../components/LosTestPanel.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import ElevationToolPanel from '../../components/ElevationToolPanel.vue';
 import TerrainToolPanel from '../../components/TerrainToolPanel.vue';
@@ -25,7 +24,6 @@ import { useMapExport } from '../../composables/useMapExport.js';
 import { useHexInteraction } from '../../composables/useHexInteraction.js';
 import { useEditorAccordion } from '../../composables/useEditorAccordion.js';
 import { useMapPersistence } from '../../composables/useMapPersistence.js';
-import { useLosTest } from '../../composables/useLosTest.js';
 import { useEdgeToggle } from '../../composables/useEdgeToggle.js';
 import { useEdgePanelWiring } from '../../composables/useEdgePanelWiring.js';
 import { DIRS } from '../../utils/hexGeometry.js';
@@ -212,14 +210,7 @@ const hexLabelFn = (cell) => cell.id;
 
 // M2: Panels that enable hex/edge interaction — defined here so HexMapOverlay
 // does not need to know panel names.
-const INTERACTIVE_PANELS = new Set([
-  'elevation',
-  'terrain',
-  'road',
-  'stream',
-  'contour',
-  'losTest',
-]);
+const INTERACTIVE_PANELS = new Set(['elevation', 'terrain', 'road', 'stream', 'contour']);
 const EDGE_PANELS = new Set(['road', 'stream', 'contour']);
 
 const interactionEnabled = computed(() => INTERACTIVE_PANELS.has(openPanel.value));
@@ -232,12 +223,6 @@ const edgeInteraction = computed(() => EDGE_PANELS.has(openPanel.value));
 const globalOverlayState = computed(() => ({
   selectedHex: { hexId: selectedHexId.value ?? null },
   diagnosticMode: { active: calibrationMode.value },
-  los: {
-    hexA: losHexA.value,
-    hexB: losHexB.value,
-    pathHexes: losPathHexes.value,
-    blockedHex: losBlockedHex.value,
-  },
   vpHighlight: { hexIds: vpHexIds.value },
   seedHighlight: { hexIds: seedHexIdsArray.value },
 }));
@@ -377,26 +362,6 @@ function onHexUpdate(updatedHex) {
   onMutated();
 }
 
-// ── LOS test (H1: extracted from useHexInteraction) ───────────────────────────
-
-const {
-  losHexA,
-  losHexB,
-  losSelectingHex,
-  losPathHexes,
-  losBlockedHex,
-  tryPickLosHex,
-  onLosPickStart,
-  onLosPickCancel,
-  onLosSetHexA,
-  onLosSetHexB,
-  onLosResult,
-} = useLosTest({
-  onLosPanelOpen: () => {
-    openPanel.value = 'losTest';
-  },
-});
-
 // ── Hex interaction (composable) ──────────────────────────────────────────────
 
 // dragPaintEnabled:false keeps HexMapOverlay from emitting paint-stroke events.
@@ -421,7 +386,6 @@ const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter
     elevationTarget,
     paintHexFeature,
     paintMode,
-    tryPickLosHex,
     onHexUpdate,
   });
 
@@ -517,7 +481,6 @@ function onKeyDown(e) {
       togglePanel(openPanel.value); // close the active tool panel
     }
     selectedHexIds.value = new Set();
-    losSelectingHex.value = null;
   }
 }
 
@@ -762,31 +725,6 @@ onUnmounted(() => {
               @edge-clear="contour.onEdgeClear"
               @edge-clear-all="contour.onEdgeClearAll"
               @overlay-config="contour.onOverlayConfig"
-            />
-          </div>
-        </div>
-
-        <!-- LOS Test -->
-        <div
-          class="accordion-section accordion-hex"
-          :class="{ 'accordion-flex': openPanel === 'losTest' }"
-        >
-          <button class="accordion-header" @click="togglePanel('losTest')">
-            <span>LOS Test</span>
-            <span class="accordion-chevron">{{ openPanel === 'losTest' ? '▾' : '▸' }}</span>
-          </button>
-          <div v-if="openPanel === 'losTest'" class="accordion-hex-content">
-            <LosTestPanel
-              :hex-a="losHexA"
-              :hex-b="losHexB"
-              :map-data="mapData"
-              :grid-spec="calibration"
-              :selecting-hex="losSelectingHex"
-              @pick-start="onLosPickStart"
-              @pick-cancel="onLosPickCancel"
-              @set-hex-a="onLosSetHexA"
-              @set-hex-b="onLosSetHexB"
-              @los-result="onLosResult"
             />
           </div>
         </div>

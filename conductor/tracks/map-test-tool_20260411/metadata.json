@@ -1,0 +1,16 @@
+{
+  "id": "map-test-tool_20260411",
+  "title": "Map Test Tool",
+  "type": "feature",
+  "status": "in_progress",
+  "created": "2026-04-11T00:00:00.000Z",
+  "updated": "2026-04-11T00:00:00.000Z",
+  "phases": {
+    "total": 5,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 20,
+    "completed": 0
+  }
+}
