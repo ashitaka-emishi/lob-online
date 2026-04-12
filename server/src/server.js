@@ -77,6 +77,10 @@ if (process.env.MAP_EDITOR_ENABLED === 'true') {
   const { default: mapTestRouter } = await import('./routes/mapTest.js');
   app.use('/api/tools/map-test', mapTestRouter);
   console.log('[server] map test tool enabled at /tools/map-test');
+
+  const { default: tableTestRouter } = await import('./routes/tableTest.js');
+  app.use('/api/tools/table-test', tableTestRouter);
+  console.log('[server] table test tool enabled at /tools/table-test');
 }
 
 // Global error handler — must be registered after all routes

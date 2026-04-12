@@ -74,4 +74,6 @@
 
 | [~] | map-test-tool_20260411 | Map Test Tool | 2026-04-11 | 2026-04-11 |
 
+| [~] | table-test-tool_20260412 | Table Test Tool | 2026-04-12 | 2026-04-12 |
+
 <!-- Tracks registered by /conductor:new-track -->
