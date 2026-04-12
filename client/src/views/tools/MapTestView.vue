@@ -87,7 +87,37 @@ const hexes = computed(() => mapData.value?.hexes ?? []);
 
     <!-- Body: sidebar left, map right -->
     <div v-else class="editor-body">
-      <!-- Left: panel sidebar -->
+      <!-- Right: scrollable map -->
+      <div class="map-pane">
+        <div
+          class="map-container"
+          :style="{
+            width: imgNaturalWidth * calibration.imageScale + 'px',
+            height: imgNaturalHeight * calibration.imageScale + 'px',
+          }"
+        >
+          <img
+            alt="South Mountain map"
+            draggable="false"
+            :src="MAP_IMAGE"
+            :width="imgNaturalWidth * calibration.imageScale"
+            :height="imgNaturalHeight * calibration.imageScale"
+            @load="onImageLoad"
+          />
+          <HexMapOverlay
+            v-if="mapData"
+            :calibration="calibration"
+            :hexes="hexes"
+            :image-width="imgNaturalWidth"
+            :image-height="imgNaturalHeight"
+            :overlay-config="overlayConfig"
+            :interaction-enabled="true"
+            @hex-click="onHexClick"
+          />
+        </div>
+      </div>
+
+      <!-- Right: panel sidebar -->
       <div class="panel-pane">
         <div
           v-for="panel in PANELS"
@@ -126,36 +156,6 @@ const hexes = computed(() => mapData.value?.hexes ?? []);
               @overlay-update="overlayConfig = $event"
             />
           </div>
-        </div>
-      </div>
-
-      <!-- Right: scrollable map -->
-      <div class="map-pane">
-        <div
-          class="map-container"
-          :style="{
-            width: imgNaturalWidth * calibration.imageScale + 'px',
-            height: imgNaturalHeight * calibration.imageScale + 'px',
-          }"
-        >
-          <img
-            alt="South Mountain map"
-            draggable="false"
-            :src="MAP_IMAGE"
-            :width="imgNaturalWidth * calibration.imageScale"
-            :height="imgNaturalHeight * calibration.imageScale"
-            @load="onImageLoad"
-          />
-          <HexMapOverlay
-            v-if="mapData"
-            :calibration="calibration"
-            :hexes="hexes"
-            :image-width="imgNaturalWidth"
-            :image-height="imgNaturalHeight"
-            :overlay-config="overlayConfig"
-            :interaction-enabled="true"
-            @hex-click="onHexClick"
-          />
         </div>
       </div>
     </div>
@@ -220,7 +220,7 @@ const hexes = computed(() => mapData.value?.hexes ?? []);
 .panel-pane {
   width: 260px;
   flex-shrink: 0;
-  border-right: 1px solid #444;
+  border-left: 1px solid #444;
   display: flex;
   flex-direction: column;
   overflow: hidden;
