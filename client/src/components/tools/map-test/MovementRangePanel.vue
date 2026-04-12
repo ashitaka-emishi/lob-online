@@ -53,14 +53,15 @@ async function runQuery() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     result.value = await res.json();
 
-    // Build cost map for overlay
+    // Snapshot all closure data at emit time — reactive refs must not be accessed inside fillFn.
     const costMap = new Map(result.value.reachable.map(({ hex, cost }) => [hex, cost]));
+    const origin = originHex.value;
     emit('overlay-update', {
       hexFill: {
         alwaysOn: true,
         fillFn: (cell) => {
           const id = cell.gameId ?? cell.id;
-          if (id === originHex.value) return 'rgba(0,180,255,0.5)';
+          if (id === origin) return 'rgba(0,180,255,0.5)';
           const cost = costMap.get(id);
           return cost !== undefined ? bucketColor(cost) : null;
         },

@@ -47,13 +47,14 @@ export const BEYOND_RADIUS_FAR_THRESHOLD = 50;
  * @param {'brigade'|'division'|'corps'|'army'} commanderLevel
  * @param {object} mapData - result of loadMap()
  * @param {object} scenario - result of loadScenario()
+ * @param {Map|null} [hexIndex=null] - optional pre-built hex index; built internally if omitted
  * @returns {{
  *   withinRadius: string[],
  *   beyondRadius: string[],
  *   beyondRadiusFar: string[]
  * }}
  */
-export function commandRange(fromHexId, commanderLevel, mapData, scenario) {
+export function commandRange(fromHexId, commanderLevel, mapData, scenario, hexIndex = null) {
   const radius = COMMAND_RADII[commanderLevel];
   if (radius === undefined) {
     throw new Error(
@@ -74,8 +75,9 @@ export function commandRange(fromHexId, commanderLevel, mapData, scenario) {
 
   // LOB §10.6a — use leader formation; leader MA = 12 MP (covers all radius values).
   // movementRange returns all hexes reachable within the leader's MA, each with cost.
-  const hexIndex = buildHexIndex(mapData);
-  const reachable = movementRange(fromHexId, 'leader', scenarioForRadius, mapData, hexIndex);
+  // Use caller-provided hexIndex when available to avoid redundant rebuilds.
+  const idx = hexIndex ?? buildHexIndex(mapData);
+  const reachable = movementRange(fromHexId, 'leader', scenarioForRadius, mapData, idx);
 
   // Hexes with cost ≤ radius are within command radius.
   const withinRadius = [];
@@ -95,6 +97,7 @@ export function commandRange(fromHexId, commanderLevel, mapData, scenario) {
 
   for (const hexEntry of mapData.hexes) {
     const hexId = hexEntry.hex;
+    // Origin hex is classified as withinRadius (movementRange returns it at cost 0).
     if (withinSet.has(hexId)) continue;
 
     const dist = hexDistance(fromHexId, hexId, gridSpec);

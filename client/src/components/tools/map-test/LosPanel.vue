@@ -25,12 +25,14 @@ watch(
       fromHex.value = hexId;
       error.value = null;
       result.value = null;
+      // Snapshot fromHex at emit time — reactive ref must not be accessed inside fillFn.
+      const from = hexId;
       emit('overlay-update', {
         hexFill: {
           alwaysOn: true,
           fillFn: (cell) => {
             const id = cell.gameId ?? cell.id;
-            return id === fromHex.value ? 'rgba(0,180,255,0.5)' : null;
+            return id === from ? 'rgba(0,180,255,0.5)' : null;
           },
         },
       });
@@ -55,16 +57,22 @@ async function runQuery() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     result.value = await res.json();
 
+    // Snapshot all closure data at emit time — result.value resets to null on re-query.
+    const canSee = result.value.canSee;
+    const traceSet = new Set(result.value.trace ?? []);
+    const blockedBy = result.value.blockedBy ?? null;
+    const from = fromHex.value;
+    const to = toHex.value;
+
     emit('overlay-update', {
       hexFill: {
         alwaysOn: true,
         fillFn: (cell) => {
           const id = cell.gameId ?? cell.id;
-          if (id === fromHex.value) return 'rgba(0,180,255,0.5)';
-          if (id === toHex.value)
-            return result.value?.canSee ? 'rgba(0,200,0,0.5)' : 'rgba(220,60,60,0.45)';
-          if (result.value?.trace?.includes(id)) return 'rgba(255,200,0,0.3)';
-          if (id === result.value?.blockedBy) return 'rgba(255,80,0,0.5)';
+          if (id === from) return 'rgba(0,180,255,0.5)';
+          if (id === to) return canSee ? 'rgba(0,200,0,0.5)' : 'rgba(220,60,60,0.45)';
+          if (traceSet.has(id)) return 'rgba(255,200,0,0.3)';
+          if (id === blockedBy) return 'rgba(255,80,0,0.5)';
           return null;
         },
       },

@@ -25,6 +25,7 @@ vi.mock('../engine/los.js', () => ({
 
 vi.mock('../engine/command-range.js', () => ({
   commandRange: vi.fn(),
+  COMMAND_RADII: { brigade: 3, division: 6, corps: 8, army: 12 },
 }));
 
 vi.mock('../engine/scenario.js', () => ({

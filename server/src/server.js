@@ -79,6 +79,12 @@ if (process.env.MAP_EDITOR_ENABLED === 'true') {
   console.log('[server] map test tool enabled at /tools/map-test');
 }
 
+// Global error handler — must be registered after all routes
+app.use((err, _req, res, _next) => {
+  console.error('[server] unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
 // Socket.io
 io.on('connection', (socket) => {
   console.log(`[socket] connected: ${socket.id}`);

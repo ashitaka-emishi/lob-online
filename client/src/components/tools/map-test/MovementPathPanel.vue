@@ -56,15 +56,20 @@ async function runQuery() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     result.value = await res.json();
 
+    // Snapshot all closure data at emit time — result.value resets to null on re-query.
+    const pathSet = new Set(result.value.path ?? []);
+    const start = startHex.value;
+    const end = endHex.value;
+
     // Update map overlay: highlight path hexes
     emit('overlay-update', {
       hexFill: {
         alwaysOn: true,
         fillFn: (cell) => {
           const id = cell.gameId ?? cell.id;
-          if (id === startHex.value) return 'rgba(0,180,0,0.45)';
-          if (id === endHex.value) return 'rgba(220,60,60,0.45)';
-          if (result.value?.path?.includes(id)) return 'rgba(255,200,0,0.35)';
+          if (id === start) return 'rgba(0,180,0,0.45)';
+          if (id === end) return 'rgba(220,60,60,0.45)';
+          if (pathSet.has(id)) return 'rgba(255,200,0,0.35)';
           return null;
         },
       },
