@@ -2,6 +2,16 @@
 // LOB_CHARTS §3.5 — Closing Roll Table
 import { ref, computed } from 'vue';
 
+import { useTableFetch } from './useTableFetch.js';
+
+const {
+  result,
+  loading,
+  error,
+  submit: fetchSubmit,
+  reset: fetchReset,
+} = useTableFetch('/api/tools/table-test/closing-roll');
+
 const RATINGS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 const moraleRating = ref('');
@@ -15,40 +25,17 @@ const mods = ref({
   targetInBreastworks: false,
 });
 
-const result = ref(null);
-const loading = ref(false);
-const error = ref(null);
-
 const canSubmit = computed(
   () => moraleRating.value !== '' && diceRoll.value !== '' && !loading.value
 );
 
 async function submit() {
   if (!canSubmit.value) return;
-  loading.value = true;
-  error.value = null;
-  result.value = null;
-
-  try {
-    const res = await fetch('/api/tools/table-test/closing-roll', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        moraleRating: moraleRating.value,
-        mods: { ...mods.value },
-        diceRoll: Number(diceRoll.value),
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.error ?? `HTTP ${res.status}`);
-    }
-    result.value = await res.json();
-  } catch (err) {
-    error.value = err.message;
-  } finally {
-    loading.value = false;
-  }
+  await fetchSubmit({
+    moraleRating: moraleRating.value,
+    mods: { ...mods.value },
+    diceRoll: Number(diceRoll.value),
+  });
 }
 
 function reset() {
@@ -62,8 +49,7 @@ function reset() {
     startsAdjacentToTarget: false,
     targetInBreastworks: false,
   };
-  result.value = null;
-  error.value = null;
+  fetchReset();
 }
 </script>
 

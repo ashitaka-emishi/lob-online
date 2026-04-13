@@ -2,13 +2,19 @@
 // LOB_CHARTS §5.6 — Combat Table
 import { ref, computed } from 'vue';
 
+import { useTableFetch } from './useTableFetch.js';
+
+const {
+  result,
+  loading,
+  error,
+  submit: fetchSubmit,
+  reset: fetchReset,
+} = useTableFetch('/api/tools/table-test/combat');
+
 const effectiveSPs = ref('');
 const netColumnShifts = ref('0');
 const diceRoll = ref('');
-
-const result = ref(null);
-const loading = ref(false);
-const error = ref(null);
 
 const canSubmit = computed(
   () => effectiveSPs.value !== '' && diceRoll.value !== '' && !loading.value
@@ -16,38 +22,18 @@ const canSubmit = computed(
 
 async function submit() {
   if (!canSubmit.value) return;
-  loading.value = true;
-  error.value = null;
-  result.value = null;
-
-  try {
-    const res = await fetch('/api/tools/table-test/combat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        effectiveSPs: Number(effectiveSPs.value),
-        netColumnShifts: Number(netColumnShifts.value),
-        diceRoll: Number(diceRoll.value),
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.error ?? `HTTP ${res.status}`);
-    }
-    result.value = await res.json();
-  } catch (err) {
-    error.value = err.message;
-  } finally {
-    loading.value = false;
-  }
+  await fetchSubmit({
+    effectiveSPs: Number(effectiveSPs.value),
+    netColumnShifts: Number(netColumnShifts.value),
+    diceRoll: Number(diceRoll.value),
+  });
 }
 
 function reset() {
   effectiveSPs.value = '';
   netColumnShifts.value = '0';
   diceRoll.value = '';
-  result.value = null;
-  error.value = null;
+  fetchReset();
 }
 </script>
 

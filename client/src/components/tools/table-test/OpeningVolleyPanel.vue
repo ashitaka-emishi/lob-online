@@ -2,6 +2,16 @@
 // LOB_CHARTS §5.4 — Opening Volley Table
 import { ref, computed } from 'vue';
 
+import { useTableFetch } from './useTableFetch.js';
+
+const {
+  result,
+  loading,
+  error,
+  submit: fetchSubmit,
+  reset: fetchReset,
+} = useTableFetch('/api/tools/table-test/opening-volley');
+
 const CONDITIONS = [
   { value: 'range3', label: 'Range 3' },
   { value: 'range2', label: 'Range 2' },
@@ -13,41 +23,17 @@ const CONDITIONS = [
 const condition = ref('');
 const diceRoll = ref('');
 
-const result = ref(null);
-const loading = ref(false);
-const error = ref(null);
-
 const canSubmit = computed(() => condition.value !== '' && diceRoll.value !== '' && !loading.value);
 
 async function submit() {
   if (!canSubmit.value) return;
-  loading.value = true;
-  error.value = null;
-  result.value = null;
-
-  try {
-    const res = await fetch('/api/tools/table-test/opening-volley', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ condition: condition.value, diceRoll: Number(diceRoll.value) }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.error ?? `HTTP ${res.status}`);
-    }
-    result.value = await res.json();
-  } catch (err) {
-    error.value = err.message;
-  } finally {
-    loading.value = false;
-  }
+  await fetchSubmit({ condition: condition.value, diceRoll: Number(diceRoll.value) });
 }
 
 function reset() {
   condition.value = '';
   diceRoll.value = '';
-  result.value = null;
-  error.value = null;
+  fetchReset();
 }
 </script>
 

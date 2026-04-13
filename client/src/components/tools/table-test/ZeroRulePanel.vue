@@ -2,42 +2,28 @@
 // LOB_CHARTS §9.1e — Zero Rule
 import { ref, computed } from 'vue';
 
-const diceRoll = ref('');
+import { useTableFetch } from './useTableFetch.js';
 
-const result = ref(null);
-const loading = ref(false);
-const error = ref(null);
+const {
+  result,
+  loading,
+  error,
+  submit: fetchSubmit,
+  reset: fetchReset,
+} = useTableFetch('/api/tools/table-test/zero-rule');
+
+const diceRoll = ref('');
 
 const canSubmit = computed(() => diceRoll.value !== '' && !loading.value);
 
 async function submit() {
   if (!canSubmit.value) return;
-  loading.value = true;
-  error.value = null;
-  result.value = null;
-
-  try {
-    const res = await fetch('/api/tools/table-test/zero-rule', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ diceRoll: Number(diceRoll.value) }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.error ?? `HTTP ${res.status}`);
-    }
-    result.value = await res.json();
-  } catch (err) {
-    error.value = err.message;
-  } finally {
-    loading.value = false;
-  }
+  await fetchSubmit({ diceRoll: Number(diceRoll.value) });
 }
 
 function reset() {
   diceRoll.value = '';
-  result.value = null;
-  error.value = null;
+  fetchReset();
 }
 
 const MA_LABELS = { none: 'No MA', half: 'Half MA', full: 'Full MA' };

@@ -2,15 +2,21 @@
 // LOB_CHARTS §10.7b — Fluke Stoppage Table
 import { ref, computed } from 'vue';
 
+import { useTableFetch } from './useTableFetch.js';
+
+const {
+  result,
+  loading,
+  error,
+  submit: fetchSubmit,
+  reset: fetchReset,
+} = useTableFetch('/api/tools/table-test/fluke-stoppage');
+
 const commandValue = ref('');
 const hasReserve = ref(false);
 const isNight = ref(false);
 const step1Roll = ref('');
 const step2Roll = ref('7');
-
-const result = ref(null);
-const loading = ref(false);
-const error = ref(null);
 
 const canSubmit = computed(
   () => commandValue.value !== '' && step1Roll.value !== '' && !loading.value
@@ -18,32 +24,13 @@ const canSubmit = computed(
 
 async function submit() {
   if (!canSubmit.value) return;
-  loading.value = true;
-  error.value = null;
-  result.value = null;
-
-  try {
-    const res = await fetch('/api/tools/table-test/fluke-stoppage', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        commandValue: Number(commandValue.value),
-        hasReserve: hasReserve.value,
-        isNight: isNight.value,
-        step1Roll: Number(step1Roll.value),
-        step2Roll: Number(step2Roll.value),
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.error ?? `HTTP ${res.status}`);
-    }
-    result.value = await res.json();
-  } catch (err) {
-    error.value = err.message;
-  } finally {
-    loading.value = false;
-  }
+  await fetchSubmit({
+    commandValue: Number(commandValue.value),
+    hasReserve: hasReserve.value,
+    isNight: isNight.value,
+    step1Roll: Number(step1Roll.value),
+    step2Roll: Number(step2Roll.value),
+  });
 }
 
 function reset() {
@@ -52,8 +39,7 @@ function reset() {
   isNight.value = false;
   step1Roll.value = '';
   step2Roll.value = '7';
-  result.value = null;
-  error.value = null;
+  fetchReset();
 }
 </script>
 

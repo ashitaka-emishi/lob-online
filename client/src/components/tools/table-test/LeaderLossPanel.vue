@@ -2,6 +2,16 @@
 // LOB_CHARTS §9.1a — Leader Loss Table
 import { ref, computed } from 'vue';
 
+import { useTableFetch } from './useTableFetch.js';
+
+const {
+  result,
+  loading,
+  error,
+  submit: fetchSubmit,
+  reset: fetchReset,
+} = useTableFetch('/api/tools/table-test/leader-loss');
+
 const SITUATIONS = [
   { value: 'other', label: 'Other Cases' },
   { value: 'capture', label: 'Capture' },
@@ -13,46 +23,22 @@ const situation = ref('');
 const isSharpshooter = ref(false);
 const diceRoll = ref('');
 
-const result = ref(null);
-const loading = ref(false);
-const error = ref(null);
-
 const canSubmit = computed(() => situation.value !== '' && diceRoll.value !== '' && !loading.value);
 
 async function submit() {
   if (!canSubmit.value) return;
-  loading.value = true;
-  error.value = null;
-  result.value = null;
-
-  try {
-    const res = await fetch('/api/tools/table-test/leader-loss', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        situation: situation.value,
-        isSharpshooter: isSharpshooter.value,
-        diceRoll: Number(diceRoll.value),
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.error ?? `HTTP ${res.status}`);
-    }
-    result.value = await res.json();
-  } catch (err) {
-    error.value = err.message;
-  } finally {
-    loading.value = false;
-  }
+  await fetchSubmit({
+    situation: situation.value,
+    isSharpshooter: isSharpshooter.value,
+    diceRoll: Number(diceRoll.value),
+  });
 }
 
 function reset() {
   situation.value = '';
   isSharpshooter.value = false;
   diceRoll.value = '';
-  result.value = null;
-  error.value = null;
+  fetchReset();
 }
 
 const RESULT_CLASS = {

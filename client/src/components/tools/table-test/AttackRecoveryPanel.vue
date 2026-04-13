@@ -2,6 +2,16 @@
 // LOB_CHARTS §10.8c — Attack Recovery Table
 import { ref, computed } from 'vue';
 
+import { useTableFetch } from './useTableFetch.js';
+
+const {
+  result,
+  loading,
+  error,
+  submit: fetchSubmit,
+  reset: fetchReset,
+} = useTableFetch('/api/tools/table-test/attack-recovery');
+
 const DIVISION_STATUSES = [
   { value: 'clean', label: 'Clean — no Wrecked or Dead units (threshold 8)' },
   { value: 'wrecked', label: 'Has Wrecked units, no Dead (threshold 9)' },
@@ -13,10 +23,6 @@ const commandValue = ref('');
 const step1Roll = ref('');
 const step2Roll = ref('7');
 
-const result = ref(null);
-const loading = ref(false);
-const error = ref(null);
-
 const canSubmit = computed(
   () =>
     divisionStatus.value !== '' &&
@@ -27,31 +33,12 @@ const canSubmit = computed(
 
 async function submit() {
   if (!canSubmit.value) return;
-  loading.value = true;
-  error.value = null;
-  result.value = null;
-
-  try {
-    const res = await fetch('/api/tools/table-test/attack-recovery', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        divisionStatus: divisionStatus.value,
-        commandValue: Number(commandValue.value),
-        step1Roll: Number(step1Roll.value),
-        step2Roll: Number(step2Roll.value),
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.error ?? `HTTP ${res.status}`);
-    }
-    result.value = await res.json();
-  } catch (err) {
-    error.value = err.message;
-  } finally {
-    loading.value = false;
-  }
+  await fetchSubmit({
+    divisionStatus: divisionStatus.value,
+    commandValue: Number(commandValue.value),
+    step1Roll: Number(step1Roll.value),
+    step2Roll: Number(step2Roll.value),
+  });
 }
 
 function reset() {
@@ -59,8 +46,7 @@ function reset() {
   commandValue.value = '';
   step1Roll.value = '';
   step2Roll.value = '7';
-  result.value = null;
-  error.value = null;
+  fetchReset();
 }
 </script>
 

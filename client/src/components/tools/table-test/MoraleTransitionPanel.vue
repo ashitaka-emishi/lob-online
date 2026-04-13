@@ -2,6 +2,16 @@
 // LOB §6.2a — Additive Morale Effects Chart
 import { ref, computed } from 'vue';
 
+import { useTableFetch } from './useTableFetch.js';
+
+const {
+  result,
+  loading,
+  error,
+  submit: fetchSubmit,
+  reset: fetchReset,
+} = useTableFetch('/api/tools/table-test/morale-transition');
+
 const STATES = [
   { value: 'bl', label: 'Battle Line (bl)' },
   { value: 'normal', label: 'Normal' },
@@ -22,46 +32,19 @@ const INCOMING_RESULTS = [
 const currentState = ref('');
 const incomingResult = ref('');
 
-const result = ref(null);
-const loading = ref(false);
-const error = ref(null);
-
 const canSubmit = computed(
   () => currentState.value !== '' && incomingResult.value !== '' && !loading.value
 );
 
 async function submit() {
   if (!canSubmit.value) return;
-  loading.value = true;
-  error.value = null;
-  result.value = null;
-
-  try {
-    const res = await fetch('/api/tools/table-test/morale-transition', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        currentState: currentState.value,
-        incomingResult: incomingResult.value,
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.error ?? `HTTP ${res.status}`);
-    }
-    result.value = await res.json();
-  } catch (err) {
-    error.value = err.message;
-  } finally {
-    loading.value = false;
-  }
+  await fetchSubmit({ currentState: currentState.value, incomingResult: incomingResult.value });
 }
 
 function reset() {
   currentState.value = '';
   incomingResult.value = '';
-  result.value = null;
-  error.value = null;
+  fetchReset();
 }
 </script>
 

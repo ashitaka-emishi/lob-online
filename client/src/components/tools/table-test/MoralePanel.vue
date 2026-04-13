@@ -2,6 +2,16 @@
 // LOB §6.1 — Morale Table
 import { ref, computed } from 'vue';
 
+import { useTableFetch } from './useTableFetch.js';
+
+const {
+  result,
+  loading,
+  error,
+  submit: fetchSubmit,
+  reset: fetchReset,
+} = useTableFetch('/api/tools/table-test/morale');
+
 const RATINGS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 const rating = ref('');
@@ -21,38 +31,15 @@ const modifiers = ref({
   range: 0,
 });
 
-const result = ref(null);
-const loading = ref(false);
-const error = ref(null);
-
 const canSubmit = computed(() => rating.value !== '' && diceRoll.value !== '' && !loading.value);
 
 async function submit() {
   if (!canSubmit.value) return;
-  loading.value = true;
-  error.value = null;
-  result.value = null;
-
-  try {
-    const res = await fetch('/api/tools/table-test/morale', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        rating: rating.value,
-        modifiers: { ...modifiers.value },
-        diceRoll: Number(diceRoll.value),
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.error ?? `HTTP ${res.status}`);
-    }
-    result.value = await res.json();
-  } catch (err) {
-    error.value = err.message;
-  } finally {
-    loading.value = false;
-  }
+  await fetchSubmit({
+    rating: rating.value,
+    modifiers: { ...modifiers.value },
+    diceRoll: Number(diceRoll.value),
+  });
 }
 
 function reset() {
@@ -70,8 +57,7 @@ function reset() {
     hasProtectiveTerrain: false,
     range: 0,
   };
-  result.value = null;
-  error.value = null;
+  fetchReset();
 }
 </script>
 

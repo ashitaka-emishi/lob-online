@@ -2,6 +2,16 @@
 // LOB_CHARTS §10.6a — Order Delivery Table
 import { ref, computed } from 'vue';
 
+import { useTableFetch } from './useTableFetch.js';
+
+const {
+  result,
+  loading,
+  error,
+  submit: fetchSubmit,
+  reset: fetchReset,
+} = useTableFetch('/api/tools/table-test/order-delivery');
+
 const ARMY_CO_TYPES = [
   { value: 'onFire', label: 'On Fire (+1 turn)' },
   { value: 'normal', label: 'Normal (+2 turns) — SM default' },
@@ -19,48 +29,24 @@ const armyCOType = ref('');
 const distanceCategory = ref('');
 const isReserveOrder = ref(false);
 
-const result = ref(null);
-const loading = ref(false);
-const error = ref(null);
-
 const canSubmit = computed(
   () => armyCOType.value !== '' && distanceCategory.value !== '' && !loading.value
 );
 
 async function submit() {
   if (!canSubmit.value) return;
-  loading.value = true;
-  error.value = null;
-  result.value = null;
-
-  try {
-    const res = await fetch('/api/tools/table-test/order-delivery', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        armyCOType: armyCOType.value,
-        distanceCategory: distanceCategory.value,
-        isReserveOrder: isReserveOrder.value,
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.error ?? `HTTP ${res.status}`);
-    }
-    result.value = await res.json();
-  } catch (err) {
-    error.value = err.message;
-  } finally {
-    loading.value = false;
-  }
+  await fetchSubmit({
+    armyCOType: armyCOType.value,
+    distanceCategory: distanceCategory.value,
+    isReserveOrder: isReserveOrder.value,
+  });
 }
 
 function reset() {
   armyCOType.value = '';
   distanceCategory.value = '';
   isReserveOrder.value = false;
-  result.value = null;
-  error.value = null;
+  fetchReset();
 }
 </script>
 
