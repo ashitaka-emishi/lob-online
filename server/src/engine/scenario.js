@@ -10,7 +10,8 @@
  */
 
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { join, resolve, sep } from 'path';
+import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
 
 import { ScenarioSchema } from '../schemas/scenario.schema.js';
@@ -22,6 +23,29 @@ const DEFAULT_SCENARIO_PATH = join(
   __dirname,
   '../../../data/scenarios/south-mountain/scenario.json'
 );
+
+// ─── Path containment guard (#284) ────────────────────────────────────────────
+
+const PROJECT_ROOT = resolve(__dirname, '../../..');
+const TMPDIR = resolve(tmpdir());
+
+/**
+ * Verify that `filePath` resolves within the project root or OS temp directory.
+ * Throws a generic error (no path in message) if not.
+ *
+ * // Security (#284) — prevents path traversal if user-controlled paths are ever
+ * // passed to loadScenario. Error message must not leak the resolved path.
+ *
+ * @param {string} filePath
+ */
+function assertContainedPath(filePath) {
+  const abs = resolve(filePath);
+  const inProject = abs === PROJECT_ROOT || abs.startsWith(PROJECT_ROOT + sep);
+  const inTmp = abs === TMPDIR || abs.startsWith(TMPDIR + sep);
+  if (!inProject && !inTmp) {
+    throw new Error('scenario.js: path outside allowed directory');
+  }
+}
 
 /**
  * Load and validate scenario.json.
@@ -35,20 +59,21 @@ const DEFAULT_SCENARIO_PATH = join(
  * @throws {Error} If the file is missing, unreadable, or fails Zod validation.
  */
 export function loadScenario(scenarioPath = DEFAULT_SCENARIO_PATH) {
+  // Security (#284) — containment guard: resolve and verify before any file I/O
+  assertContainedPath(scenarioPath);
+
   let raw;
   try {
     raw = readFileSync(scenarioPath, 'utf8');
   } catch (err) {
-    throw new Error(
-      `scenario.js: failed to read scenario file at "${scenarioPath}": ${err.message}`
-    );
+    throw new Error(`scenario.js: failed to read scenario file: ${err.message}`);
   }
 
   let parsed;
   try {
     parsed = JSON.parse(raw);
   } catch (err) {
-    throw new Error(`scenario.js: failed to parse JSON at "${scenarioPath}": ${err.message}`);
+    throw new Error(`scenario.js: failed to parse JSON: ${err.message}`);
   }
 
   const result = ScenarioSchema.safeParse(parsed);

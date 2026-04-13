@@ -23,21 +23,21 @@ engine and carry the lowest blast radius.
 
 ### Tasks
 
-- [ ] Task 1.1: #237 — processUSACavDiv delegates to withLeader; Farnsworth variants render
+- [x] Task 1.1: #237 — processUSACavDiv delegates to withLeader; Farnsworth variants render
   - In `server/src/data/processOob.js`, refactor `processUSACavDiv` to call the
     shared `withLeader` helper instead of inlining leader-attachment logic
   - Verify that `farnsworth-a` and `farnsworth-b` succession variant leaders render
     correctly in the OOB tree
   - Update/add unit tests in the accompanying `.test.js` file
 
-- [ ] Task 1.2: #245 — editorRouteFactory extracted; succession/leaders/oob routes unified
+- [x] Task 1.2: #245 — editorRouteFactory extracted; succession/leaders/oob routes unified
   - Extract a shared `editorRouteFactory(dataFile, schema, label)` helper in
     `server/src/routes/editorRouteFactory.js`
   - Refactor `successionEditor.js`, `leadersEditor.js`, and `oobEditor.js` (or
     equivalent) to use the factory
   - Add unit tests for the factory
 
-- [ ] Task 1.3: #247 — useOobPersistence.test.js covers all succession paths
+- [x] Task 1.3: #247 — useOobPersistence.test.js covers all succession paths
   - Extend `client/src/composables/useOobPersistence.test.js` to cover every
     branch of the succession-path logic (primary leader present, primary absent,
     no succession chain, multi-step chain)
@@ -58,7 +58,7 @@ on game logic.
 
 ### Tasks
 
-- [ ] Task 2.1: #284 — loadMap/loadScenario have directory containment guard
+- [x] Task 2.1: #284 — loadMap/loadScenario have directory containment guard
   - In `server/src/data/loadMap.js` and `loadScenario.js` (or equivalent loader),
     add a `path.resolve` containment check: verify the resolved path starts with the
     expected data directory before reading

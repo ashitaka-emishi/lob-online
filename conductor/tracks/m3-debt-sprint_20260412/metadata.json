@@ -2,15 +2,15 @@
   "id": "m3-debt-sprint_20260412",
   "title": "M3 Debt Sprint — Score-3 Cleanup",
   "type": "chore",
-  "status": "pending",
+  "status": "in_progress",
   "created": "2026-04-12T00:00:00.000Z",
-  "updated": "2026-04-12T00:00:00.000Z",
+  "updated": "2026-04-12T12:00:00.000Z",
   "phases": {
     "total": 3,
     "completed": 0
   },
   "tasks": {
     "total": 9,
-    "completed": 0
+    "completed": 4
   }
 }
