@@ -26,6 +26,12 @@ describe('router', () => {
     expect(mapTest).toBeDefined();
   });
 
+  it('has a route for /tools/table-test', () => {
+    const routes = router.getRoutes();
+    const tableTest = routes.find((r) => r.path === '/tools/table-test');
+    expect(tableTest).toBeDefined();
+  });
+
   it('exports a router instance', () => {
     expect(router).toBeTruthy();
     expect(typeof router.push).toBe('function');

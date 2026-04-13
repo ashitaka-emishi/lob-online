@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-04-12 after PR #297._
+_Last updated: 2026-04-12 after PR #305._
 
 ---
 
@@ -8,10 +8,10 @@ _Last updated: 2026-04-12 after PR #297._
 
 | Metric                           | Value                                                                                                     |
 | -------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Open debt items                  | 30                                                                                                        |
-| Cumulative debt score (net open) | 60                                                                                                        |
+| Open debt items                  | 36                                                                                                        |
+| Cumulative debt score (net open) | 66                                                                                                        |
 | Highest-risk item                | map-test: decouple MapTestView from map-editor data endpoint — silent cross-tool coupling (#303, score 3) |
-| PRs tracked                      | 103                                                                                                       |
+| PRs tracked                      | 104                                                                                                       |
 
 ---
 
@@ -122,6 +122,7 @@ _Last updated: 2026-04-12 after PR #297._
 | 2026-04-10 | PR #262 (resolved #214) | -2                   | 142                      |
 | 2026-04-11 | PR #283                 | 27                   | 169                      |
 | 2026-04-12 | PR #297                 | 17                   | 186                      |
+| 2026-04-12 | PR #305                 | 6                    | 192                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -129,15 +130,15 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Cumulative Added" is 
 
 ## Risk Assessment
 
-High risk. Net open score has reached 60 across 30 items. Immediate attention recommended before M4 socket/game-loop work begins.
+High risk. Net open score has reached 66 across 36 items. Immediate attention recommended before M4 socket/game-loop work begins.
 
-PR #297 (Map Test Tool) added 17 points of new debt across 7 deferred items: three score-3 architectural concerns (missing MapTestView test coverage, missing hex-ID input validation, cross-tool data endpoint coupling) and four score-2 items (shared CSS extraction, mockFetch test utility, lazy data load, dynamic component dispatch).
+PR #305 (Table Test Tool) added 6 points of new debt across 6 deferred score-1 items: four architectural/style items (modifier object allowlist, incomingResult validation gap, modifiers vs mods naming inconsistency, defaultModifiers factory) and two Vue idiom items (activePanel as computed, lazy-load panels). Both medium findings (M1 route boilerplate, M2 panel fetch duplication) were fixed in place.
 
-The highest-priority items for M4 readiness are: #303 (MapTestView fetches from map-editor endpoint — silent cross-tool breakage), #302 (no hex-ID format validation — NaN propagation risk), #300 (no MapTestView orchestration tests — refactor hazard), and the carry-forward engine items #289 (LOS terrain heights hardcoded), #288 (hexsideCost always 0 — misleads Map Test Tool display), and #284 (path traversal risk in loaders).
+The highest-priority items for M4 readiness remain: #303 (MapTestView fetches from map-editor endpoint — silent cross-tool breakage), #302 (no hex-ID format validation — NaN propagation risk), #300 (no MapTestView orchestration tests — refactor hazard), and the carry-forward engine items #289 (LOS terrain heights hardcoded), #288 (hexsideCost always 0 — misleads Map Test Tool display), and #284 (path traversal risk in loaders).
 
 The three legacy OOB score-3 items (#247 #245 #237) remain open. Recommend bundling them into a debt sprint alongside the score-3 engine and map-test items before M4 begins.
 
-Current debt is concentrated in **nine score-3 items** (map-test cross-tool coupling, input validation, test coverage gaps; engine LOS/cost/security items; OOB architecture), **twelve score-2 items** (map-test UI/test hygiene plus engine performance and correctness), and **nine score-1 minor items** (engine guards and legacy test style issues).
+Current debt is concentrated in **nine score-3 items** (map-test cross-tool coupling, input validation, test coverage gaps; engine LOS/cost/security items; OOB architecture), **twelve score-2 items** (map-test UI/test hygiene plus engine performance and correctness), and **fifteen score-1 minor items** (table-test validation/style gaps, engine guards, and legacy test style issues).
 
 ---
 
@@ -168,6 +169,12 @@ _Ordered by score descending (ties: newest first). Resolved items are removed._
 | 2     | #290  | engine: inconsistent parameter ordering between movementPath and computeLOS                        | PR #283       | `movementPath` takes `(scenario, mapData)`; `computeLOS` takes `(mapData, scenario)`. Both are hex-pair functions taking the same two data objects in opposite order — easy to swap silently.                                                                                                                        |
 | 2     | #287  | engine: combatResult silently accepts out-of-range diceRoll                                        | PR #283       | Roll of 1 gives array index -1 → silent "no effect". Roll > 12 also falls off the table. Should throw or return a clearly-marked invalid sentinel.                                                                                                                                                                   |
 | 2     | #285  | engine: parseHexId has no input validation — NaN propagates silently                               | PR #283       | `hexId.split('.').map(Number)` with no guard against null/undefined/malformed strings. NaN leaks into cube math and Dijkstra cost comparisons.                                                                                                                                                                       |
+| 1     | #311  | table-test: lazy-load panel SFCs with defineAsyncComponent in TableTestView                        | PR #305       | All 11 panels imported eagerly. Dev-only tool with small SFCs; no perceptible load impact today. Good practice for when panel complexity grows.                                                                                                                                                                      |
+| 1     | #310  | table-test: convert activePanel() function to computed in TableTestView                            | PR #305       | `PANELS.find()` runs on every render rather than being cached. Scanning 11 static items is imperceptible; this is a Vue idiom correctness issue, not a performance problem today.                                                                                                                                    |
+| 1     | #309  | table-test: extract defaultModifiers() factory in MoralePanel                                      | PR #305       | Default modifiers object duplicated between `ref()` init and `reset()`. No coupling risk; only matters when a new modifier flag is added to the Morale Table.                                                                                                                                                        |
+| 1     | #308  | table-test: standardize modifier param name — modifiers vs mods inconsistency                      | PR #305       | Naming inconsistency between `/morale` (`modifiers`) and `/closing-roll` (`mods`). Both work correctly; only affects API learnability.                                                                                                                                                                               |
+| 1     | #307  | table-test: add allowlist validation for incomingResult on /morale-transition                      | PR #305       | Engine returns null for unknown values which the route converts to a 400. Inconsistency with the other validated parameters but no correctness hazard.                                                                                                                                                               |
+| 1     | #306  | table-test: filter modifier objects against property allowlist before forwarding to engine         | PR #305       | Dev-only tool with 5MB body limit and engine destructuring already neutralizing unknowns. Pure defense-in-depth; no functional risk today.                                                                                                                                                                           |
 | 1     | #293  | engine: loadMap/loadScenario use synchronous file I/O with no architectural guard                  | PR #283       | Both use `readFileSync`. "Call once at startup" is documented but not enforced. For M4+ game loop, should be async or enforced via a startup bootstrap module.                                                                                                                                                       |
 | 1     | #286  | engine: hexEntryCost has no dirIndex range validation                                              | PR #283       | Out-of-range `dirIndex` (6, -1, NaN) silently returns `undefined` from array lookups. Low risk since only the Dijkstra loop calls this today.                                                                                                                                                                        |
 | 1     | #260  | test(useOobStore): add localStorage.removeItem assertion for succession key in confirmPush         | PR #252       | `confirmPush` succession test verifies fetch count and dirty flag but does not assert `localStorage.removeItem('lob-succession-editor-v1')`. Silent gap in an otherwise-covered code path.                                                                                                                           |
