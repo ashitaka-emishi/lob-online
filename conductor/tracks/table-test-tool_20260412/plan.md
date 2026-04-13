@@ -3,7 +3,7 @@
 **Track ID:** table-test-tool_20260412
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-04-12
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -189,11 +189,11 @@ navigations — no cross-panel state.
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met
+- [x] All acceptance criteria in spec.md met
 - [x] `npm run test` — full suite green (1827 passing)
 - [x] `npm run lint && npm run format:check` — clean
-- [ ] Manual: navigate to `/tools/table-test`; all 11 panels reachable and functional
-- [ ] Ready for `/pr-create`
+- [x] Manual: navigate to `/tools/table-test`; all 11 panels reachable and functional
+- [x] Ready for `/pr-create` — PR #305 open
 
 ---
 
