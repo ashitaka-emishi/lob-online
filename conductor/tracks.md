@@ -76,4 +76,6 @@
 
 | [x] | table-test-tool_20260412 | Table Test Tool | 2026-04-12 | 2026-04-12 |
 
+| [ ] | m3-debt-sprint_20260412 | M3 Debt Sprint — Score-3 Cleanup | 2026-04-12 | 2026-04-12 |
+
 <!-- Tracks registered by /conductor:new-track -->
