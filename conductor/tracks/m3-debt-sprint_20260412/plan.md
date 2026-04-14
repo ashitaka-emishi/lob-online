@@ -3,7 +3,7 @@
 **Track ID:** m3-debt-sprint_20260412
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-04-12
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -45,8 +45,8 @@ engine and carry the lowest blast radius.
 
 ### Verification
 
-- [ ] `npm run test` — all tests green; no regressions
-- [ ] `npm run lint && npm run format:check` — clean
+- [x] `npm run test` — all tests green; no regressions
+- [x] `npm run lint && npm run format:check` — clean
 
 ---
 
@@ -96,14 +96,14 @@ Tool that reduce coupling before M4.
 
 ### Tasks
 
-- [ ] Task 3.1: #300 — MapTestView orchestration tests cover togglePanel, overlay routing, click dispatch
+- [x] Task 3.1: #300 — MapTestView orchestration tests cover togglePanel, overlay routing, click dispatch
   - In `client/src/views/tools/MapTestView.test.js`, add tests for:
     - `togglePanel(name)` switches the active panel
     - Clicking a hex dispatches the correct overlay handler for each panel mode
     - Overlay routing (Movement Path, Movement Range, Hex Inspector, LOS, Command Range)
       activates the right panel prop
 
-- [ ] Task 3.2: #302 — map-test routes validate hex-ID format; malformed IDs return 400
+- [x] Task 3.2: #302 — map-test routes validate hex-ID format; malformed IDs return 400
   - In `server/src/routes/mapTest.js`, add a `validateHexId(id)` helper that
     checks the hex-ID format (e.g. `\d{4}` or the project's canonical format)
   - Apply the validator to every route that accepts a hex ID; return 400 with a
@@ -111,7 +111,7 @@ Tool that reduce coupling before M4.
   - Add unit tests: valid ID passes, empty ID fails, non-numeric ID fails, too-short
     ID fails
 
-- [ ] Task 3.3: #303 — MapTestView fetches from a dedicated /api/tools/map-test/data endpoint
+- [x] Task 3.3: #303 — MapTestView fetches from a dedicated /api/tools/map-test/data endpoint
   - Add `GET /api/tools/map-test/data` in `server/src/routes/mapTest.js` that returns
     the map + scenario payload (mirroring the map-editor data endpoint pattern)
   - Refactor `MapTestView.vue` to fetch from this endpoint instead of any ad-hoc
@@ -121,18 +121,18 @@ Tool that reduce coupling before M4.
 
 ### Verification
 
-- [ ] `npm run test` — all tests green; no regressions
-- [ ] `npm run lint && npm run format:check` — clean
+- [x] `npm run test` — all tests green; no regressions
+- [x] `npm run lint && npm run format:check` — clean
 
 ---
 
 ## Final Verification
 
-- [ ] All 9 acceptance criteria in spec.md met (#237 #245 #247 #284 #288 #289 #300 #302 #303)
-- [ ] `npm run test` — full suite green
-- [ ] `npm run lint && npm run format:check` — clean
-- [ ] No new debt introduced (tech-debt-report score delta = 0 net)
-- [ ] Ready for `/pr-create`
+- [x] All 9 acceptance criteria in spec.md met (#237 #245 #247 #284 #288 #289 #300 #302 #303)
+- [x] `npm run test` — full suite green
+- [x] `npm run lint && npm run format:check` — clean
+- [x] No new debt introduced (tech-debt-report score delta = 0 net)
+- [x] Ready for `/pr-create`
 
 ---
 
