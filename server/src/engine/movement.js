@@ -11,7 +11,7 @@
  */
 
 import { ELEVATION_TYPES, ROUTE_TYPES } from '../schemas/map.schema.js';
-import { dijkstra, OPPOSITE_DIR_INDEX, reconstructPath } from './hex.js';
+import { dijkstra, hexNeighbors, OPPOSITE_DIR_INDEX, reconstructPath } from './hex.js';
 import { buildHexIndex, loadMap } from './map.js';
 
 // Re-export so callers that loaded map data via this module continue to work.
@@ -112,12 +112,10 @@ function lookupTerrainCost(terrain, formationKey, terrainCosts) {
 // ─── Public API ────────────────────────────────────────────────────────────────
 
 /**
- * Compute the MP cost to move from fromHexId to toHexId (one step).
+ * Compute the per-component MP cost breakdown for a single hex entry step.
  *
- * Returns Infinity for any prohibited transition:
- * - null terrain cost for the formation
- * - verticalSlope hexside (SM §1.1 — impassable to all units)
- * - null hexside cost component for the formation
+ * Returns { terrainCost, hexsideCost, total } where total = terrainCost + hexsideCost.
+ * Impassable transitions return { terrainCost: Infinity, hexsideCost: 0, total: Infinity }.
  *
  * // LOB §3 — movement cost is terrain cost + hexside costs (additive)
  * // SM movement chart — authoritative values in scenario.movementCosts
@@ -128,14 +126,16 @@ function lookupTerrainCost(terrain, formationKey, terrainCosts) {
  * @param {string} formation  - 'line'|'column'|'mounted'|'limbered'|'horseArtillery'|'wagon'|'leader'
  * @param {object} scenario   - result of loadScenario()
  * @param {Map<string, object>} hexIndex - result of buildHexIndex()
- * @returns {number} MP cost (may be Infinity if impassable)
+ * @returns {{ terrainCost: number, hexsideCost: number, total: number }}
  */
-export function hexEntryCost(fromHexId, toHexId, dirIndex, formation, scenario, hexIndex) {
+function hexEntryCostBreakdown(fromHexId, toHexId, dirIndex, formation, scenario, hexIndex) {
+  const IMPASSABLE = { terrainCost: Infinity, hexsideCost: 0, total: Infinity };
+
   const toHex = hexIndex.get(toHexId);
   const fromHex = hexIndex.get(fromHexId);
 
   // Unknown hex (not yet digitized) treated as impassable
-  if (!toHex) return Infinity;
+  if (!toHex) return IMPASSABLE;
 
   const { terrainCosts, hexsideCosts, noEffectTerrain } = scenario.movementCosts;
   const formationKey = resolveFormationKey(formation);
@@ -146,7 +146,7 @@ export function hexEntryCost(fromHexId, toHexId, dirIndex, formation, scenario, 
 
   // Check for verticalSlope — impassable to all units
   // SM §1.1 — Special Slope Rule: vertical slope hexsides are impassable
-  if (features.some((f) => f.type === 'verticalSlope')) return Infinity;
+  if (features.some((f) => f.type === 'verticalSlope')) return IMPASSABLE;
 
   // Identify route features (road, pike, trail) on the crossing hexside
   // LOB §3 — road movement eligibility depends on formation and hexside feature type
@@ -160,7 +160,7 @@ export function hexEntryCost(fromHexId, toHexId, dirIndex, formation, scenario, 
     //   column/mounted/limbered → use route cost from terrainCosts[routeType][formation]
     //   line → 'ot' (other terrain) → use base hex terrain cost
     const routeCostRaw = lookupTerrainCost(routeFeature.type, formationKey, terrainCosts);
-    if (routeCostRaw === null) return Infinity; // prohibited on this route type
+    if (routeCostRaw === null) return IMPASSABLE; // prohibited on this route type
 
     if (routeCostRaw === 'ot') {
       // 'ot' — ignore the route; use the hex's base terrain cost
@@ -173,8 +173,7 @@ export function hexEntryCost(fromHexId, toHexId, dirIndex, formation, scenario, 
   }
 
   // Null terrain cost = prohibited
-  if (terrainCost === null) return Infinity;
-  if (typeof terrainCost !== 'number') return Infinity; // safety guard
+  if (terrainCost === null || typeof terrainCost !== 'number') return IMPASSABLE;
 
   // ── Step 3: Hexside costs (additive) ─────────────────────────────────────
   // LOB §3 — hexside costs are ADDED to terrain cost (additive model)
@@ -195,7 +194,7 @@ export function hexEntryCost(fromHexId, toHexId, dirIndex, formation, scenario, 
     if (!costRow) continue; // no entry = no cost (e.g. ford, bridge)
 
     const featureCost = costRow[formationKey];
-    if (featureCost === null) return Infinity; // prohibited hexside for this formation
+    if (featureCost === null) return IMPASSABLE; // prohibited hexside for this formation
     if (typeof featureCost === 'number') hexsideTotal += featureCost;
   }
 
@@ -215,7 +214,41 @@ export function hexEntryCost(fromHexId, toHexId, dirIndex, formation, scenario, 
     }
   }
 
-  return terrainCost + hexsideTotal;
+  return { terrainCost, hexsideCost: hexsideTotal, total: terrainCost + hexsideTotal };
+}
+
+/**
+ * Compute the MP cost to move from fromHexId to toHexId (one step).
+ * Returns Infinity for any prohibited transition.
+ *
+ * // LOB §3 — movement cost is terrain cost + hexside costs (additive)
+ *
+ * @param {string} fromHexId
+ * @param {string} toHexId
+ * @param {number} dirIndex
+ * @param {string} formation
+ * @param {object} scenario
+ * @param {Map<string, object>} hexIndex
+ * @returns {number} MP cost (may be Infinity if impassable)
+ */
+export function hexEntryCost(fromHexId, toHexId, dirIndex, formation, scenario, hexIndex) {
+  return hexEntryCostBreakdown(fromHexId, toHexId, dirIndex, formation, scenario, hexIndex).total;
+}
+
+/**
+ * Return the direction index from fromHexId to an adjacent toHexId, or 0 if not found.
+ * Used by movementPath to recover per-step direction for cost breakdown.
+ *
+ * @param {string} fromHexId
+ * @param {string} toHexId
+ * @param {{ cols: number, rows: number }} gridSpec
+ * @returns {number} dirIndex (0–5)
+ */
+function getDirectionBetween(fromHexId, toHexId, gridSpec) {
+  for (const { hexId, dirIndex } of hexNeighbors(fromHexId, gridSpec)) {
+    if (hexId === toHexId) return dirIndex;
+  }
+  return 0; // fallback — should not occur for valid adjacent hexes
 }
 
 // ─── Path finding ──────────────────────────────────────────────────────────────
@@ -252,7 +285,8 @@ export function movementPath(startHexId, endHexId, formation, scenario, mapData,
     return { path: null, costs: [], totalCost: Infinity, impassable: true };
   }
 
-  // Build per-hex cost breakdown
+  // Build per-hex cost breakdown with terrain/hexside split (#288)
+  // LOB §3 — breakdown separates terrain cost from hexside costs per step
   const breakdown = [];
   let running = 0;
   for (let i = 0; i < path.length; i++) {
@@ -261,9 +295,15 @@ export function movementPath(startHexId, endHexId, formation, scenario, mapData,
       breakdown.push({ hex: hexId, terrainCost: 0, hexsideCost: 0, total: 0 });
       continue;
     }
-    const stepTotal = costs.get(hexId) - costs.get(path[i - 1]);
-    running += stepTotal;
-    breakdown.push({ hex: hexId, terrainCost: stepTotal, hexsideCost: 0, total: running });
+    const dirIndex = getDirectionBetween(path[i - 1], hexId, gridSpec);
+    const detail = hexEntryCostBreakdown(path[i - 1], hexId, dirIndex, formation, scenario, idx);
+    running += detail.total;
+    breakdown.push({
+      hex: hexId,
+      terrainCost: detail.terrainCost,
+      hexsideCost: detail.hexsideCost,
+      total: running,
+    });
   }
 
   return {

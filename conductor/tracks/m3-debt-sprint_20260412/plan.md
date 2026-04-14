@@ -66,7 +66,7 @@ on game logic.
   - Add unit tests covering: valid path, path traversal attempt (`../../etc/passwd`),
     encoded traversal (`%2e%2e`)
 
-- [ ] Task 2.2: #288 — movementPath per-step hexsideCost populated correctly (not always 0)
+- [x] Task 2.2: #288 — movementPath per-step hexsideCost populated correctly (not always 0)
   - In `engine/movement.js`, fix the per-step cost calculation so that hexside
     crossing costs (streams, roads, etc.) are included in the `hexsideCost` field
     of each path step
