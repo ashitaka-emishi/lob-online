@@ -11,6 +11,7 @@
   },
   "tasks": {
     "total": 9,
-    "completed": 5
+    "completed": 6,
+    "phases": { "total": 3, "completed": 1 }
   }
 }

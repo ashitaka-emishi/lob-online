@@ -73,7 +73,7 @@ on game logic.
   - Update unit tests in `engine/movement.test.js` with at least one road-crossing
     and one stream-crossing path to assert non-zero hexsideCost
 
-- [ ] Task 2.3: #289 — LOS terrain heights data-driven from scenario.json, not hardcoded
+- [x] Task 2.3: #289 — LOS terrain heights data-driven from scenario.json, not hardcoded
   - Add a `terrainHeights` map to `scenario.json` schema (consult domain-expert for
     which terrains carry height bonuses per LOB v2.0 §LOS section)
   - In `engine/los.js`, replace any hardcoded height constants with a lookup from

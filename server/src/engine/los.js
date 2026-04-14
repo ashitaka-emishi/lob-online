@@ -44,12 +44,18 @@ const TERRAIN_LOS_HEIGHT_FLAG = {
  * LOB §4.0 — terrain height bonus is applied only to intervening obstacles.
  * SM §1.4 — treeLosHeight = 1 for South Mountain (overrides standard LOB value of 3).
  *
+ * Height flags are read from scenario.rules.terrainLosHeights (#289 — data-driven).
+ * Falls back to the hardcoded TERRAIN_LOS_HEIGHT_FLAG when the field is absent.
+ *
  * @param {string} terrain
  * @param {number} treeLosHeight - scenario.rules.treeLosHeight (SM override: 1)
+ * @param {object|undefined} terrainLosHeights - scenario.rules.terrainLosHeights
  * @returns {number}
  */
-function terrainBonus(terrain, treeLosHeight) {
-  const flag = TERRAIN_LOS_HEIGHT_FLAG[terrain] ?? 0;
+function terrainBonus(terrain, treeLosHeight, terrainLosHeights) {
+  // LOB §4.0 / SM §1.4 — use scenario-supplied height flags when available (#289)
+  const heightMap = terrainLosHeights ?? TERRAIN_LOS_HEIGHT_FLAG;
+  const flag = heightMap[terrain] ?? 0;
   return flag > 0 ? treeLosHeight : 0;
 }
 
@@ -105,6 +111,11 @@ export function computeLOS(fromHexId, toHexId, mapData, scenario, hexIndex = nul
   // SM §1.4 — treeLosHeight: South Mountain overrides standard LOB +3 with +1
   const treeLosHeight = scenario.rules?.treeLosHeight ?? 1;
 
+  // LOB §4.0 / SM §1.4 — data-driven terrain height flags (#289)
+  // scenario.rules.terrainLosHeights maps terrain type → height bonus flag (1 = gets treeLosHeight).
+  // Falls back to hardcoded TERRAIN_LOS_HEIGHT_FLAG when absent (backward compat).
+  const terrainLosHeights = scenario.rules?.terrainLosHeights;
+
   // Build hex index for O(1) lookup (caller may supply a pre-built index for efficiency)
   const idx = hexIndex ?? buildHexIndex(mapData);
 
@@ -138,7 +149,8 @@ export function computeLOS(fromHexId, toHexId, mapData, scenario, hexIndex = nul
     const groundHeight = getGroundHeight(hex);
 
     // Terrain height bonus for intermediate obstacles only (LOB §4.0)
-    let bonus = terrainBonus(terrain, treeLosHeight);
+    // Pass terrainLosHeights from scenario for data-driven lookup (#289)
+    let bonus = terrainBonus(terrain, treeLosHeight, terrainLosHeights);
 
     // SM §1.4 — orchard first-hex rule: the first orchard hex immediately adjacent to
     // the observer does not provide its terrain height bonus. This prevents orchards
