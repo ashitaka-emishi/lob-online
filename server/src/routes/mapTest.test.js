@@ -273,6 +273,88 @@ describe('GET /los', () => {
   });
 });
 
+// ─── GET /data — dedicated map-test data endpoint (#303) ─────────────────────
+
+describe('GET /data', () => {
+  it('returns map data with hexes and gridSpec', async () => {
+    const app = await buildApp();
+    const res = await request(app).get('/data');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('hexes');
+    expect(res.body).toHaveProperty('gridSpec');
+  });
+});
+
+// ─── hex-ID format validation (#302) ─────────────────────────────────────────
+
+describe('hex-ID format validation (#302)', () => {
+  it('GET /movement-path returns 400 for malformed startHex', async () => {
+    const app = await buildApp();
+    const res = await request(app)
+      .get('/movement-path')
+      .query({ startHex: 'foo', endHex: '10.11', formation: 'line' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid hex/i);
+  });
+
+  it('GET /movement-path returns 400 for malformed endHex', async () => {
+    const app = await buildApp();
+    const res = await request(app)
+      .get('/movement-path')
+      .query({ startHex: '10.10', endHex: '../../etc/passwd', formation: 'line' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid hex/i);
+  });
+
+  it('GET /movement-range returns 400 for malformed hex', async () => {
+    const app = await buildApp();
+    const res = await request(app)
+      .get('/movement-range')
+      .query({ hex: 'not-a-hex', formation: 'line' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid hex/i);
+  });
+
+  it('GET /hex-info returns 400 for malformed hex', async () => {
+    const app = await buildApp();
+    const res = await request(app).get('/hex-info').query({ hex: '10' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid hex/i);
+  });
+
+  it('GET /los returns 400 for malformed fromHex', async () => {
+    const app = await buildApp();
+    const res = await request(app).get('/los').query({ fromHex: 'abc.xyz', toHex: '10.11' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid hex/i);
+  });
+
+  it('GET /los returns 400 for malformed toHex', async () => {
+    const app = await buildApp();
+    const res = await request(app).get('/los').query({ fromHex: '10.10', toHex: '' });
+    expect(res.status).toBe(400);
+  });
+
+  it('GET /command-range returns 400 for malformed hex', async () => {
+    const app = await buildApp();
+    const res = await request(app)
+      .get('/command-range')
+      .query({ hex: 'bad', commanderLevel: 'brigade' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid hex/i);
+  });
+
+  it('valid hex IDs like "10.10" pass format validation', async () => {
+    movementPath.mockReturnValue({ path: [], costs: [], totalCost: 0, impassable: true });
+    const app = await buildApp();
+    const res = await request(app)
+      .get('/movement-path')
+      .query({ startHex: '10.10', endHex: '10.11', formation: 'line' });
+    // Should NOT be a 400 from format validation (may be 400 from index check, but not format)
+    expect(res.status).not.toBe(400);
+  });
+});
+
 // ─── GET /command-range ────────────────────────────────────────────────────────
 
 describe('GET /command-range', () => {

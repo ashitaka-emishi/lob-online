@@ -2,7 +2,7 @@
  * Tests for server/src/engine/map.js — loadMap and buildHexIndex.
  */
 
-import { writeFileSync, unlinkSync } from 'fs';
+import { writeFileSync as _writeFileSync, unlinkSync as _unlinkSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 
