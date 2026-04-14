@@ -103,11 +103,10 @@ describe('loadScenario — path traversal guard (#284)', () => {
 // ─── Error cases ──────────────────────────────────────────────────────────────
 
 describe('loadScenario — error handling', () => {
-  it('throws when file does not exist', () => {
-    // Use a path within the project tree so the containment guard passes
-    expect(() => loadScenario('/nonexistent/path/scenario.json')).toThrow(
-      /not allowed|invalid path|outside/i
-    );
+  it('throws when file does not exist (containment guard passes, file I/O fails)', () => {
+    // Use a path inside tmpdir (allowed by guard) that doesn't exist
+    const missingPath = join(tmpdir(), 'nonexistent-scenario-test.json');
+    expect(() => loadScenario(missingPath)).toThrow(/failed to read scenario file/);
   });
 
   it('throws on invalid JSON', () => {

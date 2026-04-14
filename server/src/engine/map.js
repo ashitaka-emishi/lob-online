@@ -7,40 +7,16 @@
  */
 
 import { readFileSync } from 'fs';
-import { join, resolve, sep } from 'path';
-import { tmpdir } from 'os';
+import { join } from 'path';
 import { fileURLToPath } from 'url';
 
 import { MapSchema } from '../schemas/map.schema.js';
+import { assertContainedPath } from '../utils/pathGuard.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 /** Default path to map.json, relative to this file. */
 const DEFAULT_MAP_PATH = join(__dirname, '../../../data/scenarios/south-mountain/map.json');
-
-// ─── Path containment guard (#284) ────────────────────────────────────────────
-
-/** Allowed roots: project root and OS temp dir (for test fixtures). */
-const PROJECT_ROOT = resolve(__dirname, '../../..');
-const TMPDIR = resolve(tmpdir());
-
-/**
- * Verify that `filePath` resolves to a location within the project root or
- * the OS temp directory. Throws a generic error (no path in message) if not.
- *
- * // Security (#284) — prevents path traversal attacks if user-controlled paths
- * // are ever passed to the loaders. Errors must not leak the resolved path.
- *
- * @param {string} filePath
- */
-function assertContainedPath(filePath) {
-  const abs = resolve(filePath);
-  const inProject = abs === PROJECT_ROOT || abs.startsWith(PROJECT_ROOT + sep);
-  const inTmp = abs === TMPDIR || abs.startsWith(TMPDIR + sep);
-  if (!inProject && !inTmp) {
-    throw new Error('map.js: path outside allowed directory');
-  }
-}
 
 // ─── Map loader ────────────────────────────────────────────────────────────────
 
@@ -54,7 +30,7 @@ function assertContainedPath(filePath) {
  */
 export function loadMap(mapPath = DEFAULT_MAP_PATH) {
   // Security (#284) — containment guard: resolve and verify before any file I/O
-  assertContainedPath(mapPath);
+  assertContainedPath(mapPath, 'map.js');
 
   let raw;
   try {

@@ -36,6 +36,7 @@ const VALID_LEADER_SITUATIONS = new Set(['other', 'capture', 'defender', 'attack
 const VALID_ARMY_CO_TYPES = new Set(Object.keys(AWARENESS_TURNS));
 const VALID_DISTANCE_CATEGORIES = new Set(Object.keys(DISTANCE_TURNS));
 const VALID_DIVISION_STATUSES = new Set(['clean', 'wrecked', 'dead']);
+const VALID_INCOMING_RESULTS = new Set(['bl', 'normal', 'shaken', 'dg', 'rout', 'townHex']);
 
 // ─── Validation helpers ───────────────────────────────────────────────────────
 
@@ -143,11 +144,13 @@ router.post(
     }
     const stateR = requireEnum(currentState, 'currentState', VALID_MORALE_STATES);
     if (!stateR.ok) return res.status(400).json({ error: stateR.error });
-    const result = moraleTransition(stateR.value, incomingResult);
+    const incR = requireEnum(incomingResult, 'incomingResult', VALID_INCOMING_RESULTS);
+    if (!incR.ok) return res.status(400).json({ error: incR.error });
+    const result = moraleTransition(stateR.value, incR.value);
     if (result === null) {
       return res
         .status(400)
-        .json({ error: `No transition defined for ${currentState}/${incomingResult}` });
+        .json({ error: `No transition defined for ${stateR.value}/${incR.value}` });
     }
     return res.json(result);
   })

@@ -2,7 +2,6 @@
  * Tests for server/src/engine/map.js — loadMap and buildHexIndex.
  */
 
-import { writeFileSync as _writeFileSync, unlinkSync as _unlinkSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -52,19 +51,11 @@ describe('loadMap — path traversal guard (#284)', () => {
     expect(err.message).not.toContain('/etc/passwd');
   });
 
-  it('allows a path within the project directory', () => {
-    // A path inside the engine directory (will fail on schema validation, not containment)
+  it('allows a path within the project directory (containment guard passes, file I/O attempted)', () => {
+    // A path inside the engine directory: containment guard passes, then file-not-found throws
     const fakePath = join(__dirname, 'nonexistent-test.json');
-    expect(() => loadMap(fakePath)).toThrow(/failed to read|schema validation/);
-    // Confirm it does NOT throw the containment error
-    const err = (() => {
-      try {
-        loadMap(fakePath);
-      } catch (e) {
-        return e;
-      }
-    })();
-    expect(err.message).not.toMatch(/not allowed|invalid path|outside/i);
+    // Positive assertion: the specific file-I/O error message is reached
+    expect(() => loadMap(fakePath)).toThrow(/failed to read map file/);
   });
 });
 

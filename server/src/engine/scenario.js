@@ -10,11 +10,11 @@
  */
 
 import { readFileSync } from 'fs';
-import { join, resolve, sep } from 'path';
-import { tmpdir } from 'os';
+import { join } from 'path';
 import { fileURLToPath } from 'url';
 
 import { ScenarioSchema } from '../schemas/scenario.schema.js';
+import { assertContainedPath } from '../utils/pathGuard.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -23,29 +23,6 @@ const DEFAULT_SCENARIO_PATH = join(
   __dirname,
   '../../../data/scenarios/south-mountain/scenario.json'
 );
-
-// ─── Path containment guard (#284) ────────────────────────────────────────────
-
-const PROJECT_ROOT = resolve(__dirname, '../../..');
-const TMPDIR = resolve(tmpdir());
-
-/**
- * Verify that `filePath` resolves within the project root or OS temp directory.
- * Throws a generic error (no path in message) if not.
- *
- * // Security (#284) — prevents path traversal if user-controlled paths are ever
- * // passed to loadScenario. Error message must not leak the resolved path.
- *
- * @param {string} filePath
- */
-function assertContainedPath(filePath) {
-  const abs = resolve(filePath);
-  const inProject = abs === PROJECT_ROOT || abs.startsWith(PROJECT_ROOT + sep);
-  const inTmp = abs === TMPDIR || abs.startsWith(TMPDIR + sep);
-  if (!inProject && !inTmp) {
-    throw new Error('scenario.js: path outside allowed directory');
-  }
-}
 
 /**
  * Load and validate scenario.json.
@@ -60,7 +37,7 @@ function assertContainedPath(filePath) {
  */
 export function loadScenario(scenarioPath = DEFAULT_SCENARIO_PATH) {
   // Security (#284) — containment guard: resolve and verify before any file I/O
-  assertContainedPath(scenarioPath);
+  assertContainedPath(scenarioPath, 'scenario.js');
 
   let raw;
   try {

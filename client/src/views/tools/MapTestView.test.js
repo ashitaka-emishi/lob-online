@@ -140,9 +140,11 @@ describe('MapTestView — togglePanel orchestration (#300)', () => {
     // Default: MovementPath is active
     expect(wrapper.findComponent({ name: 'MovementPathPanel' }).exists()).toBe(true);
 
-    // Click LOS panel header (4th button, index 3)
-    const headers = wrapper.findAll('button.accordion-header');
-    await headers[3].trigger('click');
+    // Click LOS panel header — select by label text, not index
+    const losHeader = wrapper
+      .findAll('button.accordion-header')
+      .find((btn) => btn.text().match(/los/i));
+    await losHeader.trigger('click');
 
     expect(wrapper.findComponent({ name: 'LosPanel' }).exists()).toBe(true);
     expect(wrapper.findComponent({ name: 'MovementPathPanel' }).exists()).toBe(false);
@@ -156,9 +158,11 @@ describe('MapTestView — togglePanel orchestration (#300)', () => {
     // Movement Path is active by default
     expect(wrapper.findComponent({ name: 'MovementPathPanel' }).exists()).toBe(true);
 
-    // Click Movement Path header again (toggle off)
-    const headers = wrapper.findAll('button.accordion-header');
-    await headers[0].trigger('click');
+    // Click Movement Path header again (toggle off) — select by label text
+    const movPathHeader = wrapper
+      .findAll('button.accordion-header')
+      .find((btn) => btn.text().match(/movement path/i));
+    await movPathHeader.trigger('click');
 
     expect(wrapper.findComponent({ name: 'MovementPathPanel' }).exists()).toBe(false);
     wrapper.unmount();
@@ -202,9 +206,11 @@ describe('MapTestView — togglePanel orchestration (#300)', () => {
     const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
     await overlay.vm.$emit('hex-click', '10.10');
 
-    // Switch to a different panel
-    const headers = wrapper.findAll('button.accordion-header');
-    await headers[1].trigger('click'); // Movement Range
+    // Switch to a different panel — select by label text
+    const rangeHeader = wrapper
+      .findAll('button.accordion-header')
+      .find((btn) => btn.text().match(/movement range/i));
+    await rangeHeader.trigger('click');
 
     // New panel should receive null clickedHexId
     const rangePanel = wrapper.findComponent({ name: 'MovementRangePanel' });

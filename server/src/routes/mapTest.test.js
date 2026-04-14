@@ -280,8 +280,9 @@ describe('GET /data', () => {
     const app = await buildApp();
     const res = await request(app).get('/data');
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('hexes');
-    expect(res.body).toHaveProperty('gridSpec');
+    expect(res.body.hexes).toHaveLength(MOCK_MAP.hexes.length);
+    expect(res.body.gridSpec).toEqual(MOCK_MAP.gridSpec);
+    expect(res.body).toHaveProperty('elevationSystem');
   });
 });
 
@@ -352,6 +353,37 @@ describe('hex-ID format validation (#302)', () => {
       .query({ startHex: '10.10', endHex: '10.11', formation: 'line' });
     // Should NOT be a 400 from format validation (may be 400 from index check, but not format)
     expect(res.status).not.toBe(400);
+  });
+});
+
+// ─── Enum validation ──────────────────────────────────────────────────────────
+
+describe('formation and commanderLevel enum validation', () => {
+  it('GET /movement-path returns 400 for invalid formation', async () => {
+    const app = await buildApp();
+    const res = await request(app)
+      .get('/movement-path')
+      .query({ startHex: '10.10', endHex: '10.11', formation: 'invalid' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid formation/i);
+  });
+
+  it('GET /movement-range returns 400 for invalid formation', async () => {
+    const app = await buildApp();
+    const res = await request(app)
+      .get('/movement-range')
+      .query({ hex: '10.10', formation: 'invalid' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid formation/i);
+  });
+
+  it('GET /command-range returns 400 for invalid commanderLevel', async () => {
+    const app = await buildApp();
+    const res = await request(app)
+      .get('/command-range')
+      .query({ hex: '10.10', commanderLevel: 'general' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid commanderLevel/i);
   });
 });
 

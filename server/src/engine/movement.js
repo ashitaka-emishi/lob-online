@@ -248,7 +248,9 @@ function getDirectionBetween(fromHexId, toHexId, gridSpec) {
   for (const { hexId, dirIndex } of hexNeighbors(fromHexId, gridSpec)) {
     if (hexId === toHexId) return dirIndex;
   }
-  return 0; // fallback — should not occur for valid adjacent hexes
+  // Should never reach here for valid adjacent hex pairs from a Dijkstra path.
+  // Throw rather than silently returning 0 (a valid direction) to fail loudly.
+  throw new Error(`getDirectionBetween: ${fromHexId} and ${toHexId} are not adjacent`);
 }
 
 // ─── Path finding ──────────────────────────────────────────────────────────────
