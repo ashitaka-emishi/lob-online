@@ -91,8 +91,8 @@ function getGroundHeight(hex) {
  *
  * @param {string} fromHexId - observer hex ID, e.g. "19.23"
  * @param {string} toHexId   - target hex ID, e.g. "24.18"
+ * @param {object} scenario  - result of loadScenario()  // canonical order: (scenario, mapData)
  * @param {object} mapData   - result of loadMap()
- * @param {object} scenario  - result of loadScenario()
  * @param {Map<string, object>} [hexIndex] - pre-built hex index; built from mapData if omitted
  * @returns {{
  *   canSee: boolean,
@@ -100,7 +100,8 @@ function getGroundHeight(hex) {
  *   trace: string[]
  * }}
  */
-export function computeLOS(fromHexId, toHexId, mapData, scenario, hexIndex = null) {
+// Canonical parameter order: (scenario, mapData) — matches movementPath/movementRange convention (#290)
+export function computeLOS(fromHexId, toHexId, scenario, mapData, hexIndex = null) {
   // LOB §4.0 — a unit can always see its own hex
   if (fromHexId === toHexId) {
     return { canSee: true, blockedBy: null, trace: [fromHexId] };
