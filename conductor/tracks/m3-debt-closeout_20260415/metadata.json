@@ -1,0 +1,16 @@
+{
+  "id": "m3-debt-closeout_20260415",
+  "title": "M3 Debt Closeout Sprint",
+  "type": "refactor",
+  "status": "pending",
+  "created": "2026-04-15T00:00:00.000Z",
+  "updated": "2026-04-15T00:00:00.000Z",
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 11,
+    "completed": 0
+  }
+}
