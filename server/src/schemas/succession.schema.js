@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { CommandLevel, SuccessionCounterRef } from './shared.schema.js';
 
 const SuccessionVariant = z.object({
-  id: z.string(),
-  name: z.string(),
-  baseLeaderId: z.string(),
+  id: z.string().max(64), // #259 — prevent runaway string lengths at schema boundary
+  name: z.string().max(128),
+  baseLeaderId: z.string().max(64),
   rank: z.string().optional(),
   commandLevel: CommandLevel,
   commandsId: z.string().nullable(),

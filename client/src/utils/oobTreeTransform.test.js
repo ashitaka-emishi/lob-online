@@ -13,7 +13,8 @@ const MINIMAL_DIVISION = {
 const MINIMAL_CORPS = { id: 'test-corps', name: 'Test Corps', divisions: [MINIMAL_DIVISION] };
 const MINIMAL_CAV_DIV = { id: 'cav-div', name: 'Cavalry Division', brigades: [MINIMAL_BRIGADE] };
 
-function makeOob(corpsOverrides = {}) {
+// #255 — second param allows overriding confederate fields without duplicating the full shape
+function makeOob(corpsOverrides = {}, csaOverrides = {}) {
   return {
     union: {
       army: 'Army of the Potomac',
@@ -28,6 +29,7 @@ function makeOob(corpsOverrides = {}) {
       independent: { cavalry: [], artillery: [] },
       reserveArtillery: { batteries: [] },
       divisions: [],
+      ...csaOverrides,
     },
   };
 }
@@ -135,31 +137,20 @@ const SUCCESSION_FIXTURE = {
   ],
 };
 
-const OOB_WITH_WJ_BRIGADE = {
-  union: makeOob().union,
-  confederate: {
-    army: 'Army of Northern Virginia',
-    wing: "Longstreet's Wing",
-    supplyWagon: { id: 'csa-wagon', name: 'Wing Supply Wagon' },
-    independent: { cavalry: [], artillery: [] },
-    reserveArtillery: { batteries: [] },
+// #255 — extends makeOob() with confederate divisions override instead of duplicating full shape
+const OOB_WITH_WJ_BRIGADE = makeOob(
+  {},
+  {
     divisions: [
       {
         id: 'jd',
         name: "Jones's Division",
         wreckThreshold: 2,
-        brigades: [
-          {
-            id: 'wj',
-            name: "Walker's Brigade",
-            wreckThreshold: 2,
-            regiments: [],
-          },
-        ],
+        brigades: [{ id: 'wj', name: "Walker's Brigade", wreckThreshold: 2, regiments: [] }],
       },
     ],
-  },
-};
+  }
+);
 
 describe('buildDisplayTree — succession variants (#235)', () => {
   it('leader without variants has no _variants on its node', () => {
@@ -197,30 +188,18 @@ const LEADERS_WITH_UNION_BRIGADE = {
   confederate: {},
 };
 
-const OOB_WITH_RENO_BRIGADE = {
-  union: {
-    army: 'Army of the Potomac',
-    supplyTrain: { id: 'usa-train', name: 'AotP Supply' },
-    corps: [
-      {
-        ...MINIMAL_CORPS,
-        id: '9c',
-        divisions: [
-          {
-            id: '1d-9c',
-            name: '1st Division (9 Corps)',
-            wreckThreshold: 2,
-            brigades: [
-              { id: 'reno-bde', name: "Reno's Brigade", wreckThreshold: 2, regiments: [] },
-            ],
-          },
-        ],
-      },
-    ],
-    cavalryDivision: MINIMAL_CAV_DIV,
-  },
-  confederate: makeOob().confederate,
-};
+// #255 — extends makeOob() with union corps overrides instead of duplicating full shape
+const OOB_WITH_RENO_BRIGADE = makeOob({
+  id: '9c',
+  divisions: [
+    {
+      id: '1d-9c',
+      name: '1st Division (9 Corps)',
+      wreckThreshold: 2,
+      brigades: [{ id: 'reno-bde', name: "Reno's Brigade", wreckThreshold: 2, regiments: [] }],
+    },
+  ],
+});
 
 const SUCCESSION_WITH_UNION_VARIANT = {
   union: [
