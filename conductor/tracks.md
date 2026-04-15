@@ -78,4 +78,6 @@
 
 | [x] | m3-debt-sprint_20260412 | M3 Debt Sprint — Score-3 Cleanup | 2026-04-12 | 2026-04-14 |
 
+| [x] | pipeline-cleanup_20260414 | Dev Pipeline Cleanup | 2026-04-14 | 2026-04-14 |
+
 <!-- Tracks registered by /conductor:new-track -->
