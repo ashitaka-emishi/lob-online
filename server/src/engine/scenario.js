@@ -14,6 +14,7 @@ import { join } from 'path';
 import { fileURLToPath } from 'url';
 
 import { ScenarioSchema } from '../schemas/scenario.schema.js';
+import { assertContainedPath } from '../utils/pathGuard.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -35,20 +36,21 @@ const DEFAULT_SCENARIO_PATH = join(
  * @throws {Error} If the file is missing, unreadable, or fails Zod validation.
  */
 export function loadScenario(scenarioPath = DEFAULT_SCENARIO_PATH) {
+  // Security (#284) — containment guard: resolve and verify before any file I/O
+  assertContainedPath(scenarioPath, 'scenario.js');
+
   let raw;
   try {
     raw = readFileSync(scenarioPath, 'utf8');
   } catch (err) {
-    throw new Error(
-      `scenario.js: failed to read scenario file at "${scenarioPath}": ${err.message}`
-    );
+    throw new Error(`scenario.js: failed to read scenario file: ${err.message}`);
   }
 
   let parsed;
   try {
     parsed = JSON.parse(raw);
   } catch (err) {
-    throw new Error(`scenario.js: failed to parse JSON at "${scenarioPath}": ${err.message}`);
+    throw new Error(`scenario.js: failed to parse JSON: ${err.message}`);
   }
 
   const result = ScenarioSchema.safeParse(parsed);

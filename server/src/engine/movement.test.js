@@ -293,6 +293,58 @@ describe('hexEntryCost — road/pike/trail movement', () => {
   });
 });
 
+// ─── movementPath — hexsideCost breakdown (#288) ─────────────────────────────
+
+describe('movementPath — hexsideCost breakdown (#288)', () => {
+  it('hexsideCost is non-zero when crossing a stream hexside (line formation)', () => {
+    // LOB §3 — stream hexside adds +1 MP. Cost breakdown must separate terrain from hexside.
+    // Moving N (dirIndex 0) from 10.10 to 10.11; N-face (edge 0) on fromHex has stream.
+    const hexes = [
+      { hex: '10.10', terrain: 'clear', edges: { 0: [{ type: 'stream' }] } },
+      { hex: '10.11', terrain: 'clear' },
+    ];
+    const syntheticMap = { hexes, gridSpec: SM_GRID, vpHexes: [] };
+    const result = movementPath('10.10', '10.11', 'line', scenario, syntheticMap);
+    expect(result.impassable).toBe(false);
+    // Start hex: all zeros
+    expect(result.costs[0]).toEqual({ hex: '10.10', terrainCost: 0, hexsideCost: 0, total: 0 });
+    // Second hex: terrain=1, hexside=1 (stream), total=2
+    expect(result.costs[1].terrainCost).toBe(1);
+    expect(result.costs[1].hexsideCost).toBe(1);
+    expect(result.costs[1].total).toBe(2);
+  });
+
+  it('hexsideCost is 0 for leader crossing a stream (stream has no cost for leaders)', () => {
+    const hexes = [
+      { hex: '10.10', terrain: 'clear', edges: { 0: [{ type: 'stream' }] } },
+      { hex: '10.11', terrain: 'clear' },
+    ];
+    const syntheticMap = { hexes, gridSpec: SM_GRID, vpHexes: [] };
+    const result = movementPath('10.10', '10.11', 'leader', scenario, syntheticMap);
+    expect(result.costs[1].hexsideCost).toBe(0);
+    expect(result.costs[1].terrainCost).toBe(1);
+    expect(result.costs[1].total).toBe(1);
+  });
+
+  it('total[i] == total[i-1] + terrainCost[i] + hexsideCost[i] for every step', () => {
+    // LOB §3 — cumulative total is the sum of all per-step (terrain + hexside) costs
+    const hexes = [
+      { hex: '10.09', terrain: 'clear' },
+      { hex: '10.10', terrain: 'clear', edges: { 0: [{ type: 'stream' }] } },
+      { hex: '10.11', terrain: 'clear' },
+    ];
+    const syntheticMap = { hexes, gridSpec: SM_GRID, vpHexes: [] };
+    const result = movementPath('10.09', '10.11', 'column', scenario, syntheticMap);
+    expect(result.impassable).toBe(false);
+    expect(result.costs[0].total).toBe(0); // start hex: no cost
+    for (let i = 1; i < result.costs.length; i++) {
+      const step = result.costs[i];
+      const prev = result.costs[i - 1];
+      expect(step.total).toBeCloseTo(prev.total + step.terrainCost + step.hexsideCost, 5);
+    }
+  });
+});
+
 // ─── movementPath ─────────────────────────────────────────────────────────────
 
 describe('movementPath', () => {

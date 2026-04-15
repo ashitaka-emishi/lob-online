@@ -328,6 +328,61 @@ describe('computeLOS — undigitized hexes', () => {
   });
 });
 
+// ─── Data-driven terrain LOS heights (#289) ───────────────────────────────────
+
+describe('computeLOS — data-driven terrainLosHeights (#289)', () => {
+  it('terrainLosHeights in scenario overrides hardcoded flag: woods=0 makes woods transparent', () => {
+    // LOB §4.0 / SM §1.4 — terrain height bonuses should come from scenario.json
+    // Override: set woods height flag to 0 → woods intermediate hex no longer blocks
+    const mockScenario = {
+      rules: {
+        treeLosHeight: 1,
+        terrainLosHeights: { woods: 0, woodedSloping: 1, orchard: 1 },
+      },
+    };
+    const mapData = makeMapData([
+      { hex: '10.10', terrain: 'clear', elevation: 0 },
+      { hex: '10.11', terrain: 'woods', elevation: 0 }, // would block at height 1 w/ default
+      { hex: '10.12', terrain: 'clear', elevation: 0 },
+    ]);
+    const result = computeLOS('10.10', '10.12', mapData, mockScenario);
+    // With terrainLosHeights.woods=0, woods gets no height bonus → LOS line = 0, height = 0 → clear
+    expect(result.canSee).toBe(true);
+  });
+
+  it('terrainLosHeights can grant bonus to a new terrain type not in the hardcoded map', () => {
+    // Extensibility: a terrain like 'marsh' (flag=0 by default) can be granted height bonus
+    const mockScenario = {
+      rules: {
+        treeLosHeight: 2,
+        terrainLosHeights: { marsh: 1 }, // marsh now grants treeLosHeight bonus
+      },
+    };
+    const mapData = makeMapData([
+      { hex: '10.10', terrain: 'clear', elevation: 0 },
+      { hex: '10.11', terrain: 'marsh', elevation: 0 }, // default: no bonus → would not block
+      { hex: '10.12', terrain: 'clear', elevation: 0 },
+    ]);
+    const result = computeLOS('10.10', '10.12', mapData, mockScenario);
+    // treeLosHeight=2, marsh flag=1 → effectiveHeight=2 > LOS line 0 → blocked
+    expect(result.canSee).toBe(false);
+    expect(result.blockedBy?.hex).toBe('10.11');
+  });
+
+  it('falls back to hardcoded TERRAIN_LOS_HEIGHT_FLAG when scenario has no terrainLosHeights', () => {
+    // Backward-compatibility: existing scenario fixture (no terrainLosHeights) still works
+    const mockScenario = { rules: { treeLosHeight: 1 } };
+    const mapData = makeMapData([
+      { hex: '10.10', terrain: 'clear', elevation: 0 },
+      { hex: '10.11', terrain: 'woods', elevation: 0 },
+      { hex: '10.12', terrain: 'clear', elevation: 0 },
+    ]);
+    const result = computeLOS('10.10', '10.12', mapData, mockScenario);
+    // Hardcoded fallback: woods=1 → blocks
+    expect(result.canSee).toBe(false);
+  });
+});
+
 // ─── Real SM map data ──────────────────────────────────────────────────────────
 
 describe('computeLOS — real SM map data', () => {

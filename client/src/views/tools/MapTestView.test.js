@@ -11,6 +11,48 @@ vi.mock('../../components/HexMapOverlay.vue', () => ({
   },
 }));
 
+// ─── Stub panel components for orchestration tests ────────────────────────────
+vi.mock('../../components/tools/map-test/MovementPathPanel.vue', () => ({
+  default: {
+    name: 'MovementPathPanel',
+    template: '<div class="movement-path-panel-stub"></div>',
+    props: ['clickedHexId'],
+    emits: ['overlay-update'],
+  },
+}));
+vi.mock('../../components/tools/map-test/MovementRangePanel.vue', () => ({
+  default: {
+    name: 'MovementRangePanel',
+    template: '<div class="movement-range-panel-stub"></div>',
+    props: ['clickedHexId'],
+    emits: ['overlay-update'],
+  },
+}));
+vi.mock('../../components/tools/map-test/HexInspectorPanel.vue', () => ({
+  default: {
+    name: 'HexInspectorPanel',
+    template: '<div class="hex-inspector-panel-stub"></div>',
+    props: ['clickedHexId'],
+    emits: ['overlay-update'],
+  },
+}));
+vi.mock('../../components/tools/map-test/LosPanel.vue', () => ({
+  default: {
+    name: 'LosPanel',
+    template: '<div class="los-panel-stub"></div>',
+    props: ['clickedHexId'],
+    emits: ['overlay-update'],
+  },
+}));
+vi.mock('../../components/tools/map-test/CommandRangePanel.vue', () => ({
+  default: {
+    name: 'CommandRangePanel',
+    template: '<div class="command-range-panel-stub"></div>',
+    props: ['clickedHexId'],
+    emits: ['overlay-update'],
+  },
+}));
+
 import MapTestView from './MapTestView.vue';
 
 const VALID_MAP = {
@@ -84,6 +126,113 @@ describe('MapTestView', () => {
     const wrapper = mount(MapTestView, { attachTo: document.body });
     await flushPromises();
     expect(wrapper.text()).toMatch(/failed to load/i);
+    wrapper.unmount();
+  });
+});
+
+// ─── Orchestration — togglePanel (#300) ───────────────────────────────────────
+
+describe('MapTestView — togglePanel orchestration (#300)', () => {
+  it('clicking a panel header switches the active panel', async () => {
+    const wrapper = mount(MapTestView, { attachTo: document.body });
+    await flushPromises();
+
+    // Default: MovementPath is active
+    expect(wrapper.findComponent({ name: 'MovementPathPanel' }).exists()).toBe(true);
+
+    // Click LOS panel header — select by label text, not index
+    const losHeader = wrapper
+      .findAll('button.accordion-header')
+      .find((btn) => btn.text().match(/los/i));
+    await losHeader.trigger('click');
+
+    expect(wrapper.findComponent({ name: 'LosPanel' }).exists()).toBe(true);
+    expect(wrapper.findComponent({ name: 'MovementPathPanel' }).exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it('clicking the active panel header deactivates it', async () => {
+    const wrapper = mount(MapTestView, { attachTo: document.body });
+    await flushPromises();
+
+    // Movement Path is active by default
+    expect(wrapper.findComponent({ name: 'MovementPathPanel' }).exists()).toBe(true);
+
+    // Click Movement Path header again (toggle off) — select by label text
+    const movPathHeader = wrapper
+      .findAll('button.accordion-header')
+      .find((btn) => btn.text().match(/movement path/i));
+    await movPathHeader.trigger('click');
+
+    expect(wrapper.findComponent({ name: 'MovementPathPanel' }).exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it('hex-click from HexMapOverlay dispatches clickedHexId to active panel', async () => {
+    const wrapper = mount(MapTestView, { attachTo: document.body });
+    await flushPromises();
+
+    // Emit hex-click from the overlay stub
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    await overlay.vm.$emit('hex-click', '19.23');
+
+    // Active panel (MovementPathPanel) should receive updated clickedHexId prop
+    const panel = wrapper.findComponent({ name: 'MovementPathPanel' });
+    expect(panel.props('clickedHexId')).toBe('19.23');
+    wrapper.unmount();
+  });
+
+  it('overlay-update event from active panel updates overlayConfig for HexMapOverlay', async () => {
+    const wrapper = mount(MapTestView, { attachTo: document.body });
+    await flushPromises();
+
+    const mockOverlay = { highlightHexes: ['10.10'], mode: 'movement-path' };
+
+    // Emit overlay-update from the active panel
+    const panel = wrapper.findComponent({ name: 'MovementPathPanel' });
+    await panel.vm.$emit('overlay-update', mockOverlay);
+
+    // HexMapOverlay should receive the updated overlayConfig prop
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    expect(overlay.props('overlayConfig')).toEqual(mockOverlay);
+    wrapper.unmount();
+  });
+
+  it('togglePanel resets clickedHexId and overlayConfig when switching panels', async () => {
+    const wrapper = mount(MapTestView, { attachTo: document.body });
+    await flushPromises();
+
+    // Set a hex click on the current panel
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    await overlay.vm.$emit('hex-click', '10.10');
+
+    // Switch to a different panel — select by label text
+    const rangeHeader = wrapper
+      .findAll('button.accordion-header')
+      .find((btn) => btn.text().match(/movement range/i));
+    await rangeHeader.trigger('click');
+
+    // New panel should receive null clickedHexId
+    const rangePanel = wrapper.findComponent({ name: 'MovementRangePanel' });
+    expect(rangePanel.props('clickedHexId')).toBeNull();
+    wrapper.unmount();
+  });
+});
+
+// ─── Fetch URL — dedicated data endpoint (#303) ───────────────────────────────
+
+describe('MapTestView — data endpoint (#303)', () => {
+  it('fetches map data from /api/tools/map-test/data, not the map-editor endpoint', async () => {
+    const fetchMock = mockFetch(VALID_MAP);
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(MapTestView, { attachTo: document.body });
+    await flushPromises();
+
+    // Verify the correct endpoint was called
+    const calledUrl = fetchMock.mock.calls[0]?.[0];
+    expect(calledUrl).toBe('/api/tools/map-test/data');
+    expect(calledUrl).not.toContain('map-editor');
     wrapper.unmount();
   });
 });

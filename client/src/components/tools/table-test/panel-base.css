@@ -1,0 +1,179 @@
+/* Shared base styles for Table Test Tool panels */
+
+.panel {
+  padding: 12px;
+  font-size: 13px;
+  color: #ccc;
+}
+
+.panel-header {
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #fff;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.rule-ref {
+  font-size: 11px;
+  color: #6a6040;
+  font-weight: normal;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.field-label {
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+}
+
+input[type='number'],
+input[type='text'],
+select {
+  background: #2d2d2d;
+  border: 1px solid #444;
+  color: #ccc;
+  padding: 4px 6px;
+  border-radius: 3px;
+  font-size: 13px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.checkbox-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #bbb;
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  padding: 4px 14px;
+  background: #3a3020;
+  border: 1px solid #6a5c30;
+  color: #d0c080;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+button:hover:not(:disabled) {
+  background: #4a3e28;
+  color: #e0d090;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.reset-btn {
+  background: #2d2d2d;
+  border-color: #444;
+  color: #888;
+}
+
+.reset-btn:hover:not(:disabled) {
+  background: #363636;
+  color: #aaa;
+}
+
+.loading {
+  color: #888;
+  font-style: italic;
+  font-size: 12px;
+}
+
+.error {
+  color: #f87171;
+  font-size: 12px;
+}
+
+.result {
+  border-top: 1px solid #333;
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.data-row {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  align-items: baseline;
+}
+
+.label {
+  color: #888;
+  min-width: 130px;
+  flex-shrink: 0;
+}
+
+.value {
+  color: #e0e0e0;
+}
+
+.badge {
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge.yes {
+  background: rgba(60, 130, 60, 0.3);
+  color: #7dd87d;
+  border: 1px solid #3c823c;
+}
+
+.badge.no {
+  background: rgba(80, 80, 80, 0.3);
+  color: #888;
+  border: 1px solid #555;
+}
+
+.pass-badge {
+  padding: 2px 10px;
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pass-badge.pass {
+  background: rgba(60, 130, 60, 0.25);
+  color: #7dd87d;
+  border: 1px solid #3c823c;
+}
+
+.pass-badge.fail {
+  background: rgba(130, 50, 50, 0.25);
+  color: #f87171;
+  border: 1px solid #823c3c;
+}

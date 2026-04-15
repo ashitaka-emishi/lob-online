@@ -5,7 +5,6 @@
   "name": "South Mountain",
   "system": "Line of Battle v2.0",
   "publication": "RSS #4",
-
   "turnStructure": {
     "firstTurn": "09:00",
     "lastTurn": "20:00",
@@ -14,10 +13,14 @@
     "firstPlayer": "union",
     "date": "1862-09-14"
   },
-
   "rules": {
     "_note": "SM-specific overrides — see LOBv2_GameSpecificUpdates.pdf and SM_Rules.pdf",
     "treeLosHeight": 1,
+    "terrainLosHeights": {
+      "woods": 1,
+      "woodedSloping": 1,
+      "orchard": 1
+    },
     "armyCommanderRating": "Normal",
     "breastworksAllowed": false,
     "longstreetIsArmyCommander": true,
@@ -32,16 +35,27 @@
     "slopeContourInterval": 50,
     "verticalSlopesImpassable": true,
     "detachment": {
-      "1c": { "maxDivisionDetachments": 1, "divisionsCanDetachBrigades": true },
-      "9c": { "maxDivisionDetachments": 2, "divisionsCanDetachBrigades": false },
-      "dh-div": { "maxBrigadeDetachments": 3 },
-      "j-div": { "maxBrigadeDetachments": 3 },
-      "h-div": { "maxBrigadeDetachments": 0 }
+      "1c": {
+        "maxDivisionDetachments": 1,
+        "divisionsCanDetachBrigades": true
+      },
+      "9c": {
+        "maxDivisionDetachments": 2,
+        "divisionsCanDetachBrigades": false
+      },
+      "dh-div": {
+        "maxBrigadeDetachments": 3
+      },
+      "j-div": {
+        "maxBrigadeDetachments": 3
+      },
+      "h-div": {
+        "maxBrigadeDetachments": 0
+      }
     },
     "flukeStoppageReserveExclusions": ["g1me", "6ny-cav", "3ohio-cav"],
     "_flukeNote": "9 Corps cavalry units may NOT fulfill reserve requirement for Fluke Stoppage (SM rule)"
   },
-
   "lightingSchedule": [
     {
       "startTurn": 1,
@@ -70,7 +84,6 @@
   },
   "randomEventsEnabled": true,
   "randomEventsTiming": "commandPhaseAfterOrderAcceptance",
-
   "movementCosts": {
     "_source": "SM_Rules.pdf — SM Special Terrain Effects on Movement chart",
     "_notes": {
@@ -98,8 +111,22 @@
         "wagon": null,
         "leader": null
       },
-      "clear": { "line": 1, "column": 1, "mounted": 1, "limbered": 1, "wagon": 1, "leader": 1 },
-      "orchard": { "line": 1, "column": 1, "mounted": 2, "limbered": 2, "wagon": 2, "leader": 1 },
+      "clear": {
+        "line": 1,
+        "column": 1,
+        "mounted": 1,
+        "limbered": 1,
+        "wagon": 1,
+        "leader": 1
+      },
+      "orchard": {
+        "line": 1,
+        "column": 1,
+        "mounted": 2,
+        "limbered": 2,
+        "wagon": 2,
+        "leader": 1
+      },
       "slopingGround": {
         "line": 2,
         "column": 2,
@@ -126,7 +153,14 @@
         "wagon": null,
         "leader": 2
       },
-      "marsh": { "line": 2, "column": 2, "mounted": 3, "limbered": 4, "wagon": null, "leader": 2 },
+      "marsh": {
+        "line": 2,
+        "column": 2,
+        "mounted": 3,
+        "limbered": 4,
+        "wagon": null,
+        "leader": 2
+      },
       "pike": {
         "line": "ot",
         "column": 0.5,
@@ -145,11 +179,25 @@
         "leader": 0.5,
         "_note": "Road: add +0.5 MP per Slope hexside when using road movement only (see roadSlopePenalty)"
       },
-      "trail": { "line": "ot", "column": 1, "mounted": 1, "limbered": 2, "wagon": 2, "leader": 0.5 }
+      "trail": {
+        "line": "ot",
+        "column": 1,
+        "mounted": 1,
+        "limbered": 2,
+        "wagon": 2,
+        "leader": 0.5
+      }
     },
     "hexsideCosts": {
       "_note": "These are ADDITIONAL costs added to the terrain cost when crossing the hexside",
-      "stream": { "line": 1, "column": 1, "mounted": 1, "limbered": 1, "wagon": 1, "leader": 0 },
+      "stream": {
+        "line": 1,
+        "column": 1,
+        "mounted": 1,
+        "limbered": 1,
+        "wagon": 1,
+        "leader": 0
+      },
       "elevation": {
         "line": 1,
         "column": 1,
@@ -194,7 +242,6 @@
       "_note": "When moving along a Road (not Pike or Trail), add this cost per slope hexside crossed"
     }
   },
-
   "ammoReserves": {
     "_source": "LOBv2_GameSpecificUpdates.pdf",
     "confederate": {
@@ -225,7 +272,6 @@
       }
     }
   },
-
   "setup": {
     "_note": "At-start hex coordinates use col.row format. Setup constraints use setupZone/referenceHex notation.",
     "union": [
@@ -238,7 +284,11 @@
       }
     ],
     "confederate": [
-      { "unitId": "5va-cav", "hex": "19.23", "order": "move" },
+      {
+        "unitId": "5va-cav",
+        "hex": "19.23",
+        "order": "move"
+      },
       {
         "unitId": "pelham-a",
         "hex": "22.23",
@@ -251,7 +301,11 @@
         "order": null,
         "_note": "Independent — no order needed"
       },
-      { "unitId": "csa-wagon", "hex": "36.26", "order": null },
+      {
+        "unitId": "csa-wagon",
+        "hex": "36.26",
+        "order": null
+      },
       {
         "unitId": "dh-hill",
         "hex": "36.26",
@@ -262,12 +316,30 @@
         "_groupNote": "Colquitt Brigade (C/dH) — deployed at Turner's Gap",
         "order": "move",
         "units": [
-          { "unitId": "colquitt", "hex": "29.22" },
-          { "unitId": "23ga", "hex": "30.21" },
-          { "unitId": "13ala", "hex": "28.23" },
-          { "unitId": "27ga", "hex": "29.23" },
-          { "unitId": "6ga", "hex": "29.22" },
-          { "unitId": "28ga", "hex": "30.20" }
+          {
+            "unitId": "colquitt",
+            "hex": "29.22"
+          },
+          {
+            "unitId": "23ga",
+            "hex": "30.21"
+          },
+          {
+            "unitId": "13ala",
+            "hex": "28.23"
+          },
+          {
+            "unitId": "27ga",
+            "hex": "29.23"
+          },
+          {
+            "unitId": "6ga",
+            "hex": "29.22"
+          },
+          {
+            "unitId": "28ga",
+            "hex": "30.20"
+          }
         ]
       },
       {
@@ -300,18 +372,38 @@
         "_groupNote": "Garland Brigade (G/dH) — DETACHED, defending Fox's Gap",
         "order": "move",
         "units": [
-          { "unitId": "garland", "hex": "28.25" },
-          { "unitId": "5nc", "hex": "25.25" },
-          { "unitId": "20nc", "hex": "26.25" },
-          { "unitId": "13nc", "hex": "27.26" },
-          { "unitId": "23nc", "hex": "28.25" },
-          { "unitId": "12nc", "hex": "29.26" },
-          { "unitId": "bondurant", "hex": "30.25" }
+          {
+            "unitId": "garland",
+            "hex": "28.25"
+          },
+          {
+            "unitId": "5nc",
+            "hex": "25.25"
+          },
+          {
+            "unitId": "20nc",
+            "hex": "26.25"
+          },
+          {
+            "unitId": "13nc",
+            "hex": "27.26"
+          },
+          {
+            "unitId": "23nc",
+            "hex": "28.25"
+          },
+          {
+            "unitId": "12nc",
+            "hex": "29.26"
+          },
+          {
+            "unitId": "bondurant",
+            "hex": "30.25"
+          }
         ]
       }
     ]
   },
-
   "initialOrders": {
     "confederate": [
       {
@@ -330,7 +422,6 @@
       }
     ]
   },
-
   "reinforcements": {
     "_note": "Reinforcement times are scenario clock times (HH:MM, 24-hour). Turn = ceil((minutesSince0900)/20) + 1. Entry hexes use col.row format.",
     "union": [
@@ -491,10 +582,26 @@
         "_note": "Jones Division (less three brigades) — VARIABLE arrival time. Roll 1d6: 1=14:30@39.35, 2-3=15:00@20.34, 4-5=15:30@39.35, 6=16:00@39.35",
         "variable": true,
         "variableTable": [
-          { "roll": 1, "time": "14:30", "entryHex": "39.35" },
-          { "roll": "2-3", "time": "15:00", "entryHex": "20.34" },
-          { "roll": "4-5", "time": "15:30", "entryHex": "39.35" },
-          { "roll": 6, "time": "16:00", "entryHex": "39.35" }
+          {
+            "roll": 1,
+            "time": "14:30",
+            "entryHex": "39.35"
+          },
+          {
+            "roll": "2-3",
+            "time": "15:00",
+            "entryHex": "20.34"
+          },
+          {
+            "roll": "4-5",
+            "time": "15:30",
+            "entryHex": "39.35"
+          },
+          {
+            "roll": 6,
+            "time": "16:00",
+            "entryHex": "39.35"
+          }
         ],
         "orderRef": "csa-order-2",
         "orderType": "move",
@@ -521,10 +628,26 @@
         "_note": "Detached Jones brigades (Garnett, Kemper, Walker) — same variable timing as Force A (roll separately)",
         "variable": true,
         "variableTable": [
-          { "roll": 1, "time": "14:30", "entryHex": "39.35" },
-          { "roll": "2-3", "time": "15:00", "entryHex": "20.34" },
-          { "roll": "4-5", "time": "15:30", "entryHex": "39.35" },
-          { "roll": 6, "time": "16:00", "entryHex": "39.35" }
+          {
+            "roll": 1,
+            "time": "14:30",
+            "entryHex": "39.35"
+          },
+          {
+            "roll": "2-3",
+            "time": "15:00",
+            "entryHex": "20.34"
+          },
+          {
+            "roll": "4-5",
+            "time": "15:30",
+            "entryHex": "39.35"
+          },
+          {
+            "roll": 6,
+            "time": "16:00",
+            "entryHex": "39.35"
+          }
         ],
         "orderRef": "csa-order-3",
         "orderType": "move",
@@ -592,20 +715,59 @@
       }
     ]
   },
-
   "victoryPoints": {
     "_note": "VP formula: Union VP minus Confederate VP = net result. Positive = Union advantage.",
     "terrain": [
-      { "hex": "06.10", "unionVP": 0, "confederateVP": 2 },
-      { "hex": "16.02", "unionVP": 0, "confederateVP": 10 },
-      { "hex": "19.23", "unionVP": 4, "confederateVP": 3 },
-      { "hex": "19.32", "unionVP": 4, "confederateVP": 2 },
-      { "hex": "33.02", "unionVP": 0, "confederateVP": 5 },
-      { "hex": "36.26", "unionVP": 5, "confederateVP": 5 },
-      { "hex": "39.34", "unionVP": 6, "confederateVP": 2 },
-      { "hex": "40.07", "unionVP": 1, "confederateVP": 5 },
-      { "hex": "56.21", "unionVP": 2, "confederateVP": 2 },
-      { "hex": "56.23", "unionVP": 2, "confederateVP": 2 }
+      {
+        "hex": "06.10",
+        "unionVP": 0,
+        "confederateVP": 2
+      },
+      {
+        "hex": "16.02",
+        "unionVP": 0,
+        "confederateVP": 10
+      },
+      {
+        "hex": "19.23",
+        "unionVP": 4,
+        "confederateVP": 3
+      },
+      {
+        "hex": "19.32",
+        "unionVP": 4,
+        "confederateVP": 2
+      },
+      {
+        "hex": "33.02",
+        "unionVP": 0,
+        "confederateVP": 5
+      },
+      {
+        "hex": "36.26",
+        "unionVP": 5,
+        "confederateVP": 5
+      },
+      {
+        "hex": "39.34",
+        "unionVP": 6,
+        "confederateVP": 2
+      },
+      {
+        "hex": "40.07",
+        "unionVP": 1,
+        "confederateVP": 5
+      },
+      {
+        "hex": "56.21",
+        "unionVP": 2,
+        "confederateVP": 2
+      },
+      {
+        "hex": "56.23",
+        "unionVP": 2,
+        "confederateVP": 2
+      }
     ],
     "wreck": {
       "_note": "VPs awarded to the OPPONENT for wrecking formations or eliminating artillery.",
@@ -635,20 +797,46 @@
       }
     }
   },
-
   "victoryConditions": {
     "_note": "Result = Union VP total minus Confederate VP total.",
     "results": [
-      { "label": "Confederate Massive Victory", "min": null, "max": -6 },
-      { "label": "Confederate Major Victory", "min": -5, "max": 1 },
-      { "label": "Confederate Marginal Victory", "min": 2, "max": 8 },
-      { "label": "Draw", "min": 9, "max": 15 },
-      { "label": "Union Marginal Victory", "min": 16, "max": 20 },
-      { "label": "Union Major Victory", "min": 21, "max": 29 },
-      { "label": "Union Massive Victory", "min": 30, "max": null }
+      {
+        "label": "Confederate Massive Victory",
+        "min": null,
+        "max": -6
+      },
+      {
+        "label": "Confederate Major Victory",
+        "min": -5,
+        "max": 1
+      },
+      {
+        "label": "Confederate Marginal Victory",
+        "min": 2,
+        "max": 8
+      },
+      {
+        "label": "Draw",
+        "min": 9,
+        "max": 15
+      },
+      {
+        "label": "Union Marginal Victory",
+        "min": 16,
+        "max": 20
+      },
+      {
+        "label": "Union Major Victory",
+        "min": 21,
+        "max": 29
+      },
+      {
+        "label": "Union Massive Victory",
+        "min": 30,
+        "max": null
+      }
     ]
   },
-
   "randomEvents": {
     "_note": "Roll 2d6 at the start of the Confederate or Union player turn (as applicable). Special re-roll triggers noted per table.",
     "confederate": {

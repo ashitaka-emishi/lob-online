@@ -3,7 +3,7 @@
 **Track ID:** map-test-tool_20260411
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-04-11
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -81,7 +81,7 @@ Add `server/src/routes/mapTest.js` with all five GET endpoints and mount it in
 ### Verification
 
 - [x] `npm run test` — 1705 tests passing (18 new route tests)
-- [ ] Manual: `curl` each endpoint against the running dev server returns expected shape
+- [x] Manual: `curl` each endpoint against the running dev server returns expected shape
 
 ---
 
@@ -109,7 +109,7 @@ shell with the hex map in read-only mode and a panel placeholder.
 ### Verification
 
 - [x] `npm run test` — 1710 tests passing (9 new: 5 router, 4 view)
-- [ ] Manual: navigate to `/tools/map-test` — map renders, panel selector visible
+- [x] Manual: navigate to `/tools/map-test` — map renders, panel selector visible
 
 ---
 
@@ -160,7 +160,7 @@ events from the orchestrator, calls its server endpoint, and displays the result
 ### Verification
 
 - [x] `npm run test` — all panel tests green (1753 tests passing)
-- [ ] Manual: exercise each panel end-to-end on the running dev server
+- [x] Manual: exercise each panel end-to-end on the running dev server
 
 ---
 
@@ -181,18 +181,18 @@ the Map Test Tool.
 ### Verification
 
 - [x] `npm run test` — all tests green (1712 passing, no orphaned LOS references)
-- [ ] Manual: map editor loads at `/tools/map-editor`; no LOS tab visible
+- [x] Manual: map editor loads at `/tools/map-editor`; no LOS tab visible
 
 ---
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met
-- [ ] `npm run test` — full suite green
-- [ ] `npm run lint && npm run format:check` — clean
-- [ ] Manual end-to-end: all five panels exercise correctly on the running dev server
-- [ ] Map editor has no LOS tab
-- [ ] Ready for `/pr-create`
+- [x] All acceptance criteria in spec.md met
+- [x] `npm run test` — full suite green (1859 tests passing)
+- [x] `npm run lint && npm run format:check` — clean
+- [x] Manual end-to-end: all five panels exercise correctly on the running dev server
+- [x] Map editor has no LOS tab
+- [x] Ready for `/pr-create`
 
 ---
 

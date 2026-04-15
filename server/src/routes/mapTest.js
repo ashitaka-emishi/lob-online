@@ -13,6 +13,22 @@ import { computeLOS } from '../engine/los.js';
 import { buildHexIndex, loadMap, movementPath, movementRange } from '../engine/movement.js';
 import { loadScenario } from '../engine/scenario.js';
 
+// ─── Hex-ID format validation (#302) ──────────────────────────────────────────
+
+// LOB — canonical hex ID format is "CC.RR" (e.g. "19.23"), matching HexId in scenario.schema.js
+const HEX_ID_PATTERN = /^\d+\.\d+$/;
+
+/**
+ * Return true when `id` matches the canonical hex-ID format ("col.row").
+ * Returns false for empty strings, non-numeric segments, or missing dot.
+ *
+ * @param {string} id
+ * @returns {boolean}
+ */
+function isValidHexId(id) {
+  return typeof id === 'string' && HEX_ID_PATTERN.test(id);
+}
+
 // ─── Allowlists for enum parameters ───────────────────────────────────────────
 
 const VALID_FORMATIONS = new Set([
@@ -37,6 +53,18 @@ const hexIndex = buildHexIndex(mapData);
 
 const router = Router();
 
+// ── GET /data ─────────────────────────────────────────────────────────────────
+// Returns map data (hexes, gridSpec, elevationSystem) for client tools.
+// Dedicated endpoint for map-test tool — decoupled from map-editor (#303).
+router.get('/data', (_req, res) => {
+  try {
+    return res.json(mapData);
+  } catch (err) {
+    console.error('[route] /map-test/data error:', err);
+    return res.status(500).json({ error: 'Failed to load map data' });
+  }
+});
+
 // ── GET /movement-path ────────────────────────────────────────────────────────
 // Query: startHex, endHex, formation
 // Returns: { path, costs, totalCost, impassable }
@@ -44,6 +72,13 @@ router.get('/movement-path', (req, res) => {
   const { startHex, endHex, formation } = req.query;
   if (!startHex || !endHex || !formation) {
     return res.status(400).json({ error: 'startHex, endHex, and formation are required' });
+  }
+  // LOB — validate hex-ID format before engine calls (#302)
+  if (!isValidHexId(startHex)) {
+    return res.status(400).json({ error: 'Invalid hex ID format for startHex' });
+  }
+  if (!isValidHexId(endHex)) {
+    return res.status(400).json({ error: 'Invalid hex ID format for endHex' });
   }
   if (!VALID_FORMATIONS.has(formation)) {
     return res
@@ -74,6 +109,10 @@ router.get('/movement-range', (req, res) => {
   if (!hex || !formation) {
     return res.status(400).json({ error: 'hex and formation are required' });
   }
+  // LOB — validate hex-ID format before engine calls (#302)
+  if (!isValidHexId(hex)) {
+    return res.status(400).json({ error: 'Invalid hex ID format for hex' });
+  }
   if (!VALID_FORMATIONS.has(formation)) {
     return res
       .status(400)
@@ -100,6 +139,10 @@ router.get('/hex-info', (req, res) => {
   if (!hex) {
     return res.status(400).json({ error: 'hex is required' });
   }
+  // LOB — validate hex-ID format before engine calls (#302)
+  if (!isValidHexId(hex)) {
+    return res.status(400).json({ error: 'Invalid hex ID format for hex' });
+  }
 
   const hexEntry = hexIndex.get(hex);
   if (!hexEntry) {
@@ -123,6 +166,13 @@ router.get('/los', (req, res) => {
   if (!fromHex || !toHex) {
     return res.status(400).json({ error: 'fromHex and toHex are required' });
   }
+  // LOB — validate hex-ID format before engine calls (#302)
+  if (!isValidHexId(fromHex)) {
+    return res.status(400).json({ error: 'Invalid hex ID format for fromHex' });
+  }
+  if (!isValidHexId(toHex)) {
+    return res.status(400).json({ error: 'Invalid hex ID format for toHex' });
+  }
   if (!hexIndex.has(fromHex)) {
     return res.status(400).json({ error: 'fromHex not found in map data' });
   }
@@ -131,7 +181,7 @@ router.get('/los', (req, res) => {
   }
 
   try {
-    const result = computeLOS(fromHex, toHex, mapData, scenario);
+    const result = computeLOS(fromHex, toHex, mapData, scenario, hexIndex);
     return res.json(result);
   } catch (err) {
     console.error('[route] /los error:', err);
@@ -146,6 +196,10 @@ router.get('/command-range', (req, res) => {
   const { hex, commanderLevel } = req.query;
   if (!hex || !commanderLevel) {
     return res.status(400).json({ error: 'hex and commanderLevel are required' });
+  }
+  // LOB — validate hex-ID format before engine calls (#302)
+  if (!isValidHexId(hex)) {
+    return res.status(400).json({ error: 'Invalid hex ID format for hex' });
   }
   if (!VALID_COMMANDER_LEVELS.has(commanderLevel)) {
     return res.status(400).json({

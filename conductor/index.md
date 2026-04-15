@@ -47,6 +47,8 @@ Navigation hub for project context.
 | [hld-milestone-plan_20260410](./tracks/hld-milestone-plan_20260410/index.md) | HLD Update — Implementation Status + M3–M8 Milestone Plan | Complete |
 | [m3-engine_20260410](./tracks/m3-engine_20260410/index.md) | M3 Engine Modules — hex, scenario, movement, LOS, and game tables | Complete |
 | [map-test-tool_20260411](./tracks/map-test-tool_20260411/index.md) | Map Test Tool | Pending |
+| [table-test-tool_20260412](./tracks/table-test-tool_20260412/index.md) | Table Test Tool | Pending |
+| [m3-debt-sprint_20260412](./tracks/m3-debt-sprint_20260412/index.md) | M3 Debt Sprint — Score-3 Cleanup | Pending |
 
 ## Getting Started
 

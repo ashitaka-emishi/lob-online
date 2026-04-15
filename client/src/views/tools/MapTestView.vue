@@ -17,7 +17,7 @@ const fetchError = ref(null);
 
 onMounted(async () => {
   try {
-    const res = await fetch('/api/tools/map-editor/data');
+    const res = await fetch('/api/tools/map-test/data');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     mapData.value = await res.json();
   } catch (err) {

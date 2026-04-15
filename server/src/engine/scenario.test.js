@@ -84,13 +84,29 @@ describe('loadScenario — South Mountain scenario', () => {
   });
 });
 
+// ─── Path traversal guard (#284) ──────────────────────────────────────────────
+
+describe('loadScenario — path traversal guard (#284)', () => {
+  it('throws a generic error (no path in message) on path traversal attempt', () => {
+    expect(() => loadScenario('/etc/passwd')).toThrow(/not allowed|invalid path|outside/i);
+    const err = (() => {
+      try {
+        loadScenario('/etc/passwd');
+      } catch (e) {
+        return e;
+      }
+    })();
+    expect(err.message).not.toContain('/etc/passwd');
+  });
+});
+
 // ─── Error cases ──────────────────────────────────────────────────────────────
 
 describe('loadScenario — error handling', () => {
-  it('throws when file does not exist', () => {
-    expect(() => loadScenario('/nonexistent/path/scenario.json')).toThrow(
-      /failed to read scenario file/
-    );
+  it('throws when file does not exist (containment guard passes, file I/O fails)', () => {
+    // Use a path inside tmpdir (allowed by guard) that doesn't exist
+    const missingPath = join(tmpdir(), 'nonexistent-scenario-test.json');
+    expect(() => loadScenario(missingPath)).toThrow(/failed to read scenario file/);
   });
 
   it('throws on invalid JSON', () => {
@@ -103,7 +119,7 @@ describe('loadScenario — error handling', () => {
     }
   });
 
-  it('throws on JSON that fails Zod schema validation', () => {
+  it('throws on JSON that fails Zod schema validation (uses tmpdir — allowed by guard)', () => {
     const tmpPath = join(tmpdir(), `scenario-test-malformed-${Date.now()}.json`);
     // Missing required fields (id, name, turnStructure, etc.)
     writeFileSync(tmpPath, JSON.stringify({ _status: 'draft', _source: 'test' }));

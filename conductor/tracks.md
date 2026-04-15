@@ -72,6 +72,10 @@
 
 | [x] | m3-engine_20260410 | M3 Engine Modules — hex, scenario, movement, LOS, and game tables | 2026-04-10 | 2026-04-11 |
 
-| [~] | map-test-tool_20260411 | Map Test Tool | 2026-04-11 | 2026-04-11 |
+| [x] | map-test-tool_20260411 | Map Test Tool | 2026-04-11 | 2026-04-14 |
+
+| [x] | table-test-tool_20260412 | Table Test Tool | 2026-04-12 | 2026-04-12 |
+
+| [x] | m3-debt-sprint_20260412 | M3 Debt Sprint — Score-3 Cleanup | 2026-04-12 | 2026-04-14 |
 
 <!-- Tracks registered by /conductor:new-track -->
