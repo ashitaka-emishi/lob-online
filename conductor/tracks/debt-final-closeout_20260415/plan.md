@@ -44,25 +44,25 @@ Fix four engine debt items. #291 requires a domain-expert consult before any cod
 
 ### Tasks
 
-- [ ] Task 2.1: Consult domain-expert agent on #291: is the `ammoTypeShift` threshold check
+- [x] Task 2.1: Consult domain-expert agent on #291: is the `ammoTypeShift` threshold check
       in `combat.js` genuinely unreachable, or does it guard a real rules edge case? Record the
       verdict as a comment. If unreachable, close with comment; if intentional, document why.
-- [ ] Task 2.2: Close #291 based on consult result — either add a rule-citation comment
+- [x] Task 2.2: Close #291 based on consult result — either add a rule-citation comment
       explaining why the check is correct-by-construction, or fix the logic if the consult reveals
       a misimplementation
-- [ ] Task 2.3: Create `engine/formations.js` and move `FORMATION_EFFECTS` and
+- [x] Task 2.3: Create `engine/formations.js` and move `FORMATION_EFFECTS` and
       `ACTIVITY_EFFECTS` out of `engine/weapons.js`; update all imports — close #292
-- [ ] Task 2.4: Add a startup-only guard (or refactor to async) for `loadMap()` and
+- [x] Task 2.4: Add a startup-only guard (or refactor to async) for `loadMap()` and
       `loadScenario()` in `engine/loader.js` (or wherever the sync `readFileSync` calls live) so
       that post-startup calls from M4 game-loop code fail loudly — close #293
-- [ ] Task 2.5: Add `dirIndex` range validation to `hexEntryCost` in `engine/hex.js` — return
+- [x] Task 2.5: Add `dirIndex` range validation to `hexEntryCost` in `engine/hex.js` — return
       a sentinel or throw on out-of-range input (6, -1, NaN) — close #286
 
 ### Verification
 
-- [ ] `npm run test` passes (engine test suite green including new dirIndex guard test)
-- [ ] `formations.js` exports referenced correctly in all callers
-- [ ] No open score-2 items remain in debt register
+- [x] `npm run test` passes (engine test suite green including new dirIndex guard test)
+- [x] `formations.js` exports referenced correctly in all callers
+- [x] No open score-2 items remain in debt register
 
 ---
 
@@ -72,18 +72,18 @@ Fix four score-1 Vue idiom issues in `TableTestView.vue` and `MoralePanel.vue` (
 
 ### Tasks
 
-- [ ] Task 3.1: Add input allowlist filtering in the table-test API route or in
+- [x] Task 3.1: Add input allowlist filtering in the table-test API route or in
       `TableTestView.vue` before forwarding modifier objects to the engine — close #306
-- [ ] Task 3.2: Extract a `defaultModifiers()` factory function in `MoralePanel.vue` so that
+- [x] Task 3.2: Extract a `defaultModifiers()` factory function in `MoralePanel.vue` so that
       `ref()` init and `reset()` share a single source of truth — close #309
-- [ ] Task 3.3: Convert `activePanel()` function in `TableTestView.vue` to a `computed()`
+- [x] Task 3.3: Convert `activePanel()` function in `TableTestView.vue` to a `computed()`
       property — close #310
-- [ ] Task 3.4: Replace eager `import` statements for all 11 panel SFCs in `TableTestView.vue`
+- [x] Task 3.4: Replace eager `import` statements for all 11 panel SFCs in `TableTestView.vue`
       with `defineAsyncComponent(() => import(...))` — close #311
 
 ### Verification
 
-- [ ] `npm run test` passes
+- [x] `npm run test` passes
 - [ ] Table Test Tool renders all 11 panels correctly in browser (`/tools/table-test`)
 
 ---
@@ -94,18 +94,18 @@ Fix three score-1 test-quality and schema items introduced in earlier sprints.
 
 ### Tasks
 
-- [ ] Task 4.1: Add `.max()` length constraints to `id`, `name`, and `baseLeaderId` string
+- [x] Task 4.1: Add `.max()` length constraints to `id`, `name`, and `baseLeaderId` string
       fields in `succession.schema` — close #259
-- [ ] Task 4.2: Extract repeated `_variants` node fixture in `OobTreeNode.test.js` into a
+- [x] Task 4.2: Extract repeated `_variants` node fixture in `OobTreeNode.test.js` into a
       factory function shared across the three tests that use it — close #256
-- [ ] Task 4.3: Refactor `OOB_WITH_WJ_BRIGADE` and `OOB_WITH_RENO_BRIGADE` fixtures in
+- [x] Task 4.3: Refactor `OOB_WITH_WJ_BRIGADE` and `OOB_WITH_RENO_BRIGADE` fixtures in
       `oobTreeTransform.test.js` to extend `makeOob()` instead of duplicating the full OOB shape
       — close #255
 
 ### Verification
 
-- [ ] `npm run test` passes (schema tests cover new `.max()` constraints)
-- [ ] No open score-1 test/schema items remain
+- [x] `npm run test` passes (schema tests cover new `.max()` constraints)
+- [x] No open score-1 test/schema items remain
 
 ---
 

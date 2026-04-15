@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { flushPromises, mount } from '@vue/test-utils';
+import { mount } from '@vue/test-utils';
 import TableTestView from './TableTestView.vue';
 
 // ─── Stub all 11 panel components ─────────────────────────────────────────────
