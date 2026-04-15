@@ -242,6 +242,11 @@ function hexEntryCostBreakdown(
  * @returns {number} MP cost (may be Infinity if impassable)
  */
 export function hexEntryCost(fromHexId, toHexId, dirIndex, formation, scenario, hexIndex) {
+  // LOB — dirIndex must be 0–5 (N/NE/SE/S/SW/NW); out-of-range values silently
+  // return wrong edge data from array lookups (#286)
+  if (!Number.isInteger(dirIndex) || dirIndex < 0 || dirIndex > 5) {
+    throw new RangeError(`hexEntryCost: dirIndex must be 0–5, got ${dirIndex}`);
+  }
   return hexEntryCostBreakdown(fromHexId, toHexId, dirIndex, formation, scenario, hexIndex).total;
 }
 

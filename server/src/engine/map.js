@@ -20,6 +20,12 @@ const DEFAULT_MAP_PATH = join(__dirname, '../../../data/scenarios/south-mountain
 
 // ─── Map loader ────────────────────────────────────────────────────────────────
 
+// #293 — startup-only guard: warn if loadMap() is called more than once per path.
+// Engine consumers should call loadMap() once at server startup and reuse the result.
+// Repeated calls indicate a caller is doing per-request data I/O, which will be
+// a correctness issue when the engine moves to async I/O in M4.
+const _loadedMapPaths = new Set();
+
 /**
  * Load and validate map.json.
  * Returns a frozen plain object. Call once at startup; pass the result to engine functions.
@@ -29,6 +35,14 @@ const DEFAULT_MAP_PATH = join(__dirname, '../../../data/scenarios/south-mountain
  * @throws {Error} If the file is missing, unreadable, or fails Zod validation.
  */
 export function loadMap(mapPath = DEFAULT_MAP_PATH) {
+  // LOB §startup — call once at server init; per-request calls are a misuse pattern (#293)
+  if (_loadedMapPaths.has(mapPath)) {
+    console.warn(
+      `[map.js] loadMap() called more than once for path "${mapPath}". ` +
+        'Call once at startup and pass the result to engine functions.'
+    );
+  }
+  _loadedMapPaths.add(mapPath);
   // Security (#284) — containment guard: resolve and verify before any file I/O
   assertContainedPath(mapPath, 'map.js');
 

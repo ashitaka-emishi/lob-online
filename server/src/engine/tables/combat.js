@@ -345,14 +345,13 @@ export function ammoTypeShift(ammoType, range, firerSPs) {
   // LOB_CHARTS §5.6 — shift only applies within max range for ammo type
   if (range > entry.maxRange) return 0;
 
-  // LOB_CHARTS §5.6 — threshold check: firer must have enough SPs for shift to apply
+  // LOB §5.6 / Threshold Value Chart — threshold is the spMin of the tier the firer falls into.
+  // A non-zero return means firerSPs ≥ spMin for that tier, so firerSPs >= threshold is always
+  // true here — the redundant comparison is removed (#291, domain-expert confirmed tautological).
   const threshold = spShiftThreshold(firerSPs);
-  if (threshold === 0) return 0; // SPs out of threshold range
+  if (threshold === 0) return 0; // firerSPs outside all threshold tiers (< 1 or > 8)
 
-  // The threshold value is the minimum SPs needed; if firer SPs >= threshold, shift applies
-  // (The threshold IS the minimum, so comparing firerSPs >= threshold)
-  if (firerSPs >= threshold) return entry.shift;
-  return 0;
+  return entry.shift;
 }
 
 /**

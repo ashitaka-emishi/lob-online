@@ -24,6 +24,9 @@ const DEFAULT_SCENARIO_PATH = join(
   '../../../data/scenarios/south-mountain/scenario.json'
 );
 
+// #293 — startup-only guard: warn if loadScenario() is called more than once per path.
+const _loadedScenarioPaths = new Set();
+
 /**
  * Load and validate scenario.json.
  *
@@ -36,6 +39,14 @@ const DEFAULT_SCENARIO_PATH = join(
  * @throws {Error} If the file is missing, unreadable, or fails Zod validation.
  */
 export function loadScenario(scenarioPath = DEFAULT_SCENARIO_PATH) {
+  // LOB §startup — call once at server init; per-request calls are a misuse pattern (#293)
+  if (_loadedScenarioPaths.has(scenarioPath)) {
+    console.warn(
+      `[scenario.js] loadScenario() called more than once for path "${scenarioPath}". ` +
+        'Call once at startup and pass the result to engine functions.'
+    );
+  }
+  _loadedScenarioPaths.add(scenarioPath);
   // Security (#284) — containment guard: resolve and verify before any file I/O
   assertContainedPath(scenarioPath, 'scenario.js');
 
