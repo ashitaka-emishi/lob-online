@@ -128,7 +128,15 @@ function lookupTerrainCost(terrain, formationKey, terrainCosts) {
  * @param {Map<string, object>} hexIndex - result of buildHexIndex()
  * @returns {{ terrainCost: number, hexsideCost: number, total: number }}
  */
-function hexEntryCostBreakdown(fromHexId, toHexId, dirIndex, formation, scenario, hexIndex) {
+function hexEntryCostBreakdown(
+  fromHexId,
+  toHexId,
+  dirIndex,
+  formation,
+  scenario,
+  hexIndex,
+  noEffectSet = null
+) {
   const IMPASSABLE = { terrainCost: Infinity, hexsideCost: 0, total: Infinity };
 
   const toHex = hexIndex.get(toHexId);
@@ -178,7 +186,9 @@ function hexEntryCostBreakdown(fromHexId, toHexId, dirIndex, formation, scenario
   // ── Step 3: Hexside costs (additive) ─────────────────────────────────────
   // LOB §3 — hexside costs are ADDED to terrain cost (additive model)
   let hexsideTotal = 0;
-  const noEffect = new Set(noEffectTerrain ?? []);
+  // LOB §3 — noEffectTerrain types (e.g. stoneWall) have zero hexside cost
+  // noEffectSet is hoisted by callers in hot loops to avoid per-call Set construction
+  const noEffect = noEffectSet ?? new Set(noEffectTerrain ?? []);
   const usingRoadMovement = routeFeature?.type === 'road';
 
   for (const feature of features) {
@@ -276,9 +286,11 @@ function getDirectionBetween(fromHexId, toHexId, gridSpec) {
 export function movementPath(startHexId, endHexId, formation, scenario, mapData, hexIndex = null) {
   const idx = hexIndex ?? buildHexIndex(mapData);
   const gridSpec = mapData.gridSpec;
+  // Pre-build noEffectSet once — avoids per-hex Set construction in the hot Dijkstra loop
+  const noEffectSet = new Set(scenario.movementCosts.noEffectTerrain ?? []);
 
   const costFn = (fromId, toId, dirIndex) =>
-    hexEntryCost(fromId, toId, dirIndex, formation, scenario, idx);
+    hexEntryCostBreakdown(fromId, toId, dirIndex, formation, scenario, idx, noEffectSet).total;
 
   const { costs, prev } = dijkstra(startHexId, costFn, Infinity, gridSpec);
 
@@ -298,7 +310,15 @@ export function movementPath(startHexId, endHexId, formation, scenario, mapData,
       continue;
     }
     const dirIndex = getDirectionBetween(path[i - 1], hexId, gridSpec);
-    const detail = hexEntryCostBreakdown(path[i - 1], hexId, dirIndex, formation, scenario, idx);
+    const detail = hexEntryCostBreakdown(
+      path[i - 1],
+      hexId,
+      dirIndex,
+      formation,
+      scenario,
+      idx,
+      noEffectSet
+    );
     running += detail.total;
     breakdown.push({
       hex: hexId,
@@ -341,8 +361,11 @@ export function movementRange(startHexId, formation, scenario, mapData, hexIndex
     scenario.movementCosts.movementAllowances[formation] ??
     0;
 
+  // Pre-build noEffectSet once — avoids per-hex Set construction in the hot Dijkstra loop
+  const noEffectSet = new Set(scenario.movementCosts.noEffectTerrain ?? []);
+
   const costFn = (fromId, toId, dirIndex) =>
-    hexEntryCost(fromId, toId, dirIndex, formation, scenario, idx);
+    hexEntryCostBreakdown(fromId, toId, dirIndex, formation, scenario, idx, noEffectSet).total;
 
   const { costs } = dijkstra(startHexId, costFn, allowance, gridSpec);
 
