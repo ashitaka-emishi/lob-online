@@ -48,7 +48,8 @@ Navigation hub for project context.
 | [m3-engine_20260410](./tracks/m3-engine_20260410/index.md) | M3 Engine Modules — hex, scenario, movement, LOS, and game tables | Complete |
 | [map-test-tool_20260411](./tracks/map-test-tool_20260411/index.md) | Map Test Tool | Pending |
 | [table-test-tool_20260412](./tracks/table-test-tool_20260412/index.md) | Table Test Tool | Pending |
-| [m3-debt-sprint_20260412](./tracks/m3-debt-sprint_20260412/index.md) | M3 Debt Sprint — Score-3 Cleanup | Pending |
+| [m3-debt-sprint_20260412](./tracks/m3-debt-sprint_20260412/index.md) | M3 Debt Sprint — Score-3 Cleanup | Complete |
+| [pipeline-cleanup_20260414](./tracks/pipeline-cleanup_20260414/index.md) | Dev Pipeline Cleanup | Pending |
 
 ## Getting Started
 

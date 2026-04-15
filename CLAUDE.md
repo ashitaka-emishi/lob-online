@@ -95,8 +95,9 @@ Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `.env` (or your shell) to enable
 | Parallel debugging  | `/team-debug`                            |
 | Parallel dev        | `/team-feature`                          |
 
-After resolving review findings from `/team-review`, run `/tech-debt-report` to score any
-deferred items and update the technical debt register in `docs/tech-debt/`.
+`/team-review` automatically runs `/tech-debt-report` at the end of every review session —
+no separate invocation needed. Fix all findings in place or defer them with a linked issue
+before the debt report runs.
 
 **Lob-specific extensions** (retained; no plugin equivalent):
 `domain-expert`, `devops`, `/dev-build`, `/dev-start`, `/dev-stop`, `/dev-test`,
