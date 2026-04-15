@@ -1,14 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import LosPanel from './LosPanel.vue';
-
-function mockFetch(data, ok = true) {
-  return vi.fn().mockResolvedValue({
-    ok,
-    status: ok ? 200 : 500,
-    json: () => Promise.resolve(data),
-  });
-}
+import { mockFetch } from './test-utils/mockFetch.js';
 
 const LOS_YES = { canSee: true, blockedBy: null, trace: ['10.11', '10.12'] };
 const LOS_NO = { canSee: false, blockedBy: '10.11', trace: ['10.11'] };

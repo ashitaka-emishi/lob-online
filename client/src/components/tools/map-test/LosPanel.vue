@@ -131,41 +131,8 @@ function clear() {
 </template>
 
 <style scoped>
-.panel {
-  padding: 12px;
-  font-size: 13px;
-  color: #ccc;
-}
-.panel-header {
-  font-weight: 600;
-  margin-bottom: 10px;
-  color: #fff;
-}
-.click-guide {
-  margin: 8px 0;
-  font-size: 12px;
-}
-.hint {
-  margin: 0;
-  color: #aaa;
-}
-.clear-btn {
-  margin-bottom: 8px;
-  padding: 3px 10px;
-  background: #3a3a3a;
-  border: 1px solid #555;
-  color: #ccc;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 12px;
-}
-.loading {
-  color: #888;
-  font-style: italic;
-}
-.error {
-  color: #f87171;
-}
+@import './panel-shared.css';
+
 .can-see-badge {
   display: inline-block;
   padding: 4px 10px;

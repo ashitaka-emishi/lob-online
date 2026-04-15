@@ -98,6 +98,21 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+// ─── Startup error guard (#304) ───────────────────────────────────────────────
+
+describe('startup data load failure (#304)', () => {
+  it('returns 500 on all routes when loadMap throws at startup', async () => {
+    loadMap.mockImplementationOnce(() => {
+      throw new Error('ENOENT: map.json not found');
+    });
+
+    const app = await buildApp();
+    const res = await request(app).get('/data');
+    expect(res.status).toBe(500);
+    expect(res.body.error).toMatch(/failed to load/i);
+  });
+});
+
 // ─── GET /movement-path ────────────────────────────────────────────────────────
 
 describe('GET /movement-path', () => {

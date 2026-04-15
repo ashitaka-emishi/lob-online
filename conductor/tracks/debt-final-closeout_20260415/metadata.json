@@ -1,0 +1,16 @@
+{
+  "id": "debt-final-closeout_20260415",
+  "title": "Debt Final Closeout",
+  "type": "chore",
+  "status": "in_progress",
+  "created": "2026-04-15T00:00:00.000Z",
+  "updated": "2026-04-15T00:00:00.000Z",
+  "phases": {
+    "total": 4,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 15,
+    "completed": 0
+  }
+}

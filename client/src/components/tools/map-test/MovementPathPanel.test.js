@@ -1,14 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import MovementPathPanel from './MovementPathPanel.vue';
-
-function mockFetch(data, ok = true) {
-  return vi.fn().mockResolvedValue({
-    ok,
-    status: ok ? 200 : 500,
-    json: () => Promise.resolve(data),
-  });
-}
+import { mockFetch } from './test-utils/mockFetch.js';
 
 const PATH_RESULT = {
   path: ['10.10', '10.11', '10.12'],
