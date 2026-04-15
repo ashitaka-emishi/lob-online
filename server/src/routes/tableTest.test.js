@@ -243,7 +243,7 @@ describe('POST /closing-roll', () => {
 
     const res = await request(app)
       .post('/api/tools/table-test/closing-roll')
-      .send({ moraleRating: 'B', mods: { isRear: true }, diceRoll: 3 });
+      .send({ moraleRating: 'B', modifiers: { isRear: true }, diceRoll: 3 });
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ pass: true, threshold: 3, modifiedRoll: 4 });

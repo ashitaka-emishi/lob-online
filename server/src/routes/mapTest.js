@@ -181,7 +181,7 @@ router.get('/los', (req, res) => {
   }
 
   try {
-    const result = computeLOS(fromHex, toHex, mapData, scenario, hexIndex);
+    const result = computeLOS(fromHex, toHex, scenario, mapData, hexIndex);
     return res.json(result);
   } catch (err) {
     console.error('[route] /los error:', err);

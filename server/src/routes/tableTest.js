@@ -157,18 +157,18 @@ router.post(
 );
 
 // ── POST /closing-roll ────────────────────────────────────────────────────────
-// Body: { moraleRating, mods, diceRoll }
+// Body: { moraleRating, modifiers, diceRoll }
 // Returns: { pass, threshold, modifiedRoll }
 // LOB_CHARTS §3.5 — Closing Roll Table
 router.post(
   '/closing-roll',
   wrapTableRoute('closing-roll', (req, res) => {
-    const { moraleRating, mods = {}, diceRoll } = req.body;
+    const { moraleRating, modifiers = {}, diceRoll } = req.body;
     const ratingR = requireEnum(moraleRating, 'moraleRating', VALID_MORALE_RATINGS);
     if (!ratingR.ok) return res.status(400).json({ error: ratingR.error });
     const rollR = requireNumber(diceRoll, 'diceRoll', { min: 1, max: 6 });
     if (!rollR.ok) return res.status(400).json({ error: rollR.error });
-    const safeMods = typeof mods === 'object' && mods !== null ? mods : {};
+    const safeMods = typeof modifiers === 'object' && modifiers !== null ? modifiers : {};
     return res.json(closingRollResult(ratingR.value, safeMods, rollR.value));
   })
 );

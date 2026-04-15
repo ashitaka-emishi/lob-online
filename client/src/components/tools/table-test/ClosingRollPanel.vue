@@ -33,7 +33,7 @@ async function submit() {
   if (!canSubmit.value) return;
   await fetchSubmit({
     moraleRating: moraleRating.value,
-    mods: { ...mods.value },
+    modifiers: { ...mods.value },
     diceRoll: Number(diceRoll.value),
   });
 }

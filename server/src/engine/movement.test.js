@@ -202,6 +202,23 @@ describe('hexEntryCost — hexside costs (additive)', () => {
     ]);
     expect(hexEntryCost('10.10', '10.11', 0, 'line', scenario, hexIndex)).toBe(1);
   });
+
+  it('noEffectTerrain is respected when Set is pre-built (hoisted path via movementPath)', () => {
+    // Regression guard for #296: verifies the hoisted-Set path through movementPath
+    // produces the same cost as the per-call path through hexEntryCost.
+    // stoneWall should add 0 MP; total for adjacent clear hexes = 1.
+    const hexes = [
+      { hex: '10.10', terrain: 'clear', edges: { 0: [{ type: 'stoneWall' }] } },
+      { hex: '10.11', terrain: 'clear' },
+    ];
+    const syntheticMap = {
+      hexes,
+      gridSpec: { ...SM_GRID, cols: 20, rows: 20 },
+    };
+    const result = movementPath('10.10', '10.11', 'line', scenario, syntheticMap);
+    expect(result.impassable).toBe(false);
+    expect(result.totalCost).toBe(1);
+  });
 });
 
 // ─── hexEntryCost — road movement ─────────────────────────────────────────────

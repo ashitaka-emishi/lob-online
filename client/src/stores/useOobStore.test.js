@@ -549,5 +549,6 @@ describe('useOobStore', () => {
     // oob PUT + leaders PUT + succession PUT = 3 fetch calls
     expect(fetchSpy).toHaveBeenCalledTimes(3);
     expect(store.dirty).toBe(false);
+    expect(localStorage.removeItem).toHaveBeenCalledWith('lob-succession-editor-v1');
   });
 });

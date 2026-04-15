@@ -63,7 +63,7 @@ function makeMapData(hexes) {
 describe('computeLOS — same hex', () => {
   it('LOB §4.0 — canSee=true when observer and target are the same hex', () => {
     const mapData = makeMapData([{ hex: '10.10', terrain: 'clear', elevation: 5 }]);
-    const result = computeLOS('10.10', '10.10', mapData, scenario);
+    const result = computeLOS('10.10', '10.10', scenario, mapData);
     expect(result.canSee).toBe(true);
     expect(result.blockedBy).toBeNull();
     expect(result.trace).toEqual(['10.10']);
@@ -78,7 +78,7 @@ describe('computeLOS — adjacent hexes (LOB §4.2a)', () => {
       { hex: '10.10', terrain: 'clear', elevation: 0 },
       { hex: '10.11', terrain: 'clear', elevation: 0 },
     ]);
-    expect(computeLOS('10.10', '10.11', mapData, scenario).canSee).toBe(true);
+    expect(computeLOS('10.10', '10.11', scenario, mapData).canSee).toBe(true);
   });
 
   it('LOB §4.2a — adjacent hexes are always clear regardless of terrain or elevation', () => {
@@ -87,7 +87,7 @@ describe('computeLOS — adjacent hexes (LOB §4.2a)', () => {
       { hex: '10.10', terrain: 'clear', elevation: 0 },
       { hex: '10.11', terrain: 'woods', elevation: 10 },
     ]);
-    expect(computeLOS('10.10', '10.11', mapData, scenario).canSee).toBe(true);
+    expect(computeLOS('10.10', '10.11', scenario, mapData).canSee).toBe(true);
   });
 });
 
@@ -101,7 +101,7 @@ describe('computeLOS — flat terrain', () => {
       { hex: '10.11', terrain: 'clear', elevation: 0 },
       { hex: '10.12', terrain: 'clear', elevation: 0 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, scenario);
+    const result = computeLOS('10.10', '10.12', scenario, mapData);
     expect(result.canSee).toBe(true);
     expect(result.trace.length).toBe(3);
   });
@@ -117,7 +117,7 @@ describe('computeLOS — blocked by elevation', () => {
       { hex: '10.11', terrain: 'clear', elevation: 2 },
       { hex: '10.12', terrain: 'clear', elevation: 0 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, scenario);
+    const result = computeLOS('10.10', '10.12', scenario, mapData);
     expect(result.canSee).toBe(false);
     expect(result.blockedBy?.hex).toBe('10.11');
   });
@@ -129,7 +129,7 @@ describe('computeLOS — blocked by elevation', () => {
       { hex: '10.11', terrain: 'clear', elevation: 3 },
       { hex: '10.12', terrain: 'clear', elevation: 4 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, scenario);
+    const result = computeLOS('10.10', '10.12', scenario, mapData);
     expect(result.canSee).toBe(true);
   });
 
@@ -140,7 +140,7 @@ describe('computeLOS — blocked by elevation', () => {
       { hex: '10.11', terrain: 'clear', elevation: 2 },
       { hex: '10.12', terrain: 'clear', elevation: 2 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, scenario);
+    const result = computeLOS('10.10', '10.12', scenario, mapData);
     expect(result.canSee).toBe(true);
   });
 
@@ -153,7 +153,7 @@ describe('computeLOS — blocked by elevation', () => {
       { hex: '10.12', terrain: 'clear', elevation: 2 },
       { hex: '10.13', terrain: 'clear', elevation: 0 },
     ]);
-    const result = computeLOS('10.10', '10.13', mapData, scenario);
+    const result = computeLOS('10.10', '10.13', scenario, mapData);
     expect(result.canSee).toBe(false);
     expect(result.blockedBy?.hex).toBe('10.11'); // first blocker
   });
@@ -169,7 +169,7 @@ describe('computeLOS — SM tree height override (SM §1.4)', () => {
       { hex: '10.11', terrain: 'woods', elevation: 0 },
       { hex: '10.12', terrain: 'clear', elevation: 0 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, scenario);
+    const result = computeLOS('10.10', '10.12', scenario, mapData);
     expect(result.canSee).toBe(false);
     expect(result.blockedBy?.hex).toBe('10.11');
   });
@@ -180,7 +180,7 @@ describe('computeLOS — SM tree height override (SM §1.4)', () => {
       { hex: '10.11', terrain: 'woodedSloping', elevation: 0 },
       { hex: '10.12', terrain: 'clear', elevation: 0 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, scenario);
+    const result = computeLOS('10.10', '10.12', scenario, mapData);
     expect(result.canSee).toBe(false);
     expect(result.blockedBy?.hex).toBe('10.11');
   });
@@ -199,12 +199,12 @@ describe('computeLOS — SM tree height override (SM §1.4)', () => {
     ]);
 
     // SM scenario: treeLosHeight=1 → canSee=true
-    const resultSM = computeLOS('10.10', '10.14', mapData, scenario);
+    const resultSM = computeLOS('10.10', '10.14', scenario, mapData);
     expect(resultSM.canSee).toBe(true);
 
     // Standard LOB: treeLosHeight=3 → canSee=false
     const mockScenario = { rules: { treeLosHeight: 3 } };
-    const resultStandard = computeLOS('10.10', '10.14', mapData, mockScenario);
+    const resultStandard = computeLOS('10.10', '10.14', mockScenario, mapData);
     expect(resultStandard.canSee).toBe(false);
   });
 
@@ -216,7 +216,7 @@ describe('computeLOS — SM tree height override (SM §1.4)', () => {
       { hex: '10.11', terrain: 'clear', elevation: 1 },
       { hex: '10.12', terrain: 'clear', elevation: 0 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, scenario);
+    const result = computeLOS('10.10', '10.12', scenario, mapData);
     // Observer's woods bonus is NOT applied; intermediate still blocks
     expect(result.canSee).toBe(false);
   });
@@ -229,7 +229,7 @@ describe('computeLOS — SM tree height override (SM §1.4)', () => {
       { hex: '10.11', terrain: 'clear', elevation: 1 },
       { hex: '10.12', terrain: 'woods', elevation: 0 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, scenario);
+    const result = computeLOS('10.10', '10.12', scenario, mapData);
     // Target's woods bonus is NOT applied; intermediate still blocks
     expect(result.canSee).toBe(false);
   });
@@ -247,7 +247,7 @@ describe('computeLOS — orchard first-hex ignore (SM §1.4)', () => {
       { hex: '10.11', terrain: 'orchard', elevation: 0 },
       { hex: '10.12', terrain: 'clear', elevation: 0 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, scenario);
+    const result = computeLOS('10.10', '10.12', scenario, mapData);
     expect(result.canSee).toBe(true); // first orchard hex is ignored
   });
 
@@ -260,7 +260,7 @@ describe('computeLOS — orchard first-hex ignore (SM §1.4)', () => {
       { hex: '10.12', terrain: 'orchard', elevation: 0 },
       { hex: '10.13', terrain: 'clear', elevation: 0 },
     ]);
-    const result = computeLOS('10.10', '10.13', mapData, scenario);
+    const result = computeLOS('10.10', '10.13', scenario, mapData);
     expect(result.canSee).toBe(false);
     expect(result.blockedBy?.hex).toBe('10.12');
   });
@@ -277,7 +277,7 @@ describe('computeLOS — wedgeElevations affect ground height (LOB §4.0)', () =
       { hex: '10.11', terrain: 'clear', elevation: 0, wedgeElevations: [0, 0, 2, 0, 0, 0] },
       { hex: '10.12', terrain: 'clear', elevation: 0 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, scenario);
+    const result = computeLOS('10.10', '10.12', scenario, mapData);
     expect(result.canSee).toBe(false);
   });
 
@@ -289,7 +289,7 @@ describe('computeLOS — wedgeElevations affect ground height (LOB §4.0)', () =
       { hex: '10.11', terrain: 'clear', elevation: 2, wedgeElevations: [-1, -1, -1, -1, -1, -1] },
       { hex: '10.12', terrain: 'clear', elevation: 0 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, scenario);
+    const result = computeLOS('10.10', '10.12', scenario, mapData);
     expect(result.canSee).toBe(false); // elevation 2 alone still blocks
   });
 });
@@ -307,7 +307,7 @@ describe('computeLOS — vertical slope (movement-only, LOB §4.0)', () => {
       { hex: '10.11', terrain: 'clear', elevation: 0, edges: { 0: [{ type: 'verticalSlope' }] } },
       { hex: '10.12', terrain: 'clear', elevation: 5 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, scenario);
+    const result = computeLOS('10.10', '10.12', scenario, mapData);
     expect(result.canSee).toBe(true);
   });
 });
@@ -323,7 +323,7 @@ describe('computeLOS — undigitized hexes', () => {
       // 10.11 intentionally absent
       { hex: '10.12', terrain: 'clear', elevation: 0 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, scenario);
+    const result = computeLOS('10.10', '10.12', scenario, mapData);
     expect(result.canSee).toBe(true);
   });
 });
@@ -345,7 +345,7 @@ describe('computeLOS — data-driven terrainLosHeights (#289)', () => {
       { hex: '10.11', terrain: 'woods', elevation: 0 }, // would block at height 1 w/ default
       { hex: '10.12', terrain: 'clear', elevation: 0 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, mockScenario);
+    const result = computeLOS('10.10', '10.12', mockScenario, mapData);
     // With terrainLosHeights.woods=0, woods gets no height bonus → LOS line = 0, height = 0 → clear
     expect(result.canSee).toBe(true);
   });
@@ -363,7 +363,7 @@ describe('computeLOS — data-driven terrainLosHeights (#289)', () => {
       { hex: '10.11', terrain: 'marsh', elevation: 0 }, // default: no bonus → would not block
       { hex: '10.12', terrain: 'clear', elevation: 0 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, mockScenario);
+    const result = computeLOS('10.10', '10.12', mockScenario, mapData);
     // treeLosHeight=2, marsh flag=1 → effectiveHeight=2 > LOS line 0 → blocked
     expect(result.canSee).toBe(false);
     expect(result.blockedBy?.hex).toBe('10.11');
@@ -377,7 +377,7 @@ describe('computeLOS — data-driven terrainLosHeights (#289)', () => {
       { hex: '10.11', terrain: 'woods', elevation: 0 },
       { hex: '10.12', terrain: 'clear', elevation: 0 },
     ]);
-    const result = computeLOS('10.10', '10.12', mapData, mockScenario);
+    const result = computeLOS('10.10', '10.12', mockScenario, mapData);
     // Hardcoded fallback: woods=1 → blocks
     expect(result.canSee).toBe(false);
   });
@@ -387,18 +387,18 @@ describe('computeLOS — data-driven terrainLosHeights (#289)', () => {
 
 describe('computeLOS — real SM map data', () => {
   it('same hex on real SM map returns canSee=true', () => {
-    const result = computeLOS('19.23', '19.23', realMap, scenario);
+    const result = computeLOS('19.23', '19.23', scenario, realMap);
     expect(result.canSee).toBe(true);
   });
 
   it("LOB §4.2a — adjacent VP hexes on Fox's Gap are always clear", () => {
     // 19.23 (elevation 12, clear) and 20.23 (elevation 12, clear) — range 1
-    const result = computeLOS('19.23', '20.23', realMap, scenario);
+    const result = computeLOS('19.23', '20.23', scenario, realMap);
     expect(result.canSee).toBe(true);
   });
 
   it('computeLOS returns a trace array of hex IDs', () => {
-    const result = computeLOS('19.23', '22.23', realMap, scenario);
+    const result = computeLOS('19.23', '22.23', scenario, realMap);
     expect(Array.isArray(result.trace)).toBe(true);
     expect(result.trace[0]).toBe('19.23');
     expect(result.trace[result.trace.length - 1]).toBe('22.23');

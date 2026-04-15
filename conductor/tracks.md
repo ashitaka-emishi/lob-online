@@ -80,4 +80,6 @@
 
 | [x] | pipeline-cleanup_20260414 | Dev Pipeline Cleanup | 2026-04-14 | 2026-04-14 |
 
+| [x] | m3-debt-closeout_20260415 | M3 Debt Closeout Sprint | 2026-04-15 | 2026-04-15 |
+
 <!-- Tracks registered by /conductor:new-track -->
