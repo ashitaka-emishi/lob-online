@@ -55,15 +55,15 @@ Manual verification required after each phase completion. The implementer confir
 
 ## SDLC Commands
 
-| Step                | Command                |
-| ------------------- | ---------------------- |
-| Scope new feature   | `/conductor:new-track` |
-| Implement a track   | `/conductor:implement` |
-| Check status        | `/conductor:status`    |
-| PR code review      | `/team-review`         |
-| Score deferred debt | `/tech-debt-report`    |
-| Create PR           | `/pr-create`           |
-| After-action        | `/plan-wrap`           |
+| Step                | Command                              |
+| ------------------- | ------------------------------------ |
+| Scope new feature   | `/conductor:new-track`               |
+| Implement a track   | `/conductor:implement`               |
+| Check status        | `/conductor:status`                  |
+| PR code review      | `/team-review`                       |
+| Score deferred debt | auto (runs at end of `/team-review`) |
+| Create PR           | `/pr-create`                         |
+| After-action        | `/plan-wrap`                         |
 
 ## Domain Questions
 
