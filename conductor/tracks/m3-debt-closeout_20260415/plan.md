@@ -40,25 +40,25 @@ Four isolated engine fixes. TDD: write failing tests first, then implement.
 
 ### Tasks
 
-- [ ] Task 2.1: **#285** — `parseHexId` input validation
+- [x] Task 2.1: **#285** — `parseHexId` input validation
   - Test: `parseHexId(null)`, `parseHexId('')`, `parseHexId('abc')` all throw
     `TypeError` with a clear message
   - Fix: add guard at top of `parseHexId` before `split().map(Number)`
   - Rule citation required
 
-- [ ] Task 2.2: **#287** — `combatResult` out-of-range dice validation
+- [x] Task 2.2: **#287** — `combatResult` out-of-range dice validation
   - Test: `combatResult(1, ...)` and `combatResult(13, ...)` throw `RangeError`
   - Fix: add range guard (valid range: 2–12) before array lookup
   - Rule citation required
 
-- [ ] Task 2.3: **#296** — hoist `noEffectTerrain` Set out of hot loop
+- [x] Task 2.3: **#296** — hoist `noEffectTerrain` Set out of hot loop
   - Read `hexEntryCost` to confirm the Set is never mutated inside the function
   - If not mutated: hoist `new Set(noEffectTerrain ?? [])` to call site or
     accept pre-built Set as parameter
   - Test: existing movement tests still pass; add one test confirming cost is
     correct when `noEffectTerrain` is provided
 
-- [ ] Task 2.4: **#290** — consistent parameter ordering
+- [x] Task 2.4: **#290** — consistent parameter ordering
   - Fix: swap `(mapData, scenario)` → `(scenario, mapData)` in `computeLOS`
     signature and all call sites
   - Update all affected tests and the mapTest.js route
@@ -66,8 +66,8 @@ Four isolated engine fixes. TDD: write failing tests first, then implement.
 
 ### Verification
 
-- [ ] `npm run test` — all engine tests green
-- [ ] `npm run lint && npm run format:check` — clean
+- [x] `npm run test` — all engine tests green (1865 tests passing)
+- [x] `npm run lint && npm run format:check` — clean
 
 ---
 
