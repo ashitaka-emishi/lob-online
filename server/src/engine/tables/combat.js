@@ -225,6 +225,10 @@ export function applyColumnShifts(startColumn, netShifts) {
  * }}
  */
 export function combatResult(effectiveSPs, netColumnShifts, diceRoll) {
+  // LOB_CHARTS §5.6 — Combat Table valid dice range is 2–12 (2d6)
+  if (diceRoll < 2 || diceRoll > 12) {
+    throw new RangeError('diceRoll must be between 2 and 12');
+  }
   const startColumn = spToColumn(effectiveSPs);
   const finalColumn = applyColumnShifts(startColumn, netColumnShifts);
   const colIdx = COMBAT_COLUMN_INDEX[finalColumn];

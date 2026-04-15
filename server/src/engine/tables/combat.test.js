@@ -220,6 +220,18 @@ describe('applyColumnShifts — column shift application', () => {
 
 // ─── combatResult — full result structure ─────────────────────────────────────
 
+describe('combatResult — dice roll range validation (LOB_CHARTS §5.6)', () => {
+  it('throws RangeError for roll 1 (below valid 2d6 range)', () => {
+    expect(() => combatResult(6, 0, 1)).toThrow(RangeError);
+    expect(() => combatResult(6, 0, 1)).toThrow('diceRoll must be between 2 and 12');
+  });
+
+  it('throws RangeError for roll 13 (above valid 2d6 range)', () => {
+    expect(() => combatResult(6, 0, 13)).toThrow(RangeError);
+    expect(() => combatResult(6, 0, 13)).toThrow('diceRoll must be between 2 and 12');
+  });
+});
+
 describe('combatResult — result structure (LOB_CHARTS §5.6)', () => {
   it('null cell → resultType none, spLoss 0, no checks', () => {
     // 6-8 SPs, no shifts, roll 2 → null
