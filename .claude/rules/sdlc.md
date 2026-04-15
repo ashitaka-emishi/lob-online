@@ -9,9 +9,9 @@
 3. **Implementation loop** — run `/conductor:implement` to execute tasks within the track
    following the TDD workflow. After merge, optionally update the design doc and create new
    tracks for any scope discovered during implementation.
-   - **PR review** — use `/team-review` for quality-gate reviews. After resolving findings,
-     run `/tech-debt-report` to score any deferred items (filed as GitHub issues) and update
-     the technical debt register in `docs/tech-debt/`. All findings must be either fixed in
-     place or deferred with a linked issue, a score (1–5), and a written assessment.
+   - **PR review** — use `/team-review` for quality-gate reviews. `/tech-debt-report` runs
+     automatically at the end of every review session. All findings must be either fixed in
+     place or deferred with a linked issue, a score (1–5), and a written assessment before
+     the debt report runs.
 4. **After-action** — run `/plan-wrap` (or `/doc-sync` + `/ecosystem-docs-generate`) to
    verify all docs reflect the delivered state and record a devlog entry.
