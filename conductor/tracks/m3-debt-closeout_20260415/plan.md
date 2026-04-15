@@ -3,7 +3,7 @@
 **Track ID:** m3-debt-closeout_20260415
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-04-15
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -77,42 +77,42 @@ Two small code fixes, then update the debt register for all 9 closures.
 
 ### Tasks
 
-- [ ] Task 3.1: **#308** — standardize modifier param name
+- [x] Task 3.1: **#308** — standardize modifier param name
   - In `server/src/routes/tableTest.js` `/closing-roll` handler: rename `mods`
     parameter to `modifiers` to match the `/morale` handler convention
   - Update any affected tests
 
-- [ ] Task 3.2: **#260** — `localStorage.removeItem` assertion
+- [x] Task 3.2: **#260** — `localStorage.removeItem` assertion
   - In `useOobStore.test.js` `confirmPush` succession test: add assertion that
     `localStorage.removeItem('lob-succession-editor-v1')` was called
 
-- [ ] Task 3.3: Update `docs/tech-debt/report.md`
+- [x] Task 3.3: Update `docs/tech-debt/report.md`
   - Remove all 9 closed issues from the Open Debt Items table
   - Append resolution rows to the Debt Over Time table with net delta
   - Recalculate Executive Summary (open items ~20, net score ~28)
   - Update Risk Assessment prose
   - Update per-PR report for this PR (create
-    `docs/tech-debt/reports/pr-{N}_{date}.md`)
+    `docs/tech-debt/reports/pr-313_2026-04-15.md`)
 
-- [ ] Task 3.4: Close all 9 GitHub issues (`gh issue close 237 245 247 285 287
-290 296 308 260 --comment "Fixed in PR #N"`)
+- [x] Task 3.4: Close all 9 GitHub issues (#237/#245/#247 already closed from
+      M2 sprint; #285 #287 #290 #296 #308 #260 closed with PR #313 comment)
 
 ### Verification
 
-- [ ] `npm run test` — full suite green
-- [ ] `npm run lint && npm run format:check` — clean
-- [ ] `docs/tech-debt/report.md` shows ~20 open items
-- [ ] All 9 GitHub issues show as closed
+- [x] `npm run test` — full suite green (1865 tests)
+- [x] `npm run lint && npm run format:check` — clean
+- [x] `docs/tech-debt/report.md` shows 20 open items (score 28)
+- [x] All 9 GitHub issues show as closed
 
 ---
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met
-- [ ] `npm run test` — full suite green
-- [ ] `npm run lint && npm run format:check` — clean
-- [ ] Net score visible in debt register (~28)
-- [ ] Ready for `/pr-create`
+- [x] All acceptance criteria in spec.md met
+- [x] `npm run test` — full suite green (1865 tests)
+- [x] `npm run lint && npm run format:check` — clean
+- [x] Net score visible in debt register (28)
+- [x] Ready for `/pr-create`
 
 ---
 

@@ -49,7 +49,8 @@ Navigation hub for project context.
 | [map-test-tool_20260411](./tracks/map-test-tool_20260411/index.md) | Map Test Tool | Pending |
 | [table-test-tool_20260412](./tracks/table-test-tool_20260412/index.md) | Table Test Tool | Pending |
 | [m3-debt-sprint_20260412](./tracks/m3-debt-sprint_20260412/index.md) | M3 Debt Sprint — Score-3 Cleanup | Complete |
-| [pipeline-cleanup_20260414](./tracks/pipeline-cleanup_20260414/index.md) | Dev Pipeline Cleanup | Pending |
+| [pipeline-cleanup_20260414](./tracks/pipeline-cleanup_20260414/index.md) | Dev Pipeline Cleanup | Complete |
+| [m3-debt-closeout_20260415](./tracks/m3-debt-closeout_20260415/index.md) | M3 Debt Closeout Sprint | Complete |
 
 ## Getting Started
 
