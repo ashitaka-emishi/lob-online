@@ -33,6 +33,21 @@ describe('parseHexId', () => {
   it('parses large col/row values', () => {
     expect(parseHexId('64.35')).toEqual({ col: 64, row: 35 });
   });
+
+  it('throws TypeError for null', () => {
+    expect(() => parseHexId(null)).toThrow(TypeError);
+    expect(() => parseHexId(null)).toThrow('hexId must be a non-empty string');
+  });
+
+  it('throws TypeError for empty string', () => {
+    expect(() => parseHexId('')).toThrow(TypeError);
+    expect(() => parseHexId('')).toThrow('hexId must be a non-empty string');
+  });
+
+  it('throws TypeError for malformed ID (no dot separator)', () => {
+    expect(() => parseHexId('abc')).toThrow(TypeError);
+    expect(() => parseHexId('abc')).toThrow('hexId must be a non-empty string');
+  });
 });
 
 describe('formatHexId', () => {

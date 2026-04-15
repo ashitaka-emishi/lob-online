@@ -42,7 +42,16 @@ export const DIR_CUBE_DELTAS = [
  * @returns {{ col: number, row: number }}
  */
 export function parseHexId(hexId) {
-  const [col, row] = hexId.split('.').map(Number);
+  // LOB — hex IDs are "CC.RR" strings (1-indexed col.row, general LOB map convention)
+  if (typeof hexId !== 'string' || hexId.length === 0) {
+    throw new TypeError('hexId must be a non-empty string');
+  }
+  const parts = hexId.split('.');
+  const col = Number(parts[0]);
+  const row = Number(parts[1]);
+  if (parts.length !== 2 || !Number.isInteger(col) || !Number.isInteger(row)) {
+    throw new TypeError('hexId must be a non-empty string');
+  }
   return { col, row };
 }
 
