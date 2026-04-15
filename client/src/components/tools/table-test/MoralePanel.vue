@@ -17,19 +17,24 @@ const RATINGS = ['A', 'B', 'C', 'D', 'E', 'F'];
 const rating = ref('');
 const diceRoll = ref('');
 
+// #309 — single source of truth for modifier initial state
+function defaultModifiers() {
+  return {
+    leaderMoraleValue: 0,
+    isShakenOrDG: false,
+    isWrecked: false,
+    isRear: false,
+    isSmall: false,
+    cowardlyLegs: false,
+    isNight: false,
+    isArtilleryOrCavalryFromSmallArms: false,
+    hasProtectiveTerrain: false,
+    range: 0,
+  };
+}
+
 // Modifier flags — LOB §6.1 Morale Table Modifiers
-const modifiers = ref({
-  leaderMoraleValue: 0,
-  isShakenOrDG: false,
-  isWrecked: false,
-  isRear: false,
-  isSmall: false,
-  cowardlyLegs: false,
-  isNight: false,
-  isArtilleryOrCavalryFromSmallArms: false,
-  hasProtectiveTerrain: false,
-  range: 0,
-});
+const modifiers = ref(defaultModifiers());
 
 const canSubmit = computed(() => rating.value !== '' && diceRoll.value !== '' && !loading.value);
 
@@ -45,18 +50,7 @@ async function submit() {
 function reset() {
   rating.value = '';
   diceRoll.value = '';
-  modifiers.value = {
-    leaderMoraleValue: 0,
-    isShakenOrDG: false,
-    isWrecked: false,
-    isRear: false,
-    isSmall: false,
-    cowardlyLegs: false,
-    isNight: false,
-    isArtilleryOrCavalryFromSmallArms: false,
-    hasProtectiveTerrain: false,
-    range: 0,
-  };
+  modifiers.value = defaultModifiers();
   fetchReset();
 }
 </script>

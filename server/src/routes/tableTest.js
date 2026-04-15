@@ -23,6 +23,28 @@ import { moraleResult, moraleTransition, MORALE_STATES } from '../engine/tables/
 
 // ─── Allowlists ────────────────────────────────────────────────────────────────
 
+/** #306 — known boolean modifier keys for the Morale Table (LOB §6.1) */
+const MORALE_BOOL_MODS = [
+  'isShakenOrDG',
+  'isWrecked',
+  'isRear',
+  'isSmall',
+  'cowardlyLegs',
+  'isNight',
+  'isArtilleryOrCavalryFromSmallArms',
+  'hasProtectiveTerrain',
+];
+
+/** #306 — known boolean modifier keys for the Closing Roll Table (LOB_CHARTS §3.5) */
+const CLOSING_BOOL_MODS = [
+  'hasLeaderMorale2Plus',
+  'isRear',
+  'isShaken',
+  'frontalArtilleryWithCanister',
+  'startsAdjacentToTarget',
+  'targetInBreastworks',
+];
+
 const VALID_OPENING_VOLLEY_CONDITIONS = new Set([
   'range1',
   'range2',
@@ -59,6 +81,29 @@ function requireEnum(raw, name, allowSet) {
     };
   }
   return { ok: true, value: raw };
+}
+
+// ─── Modifier allowlist filter ────────────────────────────────────────────────
+
+/**
+ * Build a safe modifier object from raw client input.
+ *
+ * Only keys named in `boolKeys` (coerced with Boolean()) and `numKeys`
+ * (coerced with Number(); NaN becomes 0) are forwarded to the engine.
+ * All other properties are silently dropped, preventing prototype pollution
+ * and unrecognised-field forwarding. — #306
+ *
+ * @param {unknown} raw          - untrusted input (from req.body.modifiers)
+ * @param {string[]} boolKeys    - boolean modifier key names
+ * @param {string[]} [numKeys=[]] - numeric modifier key names
+ * @returns {object}
+ */
+function pickMods(raw, boolKeys, numKeys = []) {
+  const src = typeof raw === 'object' && raw !== null ? raw : {};
+  const out = {};
+  for (const k of boolKeys) out[k] = Boolean(src[k]);
+  for (const k of numKeys) out[k] = Number.isFinite(Number(src[k])) ? Number(src[k]) : 0;
+  return out;
 }
 
 // ─── Route wrapper ────────────────────────────────────────────────────────────
@@ -126,7 +171,8 @@ router.post(
     if (!ratingR.ok) return res.status(400).json({ error: ratingR.error });
     const rollR = requireNumber(diceRoll, 'diceRoll', { min: 2, max: 12 });
     if (!rollR.ok) return res.status(400).json({ error: rollR.error });
-    const safeMods = typeof modifiers === 'object' && modifiers !== null ? modifiers : {};
+    // #306 — allowlist-filter modifier object before forwarding to engine
+    const safeMods = pickMods(modifiers, MORALE_BOOL_MODS, ['leaderMoraleValue', 'range']);
     return res.json(moraleResult(ratingR.value, safeMods, rollR.value));
   })
 );
@@ -168,7 +214,8 @@ router.post(
     if (!ratingR.ok) return res.status(400).json({ error: ratingR.error });
     const rollR = requireNumber(diceRoll, 'diceRoll', { min: 1, max: 6 });
     if (!rollR.ok) return res.status(400).json({ error: rollR.error });
-    const safeMods = typeof modifiers === 'object' && modifiers !== null ? modifiers : {};
+    // #306 — allowlist-filter modifier object before forwarding to engine
+    const safeMods = pickMods(modifiers, CLOSING_BOOL_MODS);
     return res.json(closingRollResult(ratingR.value, safeMods, rollR.value));
   })
 );

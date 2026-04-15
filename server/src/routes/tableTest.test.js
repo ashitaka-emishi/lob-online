@@ -164,7 +164,23 @@ describe('POST /morale', () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ effectiveRoll: 9, type: 'shaken' });
-    expect(moraleResult).toHaveBeenCalledWith('C', { isShakenOrDG: true }, 8);
+    // #306 — pickMods fills all allowlisted keys; only isShakenOrDG is true here
+    expect(moraleResult).toHaveBeenCalledWith(
+      'C',
+      {
+        isShakenOrDG: true,
+        isWrecked: false,
+        isRear: false,
+        isSmall: false,
+        cowardlyLegs: false,
+        isNight: false,
+        isArtilleryOrCavalryFromSmallArms: false,
+        hasProtectiveTerrain: false,
+        leaderMoraleValue: 0,
+        range: 0,
+      },
+      8
+    );
   });
 
   it('returns 400 when rating is missing', async () => {
@@ -179,7 +195,7 @@ describe('POST /morale', () => {
     expect(res.status).toBe(400);
   });
 
-  it('defaults modifiers to empty object when not provided', async () => {
+  it('passes all-false modifier defaults when modifiers not provided', async () => {
     moraleResult.mockReturnValue({
       effectiveRoll: 8,
       type: 'noEffect',
@@ -193,7 +209,23 @@ describe('POST /morale', () => {
       .send({ rating: 'B', diceRoll: 8 });
 
     expect(res.status).toBe(200);
-    expect(moraleResult).toHaveBeenCalledWith('B', {}, 8);
+    // #306 — pickMods fills all allowlisted keys as defaults when modifiers omitted
+    expect(moraleResult).toHaveBeenCalledWith(
+      'B',
+      {
+        isShakenOrDG: false,
+        isWrecked: false,
+        isRear: false,
+        isSmall: false,
+        cowardlyLegs: false,
+        isNight: false,
+        isArtilleryOrCavalryFromSmallArms: false,
+        hasProtectiveTerrain: false,
+        leaderMoraleValue: 0,
+        range: 0,
+      },
+      8
+    );
   });
 });
 
@@ -247,7 +279,19 @@ describe('POST /closing-roll', () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ pass: true, threshold: 3, modifiedRoll: 4 });
-    expect(closingRollResult).toHaveBeenCalledWith('B', { isRear: true }, 3);
+    // #306 — pickMods fills all allowlisted keys; only isRear is true here
+    expect(closingRollResult).toHaveBeenCalledWith(
+      'B',
+      {
+        hasLeaderMorale2Plus: false,
+        isRear: true,
+        isShaken: false,
+        frontalArtilleryWithCanister: false,
+        startsAdjacentToTarget: false,
+        targetInBreastworks: false,
+      },
+      3
+    );
   });
 
   it('returns 400 when moraleRating is missing', async () => {
