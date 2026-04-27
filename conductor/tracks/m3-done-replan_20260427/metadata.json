@@ -2,15 +2,15 @@
   "id": "m3-done-replan_20260427",
   "title": "M3 Closeout + M4 Replan",
   "type": "chore",
-  "status": "in_progress",
+  "status": "complete",
   "created": "2026-04-27T00:00:00Z",
   "updated": "2026-04-27T00:00:00Z",
   "phases": {
     "total": 2,
-    "completed": 0
+    "completed": 2
   },
   "tasks": {
     "total": 6,
-    "completed": 0
+    "completed": 6
   }
 }

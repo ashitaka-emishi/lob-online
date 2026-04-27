@@ -3,7 +3,7 @@
 **Track ID:** m3-done-replan_20260427
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-04-27
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -40,11 +40,11 @@ Rewrite the HLD implementation status banner and the M4 milestone definition.
 
 ### Tasks
 
-- [ ] Task 2.1: Update HLD implementation status banner (top of file)
+- [x] Task 2.1: Update HLD implementation status banner (top of file)
   - Change "M2 Complete" → "M3 Complete"
   - Update "In progress" and "Next" lines to reflect M4 game state work
 
-- [ ] Task 2.2: Rewrite HLD M4 milestone
+- [x] Task 2.2: Rewrite HLD M4 milestone
   - Remove Discord OAuth, passport-discord, JWT cookie auth
   - Remove SQLite users table (games table stays)
   - Add: in-memory game state model (unit positions, morale states, orders, ammo, facing)
@@ -57,12 +57,12 @@ Rewrite the HLD implementation status banner and the M4 milestone definition.
   - Keep: game lobby UI (list/create/join), but simpler — no Discord login required
   - Update M4 acceptance criteria to match
 
-- [ ] Task 2.3: Update HLD milestone overview table
+- [x] Task 2.3: Update HLD milestone overview table
   - M3 row: change 🔜 to ✅, update status to "Complete"
   - M4 row: update goal description to match rewritten milestone
   - Keep M5–M8 rows unchanged
 
-- [ ] Task 2.4: Update HLD Rule Section Coverage table
+- [x] Task 2.4: Update HLD Rule Section Coverage table
   - Mark M3 rows as complete where implementation is confirmed
 
 ### Verification
