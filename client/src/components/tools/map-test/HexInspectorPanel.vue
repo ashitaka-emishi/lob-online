@@ -105,7 +105,7 @@ function clear() {
 </template>
 
 <style scoped>
-@import './panel-shared.css';
+@import './panel-base.css';
 
 .data-row {
   display: flex;

@@ -1,14 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { mockFetch } from './test-utils/mockFetch.js';
 import { mount, flushPromises } from '@vue/test-utils';
 import MoraleTransitionPanel from './MoraleTransitionPanel.vue';
-
-function mockFetch(data, ok = true) {
-  return vi.fn().mockResolvedValue({
-    ok,
-    status: ok ? 200 : 400,
-    json: () => Promise.resolve(data),
-  });
-}
 
 const TRANSITION_RESULT = { newState: 'dg', suppressRetreatsAndLosses: false };
 

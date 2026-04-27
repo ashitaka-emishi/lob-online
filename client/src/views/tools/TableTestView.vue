@@ -125,7 +125,7 @@ const activePanel = computed(
 
       <!-- Active panel content -->
       <div class="panel-content">
-        <component :is="activePanel" />
+        <KeepAlive><component :is="activePanel" /></KeepAlive>
       </div>
     </div>
   </div>

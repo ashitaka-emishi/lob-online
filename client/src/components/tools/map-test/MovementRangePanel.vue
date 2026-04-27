@@ -125,7 +125,7 @@ function onFormationChange() {
 </template>
 
 <style scoped>
-@import './panel-shared.css';
+@import './panel-base.css';
 
 .count {
   margin-bottom: 6px;

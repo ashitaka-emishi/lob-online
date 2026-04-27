@@ -146,7 +146,7 @@ function clear() {
 </template>
 
 <style scoped>
-@import './panel-shared.css';
+@import './panel-base.css';
 
 .impassable {
   color: #f87171;

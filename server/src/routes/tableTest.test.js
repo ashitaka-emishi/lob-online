@@ -19,6 +19,14 @@ vi.mock('../engine/tables/combat.js', () => ({
 
 vi.mock('../engine/tables/charge.js', () => ({
   closingRollResult: vi.fn(),
+  CLOSING_BOOL_MOD_KEYS: Object.freeze([
+    'hasLeaderMorale2Plus',
+    'isRear',
+    'isShaken',
+    'frontalArtilleryWithCanister',
+    'startsAdjacentToTarget',
+    'targetInBreastworks',
+  ]),
 }));
 
 vi.mock('../engine/tables/command.js', () => ({
@@ -39,6 +47,17 @@ vi.mock('../engine/tables/morale.js', () => ({
   moraleResult: vi.fn(),
   moraleTransition: vi.fn(),
   MORALE_STATES: ['bl', 'normal', 'shaken', 'dg', 'rout'],
+  MORALE_BOOL_MOD_KEYS: Object.freeze([
+    'isShakenOrDG',
+    'isWrecked',
+    'isRear',
+    'isSmall',
+    'cowardlyLegs',
+    'isNight',
+    'isArtilleryOrCavalryFromSmallArms',
+    'hasProtectiveTerrain',
+  ]),
+  MORALE_NUM_MOD_KEYS: Object.freeze(['leaderMoraleValue', 'range']),
 }));
 
 import { combatResult, openingVolleyResult } from '../engine/tables/combat.js';
@@ -516,5 +535,28 @@ describe('POST /zero-rule', () => {
   it('returns 400 when diceRoll is out of 1d6 range', async () => {
     const res = await request(app).post('/api/tools/table-test/zero-rule').send({ diceRoll: 0 });
     expect(res.status).toBe(400);
+  });
+});
+
+// ─── prototype-pollution guard for pickMods (#321) ────────────────────────────
+
+describe('pickMods prototype-pollution guard', () => {
+  it('does not pollute Object.prototype when modifiers contains __proto__', async () => {
+    moraleResult.mockReturnValue({
+      effectiveRoll: 7,
+      type: null,
+      retreatHexes: 0,
+      spLoss: 0,
+      leaderLossCheck: false,
+    });
+
+    // Inject a __proto__ key via JSON.parse to bypass literal syntax check
+    const malicious = JSON.parse(
+      '{"rating":"B","diceRoll":7,"modifiers":{"__proto__":{"polluted":true}}}'
+    );
+
+    const res = await request(app).post('/api/tools/table-test/morale').send(malicious);
+    expect(res.status).toBe(200);
+    expect({}.polluted).toBeUndefined();
   });
 });

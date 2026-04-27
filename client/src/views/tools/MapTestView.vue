@@ -41,6 +41,9 @@ function onImageLoad(event) {
 
 // ── Panel state ───────────────────────────────────────────────────────────────
 
+// Eager-loaded intentionally: panels are tightly coupled to mapData (passed as prop) and
+// are small SFCs — defineAsyncComponent would add complexity with no UX gain here.
+// TableTestView uses async because its 11 panels are larger and have no shared startup fetch.
 const PANELS = [
   { id: 'movement-path', label: 'Movement Path', component: MovementPathPanel },
   { id: 'movement-range', label: 'Movement Range', component: MovementRangePanel },

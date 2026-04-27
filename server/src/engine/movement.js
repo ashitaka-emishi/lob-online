@@ -12,7 +12,7 @@
 
 import { ELEVATION_TYPES, ROUTE_TYPES } from '../schemas/map.schema.js';
 import { dijkstra, hexNeighbors, OPPOSITE_DIR_INDEX, reconstructPath } from './hex.js';
-import { buildHexIndex, loadMap } from './map.js';
+import { buildHexIndex } from './map.js';
 
 // ─── Internal helpers ──────────────────────────────────────────────────────────
 

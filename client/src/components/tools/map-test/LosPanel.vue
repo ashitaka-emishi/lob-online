@@ -131,7 +131,7 @@ function clear() {
 </template>
 
 <style scoped>
-@import './panel-shared.css';
+@import './panel-base.css';
 
 .can-see-badge {
   display: inline-block;

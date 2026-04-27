@@ -1,14 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { mockFetch } from './test-utils/mockFetch.js';
 import { mount, flushPromises } from '@vue/test-utils';
 import FlukeStoppagePanel from './FlukeStoppagePanel.vue';
-
-function mockFetch(data, ok = true) {
-  return vi.fn().mockResolvedValue({
-    ok,
-    status: ok ? 200 : 400,
-    json: () => Promise.resolve(data),
-  });
-}
 
 const FLUKE_RESULT = {
   step1EffectiveRoll: 5,

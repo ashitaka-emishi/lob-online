@@ -32,6 +32,16 @@ export const CLOSING_ROLL_THRESHOLDS = Object.freeze({
  * LOB_CHARTS §3.5 — "Die Roll Modifiers" block.
  * Positive values help the attacker (raise the modified roll).
  */
+// #320 — modifier key array consumed by the route layer's pickMods() allowlist
+export const CLOSING_BOOL_MOD_KEYS = Object.freeze([
+  'hasLeaderMorale2Plus',
+  'isRear',
+  'isShaken',
+  'frontalArtilleryWithCanister',
+  'startsAdjacentToTarget',
+  'targetInBreastworks',
+]);
+
 export const CLOSING_ROLL_MODIFIERS = Object.freeze({
   leaderMoraleValue2Plus: 1, // LOB_CHARTS §3.5 — leader with Morale Value 2+ in charging stack
   rear: 1, // LOB_CHARTS §3.5 — charging into a Rear hex

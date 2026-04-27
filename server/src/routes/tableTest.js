@@ -8,7 +8,7 @@
 import { Router } from 'express';
 
 import { combatResult, openingVolleyResult } from '../engine/tables/combat.js';
-import { closingRollResult } from '../engine/tables/charge.js';
+import { closingRollResult, CLOSING_BOOL_MOD_KEYS } from '../engine/tables/charge.js';
 import {
   attackRecoveryResult,
   commandRollResult,
@@ -19,31 +19,19 @@ import {
   zeroRuleResult,
 } from '../engine/tables/command.js';
 import { leaderLossResult } from '../engine/tables/leader-loss.js';
-import { moraleResult, moraleTransition, MORALE_STATES } from '../engine/tables/morale.js';
+import {
+  moraleResult,
+  moraleTransition,
+  MORALE_STATES,
+  MORALE_BOOL_MOD_KEYS,
+  MORALE_NUM_MOD_KEYS,
+} from '../engine/tables/morale.js';
 
 // ─── Allowlists ────────────────────────────────────────────────────────────────
 
-/** #306 — known boolean modifier keys for the Morale Table (LOB §6.1) */
-const MORALE_BOOL_MODS = [
-  'isShakenOrDG',
-  'isWrecked',
-  'isRear',
-  'isSmall',
-  'cowardlyLegs',
-  'isNight',
-  'isArtilleryOrCavalryFromSmallArms',
-  'hasProtectiveTerrain',
-];
-
-/** #306 — known boolean modifier keys for the Closing Roll Table (LOB_CHARTS §3.5) */
-const CLOSING_BOOL_MODS = [
-  'hasLeaderMorale2Plus',
-  'isRear',
-  'isShaken',
-  'frontalArtilleryWithCanister',
-  'startsAdjacentToTarget',
-  'targetInBreastworks',
-];
+// #320 — key arrays sourced from engine modules; single source of truth
+const MORALE_BOOL_MODS = MORALE_BOOL_MOD_KEYS;
+const CLOSING_BOOL_MODS = CLOSING_BOOL_MOD_KEYS;
 
 const VALID_OPENING_VOLLEY_CONDITIONS = new Set([
   'range1',
@@ -175,7 +163,7 @@ router.post(
     const rollR = requireNumber(diceRoll, 'diceRoll', { min: 2, max: 12 });
     if (!rollR.ok) return res.status(400).json({ error: rollR.error });
     // #306 — allowlist-filter modifier object before forwarding to engine
-    const safeMods = pickMods(modifiers, MORALE_BOOL_MODS, ['leaderMoraleValue', 'range']);
+    const safeMods = pickMods(modifiers, MORALE_BOOL_MODS, MORALE_NUM_MOD_KEYS);
     return res.json(moraleResult(ratingR.value, safeMods, rollR.value));
   })
 );
