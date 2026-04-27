@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **lob-online** is an online game implementation of the _Line of Battle v2.0_ wargame system (Multi-Man Publishing). The first game being implemented is _South Mountain_ (RSS #4), chosen because it is a smaller, more tractable battle.
 
-**Current state:** M2 complete. All dev tools are done (map editor, scenario editor, OOB editor). Five data JSON files with Zod schemas and full Vitest coverage. Starting M3 — rules engine foundation (`engine/hex.js`, `movement.js`, `los.js`) and a new Map Test Tool (`/tools/map-test`) for interactive validation. See `docs/designs/high-level-design.md` §2 for the M3–M8 milestone plan.
+**Current state:** M3 complete. Rules engine foundation delivered (`engine/hex.js`, `scenario.js`, `movement.js`, `los.js`, `command-range.js`) with full Vitest coverage and rule-reference comments throughout. All LOB v2.0 game tables implemented in `engine/tables/`. Two validation tools live: Map Test Tool (`/tools/map-test`) and Table Test Tool (`/tools/table-test`). Starting M4 — game state model, game state initializer (reads `scenario.json` setup data), initial setup phase, minimal "pick a side" session, and file persistence. See `docs/designs/high-level-design.md` §2 for the M4–M8 milestone plan.
 
 ## Reference Library
 

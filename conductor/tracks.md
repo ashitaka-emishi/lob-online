@@ -84,4 +84,6 @@
 
 | [x] | debt-final-closeout_20260415 | Debt Final Closeout | 2026-04-15 | 2026-04-27 |
 
+| [~] | m3-done-replan_20260427 | M3 Closeout + M4 Replan | 2026-04-27 | 2026-04-27 |
+
 <!-- Tracks registered by /conductor:new-track -->
