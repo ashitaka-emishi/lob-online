@@ -348,9 +348,7 @@ export function ammoTypeShift(ammoType, range, firerSPs) {
   // LOB §5.6 / Threshold Value Chart — threshold is the spMin of the tier the firer falls into.
   // A non-zero return means firerSPs ≥ spMin for that tier, so firerSPs >= threshold is always
   // true here — the redundant comparison is removed (#291, domain-expert confirmed tautological).
-  const threshold = spShiftThreshold(firerSPs);
-  if (threshold === 0) return 0; // firerSPs outside all threshold tiers (< 1 or > 8)
-
+  if (spShiftThreshold(firerSPs) === 0) return 0; // firerSPs outside all threshold tiers (< 1 or > 8)
   return entry.shift;
 }
 

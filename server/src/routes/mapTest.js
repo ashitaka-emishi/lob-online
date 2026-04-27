@@ -10,7 +10,8 @@ import { Router } from 'express';
 
 import { commandRange, COMMAND_RADII } from '../engine/command-range.js';
 import { computeLOS } from '../engine/los.js';
-import { buildHexIndex, loadMap, movementPath, movementRange } from '../engine/movement.js';
+import { buildHexIndex, loadMap } from '../engine/map.js';
+import { movementPath, movementRange } from '../engine/movement.js';
 import { loadScenario } from '../engine/scenario.js';
 
 // ─── Hex-ID format validation (#302) ──────────────────────────────────────────
@@ -53,8 +54,8 @@ try {
   scenario = loadScenario();
   hexIndex = buildHexIndex(mapData);
 } catch (err) {
-  _startupError = err;
   console.error('[route] map-test: data load failed at startup:', err);
+  _startupError = true; // boolean flag; full error already logged above
 }
 
 // ─── Router ───────────────────────────────────────────────────────────────────

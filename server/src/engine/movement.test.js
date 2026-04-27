@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 
 import { loadScenario } from './scenario.js';
-import { hexEntryCost, loadMap, movementPath, movementRange } from './movement.js';
+import { loadMap } from './map.js';
+import { hexEntryCost, movementPath, movementRange } from './movement.js';
 
 // ─── Shared fixtures ───────────────────────────────────────────────────────────
 

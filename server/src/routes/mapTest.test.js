@@ -12,9 +12,12 @@ import request from 'supertest';
 
 // ─── Mock engine modules ───────────────────────────────────────────────────────
 
-vi.mock('../engine/movement.js', () => ({
+vi.mock('../engine/map.js', () => ({
   loadMap: vi.fn(),
   buildHexIndex: vi.fn(() => new Map()),
+}));
+
+vi.mock('../engine/movement.js', () => ({
   movementPath: vi.fn(),
   movementRange: vi.fn(),
 }));
@@ -32,7 +35,8 @@ vi.mock('../engine/scenario.js', () => ({
   loadScenario: vi.fn(),
 }));
 
-import { buildHexIndex, loadMap, movementPath, movementRange } from '../engine/movement.js';
+import { buildHexIndex, loadMap } from '../engine/map.js';
+import { movementPath, movementRange } from '../engine/movement.js';
 import { computeLOS } from '../engine/los.js';
 import { commandRange } from '../engine/command-range.js';
 import { loadScenario } from '../engine/scenario.js';

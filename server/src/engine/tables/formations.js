@@ -4,6 +4,8 @@
  * Extracted from weapons.js (#292) — these charts are sourced from
  * LOB_CHARTS p. 4, separate from the weapon-characteristics data on p. 2.
  *
+ * Pre-positioned for movement/combat resolution in M3+; no production callers yet.
+ *
  * Pure data module: no game state, no side effects.
  */
 

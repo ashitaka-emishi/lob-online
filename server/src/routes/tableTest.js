@@ -102,7 +102,10 @@ function pickMods(raw, boolKeys, numKeys = []) {
   const src = typeof raw === 'object' && raw !== null ? raw : {};
   const out = {};
   for (const k of boolKeys) out[k] = Boolean(src[k]);
-  for (const k of numKeys) out[k] = Number.isFinite(Number(src[k])) ? Number(src[k]) : 0;
+  for (const k of numKeys) {
+    const n = Number(src[k]);
+    out[k] = Number.isFinite(n) ? n : 0;
+  }
   return out;
 }
 

@@ -14,9 +14,6 @@ import { ELEVATION_TYPES, ROUTE_TYPES } from '../schemas/map.schema.js';
 import { dijkstra, hexNeighbors, OPPOSITE_DIR_INDEX, reconstructPath } from './hex.js';
 import { buildHexIndex, loadMap } from './map.js';
 
-// Re-export so callers that loaded map data via this module continue to work.
-export { buildHexIndex, loadMap };
-
 // ─── Internal helpers ──────────────────────────────────────────────────────────
 
 /**
