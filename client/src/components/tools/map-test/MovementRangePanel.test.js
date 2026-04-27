@@ -1,14 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import MovementRangePanel from './MovementRangePanel.vue';
-
-function mockFetch(data, ok = true) {
-  return vi.fn().mockResolvedValue({
-    ok,
-    status: ok ? 200 : 500,
-    json: () => Promise.resolve(data),
-  });
-}
+import { mockFetch } from './test-utils/mockFetch.js';
 
 const RANGE_RESULT = {
   reachable: [

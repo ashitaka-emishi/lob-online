@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-04-15 after PR #313 (m3-debt-closeout)._
+_Last updated: 2026-04-27 after PR #315._
 
 ---
 
@@ -8,10 +8,10 @@ _Last updated: 2026-04-15 after PR #313 (m3-debt-closeout)._
 
 | Metric                           | Value                                                                       |
 | -------------------------------- | --------------------------------------------------------------------------- |
-| Open debt items                  | 20                                                                          |
-| Cumulative debt score (net open) | 28                                                                          |
-| Highest-risk item                | map-test: move module-level data load into lazy route setup (#304, score 2) |
-| PRs tracked                      | 113                                                                         |
+| Open debt items                  | 7                                                                           |
+| Cumulative debt score (net open) | 11                                                                          |
+| Highest-risk item                | Dijkstra lacks early termination for point-to-point queries (#295, score 2) |
+| PRs tracked                      | 138                                                                         |
 
 ---
 
@@ -141,6 +141,22 @@ _Last updated: 2026-04-15 after PR #313 (m3-debt-closeout)._
 | 2026-04-15 | PR #313 (resolved #237) | -3                   | —         | 192                      |
 | 2026-04-15 | PR #313 (resolved #245) | -3                   | —         | 192                      |
 | 2026-04-15 | PR #313 (resolved #247) | -3                   | —         | 192                      |
+| 2026-04-27 | PR #315                 | 4                    | -17       | 196                      |
+| 2026-04-27 | PR #315 (resolved #304) | -2                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #301) | -2                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #299) | -2                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #298) | -2                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #292) | -2                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #291) | -2                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #311) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #310) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #309) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #306) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #293) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #286) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #259) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #256) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #255) | -1                   | —         | 196                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -148,11 +164,11 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Moderate risk. Net open score is 28 across 20 items. Manageable before M4 socket/game-loop work begins.
+Moderate risk. Net open score is 11 across 7 items. Current debt is concentrated in performance and scale awareness flags — no correctness hazards, no M4 blockers.
 
-PR #313 (M3 debt closeout) resolved all three score-3 OOB items (#237, #245, #247 — verified closed in the M2 sprint), four score-2 engine correctness items (#285 parseHexId validation, #287 combatResult range guard, #296 noEffectTerrain Set hoist, #290 computeLOS parameter reorder), and two score-1 cleanup items (#308 modifier param name, #260 localStorage assertion). Net delta: -19.
+PR #315 (debt-final-closeout) resolved all 15 actionable open items (net delta: -17 after 2 new items deferred from team-review). The two deferred items (#322 pickMods numeric bounds, #324 hexEntryCost Set allocation) are performance concerns with no current high-frequency callers and no correctness risk today.
 
-No score-3 items remain. The register is now dominated by **eight score-2 engine/architecture items** (map-test architecture improvements, performance hot-path allocations, formation module extraction, a tautological threshold check) and **twelve score-1 minor items** (test style, schema validation, Vue idiom gaps, and legacy OOB style issues). None of the remaining items block M4 socket/game-loop work.
+The seven open items break down as: four performance/scale flags (#324 #322 #295 #294) and three OOB-scale awareness flags (#205 #204 #201). All should be revisited when profiling data or scale demands it in M4+.
 
 ---
 
@@ -160,28 +176,15 @@ No score-3 items remain. The register is now dominated by **eight score-2 engine
 
 _Ordered by score descending (ties: newest first). Resolved items are removed._
 
-| Score | Issue | Title                                                                                              | PR Introduced | Assessment                                                                                                                                                                                                                          |
-| ----- | ----- | -------------------------------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2     | #304  | map-test: move module-level data load in mapTest.js into lazy route setup                          | PR #297       | `loadMap()`, `loadScenario()`, and `buildHexIndex()` called at module import time. A data-load failure throws during server startup with no HTTP error path, making root-cause diagnosis harder than a request-time 500 would be.   |
-| 2     | #301  | map-test: replace v-if panel dispatch table with dynamic component                                 | PR #297       | Adding a sixth panel requires editing both the `PANELS` array and the v-if/v-else-if template block. Low coupling risk today but becomes maintenance friction as M4 adds more tool panels.                                          |
-| 2     | #299  | map-test: extract mockFetch test utility shared by all five panel tests                            | PR #297       | `vi.stubGlobal('fetch', ...)` helper duplicated across all five panel test files. A mock contract change must be applied independently in five places; easy to miss one.                                                            |
-| 2     | #298  | map-test: extract shared panel CSS across five SFCs                                                | PR #297       | Identical scoped CSS for `.panel`, `.panel-header`, `.hint`, `.clear-btn`, `.loading`, `.error` duplicated across all five panel SFCs. A visual consistency fix requires touching five files simultaneously.                        |
-| 2     | #295  | engine: Dijkstra lacks early termination for point-to-point queries                                | PR #283       | `movementPath` passes `Infinity` maxCost, exploring the entire reachable graph even for single target queries. Add optional `targetHex` to `dijkstra()` for 2–5× speedup on nearby pairs.                                           |
-| 2     | #294  | engine: hex.js hot-path allocations — memoize formatHexId/parseHexId                               | PR #283       | `parseHexId` and `formatHexId` called ~13K+ times per Dijkstra run; each creates temporary array/string allocations. Pre-compute a 2D ID grid at startup. Only worth addressing if profiling confirms bottleneck after H1/H2 fixes. |
-| 2     | #292  | engine: extract formations.js — FORMATION_EFFECTS and ACTIVITY_EFFECTS belong in a separate module | PR #283       | `weapons.js` mixes weapon data with formation/activity charts from different LOB Charts pages. A developer looking for formation rules won't find them in `weapons.js`.                                                             |
-| 2     | #291  | engine: combat.js ammoTypeShift threshold check is tautological                                    | PR #283       | `if (firerSPs >= threshold)` where threshold comes from the tier firerSPs falls into — the check can never fail. Either rules intent is misunderstood or the code is dead. Consult domain-expert before changing.                   |
-| 1     | #311  | table-test: lazy-load panel SFCs with defineAsyncComponent in TableTestView                        | PR #305       | All 11 panels imported eagerly. Dev-only tool with small SFCs; no perceptible load impact today. Good practice for when panel complexity grows.                                                                                     |
-| 1     | #310  | table-test: convert activePanel() function to computed in TableTestView                            | PR #305       | `PANELS.find()` runs on every render rather than being cached. Scanning 11 static items is imperceptible; this is a Vue idiom correctness issue, not a performance problem today.                                                   |
-| 1     | #309  | table-test: extract defaultModifiers() factory in MoralePanel                                      | PR #305       | Default modifiers object duplicated between `ref()` init and `reset()`. No coupling risk; only matters when a new modifier flag is added to the Morale Table.                                                                       |
-| 1     | #306  | table-test: filter modifier objects against property allowlist before forwarding to engine         | PR #305       | Dev-only tool with 5MB body limit and engine destructuring already neutralizing unknowns. Pure defense-in-depth; no functional risk today.                                                                                          |
-| 1     | #293  | engine: loadMap/loadScenario use synchronous file I/O with no architectural guard                  | PR #283       | Both use `readFileSync`. "Call once at startup" is documented but not enforced. For M4+ game loop, should be async or enforced via a startup bootstrap module.                                                                      |
-| 1     | #286  | engine: hexEntryCost has no dirIndex range validation                                              | PR #283       | Out-of-range `dirIndex` (6, -1, NaN) silently returns `undefined` from array lookups. Low risk since only the Dijkstra loop calls this today.                                                                                       |
-| 1     | #259  | refactor(succession.schema): add .max() length constraints to string fields                        | PR #252       | `id`, `name`, `baseLeaderId` accept arbitrary-length strings. Minor schema hardening gap; dev-only route with 5 MB body limit already in place.                                                                                     |
-| 1     | #256  | test(OobTreeNode): extract repeated \_variants node fixture into factory function                  | PR #252       | Same `_leader`/`_variants` node object copy-pasted across three consecutive tests; style issue with no functional risk.                                                                                                             |
-| 1     | #255  | test(oobTreeTransform): extend makeOob() factory instead of repeating full OOB shape               | PR #252       | `OOB_WITH_WJ_BRIGADE` and `OOB_WITH_RENO_BRIGADE` duplicate the full OOB shape instead of extending `makeOob()`; brittle to structural changes but no functional risk today.                                                        |
-| 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                                          | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis.                                      |
-| 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals                       | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                                                                 |
-| 1     | #201  | oobTreeTransform: pre-index arty entries for O(1) lookups                                          | PR #200       | Nested linear scan in `distributeCorpsArtillery` is O(M×(D+D×B)). No observable impact at South Mountain scale; flagged for awareness if OOB grows significantly.                                                                   |
+| Score | Issue | Title                                                                        | PR Introduced | Assessment                                                                                                                                                                                                                                                                              |
+| ----- | ----- | ---------------------------------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2     | #324  | perf: hoist noEffectTerrain Set construction out of hexEntryCost hot path    | PR #315       | `hexEntryCostBreakdown` constructs `new Set(noEffectTerrain ?? [])` on every call when invoked without a pre-built Set. Internal Dijkstra callers hoist correctly; future single-step public callers (M4 combat hex checks) will pay one allocation per call unless the API is updated. |
+| 2     | #322  | feat: add numeric bounds validation in pickMods                              | PR #315       | `pickMods()` coerces numeric modifier values but applies no min/max bounds. Extreme or negative values pass through to engine table functions without validation, unlike the bounds enforced by `requireNumber()` in the same file.                                                     |
+| 2     | #295  | engine: Dijkstra lacks early termination for point-to-point queries          | PR #283       | `movementPath` passes `Infinity` maxCost, exploring the entire reachable graph even for single target queries. Add optional `targetHex` to `dijkstra()` for 2–5× speedup on nearby pairs.                                                                                               |
+| 2     | #294  | engine: hex.js hot-path allocations — memoize formatHexId/parseHexId         | PR #283       | `parseHexId` and `formatHexId` called ~13K+ times per Dijkstra run; each creates temporary array/string allocations. Pre-compute a 2D ID grid at startup. Only worth addressing if profiling confirms bottleneck after H1/H2 fixes.                                                     |
+| 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                    | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis.                                                                                          |
+| 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                                                                                                                     |
+| 1     | #201  | oobTreeTransform: pre-index arty entries for O(1) lookups                    | PR #200       | Nested linear scan in `distributeCorpsArtillery` is O(M×(D+D×B)). No observable impact at South Mountain scale; flagged for awareness if OOB grows significantly.                                                                                                                       |
 
 ---
 

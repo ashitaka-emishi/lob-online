@@ -4,61 +4,108 @@ import TableTestView from './TableTestView.vue';
 
 // ─── Stub all 11 panel components ─────────────────────────────────────────────
 
+// defineAsyncComponent resolves the module namespace before accessing .default.
+// Vitest's strict mock proxy throws when Vue/VTU access undeclared properties on the
+// namespace (__isTeleport, __isKeepAlive, name, __esModule). Declare them all.
 vi.mock('../../components/tools/table-test/CombatPanel.vue', () => ({
+  __esModule: true,
+  __isTeleport: false,
+  __isKeepAlive: false,
+  name: undefined,
   default: { name: 'CombatPanel', template: '<div class="stub-combat">CombatPanel</div>' },
 }));
 vi.mock('../../components/tools/table-test/OpeningVolleyPanel.vue', () => ({
+  __esModule: true,
+  __isTeleport: false,
+  __isKeepAlive: false,
+  name: undefined,
   default: {
     name: 'OpeningVolleyPanel',
     template: '<div class="stub-opening-volley">OpeningVolleyPanel</div>',
   },
 }));
 vi.mock('../../components/tools/table-test/MoralePanel.vue', () => ({
+  __esModule: true,
+  __isTeleport: false,
+  __isKeepAlive: false,
+  name: undefined,
   default: { name: 'MoralePanel', template: '<div class="stub-morale">MoralePanel</div>' },
 }));
 vi.mock('../../components/tools/table-test/MoraleTransitionPanel.vue', () => ({
+  __esModule: true,
+  __isTeleport: false,
+  __isKeepAlive: false,
+  name: undefined,
   default: {
     name: 'MoraleTransitionPanel',
     template: '<div class="stub-morale-transition">MoraleTransitionPanel</div>',
   },
 }));
 vi.mock('../../components/tools/table-test/ClosingRollPanel.vue', () => ({
+  __esModule: true,
+  __isTeleport: false,
+  __isKeepAlive: false,
+  name: undefined,
   default: {
     name: 'ClosingRollPanel',
     template: '<div class="stub-closing-roll">ClosingRollPanel</div>',
   },
 }));
 vi.mock('../../components/tools/table-test/LeaderLossPanel.vue', () => ({
+  __esModule: true,
+  __isTeleport: false,
+  __isKeepAlive: false,
+  name: undefined,
   default: {
     name: 'LeaderLossPanel',
     template: '<div class="stub-leader-loss">LeaderLossPanel</div>',
   },
 }));
 vi.mock('../../components/tools/table-test/CommandRollPanel.vue', () => ({
+  __esModule: true,
+  __isTeleport: false,
+  __isKeepAlive: false,
+  name: undefined,
   default: {
     name: 'CommandRollPanel',
     template: '<div class="stub-command-roll">CommandRollPanel</div>',
   },
 }));
 vi.mock('../../components/tools/table-test/OrderDeliveryPanel.vue', () => ({
+  __esModule: true,
+  __isTeleport: false,
+  __isKeepAlive: false,
+  name: undefined,
   default: {
     name: 'OrderDeliveryPanel',
     template: '<div class="stub-order-delivery">OrderDeliveryPanel</div>',
   },
 }));
 vi.mock('../../components/tools/table-test/FlukeStoppagePanel.vue', () => ({
+  __esModule: true,
+  __isTeleport: false,
+  __isKeepAlive: false,
+  name: undefined,
   default: {
     name: 'FlukeStoppagePanel',
     template: '<div class="stub-fluke-stoppage">FlukeStoppagePanel</div>',
   },
 }));
 vi.mock('../../components/tools/table-test/AttackRecoveryPanel.vue', () => ({
+  __esModule: true,
+  __isTeleport: false,
+  __isKeepAlive: false,
+  name: undefined,
   default: {
     name: 'AttackRecoveryPanel',
     template: '<div class="stub-attack-recovery">AttackRecoveryPanel</div>',
   },
 }));
 vi.mock('../../components/tools/table-test/ZeroRulePanel.vue', () => ({
+  __esModule: true,
+  __isTeleport: false,
+  __isKeepAlive: false,
+  name: undefined,
   default: { name: 'ZeroRulePanel', template: '<div class="stub-zero-rule">ZeroRulePanel</div>' },
 }));
 
@@ -88,22 +135,29 @@ describe('TableTestView', () => {
     wrapper.unmount();
   });
 
-  it('renders Combat panel by default', () => {
+  it('Combat tab is active by default', () => {
+    // TableTestView's responsibility is tab state management; panel rendering
+    // is tested in each panel's own test file. Check aria-selected, not panel DOM.
     const wrapper = mount(TableTestView);
-    expect(wrapper.find('.stub-combat').exists()).toBe(true);
+    const tabs = wrapper.findAll('[role="tab"]');
+    const combatTab = tabs.find((t) => t.text() === 'Combat');
+    expect(combatTab.attributes('aria-selected')).toBe('true');
+    expect(combatTab.classes()).toContain('active');
     wrapper.unmount();
   });
 
-  it('switching tab renders the selected panel', async () => {
+  it('switching tab updates active state', async () => {
     const wrapper = mount(TableTestView);
 
-    // Click the Morale tab
     const tabs = wrapper.findAll('[role="tab"]');
     const moraleTab = tabs.find((t) => t.text() === 'Morale');
+    const combatTab = tabs.find((t) => t.text() === 'Combat');
     await moraleTab.trigger('click');
 
-    expect(wrapper.find('.stub-morale').exists()).toBe(true);
-    expect(wrapper.find('.stub-combat').exists()).toBe(false);
+    expect(moraleTab.attributes('aria-selected')).toBe('true');
+    expect(moraleTab.classes()).toContain('active');
+    expect(combatTab.attributes('aria-selected')).toBe('false');
+    expect(combatTab.classes()).not.toContain('active');
     wrapper.unmount();
   });
 

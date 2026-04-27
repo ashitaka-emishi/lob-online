@@ -2,12 +2,16 @@ import { z } from 'zod';
 
 import { CommandLevel, LeaderCounterRef } from './shared.schema.js';
 
+// #316 — bounded primitives for leader identifiers
+const EntityId = z.string().max(64);
+const EntityName = z.string().max(128);
+
 const BaseLeader = z.object({
-  id: z.string(),
-  name: z.string(),
-  rank: z.string().optional(),
+  id: EntityId,
+  name: EntityName,
+  rank: z.string().max(32).optional(),
   commandLevel: CommandLevel,
-  commandsId: z.string().nullable(),
+  commandsId: EntityId.nullable(),
   commandValue: z.number().int().nullable(),
   moraleValue: z.number().int().nullable(),
   counterRef: LeaderCounterRef.optional(),

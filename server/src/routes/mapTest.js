@@ -10,7 +10,8 @@ import { Router } from 'express';
 
 import { commandRange, COMMAND_RADII } from '../engine/command-range.js';
 import { computeLOS } from '../engine/los.js';
-import { buildHexIndex, loadMap, movementPath, movementRange } from '../engine/movement.js';
+import { buildHexIndex, loadMap } from '../engine/map.js';
+import { movementPath, movementRange } from '../engine/movement.js';
 import { loadScenario } from '../engine/scenario.js';
 
 // ─── Hex-ID format validation (#302) ──────────────────────────────────────────
@@ -44,14 +45,30 @@ const VALID_FORMATIONS = new Set([
 const VALID_COMMANDER_LEVELS = new Set(Object.keys(COMMAND_RADII));
 
 // ─── Data loaded once at startup ──────────────────────────────────────────────
+// Wrapped in try/catch (#304) so a data-load failure surfaces as a request-time
+// 500 rather than an unhandled throw that crashes the server with no HTTP path.
 
-const mapData = loadMap();
-const scenario = loadScenario();
-const hexIndex = buildHexIndex(mapData);
+let mapData, scenario, hexIndex, _startupError;
+try {
+  mapData = loadMap();
+  scenario = loadScenario();
+  hexIndex = buildHexIndex(mapData);
+} catch (err) {
+  console.error('[route] map-test: data load failed at startup:', err);
+  _startupError = true; // boolean flag; full error already logged above
+}
 
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 const router = Router();
+
+// Guard: return 500 on all routes if startup data load failed (#304)
+router.use((_req, res, next) => {
+  if (_startupError) {
+    return res.status(500).json({ error: 'Map data failed to load at startup' });
+  }
+  next();
+});
 
 // ── GET /data ─────────────────────────────────────────────────────────────────
 // Returns map data (hexes, gridSpec, elevationSystem) for client tools.

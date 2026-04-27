@@ -4,14 +4,18 @@ import { BaseCounterRef } from './shared.schema.js';
 
 const CounterRef = BaseCounterRef;
 
+// #316 — bounded primitives for entity identifiers across all OOB sub-schemas
+const EntityId = z.string().max(64);
+const EntityName = z.string().max(128);
+
 const WeaponType = z.enum(['R', 'M', 'SR', 'C']);
 const GunType = z.enum(['R', 'N', 'H', 'L', 'HvR']);
 const MoraleRating = z.enum(['A', 'B', 'C', 'D']);
 const UnitType = z.enum(['infantry', 'cavalry', 'artillery']);
 
 const InfantryCavalryUnit = z.object({
-  id: z.string(),
-  name: z.string(),
+  id: EntityId,
+  name: EntityName,
   type: UnitType,
   morale: MoraleRating,
   weapon: WeaponType,
@@ -22,8 +26,8 @@ const InfantryCavalryUnit = z.object({
 });
 
 const ArtilleryBattery = z.object({
-  id: z.string(),
-  name: z.string(),
+  id: EntityId,
+  name: EntityName,
   gunType: GunType,
   strengthPoints: z.number().int().positive(),
   morale: MoraleRating,
@@ -33,22 +37,22 @@ const ArtilleryBattery = z.object({
 });
 
 const HqNode = z.object({
-  id: z.string(),
-  name: z.string(),
+  id: EntityId,
+  name: EntityName,
   counterRef: CounterRef.optional(),
 });
 
 const SupplyNode = z.object({
-  id: z.string(),
-  name: z.string(),
+  id: EntityId,
+  name: EntityName,
   counterRef: CounterRef.optional(),
 });
 
 const Brigade = z.object({
-  id: z.string(),
-  name: z.string().optional(),
+  id: EntityId,
+  name: EntityName.optional(),
   wreckThreshold: z.number().int().positive(),
-  successionIds: z.array(z.string()).optional().default([]),
+  successionIds: z.array(EntityId).optional().default([]),
   counterRef: CounterRef.optional(),
   regiments: z.array(InfantryCavalryUnit),
   batteries: z.array(ArtilleryBattery).optional(),
@@ -58,16 +62,16 @@ const Brigade = z.object({
 const ArtilleryGroup = z.record(
   z.string(),
   z.object({
-    name: z.string().optional(),
+    name: EntityName.optional(),
     batteries: z.array(ArtilleryBattery),
   })
 );
 
 const Division = z.object({
-  id: z.string(),
-  name: z.string(),
+  id: EntityId,
+  name: EntityName,
   wreckThreshold: z.number().int().positive(),
-  successionIds: z.array(z.string()).optional().default([]),
+  successionIds: z.array(EntityId).optional().default([]),
   counterRef: CounterRef.optional(),
   hq: HqNode.optional(),
   artillery: ArtilleryGroup.optional(),
@@ -76,9 +80,9 @@ const Division = z.object({
 });
 
 const Corps = z.object({
-  id: z.string(),
-  name: z.string(),
-  successionIds: z.array(z.string()).optional().default([]),
+  id: EntityId,
+  name: EntityName,
+  successionIds: z.array(EntityId).optional().default([]),
   counterRef: CounterRef.optional(),
   hq: HqNode.optional(),
   supply: SupplyNode.optional(),
@@ -88,9 +92,9 @@ const Corps = z.object({
 });
 
 const CavalryDivision = z.object({
-  id: z.string(),
-  name: z.string(),
-  successionIds: z.array(z.string()).optional().default([]),
+  id: EntityId,
+  name: EntityName,
+  successionIds: z.array(EntityId).optional().default([]),
   counterRef: CounterRef.optional(),
   hq: HqNode.optional(),
   _note: z.string().optional(),
@@ -99,15 +103,15 @@ const CavalryDivision = z.object({
 });
 
 const UnionOOB = z.object({
-  army: z.string(),
+  army: EntityName,
   supplyTrain: SupplyNode,
   corps: z.array(Corps),
   cavalryDivision: CavalryDivision,
 });
 
 const ConfederateOOB = z.object({
-  army: z.string(),
-  wing: z.string(),
+  army: EntityName,
+  wing: EntityName,
   supplyWagon: SupplyNode,
   independent: z.object({
     _note: z.string().optional(),
@@ -122,11 +126,11 @@ const ConfederateOOB = z.object({
 });
 
 const IndependentBrigade = z.object({
-  id: z.string(),
-  name: z.string(),
+  id: EntityId,
+  name: EntityName,
   _note: z.string().optional(),
   wreckThreshold: z.number().int().positive(),
-  successionIds: z.array(z.string()).optional().default([]),
+  successionIds: z.array(EntityId).optional().default([]),
   counterRef: CounterRef.optional(),
   artillery: ArtilleryGroup.optional(),
   regiments: z.array(InfantryCavalryUnit),

@@ -80,6 +80,46 @@ describe('SuccessionSchema — SuccessionVariant', () => {
   });
 });
 
+// ── String length constraints (#259) ─────────────────────────────────────────
+
+describe('SuccessionSchema — string length constraints (#259)', () => {
+  it('rejects id longer than 64 characters', () => {
+    const variant = { ...MINIMAL_VARIANT, id: 'x'.repeat(65) };
+    const result = SuccessionSchema.safeParse({ ...MINIMAL_SUCCESSION, confederate: [variant] });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts id of exactly 64 characters', () => {
+    const variant = { ...MINIMAL_VARIANT, id: 'x'.repeat(64) };
+    const result = SuccessionSchema.safeParse({ ...MINIMAL_SUCCESSION, confederate: [variant] });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects name longer than 128 characters', () => {
+    const variant = { ...MINIMAL_VARIANT, name: 'x'.repeat(129) };
+    const result = SuccessionSchema.safeParse({ ...MINIMAL_SUCCESSION, confederate: [variant] });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts name of exactly 128 characters', () => {
+    const variant = { ...MINIMAL_VARIANT, name: 'x'.repeat(128) };
+    const result = SuccessionSchema.safeParse({ ...MINIMAL_SUCCESSION, confederate: [variant] });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects baseLeaderId longer than 64 characters', () => {
+    const variant = { ...MINIMAL_VARIANT, baseLeaderId: 'x'.repeat(65) };
+    const result = SuccessionSchema.safeParse({ ...MINIMAL_SUCCESSION, confederate: [variant] });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts baseLeaderId of exactly 64 characters', () => {
+    const variant = { ...MINIMAL_VARIANT, baseLeaderId: 'x'.repeat(64) };
+    const result = SuccessionSchema.safeParse({ ...MINIMAL_SUCCESSION, confederate: [variant] });
+    expect(result.success).toBe(true);
+  });
+});
+
 describe('SuccessionSchema — SuccessionCounterRef', () => {
   it('accepts variant with null counterRef', () => {
     const variant = { ...MINIMAL_VARIANT, counterRef: null };

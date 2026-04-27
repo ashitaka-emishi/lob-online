@@ -12,10 +12,7 @@
 
 import { ELEVATION_TYPES, ROUTE_TYPES } from '../schemas/map.schema.js';
 import { dijkstra, hexNeighbors, OPPOSITE_DIR_INDEX, reconstructPath } from './hex.js';
-import { buildHexIndex, loadMap } from './map.js';
-
-// Re-export so callers that loaded map data via this module continue to work.
-export { buildHexIndex, loadMap };
+import { buildHexIndex } from './map.js';
 
 // ─── Internal helpers ──────────────────────────────────────────────────────────
 
@@ -242,6 +239,11 @@ function hexEntryCostBreakdown(
  * @returns {number} MP cost (may be Infinity if impassable)
  */
 export function hexEntryCost(fromHexId, toHexId, dirIndex, formation, scenario, hexIndex) {
+  // LOB — dirIndex must be 0–5 (N/NE/SE/S/SW/NW); out-of-range values silently
+  // return wrong edge data from array lookups (#286)
+  if (!Number.isInteger(dirIndex) || dirIndex < 0 || dirIndex > 5) {
+    throw new RangeError(`hexEntryCost: dirIndex must be 0–5, got ${dirIndex}`);
+  }
   return hexEntryCostBreakdown(fromHexId, toHexId, dirIndex, formation, scenario, hexIndex).total;
 }
 

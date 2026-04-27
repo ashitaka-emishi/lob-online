@@ -51,6 +51,7 @@ Navigation hub for project context.
 | [m3-debt-sprint_20260412](./tracks/m3-debt-sprint_20260412/index.md) | M3 Debt Sprint — Score-3 Cleanup | Complete |
 | [pipeline-cleanup_20260414](./tracks/pipeline-cleanup_20260414/index.md) | Dev Pipeline Cleanup | Complete |
 | [m3-debt-closeout_20260415](./tracks/m3-debt-closeout_20260415/index.md) | M3 Debt Closeout Sprint | Complete |
+| [debt-final-closeout_20260415](./tracks/debt-final-closeout_20260415/index.md) | Debt Final Closeout | Pending |
 
 ## Getting Started
 

@@ -119,35 +119,36 @@ describe('OobTreeNode — selection', () => {
 
 // ── Succession variants in childEntries ───────────────────────────────────────
 
+// #256 — shared factory so tests don't duplicate this fixture shape
+function makeWalkerNode(variantsOverride) {
+  return {
+    id: 'test-bde',
+    name: 'Test Brigade',
+    _leader: {
+      id: 'walker',
+      name: 'Joseph Walker',
+      _variants: variantsOverride ?? [
+        { id: 'walker-promoted', name: 'Col Joseph Walker (Promoted)' },
+      ],
+    },
+  };
+}
+
 describe('OobTreeNode — succession variant children', () => {
   beforeEach(setup);
 
   it('renders leader-variant badge when _leader has _variants', () => {
-    const node = {
-      id: 'test-bde',
-      name: 'Test Brigade',
-      _leader: {
-        id: 'walker',
-        name: 'Joseph Walker',
-        _variants: [{ id: 'walker-promoted', name: 'Col Joseph Walker (Promoted)' }],
-      },
-    };
-    const wrapper = mount(OobTreeNode, { props: { node, nodeType: 'brigade' } });
+    const wrapper = mount(OobTreeNode, {
+      props: { node: makeWalkerNode(), nodeType: 'brigade' },
+    });
     expect(wrapper.find('.badge-leader-variant').exists()).toBe(true);
     expect(wrapper.find('.badge-leader-variant').text()).toBe('Var');
   });
 
   it('renders variant name in tree', () => {
-    const node = {
-      id: 'test-bde',
-      name: 'Test Brigade',
-      _leader: {
-        id: 'walker',
-        name: 'Joseph Walker',
-        _variants: [{ id: 'walker-promoted', name: 'Col Joseph Walker (Promoted)' }],
-      },
-    };
-    const wrapper = mount(OobTreeNode, { props: { node, nodeType: 'brigade' } });
+    const wrapper = mount(OobTreeNode, {
+      props: { node: makeWalkerNode(), nodeType: 'brigade' },
+    });
     expect(wrapper.text()).toContain('Col Joseph Walker (Promoted)');
   });
 

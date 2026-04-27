@@ -1,31 +1,86 @@
 <script setup>
-import { ref } from 'vue';
-import AttackRecoveryPanel from '../../components/tools/table-test/AttackRecoveryPanel.vue';
-import ClosingRollPanel from '../../components/tools/table-test/ClosingRollPanel.vue';
-import CombatPanel from '../../components/tools/table-test/CombatPanel.vue';
-import CommandRollPanel from '../../components/tools/table-test/CommandRollPanel.vue';
-import FlukeStoppagePanel from '../../components/tools/table-test/FlukeStoppagePanel.vue';
-import LeaderLossPanel from '../../components/tools/table-test/LeaderLossPanel.vue';
-import MoralePanel from '../../components/tools/table-test/MoralePanel.vue';
-import MoraleTransitionPanel from '../../components/tools/table-test/MoraleTransitionPanel.vue';
-import OpeningVolleyPanel from '../../components/tools/table-test/OpeningVolleyPanel.vue';
-import OrderDeliveryPanel from '../../components/tools/table-test/OrderDeliveryPanel.vue';
-import ZeroRulePanel from '../../components/tools/table-test/ZeroRulePanel.vue';
+import { computed, defineAsyncComponent, ref } from 'vue';
 
-// ── Panel registry ────────────────────────────────────────────────────────────
+// ── Panel registry — #311 lazy-load each panel SFC ───────────────────────────
 
 const PANELS = [
-  { id: 'combat', label: 'Combat', component: CombatPanel },
-  { id: 'opening-volley', label: 'Opening Volley', component: OpeningVolleyPanel },
-  { id: 'morale', label: 'Morale', component: MoralePanel },
-  { id: 'morale-transition', label: 'Morale Transition', component: MoraleTransitionPanel },
-  { id: 'closing-roll', label: 'Closing Roll', component: ClosingRollPanel },
-  { id: 'leader-loss', label: 'Leader Loss', component: LeaderLossPanel },
-  { id: 'command-roll', label: 'Command Roll', component: CommandRollPanel },
-  { id: 'order-delivery', label: 'Order Delivery', component: OrderDeliveryPanel },
-  { id: 'fluke-stoppage', label: 'Fluke Stoppage', component: FlukeStoppagePanel },
-  { id: 'attack-recovery', label: 'Attack Recovery', component: AttackRecoveryPanel },
-  { id: 'zero-rule', label: 'Zero Rule', component: ZeroRulePanel },
+  {
+    id: 'combat',
+    label: 'Combat',
+    component: defineAsyncComponent(
+      () => import('../../components/tools/table-test/CombatPanel.vue')
+    ),
+  },
+  {
+    id: 'opening-volley',
+    label: 'Opening Volley',
+    component: defineAsyncComponent(
+      () => import('../../components/tools/table-test/OpeningVolleyPanel.vue')
+    ),
+  },
+  {
+    id: 'morale',
+    label: 'Morale',
+    component: defineAsyncComponent(
+      () => import('../../components/tools/table-test/MoralePanel.vue')
+    ),
+  },
+  {
+    id: 'morale-transition',
+    label: 'Morale Transition',
+    component: defineAsyncComponent(
+      () => import('../../components/tools/table-test/MoraleTransitionPanel.vue')
+    ),
+  },
+  {
+    id: 'closing-roll',
+    label: 'Closing Roll',
+    component: defineAsyncComponent(
+      () => import('../../components/tools/table-test/ClosingRollPanel.vue')
+    ),
+  },
+  {
+    id: 'leader-loss',
+    label: 'Leader Loss',
+    component: defineAsyncComponent(
+      () => import('../../components/tools/table-test/LeaderLossPanel.vue')
+    ),
+  },
+  {
+    id: 'command-roll',
+    label: 'Command Roll',
+    component: defineAsyncComponent(
+      () => import('../../components/tools/table-test/CommandRollPanel.vue')
+    ),
+  },
+  {
+    id: 'order-delivery',
+    label: 'Order Delivery',
+    component: defineAsyncComponent(
+      () => import('../../components/tools/table-test/OrderDeliveryPanel.vue')
+    ),
+  },
+  {
+    id: 'fluke-stoppage',
+    label: 'Fluke Stoppage',
+    component: defineAsyncComponent(
+      () => import('../../components/tools/table-test/FlukeStoppagePanel.vue')
+    ),
+  },
+  {
+    id: 'attack-recovery',
+    label: 'Attack Recovery',
+    component: defineAsyncComponent(
+      () => import('../../components/tools/table-test/AttackRecoveryPanel.vue')
+    ),
+  },
+  {
+    id: 'zero-rule',
+    label: 'Zero Rule',
+    component: defineAsyncComponent(
+      () => import('../../components/tools/table-test/ZeroRulePanel.vue')
+    ),
+  },
 ];
 
 // ── Active panel state ─────────────────────────────────────────────────────────
@@ -36,7 +91,10 @@ function selectPanel(id) {
   activePanelId.value = id;
 }
 
-const activePanel = () => PANELS.find((p) => p.id === activePanelId.value)?.component ?? null;
+// #310 — computed so Vue tracks activePanelId reactivity correctly
+const activePanel = computed(
+  () => PANELS.find((p) => p.id === activePanelId.value)?.component ?? null
+);
 </script>
 
 <template>
@@ -67,7 +125,7 @@ const activePanel = () => PANELS.find((p) => p.id === activePanelId.value)?.comp
 
       <!-- Active panel content -->
       <div class="panel-content">
-        <component :is="activePanel()" />
+        <KeepAlive><component :is="activePanel" /></KeepAlive>
       </div>
     </div>
   </div>

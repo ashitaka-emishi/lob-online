@@ -19,6 +19,14 @@ vi.mock('../engine/tables/combat.js', () => ({
 
 vi.mock('../engine/tables/charge.js', () => ({
   closingRollResult: vi.fn(),
+  CLOSING_BOOL_MOD_KEYS: Object.freeze([
+    'hasLeaderMorale2Plus',
+    'isRear',
+    'isShaken',
+    'frontalArtilleryWithCanister',
+    'startsAdjacentToTarget',
+    'targetInBreastworks',
+  ]),
 }));
 
 vi.mock('../engine/tables/command.js', () => ({
@@ -39,6 +47,17 @@ vi.mock('../engine/tables/morale.js', () => ({
   moraleResult: vi.fn(),
   moraleTransition: vi.fn(),
   MORALE_STATES: ['bl', 'normal', 'shaken', 'dg', 'rout'],
+  MORALE_BOOL_MOD_KEYS: Object.freeze([
+    'isShakenOrDG',
+    'isWrecked',
+    'isRear',
+    'isSmall',
+    'cowardlyLegs',
+    'isNight',
+    'isArtilleryOrCavalryFromSmallArms',
+    'hasProtectiveTerrain',
+  ]),
+  MORALE_NUM_MOD_KEYS: Object.freeze(['leaderMoraleValue', 'range']),
 }));
 
 import { combatResult, openingVolleyResult } from '../engine/tables/combat.js';
@@ -164,7 +183,23 @@ describe('POST /morale', () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ effectiveRoll: 9, type: 'shaken' });
-    expect(moraleResult).toHaveBeenCalledWith('C', { isShakenOrDG: true }, 8);
+    // #306 — pickMods fills all allowlisted keys; only isShakenOrDG is true here
+    expect(moraleResult).toHaveBeenCalledWith(
+      'C',
+      {
+        isShakenOrDG: true,
+        isWrecked: false,
+        isRear: false,
+        isSmall: false,
+        cowardlyLegs: false,
+        isNight: false,
+        isArtilleryOrCavalryFromSmallArms: false,
+        hasProtectiveTerrain: false,
+        leaderMoraleValue: 0,
+        range: 0,
+      },
+      8
+    );
   });
 
   it('returns 400 when rating is missing', async () => {
@@ -179,7 +214,7 @@ describe('POST /morale', () => {
     expect(res.status).toBe(400);
   });
 
-  it('defaults modifiers to empty object when not provided', async () => {
+  it('passes all-false modifier defaults when modifiers not provided', async () => {
     moraleResult.mockReturnValue({
       effectiveRoll: 8,
       type: 'noEffect',
@@ -193,7 +228,23 @@ describe('POST /morale', () => {
       .send({ rating: 'B', diceRoll: 8 });
 
     expect(res.status).toBe(200);
-    expect(moraleResult).toHaveBeenCalledWith('B', {}, 8);
+    // #306 — pickMods fills all allowlisted keys as defaults when modifiers omitted
+    expect(moraleResult).toHaveBeenCalledWith(
+      'B',
+      {
+        isShakenOrDG: false,
+        isWrecked: false,
+        isRear: false,
+        isSmall: false,
+        cowardlyLegs: false,
+        isNight: false,
+        isArtilleryOrCavalryFromSmallArms: false,
+        hasProtectiveTerrain: false,
+        leaderMoraleValue: 0,
+        range: 0,
+      },
+      8
+    );
   });
 });
 
@@ -247,7 +298,19 @@ describe('POST /closing-roll', () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ pass: true, threshold: 3, modifiedRoll: 4 });
-    expect(closingRollResult).toHaveBeenCalledWith('B', { isRear: true }, 3);
+    // #306 — pickMods fills all allowlisted keys; only isRear is true here
+    expect(closingRollResult).toHaveBeenCalledWith(
+      'B',
+      {
+        hasLeaderMorale2Plus: false,
+        isRear: true,
+        isShaken: false,
+        frontalArtilleryWithCanister: false,
+        startsAdjacentToTarget: false,
+        targetInBreastworks: false,
+      },
+      3
+    );
   });
 
   it('returns 400 when moraleRating is missing', async () => {
@@ -472,5 +535,28 @@ describe('POST /zero-rule', () => {
   it('returns 400 when diceRoll is out of 1d6 range', async () => {
     const res = await request(app).post('/api/tools/table-test/zero-rule').send({ diceRoll: 0 });
     expect(res.status).toBe(400);
+  });
+});
+
+// ─── prototype-pollution guard for pickMods (#321) ────────────────────────────
+
+describe('pickMods prototype-pollution guard', () => {
+  it('does not pollute Object.prototype when modifiers contains __proto__', async () => {
+    moraleResult.mockReturnValue({
+      effectiveRoll: 7,
+      type: null,
+      retreatHexes: 0,
+      spLoss: 0,
+      leaderLossCheck: false,
+    });
+
+    // Inject a __proto__ key via JSON.parse to bypass literal syntax check
+    const malicious = JSON.parse(
+      '{"rating":"B","diceRoll":7,"modifiers":{"__proto__":{"polluted":true}}}'
+    );
+
+    const res = await request(app).post('/api/tools/table-test/morale').send(malicious);
+    expect(res.status).toBe(200);
+    expect({}.polluted).toBeUndefined();
   });
 });

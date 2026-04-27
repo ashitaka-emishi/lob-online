@@ -8,7 +8,7 @@
 import { Router } from 'express';
 
 import { combatResult, openingVolleyResult } from '../engine/tables/combat.js';
-import { closingRollResult } from '../engine/tables/charge.js';
+import { closingRollResult, CLOSING_BOOL_MOD_KEYS } from '../engine/tables/charge.js';
 import {
   attackRecoveryResult,
   commandRollResult,
@@ -19,9 +19,19 @@ import {
   zeroRuleResult,
 } from '../engine/tables/command.js';
 import { leaderLossResult } from '../engine/tables/leader-loss.js';
-import { moraleResult, moraleTransition, MORALE_STATES } from '../engine/tables/morale.js';
+import {
+  moraleResult,
+  moraleTransition,
+  MORALE_STATES,
+  MORALE_BOOL_MOD_KEYS,
+  MORALE_NUM_MOD_KEYS,
+} from '../engine/tables/morale.js';
 
 // ─── Allowlists ────────────────────────────────────────────────────────────────
+
+// #320 — key arrays sourced from engine modules; single source of truth
+const MORALE_BOOL_MODS = MORALE_BOOL_MOD_KEYS;
+const CLOSING_BOOL_MODS = CLOSING_BOOL_MOD_KEYS;
 
 const VALID_OPENING_VOLLEY_CONDITIONS = new Set([
   'range1',
@@ -59,6 +69,32 @@ function requireEnum(raw, name, allowSet) {
     };
   }
   return { ok: true, value: raw };
+}
+
+// ─── Modifier allowlist filter ────────────────────────────────────────────────
+
+/**
+ * Build a safe modifier object from raw client input.
+ *
+ * Only keys named in `boolKeys` (coerced with Boolean()) and `numKeys`
+ * (coerced with Number(); NaN becomes 0) are forwarded to the engine.
+ * All other properties are silently dropped, preventing prototype pollution
+ * and unrecognised-field forwarding. — #306
+ *
+ * @param {unknown} raw          - untrusted input (from req.body.modifiers)
+ * @param {string[]} boolKeys    - boolean modifier key names
+ * @param {string[]} [numKeys=[]] - numeric modifier key names
+ * @returns {object}
+ */
+function pickMods(raw, boolKeys, numKeys = []) {
+  const src = typeof raw === 'object' && raw !== null ? raw : {};
+  const out = {};
+  for (const k of boolKeys) out[k] = Boolean(src[k]);
+  for (const k of numKeys) {
+    const n = Number(src[k]);
+    out[k] = Number.isFinite(n) ? n : 0;
+  }
+  return out;
 }
 
 // ─── Route wrapper ────────────────────────────────────────────────────────────
@@ -126,7 +162,8 @@ router.post(
     if (!ratingR.ok) return res.status(400).json({ error: ratingR.error });
     const rollR = requireNumber(diceRoll, 'diceRoll', { min: 2, max: 12 });
     if (!rollR.ok) return res.status(400).json({ error: rollR.error });
-    const safeMods = typeof modifiers === 'object' && modifiers !== null ? modifiers : {};
+    // #306 — allowlist-filter modifier object before forwarding to engine
+    const safeMods = pickMods(modifiers, MORALE_BOOL_MODS, MORALE_NUM_MOD_KEYS);
     return res.json(moraleResult(ratingR.value, safeMods, rollR.value));
   })
 );
@@ -168,7 +205,8 @@ router.post(
     if (!ratingR.ok) return res.status(400).json({ error: ratingR.error });
     const rollR = requireNumber(diceRoll, 'diceRoll', { min: 1, max: 6 });
     if (!rollR.ok) return res.status(400).json({ error: rollR.error });
-    const safeMods = typeof modifiers === 'object' && modifiers !== null ? modifiers : {};
+    // #306 — allowlist-filter modifier object before forwarding to engine
+    const safeMods = pickMods(modifiers, CLOSING_BOOL_MODS);
     return res.json(closingRollResult(ratingR.value, safeMods, rollR.value));
   })
 );

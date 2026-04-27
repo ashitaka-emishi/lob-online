@@ -126,6 +126,19 @@ export const ADDITIVE_MORALE_EFFECTS = Object.freeze({
  * LOB_CHARTS p.5 — Morale Table Modifiers box. LOB §6.1.
  * Positive values increase the roll (bad for the target); negative decrease it (good).
  */
+// #320 — modifier key arrays consumed by the route layer's pickMods() allowlist
+export const MORALE_BOOL_MOD_KEYS = Object.freeze([
+  'isShakenOrDG',
+  'isWrecked',
+  'isRear',
+  'isSmall',
+  'cowardlyLegs',
+  'isNight',
+  'isArtilleryOrCavalryFromSmallArms',
+  'hasProtectiveTerrain',
+]);
+export const MORALE_NUM_MOD_KEYS = Object.freeze(['leaderMoraleValue', 'range']);
+
 export const MORALE_MODIFIERS = Object.freeze({
   shakenOrDG: 1, // LOB §6.1 — checking unit is currently Shaken or DG
   wrecked: 3, // LOB §6.1 — checking unit is Wrecked

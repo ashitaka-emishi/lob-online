@@ -12,9 +12,12 @@ import request from 'supertest';
 
 // ─── Mock engine modules ───────────────────────────────────────────────────────
 
-vi.mock('../engine/movement.js', () => ({
+vi.mock('../engine/map.js', () => ({
   loadMap: vi.fn(),
   buildHexIndex: vi.fn(() => new Map()),
+}));
+
+vi.mock('../engine/movement.js', () => ({
   movementPath: vi.fn(),
   movementRange: vi.fn(),
 }));
@@ -32,7 +35,8 @@ vi.mock('../engine/scenario.js', () => ({
   loadScenario: vi.fn(),
 }));
 
-import { buildHexIndex, loadMap, movementPath, movementRange } from '../engine/movement.js';
+import { buildHexIndex, loadMap } from '../engine/map.js';
+import { movementPath, movementRange } from '../engine/movement.js';
 import { computeLOS } from '../engine/los.js';
 import { commandRange } from '../engine/command-range.js';
 import { loadScenario } from '../engine/scenario.js';
@@ -96,6 +100,21 @@ beforeEach(() => {
 afterEach(() => {
   vi.resetModules();
   vi.clearAllMocks();
+});
+
+// ─── Startup error guard (#304) ───────────────────────────────────────────────
+
+describe('startup data load failure (#304)', () => {
+  it('returns 500 on all routes when loadMap throws at startup', async () => {
+    loadMap.mockImplementationOnce(() => {
+      throw new Error('ENOENT: map.json not found');
+    });
+
+    const app = await buildApp();
+    const res = await request(app).get('/data');
+    expect(res.status).toBe(500);
+    expect(res.body.error).toMatch(/failed to load/i);
+  });
 });
 
 // ─── GET /movement-path ────────────────────────────────────────────────────────

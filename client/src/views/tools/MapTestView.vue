@@ -41,12 +41,15 @@ function onImageLoad(event) {
 
 // ── Panel state ───────────────────────────────────────────────────────────────
 
+// Eager-loaded intentionally: panels are tightly coupled to mapData (passed as prop) and
+// are small SFCs — defineAsyncComponent would add complexity with no UX gain here.
+// TableTestView uses async because its 11 panels are larger and have no shared startup fetch.
 const PANELS = [
-  { id: 'movement-path', label: 'Movement Path' },
-  { id: 'movement-range', label: 'Movement Range' },
-  { id: 'hex-inspector', label: 'Hex Inspector' },
-  { id: 'los', label: 'LOS' },
-  { id: 'command-range', label: 'Command Range' },
+  { id: 'movement-path', label: 'Movement Path', component: MovementPathPanel },
+  { id: 'movement-range', label: 'Movement Range', component: MovementRangePanel },
+  { id: 'hex-inspector', label: 'Hex Inspector', component: HexInspectorPanel },
+  { id: 'los', label: 'LOS', component: LosPanel },
+  { id: 'command-range', label: 'Command Range', component: CommandRangePanel },
 ];
 
 const activePanelId = ref('movement-path');
@@ -130,28 +133,8 @@ const hexes = computed(() => mapData.value?.hexes ?? []);
             <span class="accordion-chevron">{{ activePanelId === panel.id ? '▾' : '▸' }}</span>
           </button>
           <div v-if="activePanelId === panel.id" class="accordion-hex-content">
-            <MovementPathPanel
-              v-if="panel.id === 'movement-path'"
-              :clicked-hex-id="clickedHexId"
-              @overlay-update="overlayConfig = $event"
-            />
-            <MovementRangePanel
-              v-else-if="panel.id === 'movement-range'"
-              :clicked-hex-id="clickedHexId"
-              @overlay-update="overlayConfig = $event"
-            />
-            <HexInspectorPanel
-              v-else-if="panel.id === 'hex-inspector'"
-              :clicked-hex-id="clickedHexId"
-              @overlay-update="overlayConfig = $event"
-            />
-            <LosPanel
-              v-else-if="panel.id === 'los'"
-              :clicked-hex-id="clickedHexId"
-              @overlay-update="overlayConfig = $event"
-            />
-            <CommandRangePanel
-              v-else-if="panel.id === 'command-range'"
+            <component
+              :is="panel.component"
               :clicked-hex-id="clickedHexId"
               @overlay-update="overlayConfig = $event"
             />

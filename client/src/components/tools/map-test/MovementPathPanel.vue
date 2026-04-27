@@ -146,61 +146,8 @@ function clear() {
 </template>
 
 <style scoped>
-.panel {
-  padding: 12px;
-  font-size: 13px;
-  color: #ccc;
-}
-.panel-header {
-  font-weight: 600;
-  margin-bottom: 10px;
-  color: #fff;
-}
-.controls {
-  margin-bottom: 8px;
-}
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.field-label {
-  font-size: 11px;
-  color: #888;
-  text-transform: uppercase;
-}
-select {
-  background: #2d2d2d;
-  border: 1px solid #444;
-  color: #ccc;
-  padding: 3px 6px;
-  border-radius: 3px;
-}
-.click-guide {
-  margin: 8px 0;
-  font-size: 12px;
-}
-.hint {
-  margin: 0;
-  color: #aaa;
-}
-.clear-btn {
-  margin-bottom: 8px;
-  padding: 3px 10px;
-  background: #3a3a3a;
-  border: 1px solid #555;
-  color: #ccc;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 12px;
-}
-.loading {
-  color: #888;
-  font-style: italic;
-}
-.error {
-  color: #f87171;
-}
+@import './panel-base.css';
+
 .impassable {
   color: #f87171;
   font-weight: 600;

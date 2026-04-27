@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 
 import { loadScenario } from './scenario.js';
-import { hexEntryCost, loadMap, movementPath, movementRange } from './movement.js';
+import { loadMap } from './map.js';
+import { hexEntryCost, movementPath, movementRange } from './movement.js';
 
 // ─── Shared fixtures ───────────────────────────────────────────────────────────
 
@@ -307,6 +308,50 @@ describe('hexEntryCost — road/pike/trail movement', () => {
     ]);
     expect(hexEntryCost('10.10', '10.09', 3, 'line', scenario, hexIndex)).toBe(2); // 1 + 1 stream
     expect(hexEntryCost('10.10', '10.09', 3, 'leader', scenario, hexIndex)).toBe(1); // stream=0 for leader
+  });
+});
+
+// ─── hexEntryCost — dirIndex validation (#286) ────────────────────────────────
+
+describe('hexEntryCost — dirIndex range validation (#286)', () => {
+  it('throws RangeError for dirIndex 6', () => {
+    const hexIndex = makeHexIndex([
+      { hex: '10.10', terrain: 'clear' },
+      { hex: '10.11', terrain: 'clear' },
+    ]);
+    expect(() => hexEntryCost('10.10', '10.11', 6, 'line', scenario, hexIndex)).toThrow(RangeError);
+  });
+
+  it('throws RangeError for negative dirIndex', () => {
+    const hexIndex = makeHexIndex([
+      { hex: '10.10', terrain: 'clear' },
+      { hex: '10.11', terrain: 'clear' },
+    ]);
+    expect(() => hexEntryCost('10.10', '10.11', -1, 'line', scenario, hexIndex)).toThrow(
+      RangeError
+    );
+  });
+
+  it('throws RangeError for NaN dirIndex', () => {
+    const hexIndex = makeHexIndex([
+      { hex: '10.10', terrain: 'clear' },
+      { hex: '10.11', terrain: 'clear' },
+    ]);
+    expect(() => hexEntryCost('10.10', '10.11', NaN, 'line', scenario, hexIndex)).toThrow(
+      RangeError
+    );
+  });
+
+  it('accepts valid dirIndex values 0–5', () => {
+    const hexIndex = makeHexIndex([
+      { hex: '10.10', terrain: 'clear' },
+      { hex: '10.11', terrain: 'clear' },
+    ]);
+    for (let i = 0; i <= 5; i++) {
+      expect(() => hexEntryCost('10.10', '10.11', i, 'line', scenario, hexIndex)).not.toThrow(
+        RangeError
+      );
+    }
   });
 });
 
