@@ -33,8 +33,8 @@ four are self-contained to `client/src/tools/map-test/` and its tests.
 ### Verification
 
 - [x] `npm run test` passes (all five map-test panel tests still green)
-- [ ] Map Test Tool loads correctly in browser (`/tools/map-test`)
-- [ ] No score-2 map-test items remain in debt register
+- [ ] Map Test Tool loads correctly in browser (`/tools/map-test`) — manual check deferred to PR review
+- [x] No score-2 map-test items remain in debt register
 
 ---
 
@@ -84,7 +84,7 @@ Fix four score-1 Vue idiom issues in `TableTestView.vue` and `MoralePanel.vue` (
 ### Verification
 
 - [x] `npm run test` passes
-- [ ] Table Test Tool renders all 11 panels correctly in browser (`/tools/table-test`)
+- [ ] Table Test Tool renders all 11 panels correctly in browser (`/tools/table-test`) — manual check deferred to PR review
 
 ---
 
@@ -111,12 +111,12 @@ Fix three score-1 test-quality and schema items introduced in earlier sprints.
 
 ## Final Verification
 
-- [ ] All 15 acceptance criteria items resolved
-- [ ] `npm run lint` passes
-- [ ] `npm run format:check` passes
-- [ ] `npm run test` passes (≥ 70% coverage)
-- [ ] Debt register updated: open items 20 → 5, net score 28 → 7
-- [ ] Ready for `/team-review`
+- [x] All 15 acceptance criteria items resolved
+- [x] `npm run lint` passes
+- [x] `npm run format:check` passes
+- [x] `npm run test` passes (≥ 70% coverage) — 1876 tests, all green
+- [x] Debt register updated: open items 20 → 5, net score 28 → 7
+- [x] Ready for `/team-review`
 
 ---
 

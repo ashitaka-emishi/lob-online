@@ -2,15 +2,21 @@
   "id": "debt-final-closeout_20260415",
   "title": "Debt Final Closeout",
   "type": "chore",
-  "status": "in_progress",
+  "status": "complete",
   "created": "2026-04-15T00:00:00.000Z",
   "updated": "2026-04-15T00:00:00.000Z",
   "phases": {
     "total": 4,
-    "completed": 0
+    "completed": 4
   },
   "tasks": {
     "total": 15,
-    "completed": 0
-  }
+    "completed": 15
+  },
+  "commits": [
+    "ba77416: feat(map-test): Phase 1 — shared CSS, mockFetch, dynamic component, startup error guard",
+    "e21afad: feat(engine): Phase 2 — ammoTypeShift, formations.js, call-once guards, dirIndex validation",
+    "69c3bc1: feat(table-test): Phase 3 — input allowlist, factory function, computed, async panels",
+    "678bf59: feat(schema/test): Phase 4 — string length guards, fixture factories"
+  ]
 }

@@ -82,6 +82,6 @@
 
 | [x] | m3-debt-closeout_20260415 | M3 Debt Closeout Sprint | 2026-04-15 | 2026-04-15 |
 
-| [~] | debt-final-closeout_20260415 | Debt Final Closeout | 2026-04-15 | 2026-04-15 |
+| [x] | debt-final-closeout_20260415 | Debt Final Closeout | 2026-04-15 | 2026-04-27 |
 
 <!-- Tracks registered by /conductor:new-track -->
