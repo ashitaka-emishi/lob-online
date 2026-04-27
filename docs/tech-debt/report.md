@@ -1,17 +1,17 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-04-15 after PR #314 (debt-final-closeout)._
+_Last updated: 2026-04-27 after PR #315._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                         |
-| -------------------------------- | ------------------------------------------------------------- |
-| Open debt items                  | 5                                                             |
-| Cumulative debt score (net open) | 7                                                             |
-| Highest-risk item                | Dijkstra early termination for point-to-point (#295, score 2) |
-| PRs tracked                      | 114                                                           |
+| Metric                           | Value                                                                       |
+| -------------------------------- | --------------------------------------------------------------------------- |
+| Open debt items                  | 7                                                                           |
+| Cumulative debt score (net open) | 11                                                                          |
+| Highest-risk item                | Dijkstra lacks early termination for point-to-point queries (#295, score 2) |
+| PRs tracked                      | 138                                                                         |
 
 ---
 
@@ -141,22 +141,22 @@ _Last updated: 2026-04-15 after PR #314 (debt-final-closeout)._
 | 2026-04-15 | PR #313 (resolved #237) | -3                   | —         | 192                      |
 | 2026-04-15 | PR #313 (resolved #245) | -3                   | —         | 192                      |
 | 2026-04-15 | PR #313 (resolved #247) | -3                   | —         | 192                      |
-| 2026-04-15 | PR #314                 | 0                    | -21       | 192                      |
-| 2026-04-15 | PR #314 (resolved #304) | -2                   | —         | 192                      |
-| 2026-04-15 | PR #314 (resolved #301) | -2                   | —         | 192                      |
-| 2026-04-15 | PR #314 (resolved #299) | -2                   | —         | 192                      |
-| 2026-04-15 | PR #314 (resolved #298) | -2                   | —         | 192                      |
-| 2026-04-15 | PR #314 (resolved #292) | -2                   | —         | 192                      |
-| 2026-04-15 | PR #314 (resolved #291) | -2                   | —         | 192                      |
-| 2026-04-15 | PR #314 (resolved #311) | -1                   | —         | 192                      |
-| 2026-04-15 | PR #314 (resolved #310) | -1                   | —         | 192                      |
-| 2026-04-15 | PR #314 (resolved #309) | -1                   | —         | 192                      |
-| 2026-04-15 | PR #314 (resolved #306) | -1                   | —         | 192                      |
-| 2026-04-15 | PR #314 (resolved #293) | -1                   | —         | 192                      |
-| 2026-04-15 | PR #314 (resolved #286) | -1                   | —         | 192                      |
-| 2026-04-15 | PR #314 (resolved #259) | -1                   | —         | 192                      |
-| 2026-04-15 | PR #314 (resolved #256) | -1                   | —         | 192                      |
-| 2026-04-15 | PR #314 (resolved #255) | -1                   | —         | 192                      |
+| 2026-04-27 | PR #315                 | 4                    | -17       | 196                      |
+| 2026-04-27 | PR #315 (resolved #304) | -2                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #301) | -2                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #299) | -2                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #298) | -2                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #292) | -2                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #291) | -2                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #311) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #310) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #309) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #306) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #293) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #286) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #259) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #256) | -1                   | —         | 196                      |
+| 2026-04-27 | PR #315 (resolved #255) | -1                   | —         | 196                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -164,11 +164,11 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Low risk. Net open score is 7 across 5 items. All actionable debt resolved; remaining items are pure performance/scale awareness flags deferred intentionally.
+Moderate risk. Net open score is 11 across 7 items. Current debt is concentrated in performance and scale awareness flags — no correctness hazards, no M4 blockers.
 
-PR #314 (debt-final-closeout) resolved all 15 actionable open items across all four phases: six score-2 architectural items (#304 startup data load guard, #301 dynamic component dispatch, #299 shared mockFetch utility, #298 shared panel CSS, #292 formations.js extraction, #291 tautological threshold removal) and nine score-1 items (#311 defineAsyncComponent, #310 computed activePanel, #309 defaultModifiers factory, #306 modifier allowlist, #293 loadMap/loadScenario call-once guard, #286 dirIndex range validation, #259 string .max() constraints, #256 OobTreeNode fixture factory, #255 makeOob() extension). Net delta: -21.
+PR #315 (debt-final-closeout) resolved all 15 actionable open items (net delta: -17 after 2 new items deferred from team-review). The two deferred items (#322 pickMods numeric bounds, #324 hexEntryCost Set allocation) are performance concerns with no current high-frequency callers and no correctness risk today.
 
-The five remaining items (#295 #294 #205 #204 #201) are pure performance/scale awareness flags — no correctness risk, no M4 blockers. They should be revisited when profiling data or OOB scale demands it.
+The seven open items break down as: four performance/scale flags (#324 #322 #295 #294) and three OOB-scale awareness flags (#205 #204 #201). All should be revisited when profiling data or scale demands it in M4+.
 
 ---
 
@@ -176,13 +176,15 @@ The five remaining items (#295 #294 #205 #204 #201) are pure performance/scale a
 
 _Ordered by score descending (ties: newest first). Resolved items are removed._
 
-| Score | Issue | Title                                                                        | PR Introduced | Assessment                                                                                                                                                                                                                          |
-| ----- | ----- | ---------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2     | #295  | engine: Dijkstra lacks early termination for point-to-point queries          | PR #283       | `movementPath` passes `Infinity` maxCost, exploring the entire reachable graph even for single target queries. Add optional `targetHex` to `dijkstra()` for 2–5× speedup on nearby pairs.                                           |
-| 2     | #294  | engine: hex.js hot-path allocations — memoize formatHexId/parseHexId         | PR #283       | `parseHexId` and `formatHexId` called ~13K+ times per Dijkstra run; each creates temporary array/string allocations. Pre-compute a 2D ID grid at startup. Only worth addressing if profiling confirms bottleneck after H1/H2 fixes. |
-| 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                    | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis.                                      |
-| 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                                                                 |
-| 1     | #201  | oobTreeTransform: pre-index arty entries for O(1) lookups                    | PR #200       | Nested linear scan in `distributeCorpsArtillery` is O(M×(D+D×B)). No observable impact at South Mountain scale; flagged for awareness if OOB grows significantly.                                                                   |
+| Score | Issue | Title                                                                        | PR Introduced | Assessment                                                                                                                                                                                                                                                                              |
+| ----- | ----- | ---------------------------------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2     | #324  | perf: hoist noEffectTerrain Set construction out of hexEntryCost hot path    | PR #315       | `hexEntryCostBreakdown` constructs `new Set(noEffectTerrain ?? [])` on every call when invoked without a pre-built Set. Internal Dijkstra callers hoist correctly; future single-step public callers (M4 combat hex checks) will pay one allocation per call unless the API is updated. |
+| 2     | #322  | feat: add numeric bounds validation in pickMods                              | PR #315       | `pickMods()` coerces numeric modifier values but applies no min/max bounds. Extreme or negative values pass through to engine table functions without validation, unlike the bounds enforced by `requireNumber()` in the same file.                                                     |
+| 2     | #295  | engine: Dijkstra lacks early termination for point-to-point queries          | PR #283       | `movementPath` passes `Infinity` maxCost, exploring the entire reachable graph even for single target queries. Add optional `targetHex` to `dijkstra()` for 2–5× speedup on nearby pairs.                                                                                               |
+| 2     | #294  | engine: hex.js hot-path allocations — memoize formatHexId/parseHexId         | PR #283       | `parseHexId` and `formatHexId` called ~13K+ times per Dijkstra run; each creates temporary array/string allocations. Pre-compute a 2D ID grid at startup. Only worth addressing if profiling confirms bottleneck after H1/H2 fixes.                                                     |
+| 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                    | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis.                                                                                          |
+| 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                                                                                                                     |
+| 1     | #201  | oobTreeTransform: pre-index arty entries for O(1) lookups                    | PR #200       | Nested linear scan in `distributeCorpsArtillery` is O(M×(D+D×B)). No observable impact at South Mountain scale; flagged for awareness if OOB grows significantly.                                                                                                                       |
 
 ---
 
