@@ -100,13 +100,13 @@ Wire the initializer into real storage and expose the game API.
   - `loadGame(id)` — `fs.readFileSync` + `JSON.parse` + `GameStateSchema.parse()`
   - Ensure `data/games/` directory created on first write
 
-- [ ] Task 3.3: Write tests for SQLite games store (`gameSqlite.test.js`)
+- [x] Task 3.3: Write tests for SQLite games store (`gameSqlite.test.js`)
   - `createGame(id, sideAToken)` inserts row
   - `joinGame(id, sideBToken)` updates row
   - `getGame(id)` returns row; returns null for unknown id
   - `listGames()` returns all rows
 
-- [ ] Task 3.4: Implement `server/src/store/gameSqlite.js`
+- [x] Task 3.4: Implement `server/src/store/gameSqlite.js`
   - Schema: `games(id TEXT PK, side_a_token TEXT, side_b_token TEXT, status TEXT,
 created_at INTEGER, state_path TEXT)`
   - Use `better-sqlite3` synchronous API; open DB at `data/games.db`
