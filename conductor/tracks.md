@@ -86,4 +86,6 @@
 
 | [x] | m3-done-replan_20260427 | M3 Closeout + M4 Replan | 2026-04-27 | 2026-04-27 |
 
+| [x] | issue-closeout_20260504 | Issue Closeout — Close All Resolved Issues | 2026-05-04 | 2026-05-05 |
+
 <!-- Tracks registered by /conductor:new-track -->
