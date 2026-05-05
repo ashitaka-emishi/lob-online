@@ -88,6 +88,6 @@
 
 | [x] | issue-closeout_20260504 | Issue Closeout — Close All Resolved Issues | 2026-05-04 | 2026-05-05 |
 
-| [~] | m4-game-state_20260505 | M4 — Game State Model + Initializer + Setup Phase | 2026-05-05 | 2026-05-05 |
+| [x] | m4-game-state_20260505 | M4 — Game State Model + Initializer + Setup Phase | 2026-05-05 | 2026-05-05 |
 
 <!-- Tracks registered by /conductor:new-track -->

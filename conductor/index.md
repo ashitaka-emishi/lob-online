@@ -54,7 +54,7 @@ Navigation hub for project context.
 | [debt-final-closeout_20260415](./tracks/debt-final-closeout_20260415/index.md) | Debt Final Closeout | Complete |
 | [m3-done-replan_20260427](./tracks/m3-done-replan_20260427/index.md) | M3 Closeout + M4 Replan | Complete |
 | [issue-closeout_20260504](./tracks/issue-closeout_20260504/index.md) | Issue Closeout — Close All Resolved Issues | Complete |
-| [m4-game-state_20260505](./tracks/m4-game-state_20260505/index.md) | M4 — Game State Model + Initializer + Setup Phase | Pending |
+| [m4-game-state_20260505](./tracks/m4-game-state_20260505/index.md) | M4 — Game State Model + Initializer + Setup Phase | Complete |
 
 ## Getting Started
 

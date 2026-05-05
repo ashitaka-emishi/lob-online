@@ -3,7 +3,7 @@
 **Track ID:** m4-game-state_20260505
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-05-05
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -151,18 +151,18 @@ Vue lobby that lets two browser sessions create, join, and pick a side.
   - State: `games[]`, `myGameId`, `mySide`, `loading`, `error`
   - Actions: `fetchGames()`, `createGame()`, `joinGame(id)`
 
-- [ ] Task 4.3: Write tests for `LobbyView.vue`
+- [x] Task 4.3: Write tests for `LobbyView.vue`
   - Renders game list from store
   - "New Game" button calls `createGame()` and navigates to setup placeholder
   - "Join" button on a game calls `joinGame(id)`
 
-- [ ] Task 4.4: Implement `client/src/views/LobbyView.vue`
+- [x] Task 4.4: Implement `client/src/views/LobbyView.vue`
   - Game list table: id, status, join button (disabled if full)
   - "New Game" button
   - Shows `mySide` assignment after create/join
   - Minimal styling — functional, not polished
 
-- [ ] Task 4.5: Add Vue Router routes
+- [x] Task 4.5: Add Vue Router routes
   - `/lobby` → `LobbyView.vue`
   - `/games/:id` → `GameView.vue` stub (placeholder for M5 game map)
   - Update `client/src/router/index.js`
