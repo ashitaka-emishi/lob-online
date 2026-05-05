@@ -142,12 +142,12 @@ Vue lobby that lets two browser sessions create, join, and pick a side.
 
 ### Tasks
 
-- [ ] Task 4.1: Write tests for `useLobbyStore` Pinia store (`lobby.store.test.js`)
+- [x] Task 4.1: Write tests for `useLobbyStore` Pinia store (`lobby.store.test.js`)
   - `createGame()` calls `POST /api/v1/games`, sets `myGameId` and `mySide`
   - `joinGame(id)` calls `POST /api/v1/games/:id/join`, sets `mySide`
   - `fetchGames()` calls `GET /api/v1/games`, populates `games` list
 
-- [ ] Task 4.2: Implement `client/src/stores/lobby.js` Pinia store
+- [x] Task 4.2: Implement `client/src/stores/lobby.js` Pinia store
   - State: `games[]`, `myGameId`, `mySide`, `loading`, `error`
   - Actions: `fetchGames()`, `createGame()`, `joinGame(id)`
 
