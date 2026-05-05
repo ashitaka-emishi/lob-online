@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Each test gets a fresh in-memory DB via the module factory.
 // We re-import gameSqlite with a fresh db each time using the
@@ -15,8 +15,6 @@ afterEach(() => {
   // Reset module so the next beforeEach gets a fresh db instance
   vi.resetModules();
 });
-
-import { vi } from 'vitest';
 
 describe('createGame', () => {
   it('inserts a row and returns the game id', () => {

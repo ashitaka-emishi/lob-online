@@ -7,7 +7,11 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import session from 'express-session';
 import { Server } from 'socket.io';
+
+import { initDb } from './store/gameSqlite.js';
+import gamesRouter from './routes/games.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -26,11 +30,24 @@ app.use(helmet());
 app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '5mb' }));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'dev-secret-change-in-prod',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: process.env.NODE_ENV === 'production', httpOnly: true },
+  })
+);
 
 // Health check
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, uptime: process.uptime() });
 });
+
+// Game API
+initDb();
+app.use('/api/v1/games', gamesRouter);
+console.log('[server] game API enabled at /api/v1/games');
 
 // E2E coverage endpoint — returns Istanbul coverage collected via esm-loader-hook
 if (process.env.CYPRESS_COVERAGE === 'true') {

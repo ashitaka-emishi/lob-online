@@ -112,14 +112,14 @@ created_at INTEGER, state_path TEXT)`
   - Use `better-sqlite3` synchronous API; open DB at `data/games.db`
   - `initDb()` runs `CREATE TABLE IF NOT EXISTS`
 
-- [ ] Task 3.5: Write tests for game API routes (`games.test.js`)
+- [x] Task 3.5: Write tests for game API routes (`games.test.js`)
   - `POST /api/v1/games` creates game, returns `{ id, side: 'union' }`
   - `POST /api/v1/games/:id/join` joins as CSA, returns `{ id, side: 'csa' }`
   - `GET /api/v1/games` returns list
   - `GET /api/v1/games/:id` returns game state; 404 for unknown id
   - Joining a full game returns 409
 
-- [ ] Task 3.6: Implement `server/src/routes/games.js` + wire express-session
+- [x] Task 3.6: Implement `server/src/routes/games.js` + wire express-session
   - `POST /games`: call `initGameState(scenario)`, `saveGame`, `createGame`; store
     `sideToken` in session
   - `POST /games/:id/join`: `joinGame`; store `sideToken` in session
