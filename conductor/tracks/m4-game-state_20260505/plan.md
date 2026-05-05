@@ -24,14 +24,14 @@ downstream code targets.
   - Run `npm install better-sqlite3 express-session` in `server/`
   - Verify imports work in a Node 20 ES-module context
 
-- [ ] Task 1.2: Define `GameState` Zod schema (`server/src/schemas/gameState.schema.js`)
+- [x] Task 1.2: Define `GameState` Zod schema (`server/src/schemas/gameState.schema.js`)
   - `UnitState`: `id`, `hex`, `facing` (0–5), `morale` (enum: normal/shaken/DG/wrecked/routed),
     `orders` (enum), `ammo` (full/low/none), `isOnBoard`, `entryTurn`
   - `GameState`: `id`, `scenarioId`, `turn`, `phase` (enum), `initiative`, `sides`
     (union/csa player tokens), `units` (map of unitId → UnitState),
     `reinforcementQueue` (array of `{unitId, turn, entryHex}`), `status` (setup/active/complete)
 
-- [ ] Task 1.3: Write Vitest tests for `GameState` schema (`gameState.schema.test.js`)
+- [x] Task 1.3: Write Vitest tests for `GameState` schema (`gameState.schema.test.js`)
   - Valid full game state parses without error
   - Missing required fields throw `ZodError`
   - Enum violations throw `ZodError`
