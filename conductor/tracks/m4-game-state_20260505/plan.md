@@ -51,7 +51,7 @@ produces a valid `GameState` ready for Turn 1.
 
 ### Tasks
 
-- [ ] Task 2.1: Write failing tests for `initGameState()` (`init.test.js`)
+- [x] Task 2.1: Write failing tests for `initGameState()` (`init.test.js`)
   - Union units appear in their zone-constraint hex area (within N hexes of reference hex
     per `setupZone`)
   - CSA units appear at their fixed hexes from `scenario.json setup`
@@ -60,17 +60,17 @@ produces a valid `GameState` ready for Turn 1.
   - Reinforcements queued by arrival turn from `scenario.json reinforcements`
   - Returned state validates against `GameStateSchema`
 
-- [ ] Task 2.2: Implement `initGameState()` — fixed-hex CSA placement
+- [x] Task 2.2: Implement `initGameState()` — fixed-hex CSA placement
   - Read `scenario.json setup` array; filter for fixed-hex format `{ unitId, hex }`
   - Place each CSA unit at its hex with `isOnBoard: true`, default morale/orders/ammo
 
-- [ ] Task 2.3: Implement union zone-constraint placement
+- [x] Task 2.3: Implement union zone-constraint placement
   - For `{ setupZone: "within5Of", referenceHex }` entries: compute valid hex set using
     `engine/hex.js` distance; pick a placement hex (initial pass: place at reference hex
     itself; setup phase UI will let player move within zone in M5)
   - Apply SM Errata corrections to affected unit states
 
-- [ ] Task 2.4: Implement reinforcement pre-queuing
+- [x] Task 2.4: Implement reinforcement pre-queuing
   - Read `scenario.json reinforcements`; build `reinforcementQueue` array with
     `{ unitId, turn, entryHex }`
   - Reinforcement units have `isOnBoard: false`
