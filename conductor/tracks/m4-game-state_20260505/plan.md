@@ -90,12 +90,12 @@ Wire the initializer into real storage and expose the game API.
 
 ### Tasks
 
-- [ ] Task 3.1: Write tests for file game store (`gameFile.test.js`)
+- [x] Task 3.1: Write tests for file game store (`gameFile.test.js`)
   - `saveGame(id, state)` writes `data/games/{id}/state.json`
   - `loadGame(id)` reads it back; round-trips correctly
   - `loadGame` throws if file not found
 
-- [ ] Task 3.2: Implement `server/src/store/gameFile.js`
+- [x] Task 3.2: Implement `server/src/store/gameFile.js`
   - `saveGame(id, state)` — `JSON.stringify` + atomic write (tmp file + rename)
   - `loadGame(id)` — `fs.readFileSync` + `JSON.parse` + `GameStateSchema.parse()`
   - Ensure `data/games/` directory created on first write
