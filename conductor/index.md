@@ -53,6 +53,7 @@ Navigation hub for project context.
 | [m3-debt-closeout_20260415](./tracks/m3-debt-closeout_20260415/index.md) | M3 Debt Closeout Sprint | Complete |
 | [debt-final-closeout_20260415](./tracks/debt-final-closeout_20260415/index.md) | Debt Final Closeout | Complete |
 | [m3-done-replan_20260427](./tracks/m3-done-replan_20260427/index.md) | M3 Closeout + M4 Replan | Complete |
+| [issue-closeout_20260504](./tracks/issue-closeout_20260504/index.md) | Issue Closeout — Close All Resolved Issues | Complete |
 
 ## Getting Started
 
