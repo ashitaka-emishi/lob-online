@@ -90,10 +90,10 @@ Refactor `gameSqlite.js` to a factory + DI pattern, fix the TOCTOU race in `join
 - [x] Task 4.1: Refactor `gameSqlite.js` to export a `createStore(db)` factory; hoist all prepared
       statement creation into the factory; update `server.js` and route tests to inject the db
       instance — closes #331
-- [ ] Task 4.2: Rewrite `joinGame` as a single conditional `UPDATE games SET status = 'active',
+- [x] Task 4.2: Rewrite `joinGame` as a single conditional `UPDATE games SET status = 'active',
 side_b_token = ? WHERE id = ? AND status = 'open'`; check `changes === 1` for success; remove
       the SELECT + UPDATE pair; update tests — closes #336
-- [ ] Task 4.3: Move `initDb()` call into the `startServer()` startup function (wrap `server.js`
+- [x] Task 4.3: Move `initDb()` call into the `startServer()` startup function (wrap `server.js`
       top-level code); register `process.on('SIGTERM', () => db.close())` handler; make DB path
       configurable via `DB_PATH` env var — closes #338
 
@@ -111,7 +111,7 @@ implementation-specific files.
 
 ### Tasks
 
-- [ ] Task 5.1: Create `server/src/store/index.js` that re-exports all public functions from
+- [x] Task 5.1: Create `server/src/store/index.js` that re-exports all public functions from
       `gameFile.js` and `gameSqlite.js` (via factory); update every `routes/*.js` file to import
       from `../store/index.js`; verify no route directly imports `gameFile.js` or `gameSqlite.js` —
       closes #334
