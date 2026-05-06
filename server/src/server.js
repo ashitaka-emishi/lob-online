@@ -8,9 +8,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import session from 'express-session';
+import SqliteStore from 'better-sqlite3-session-store';
 import { Server } from 'socket.io';
 
-import { initDb } from './store/gameSqlite.js';
+import { initDb, getDb } from './store/gameSqlite.js';
 import gamesRouter from './routes/games.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -34,8 +35,12 @@ app.use(express.json({ limit: '5mb' }));
 if (!process.env.SESSION_SECRET && process.env.NODE_ENV === 'production') {
   throw new Error('SESSION_SECRET env var must be set in production');
 }
+// Persistent session store backed by the same SQLite database (#329)
+initDb();
+const SessionStore = SqliteStore(session);
 app.use(
   session({
+    store: new SessionStore({ client: getDb() }),
     secret: process.env.SESSION_SECRET || 'dev-secret-change-in-prod',
     resave: false,
     saveUninitialized: false,
@@ -43,6 +48,7 @@ app.use(
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       sameSite: 'lax',
+      maxAge: 14 * 24 * 60 * 60 * 1000,
     },
   })
 );
@@ -53,7 +59,6 @@ app.get('/api/health', (_req, res) => {
 });
 
 // Game API
-initDb();
 app.use('/api/v1/games', gamesRouter);
 console.log('[server] game API enabled at /api/v1/games');
 

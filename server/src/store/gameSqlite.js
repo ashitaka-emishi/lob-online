@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 
 let db;
 
-export function initDb(dbPath = 'data/games.db') {
+export function initDb(dbPath = process.env.DB_PATH || 'data/games.db') {
   db = new Database(dbPath);
   db.exec(`
     CREATE TABLE IF NOT EXISTS games (
@@ -13,6 +13,10 @@ export function initDb(dbPath = 'data/games.db') {
       created_at INTEGER NOT NULL
     )
   `);
+}
+
+export function getDb() {
+  return db;
 }
 
 export function createGame(id, sideAToken) {
