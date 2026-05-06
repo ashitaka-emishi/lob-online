@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import express from 'express';
 
+import { requireSide } from '../auth/requireSide.js';
 import { setPlayerSession } from '../auth/session.js';
 import { initGameState } from '../engine/init.js';
 import { loadScenario } from '../engine/scenario.js';
@@ -67,8 +68,8 @@ router.get('/', (_req, res) => {
   res.json(listGames());
 });
 
-// GET /api/v1/games/:id — load game state
-router.get('/:id', async (req, res) => {
+// GET /api/v1/games/:id — load game state (player must have a valid session for this game)
+router.get('/:id', requireSide, async (req, res) => {
   try {
     const { id } = req.params;
     const row = getGame(id);

@@ -6,6 +6,7 @@ import request from 'supertest';
 
 vi.mock('../auth/session.js', () => ({
   setPlayerSession: vi.fn(),
+  getPlayerSession: vi.fn().mockReturnValue(null),
 }));
 
 vi.mock('../store/gameFile.js', () => ({
@@ -29,7 +30,7 @@ vi.mock('../engine/scenario.js', () => ({
   loadScenario: vi.fn(),
 }));
 
-import { setPlayerSession } from '../auth/session.js';
+import { setPlayerSession, getPlayerSession } from '../auth/session.js';
 import { saveGame, loadGame } from '../store/gameFile.js';
 import { createGame, getGame, listGames } from '../store/gameSqlite.js';
 import { initGameState } from '../engine/init.js';
@@ -163,7 +164,8 @@ describe('GET /api/v1/games', () => {
 });
 
 describe('GET /api/v1/games/:id', () => {
-  it('returns 200 with game state', async () => {
+  it('returns 200 with game state when player session is valid (#330)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok-1' });
     getGame.mockReturnValue({ id: TEST_UUID, status: 'open' });
     loadGame.mockResolvedValue(MINIMAL_STATE);
     const app = await buildApp();
@@ -173,7 +175,22 @@ describe('GET /api/v1/games/:id', () => {
     expect(res.body.turn).toBe(1);
   });
 
-  it('returns 404 for unknown game id', async () => {
+  it('returns 401 when there is no player session (#330)', async () => {
+    getPlayerSession.mockReturnValue(null);
+    const app = await buildApp();
+    const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 401 when session gameId does not match the route :id (#330)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: 'other-game', side: 'union', token: 'tok-1' });
+    const app = await buildApp();
+    const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 404 for unknown game id (authenticated player) (#330)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok-1' });
     getGame.mockReturnValue(null);
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
