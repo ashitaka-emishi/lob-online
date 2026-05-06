@@ -54,6 +54,18 @@ describe('joinGame', () => {
     store.joinGame('full1', 'tok-b');
     expect(() => store.joinGame('full1', 'tok-c')).toThrow();
   });
+
+  it('throws "not open" via changes === 0, not a prior SELECT — proves atomic fix (#336)', () => {
+    store.createGame('race1', 'tok-a');
+    // Mark game active directly in DB, simulating the race scenario where both callers
+    // have already passed a SELECT check but only one UPDATE can win
+    db.prepare("UPDATE games SET status = 'active', side_b_token = 'tok-b1' WHERE id = ?").run(
+      'race1'
+    );
+    // Must throw "not open" — the conditional UPDATE returns changes=0, not a JS SELECT check
+    expect(() => store.joinGame('race1', 'tok-b2')).toThrow(/not open/i);
+    expect(store.getGame('race1').side_b_token).toBe('tok-b1');
+  });
 });
 
 describe('getGame', () => {
