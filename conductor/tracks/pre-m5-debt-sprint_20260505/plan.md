@@ -24,7 +24,7 @@ enum and adding the version field are both schema-only changes that downstream p
 
 - [x] Task 1.1: Remove `'setup'` from the `phase` enum in `GameStateSchema`; change phase initial
       value to `null` in `initGameState`; update all tests that set `phase: 'setup'` — closes #333
-- [ ] Task 1.2: Add `version: z.number().int().nonnegative()` to `GameStateSchema`; set `version: 0`
+- [x] Task 1.2: Add `version: z.number().int().nonnegative()` to `GameStateSchema`; set `version: 0`
       in `initGameState` — closes #332 (schema half)
 - [ ] Task 1.3: Update `saveGame` to accept an expected version, check it matches the stored value,
       increment before writing; update `loadGame` round-trip test to include version field — closes
