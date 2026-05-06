@@ -36,35 +36,65 @@ describe('createGame', () => {
   });
 });
 
+const UUID_B = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+const UUID_C = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
+
 describe('joinGame', () => {
   it('sets side_b_token and changes status to active', () => {
     store.createGame('j1', 'tok-a');
-    store.joinGame('j1', 'tok-b');
+    store.joinGame('j1', UUID_B);
     const row = store.getGame('j1');
-    expect(row.side_b_token).toBe('tok-b');
+    expect(row.side_b_token).toBe(UUID_B);
     expect(row.status).toBe('active');
   });
 
   it('throws GameNotFoundError if game does not exist', () => {
-    expect(() => store.joinGame('nope', 'tok')).toThrow(GameNotFoundError);
+    expect(() => store.joinGame('nope', UUID_B)).toThrow(GameNotFoundError);
   });
 
   it('throws GameNotOpenError if game is already full (status active)', () => {
     store.createGame('full1', 'tok-a');
-    store.joinGame('full1', 'tok-b');
-    expect(() => store.joinGame('full1', 'tok-c')).toThrow(GameNotOpenError);
+    store.joinGame('full1', UUID_B);
+    expect(() => store.joinGame('full1', UUID_C)).toThrow(GameNotOpenError);
   });
 
   it('throws "not open" via changes === 0, not a prior SELECT — proves atomic fix (#336)', () => {
     store.createGame('race1', 'tok-a');
     // Mark game active directly in DB, simulating the race scenario where both callers
     // have already passed a SELECT check but only one UPDATE can win
-    db.prepare("UPDATE games SET status = 'active', side_b_token = 'tok-b1' WHERE id = ?").run(
+    db.prepare("UPDATE games SET status = 'active', side_b_token = ? WHERE id = ?").run(
+      UUID_B,
       'race1'
     );
     // Must throw "not open" — the conditional UPDATE returns changes=0, not a JS SELECT check
-    expect(() => store.joinGame('race1', 'tok-b2')).toThrow(/not open/i);
-    expect(store.getGame('race1').side_b_token).toBe('tok-b1');
+    expect(() => store.joinGame('race1', UUID_C)).toThrow(/not open/i);
+    expect(store.getGame('race1').side_b_token).toBe(UUID_B);
+  });
+
+  // SEC-H1: sideToken must be a non-empty UUID string (#340)
+  it('throws TypeError when sideBToken is an empty string (#340)', () => {
+    store.createGame('val1', 'tok-a');
+    expect(() => store.joinGame('val1', '')).toThrow(TypeError);
+  });
+
+  it('throws TypeError when sideBToken is not a string (#340)', () => {
+    store.createGame('val2', 'tok-a');
+    expect(() => store.joinGame('val2', null)).toThrow(TypeError);
+    expect(() => store.joinGame('val2', 123)).toThrow(TypeError);
+    expect(() => store.joinGame('val2', undefined)).toThrow(TypeError);
+  });
+
+  it('throws TypeError when sideBToken is not UUID format (#340)', () => {
+    store.createGame('val3', 'tok-a');
+    expect(() => store.joinGame('val3', 'not-a-uuid')).toThrow(TypeError);
+    expect(() => store.joinGame('val3', 'tok-b')).toThrow(TypeError);
+  });
+
+  it('accepts a valid UUID-format sideBToken (#340)', () => {
+    store.createGame('val4', 'tok-a');
+    const uuid = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+    expect(() => store.joinGame('val4', uuid)).not.toThrow();
+    expect(store.getGame('val4').side_b_token).toBe(uuid);
   });
 });
 
