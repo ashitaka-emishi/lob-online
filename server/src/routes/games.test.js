@@ -9,13 +9,9 @@ vi.mock('../auth/session.js', () => ({
   getPlayerSession: vi.fn().mockReturnValue(null),
 }));
 
-vi.mock('../store/gameFile.js', () => ({
+vi.mock('../store/index.js', () => ({
   saveGame: vi.fn().mockResolvedValue(undefined),
   loadGame: vi.fn(),
-}));
-
-vi.mock('../store/gameSqlite.js', () => ({
-  initDb: vi.fn(),
   createGame: vi.fn(),
   joinGame: vi.fn(),
   getGame: vi.fn(),
@@ -31,8 +27,7 @@ vi.mock('../engine/scenario.js', () => ({
 }));
 
 import { setPlayerSession, getPlayerSession } from '../auth/session.js';
-import { saveGame, loadGame } from '../store/gameFile.js';
-import { createGame, getGame, listGames } from '../store/gameSqlite.js';
+import { createGame, getGame, listGames, loadGame, saveGame } from '../store/index.js';
 import { initGameState } from '../engine/init.js';
 import { loadScenario } from '../engine/scenario.js';
 

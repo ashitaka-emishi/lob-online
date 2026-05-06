@@ -6,8 +6,7 @@ import { requireSide } from '../auth/requireSide.js';
 import { setPlayerSession } from '../auth/session.js';
 import { initGameState } from '../engine/init.js';
 import { loadScenario } from '../engine/scenario.js';
-import { loadGame, saveGame } from '../store/gameFile.js';
-import { createGame, getGame, joinGame, listGames } from '../store/gameSqlite.js';
+import { createGame, getGame, joinGame, listGames, loadGame, saveGame } from '../store/index.js';
 
 const router = express.Router();
 
