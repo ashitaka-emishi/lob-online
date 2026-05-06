@@ -2,15 +2,15 @@
   "id": "pre-m5-debt-sprint_20260505",
   "title": "Pre-M5 Debt Sprint — Score ≥ 3 Findings from PR #328",
   "type": "chore",
-  "status": "pending",
+  "status": "complete",
   "created": "2026-05-05T00:00:00Z",
-  "updated": "2026-05-05T00:00:00Z",
+  "updated": "2026-05-06T07:16:00Z",
   "phases": {
     "total": 5,
-    "completed": 0
+    "completed": 5
   },
   "tasks": {
     "total": 12,
-    "completed": 0
+    "completed": 12
   }
 }

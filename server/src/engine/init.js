@@ -139,8 +139,9 @@ export function initGameState(scenario, gameId) {
   const state = {
     id: gameId,
     scenarioId: scenario.id,
+    version: 0,
     turn: 1,
-    phase: 'setup',
+    phase: null,
     initiative: null,
     sides: { union: null, confederate: null },
     units,

@@ -4,17 +4,30 @@ import request from 'supertest';
 
 // ─── Mock store and engine dependencies ───────────────────────────────────────
 
-vi.mock('../store/gameFile.js', () => ({
-  saveGame: vi.fn().mockResolvedValue(undefined),
-  loadGame: vi.fn(),
+vi.mock('../auth/session.js', () => ({
+  setPlayerSession: vi.fn(),
+  getPlayerSession: vi.fn().mockReturnValue(null),
 }));
 
-vi.mock('../store/gameSqlite.js', () => ({
-  initDb: vi.fn(),
+vi.mock('../store/index.js', () => ({
+  saveGame: vi.fn().mockResolvedValue(undefined),
+  loadGame: vi.fn(),
   createGame: vi.fn(),
   joinGame: vi.fn(),
   getGame: vi.fn(),
   listGames: vi.fn(),
+  GameNotFoundError: class GameNotFoundError extends Error {
+    constructor(id) {
+      super(`Game not found: ${id}`);
+      this.name = 'GameNotFoundError';
+    }
+  },
+  GameNotOpenError: class GameNotOpenError extends Error {
+    constructor(id) {
+      super(`Game ${id} is not open`);
+      this.name = 'GameNotOpenError';
+    }
+  },
 }));
 
 vi.mock('../engine/init.js', () => ({
@@ -25,8 +38,17 @@ vi.mock('../engine/scenario.js', () => ({
   loadScenario: vi.fn(),
 }));
 
-import { saveGame, loadGame } from '../store/gameFile.js';
-import { createGame, getGame, listGames } from '../store/gameSqlite.js';
+import { setPlayerSession, getPlayerSession } from '../auth/session.js';
+import {
+  createGame,
+  GameNotFoundError,
+  GameNotOpenError,
+  getGame,
+  joinGame,
+  listGames,
+  loadGame,
+  saveGame,
+} from '../store/index.js';
 import { initGameState } from '../engine/init.js';
 import { loadScenario } from '../engine/scenario.js';
 
@@ -36,8 +58,9 @@ const TEST_UUID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 const MINIMAL_STATE = {
   id: TEST_UUID,
   scenarioId: 'south-mountain',
+  version: 0,
   turn: 1,
-  phase: 'setup',
+  phase: null,
   initiative: null,
   sides: { union: null, confederate: null },
   units: {},
@@ -49,9 +72,9 @@ async function buildApp() {
   const { default: router } = await import('./games.js');
   const app = express();
   app.use(express.json());
-  // Minimal session stub — gives each request its own session object
+  // Minimal session stub — regenerate resets session and invokes callback (#SEC-M1)
   app.use((req, _res, next) => {
-    req.session = {};
+    req.session = { regenerate: (cb) => cb() };
     next();
   });
   app.use('/api/v1/games', router);
@@ -78,6 +101,15 @@ describe('POST /api/v1/games', () => {
     expect(res.body.side).toBe('union');
   });
 
+  it('calls createGame before saveGame (#ARCH-H4)', async () => {
+    const callOrder = [];
+    createGame.mockImplementation(() => callOrder.push('createGame'));
+    saveGame.mockImplementation(async () => callOrder.push('saveGame'));
+    const app = await buildApp();
+    await request(app).post('/api/v1/games').send({});
+    expect(callOrder).toEqual(['createGame', 'saveGame']);
+  });
+
   it('calls initGameState and saveGame', async () => {
     const app = await buildApp();
     await request(app).post('/api/v1/games').send({});
@@ -85,11 +117,18 @@ describe('POST /api/v1/games', () => {
     expect(saveGame).toHaveBeenCalledOnce();
     expect(createGame).toHaveBeenCalledOnce();
   });
+
+  it('sets player session via setPlayerSession with union side (#335)', async () => {
+    const app = await buildApp();
+    await request(app).post('/api/v1/games').send({});
+    expect(setPlayerSession).toHaveBeenCalledOnce();
+    const [, , side] = setPlayerSession.mock.calls[0];
+    expect(side).toBe('union');
+  });
 });
 
 describe('POST /api/v1/games/:id/join', () => {
   it('returns 200 with id and confederate side', async () => {
-    getGame.mockReturnValue({ id: TEST_UUID, status: 'open', side_a_token: 'tok-a' });
     const app = await buildApp();
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
     expect(res.status).toBe(200);
@@ -97,15 +136,27 @@ describe('POST /api/v1/games/:id/join', () => {
     expect(res.body.side).toBe('confederate');
   });
 
-  it('returns 404 when game does not exist', async () => {
-    getGame.mockReturnValue(null);
+  it('sets player session via setPlayerSession with confederate side (#335)', async () => {
+    const app = await buildApp();
+    await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    expect(setPlayerSession).toHaveBeenCalledOnce();
+    const [, , side] = setPlayerSession.mock.calls[0];
+    expect(side).toBe('confederate');
+  });
+
+  it('returns 404 when joinGame throws GameNotFoundError (#PERF-H1)', async () => {
+    joinGame.mockImplementation(() => {
+      throw new GameNotFoundError(TEST_UUID);
+    });
     const app = await buildApp();
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
     expect(res.status).toBe(404);
   });
 
-  it('returns 409 when game is already full', async () => {
-    getGame.mockReturnValue({ id: TEST_UUID, status: 'active' });
+  it('returns 409 when joinGame throws GameNotOpenError (#PERF-H1)', async () => {
+    joinGame.mockImplementation(() => {
+      throw new GameNotOpenError(TEST_UUID);
+    });
     const app = await buildApp();
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
     expect(res.status).toBe(409);
@@ -140,7 +191,8 @@ describe('GET /api/v1/games', () => {
 });
 
 describe('GET /api/v1/games/:id', () => {
-  it('returns 200 with game state', async () => {
+  it('returns 200 with game state when player session is valid (#330)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok-1' });
     getGame.mockReturnValue({ id: TEST_UUID, status: 'open' });
     loadGame.mockResolvedValue(MINIMAL_STATE);
     const app = await buildApp();
@@ -150,7 +202,22 @@ describe('GET /api/v1/games/:id', () => {
     expect(res.body.turn).toBe(1);
   });
 
-  it('returns 404 for unknown game id', async () => {
+  it('returns 401 when there is no player session (#330)', async () => {
+    getPlayerSession.mockReturnValue(null);
+    const app = await buildApp();
+    const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 401 when session gameId does not match the route :id (#330)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: 'other-game', side: 'union', token: 'tok-1' });
+    const app = await buildApp();
+    const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 404 for unknown game id (authenticated player) (#330)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok-1' });
     getGame.mockReturnValue(null);
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);

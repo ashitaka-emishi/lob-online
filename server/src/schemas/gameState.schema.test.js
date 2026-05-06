@@ -23,8 +23,9 @@ const BASE_UNIT = {
 const BASE_GAME_STATE = {
   id: 'game-abc123',
   scenarioId: 'south-mountain',
+  version: 0,
   turn: 1,
-  phase: 'setup',
+  phase: null,
   initiative: null,
   sides: { union: 'token-union-abc', confederate: null },
   units: { 'test-unit': BASE_UNIT },
@@ -142,8 +143,8 @@ describe('GameStateSchema', () => {
     expect(GameStateSchema.safeParse(state).success).toBe(true);
   });
 
-  it('accepts complete status', () => {
-    const state = { ...BASE_GAME_STATE, status: 'complete', turn: 45 };
+  it('accepts complete status with a non-null phase', () => {
+    const state = { ...BASE_GAME_STATE, status: 'complete', phase: 'recovery', turn: 45 };
     expect(GameStateSchema.safeParse(state).success).toBe(true);
   });
 
@@ -152,9 +153,34 @@ describe('GameStateSchema', () => {
     expect(GameStateSchema.safeParse(noId).success).toBe(false);
   });
 
+  it('requires a version field (integer ≥ 0) for optimistic concurrency (#332)', () => {
+    expect(GameStateSchema.safeParse({ ...BASE_GAME_STATE, version: 0 }).success).toBe(true);
+    expect(GameStateSchema.safeParse({ ...BASE_GAME_STATE, version: 7 }).success).toBe(true);
+    expect(GameStateSchema.safeParse({ ...BASE_GAME_STATE, version: -1 }).success).toBe(false);
+    const { version: _v, ...noVersion } = BASE_GAME_STATE;
+    expect(GameStateSchema.safeParse(noVersion).success).toBe(false);
+  });
+
   it('rejects invalid phase', () => {
     expect(
       GameStateSchema.safeParse({ ...BASE_GAME_STATE, phase: 'combat_resolution' }).success
+    ).toBe(false);
+  });
+
+  it("rejects phase: 'setup' — setup is a status value, not a phase (#333)", () => {
+    expect(GameStateSchema.safeParse({ ...BASE_GAME_STATE, phase: 'setup' }).success).toBe(false);
+  });
+
+  it('rejects phase: null when status is active — cross-field constraint (#ARCH-M1)', () => {
+    expect(
+      GameStateSchema.safeParse({ ...BASE_GAME_STATE, status: 'active', phase: null }).success
+    ).toBe(false);
+  });
+
+  it('rejects non-null phase when status is setup — cross-field constraint (#ARCH-M1)', () => {
+    expect(
+      GameStateSchema.safeParse({ ...BASE_GAME_STATE, status: 'setup', phase: 'initiative' })
+        .success
     ).toBe(false);
   });
 

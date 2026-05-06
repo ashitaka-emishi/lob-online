@@ -3,7 +3,7 @@ import { join, resolve, sep } from 'node:path';
 
 import { GameStateSchema } from '../schemas/gameState.schema.js';
 
-const DEFAULT_DATA_DIR = 'data/games';
+const DEFAULT_DATA_DIR = process.env.GAMES_DIR || 'data/games';
 
 function gameDir(id, dataDir) {
   const dir = join(dataDir, id);
@@ -18,15 +18,37 @@ function statePath(id, dataDir) {
   return join(gameDir(id, dataDir), 'state.json');
 }
 
+// Returns the persisted state (with incremented version) so callers can chain saves.
+// Callers must adopt the returned object for any subsequent saveGame call — the in-memory
+// state.version is now stale relative to what was written. (#ARCH-H3, #ARCH-M7)
 export async function saveGame(id, state, dataDir = DEFAULT_DATA_DIR) {
   const dir = gameDir(id, dataDir);
   await mkdir(dir, { recursive: true });
 
-  // Atomic write: write to tmp file then rename to avoid partial reads
   const dest = statePath(id, dataDir);
+
+  // Optimistic concurrency: if a file exists, stored version must match state.version (#332)
+  if (typeof state.version === 'number') {
+    try {
+      const raw = await readFile(dest, 'utf8');
+      const stored = JSON.parse(raw);
+      if (stored.version !== state.version) {
+        throw new Error(
+          `Version conflict on game ${id}: stored=${stored.version}, expected=${state.version}`
+        );
+      }
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err;
+    }
+  }
+
+  // Atomic write with incremented version
   const tmp = dest + '.tmp';
-  await writeFile(tmp, JSON.stringify(state));
+  const toWrite =
+    typeof state.version === 'number' ? { ...state, version: state.version + 1 } : state;
+  await writeFile(tmp, JSON.stringify(toWrite));
   await rename(tmp, dest);
+  return toWrite;
 }
 
 export async function loadGame(id, dataDir = DEFAULT_DATA_DIR) {

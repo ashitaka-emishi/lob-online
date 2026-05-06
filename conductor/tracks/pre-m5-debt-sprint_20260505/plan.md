@@ -22,11 +22,11 @@ enum and adding the version field are both schema-only changes that downstream p
 
 ### Tasks
 
-- [ ] Task 1.1: Remove `'setup'` from the `phase` enum in `GameStateSchema`; change phase initial
+- [x] Task 1.1: Remove `'setup'` from the `phase` enum in `GameStateSchema`; change phase initial
       value to `null` in `initGameState`; update all tests that set `phase: 'setup'` — closes #333
-- [ ] Task 1.2: Add `version: z.number().int().nonnegative()` to `GameStateSchema`; set `version: 0`
+- [x] Task 1.2: Add `version: z.number().int().nonnegative()` to `GameStateSchema`; set `version: 0`
       in `initGameState` — closes #332 (schema half)
-- [ ] Task 1.3: Update `saveGame` to accept an expected version, check it matches the stored value,
+- [x] Task 1.3: Update `saveGame` to accept an expected version, check it matches the stored value,
       increment before writing; update `loadGame` round-trip test to include version field — closes
       #332 (persistence half)
 
@@ -44,12 +44,12 @@ MemoryStore for a persistent SQLite-backed store in the same phase.
 
 ### Tasks
 
-- [ ] Task 2.1: Create `server/src/auth/session.js` exporting `setPlayerSession(req, gameId, side,
+- [x] Task 2.1: Create `server/src/auth/session.js` exporting `setPlayerSession(req, gameId, side,
 token)` and `getPlayerSession(req)` (returns `{ gameId, side, token }` or `null`); write unit
       tests with a mock `req.session` — closes #335
-- [ ] Task 2.2: Refactor `routes/games.js` to use `setPlayerSession` / `getPlayerSession` instead of
+- [x] Task 2.2: Refactor `routes/games.js` to use `setPlayerSession` / `getPlayerSession` instead of
       direct `req.session` assignments; update route tests — closes #335 (route wiring)
-- [ ] Task 2.3: Install `better-sqlite3-session-store`; configure in `server.js` with `cookie.maxAge`
+- [x] Task 2.3: Install `better-sqlite3-session-store`; configure in `server.js` with `cookie.maxAge`
       (14 days); write smoke test asserting the store constructor is called — closes #329
 
 ### Verification
@@ -66,10 +66,10 @@ on `GET /api/v1/games/:id`.
 
 ### Tasks
 
-- [ ] Task 3.1: Create `server/src/auth/requireSide.js` middleware: reads `getPlayerSession(req)`;
+- [x] Task 3.1: Create `server/src/auth/requireSide.js` middleware: reads `getPlayerSession(req)`;
       returns 401 if null or if `gameId` does not match the requested `:id`; write unit tests — closes
       #330 (middleware)
-- [ ] Task 3.2: Mount `requireSide` on `router.get('/:id', requireSide, ...)` in `routes/games.js`;
+- [x] Task 3.2: Mount `requireSide` on `router.get('/:id', requireSide, ...)` in `routes/games.js`;
       add route tests: 401 with no session, 401 with mismatched gameId, 200 with valid session —
       closes #330 (route wiring)
 
@@ -87,13 +87,13 @@ Refactor `gameSqlite.js` to a factory + DI pattern, fix the TOCTOU race in `join
 
 ### Tasks
 
-- [ ] Task 4.1: Refactor `gameSqlite.js` to export a `createStore(db)` factory; hoist all prepared
+- [x] Task 4.1: Refactor `gameSqlite.js` to export a `createStore(db)` factory; hoist all prepared
       statement creation into the factory; update `server.js` and route tests to inject the db
       instance — closes #331
-- [ ] Task 4.2: Rewrite `joinGame` as a single conditional `UPDATE games SET status = 'active',
+- [x] Task 4.2: Rewrite `joinGame` as a single conditional `UPDATE games SET status = 'active',
 side_b_token = ? WHERE id = ? AND status = 'open'`; check `changes === 1` for success; remove
       the SELECT + UPDATE pair; update tests — closes #336
-- [ ] Task 4.3: Move `initDb()` call into the `startServer()` startup function (wrap `server.js`
+- [x] Task 4.3: Move `initDb()` call into the `startServer()` startup function (wrap `server.js`
       top-level code); register `process.on('SIGTERM', () => db.close())` handler; make DB path
       configurable via `DB_PATH` env var — closes #338
 
@@ -111,7 +111,7 @@ implementation-specific files.
 
 ### Tasks
 
-- [ ] Task 5.1: Create `server/src/store/index.js` that re-exports all public functions from
+- [x] Task 5.1: Create `server/src/store/index.js` that re-exports all public functions from
       `gameFile.js` and `gameSqlite.js` (via factory); update every `routes/*.js` file to import
       from `../store/index.js`; verify no route directly imports `gameFile.js` or `gameSqlite.js` —
       closes #334

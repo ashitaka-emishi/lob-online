@@ -1,17 +1,17 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-05-05 after PR #328._
+_Last updated: 2026-05-06 after PR #339._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                            |
-| -------------------------------- | -------------------------------------------------------------------------------- |
-| Open debt items                  | 17                                                                               |
-| Cumulative debt score (net open) | 45                                                                               |
-| Highest-risk item                | GameStateSchema version field for optimistic concurrency control (#332, score 5) |
-| PRs tracked                      | 139                                                                              |
+| Metric                           | Value                                                                        |
+| -------------------------------- | ---------------------------------------------------------------------------- |
+| Open debt items                  | 9                                                                            |
+| Cumulative debt score (net open) | 17                                                                           |
+| Highest-risk item                | Fix sideToken validation and add auth guard to join endpoint (#340, score 4) |
+| PRs tracked                      | 149                                                                          |
 
 ---
 
@@ -158,6 +158,16 @@ _Last updated: 2026-05-05 after PR #328._
 | 2026-04-27 | PR #315 (resolved #256) | -1                   | —         | 196                      |
 | 2026-04-27 | PR #315 (resolved #255) | -1                   | —         | 196                      |
 | 2026-05-05 | PR #328                 | 34                   | +34       | 230                      |
+| 2026-05-06 | PR #339                 | 4                    | -28       | 234                      |
+| 2026-05-06 | PR #339 (resolved #332) | -5                   | —         | 234                      |
+| 2026-05-06 | PR #339 (resolved #329) | -4                   | —         | 234                      |
+| 2026-05-06 | PR #339 (resolved #330) | -4                   | —         | 234                      |
+| 2026-05-06 | PR #339 (resolved #333) | -4                   | —         | 234                      |
+| 2026-05-06 | PR #339 (resolved #334) | -3                   | —         | 234                      |
+| 2026-05-06 | PR #339 (resolved #331) | -3                   | —         | 234                      |
+| 2026-05-06 | PR #339 (resolved #335) | -3                   | —         | 234                      |
+| 2026-05-06 | PR #339 (resolved #336) | -3                   | —         | 234                      |
+| 2026-05-06 | PR #339 (resolved #338) | -3                   | —         | 234                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -165,11 +175,9 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-High risk. Net open score is 45 across 17 items. Critical or significant deferred items pose a threat to production stability or block future work. Immediate attention recommended.
+Elevated risk. Net open score is 17 across 9 items. Several significant deferred items that introduce coupling or architectural compromise. Recommend a debt reduction sprint before the next major phase.
 
-PR #328 (M4 game state + server layer) introduced 34 points of new debt across 10 items. Current debt is concentrated in three categories: (1) **correctness hazards for M5** — no state version field means concurrent order submissions will silently overwrite each other (#332, score 5); (2) **security/auth gaps** — MemoryStore sessions lost on restart (#329), no auth on game-state endpoint (#330), session shape not abstracted (#335); (3) **architectural coupling** — direct store imports with no swap seam (#334), singleton DB with no DI (#331), overlapping `phase`/`status` enum values that will complicate M5 phase-transition logic (#333).
-
-The four pre-existing performance/scale flags (#324 #322 #295 #294) and three OOB-scale awareness flags (#205 #204 #201) remain open and low-urgency. A focused M5-prep debt sprint should address #332, #329, #330, and #333 before M5 implementation begins.
+PR #339 (pre-M5 debt sprint) resolved all 9 score-≥-3 items from PR #328, delivering a net improvement of −28. One new significant finding was deferred (#340, score 4): the `POST /:id/join` endpoint lacks an authentication guard, and `sideToken` is stored without format validation. Current open debt is concentrated in two areas: (1) **one significant auth gap** — unauthenticated join allows any caller knowing a game UUID to claim the confederate seat (#340); (2) **low-urgency engine performance flags** — four score-2 items covering Dijkstra early termination, hot-path allocations, Set construction in movement cost, and `pickMods` bounds (#295, #294, #324, #322), plus a scenario cache invalidation issue in the dev workflow (#337). The three OOB-scale awareness flags (#205, #204, #201) remain open at score 1 with no observable impact at South Mountain scale.
 
 ---
 
@@ -177,25 +185,17 @@ The four pre-existing performance/scale flags (#324 #322 #295 #294) and three OO
 
 _Ordered by score descending (ties: newest first). Resolved items are removed._
 
-| Score | Issue | Title                                                                        | PR Introduced | Assessment                                                                                                                                                                                                         |
-| ----- | ----- | ---------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 5     | #332  | GameStateSchema version field for optimistic concurrency control             | PR #328       | No version field or write serialization on game state. M5 simultaneous order submission will silently overwrite one player's orders. Critical correctness hazard that blocks M5 from being safe.                   |
-| 4     | #329  | Configure persistent session store (replace MemoryStore)                     | PR #328       | Default MemoryStore loses all sessions on restart, making in-progress games unjoinable. No `maxAge`; unbounded memory growth. Production reliability risk that impacts every M5 endpoint.                          |
-| 4     | #330  | Add authorization middleware on GET /api/v1/games/:id                        | PR #328       | Full game state returned to any caller with the ID. M5 adds hidden orders — without this gate, M5 ships with an information-disclosure flaw letting players read each other's orders.                              |
-| 4     | #333  | Remove `'setup'` from phase enum — overlaps with status field                | PR #328       | `phase` and `status` both accept `'setup'` for two different concepts. M5 phase-transition code will need error-prone compound predicates. Decide the model before M5 wires transitions.                           |
-| 3     | #334  | Create store/index.js interface to enable M8 storage swap                    | PR #328       | Routes import `gameFile.js` and `gameSqlite.js` directly. No abstraction layer — M8 Spaces swap requires editing every route and every M5 turn-loop file. Coupling grows with each M5 endpoint added.              |
-| 3     | #331  | Refactor gameSqlite to factory + DI; cache prepared statements               | PR #328       | Module-level singleton forces `vi.resetModules()` hacks in tests. No DI seam means M5 turn-loop integration tests will be difficult. Prepared statements re-created on every call (2–5× parse overhead per query). |
-| 3     | #335  | Add auth/session.js abstraction for player session access                    | PR #328       | Session shape (`sideToken`, `gameId`, `side`) is three independent assignments per route. Multiplies with M5 routes. M8 OAuth swap means editing every route that touches the session.                             |
-| 3     | #336  | Fix joinGame TOCTOU race — conditional UPDATE instead of SELECT+UPDATE       | PR #328       | Two simultaneous join requests can both pass the status check. Also executes 3 sequential blocking SQLite queries (getGame + joinGame SELECT + joinGame UPDATE) where 1 suffices.                                  |
-| 3     | #338  | Move initDb() into startup function; register SIGTERM handler                | PR #328       | `initDb()` runs as a module-load side effect with no error handling and no `db.close()` on SIGTERM. PM2 restarts may corrupt the SQLite file; DB path is not env-configurable.                                     |
-| 2     | #324  | perf: hoist noEffectTerrain Set construction out of hexEntryCost hot path    | PR #315       | `hexEntryCostBreakdown` constructs `new Set(noEffectTerrain ?? [])` on every call when invoked without a pre-built Set. Internal Dijkstra callers hoist correctly; future single-step callers will pay per-call.   |
-| 2     | #322  | feat: add numeric bounds validation in pickMods                              | PR #315       | `pickMods()` coerces numeric modifier values but applies no min/max bounds. Extreme or negative values pass through to engine table functions without validation.                                                  |
-| 2     | #337  | Fix getScenario cache invalidation when scenario editor saves                | PR #328       | Module-level `_scenario` cache is never invalidated. Scenario editor can modify `scenario.json`; new games will use stale data until server restart. Breaks the dev workflow.                                      |
-| 2     | #295  | engine: Dijkstra lacks early termination for point-to-point queries          | PR #283       | `movementPath` passes `Infinity` maxCost, exploring the entire reachable graph even for single target queries. Add optional `targetHex` to `dijkstra()` for 2–5× speedup on nearby pairs.                          |
-| 2     | #294  | engine: hex.js hot-path allocations — memoize formatHexId/parseHexId         | PR #283       | `parseHexId` and `formatHexId` called ~13K+ times per Dijkstra run; each creates temporary array/string allocations. Pre-compute a 2D ID grid at startup. Only worth addressing if profiling confirms bottleneck.  |
-| 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                    | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis.                     |
-| 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                                                |
-| 1     | #201  | oobTreeTransform: pre-index arty entries for O(1) lookups                    | PR #200       | Nested linear scan in `distributeCorpsArtillery` is O(M×(D+D×B)). No observable impact at South Mountain scale; flagged for awareness if OOB grows significantly.                                                  |
+| Score | Issue | Title                                                                        | PR Introduced | Assessment                                                                                                                                                                                                                                                               |
+| ----- | ----- | ---------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 4     | #340  | Fix sideToken validation and add auth guard to join endpoint                 | PR #339       | Any caller knowing a game UUID can claim the confederate seat; `sideToken` is stored without format validation, allowing empty strings or arbitrary values. Real access-control gap that must be closed before M5 order submission wires token-based move authorization. |
+| 2     | #337  | Fix getScenario cache invalidation when scenario editor saves                | PR #328       | Module-level `_scenario` cache is never invalidated. Scenario editor can modify `scenario.json`; new games will use stale data until server restart. Breaks the dev workflow.                                                                                            |
+| 2     | #324  | perf: hoist noEffectTerrain Set construction out of hexEntryCost hot path    | PR #315       | `hexEntryCostBreakdown` constructs `new Set(noEffectTerrain ?? [])` on every call when invoked without a pre-built Set. Internal Dijkstra callers hoist correctly; future single-step callers will pay per-call.                                                         |
+| 2     | #322  | feat: add numeric bounds validation in pickMods                              | PR #315       | `pickMods()` coerces numeric modifier values but applies no min/max bounds. Extreme or negative values pass through to engine table functions without validation.                                                                                                        |
+| 2     | #295  | engine: Dijkstra lacks early termination for point-to-point queries          | PR #283       | `movementPath` passes `Infinity` maxCost, exploring the entire reachable graph even for single target queries. Add optional `targetHex` to `dijkstra()` for 2–5× speedup on nearby pairs.                                                                                |
+| 2     | #294  | engine: hex.js hot-path allocations — memoize formatHexId/parseHexId         | PR #283       | `parseHexId` and `formatHexId` called ~13K+ times per Dijkstra run; each creates temporary array/string allocations. Pre-compute a 2D ID grid at startup. Only worth addressing if profiling confirms bottleneck.                                                        |
+| 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                    | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis.                                                                           |
+| 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                                                                                                      |
+| 1     | #201  | oobTreeTransform: pre-index arty entries for O(1) lookups                    | PR #200       | Nested linear scan in `distributeCorpsArtillery` is O(M×(D+D×B)). No observable impact at South Mountain scale; flagged for awareness if OOB grows significantly.                                                                                                        |
 
 ---
 
