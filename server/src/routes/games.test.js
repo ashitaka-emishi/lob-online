@@ -4,6 +4,10 @@ import request from 'supertest';
 
 // ─── Mock store and engine dependencies ───────────────────────────────────────
 
+vi.mock('../auth/session.js', () => ({
+  setPlayerSession: vi.fn(),
+}));
+
 vi.mock('../store/gameFile.js', () => ({
   saveGame: vi.fn().mockResolvedValue(undefined),
   loadGame: vi.fn(),
@@ -25,6 +29,7 @@ vi.mock('../engine/scenario.js', () => ({
   loadScenario: vi.fn(),
 }));
 
+import { setPlayerSession } from '../auth/session.js';
 import { saveGame, loadGame } from '../store/gameFile.js';
 import { createGame, getGame, listGames } from '../store/gameSqlite.js';
 import { initGameState } from '../engine/init.js';
@@ -86,6 +91,14 @@ describe('POST /api/v1/games', () => {
     expect(saveGame).toHaveBeenCalledOnce();
     expect(createGame).toHaveBeenCalledOnce();
   });
+
+  it('sets player session via setPlayerSession with union side (#335)', async () => {
+    const app = await buildApp();
+    await request(app).post('/api/v1/games').send({});
+    expect(setPlayerSession).toHaveBeenCalledOnce();
+    const [, , side] = setPlayerSession.mock.calls[0];
+    expect(side).toBe('union');
+  });
 });
 
 describe('POST /api/v1/games/:id/join', () => {
@@ -96,6 +109,15 @@ describe('POST /api/v1/games/:id/join', () => {
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(TEST_UUID);
     expect(res.body.side).toBe('confederate');
+  });
+
+  it('sets player session via setPlayerSession with confederate side (#335)', async () => {
+    getGame.mockReturnValue({ id: TEST_UUID, status: 'open', side_a_token: 'tok-a' });
+    const app = await buildApp();
+    await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    expect(setPlayerSession).toHaveBeenCalledOnce();
+    const [, , side] = setPlayerSession.mock.calls[0];
+    expect(side).toBe('confederate');
   });
 
   it('returns 404 when game does not exist', async () => {

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import express from 'express';
 
+import { setPlayerSession } from '../auth/session.js';
 import { initGameState } from '../engine/init.js';
 import { loadScenario } from '../engine/scenario.js';
 import { loadGame, saveGame } from '../store/gameFile.js';
@@ -33,9 +34,7 @@ router.post('/', async (req, res) => {
 
     const sideToken = randomUUID();
     createGame(id, sideToken);
-    req.session.sideToken = sideToken;
-    req.session.gameId = id;
-    req.session.side = 'union';
+    setPlayerSession(req, id, 'union', sideToken);
 
     res.status(201).json({ id, side: 'union' });
   } catch (err) {
@@ -54,9 +53,7 @@ router.post('/:id/join', async (req, res) => {
 
     const sideToken = randomUUID();
     joinGame(id, sideToken);
-    req.session.sideToken = sideToken;
-    req.session.gameId = id;
-    req.session.side = 'confederate';
+    setPlayerSession(req, id, 'confederate', sideToken);
 
     res.json({ id, side: 'confederate' });
   } catch (err) {
