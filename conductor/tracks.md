@@ -88,4 +88,8 @@
 
 | [x] | issue-closeout_20260504 | Issue Closeout — Close All Resolved Issues | 2026-05-04 | 2026-05-05 |
 
+| [x] | m4-game-state_20260505 | M4 — Game State Model + Initializer + Setup Phase | 2026-05-05 | 2026-05-05 |
+
+| [ ] | pre-m5-debt-sprint_20260505 | Pre-M5 Debt Sprint — Score ≥ 3 Findings from PR #328 | 2026-05-05 | 2026-05-05 |
+
 <!-- Tracks registered by /conductor:new-track -->

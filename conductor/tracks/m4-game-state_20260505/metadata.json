@@ -1,0 +1,16 @@
+{
+  "id": "m4-game-state_20260505",
+  "title": "M4 — Game State Model + Initializer + Setup Phase",
+  "type": "feature",
+  "status": "complete",
+  "created": "2026-05-05T00:00:00Z",
+  "updated": "2026-05-05T00:00:00Z",
+  "phases": {
+    "total": 4,
+    "completed": 4
+  },
+  "tasks": {
+    "total": 18,
+    "completed": 18
+  }
+}
