@@ -55,7 +55,17 @@ describe('saveGame', () => {
 
 describe('loadGame', () => {
   it('reads and parses state.json written by saveGame', async () => {
-    const state = { id: 'game2', turn: 3, status: 'active', units: {} };
+    const state = {
+      id: 'game2',
+      scenarioId: 'south-mountain',
+      turn: 3,
+      phase: 'setup',
+      initiative: null,
+      sides: { union: null, confederate: null },
+      units: {},
+      reinforcementQueue: [],
+      status: 'active',
+    };
     await saveGame('game2', state, tmpDir);
     const loaded = await loadGame('game2', tmpDir);
     expect(loaded.id).toBe('game2');

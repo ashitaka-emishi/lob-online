@@ -1,10 +1,17 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve, sep } from 'node:path';
+
+import { GameStateSchema } from '../schemas/gameState.schema.js';
 
 const DEFAULT_DATA_DIR = 'data/games';
 
 function gameDir(id, dataDir) {
-  return join(dataDir, id);
+  const dir = join(dataDir, id);
+  // Defense-in-depth: assert resolved path stays inside dataDir
+  const resolved = resolve(dir);
+  const root = resolve(dataDir);
+  if (!resolved.startsWith(root + sep)) throw new Error('Invalid game id');
+  return dir;
 }
 
 function statePath(id, dataDir) {
@@ -24,5 +31,5 @@ export async function saveGame(id, state, dataDir = DEFAULT_DATA_DIR) {
 
 export async function loadGame(id, dataDir = DEFAULT_DATA_DIR) {
   const raw = await readFile(statePath(id, dataDir), 'utf8');
-  return JSON.parse(raw);
+  return GameStateSchema.parse(JSON.parse(raw));
 }

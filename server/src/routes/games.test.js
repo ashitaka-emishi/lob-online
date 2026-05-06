@@ -30,8 +30,11 @@ import { createGame, getGame, listGames } from '../store/gameSqlite.js';
 import { initGameState } from '../engine/init.js';
 import { loadScenario } from '../engine/scenario.js';
 
+// Fixed UUID used as a stand-in game id in route tests
+const TEST_UUID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+
 const MINIMAL_STATE = {
-  id: 'game-abc',
+  id: TEST_UUID,
   scenarioId: 'south-mountain',
   turn: 1,
   phase: 'setup',
@@ -59,7 +62,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   loadScenario.mockReturnValue({ id: 'south-mountain', turnStructure: {} });
   initGameState.mockReturnValue(MINIMAL_STATE);
-  createGame.mockReturnValue('game-abc');
+  createGame.mockReturnValue(TEST_UUID);
   listGames.mockReturnValue([]);
   getGame.mockReturnValue(null);
   loadGame.mockResolvedValue(MINIMAL_STATE);
@@ -86,26 +89,32 @@ describe('POST /api/v1/games', () => {
 
 describe('POST /api/v1/games/:id/join', () => {
   it('returns 200 with id and confederate side', async () => {
-    getGame.mockReturnValue({ id: 'game-abc', status: 'open', side_a_token: 'tok-a' });
+    getGame.mockReturnValue({ id: TEST_UUID, status: 'open', side_a_token: 'tok-a' });
     const app = await buildApp();
-    const res = await request(app).post('/api/v1/games/game-abc/join').send({});
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
     expect(res.status).toBe(200);
-    expect(res.body.id).toBe('game-abc');
+    expect(res.body.id).toBe(TEST_UUID);
     expect(res.body.side).toBe('confederate');
   });
 
   it('returns 404 when game does not exist', async () => {
     getGame.mockReturnValue(null);
     const app = await buildApp();
-    const res = await request(app).post('/api/v1/games/nope/join').send({});
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
     expect(res.status).toBe(404);
   });
 
   it('returns 409 when game is already full', async () => {
-    getGame.mockReturnValue({ id: 'game-abc', status: 'active' });
+    getGame.mockReturnValue({ id: TEST_UUID, status: 'active' });
     const app = await buildApp();
-    const res = await request(app).post('/api/v1/games/game-abc/join').send({});
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
     expect(res.status).toBe(409);
+  });
+
+  it('returns 400 for non-UUID game id', async () => {
+    const app = await buildApp();
+    const res = await request(app).post('/api/v1/games/not-a-uuid/join').send({});
+    expect(res.status).toBe(400);
   });
 });
 
@@ -132,19 +141,25 @@ describe('GET /api/v1/games', () => {
 
 describe('GET /api/v1/games/:id', () => {
   it('returns 200 with game state', async () => {
-    getGame.mockReturnValue({ id: 'game-abc', status: 'open' });
+    getGame.mockReturnValue({ id: TEST_UUID, status: 'open' });
     loadGame.mockResolvedValue(MINIMAL_STATE);
     const app = await buildApp();
-    const res = await request(app).get('/api/v1/games/game-abc');
+    const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
     expect(res.status).toBe(200);
-    expect(res.body.id).toBe('game-abc');
+    expect(res.body.id).toBe(TEST_UUID);
     expect(res.body.turn).toBe(1);
   });
 
   it('returns 404 for unknown game id', async () => {
     getGame.mockReturnValue(null);
     const app = await buildApp();
-    const res = await request(app).get('/api/v1/games/unknown');
+    const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
     expect(res.status).toBe(404);
+  });
+
+  it('returns 400 for non-UUID game id', async () => {
+    const app = await buildApp();
+    const res = await request(app).get('/api/v1/games/not-a-uuid');
+    expect(res.status).toBe(400);
   });
 });

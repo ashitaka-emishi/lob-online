@@ -40,5 +40,5 @@ export function getGame(id) {
 }
 
 export function listGames() {
-  return db.prepare('SELECT * FROM games ORDER BY created_at DESC').all();
+  return db.prepare('SELECT id, status, created_at FROM games ORDER BY created_at DESC').all();
 }

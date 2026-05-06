@@ -30,12 +30,20 @@ app.use(helmet());
 app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '5mb' }));
+// Fail fast if SESSION_SECRET is absent in production
+if (!process.env.SESSION_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('SESSION_SECRET env var must be set in production');
+}
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'dev-secret-change-in-prod',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === 'production', httpOnly: true },
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'lax',
+    },
   })
 );
 

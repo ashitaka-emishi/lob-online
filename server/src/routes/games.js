@@ -9,6 +9,13 @@ import { createGame, getGame, joinGame, listGames } from '../store/gameSqlite.js
 
 const router = express.Router();
 
+// Validate :id is a UUID — prevents path traversal into gameFile storage
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+router.param('id', (req, res, next, id) => {
+  if (!UUID_RE.test(id)) return res.status(400).json({ error: 'Invalid game id' });
+  next();
+});
+
 // Lazily load scenario once — scenario.json is immutable at runtime
 let _scenario;
 function getScenario() {
