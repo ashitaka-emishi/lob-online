@@ -28,6 +28,12 @@ vi.mock('../store/index.js', () => ({
       this.name = 'GameNotOpenError';
     }
   },
+  InvalidTokenError: class InvalidTokenError extends Error {
+    constructor(field, value) {
+      super(`${field} must be a UUID string, got ${typeof value}`);
+      this.name = 'InvalidTokenError';
+    }
+  },
 }));
 
 vi.mock('../engine/init.js', () => ({
@@ -43,6 +49,7 @@ import {
   createGame,
   GameNotFoundError,
   GameNotOpenError,
+  InvalidTokenError,
   getGame,
   joinGame,
   listGames,
@@ -81,8 +88,10 @@ async function buildApp() {
   return app;
 }
 
+// vi.resetAllMocks() resets both call history and mockImplementation, preventing
+// tests that use mockImplementation(() => throw) from bleeding into later tests
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   loadScenario.mockReturnValue({ id: 'south-mountain', turnStructure: {} });
   initGameState.mockReturnValue(MINIMAL_STATE);
   createGame.mockReturnValue(TEST_UUID);
@@ -160,12 +169,71 @@ describe('POST /api/v1/games/:id/join', () => {
     const app = await buildApp();
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
     expect(res.status).toBe(409);
+    expect(res.body.error).toBe('Game is already full');
+  });
+
+  it('returns 400 when joinGame throws InvalidTokenError', async () => {
+    joinGame.mockImplementation(() => {
+      throw new InvalidTokenError('sideBToken', 'bad');
+    });
+    const app = await buildApp();
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 500 when joinGame throws an unexpected error', async () => {
+    joinGame.mockImplementation(() => {
+      throw new Error('unexpected');
+    });
+    const app = await buildApp();
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe('Failed to join game');
   });
 
   it('returns 400 for non-UUID game id', async () => {
     const app = await buildApp();
     const res = await request(app).post('/api/v1/games/not-a-uuid/join').send({});
     expect(res.status).toBe(400);
+  });
+
+  // ARCH-H2: session conflict guard — prevent same-session double-join (#340)
+  it('returns 409 with correct error body and does not call joinGame when session matches route :id (#340)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok-1' });
+    const app = await buildApp();
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe('Already in this game');
+    expect(joinGame).not.toHaveBeenCalled();
+    expect(setPlayerSession).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 when caller holds confederate session for same game (#340)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'confederate', token: 'tok-2' });
+    const app = await buildApp();
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe('Already in this game');
+    expect(joinGame).not.toHaveBeenCalled();
+  });
+
+  it('joins successfully and returns confederate side when caller has no session (#340)', async () => {
+    getPlayerSession.mockReturnValue(null);
+    const app = await buildApp();
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    expect(res.status).toBe(200);
+    expect(res.body.side).toBe('confederate');
+    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String));
+  });
+
+  it('joins successfully and returns confederate side when caller session is for a different game (#340)', async () => {
+    const OTHER_UUID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', token: 'tok-1' });
+    const app = await buildApp();
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    expect(res.status).toBe(200);
+    expect(res.body.side).toBe('confederate');
+    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String));
   });
 });
 

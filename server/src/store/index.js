@@ -4,6 +4,7 @@ export {
   GameNotFoundError,
   GameNotOpenError,
   getGame,
+  InvalidTokenError,
   joinGame,
   listGames,
 } from './gameSqlite.js';

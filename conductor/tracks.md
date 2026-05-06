@@ -92,4 +92,6 @@
 
 | [x] | pre-m5-debt-sprint_20260505 | Pre-M5 Debt Sprint — Score ≥ 3 Findings from PR #328 | 2026-05-05 | 2026-05-06 |
 
+| [x] | auth-join-guard_20260506 | Auth Guard + sideToken Validation on Join Endpoint | 2026-05-06 | 2026-05-06 |
+
 <!-- Tracks registered by /conductor:new-track -->

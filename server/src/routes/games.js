@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import express from 'express';
 
 import { requireSide } from '../auth/requireSide.js';
-import { setPlayerSession } from '../auth/session.js';
+import { getPlayerSession, setPlayerSession } from '../auth/session.js';
 import { initGameState } from '../engine/init.js';
 import { loadScenario } from '../engine/scenario.js';
 import {
@@ -11,16 +11,17 @@ import {
   GameNotFoundError,
   GameNotOpenError,
   getGame,
+  InvalidTokenError,
   joinGame,
   listGames,
   loadGame,
   saveGame,
 } from '../store/index.js';
+import { UUID_RE } from '../util/uuid.js';
 
 const router = express.Router();
 
 // Validate :id is a UUID — prevents path traversal into gameFile storage
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 router.param('id', (req, res, next, id) => {
   if (!UUID_RE.test(id)) return res.status(400).json({ error: 'Invalid game id' });
   next();
@@ -60,6 +61,13 @@ router.post('/', async (req, res) => {
 router.post('/:id/join', async (req, res) => {
   try {
     const { id } = req.params;
+
+    // ARCH-H2: reject if the caller is already in this game (#340)
+    const existingSession = getPlayerSession(req);
+    if (existingSession?.gameId === id) {
+      return res.status(409).json({ error: 'Already in this game' });
+    }
+
     const sideToken = randomUUID();
 
     // joinGame is atomic — no pre-check needed; typed errors map to 404/409 (#PERF-H1, #ARCH-M2)
@@ -74,6 +82,7 @@ router.post('/:id/join', async (req, res) => {
     if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });
     if (err instanceof GameNotOpenError)
       return res.status(409).json({ error: 'Game is already full' });
+    if (err instanceof InvalidTokenError) return res.status(400).json({ error: err.message });
     console.error('[route] POST /games/:id/join error:', err.message);
     res.status(500).json({ error: 'Failed to join game' });
   }

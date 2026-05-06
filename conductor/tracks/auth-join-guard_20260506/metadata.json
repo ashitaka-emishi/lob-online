@@ -1,0 +1,16 @@
+{
+  "id": "auth-join-guard_20260506",
+  "title": "Auth Guard + sideToken Validation on Join Endpoint",
+  "type": "bug",
+  "status": "pending",
+  "created": "2026-05-06T00:00:00.000Z",
+  "updated": "2026-05-06T00:00:00.000Z",
+  "phases": {
+    "total": 2,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 6,
+    "completed": 0
+  }
+}
