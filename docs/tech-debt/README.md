@@ -22,6 +22,22 @@ After completing PR review resolution (following `/team-review`), run `/tech-deb
 
 All review findings must be either **fixed in place** (resolved in the PR) or **deferred** (filed as a GitHub issue). Deferred items require a debt score and written assessment before the workflow completes.
 
+### Targeted Second-Pass Review
+
+Review-fix commits do not need another full `/team-review` when they are limited to low-risk,
+local cleanup. Run a targeted second-pass review only when the fix diff touches a high-risk
+surface:
+
+- Auth, authorization, sessions, tokens, permissions, or game-state access routes.
+- Persistence, migrations, save/load paths, cache invalidation, or data validation schemas.
+- Shared rules-engine logic, movement, LOS, combat, morale, orders, or other domain-critical paths.
+- Shared Vue stores, composables, editor orchestration, or API/client contract boundaries.
+- More than roughly 300-500 production LOC, or a broad multi-file refactor.
+
+The second pass should review only the incremental fix diff and use the relevant dimension
+(security, architecture, performance, or testing). Record either "not required" or the completed
+second-pass outcome in the per-PR debt report.
+
 When a deferred item's linked issue is later closed, follow the **Resolving Debt Items** process below to remove it from the register.
 
 ## Filename Convention
@@ -75,6 +91,12 @@ When scoring, err toward the higher score if uncertain — it is easier to downg
 ## Fixed Findings
 
 {N} finding(s) fixed in place during this review cycle.
+
+## Second-Pass Review
+
+{NOT REQUIRED / COMPLETED}
+
+{Trigger reason and outcome.}
 
 ## Deferred Findings
 

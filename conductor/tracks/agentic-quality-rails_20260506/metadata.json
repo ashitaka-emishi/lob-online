@@ -1,0 +1,17 @@
+{
+  "id": "agentic-quality-rails_20260506",
+  "title": "Agentic Quality Rails — Conductor Workflow Hardening",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-05-06T00:00:00.000Z",
+  "updated": "2026-05-06T00:00:00.000Z",
+  "githubIssue": 347,
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 9,
+    "completed": 0
+  }
+}

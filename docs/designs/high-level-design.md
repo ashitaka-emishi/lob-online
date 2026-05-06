@@ -2209,6 +2209,13 @@ items and update the project debt register.
 **Resolution standard:** every review finding must be either fixed in place (resolved in the
 PR) or deferred (filed as a GitHub issue with a debt score and written assessment).
 
+**Second-pass standard:** do not rerun full `/team-review` after every low-risk cleanup. Run a
+targeted second-pass review of the incremental fix diff only when review fixes touch auth/session
+or token handling, persistence/cache/schema validation, rules-engine/domain-critical paths, shared
+stores/composables/editor orchestration/API contracts, more than roughly 300-500 production LOC, or
+a broad multi-file refactor. Record either "not required" or the completed second-pass outcome in
+the per-PR debt report before merge.
+
 **Debt score scale (1–5 logarithmic):**
 
 | Score | Label       | Meaning                                                   |

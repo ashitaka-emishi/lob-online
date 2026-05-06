@@ -56,6 +56,7 @@ Navigation hub for project context.
 | [issue-closeout_20260504](./tracks/issue-closeout_20260504/index.md) | Issue Closeout — Close All Resolved Issues | Complete |
 | [m4-game-state_20260505](./tracks/m4-game-state_20260505/index.md) | M4 — Game State Model + Initializer + Setup Phase | Complete |
 | [pre-m5-debt-sprint_20260505](./tracks/pre-m5-debt-sprint_20260505/index.md) | Pre-M5 Debt Sprint — Score ≥ 3 Findings from PR #328 | Pending |
+| [agentic-quality-rails_20260506](./tracks/agentic-quality-rails_20260506/index.md) | Agentic Quality Rails — Conductor Workflow Hardening | Pending |
 
 ## Getting Started
 

@@ -47,6 +47,13 @@ step-by-step instructions that Claude executes.
 | `/issue-close` | `commands/issue-close.md` | Close a GitHub issue with a merge summary comment after the PR is merged                            |
 | `/plan-wrap`   | `commands/plan-wrap.md`   | After a plan is implemented: verify lint/format/tests, write devlog entry, review CLAUDE.md and HLD |
 
+### Review and Debt Skills
+
+| Skill               | File                           | Purpose                                                                                   |
+| ------------------- | ------------------------------ | ----------------------------------------------------------------------------------------- |
+| `/team-review`      | `commands/team-review.md`      | Run multi-dimension PR review, apply the targeted second-pass trigger, then score debt    |
+| `/tech-debt-report` | `commands/tech-debt-report.md` | Record fixed/deferred findings, second-pass outcome, and update the project debt register |
+
 ### Documentation Skills
 
 | Skill                      | File                                  | Purpose                                                                           |
