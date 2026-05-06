@@ -44,7 +44,7 @@ MemoryStore for a persistent SQLite-backed store in the same phase.
 
 ### Tasks
 
-- [ ] Task 2.1: Create `server/src/auth/session.js` exporting `setPlayerSession(req, gameId, side,
+- [x] Task 2.1: Create `server/src/auth/session.js` exporting `setPlayerSession(req, gameId, side,
 token)` and `getPlayerSession(req)` (returns `{ gameId, side, token }` or `null`); write unit
       tests with a mock `req.session` — closes #335
 - [ ] Task 2.2: Refactor `routes/games.js` to use `setPlayerSession` / `getPlayerSession` instead of
