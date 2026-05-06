@@ -49,7 +49,7 @@ token)` and `getPlayerSession(req)` (returns `{ gameId, side, token }` or `null`
       tests with a mock `req.session` — closes #335
 - [x] Task 2.2: Refactor `routes/games.js` to use `setPlayerSession` / `getPlayerSession` instead of
       direct `req.session` assignments; update route tests — closes #335 (route wiring)
-- [ ] Task 2.3: Install `better-sqlite3-session-store`; configure in `server.js` with `cookie.maxAge`
+- [x] Task 2.3: Install `better-sqlite3-session-store`; configure in `server.js` with `cookie.maxAge`
       (14 days); write smoke test asserting the store constructor is called — closes #329
 
 ### Verification
