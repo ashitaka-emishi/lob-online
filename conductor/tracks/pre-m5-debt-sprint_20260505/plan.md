@@ -47,7 +47,7 @@ MemoryStore for a persistent SQLite-backed store in the same phase.
 - [x] Task 2.1: Create `server/src/auth/session.js` exporting `setPlayerSession(req, gameId, side,
 token)` and `getPlayerSession(req)` (returns `{ gameId, side, token }` or `null`); write unit
       tests with a mock `req.session` — closes #335
-- [ ] Task 2.2: Refactor `routes/games.js` to use `setPlayerSession` / `getPlayerSession` instead of
+- [x] Task 2.2: Refactor `routes/games.js` to use `setPlayerSession` / `getPlayerSession` instead of
       direct `req.session` assignments; update route tests — closes #335 (route wiring)
 - [ ] Task 2.3: Install `better-sqlite3-session-store`; configure in `server.js` with `cookie.maxAge`
       (14 days); write smoke test asserting the store constructor is called — closes #329
