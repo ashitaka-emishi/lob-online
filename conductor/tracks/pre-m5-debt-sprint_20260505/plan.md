@@ -69,7 +69,7 @@ on `GET /api/v1/games/:id`.
 - [x] Task 3.1: Create `server/src/auth/requireSide.js` middleware: reads `getPlayerSession(req)`;
       returns 401 if null or if `gameId` does not match the requested `:id`; write unit tests — closes
       #330 (middleware)
-- [ ] Task 3.2: Mount `requireSide` on `router.get('/:id', requireSide, ...)` in `routes/games.js`;
+- [x] Task 3.2: Mount `requireSide` on `router.get('/:id', requireSide, ...)` in `routes/games.js`;
       add route tests: 401 with no session, 401 with mismatched gameId, 200 with valid session —
       closes #330 (route wiring)
 
