@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { UUID_RE } from '../util/uuid.js';
 
 const SCHEMA = `
   CREATE TABLE IF NOT EXISTS games (
@@ -23,6 +23,14 @@ export class GameNotOpenError extends Error {
   constructor(id) {
     super(`Game ${id} is not open`);
     this.name = 'GameNotOpenError';
+  }
+}
+
+// SEC-H1: contract assertion — token must be a UUID string (#340)
+export class InvalidTokenError extends Error {
+  constructor(field, value) {
+    super(`${field} must be a UUID string, got ${typeof value} (len=${value?.length ?? 'n/a'})`);
+    this.name = 'InvalidTokenError';
   }
 }
 
@@ -51,11 +59,9 @@ export function createStore(db) {
     },
 
     joinGame(id, sideBToken) {
-      // SEC-H1: validate token is a non-empty UUID string before writing to DB (#340)
+      // SEC-H1: contract assertion — defence-in-depth against caller bugs (#340)
       if (typeof sideBToken !== 'string' || !UUID_RE.test(sideBToken)) {
-        throw new TypeError(
-          `joinGame: sideBToken must be a UUID string, got ${JSON.stringify(sideBToken)}`
-        );
+        throw new InvalidTokenError('sideBToken', sideBToken);
       }
       const result = stmts.updateJoin.run(sideBToken, id);
       if (result.changes === 0) {
