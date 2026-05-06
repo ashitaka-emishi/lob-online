@@ -19,8 +19,9 @@ export function createStore(db) {
       'INSERT INTO games (id, side_a_token, status, created_at) VALUES (?, ?, ?, ?)'
     ),
     selectById: db.prepare('SELECT * FROM games WHERE id = ?'),
-    selectStatus: db.prepare('SELECT status FROM games WHERE id = ?'),
-    updateJoin: db.prepare('UPDATE games SET side_b_token = ?, status = ? WHERE id = ?'),
+    updateJoin: db.prepare(
+      "UPDATE games SET side_b_token = ?, status = 'active' WHERE id = ? AND status = 'open'"
+    ),
     selectAll: db.prepare('SELECT id, status, created_at FROM games ORDER BY created_at DESC'),
   };
 
@@ -31,10 +32,12 @@ export function createStore(db) {
     },
 
     joinGame(id, sideBToken) {
-      const row = stmts.selectStatus.get(id);
-      if (!row) throw new Error(`Game not found: ${id}`);
-      if (row.status !== 'open') throw new Error(`Game ${id} is already full`);
-      stmts.updateJoin.run(sideBToken, 'active', id);
+      const result = stmts.updateJoin.run(sideBToken, id);
+      if (result.changes === 0) {
+        const row = stmts.selectById.get(id);
+        if (!row) throw new Error(`Game not found: ${id}`);
+        throw new Error(`Game ${id} is not open`);
+      }
     },
 
     getGame(id) {
