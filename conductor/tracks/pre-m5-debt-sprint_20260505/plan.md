@@ -66,7 +66,7 @@ on `GET /api/v1/games/:id`.
 
 ### Tasks
 
-- [ ] Task 3.1: Create `server/src/auth/requireSide.js` middleware: reads `getPlayerSession(req)`;
+- [x] Task 3.1: Create `server/src/auth/requireSide.js` middleware: reads `getPlayerSession(req)`;
       returns 401 if null or if `gameId` does not match the requested `:id`; write unit tests — closes
       #330 (middleware)
 - [ ] Task 3.2: Mount `requireSide` on `router.get('/:id', requireSide, ...)` in `routes/games.js`;
