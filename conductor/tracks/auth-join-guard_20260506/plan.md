@@ -3,7 +3,7 @@
 **Track ID:** auth-join-guard_20260506
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-05-06
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -38,7 +38,7 @@ Add a pre-check in `POST /:id/join` that rejects callers already in the same gam
 ## Final Verification
 
 - [ ] All acceptance criteria in spec.md met
-- [ ] `npm run lint && npm run format:check && npm run test` all pass
+- [x] `npm run lint && npm run format:check && npm run test` all pass
 - [ ] Issue #340 closed
 
 ---
