@@ -7,17 +7,36 @@ You have just finished implementing a plan. Work through these four tasks in ord
 
 ## Task 0 — Verify the Build
 
-Run the following three commands and report their results before proceeding:
+Run the following gates in order and report each result before proceeding:
 
-```
+```bash
+npm run validate-data
 npm run lint
 npm run format:check
 npm run test
+npm run build
 ```
 
 If any command fails, stop immediately and report the failure with the relevant output. Do not
-proceed to documentation tasks until all three pass. Fix any issues first, then re-run to confirm
-before continuing.
+proceed to documentation tasks until all five pass. Fix any issues first, then re-run to confirm.
+
+**Warning scan:** after `npm run test` passes, scan the output for unexpected warnings:
+
+- Lines matching `[Vue warn]:` — Vue component or reactivity warnings
+- Lines matching `UnhandledPromiseRejection` — unhandled async errors
+- Unexpected `console.warn` or `console.error` output not part of test assertions
+
+If unexpected warnings are present, stop and fix them before continuing. If a warning is
+expected prototype noise that cannot yet be removed, it must be explicitly classified:
+
+```text
+Accepted warning: <npm script>
+Category: <Vue warning | unhandled rejection | console.warn | console.error>
+Reason: <why this is accepted prototype noise>
+Will be removed by: <issue number or track ID>
+```
+
+A passing test run with unclassified unexpected warnings is **not a complete build**.
 
 ## Task 1 — Devlog Entry
 

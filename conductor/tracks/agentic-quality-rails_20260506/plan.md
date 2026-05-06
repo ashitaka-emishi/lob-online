@@ -3,7 +3,7 @@
 **Track ID:** agentic-quality-rails_20260506
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-05-06
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Interaction Mode
 
@@ -47,7 +47,7 @@ The working tree already contains partial implementation from the second-pass tr
 ### Tasks
 
 - [x] Task 1.1: Create feature branch `feat/347-agentic-quality-rails` from master
-- [ ] Task 1.2: Stage and commit the already-modified files:
+- [x] Task 1.2: Stage and commit the already-modified files:
   - `.claude/README.md` (review/debt skills table)
   - `.claude/commands/pr-merge.md` (second-pass check before merge)
   - `.claude/commands/team-review.md` (Phase 6 second-pass trigger, Phase 7 debt scoring)
@@ -58,8 +58,8 @@ The working tree already contains partial implementation from the second-pass tr
 
 ### Verification
 
-- [ ] `git status` shows working tree clean after commit
-- [ ] `npm run lint && npm run format:check` pass
+- [x] `git status` shows working tree clean after commit
+- [x] `npm run lint && npm run format:check` pass
 
 ## Phase 2: Quality Rails Rule File + Workflow/Command Updates
 
@@ -67,7 +67,7 @@ Create the new rule file and update all remaining docs per the acceptance criter
 
 ### Tasks
 
-- [ ] Task 2.1: Create `.claude/rules/agentic-quality-rails.md` with:
+- [x] Task 2.1: Create `.claude/rules/agentic-quality-rails.md` with:
   - Interaction modes: Autonomous (default) and Checkpointed (high-risk triggers)
   - Risk classes: Low / Medium / High with definitions
   - Warning-free completion policy
@@ -75,44 +75,44 @@ Create the new rule file and update all remaining docs per the acceptance criter
   - Strict closeout quality gates
   - Required track metadata fields (Interaction Mode, Risk Classification, Human Control Points, Quality Gates, Debt Budget, Completion Contract)
 
-- [ ] Task 2.2: Update `.claude/rules/sdlc.md` to reference the quality rails rule file in the lifecycle description (Track creation and Implementation loop steps)
+- [x] Task 2.2: Update `.claude/rules/sdlc.md` to reference the quality rails rule file in the lifecycle description (Track creation and Implementation loop steps)
 
-- [ ] Task 2.3: Update `conductor/workflow.md` to document required track sections: Interaction Mode, Risk Classification, Human Control Points, Quality Gates, Debt Budget, Completion Contract — with Autonomous/Checkpointed definitions and trigger list
+- [x] Task 2.3: Update `conductor/workflow.md` to document required track sections: Interaction Mode, Risk Classification, Human Control Points, Quality Gates, Debt Budget, Completion Contract — with Autonomous/Checkpointed definitions and trigger list
 
-- [ ] Task 2.4: Update `.claude/commands/dev-test.md` to require scanning captured test output for unexpected warnings (Vue warnings, unhandled promise rejections, unexpected `console.warn`/`console.error`); flag these as blockers equivalent to test failures unless classified as accepted prototype noise
+- [x] Task 2.4: Update `.claude/commands/dev-test.md` to require scanning captured test output for unexpected warnings (Vue warnings, unhandled promise rejections, unexpected `console.warn`/`console.error`); flag these as blockers equivalent to test failures unless classified as accepted prototype noise
 
-- [ ] Task 2.5: Update `.claude/commands/plan-wrap.md` to:
+- [x] Task 2.5: Update `.claude/commands/plan-wrap.md` to:
   - Run gates in order: `validate-data`, `lint`, `format:check`, `test`, `build`
   - Stop if tests pass but emit unexpected warnings (unless explicitly classified as accepted prototype noise)
   - Document the accepted-noise classification format
 
-- [ ] Task 2.6: Update `.claude/commands/team-review.md`:
+- [x] Task 2.6: Update `.claude/commands/team-review.md`:
   - Change default reviewers from `security,performance,architecture` to `security,architecture,testing,maintainability`
   - Add conditional reviewer guidance: use `performance` when hot paths or algorithms changed; `domain` when rules-engine/movement/LOS/combat touched; `accessibility` when UI components changed
 
 ### Verification
 
-- [ ] `npm run lint && npm run format:check` pass
-- [ ] All new/updated files are consistent (same trigger conditions across all docs)
+- [x] `npm run lint && npm run format:check` pass
+- [x] All new/updated files are consistent (same trigger conditions across all docs)
 
 ## Phase 3: Quality Script + Example Track Update
 
 ### Tasks
 
-- [ ] Task 3.1: Add `quality:strict` script to `package.json` that runs `validate-data && lint && format:check && test && build` in sequence (chain existing scripts, no new tooling)
+- [x] Task 3.1: Add `quality:strict` script to `package.json` that runs `validate-data && lint && format:check && test && build` in sequence (chain existing scripts, no new tooling)
 
 ### Verification
 
-- [ ] `npm run quality:strict` exits 0
-- [ ] `npm run test` passes with no unexpected warnings
+- [x] `npm run quality:strict` exits 0
+- [x] `npm run test` passes with no unexpected warnings
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met
-- [ ] `npm run quality:strict` passes cleanly
-- [ ] No unexpected test warnings
-- [ ] `conductor/tracks.md` updated with this track
-- [ ] Ready for `/team-review`
+- [x] All acceptance criteria in spec.md met
+- [x] `npm run quality:strict` passes cleanly
+- [x] No unexpected test warnings
+- [x] `conductor/tracks.md` updated with this track
+- [x] Ready for `/team-review`
 
 ---
 

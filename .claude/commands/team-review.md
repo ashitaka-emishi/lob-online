@@ -1,6 +1,6 @@
 ---
 description: 'Launch a multi-reviewer parallel code review with specialized review dimensions, apply the second-pass trigger policy, then run /tech-debt-report'
-argument-hint: '<target> [--reviewers security,performance,architecture,testing,accessibility] [--base-branch main]'
+argument-hint: '<target> [--reviewers security,architecture,testing,maintainability] [--base-branch main]'
 ---
 
 # Team Review
@@ -12,8 +12,22 @@ Orchestrate a multi-reviewer parallel code review where each reviewer focuses on
 1. Verify `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set
 2. Parse `$ARGUMENTS`:
    - `<target>`: file path, directory, git diff range (e.g., `main...HEAD`), or PR number (e.g., `#123`)
-   - `--reviewers`: comma-separated dimensions (default: `security,performance,architecture`)
+   - `--reviewers`: comma-separated dimensions (default: `security,architecture,testing,maintainability`)
    - `--base-branch`: base branch for diff comparison (default: `main`)
+
+## Reviewer Selection
+
+The default set (`security,architecture,testing,maintainability`) covers most PRs. Add
+reviewers conditionally based on what the PR touches:
+
+| Add reviewer    | When the PR touches                                                             |
+| --------------- | ------------------------------------------------------------------------------- |
+| `performance`   | Hot paths, algorithmic changes, rendering loops, O(n) data structures           |
+| `domain`        | Rules-engine logic: movement, LOS, combat, morale, orders, or SM-specific rules |
+| `accessibility` | Vue UI components, forms, or any user-facing interactive elements               |
+
+To override the defaults, pass `--reviewers` explicitly, e.g.:
+`/team-review #123 --reviewers security,architecture,testing,maintainability,domain`
 
 ## Phase 1: Target Resolution
 

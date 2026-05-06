@@ -5,13 +5,18 @@
    the component type, drafts the doc using `docs/designs/TEMPLATE.md`, iterates via chat or
    direct file edits, then commits on `design/{slug}` and opens a PR. After merge:
 2. **Track creation** — run `/conductor:new-track` to break the design into a tracked,
-   milestone-assigned work unit with a spec and phased implementation plan.
+   milestone-assigned work unit with a spec and phased implementation plan. Every plan must
+   declare an Interaction Mode, Risk Classification, Quality Gates, Debt Budget, and
+   Completion Contract per `.claude/rules/agentic-quality-rails.md`.
 3. **Implementation loop** — run `/conductor:implement` to execute tasks within the track
-   following the TDD workflow. After merge, optionally update the design doc and create new
-   tracks for any scope discovered during implementation.
+   following the TDD workflow. Apply the quality rails: warning-free completion policy,
+   immediate debt-capture, and strict closeout gates (`npm run quality:strict`) before
+   opening a PR. After merge, optionally update the design doc and create new tracks for any
+   scope discovered during implementation.
    - **PR review** — use `/team-review` for quality-gate reviews. `/tech-debt-report` runs
      automatically at the end of every review session. All findings must be either fixed in
      place or deferred with a linked issue, a score (1–5), and a written assessment before
-     the debt report runs.
+     the debt report runs. A targeted second-pass review is required when review fixes touch
+     high-risk surfaces (see `.claude/commands/team-review.md` Phase 6).
 4. **After-action** — run `/plan-wrap` (or `/doc-sync` + `/ecosystem-docs-generate`) to
    verify all docs reflect the delivered state and record a devlog entry.

@@ -1,5 +1,48 @@
 # Workflow: lob-online
 
+## Required Track Metadata
+
+Every `plan.md` created by `/conductor:new-track` must include the following sections.
+See `.claude/rules/agentic-quality-rails.md` for full definitions.
+
+```markdown
+## Interaction Mode
+
+**Mode:** Autonomous | Checkpointed
+**Human control points:** <list, or "None beyond phase approvals">
+
+## Risk Classification
+
+**Risk:** Low | Medium | High
+**Reason:** <one sentence>
+
+## Quality Gates
+
+- [ ] `npm run validate-data`
+- [ ] `npm run lint`
+- [ ] `npm run format:check`
+- [ ] `npm run test`
+- [ ] `npm run build`
+- [ ] No unexpected warnings in test output
+
+## Debt Budget
+
+**Allowed new deferred debt:** 0 unless explicitly approved.
+
+## Completion Contract
+
+- [ ] All plan tasks complete
+- [ ] All acceptance criteria in spec.md met
+- [ ] Warnings fixed or explicitly classified as accepted prototype noise
+- [ ] Debt register updated if any debt was accepted
+- [ ] Ready for `/team-review`
+```
+
+**Autonomous** is the default for ordinary feature/test/docs work. **Checkpointed** is
+required when the track touches auth/session/authorization, persistence/migrations,
+game-state/schema compatibility, rules-engine behavior, production deployment behavior,
+data validation semantics, or broad multi-file refactors (roughly 300–500+ production LOC).
+
 ## TDD Policy
 
 **Strict** — tests are written before or alongside implementation. For new utility functions and Vue components, tests must be created in the same task as the implementation. For schema changes, schema tests are required in the same commit.
@@ -8,7 +51,7 @@
 
 **Never commit directly to `master`.** All implementation work must happen on a feature branch:
 
-```
+```bash
 git checkout -b feat/{issue-number}-{short-slug}
 ```
 
@@ -18,7 +61,7 @@ Create the branch at the start of `/conductor:implement`, before writing any cod
 
 Conventional Commits format:
 
-```
+```text
 <type>(<scope>): <description> (#<issue>)
 ```
 
@@ -49,7 +92,7 @@ Manual verification required after each phase completion. The implementer confir
 
 ## Task Lifecycle
 
-```
+```text
 [ ] Not started → [~] In progress → [x] Complete
 ```
 
