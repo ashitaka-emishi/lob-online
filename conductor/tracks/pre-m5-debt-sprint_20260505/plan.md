@@ -87,7 +87,7 @@ Refactor `gameSqlite.js` to a factory + DI pattern, fix the TOCTOU race in `join
 
 ### Tasks
 
-- [ ] Task 4.1: Refactor `gameSqlite.js` to export a `createStore(db)` factory; hoist all prepared
+- [x] Task 4.1: Refactor `gameSqlite.js` to export a `createStore(db)` factory; hoist all prepared
       statement creation into the factory; update `server.js` and route tests to inject the db
       instance — closes #331
 - [ ] Task 4.2: Rewrite `joinGame` as a single conditional `UPDATE games SET status = 'active',
