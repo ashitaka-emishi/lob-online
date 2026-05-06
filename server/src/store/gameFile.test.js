@@ -8,6 +8,20 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 // gameFile.js is exercised with actual disk reads/writes.
 // DATA_DIR is overridden via the exported function signature.
 
+// Minimal valid GameState for version-enforcement tests
+const BASE_VERSIONED_STATE = {
+  id: 'vtest',
+  scenarioId: 'south-mountain',
+  version: 0,
+  turn: 1,
+  phase: null,
+  initiative: null,
+  sides: { union: null, confederate: null },
+  units: {},
+  reinforcementQueue: [],
+  status: 'setup',
+};
+
 let tmpDir;
 let saveGame, loadGame;
 
@@ -40,16 +54,35 @@ describe('saveGame', () => {
     expect(existsSync(join(tmpDir, 'newgame', 'state.json'))).toBe(true);
   });
 
-  it('overwrites existing state.json on second save', async () => {
-    const state1 = { id: 'g1', turn: 1, status: 'setup', units: {} };
-    const state2 = { id: 'g1', turn: 2, status: 'active', units: {} };
-    await saveGame('g1', state1, tmpDir);
+  it('overwrites existing state.json on second save (load-modify-save cycle)', async () => {
+    await saveGame('g1', BASE_VERSIONED_STATE, tmpDir);
+    const loaded = await loadGame('g1', tmpDir);
+    const state2 = { ...loaded, turn: 2, status: 'active' };
     await saveGame('g1', state2, tmpDir);
 
     const { readFileSync } = await import('node:fs');
     const written = JSON.parse(readFileSync(join(tmpDir, 'g1', 'state.json'), 'utf8'));
     expect(written.turn).toBe(2);
     expect(written.status).toBe('active');
+  });
+
+  it('increments version on each save (#332)', async () => {
+    await saveGame('g2', BASE_VERSIONED_STATE, tmpDir);
+    const after1 = await loadGame('g2', tmpDir);
+    expect(after1.version).toBe(1);
+
+    await saveGame('g2', after1, tmpDir);
+    const after2 = await loadGame('g2', tmpDir);
+    expect(after2.version).toBe(2);
+  });
+
+  it('throws on version conflict — detects concurrent write (#332)', async () => {
+    await saveGame('g3', BASE_VERSIONED_STATE, tmpDir);
+    // Another writer saves — disk now has version 1
+    const loaded = await loadGame('g3', tmpDir);
+    await saveGame('g3', loaded, tmpDir);
+    // Original writer tries to save with stale version 0
+    await expect(saveGame('g3', BASE_VERSIONED_STATE, tmpDir)).rejects.toThrow(/version/i);
   });
 });
 
@@ -73,7 +106,7 @@ describe('loadGame', () => {
     expect(loaded.turn).toBe(3);
   });
 
-  it('round-trips all state fields correctly', async () => {
+  it('round-trips all state fields correctly (version incremented by saveGame)', async () => {
     const state = {
       id: 'rt1',
       scenarioId: 'south-mountain',
@@ -100,7 +133,7 @@ describe('loadGame', () => {
     };
     await saveGame('rt1', state, tmpDir);
     const loaded = await loadGame('rt1', tmpDir);
-    expect(loaded).toEqual(state);
+    expect(loaded).toEqual({ ...state, version: 1 });
   });
 
   it('throws if the game directory does not exist', async () => {

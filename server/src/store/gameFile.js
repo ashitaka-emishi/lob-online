@@ -22,10 +22,28 @@ export async function saveGame(id, state, dataDir = DEFAULT_DATA_DIR) {
   const dir = gameDir(id, dataDir);
   await mkdir(dir, { recursive: true });
 
-  // Atomic write: write to tmp file then rename to avoid partial reads
   const dest = statePath(id, dataDir);
+
+  // Optimistic concurrency: if a file exists, stored version must match state.version (#332)
+  if (typeof state.version === 'number') {
+    try {
+      const raw = await readFile(dest, 'utf8');
+      const stored = JSON.parse(raw);
+      if (stored.version !== state.version) {
+        throw new Error(
+          `Version conflict on game ${id}: stored=${stored.version}, expected=${state.version}`
+        );
+      }
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err;
+    }
+  }
+
+  // Atomic write with incremented version
   const tmp = dest + '.tmp';
-  await writeFile(tmp, JSON.stringify(state));
+  const toWrite =
+    typeof state.version === 'number' ? { ...state, version: state.version + 1 } : state;
+  await writeFile(tmp, JSON.stringify(toWrite));
   await rename(tmp, dest);
 }
 
