@@ -59,7 +59,7 @@ describe('loadGame', () => {
       id: 'game2',
       scenarioId: 'south-mountain',
       turn: 3,
-      phase: 'setup',
+      phase: null,
       initiative: null,
       sides: { union: null, confederate: null },
       units: {},
@@ -77,7 +77,7 @@ describe('loadGame', () => {
       id: 'rt1',
       scenarioId: 'south-mountain',
       turn: 1,
-      phase: 'setup',
+      phase: null,
       initiative: null,
       sides: { union: null, confederate: null },
       units: {

@@ -24,7 +24,7 @@ const BASE_GAME_STATE = {
   id: 'game-abc123',
   scenarioId: 'south-mountain',
   turn: 1,
-  phase: 'setup',
+  phase: null,
   initiative: null,
   sides: { union: 'token-union-abc', confederate: null },
   units: { 'test-unit': BASE_UNIT },
@@ -156,6 +156,10 @@ describe('GameStateSchema', () => {
     expect(
       GameStateSchema.safeParse({ ...BASE_GAME_STATE, phase: 'combat_resolution' }).success
     ).toBe(false);
+  });
+
+  it("rejects phase: 'setup' — setup is a status value, not a phase (#333)", () => {
+    expect(GameStateSchema.safeParse({ ...BASE_GAME_STATE, phase: 'setup' }).success).toBe(false);
   });
 
   it('rejects invalid status', () => {

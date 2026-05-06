@@ -37,8 +37,8 @@ export const GameStateSchema = z.object({
   id: z.string(),
   scenarioId: z.string(),
   turn: z.number().int().min(1),
-  // Phase within the current turn (setup = pre-game placement phase)
-  phase: z.enum(['setup', 'initiative', 'orders', 'movement', 'combat', 'morale', 'recovery']),
+  // Phase within the current turn; null when status = 'setup' (pre-game) — LOB §10 turn sequence
+  phase: z.enum(['initiative', 'orders', 'movement', 'combat', 'morale', 'recovery']).nullable(),
   initiative: z.enum(['union', 'confederate']).nullable(),
   sides: z.object({
     union: z.string().nullable(),

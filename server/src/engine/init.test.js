@@ -98,10 +98,10 @@ describe('initGameState — structure', () => {
     expect(state.scenarioId).toBe('south-mountain');
   });
 
-  it('initialises at turn 1, phase setup, status setup', () => {
+  it('initialises at turn 1, phase null (pre-game), status setup', () => {
     const state = initGameState(SCENARIO, 'game-abc');
     expect(state.turn).toBe(1);
-    expect(state.phase).toBe('setup');
+    expect(state.phase).toBeNull();
     expect(state.status).toBe('setup');
   });
 

@@ -37,7 +37,7 @@ const MINIMAL_STATE = {
   id: TEST_UUID,
   scenarioId: 'south-mountain',
   turn: 1,
-  phase: 'setup',
+  phase: null,
   initiative: null,
   sides: { union: null, confederate: null },
   units: {},

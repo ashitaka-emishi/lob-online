@@ -140,7 +140,7 @@ export function initGameState(scenario, gameId) {
     id: gameId,
     scenarioId: scenario.id,
     turn: 1,
-    phase: 'setup',
+    phase: null,
     initiative: null,
     sides: { union: null, confederate: null },
     units,
