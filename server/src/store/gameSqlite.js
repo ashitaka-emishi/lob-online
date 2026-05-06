@@ -10,6 +10,20 @@ const SCHEMA = `
   )
 `;
 
+export class GameNotFoundError extends Error {
+  constructor(id) {
+    super(`Game not found: ${id}`);
+    this.name = 'GameNotFoundError';
+  }
+}
+
+export class GameNotOpenError extends Error {
+  constructor(id) {
+    super(`Game ${id} is not open`);
+    this.name = 'GameNotOpenError';
+  }
+}
+
 // Factory — hoists all prepared statements at construction time (#331)
 export function createStore(db) {
   db.exec(SCHEMA);
@@ -22,7 +36,10 @@ export function createStore(db) {
     updateJoin: db.prepare(
       "UPDATE games SET side_b_token = ?, status = 'active' WHERE id = ? AND status = 'open'"
     ),
-    selectAll: db.prepare('SELECT id, status, created_at FROM games ORDER BY created_at DESC'),
+    // LIMIT 200 guards against unbounded memory growth as game count scales (#PERF-M1)
+    selectAll: db.prepare(
+      'SELECT id, status, created_at FROM games ORDER BY created_at DESC LIMIT 200'
+    ),
   };
 
   return {
@@ -35,8 +52,8 @@ export function createStore(db) {
       const result = stmts.updateJoin.run(sideBToken, id);
       if (result.changes === 0) {
         const row = stmts.selectById.get(id);
-        if (!row) throw new Error(`Game not found: ${id}`);
-        throw new Error(`Game ${id} is not open`);
+        if (!row) throw new GameNotFoundError(id);
+        throw new GameNotOpenError(id);
       }
     },
 
@@ -55,6 +72,8 @@ let _store;
 let _db;
 
 export function initDb(dbPath = process.env.DB_PATH || 'data/games.db') {
+  // Idempotent: close any prior connection before re-initialising (#ARCH-M4)
+  if (_db) _db.close();
   _db = new Database(dbPath);
   _store = createStore(_db);
   return _db;
@@ -64,8 +83,13 @@ export function getDb() {
   return _db;
 }
 
-// Convenience delegates so existing routes keep working without change (#334 will clean this up)
-export const createGame = (...args) => _store.createGame(...args);
-export const joinGame = (...args) => _store.joinGame(...args);
-export const getGame = (...args) => _store.getGame(...args);
-export const listGames = (...args) => _store.listGames(...args);
+function requireStore() {
+  if (!_store) throw new Error('[gameSqlite] store not initialised — call initDb() first');
+  return _store;
+}
+
+// Convenience delegates — guarded so callers get a clear error before initDb() (#ARCH-H5)
+export const createGame = (...args) => requireStore().createGame(...args);
+export const joinGame = (...args) => requireStore().joinGame(...args);
+export const getGame = (...args) => requireStore().getGame(...args);
+export const listGames = (...args) => requireStore().listGames(...args);

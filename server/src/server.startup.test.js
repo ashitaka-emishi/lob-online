@@ -53,6 +53,7 @@ vi.mock('http', async (importOriginal) => {
     ...real,
     createServer: vi.fn(() => ({
       listen: vi.fn((_port, cb) => cb?.()),
+      close: vi.fn((cb) => cb?.()),
     })),
   };
 });
@@ -65,6 +66,10 @@ describe('startServer (#338)', () => {
   beforeEach(() => {
     sighandlers = {};
     vi.spyOn(process, 'on').mockImplementation((event, fn) => {
+      sighandlers[event] = fn;
+      return process;
+    });
+    vi.spyOn(process, 'once').mockImplementation((event, fn) => {
       sighandlers[event] = fn;
       return process;
     });

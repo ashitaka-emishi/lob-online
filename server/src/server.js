@@ -33,9 +33,9 @@ export async function startServer() {
   app.use(morgan('dev'));
   app.use(express.json({ limit: '5mb' }));
 
-  // Fail fast if SESSION_SECRET is absent in production
-  if (!process.env.SESSION_SECRET && process.env.NODE_ENV === 'production') {
-    throw new Error('SESSION_SECRET env var must be set in production');
+  // Fail fast if SESSION_SECRET is absent in any non-test environment (#SEC-M2)
+  if (!process.env.SESSION_SECRET && process.env.NODE_ENV !== 'test') {
+    throw new Error('SESSION_SECRET env var must be set in all non-test environments');
   }
 
   // Initialise DB and persistent session store (#329, #338)
@@ -48,7 +48,8 @@ export async function startServer() {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        // Drive secure flag from explicit env var so staging/preview HTTPS envs are covered (#SEC-M3)
+        secure: process.env.COOKIE_SECURE === 'true',
         httpOnly: true,
         sameSite: 'lax',
         maxAge: 14 * 24 * 60 * 60 * 1000,
@@ -134,8 +135,10 @@ export async function startServer() {
     });
   });
 
-  // Graceful shutdown (#338)
-  process.on('SIGTERM', () => getDb().close());
+  // Graceful shutdown — close http server first, then DB; use once to prevent accumulation (#ARCH-M3)
+  process.once('SIGTERM', () => {
+    httpServer.close(() => getDb().close());
+  });
 
   return new Promise((resolve) => {
     httpServer.listen(PORT, () => {
@@ -145,4 +148,7 @@ export async function startServer() {
   });
 }
 
-startServer();
+// Only auto-start when this file is the process entry point (#ARCH-H1)
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  startServer();
+}

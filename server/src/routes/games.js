@@ -6,7 +6,16 @@ import { requireSide } from '../auth/requireSide.js';
 import { setPlayerSession } from '../auth/session.js';
 import { initGameState } from '../engine/init.js';
 import { loadScenario } from '../engine/scenario.js';
-import { createGame, getGame, joinGame, listGames, loadGame, saveGame } from '../store/index.js';
+import {
+  createGame,
+  GameNotFoundError,
+  GameNotOpenError,
+  getGame,
+  joinGame,
+  listGames,
+  loadGame,
+  saveGame,
+} from '../store/index.js';
 
 const router = express.Router();
 
@@ -30,10 +39,14 @@ router.post('/', async (req, res) => {
     const id = randomUUID();
     const scenario = getScenario();
     const state = initGameState(scenario, id);
-    await saveGame(id, state);
 
+    // SQLite row first: a failed INSERT leaves no filesystem side-effect (#ARCH-H4)
     const sideToken = randomUUID();
     createGame(id, sideToken);
+    await saveGame(id, state);
+
+    // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
+    await new Promise((res, rej) => req.session.regenerate((e) => (e ? rej(e) : res())));
     setPlayerSession(req, id, 'union', sideToken);
 
     res.status(201).json({ id, side: 'union' });
@@ -47,16 +60,20 @@ router.post('/', async (req, res) => {
 router.post('/:id/join', async (req, res) => {
   try {
     const { id } = req.params;
-    const row = getGame(id);
-    if (!row) return res.status(404).json({ error: 'Game not found' });
-    if (row.status !== 'open') return res.status(409).json({ error: 'Game is already full' });
-
     const sideToken = randomUUID();
+
+    // joinGame is atomic — no pre-check needed; typed errors map to 404/409 (#PERF-H1, #ARCH-M2)
     joinGame(id, sideToken);
+
+    // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
+    await new Promise((res, rej) => req.session.regenerate((e) => (e ? rej(e) : res())));
     setPlayerSession(req, id, 'confederate', sideToken);
 
     res.json({ id, side: 'confederate' });
   } catch (err) {
+    if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });
+    if (err instanceof GameNotOpenError)
+      return res.status(409).json({ error: 'Game is already full' });
     console.error('[route] POST /games/:id/join error:', err.message);
     res.status(500).json({ error: 'Failed to join game' });
   }

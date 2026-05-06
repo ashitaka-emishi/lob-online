@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { createStore } from './gameSqlite.js';
+import { createStore, GameNotFoundError, GameNotOpenError } from './gameSqlite.js';
 
 // Each test gets an isolated in-memory DB — no vi.resetModules() needed (#331)
 let db;
@@ -45,14 +45,14 @@ describe('joinGame', () => {
     expect(row.status).toBe('active');
   });
 
-  it('throws if game does not exist', () => {
-    expect(() => store.joinGame('nope', 'tok')).toThrow();
+  it('throws GameNotFoundError if game does not exist', () => {
+    expect(() => store.joinGame('nope', 'tok')).toThrow(GameNotFoundError);
   });
 
-  it('throws if game is already full (status active)', () => {
+  it('throws GameNotOpenError if game is already full (status active)', () => {
     store.createGame('full1', 'tok-a');
     store.joinGame('full1', 'tok-b');
-    expect(() => store.joinGame('full1', 'tok-c')).toThrow();
+    expect(() => store.joinGame('full1', 'tok-c')).toThrow(GameNotOpenError);
   });
 
   it('throws "not open" via changes === 0, not a prior SELECT — proves atomic fix (#336)', () => {

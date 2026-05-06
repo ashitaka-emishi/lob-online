@@ -143,8 +143,8 @@ describe('GameStateSchema', () => {
     expect(GameStateSchema.safeParse(state).success).toBe(true);
   });
 
-  it('accepts complete status', () => {
-    const state = { ...BASE_GAME_STATE, status: 'complete', turn: 45 };
+  it('accepts complete status with a non-null phase', () => {
+    const state = { ...BASE_GAME_STATE, status: 'complete', phase: 'recovery', turn: 45 };
     expect(GameStateSchema.safeParse(state).success).toBe(true);
   });
 
@@ -169,6 +169,19 @@ describe('GameStateSchema', () => {
 
   it("rejects phase: 'setup' — setup is a status value, not a phase (#333)", () => {
     expect(GameStateSchema.safeParse({ ...BASE_GAME_STATE, phase: 'setup' }).success).toBe(false);
+  });
+
+  it('rejects phase: null when status is active — cross-field constraint (#ARCH-M1)', () => {
+    expect(
+      GameStateSchema.safeParse({ ...BASE_GAME_STATE, status: 'active', phase: null }).success
+    ).toBe(false);
+  });
+
+  it('rejects non-null phase when status is setup — cross-field constraint (#ARCH-M1)', () => {
+    expect(
+      GameStateSchema.safeParse({ ...BASE_GAME_STATE, status: 'setup', phase: 'initiative' })
+        .success
+    ).toBe(false);
   });
 
   it('rejects invalid status', () => {

@@ -38,7 +38,7 @@ afterEach(() => {
 describe('saveGame', () => {
   it('writes state.json under data/games/{id}/', async () => {
     const state = { id: 'game1', turn: 1, status: 'setup', units: {} };
-    await expect(saveGame('game1', state, tmpDir)).resolves.toBeUndefined();
+    await expect(saveGame('game1', state, tmpDir)).resolves.toBeDefined();
 
     const { readFileSync } = await import('node:fs');
     const written = JSON.parse(readFileSync(join(tmpDir, 'game1', 'state.json'), 'utf8'));
@@ -48,7 +48,7 @@ describe('saveGame', () => {
 
   it('creates the game directory if it does not exist', async () => {
     const state = { id: 'newgame', turn: 1, status: 'setup', units: {} };
-    await expect(saveGame('newgame', state, tmpDir)).resolves.toBeUndefined();
+    await expect(saveGame('newgame', state, tmpDir)).resolves.toBeDefined();
 
     const { existsSync } = await import('node:fs');
     expect(existsSync(join(tmpDir, 'newgame', 'state.json'))).toBe(true);
@@ -64,6 +64,12 @@ describe('saveGame', () => {
     const written = JSON.parse(readFileSync(join(tmpDir, 'g1', 'state.json'), 'utf8'));
     expect(written.turn).toBe(2);
     expect(written.status).toBe('active');
+  });
+
+  it('returns the persisted state with incremented version (#ARCH-M7)', async () => {
+    const saved = await saveGame('ret1', BASE_VERSIONED_STATE, tmpDir);
+    expect(saved.version).toBe(1);
+    expect(saved.id).toBe('vtest');
   });
 
   it('increments version on each save (#332)', async () => {
@@ -93,7 +99,7 @@ describe('loadGame', () => {
       scenarioId: 'south-mountain',
       version: 0,
       turn: 3,
-      phase: null,
+      phase: 'initiative',
       initiative: null,
       sides: { union: null, confederate: null },
       units: {},
