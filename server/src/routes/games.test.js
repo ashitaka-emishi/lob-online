@@ -36,6 +36,7 @@ const TEST_UUID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 const MINIMAL_STATE = {
   id: TEST_UUID,
   scenarioId: 'south-mountain',
+  version: 0,
   turn: 1,
   phase: null,
   initiative: null,

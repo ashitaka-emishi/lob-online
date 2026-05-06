@@ -58,6 +58,7 @@ describe('loadGame', () => {
     const state = {
       id: 'game2',
       scenarioId: 'south-mountain',
+      version: 0,
       turn: 3,
       phase: null,
       initiative: null,
@@ -76,6 +77,7 @@ describe('loadGame', () => {
     const state = {
       id: 'rt1',
       scenarioId: 'south-mountain',
+      version: 0,
       turn: 1,
       phase: null,
       initiative: null,

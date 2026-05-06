@@ -23,6 +23,7 @@ const BASE_UNIT = {
 const BASE_GAME_STATE = {
   id: 'game-abc123',
   scenarioId: 'south-mountain',
+  version: 0,
   turn: 1,
   phase: null,
   initiative: null,
@@ -150,6 +151,14 @@ describe('GameStateSchema', () => {
   it('rejects missing required fields', () => {
     const { id: _id, ...noId } = BASE_GAME_STATE;
     expect(GameStateSchema.safeParse(noId).success).toBe(false);
+  });
+
+  it('requires a version field (integer ≥ 0) for optimistic concurrency (#332)', () => {
+    expect(GameStateSchema.safeParse({ ...BASE_GAME_STATE, version: 0 }).success).toBe(true);
+    expect(GameStateSchema.safeParse({ ...BASE_GAME_STATE, version: 7 }).success).toBe(true);
+    expect(GameStateSchema.safeParse({ ...BASE_GAME_STATE, version: -1 }).success).toBe(false);
+    const { version: _v, ...noVersion } = BASE_GAME_STATE;
+    expect(GameStateSchema.safeParse(noVersion).success).toBe(false);
   });
 
   it('rejects invalid phase', () => {

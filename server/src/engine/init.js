@@ -139,6 +139,7 @@ export function initGameState(scenario, gameId) {
   const state = {
     id: gameId,
     scenarioId: scenario.id,
+    version: 0,
     turn: 1,
     phase: null,
     initiative: null,

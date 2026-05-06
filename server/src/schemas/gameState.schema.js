@@ -36,6 +36,8 @@ const ReinforcementEntry = z.object({
 export const GameStateSchema = z.object({
   id: z.string(),
   scenarioId: z.string(),
+  // Monotonically incremented on every saveGame — used for optimistic concurrency control (#332)
+  version: z.number().int().nonnegative(),
   turn: z.number().int().min(1),
   // Phase within the current turn; null when status = 'setup' (pre-game) — LOB §10 turn sequence
   phase: z.enum(['initiative', 'orders', 'movement', 'combat', 'morale', 'recovery']).nullable(),
