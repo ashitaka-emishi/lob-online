@@ -22,7 +22,7 @@ enum and adding the version field are both schema-only changes that downstream p
 
 ### Tasks
 
-- [ ] Task 1.1: Remove `'setup'` from the `phase` enum in `GameStateSchema`; change phase initial
+- [x] Task 1.1: Remove `'setup'` from the `phase` enum in `GameStateSchema`; change phase initial
       value to `null` in `initGameState`; update all tests that set `phase: 'setup'` — closes #333
 - [ ] Task 1.2: Add `version: z.number().int().nonnegative()` to `GameStateSchema`; set `version: 0`
       in `initGameState` — closes #332 (schema half)
