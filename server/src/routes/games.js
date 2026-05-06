@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import express from 'express';
 
 import { requireSide } from '../auth/requireSide.js';
-import { setPlayerSession } from '../auth/session.js';
+import { getPlayerSession, setPlayerSession } from '../auth/session.js';
 import { initGameState } from '../engine/init.js';
 import { loadScenario } from '../engine/scenario.js';
 import {
@@ -60,6 +60,13 @@ router.post('/', async (req, res) => {
 router.post('/:id/join', async (req, res) => {
   try {
     const { id } = req.params;
+
+    // ARCH-H2: reject if the caller is already in this game (#340)
+    const existing = getPlayerSession(req);
+    if (existing?.gameId === id) {
+      return res.status(409).json({ error: 'Already in this game' });
+    }
+
     const sideToken = randomUUID();
 
     // joinGame is atomic — no pre-check needed; typed errors map to 404/409 (#PERF-H1, #ARCH-M2)

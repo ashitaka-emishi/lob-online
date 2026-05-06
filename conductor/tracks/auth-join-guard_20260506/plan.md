@@ -28,8 +28,8 @@ Add a pre-check in `POST /:id/join` that rejects callers already in the same gam
 
 ### Tasks
 
-- [ ] Task 2.1: Write failing tests in `games.test.js` covering: returns 409 when caller's session `gameId` matches the route `:id`; returns 200 when caller has no session; returns 200 when caller has a session for a different game
-- [ ] Task 2.2: Import `getPlayerSession` in `games.js` (already imported via `setPlayerSession` — add `getPlayerSession` to the import) and add the session-conflict check at the top of the join handler, before `randomUUID()` / `joinGame` are called
+- [x] Task 2.1: Write failing tests in `games.test.js` covering: returns 409 when caller's session `gameId` matches the route `:id`; returns 200 when caller has no session; returns 200 when caller has a session for a different game
+- [x] Task 2.2: Import `getPlayerSession` in `games.js` (already imported via `setPlayerSession` — add `getPlayerSession` to the import) and add the session-conflict check at the top of the join handler, before `randomUUID()` / `joinGame` are called
 
 ### Verification
 

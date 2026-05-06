@@ -83,6 +83,9 @@ async function buildApp() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Reset joinGame implementation so tests 3/4 (which set mockImplementation to throw)
+  // don't bleed into later tests — clearAllMocks clears calls but not implementations
+  joinGame.mockReset();
   loadScenario.mockReturnValue({ id: 'south-mountain', turnStructure: {} });
   initGameState.mockReturnValue(MINIMAL_STATE);
   createGame.mockReturnValue(TEST_UUID);
@@ -166,6 +169,29 @@ describe('POST /api/v1/games/:id/join', () => {
     const app = await buildApp();
     const res = await request(app).post('/api/v1/games/not-a-uuid/join').send({});
     expect(res.status).toBe(400);
+  });
+
+  // ARCH-H2: session conflict guard — prevent same-session double-join (#340)
+  it('returns 409 when caller session gameId matches the route :id (#340)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok-1' });
+    const app = await buildApp();
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    expect(res.status).toBe(409);
+  });
+
+  it('returns 200 when caller has no session (#340)', async () => {
+    getPlayerSession.mockReturnValue(null);
+    const app = await buildApp();
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    expect(res.status).toBe(200);
+  });
+
+  it('returns 200 when caller session is for a different game (#340)', async () => {
+    const OTHER_UUID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', token: 'tok-1' });
+    const app = await buildApp();
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    expect(res.status).toBe(200);
   });
 });
 
