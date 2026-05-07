@@ -1,0 +1,16 @@
+{
+  "id": "m5-schema-prereqs_20260507",
+  "title": "M5 Schema Prerequisites — UnitOrderState + isDetached",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-05-07T00:00:00.000Z",
+  "updated": "2026-05-07T00:00:00.000Z",
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 12,
+    "completed": 0
+  }
+}
