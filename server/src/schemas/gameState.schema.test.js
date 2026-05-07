@@ -82,6 +82,19 @@ describe('UnitStateSchema', () => {
   it('rejects invalid ammo value', () => {
     expect(UnitStateSchema.safeParse({ ...BASE_UNIT, ammo: 'depleted' }).success).toBe(false);
   });
+
+  it('accepts isDetached: true (detached brigade)', () => {
+    expect(UnitStateSchema.safeParse({ ...BASE_UNIT, isDetached: true }).success).toBe(true);
+  });
+
+  it('rejects missing isDetached field', () => {
+    const { isDetached: _d, ...noDetached } = BASE_UNIT;
+    expect(UnitStateSchema.safeParse(noDetached).success).toBe(false);
+  });
+
+  it('rejects non-boolean isDetached', () => {
+    expect(UnitStateSchema.safeParse({ ...BASE_UNIT, isDetached: 'true' }).success).toBe(false);
+  });
 });
 
 describe('MoraleState enum exhaustiveness', () => {
@@ -150,6 +163,30 @@ describe('UnitOrderState', () => {
   it('rejects none status with a non-null type', () => {
     expect(
       UnitOrderState.safeParse({ type: 'move', status: 'none', deliveryTurnDue: null }).success
+    ).toBe(false);
+  });
+
+  it('rejects accepted status with a non-null deliveryTurnDue (LOB §10.6a)', () => {
+    expect(
+      UnitOrderState.safeParse({ type: 'move', status: 'accepted', deliveryTurnDue: 5 }).success
+    ).toBe(false);
+  });
+
+  it('rejects accepted status with a null type (LOB §10.4a–b)', () => {
+    expect(
+      UnitOrderState.safeParse({ type: null, status: 'accepted', deliveryTurnDue: null }).success
+    ).toBe(false);
+  });
+
+  it('rejects delay status with a null type (LOB §10.4a–b)', () => {
+    expect(
+      UnitOrderState.safeParse({ type: null, status: 'delay', deliveryTurnDue: 3 }).success
+    ).toBe(false);
+  });
+
+  it('rejects none status with a non-null deliveryTurnDue', () => {
+    expect(
+      UnitOrderState.safeParse({ type: null, status: 'none', deliveryTurnDue: 2 }).success
     ).toBe(false);
   });
 });

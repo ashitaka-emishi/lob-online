@@ -1,6 +1,8 @@
 import { GameStateSchema } from '../schemas/gameState.schema.js';
 
-// LOB §10.4b — "none" in scenario setup data = no accepted order (§10.8a)
+// LOB §10.3 — artillery and non-order-holding units have null orders; effective behavior is §10.8a
+// LOB §10.6 — scenario setup orders are treated as already accepted at turn 1; they represent
+//   the pre-game historical posture and bypass the order-delivery pipeline
 // LOB_GAME_UPDATES SM section — "complexDefense" replaced by "move"
 // Returns a UnitOrderState object for order-holding units, or null for non-order-holding units.
 function mapOrder(rawOrder) {

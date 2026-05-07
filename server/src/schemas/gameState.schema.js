@@ -24,6 +24,15 @@ export const UnitOrderState = z
   })
   .refine((o) => o.status !== 'none' || o.type === null, {
     message: 'type must be null when status is none',
+  })
+  .refine((o) => o.status !== 'accepted' || o.deliveryTurnDue === null, {
+    message: 'deliveryTurnDue must be null when status is accepted',
+  })
+  .refine((o) => o.status === 'none' || o.type !== null, {
+    message: 'type must be set when status is accepted or delay',
+  })
+  .refine((o) => o.status === 'delay' || o.deliveryTurnDue === null, {
+    message: 'deliveryTurnDue must be null unless status is delay',
   });
 
 // LOB §8.2b — Shell Depletion / Canister Depletion mapped to RSS Low/No Ammo markers (LOB_GAME_UPDATES)
