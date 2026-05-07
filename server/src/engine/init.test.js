@@ -136,10 +136,18 @@ describe('initGameState — CSA fixed-hex placement', () => {
     expect(units['23ga'].hex).toBe('30.21');
   });
 
-  it('maps setup order "move" → orders: "move"', () => {
+  it('maps setup order "move" → accepted UnitOrderState with type move', () => {
     const { units } = initGameState(SCENARIO, 'g1');
-    expect(units['5va-cav'].orders).toBe('move');
-    expect(units['colquitt'].orders).toBe('move');
+    expect(units['5va-cav'].orders).toEqual({
+      type: 'move',
+      status: 'accepted',
+      deliveryTurnDue: null,
+    });
+    expect(units['colquitt'].orders).toEqual({
+      type: 'move',
+      status: 'accepted',
+      deliveryTurnDue: null,
+    });
   });
 });
 

@@ -132,6 +132,7 @@ describe('loadGame', () => {
           ammo: 'full',
           isOnBoard: true,
           entryTurn: null,
+          isDetached: false,
         },
       },
       reinforcementQueue: [{ unitId: 'u2', turn: 5, entryHex: '1.1' }],
