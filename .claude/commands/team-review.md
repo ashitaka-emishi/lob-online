@@ -1,19 +1,33 @@
 ---
-description: 'Launch a multi-reviewer parallel code review with specialized review dimensions, then run /tech-debt-report'
-argument-hint: '<target> [--reviewers security,performance,architecture,testing,accessibility] [--base-branch main]'
+description: 'Launch a multi-reviewer parallel code review with specialized review dimensions, apply the second-pass trigger policy, then run /tech-debt-report'
+argument-hint: '<target> [--reviewers security,architecture,testing,maintainability] [--base-branch main]'
 ---
 
 # Team Review
 
-Orchestrate a multi-reviewer parallel code review where each reviewer focuses on a specific quality dimension. Produces a consolidated, deduplicated report organized by severity. Automatically runs `/tech-debt-report` at the end to score any deferred findings.
+Orchestrate a multi-reviewer parallel code review where each reviewer focuses on a specific quality dimension. Produces a consolidated, deduplicated report organized by severity. Applies the second-pass trigger policy after review fixes, then automatically runs `/tech-debt-report` at the end to score any deferred findings.
 
 ## Pre-flight Checks
 
 1. Verify `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set
 2. Parse `$ARGUMENTS`:
    - `<target>`: file path, directory, git diff range (e.g., `main...HEAD`), or PR number (e.g., `#123`)
-   - `--reviewers`: comma-separated dimensions (default: `security,performance,architecture`)
+   - `--reviewers`: comma-separated dimensions (default: `security,architecture,testing,maintainability`)
    - `--base-branch`: base branch for diff comparison (default: `main`)
+
+## Reviewer Selection
+
+The default set (`security,architecture,testing,maintainability`) covers most PRs. Add
+reviewers conditionally based on what the PR touches:
+
+| Add reviewer    | When the PR touches                                                             |
+| --------------- | ------------------------------------------------------------------------------- |
+| `performance`   | Hot paths, algorithmic changes, rendering loops, O(n) data structures           |
+| `domain`        | Rules-engine logic: movement, LOS, combat, morale, orders, or SM-specific rules |
+| `accessibility` | Vue UI components, forms, or any user-facing interactive elements               |
+
+To override the defaults, pass `--reviewers` explicitly, e.g.:
+`/team-review #123 --reviewers security,architecture,testing,maintainability,domain`
 
 ## Phase 1: Target Resolution
 
@@ -77,10 +91,38 @@ Orchestrate a multi-reviewer parallel code review where each reviewer focuses on
 2. Send `shutdown_request` to all reviewers
 3. Call `Teammate` cleanup to remove team resources
 
-## Phase 6: Debt Scoring
+## Phase 6: Second-Pass Trigger Check
+
+After the user or implementer fixes review findings, inspect the incremental diff created by those
+fixes. Do **not** automatically rerun a full `/team-review` for every low-risk cleanup. Instead,
+require a targeted second-pass review only when the fix diff touches one or more high-risk surfaces:
+
+- Auth, authorization, sessions, tokens, permissions, or any route that grants access to game state.
+- Persistence, migrations, save/load paths, cache invalidation, or data validation schemas.
+- Shared rules-engine logic, movement, LOS, combat, morale, orders, or other domain-critical paths.
+- Shared Vue stores, composables, editor orchestration, or API/client contract boundaries.
+- More than roughly 300-500 production LOC, or broad multi-file refactors whose behavior is hard to
+  reason about from local tests alone.
+
+If no trigger applies, record: "Second-pass review not required: low-risk/local cleanup only."
+
+If a trigger applies:
+
+1. Run a targeted review of only the incremental fix diff, using the relevant dimensions:
+   - security for auth/session/token/API access changes
+   - architecture for shared boundaries, stores, composables, persistence, or broad refactors
+   - performance for hot paths or algorithmic changes
+   - testing for changed test strategy, fixtures, or coverage gaps
+2. Present any second-pass findings separately from the original findings.
+3. Require each second-pass finding to be either fixed in place or deferred as a debt issue before
+   proceeding.
+4. Record the trigger reason and the second-pass outcome so `/tech-debt-report` can include it.
+
+## Phase 7: Debt Scoring
 
 After findings are presented and the team is shut down, run `/tech-debt-report` to score
-any deferred findings and update the project-wide debt register.
+any deferred findings and update the project-wide debt register. Include the second-pass trigger
+decision and outcome in the context passed to `/tech-debt-report`.
 
 Tell the user:
 

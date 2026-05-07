@@ -26,6 +26,19 @@ npm run test
 
 If any check fails, report the failure and stop. Do not merge broken code.
 
+Confirm the review/debt workflow is complete before asking for merge approval:
+
+- `/team-review` has run for the PR.
+- Review findings were either fixed in place or deferred as GitHub issues.
+- `/tech-debt-report` has been run when there were findings or resolved debt items.
+- If review-fix changes touched auth/session/token/API access, persistence/cache/schema validation,
+  rules-engine/domain-critical paths, shared stores/composables/editor orchestration/API contracts,
+  more than roughly 300-500 production LOC, or a broad multi-file refactor, a targeted second-pass
+  review was completed and its outcome was included in the debt report.
+
+If the second-pass trigger applies and no targeted second-pass review is documented, stop and run
+that review before merging.
+
 > **HUMAN CONTROL POINT 3** — Show the PR title, URL, check results, and squash-merge plan.
 > Wait for the user to reply with an explicit "merge" command before proceeding.
 > If the user does not say "merge", stop here.

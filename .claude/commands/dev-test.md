@@ -78,15 +78,34 @@ grep -i "error" logs/server/$LOG_DATE/server.log 2>/dev/null
 
 Present any server errors alongside the names of the failing tests they may be related to.
 
+## Step 8 — Warning scan
+
+Scan the verbose test log for unexpected warning output. Flag the following as blockers
+equivalent to a test failure unless they are explicitly classified as accepted prototype
+noise in `agentic-quality-rails.md`:
+
+- Lines matching `[Vue warn]:` — Vue component or reactivity warnings
+- Lines matching `UnhandledPromiseRejection` — unhandled async errors
+- Lines matching `console.warn` or `console.error` emitted outside of test assertions
+
+For each flagged warning, report:
+
+- The warning text (first line only)
+- The test file or suite it appeared in
+- Whether it is classified as accepted prototype noise (and the linked issue/track)
+
+Unexpected, unclassified warnings make the run **incomplete** even if all tests pass.
+
 ## Finishing
 
 Output a concise summary:
 
 1. **Results:** X passed, Y failed, Z skipped
-2. **Log:** `logs/test/$DATE/test-$TIME.log`
-3. **Failures:** list of failing test names with file paths (if any)
-4. **Flaky tests:** list of tests that changed state vs. the prior run (if any)
-5. **Server errors:** correlated server log lines (if failures exist)
+2. **Warnings:** list of unexpected warnings found (if any), or "None"
+3. **Log:** `logs/test/$DATE/test-$TIME.log`
+4. **Failures:** list of failing test names with file paths (if any)
+5. **Flaky tests:** list of tests that changed state vs. the prior run (if any)
+6. **Server errors:** correlated server log lines (if failures exist)
 
 Keep test result snapshots in `test-results/` for future flake tracking. They are
 gitignored and accumulate locally.

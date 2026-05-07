@@ -22,6 +22,7 @@
     "dev:oob-editor": "bash scripts/oob-editor.sh",
     "build": "npm run build -w client",
     "validate-data": "node scripts/validate-data.js",
+    "quality:strict": "npm run validate-data && npm run lint && npm run format:check && npm run test && npm run build",
     "test:e2e": "cypress run",
     "test:e2e:coverage": "cross-env CYPRESS_COVERAGE=true cypress run && node scripts/check-e2e-coverage.js"
   },

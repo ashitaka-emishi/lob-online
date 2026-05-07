@@ -80,6 +80,24 @@ Deferred item "{title}" requires a linked GitHub issue before this workflow can 
 Please file the issue and provide the issue number.
 ```
 
+Also confirm the second-pass trigger decision for fixes made after the primary review:
+
+```
+Did the review-fix diff trigger a targeted second-pass review?
+
+Trigger if fixes touched auth/session/token/API access, persistence/cache/schema validation,
+rules-engine/domain-critical paths, shared stores/composables/editor orchestration/API contracts,
+more than roughly 300-500 production LOC, or a broad multi-file refactor.
+
+Answer with one:
+- NOT REQUIRED — low-risk/local cleanup only
+- COMPLETED — second-pass review ran; include trigger reason and outcome
+- REQUIRED BUT NOT DONE — stop here and run the targeted second-pass review first
+```
+
+If the answer is `REQUIRED BUT NOT DONE`, stop immediately and tell the user to run the targeted
+second-pass review before generating the debt report.
+
 ---
 
 ## Step 3 — Score Each Deferred Finding
@@ -123,6 +141,14 @@ Create the file `docs/tech-debt/reports/pr-{number}_{YYYY-MM-DD}.md` with the fo
 ## Fixed Findings
 
 {N} finding(s) fixed in place during this review cycle.
+
+## Second-Pass Review
+
+{NOT REQUIRED / COMPLETED}
+
+{One sentence with the trigger reason and outcome. Example: "Not required — review fixes were
+limited to local test cleanup." Or: "Completed — auth route changes triggered a security second
+pass; no additional findings were deferred."}
 
 ## Deferred Findings
 

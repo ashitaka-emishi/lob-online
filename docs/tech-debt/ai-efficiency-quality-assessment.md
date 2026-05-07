@@ -466,14 +466,19 @@ Effect on numbers:
 4. Create tech-debt issues at the moment debt is accepted.
    - This prevents later archaeology and keeps the debt register synchronized with reality.
 
-5. Separate feature commits from debt/test commits when practical.
+5. Add a targeted second-pass review trigger after review fixes.
+   - Skip full review reruns for low-risk cleanup, but require a targeted second pass when fixes
+     touch auth, persistence, schemas, shared engine paths, shared stores/composables, API
+     contracts, or broad multi-file refactors.
+
+6. Separate feature commits from debt/test commits when practical.
    - Cleaner commit boundaries make future productivity and rework analysis more accurate.
 
-6. Add a production-readiness checklist.
+7. Add a production-readiness checklist.
    - Include auth/security review, data completeness, logging/error policy, backup/restore,
      performance sanity checks, and clean validation output.
 
-7. Track AI rework rate by milestone.
+8. Track AI rework rate by milestone.
    - For each milestone, track feature churn, debt churn, test churn, defects found, and debt left
      open. This is the strongest way to tell whether the AI workflow is improving.
 
