@@ -176,52 +176,62 @@ server/src/engine/actions/
 Fluke Stoppage rolls) and persists once when it reaches an interactive step.
 
 `getValidActions(state, playerId)` returns the list of legal `{ type, payload }` objects for
-the given player given the current state. Used both to populate `validActions` in emissions
-and to validate incoming `game:action` events.
+the given player given the current state. Used both to populate `validActions` in API responses
+and to validate incoming REST actions.
 
 #### 2c. Optimistic Concurrency
 
-Every `saveGame` increments `state.version`. The socket handler checks:
+Every `saveGame` increments `state.version`. The action route checks:
 
 ```js
 if (loaded.state.version !== action.expectedVersion) {
-  socket.emit('game:error', { code: 'VERSION_CONFLICT', message: '...' });
+  res.status(409).json({ error: { code: 'VERSION_CONFLICT', message: '...' } });
   return;
 }
 ```
 
-#### 2d. Socket Handler
+#### 2d. HTTP Action Endpoint + Socket Notifications
 
-`server/src/routes/socket.js` — extends existing socket setup:
+`POST /api/v1/games/:id/actions` is the authoritative action submission path:
 
 ```
-game:join   → load game, emit game:state + validActions for this player
-game:action → load → dispatch → saveGame → io.to(gameId).emit game:state to both players
+load → check expectedVersion → dispatch → saveGame → HTTP response with authoritative state/result
 ```
 
-Both players always receive the full `gameState`. `validActions` is player-scoped (only
-legal actions for the token holder; inactive player receives `[]` except during their
+After a successful action, the route emits `game:state-updated` to the Socket.io game room so
+connected clients can refetch or apply the latest state. Socket.io also owns room membership and
+presence events (`game:join`, `game:leave`, player online/offline notifications). It does not own
+authoritative action submission.
+
+Both players can receive the full `gameState` once authorized. `validActions` is player-scoped
+(only legal actions for the token holder; inactive player receives `[]` except during their
 Activity Phase).
 
 ---
 
-### 3. Socket Event Contract
+### 3. API and Socket Contract
+
+**HTTP:**
+
+| Endpoint                         | Payload                                                      | Response                                   |
+| -------------------------------- | ------------------------------------------------------------ | ------------------------------------------ |
+| `POST /api/v1/games/:id/actions` | `{ type: string, payload: object, expectedVersion: number }` | `{ result: object, gameState: GameState }` |
 
 **Server → Client:**
 
-| Event                | Payload                                            | When                      |
-| -------------------- | -------------------------------------------------- | ------------------------- |
-| `game:state`         | `{ gameState: GameState, validActions: Action[] }` | After any action; on join |
-| `game:error`         | `{ code: string, message: string }`                | Action rejected           |
-| `game:player-joined` | `{ side: 'union'\|'confederate' }`                 | Other player joins        |
-| `game:player-left`   | `{ side: 'union'\|'confederate' }`                 | Other player disconnects  |
+| Event                 | Payload                             | When                            |
+| --------------------- | ----------------------------------- | ------------------------------- |
+| `game:state-updated`  | `{ state, lastAction }`             | After successful REST action    |
+| `game:player-online`  | `{ side: 'union'\|'confederate' }`  | Other player joins socket room  |
+| `game:player-offline` | `{ side: 'union'\|'confederate' }`  | Other player leaves/disconnects |
+| `game:error`          | `{ code: string, message: string }` | Socket room/presence error      |
 
 **Client → Server:**
 
-| Event         | Payload                                                      | When                  |
-| ------------- | ------------------------------------------------------------ | --------------------- |
-| `game:join`   | `{ gameId: string, sideToken: string }`                      | On game view mount    |
-| `game:action` | `{ type: string, payload: object, expectedVersion: number }` | Player submits action |
+| Event        | Payload                                 | When               |
+| ------------ | --------------------------------------- | ------------------ |
+| `game:join`  | `{ gameId: string, sideToken: string }` | On game view mount |
+| `game:leave` | `{ gameId: string }`                    | On game view leave |
 
 ---
 
@@ -238,11 +248,12 @@ const gameState = ref(null); // full GameState, null until joined
 const validActions = ref([]); // Action[] from server, player-scoped
 const pendingAction = ref(null); // action submitted, awaiting ack
 
-// socket.on('game:state') → replace both gameState and validActions atomically
-// game:action submit → set pendingAction; clear on ack or nack
+// socket.on('game:state-updated') → refetch/apply latest state
+// POST action submit → set pendingAction; clear on response/error
 ```
 
-One store, full-replace on every `game:state` emission. No client-side game logic.
+One store, full-replace on initial load, REST action responses, or `game:state-updated` refresh.
+No client-side game logic.
 
 #### 4b. GameView Layout
 
@@ -285,7 +296,8 @@ client/src/components/game/
 - `server/src/engine/actions/activateStack.js` — new (M5 stub)
 - `server/src/engine/actions/endActivation.js` — new
 - `server/src/engine/actions/*.test.js` — unit tests for each handler
-- `server/src/routes/socket.js` — extend with game:join + game:action handlers
+- `server/src/routes/games.js` — add POST action route
+- `server/src/server.js` or socket helper — add game room/presence notifications
 
 **Client:**
 
@@ -335,8 +347,7 @@ None.
 
 ## Issues
 
-- #??? — Apply M5 schema changes (9 additions to gameState.schema.js + tests)
-- #??? — Implement server phase engine (dispatch, getValidActions, action handlers)
-- #??? — Extend socket.js with game:join and game:action handlers
-- #??? — Build Vue GameView (MapCanvas, ActionPanel, InfoPanel, UnitCounter)
-- #??? — Wire Pinia useGameStore to socket events
+- #354 — Apply M5 schema changes (9 additions to gameState.schema.js + tests)
+- #355 — Implement server phase engine (dispatch, getValidActions, action handlers)
+- #356 — Add game action endpoint and socket room notifications
+- #357 — Detail GameView component architecture and split UI tickets
