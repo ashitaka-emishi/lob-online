@@ -49,6 +49,23 @@ Transform the component name:
 5. Truncate to 40 characters
 6. Strip leading/trailing hyphens
 
+### Rules consultation (game components only)
+
+Before drafting any component that touches game rules — orders, movement, combat, morale,
+turn structure, victory conditions, or any LOB/SM rule section — **always consult the
+`domain-expert` agent first**. Do not make rules-based design recommendations from the HLD
+summary or code comments alone; the domain expert is the authoritative source.
+
+Invoke via:
+
+```js
+Agent({ subagent_type: 'domain-expert', prompt: '...' });
+```
+
+Ask specific, scoped questions: which command levels hold orders, how a particular phase
+sequence works, SM overrides, etc. Incorporate the ruling into the design before asking the
+engineer for feedback.
+
 ---
 
 ## Step 2 — Draft the design document
