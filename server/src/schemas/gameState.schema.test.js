@@ -5,6 +5,7 @@ import {
   UnitStateSchema,
   MoraleState,
   OrderType,
+  UnitOrderState,
   AmmoState,
 } from './gameState.schema.js';
 
@@ -14,10 +15,11 @@ const BASE_UNIT = {
   facing: 0,
   moraleState: 'normal',
   wrecked: false,
-  orders: 'move',
+  orders: { type: 'move', status: 'accepted', deliveryTurnDue: null },
   ammo: 'full',
   isOnBoard: true,
   entryTurn: null,
+  isDetached: false,
 };
 
 const BASE_GAME_STATE = {
@@ -43,7 +45,7 @@ describe('UnitStateSchema', () => {
     expect(UnitStateSchema.safeParse(unit).success).toBe(true);
   });
 
-  it('accepts orders: null (no accepted order)', () => {
+  it('accepts orders: null (non-order-holding unit — inherits from parent division)', () => {
     const unit = { ...BASE_UNIT, orders: null };
     expect(UnitStateSchema.safeParse(unit).success).toBe(true);
   });
@@ -70,15 +72,28 @@ describe('UnitStateSchema', () => {
     );
   });
 
-  it('rejects invalid orders value', () => {
+  it('rejects orders as a raw string (must be UnitOrderState object or null)', () => {
+    expect(UnitStateSchema.safeParse({ ...BASE_UNIT, orders: 'move' }).success).toBe(false);
     expect(UnitStateSchema.safeParse({ ...BASE_UNIT, orders: 'complexDefense' }).success).toBe(
       false
     );
-    expect(UnitStateSchema.safeParse({ ...BASE_UNIT, orders: 'none' }).success).toBe(false);
   });
 
   it('rejects invalid ammo value', () => {
     expect(UnitStateSchema.safeParse({ ...BASE_UNIT, ammo: 'depleted' }).success).toBe(false);
+  });
+
+  it('accepts isDetached: true (detached brigade)', () => {
+    expect(UnitStateSchema.safeParse({ ...BASE_UNIT, isDetached: true }).success).toBe(true);
+  });
+
+  it('rejects missing isDetached field', () => {
+    const { isDetached: _d, ...noDetached } = BASE_UNIT;
+    expect(UnitStateSchema.safeParse(noDetached).success).toBe(false);
+  });
+
+  it('rejects non-boolean isDetached', () => {
+    expect(UnitStateSchema.safeParse({ ...BASE_UNIT, isDetached: 'true' }).success).toBe(false);
   });
 });
 
@@ -110,12 +125,69 @@ describe('OrderType enum', () => {
     expect(OrderType.safeParse('move').success).toBe(true);
   });
 
-  it('accepts null (no accepted order — LOB §10.8a)', () => {
+  it('accepts null (no current order in pipeline — LOB §10.4a–b)', () => {
     expect(OrderType.safeParse(null).success).toBe(true);
   });
 
   it('rejects complexDefense (not a LOB v2.0 order type)', () => {
     expect(OrderType.safeParse('complexDefense').success).toBe(false);
+  });
+});
+
+describe('UnitOrderState', () => {
+  it('accepts an accepted order with no delivery turn', () => {
+    expect(
+      UnitOrderState.safeParse({ type: 'attack', status: 'accepted', deliveryTurnDue: null })
+        .success
+    ).toBe(true);
+  });
+
+  it('accepts a delayed order with a delivery turn set', () => {
+    expect(
+      UnitOrderState.safeParse({ type: 'move', status: 'delay', deliveryTurnDue: 3 }).success
+    ).toBe(true);
+  });
+
+  it('accepts no-order state (type null, status none, deliveryTurnDue null)', () => {
+    expect(
+      UnitOrderState.safeParse({ type: null, status: 'none', deliveryTurnDue: null }).success
+    ).toBe(true);
+  });
+
+  it('rejects delay status without a deliveryTurnDue (LOB §10.6a)', () => {
+    expect(
+      UnitOrderState.safeParse({ type: 'attack', status: 'delay', deliveryTurnDue: null }).success
+    ).toBe(false);
+  });
+
+  it('rejects none status with a non-null type', () => {
+    expect(
+      UnitOrderState.safeParse({ type: 'move', status: 'none', deliveryTurnDue: null }).success
+    ).toBe(false);
+  });
+
+  it('rejects accepted status with a non-null deliveryTurnDue (LOB §10.6a)', () => {
+    expect(
+      UnitOrderState.safeParse({ type: 'move', status: 'accepted', deliveryTurnDue: 5 }).success
+    ).toBe(false);
+  });
+
+  it('rejects accepted status with a null type (LOB §10.4a–b)', () => {
+    expect(
+      UnitOrderState.safeParse({ type: null, status: 'accepted', deliveryTurnDue: null }).success
+    ).toBe(false);
+  });
+
+  it('rejects delay status with a null type (LOB §10.4a–b)', () => {
+    expect(
+      UnitOrderState.safeParse({ type: null, status: 'delay', deliveryTurnDue: 3 }).success
+    ).toBe(false);
+  });
+
+  it('rejects none status with a non-null deliveryTurnDue', () => {
+    expect(
+      UnitOrderState.safeParse({ type: null, status: 'none', deliveryTurnDue: 2 }).success
+    ).toBe(false);
   });
 });
 

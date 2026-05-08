@@ -1,11 +1,14 @@
 import { GameStateSchema } from '../schemas/gameState.schema.js';
 
-// LOB §10.4b — "none" in scenario setup data = no accepted order (§10.8a)
+// LOB §10.3 — artillery and non-order-holding units have null orders; effective behavior is §10.8a
+// LOB §10.6 — scenario setup orders are treated as already accepted at turn 1; they represent
+//   the pre-game historical posture and bypass the order-delivery pipeline
 // LOB_GAME_UPDATES SM section — "complexDefense" replaced by "move"
+// Returns a UnitOrderState object for order-holding units, or null for non-order-holding units.
 function mapOrder(rawOrder) {
   if (rawOrder === 'none' || rawOrder == null) return null;
-  if (rawOrder === 'complexDefense') return 'move';
-  return rawOrder;
+  const type = rawOrder === 'complexDefense' ? 'move' : rawOrder;
+  return { type, status: 'accepted', deliveryTurnDue: null };
 }
 
 // Convert "HH:MM" time string to turn number relative to scenario firstTurn
@@ -16,7 +19,7 @@ function timeToTurn(timeStr, firstTurnTime, minutesPerTurn) {
   return Math.floor(minutesSinceStart / minutesPerTurn) + 1;
 }
 
-function defaultUnit(id, hex, orderRaw, isOnBoard, entryTurn) {
+function defaultUnit(id, hex, orderRaw, isOnBoard, entryTurn, isDetached = false) {
   return {
     id,
     hex: hex ?? null,
@@ -26,12 +29,14 @@ function defaultUnit(id, hex, orderRaw, isOnBoard, entryTurn) {
     moraleState: 'normal',
     // LOB §5.7 — Wrecked Status: separate from morale
     wrecked: false,
-    // LOB §10.4a–b — order mapped from scenario setup data
+    // LOB §10.6 — order state mapped from scenario setup data; null = inherits from parent division
     orders: mapOrder(orderRaw),
     // LOB §8.2b — Ammo: full at start
     ammo: 'full',
     isOnBoard,
     entryTurn: entryTurn ?? null,
+    // SM detachment rules — false at init; set true by dispatch when a brigade is detached
+    isDetached,
   };
 }
 

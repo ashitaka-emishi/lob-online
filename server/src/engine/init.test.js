@@ -43,6 +43,10 @@ const SCENARIO = {
         order: 'move',
         units: ['gb-anderson', '2nc'],
       },
+      // attack order — exercises LOB §10.4a path in mapOrder
+      { unitId: 'test-attack', hex: '25.20', order: 'attack' },
+      // complexDefense legacy token — LOB_GAME_UPDATES SM section maps to 'move'
+      { unitId: 'test-complex', hex: '26.20', order: 'complexDefense' },
     ],
   },
   reinforcements: {
@@ -136,10 +140,36 @@ describe('initGameState — CSA fixed-hex placement', () => {
     expect(units['23ga'].hex).toBe('30.21');
   });
 
-  it('maps setup order "move" → orders: "move"', () => {
+  it('maps setup order "move" → accepted UnitOrderState with type move', () => {
     const { units } = initGameState(SCENARIO, 'g1');
-    expect(units['5va-cav'].orders).toBe('move');
-    expect(units['colquitt'].orders).toBe('move');
+    expect(units['5va-cav'].orders).toEqual({
+      type: 'move',
+      status: 'accepted',
+      deliveryTurnDue: null,
+    });
+    expect(units['colquitt'].orders).toEqual({
+      type: 'move',
+      status: 'accepted',
+      deliveryTurnDue: null,
+    });
+  });
+
+  it('maps setup order "attack" → accepted UnitOrderState with type attack (LOB §10.4a)', () => {
+    const { units } = initGameState(SCENARIO, 'g1');
+    expect(units['test-attack'].orders).toEqual({
+      type: 'attack',
+      status: 'accepted',
+      deliveryTurnDue: null,
+    });
+  });
+
+  it('maps legacy "complexDefense" → accepted UnitOrderState with type move (LOB_GAME_UPDATES SM)', () => {
+    const { units } = initGameState(SCENARIO, 'g1');
+    expect(units['test-complex'].orders).toEqual({
+      type: 'move',
+      status: 'accepted',
+      deliveryTurnDue: null,
+    });
   });
 });
 
@@ -176,6 +206,30 @@ describe('initGameState — default unit fields', () => {
       expect(units[id].ammo, id).toBe('full');
       expect(units[id].facing, id).toBe(0);
       expect(units[id].entryTurn, id).toBeNull();
+    }
+  });
+
+  it('all at-start units default to isDetached: false', () => {
+    const { units } = initGameState(SCENARIO, 'g1');
+    const atStartIds = ['5va-cav', 'pelham-a', 'colquitt', '23ga', 'pleasonton', 'gb-anderson'];
+    for (const id of atStartIds) {
+      expect(units[id].isDetached, id).toBe(false);
+    }
+  });
+
+  it('all reinforcement units default to isDetached: false', () => {
+    const { units } = initGameState(SCENARIO, 'g1');
+    for (const id of ['cox', 'willcox', 'ripley', 'dr-jones']) {
+      expect(units[id].isDetached, id).toBe(false);
+    }
+  });
+
+  it('init never produces a delay or none status order (all orders are pre-accepted at setup)', () => {
+    const { units } = initGameState(SCENARIO, 'g1');
+    for (const u of Object.values(units)) {
+      if (u.orders !== null) {
+        expect(u.orders.status, u.id).toBe('accepted');
+      }
     }
   });
 });
