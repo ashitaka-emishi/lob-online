@@ -58,7 +58,6 @@ const HANDLERS = {
 export function drainAutoSteps(state) {
   let s = state;
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const { phase, step } = s;
 
