@@ -171,14 +171,14 @@ Run all closeout gates, open PR, and close issue #355.
 
 - [x] Task 5.1: `npm run quality:strict` — all 5 gates pass.
 - [x] Task 5.2: No unexpected warnings in test output (pre-existing console noise unchanged).
-- [ ] Task 5.3: Run `/pr-create` to write devlog entry and open the PR on GitHub.
+- [x] Task 5.3: Run `/pr-create` to write devlog entry and open the PR on GitHub.
 - [ ] Task 5.4: After PR merges, run `/issue-close 355` to post a merge summary comment and
       close the issue.
 
 ### Verification
 
 - [x] All quality gates green.
-- [ ] PR opened via `/pr-create`.
+- [x] PR opened via `/pr-create`. → [PR #375](https://github.com/ashitaka-emishi/lob-online/pull/375)
 - [ ] Issue #355 closed with merge comment.
 
 ---
