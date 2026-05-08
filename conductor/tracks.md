@@ -96,4 +96,6 @@
 
 | [x] | agentic-quality-rails_20260506 | Agentic Quality Rails — Conductor Workflow Hardening | 2026-05-06 | 2026-05-06 |
 
+| [x] | m5-schema-prereqs_20260507 | M5 Schema Prerequisites — UnitOrderState + isDetached | 2026-05-07 | 2026-05-08 |
+
 <!-- Tracks registered by /conductor:new-track -->
