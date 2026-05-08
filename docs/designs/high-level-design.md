@@ -23,7 +23,7 @@
 
 ---
 
-> **Implementation Status (as of 2026-04-27) — M3 Complete**
+> **Implementation Status (as of 2026-05-08) — M4 Complete**
 >
 > **M1 — Scaffold (complete):** tech stack selection, server scaffold (Express + Socket.io),
 > data models (five JSON files: map, scenario, oob, leaders, succession), Zod validation schemas,
@@ -45,11 +45,18 @@
 > with movement path, movement range, hex inspector, LOS, and command range panels; Table
 > Test Tool (`/tools/table-test`) with all 11 table panels and modifier breakdowns.
 >
+> **M4 — Game State Model + Session + Persistence (complete):** `GameStateSchema` +
+> `UnitStateSchema` Zod schemas; `initGameState()` engine (reads `scenario.json` setup data,
+> pre-queues reinforcements); `gameFile` (JSON) and `gameSqlite` (SQLite) persistence stores;
+> games API routes with express-session auth; `LobbyView` + `useLobbyStore` client UI;
+> join/create/list endpoints with sideToken session guards.
+>
+> **M5 — Turn Structure, Orders, and Game Map UI (in progress):** schema prerequisites
+> landed (PR #359): `UnitOrderState` with cross-field Zod refinements, `isDetached` field.
+> Remaining M5 work: order-delivery pipeline, turn-phase sequencing, game map UI component.
+>
 > **In progress:** South Mountain scenario data digitization (841 hexes, turn structure,
 > setup zones, reinforcements, initial orders — ongoing refinement throughout development).
->
-> **Next:** M4 — Game State Model + Initializer + Initial Setup Phase (see §2 for full
-> milestone plan).
 >
 > Sections describing completed work are accurate to the implementation. Sections describing
 > planned work reflect design intent and may evolve.

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **lob-online** is an online game implementation of the _Line of Battle v2.0_ wargame system (Multi-Man Publishing). The first game being implemented is _South Mountain_ (RSS #4), chosen because it is a smaller, more tractable battle.
 
-**Current state:** M3 complete. Rules engine foundation delivered (`engine/hex.js`, `scenario.js`, `movement.js`, `los.js`, `command-range.js`) with full Vitest coverage and rule-reference comments throughout. All LOB v2.0 game tables implemented in `engine/tables/`. Two validation tools live: Map Test Tool (`/tools/map-test`) and Table Test Tool (`/tools/table-test`). Starting M4 — game state model, game state initializer (reads `scenario.json` setup data), initial setup phase, minimal "pick a side" session, and file persistence. See `docs/designs/high-level-design.md` §2 for the M4–M8 milestone plan.
+**Current state:** M4 complete. Rules engine foundation (`engine/hex.js`, `scenario.js`, `movement.js`, `los.js`, `command-range.js`), all LOB v2.0 game tables (`engine/tables/`), and four dev tools (Map Test, Table Test, Map Editor, OOB Editor) delivered. M4 added: `GameStateSchema` + `UnitStateSchema` Zod schemas, `initGameState()` engine (reads `scenario.json` setup data), `gameFile`/`gameSqlite` persistence stores, games API routes with express-session, and `LobbyView` + `useLobbyStore`. Starting M5 — turn structure, order system, and game map UI. M5 schema prerequisites landed in PR #359: `UnitOrderState` schema with cross-field refinements, `isDetached` field on `UnitStateSchema`. See `docs/designs/high-level-design.md` §2 for the M5–M8 milestone plan.
 
 ## Reference Library
 
