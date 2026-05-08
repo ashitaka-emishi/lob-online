@@ -7,6 +7,8 @@ import {
   OrderType,
   UnitOrderState,
   AmmoState,
+  LeaderStateSchema,
+  PendingResolutionSchema,
 } from './gameState.schema.js';
 
 const BASE_UNIT = {
@@ -28,11 +30,18 @@ const BASE_GAME_STATE = {
   version: 0,
   turn: 1,
   phase: null,
+  activePlayer: null,
+  step: null,
+  completedSteps: [],
   initiative: null,
   sides: { union: 'token-union-abc', confederate: null },
   units: { 'test-unit': BASE_UNIT },
   reinforcementQueue: [],
   status: 'setup',
+  leaderState: {},
+  pendingResolution: null,
+  activityPhase: null,
+  ordersPhase: null,
 };
 
 describe('UnitStateSchema', () => {
@@ -154,6 +163,21 @@ describe('UnitOrderState', () => {
     ).toBe(true);
   });
 
+  it('accepts stopped status with a non-null type (LOB §10.6b — Attack Recovery)', () => {
+    expect(
+      UnitOrderState.safeParse({ type: 'attack', status: 'stopped', deliveryTurnDue: null }).success
+    ).toBe(true);
+    expect(
+      UnitOrderState.safeParse({ type: 'move', status: 'stopped', deliveryTurnDue: null }).success
+    ).toBe(true);
+  });
+
+  it('rejects stopped status with a null type (stopped order must retain its type — LOB §10.6b)', () => {
+    expect(
+      UnitOrderState.safeParse({ type: null, status: 'stopped', deliveryTurnDue: null }).success
+    ).toBe(false);
+  });
+
   it('rejects delay status without a deliveryTurnDue (LOB §10.6a)', () => {
     expect(
       UnitOrderState.safeParse({ type: 'attack', status: 'delay', deliveryTurnDue: null }).success
@@ -191,6 +215,55 @@ describe('UnitOrderState', () => {
   });
 });
 
+describe('LeaderStateSchema', () => {
+  it('accepts a valid leader state (no casualty, no successor)', () => {
+    expect(
+      LeaderStateSchema.safeParse({ casualtyRollPending: false, replacedBy: null }).success
+    ).toBe(true);
+  });
+
+  it('accepts a leader state with casualty roll pending and successor', () => {
+    expect(
+      LeaderStateSchema.safeParse({ casualtyRollPending: true, replacedBy: 'mcclellan' }).success
+    ).toBe(true);
+  });
+
+  it('rejects missing casualtyRollPending', () => {
+    expect(LeaderStateSchema.safeParse({ replacedBy: null }).success).toBe(false);
+  });
+
+  it('rejects non-boolean casualtyRollPending', () => {
+    expect(
+      LeaderStateSchema.safeParse({ casualtyRollPending: 'yes', replacedBy: null }).success
+    ).toBe(false);
+  });
+});
+
+describe('PendingResolutionSchema', () => {
+  it('accepts a valid looseCannonRoll resolution', () => {
+    expect(
+      PendingResolutionSchema.safeParse({ type: 'looseCannonRoll', context: { leaderId: 'cox' } })
+        .success
+    ).toBe(true);
+  });
+
+  it('accepts all valid resolution types', () => {
+    for (const type of ['looseCannonRoll', 'variableReinforcement', 'leaderCasualty']) {
+      expect(PendingResolutionSchema.safeParse({ type, context: {} }).success).toBe(true);
+    }
+  });
+
+  it('rejects unknown resolution type', () => {
+    expect(PendingResolutionSchema.safeParse({ type: 'combatResult', context: {} }).success).toBe(
+      false
+    );
+  });
+
+  it('rejects missing context', () => {
+    expect(PendingResolutionSchema.safeParse({ type: 'looseCannonRoll' }).success).toBe(false);
+  });
+});
+
 describe('GameStateSchema', () => {
   it('accepts a valid full game state', () => {
     const state = {
@@ -210,19 +283,75 @@ describe('GameStateSchema', () => {
     expect(GameStateSchema.safeParse(state).success).toBe(true);
   });
 
-  it('accepts active status with initiative set', () => {
-    const state = { ...BASE_GAME_STATE, status: 'active', phase: 'movement', initiative: 'union' };
+  it('accepts active status with phase and activePlayer set', () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      status: 'active',
+      phase: 'command',
+      activePlayer: 'union',
+      step: 'orders',
+      ordersPhase: { leaderRollUsed: {} },
+      initiative: 'union',
+    };
     expect(GameStateSchema.safeParse(state).success).toBe(true);
   });
 
   it('accepts complete status with a non-null phase', () => {
-    const state = { ...BASE_GAME_STATE, status: 'complete', phase: 'recovery', turn: 45 };
+    const state = {
+      ...BASE_GAME_STATE,
+      status: 'complete',
+      phase: 'rally',
+      activePlayer: 'confederate',
+      step: 'rally',
+      turn: 45,
+    };
+    expect(GameStateSchema.safeParse(state).success).toBe(true);
+  });
+
+  it('accepts activity phase with activityPhase envelope set', () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      status: 'active',
+      phase: 'activity',
+      activePlayer: 'union',
+      step: 'activation',
+      activityPhase: { activatedUnits: ['colquitt'] },
+    };
+    expect(GameStateSchema.safeParse(state).success).toBe(true);
+  });
+
+  it('accepts leaderState record with per-leader entries', () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      leaderState: {
+        cox: { casualtyRollPending: true, replacedBy: null },
+        mcclellan: { casualtyRollPending: false, replacedBy: 'burnside' },
+      },
+    };
+    expect(GameStateSchema.safeParse(state).success).toBe(true);
+  });
+
+  it('accepts non-null pendingResolution', () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      pendingResolution: { type: 'looseCannonRoll', context: { leaderId: 'cox' } },
+    };
     expect(GameStateSchema.safeParse(state).success).toBe(true);
   });
 
   it('rejects missing required fields', () => {
     const { id: _id, ...noId } = BASE_GAME_STATE;
     expect(GameStateSchema.safeParse(noId).success).toBe(false);
+  });
+
+  it('rejects missing completedSteps', () => {
+    const { completedSteps: _cs, ...noCs } = BASE_GAME_STATE;
+    expect(GameStateSchema.safeParse(noCs).success).toBe(false);
+  });
+
+  it('rejects missing leaderState', () => {
+    const { leaderState: _ls, ...noLs } = BASE_GAME_STATE;
+    expect(GameStateSchema.safeParse(noLs).success).toBe(false);
   });
 
   it('requires a version field (integer ≥ 0) for optimistic concurrency (#332)', () => {
@@ -251,8 +380,7 @@ describe('GameStateSchema', () => {
 
   it('rejects non-null phase when status is setup — cross-field constraint (#ARCH-M1)', () => {
     expect(
-      GameStateSchema.safeParse({ ...BASE_GAME_STATE, status: 'setup', phase: 'initiative' })
-        .success
+      GameStateSchema.safeParse({ ...BASE_GAME_STATE, status: 'setup', phase: 'command' }).success
     ).toBe(false);
   });
 
@@ -268,6 +396,12 @@ describe('GameStateSchema', () => {
     );
   });
 
+  it('rejects invalid activePlayer value', () => {
+    expect(GameStateSchema.safeParse({ ...BASE_GAME_STATE, activePlayer: 'neutral' }).success).toBe(
+      false
+    );
+  });
+
   it('rejects turn < 1', () => {
     expect(GameStateSchema.safeParse({ ...BASE_GAME_STATE, turn: 0 }).success).toBe(false);
   });
@@ -276,6 +410,38 @@ describe('GameStateSchema', () => {
     const state = {
       ...BASE_GAME_STATE,
       reinforcementQueue: [{ unitId: 'foo', turn: 3, entryHex: 'bad-hex' }],
+    };
+    expect(GameStateSchema.safeParse(state).success).toBe(false);
+  });
+
+  it('rejects invalid leaderState entry (non-boolean casualtyRollPending)', () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      leaderState: { cox: { casualtyRollPending: 'yes', replacedBy: null } },
+    };
+    expect(GameStateSchema.safeParse(state).success).toBe(false);
+  });
+
+  it('rejects invalid pendingResolution type', () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      pendingResolution: { type: 'unknownType', context: {} },
+    };
+    expect(GameStateSchema.safeParse(state).success).toBe(false);
+  });
+
+  it('rejects activityPhase with non-array activatedUnits', () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      activityPhase: { activatedUnits: 'colquitt' },
+    };
+    expect(GameStateSchema.safeParse(state).success).toBe(false);
+  });
+
+  it('rejects ordersPhase with non-record leaderRollUsed', () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      ordersPhase: { leaderRollUsed: ['cox'] },
     };
     expect(GameStateSchema.safeParse(state).success).toBe(false);
   });

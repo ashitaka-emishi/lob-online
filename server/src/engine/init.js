@@ -146,12 +146,20 @@ export function initGameState(scenario, gameId) {
     scenarioId: scenario.id,
     version: 0,
     turn: 1,
+    // LOB §2.1 — null until game starts (status: 'setup')
     phase: null,
+    activePlayer: null,
+    step: null,
+    completedSteps: [],
     initiative: null,
     sides: { union: null, confederate: null },
     units,
     reinforcementQueue,
     status: 'setup',
+    leaderState: {},
+    pendingResolution: null,
+    activityPhase: null,
+    ordersPhase: null,
   };
 
   return GameStateSchema.parse(state);
