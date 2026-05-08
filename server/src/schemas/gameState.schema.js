@@ -104,9 +104,21 @@ export const GameStateSchema = z
     // Non-null when a mid-step interrupt requires a dice roll or player decision before the step completes
     pendingResolution: PendingResolutionSchema.nullable(),
     // LOB §3.0d — non-null only during Activity Phase; tracks stacks that have completed activation this phase
-    activityPhase: z.object({ activatedUnits: z.array(z.string()) }).nullable(),
-    // LOB §10.6 — non-null only during Orders step of Command Phase; tracks Command Rolls used per leader this turn
-    ordersPhase: z.object({ leaderRollUsed: z.record(z.string(), z.boolean()) }).nullable(),
+    // currentActivation: hex of the stack currently mid-activation; null when no activation in progress
+    activityPhase: z
+      .object({
+        activatedUnits: z.array(z.string()),
+        currentActivation: z.string().nullable(),
+      })
+      .nullable(),
+    // LOB §10.6 — non-null only during Orders step of Command Phase
+    // pendingOrderIssuance: set after a successful ROLL_INITIATIVE; cleared by ISSUE_ORDER
+    ordersPhase: z
+      .object({
+        leaderRollUsed: z.record(z.string(), z.boolean()),
+        pendingOrderIssuance: z.object({ leaderId: z.string(), unitId: z.string() }).nullable(),
+      })
+      .nullable(),
   })
   .refine((data) => (data.status === 'setup') === (data.phase === null), {
     message: "phase must be null when status is 'setup', and non-null otherwise",

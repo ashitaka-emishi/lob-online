@@ -1,0 +1,63 @@
+import { ActionError } from './actionError.js';
+
+// LOB §2.1 — END_PHASE advances the turn sequence from the current interactive step.
+// drainAutoSteps() in index.js handles all subsequent automatic steps.
+export function handleEndPhase(state, _action) {
+  const { phase, step } = state;
+
+  // Command phase → end Orders step; drainAutoSteps handles attackRecovery → flukeStoppage → activity
+  if (phase === 'command' && step === 'orders') {
+    return {
+      ...state,
+      step: 'attackRecovery',
+      completedSteps: [...state.completedSteps, 'orders'],
+      ordersPhase: null,
+    };
+  }
+
+  // Activity phase → end a player's activation turn (LOB §2.1 — activity ends per player)
+  if (phase === 'activity' && step === 'activation') {
+    // LOB §3.0d — cannot end phase while a stack is mid-activation
+    if (state.activityPhase?.currentActivation !== null) {
+      throw new ActionError(
+        'INVALID_ACTION',
+        'Cannot end the activation phase while a stack is mid-activation'
+      );
+    }
+
+    const currentSide = state.activePlayer;
+    const otherSide = currentSide === 'union' ? 'confederate' : 'union';
+    const doneKey = `activation-${currentSide}`;
+    const updatedCompleted = [...state.completedSteps, doneKey];
+
+    // Check whether the other player has already had their activation this turn
+    const otherKey = `activation-${otherSide}`;
+    const bothDone = updatedCompleted.includes(otherKey);
+
+    if (bothDone) {
+      // LOB §2.1 — both players completed their activation → Rally Phase
+      // Restore activePlayer to the turn's original first player so drainAutoSteps flips correctly
+      return {
+        ...state,
+        phase: 'rally',
+        step: 'rally',
+        completedSteps: [],
+        activePlayer: otherSide,
+        activityPhase: null,
+      };
+    }
+
+    // LOB §2.1 — first player done → second player gets their activation
+    return {
+      ...state,
+      completedSteps: updatedCompleted,
+      activePlayer: otherSide,
+      activityPhase: { activatedUnits: [], currentActivation: null },
+    };
+  }
+
+  throw new ActionError(
+    'INVALID_ACTION',
+    `END_PHASE is not valid in phase '${phase}', step '${step}'`
+  );
+}

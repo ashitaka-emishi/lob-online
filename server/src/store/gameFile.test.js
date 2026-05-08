@@ -118,7 +118,7 @@ describe('loadGame', () => {
       leaderState: {},
       pendingResolution: null,
       activityPhase: null,
-      ordersPhase: { leaderRollUsed: {} },
+      ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
     };
     await saveGame('game2', state, tmpDir);
     const loaded = await loadGame('game2', tmpDir);

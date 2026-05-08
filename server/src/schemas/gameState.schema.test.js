@@ -290,7 +290,7 @@ describe('GameStateSchema', () => {
       phase: 'command',
       activePlayer: 'union',
       step: 'orders',
-      ordersPhase: { leaderRollUsed: {} },
+      ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
       initiative: 'union',
     };
     expect(GameStateSchema.safeParse(state).success).toBe(true);
@@ -315,7 +315,7 @@ describe('GameStateSchema', () => {
       phase: 'activity',
       activePlayer: 'union',
       step: 'activation',
-      activityPhase: { activatedUnits: ['colquitt'] },
+      activityPhase: { activatedUnits: ['colquitt'], currentActivation: null },
     };
     expect(GameStateSchema.safeParse(state).success).toBe(true);
   });
