@@ -58,6 +58,7 @@ Navigation hub for project context.
 | [pre-m5-debt-sprint_20260505](./tracks/pre-m5-debt-sprint_20260505/index.md) | Pre-M5 Debt Sprint — Score ≥ 3 Findings from PR #328 | Pending |
 | [agentic-quality-rails_20260506](./tracks/agentic-quality-rails_20260506/index.md) | Agentic Quality Rails — Conductor Workflow Hardening | Complete |
 | [m5-schema-prereqs_20260507](./tracks/m5-schema-prereqs_20260507/index.md) | M5 Schema Prerequisites — UnitOrderState + isDetached | Pending |
+| [m5-phase-engine_20260508](./tracks/m5-phase-engine_20260508/index.md) | M5 Phase Engine — Turn Reducer and Valid Actions | Pending |
 
 ## Getting Started
 

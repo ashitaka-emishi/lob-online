@@ -110,17 +110,14 @@ export signatures but no logic yet.
 
 ### Tasks
 
-- [ ] Task 2.1: Create `server/src/engine/actions/index.js` with: - `ActionError` class extending `Error` with `code` and `message` properties. - Exported stub `dispatch(state, action)` that throws `ActionError{ code: 'NOT_IMPLEMENTED' }`. - Exported stub `getValidActions(state, playerSide)` that returns `[]`.
-- [ ] Task 2.2: Create skeleton files with comment-only bodies: - `server/src/engine/actions/endPhase.js` — exports `handleEndPhase(state, action)` - `server/src/engine/actions/issueOrder.js` — exports `handleIssueOrder(state, action)` and
-      `handleRollInitiative(state, action)` - `server/src/engine/actions/activateStack.js` — exports `handleActivateStack(state, action)` - `server/src/engine/actions/endActivation.js` — exports `handleEndActivation(state, action)`
-- [ ] Task 2.3: Create `server/src/engine/actions/index.test.js` with the test skeleton:
-      scaffolding for dispatch-rejects-invalid-action, getValidActions-returns-empty-outside-active
-      tests (not yet passing — will be filled in Phase 3).
+- [x] Task 2.1: Create `server/src/engine/actions/index.js` with `ActionError`, `dispatch`, `getValidActions` stubs.
+- [x] Task 2.2: Create `actionError.js`, `endPhase.js`, `issueOrder.js`, `activateStack.js`, `endActivation.js` with full implementations.
+- [x] Task 2.3: Create `index.test.js` with full test coverage.
 
 ### Verification
 
-- [ ] All new files present and ESLint-clean (no import errors).
-- [ ] `npm run lint` passes.
+- [x] All new files present and ESLint-clean (no import errors).
+- [x] `npm run lint` passes.
 
 ---
 
@@ -131,25 +128,15 @@ functions are the entire public surface of the action engine.
 
 ### Tasks
 
-- [ ] Task 3.1: Implement `drainAutoSteps(state)` in `index.js`: - Rally phase step `'rally'` is automatic — immediately advance to next turn Command. - Attack Recovery step `'attackRecovery'` is automatic at M5 depth (no stopped orders
-      in initial state) — advance to Fluke Stoppage. - Fluke Stoppage step `'flukeStoppage'` is automatic at M5 depth — advance to Activity. - Return updated state; do not mutate input.
-- [ ] Task 3.2: Implement `getValidActions(state, playerSide)`: - Returns `[]` if `state.status !== 'active'`. - Returns `[]` if `state.activePlayer !== playerSide` (except Activity Phase inactive
-      player rule — out of M5 scope, so just enforce active-player-only for now). - Returns `[]` if `state.pendingResolution !== null`. - Command phase, orders step: returns `[{ type: 'ROLL_INITIATIVE', payload: { leaderId } }]`
-      for each eligible leader not yet rolled this step. - Command phase, orders step (after roll): returns `[{ type: 'ISSUE_ORDER', payload: ... }]`
-      if a roll succeeded and an order has not yet been issued. - Activity phase, activation step: returns `[{ type: 'ACTIVATE_STACK', payload: { hex } }]`
-      for non-activated stacks + `[{ type: 'END_PHASE' }]` when activation step can end. - Any interactive step: always includes `{ type: 'END_PHASE' }` as a legal escape when
-      the active player may advance the phase. - Include LOB rule citations on each conditional branch.
-- [ ] Task 3.3: Implement `dispatch(state, action)`: 1. Validate `action` is in `getValidActions(state, action.playerId)` — throw
-      `ActionError{ code: 'INVALID_ACTION', message: '...' }` if not found. 2. Route `action.type` to the appropriate handler imported from handler files. 3. Call `drainAutoSteps(nextState)` on the returned state. 4. Validate the final state with `GameStateSchema.parse(finalState)` — if Zod throws,
-      re-throw as `ActionError{ code: 'INVALID_STATE', message: zodError.message }`. 5. Return validated final state.
-- [ ] Task 3.4: Fill in `index.test.js` tests: - `getValidActions` returns `[]` for setup state (status: 'setup'). - `getValidActions` returns `[]` for wrong playerSide. - `dispatch` throws `ActionError{ code: 'INVALID_ACTION' }` for action not in
-      `getValidActions`. - `dispatch` validates output state with `GameStateSchema` and throws
-      `ActionError{ code: 'INVALID_STATE' }` when a handler returns corrupt state.
+- [x] Task 3.1: Implement `drainAutoSteps(state)` — attackRecovery, flukeStoppage, Rally all auto-drain.
+- [x] Task 3.2: Implement `getValidActions(state, playerSide)` with full phase/step/pendingResolution logic.
+- [x] Task 3.3: Implement `dispatch(state, action)` — validate → route → drain → schema-check.
+- [x] Task 3.4: Full `index.test.js` tests including turn-cycle and activePlayer alternation.
 
 ### Verification
 
-- [ ] `index.test.js` tests pass.
-- [ ] `npm run lint` clean.
+- [x] `index.test.js` tests pass.
+- [x] `npm run lint` clean.
 
 ---
 
@@ -160,23 +147,19 @@ object (no mutation of input). Rule citations are required per coding-standards.
 
 ### Tasks
 
-- [ ] Task 4.1: Implement `endPhase.js` — `handleEndPhase(state, action)`: - Command phase → Activity phase transition: - Set `phase: 'activity'`, `step: 'activation'`, `completedSteps: []`. - Set `activityPhase: { activatedUnits: [] }`. - Set `ordersPhase: null`. - LOB §2.1 — Command Phase ends, Activity Phase begins. - Activity phase → Rally phase transition (when active player ends): - Flip to inactive player's Activity Phase first (M5 design §2a) if inactive player
-      hasn't gone yet; otherwise advance to Rally. - Set `phase: 'rally'`, `step: 'rally'`, `activityPhase: null`. - LOB §2.1 — Activity Phase ends, Rally Phase begins. - Rally phase → next turn Command transition: - Increment `turn`, flip `activePlayer`, set `phase: 'command'`, `step: 'orders'`,
-      `completedSteps: []`, `ordersPhase: { leaderRollUsed: {} }`. - LOB §2.1 — Rally Phase ends, new turn begins.
-- [ ] Task 4.2: Write `endPhase.test.js` covering: - Command → Activity transition sets correct fields. - Activity → Rally transition (both players done) sets correct fields. - Rally → next turn Command increments turn, flips activePlayer. - Calling END_PHASE at wrong phase/step returns ActionError (tested via dispatch).
-- [ ] Task 4.3: Implement `issueOrder.js`: - `handleRollInitiative(state, action)`: - Mark `ordersPhase.leaderRollUsed[leaderId] = true`. - Store roll result in a transient field so ISSUE_ORDER can check it. - LOB §10.6 — Command Roll: one roll per leader per turn. - `handleIssueOrder(state, action)`: - Set `units[unitId].orders` to `{ type: action.payload.orderType, status: 'accepted',
-deliveryTurnDue: null }` (M5 steel thread — no delay/delivery phase yet). - LOB §10.4a-b — Attack and Move order assignment.
-- [ ] Task 4.4: Write `issueOrder.test.js` covering: - `ROLL_INITIATIVE` marks the leader as rolled and cannot be re-issued for the same leader. - `ISSUE_ORDER` sets the target unit's order to accepted status with correct type. - `ISSUE_ORDER` without a preceding successful roll is rejected by `getValidActions`.
-- [ ] Task 4.5: Implement `activateStack.js` — `handleActivateStack(state, action)` (M5 stub): - Add `action.payload.hex` to `activityPhase.activatedUnits` (record the stack as activated). - LOB §3.0d — one stack must complete activity before another starts. - No movement resolution (M6).
-- [ ] Task 4.6: Implement `endActivation.js` — `handleEndActivation(state, action)`: - Mark the current activation as complete (stack hex already in `activatedUnits`). - Return state with same step (more stacks can activate). - LOB §3.0d — activation ends; another stack may now activate.
-- [ ] Task 4.7: Write `activateStack.test.js` covering: - `ACTIVATE_STACK` adds hex to `activatedUnits`. - `ACTIVATE_STACK` is rejected if a stack is already mid-activation (LOB §3.0d). - `END_ACTIVATION` completes the current activation without advancing the phase.
-- [ ] Task 4.8: Verify `drainAutoSteps` handles Rally auto-drain end-to-end: - After `END_PHASE` from Activity, entering Rally immediately advances to next turn
-      Command via `drainAutoSteps` without requiring any player input.
+- [x] Task 4.1: Implement `endPhase.js` — Command→Activity (via drainAutoSteps) and two-player Activity→Rally transitions.
+- [x] Task 4.2: Write `endPhase.test.js` with full coverage of all transitions and LOB §3.0d guard.
+- [x] Task 4.3: Implement `issueOrder.js` — `handleRollInitiative` + `handleIssueOrder` with pendingOrderIssuance state machine.
+- [x] Task 4.4: Write `issueOrder.test.js` — 11 tests covering roll, issue, rejection, and immutability.
+- [x] Task 4.5: Implement `activateStack.js` (M5 stub) — sets `currentActivation`, enforces LOB §3.0d.
+- [x] Task 4.6: Implement `endActivation.js` — moves `currentActivation` to `activatedUnits`.
+- [x] Task 4.7: Write `activateStack.test.js` and `endActivation.test.js` with full coverage.
+- [x] Task 4.8: Rally auto-drain verified by end-to-end turn-cycle test in `index.test.js`.
 
 ### Verification
 
-- [ ] All handler test files pass.
-- [ ] `npm run test` — full suite green.
+- [x] All handler test files pass.
+- [x] `npm run test` — 115 files, 2104 tests green.
 
 ---
 
@@ -186,17 +169,15 @@ Run all closeout gates, open PR, and close issue #355.
 
 ### Tasks
 
-- [ ] Task 5.1: Run `npm run quality:strict` (validate-data, lint, format:check, test, build).
-      Fix any failures before proceeding.
-- [ ] Task 5.2: Verify no unexpected warnings in test output (Vue warnings, unhandled rejections,
-      console.warn/error not from assertions).
+- [x] Task 5.1: `npm run quality:strict` — all 5 gates pass.
+- [x] Task 5.2: No unexpected warnings in test output (pre-existing console noise unchanged).
 - [ ] Task 5.3: Run `/pr-create` to write devlog entry and open the PR on GitHub.
 - [ ] Task 5.4: After PR merges, run `/issue-close 355` to post a merge summary comment and
       close the issue.
 
 ### Verification
 
-- [ ] All quality gates green.
+- [x] All quality gates green.
 - [ ] PR opened via `/pr-create`.
 - [ ] Issue #355 closed with merge comment.
 
@@ -204,10 +185,10 @@ Run all closeout gates, open PR, and close issue #355.
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met.
-- [ ] `npm run quality:strict` passes.
-- [ ] No unexpected warnings in test output.
-- [ ] Debt register updated if any debt was accepted.
+- [x] All acceptance criteria in spec.md met.
+- [x] `npm run quality:strict` passes.
+- [x] No unexpected warnings in test output.
+- [x] Debt register updated — no new debt accepted.
 - [ ] Issue #355 closed with merge comment after PR merge.
 - [ ] Ready for `/team-review`.
 
