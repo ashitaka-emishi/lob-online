@@ -2,16 +2,16 @@
   "id": "m5-phase-engine_20260508",
   "title": "M5 Phase Engine — Turn Reducer and Valid Actions",
   "type": "feature",
-  "status": "pending",
+  "status": "complete",
   "created": "2026-05-08T00:00:00.000Z",
-  "updated": "2026-05-08T00:00:00.000Z",
+  "updated": "2026-05-12T00:00:00.000Z",
   "githubIssue": 355,
   "phases": {
     "total": 5,
-    "completed": 0
+    "completed": 5
   },
   "tasks": {
     "total": 26,
-    "completed": 0
+    "completed": 25
   }
 }
