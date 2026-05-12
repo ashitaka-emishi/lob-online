@@ -57,6 +57,11 @@ describe('handleActivateStack', () => {
     };
     const action = { type: 'ACTIVATE_STACK', payload: { hex: '29.22' } };
     expect(() => handleActivateStack(state, action)).toThrow(ActionError);
+    try {
+      handleActivateStack(state, action);
+    } catch (e) {
+      expect(e.code).toBe('INVALID_ACTION');
+    }
   });
 
   it('throws INVALID_PAYLOAD when hex is missing', () => {
@@ -73,11 +78,17 @@ describe('handleActivateStack', () => {
     const state = { ...ACTIVITY_STATE, activityPhase: null };
     const action = { type: 'ACTIVATE_STACK', payload: { hex: '29.22' } };
     expect(() => handleActivateStack(state, action)).toThrow(ActionError);
+    try {
+      handleActivateStack(state, action);
+    } catch (e) {
+      expect(e.code).toBe('INVALID_ACTION');
+    }
   });
 
   it('does not mutate input state', () => {
+    const snapshot = JSON.parse(JSON.stringify(ACTIVITY_STATE));
     const action = { type: 'ACTIVATE_STACK', payload: { hex: '29.22' } };
     handleActivateStack(ACTIVITY_STATE, action);
-    expect(ACTIVITY_STATE.activityPhase.currentActivation).toBeNull();
+    expect(ACTIVITY_STATE).toEqual(snapshot);
   });
 });

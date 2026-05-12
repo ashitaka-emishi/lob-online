@@ -156,6 +156,15 @@ describe('drainAutoSteps', () => {
     expect(drainAutoSteps(COMMAND_ORDERS_STATE)).toBe(COMMAND_ORDERS_STATE);
     expect(drainAutoSteps(ACTIVITY_STATE)).toBe(ACTIVITY_STATE);
   });
+
+  it('returns state unchanged when phase is null (setup state)', () => {
+    expect(drainAutoSteps(SETUP_STATE)).toBe(SETUP_STATE);
+  });
+
+  it('is idempotent: calling twice on an already-drained state returns same reference', () => {
+    const drained = drainAutoSteps(COMMAND_ORDERS_STATE);
+    expect(drainAutoSteps(drained)).toBe(drained);
+  });
 });
 
 // ── dispatch ─────────────────────────────────────────────────────────────────
@@ -174,17 +183,24 @@ describe('dispatch', () => {
   it('throws ActionError{ code: INVALID_ACTION } for wrong playerSide', () => {
     const action = { type: 'END_PHASE', payload: null, playerSide: 'confederate' };
     expect(() => dispatch(COMMAND_ORDERS_STATE, action)).toThrow(ActionError);
+    try {
+      dispatch(COMMAND_ORDERS_STATE, action);
+    } catch (e) {
+      expect(e.code).toBe('INVALID_ACTION');
+    }
   });
 
   it('throws ActionError{ code: INVALID_ACTION } for action in setup state', () => {
     const action = { type: 'END_PHASE', payload: null, playerSide: 'union' };
     expect(() => dispatch(SETUP_STATE, action)).toThrow(ActionError);
+    try {
+      dispatch(SETUP_STATE, action);
+    } catch (e) {
+      expect(e.code).toBe('INVALID_ACTION');
+    }
   });
 
-  it('throws ActionError{ code: INVALID_STATE } when a handler returns invalid state', () => {
-    // Inject a broken handler via monkey-patching is not possible cleanly, so test through
-    // a handler that would produce invalid output — skip for now; covered by handler tests
-  });
+  // INVALID_STATE path is tested in dispatch.invalid-state.test.js (requires vi.mock for handler injection)
 
   it('returns a schema-validated state after END_PHASE from orders step', () => {
     const action = { type: 'END_PHASE', payload: null, playerSide: 'union' };
@@ -232,5 +248,45 @@ describe('dispatch', () => {
     state = dispatch(state, { type: 'END_PHASE', payload: null, playerSide: 'union' }); // → turn 3
     expect(state.turn).toBe(3);
     expect(state.activePlayer).toBe('union');
+  });
+
+  it('ROLL_INITIATIVE → ISSUE_ORDER round-trip through dispatch', () => {
+    let state = dispatch(COMMAND_ORDERS_STATE, {
+      type: 'ROLL_INITIATIVE',
+      payload: { leaderId: 'cox', unitId: 'colquitt', diceResult: 4 },
+      playerSide: 'union',
+    });
+    expect(state.ordersPhase.pendingOrderIssuance).toEqual({ leaderId: 'cox', unitId: 'colquitt' });
+    expect(state.ordersPhase.leaderRollUsed['cox']).toBe(true);
+
+    state = dispatch(state, {
+      type: 'ISSUE_ORDER',
+      payload: { unitId: 'colquitt', orderType: 'attack' },
+      playerSide: 'union',
+    });
+    expect(state.units['colquitt'].orders).toEqual({
+      type: 'attack',
+      status: 'accepted',
+      deliveryTurnDue: null,
+    });
+    expect(state.ordersPhase.pendingOrderIssuance).toBeNull();
+  });
+
+  it('ACTIVATE_STACK → END_ACTIVATION → END_PHASE through dispatch', () => {
+    let state = dispatch(ACTIVITY_STATE, {
+      type: 'ACTIVATE_STACK',
+      payload: { hex: '29.22' },
+      playerSide: 'union',
+    });
+    expect(state.activityPhase.currentActivation).toBe('29.22');
+
+    state = dispatch(state, { type: 'END_ACTIVATION', payload: null, playerSide: 'union' });
+    expect(state.activityPhase.activatedUnits).toContain('29.22');
+    expect(state.activityPhase.currentActivation).toBeNull();
+
+    // Union ends their activation turn; confederate gets theirs
+    state = dispatch(state, { type: 'END_PHASE', payload: null, playerSide: 'union' });
+    expect(state.phase).toBe('activity');
+    expect(state.activePlayer).toBe('confederate');
   });
 });

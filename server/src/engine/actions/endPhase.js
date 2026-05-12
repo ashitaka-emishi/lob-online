@@ -35,8 +35,10 @@ export function handleEndPhase(state, _action) {
     const bothDone = updatedCompleted.includes(otherKey);
 
     if (bothDone) {
-      // LOB §2.1 — both players completed their activation → Rally Phase
-      // Restore activePlayer to the turn's original first player so drainAutoSteps flips correctly
+      // LOB §2.1 — both players completed their activation → Rally Phase.
+      // We set activePlayer to otherSide (the turn's original FIRST player) here so that
+      // drainAutoSteps' Rally branch (index.js) flips it to the other side, producing the
+      // correct next-turn first player. Both files must be edited together if this invariant changes.
       return {
         ...state,
         phase: 'rally',

@@ -109,9 +109,43 @@ describe('handleEndPhase — Activity phase, second player done → Rally', () =
   });
 });
 
+describe('handleEndPhase — Activity phase, completedSteps noise', () => {
+  it('unrelated tokens in completedSteps do not trigger bothDone prematurely', () => {
+    // 'orders' is an unrelated token — should not count as either player's activation
+    const state = {
+      ...ACTIVITY_FIRST,
+      completedSteps: ['orders'],
+      activityPhase: { activatedUnits: [], currentActivation: null },
+    };
+    const result = handleEndPhase(state, { type: 'END_PHASE', payload: null });
+    // Only union ended; should still be in Activity, not Rally
+    expect(result.phase).toBe('activity');
+    expect(result.completedSteps).toContain('activation-union');
+    expect(result.completedSteps).toContain('orders');
+  });
+
+  it('bothDone is false when only one activation key is present', () => {
+    // completedSteps has activation-union but NOT activation-confederate
+    const state = {
+      ...ACTIVITY_FIRST,
+      activePlayer: 'union',
+      completedSteps: ['activation-union'],
+      activityPhase: { activatedUnits: [], currentActivation: null },
+    };
+    const result = handleEndPhase(state, { type: 'END_PHASE', payload: null });
+    // Union ending a second time — adds another activation-union but confederate key absent
+    expect(result.phase).toBe('activity');
+  });
+});
+
 describe('handleEndPhase — invalid state', () => {
   it('throws INVALID_ACTION for unknown phase/step combination', () => {
     const state = { ...COMMAND_ORDERS, phase: 'rally', step: 'rally' };
     expect(() => handleEndPhase(state, { type: 'END_PHASE', payload: null })).toThrow(ActionError);
+    try {
+      handleEndPhase(state, { type: 'END_PHASE', payload: null });
+    } catch (e) {
+      expect(e.code).toBe('INVALID_ACTION');
+    }
   });
 });

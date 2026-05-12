@@ -80,15 +80,21 @@ describe('handleRollInitiative', () => {
   it('throws INVALID_PAYLOAD if unitId is missing', () => {
     const action = { type: 'ROLL_INITIATIVE', payload: { leaderId: 'cox' } };
     expect(() => handleRollInitiative(COMMAND_ORDERS, action)).toThrow(ActionError);
+    try {
+      handleRollInitiative(COMMAND_ORDERS, action);
+    } catch (e) {
+      expect(e.code).toBe('INVALID_PAYLOAD');
+    }
   });
 
   it('does not mutate input state', () => {
+    const snapshot = JSON.parse(JSON.stringify(COMMAND_ORDERS));
     const action = {
       type: 'ROLL_INITIATIVE',
       payload: { leaderId: 'cox', unitId: 'colquitt', diceResult: 5 },
     };
     handleRollInitiative(COMMAND_ORDERS, action);
-    expect(COMMAND_ORDERS.ordersPhase.pendingOrderIssuance).toBeNull();
+    expect(COMMAND_ORDERS).toEqual(snapshot);
   });
 });
 
@@ -142,11 +148,17 @@ describe('handleIssueOrder', () => {
     const state = { ...PENDING_STATE, units: {} };
     const action = { type: 'ISSUE_ORDER', payload: { unitId: 'colquitt', orderType: 'move' } };
     expect(() => handleIssueOrder(state, action)).toThrow(ActionError);
+    try {
+      handleIssueOrder(state, action);
+    } catch (e) {
+      expect(e.code).toBe('INVALID_PAYLOAD');
+    }
   });
 
   it('does not mutate input state', () => {
+    const snapshot = JSON.parse(JSON.stringify(PENDING_STATE));
     const action = { type: 'ISSUE_ORDER', payload: { unitId: 'colquitt', orderType: 'move' } };
     handleIssueOrder(PENDING_STATE, action);
-    expect(PENDING_STATE.ordersPhase.pendingOrderIssuance).not.toBeNull();
+    expect(PENDING_STATE).toEqual(snapshot);
   });
 });

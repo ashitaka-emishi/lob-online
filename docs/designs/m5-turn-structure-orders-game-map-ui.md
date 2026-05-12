@@ -149,10 +149,11 @@ The sequence of play (LOB §2.1) maps to three phases, each with ordered steps:
 
 Phase transitions:
 
-- Command → Activity: after all Command Phase steps complete (both players, active player first)
+- Command → Activity: after active player's Command Phase steps complete (LOB §2.0 — active player
+  only; inactive player has no Command Phase during the active player's Player Turn)
 - Activity (active player) → Activity (inactive player): on `END_PHASE` by active player
 - Activity (inactive player) → Rally: on `END_PHASE` by inactive player
-- Rally → next turn Command: on `END_PHASE`; increment `turn`, flip `activePlayer`
+- Rally → next turn Command: auto-drain; increment `turn`, flip `activePlayer`
 
 #### 2b. Pure Reducer Pattern
 

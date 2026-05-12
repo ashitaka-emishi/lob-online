@@ -20,6 +20,7 @@ export const UnitOrderState = z
     status: z.enum(['none', 'delay', 'accepted', 'stopped']),
     deliveryTurnDue: z.number().int().positive().nullable(),
   })
+  .strict()
   .refine((o) => o.status !== 'delay' || o.deliveryTurnDue !== null, {
     message: 'deliveryTurnDue must be set when status is delay',
   })
@@ -40,41 +41,49 @@ export const UnitOrderState = z
 // 'full' = undepleted; 'low' = Shell Depleted; 'none' = Canister Depleted
 export const AmmoState = z.enum(['full', 'low', 'none']);
 
-export const UnitStateSchema = z.object({
-  id: z.string(),
-  // LOB §3.3 — Facing: hexside 0–5, 0=N clockwise (implementation convention)
-  hex: HexId.nullable(),
-  facing: z.number().int().min(0).max(5),
-  moraleState: MoraleState,
-  // LOB §5.7 — Wrecked Status: separate from morale; unit is Wrecked when current SPs < 50% of printed strength
-  wrecked: z.boolean(),
-  // LOB §10.6 — null = non-order-holding unit; inherits effective order from parent division at query time
-  // Non-null = division or detached brigade with independent order state (SM detachment rules)
-  orders: UnitOrderState.nullable(),
-  ammo: AmmoState,
-  isOnBoard: z.boolean(),
-  entryTurn: z.number().int().positive().nullable(),
-  // SM detachment rules — true when a brigade is operating independently of its parent division
-  isDetached: z.boolean(),
-});
+export const UnitStateSchema = z
+  .object({
+    id: z.string(),
+    // LOB §3.3 — Facing: hexside 0–5, 0=N clockwise (implementation convention)
+    hex: HexId.nullable(),
+    facing: z.number().int().min(0).max(5),
+    moraleState: MoraleState,
+    // LOB §5.7 — Wrecked Status: separate from morale; unit is Wrecked when current SPs < 50% of printed strength
+    wrecked: z.boolean(),
+    // LOB §10.6 — null = non-order-holding unit; inherits effective order from parent division at query time
+    // Non-null = division or detached brigade with independent order state (SM detachment rules)
+    orders: UnitOrderState.nullable(),
+    ammo: AmmoState,
+    isOnBoard: z.boolean(),
+    entryTurn: z.number().int().positive().nullable(),
+    // SM detachment rules — true when a brigade is operating independently of its parent division
+    isDetached: z.boolean(),
+  })
+  .strict();
 
-const ReinforcementEntry = z.object({
-  unitId: z.string(),
-  turn: z.number().int().positive(),
-  entryHex: HexId,
-});
+const ReinforcementEntry = z
+  .object({
+    unitId: z.string(),
+    turn: z.number().int().positive(),
+    entryHex: HexId,
+  })
+  .strict();
 
 // LOB §3.0d — per-leader transient runtime state (casualty and succession tracking)
-export const LeaderStateSchema = z.object({
-  casualtyRollPending: z.boolean(),
-  replacedBy: z.string().nullable(),
-});
+export const LeaderStateSchema = z
+  .object({
+    casualtyRollPending: z.boolean(),
+    replacedBy: z.string().nullable(),
+  })
+  .strict();
 
 // Pending interrupt requiring a dice roll or player decision before the current step completes
-export const PendingResolutionSchema = z.object({
-  type: z.enum(['looseCannonRoll', 'variableReinforcement', 'leaderCasualty']),
-  context: z.record(z.string(), z.unknown()),
-});
+export const PendingResolutionSchema = z
+  .object({
+    type: z.enum(['looseCannonRoll', 'variableReinforcement', 'leaderCasualty']),
+    context: z.record(z.string(), z.unknown()),
+  })
+  .strict();
 
 export const GameStateSchema = z
   .object({
@@ -92,10 +101,7 @@ export const GameStateSchema = z
     // Ordered list of step keys completed in the current phase; reset to [] on each phase transition
     completedSteps: z.array(z.string()),
     initiative: z.enum(['union', 'confederate']).nullable(),
-    sides: z.object({
-      union: z.string().nullable(),
-      confederate: z.string().nullable(),
-    }),
+    sides: z.object({ union: z.string().nullable(), confederate: z.string().nullable() }).strict(),
     units: z.record(z.string(), UnitStateSchema),
     reinforcementQueue: z.array(ReinforcementEntry),
     status: z.enum(['setup', 'active', 'complete']),
@@ -110,16 +116,22 @@ export const GameStateSchema = z
         activatedUnits: z.array(z.string()),
         currentActivation: z.string().nullable(),
       })
+      .strict()
       .nullable(),
     // LOB §10.6 — non-null only during Orders step of Command Phase
     // pendingOrderIssuance: set after a successful ROLL_INITIATIVE; cleared by ISSUE_ORDER
     ordersPhase: z
       .object({
         leaderRollUsed: z.record(z.string(), z.boolean()),
-        pendingOrderIssuance: z.object({ leaderId: z.string(), unitId: z.string() }).nullable(),
+        pendingOrderIssuance: z
+          .object({ leaderId: z.string(), unitId: z.string() })
+          .strict()
+          .nullable(),
       })
+      .strict()
       .nullable(),
   })
+  .strict()
   .refine((data) => (data.status === 'setup') === (data.phase === null), {
     message: "phase must be null when status is 'setup', and non-null otherwise",
     path: ['phase'],

@@ -58,16 +58,20 @@ const HANDLERS = {
 export function drainAutoSteps(state) {
   let s = state;
 
-  while (true) {
+  // Iteration cap guards against a future handler bug that creates a cycle in the step state machine,
+  // which would otherwise block the Node event loop indefinitely (single-process Express).
+  for (let i = 0; i < 8; i++) {
     const { phase, step } = s;
 
-    // LOB §10.6b — Attack Recovery: automatic at M5 depth (no stopped orders in initial state)
+    // LOB §10.6b — Attack Recovery: auto-advance at M5 depth (no stopped orders exist yet).
+    // TODO(M6): roll per stopped attack order before advancing — see LOB §10.6b recovery table.
     if (phase === 'command' && step === 'attackRecovery') {
       s = { ...s, step: 'flukeStoppage', completedSteps: [...s.completedSteps, 'attackRecovery'] };
       continue;
     }
 
-    // LOB §10.7 — Fluke Stoppage: automatic at M5 depth (no active attack orders to roll for)
+    // LOB §10.7 — Fluke Stoppage: auto-advance at M5 depth (no active attack orders exist yet).
+    // TODO(M6): roll for each accepted attack order before advancing — see LOB §10.7 stoppage table.
     if (phase === 'command' && step === 'flukeStoppage') {
       s = {
         ...s,
@@ -80,7 +84,8 @@ export function drainAutoSteps(state) {
       continue;
     }
 
-    // LOB §2.1 — Rally Phase is an auto-drain pass-through in M5 (all units start normal morale)
+    // LOB §2.1, §6.3 — Rally Phase: auto-advance at M5 depth (all units start normal morale).
+    // TODO(M6): roll Rally for each DG/Routed unit before advancing — see LOB §6.3.
     if (phase === 'rally' && step === 'rally') {
       const nextActivePlayer = s.activePlayer === 'union' ? 'confederate' : 'union';
       s = {
@@ -96,10 +101,14 @@ export function drainAutoSteps(state) {
       continue;
     }
 
-    break;
+    return s;
   }
 
-  return s;
+  // Reached only if a handler bug produces a cycle in the step state machine.
+  throw new ActionError(
+    'DRAIN_LOOP',
+    'drainAutoSteps exceeded maximum iterations — state machine cycle detected'
+  );
 }
 
 // Pure reducer: validate → route → drain → validate output state.

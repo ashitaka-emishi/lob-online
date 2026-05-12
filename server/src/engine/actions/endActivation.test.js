@@ -61,11 +61,16 @@ describe('handleEndActivation', () => {
   it('throws INVALID_ACTION when activityPhase is null', () => {
     const state = { ...MID_ACTIVATION_STATE, activityPhase: null };
     expect(() => handleEndActivation(state, { type: 'END_ACTIVATION' })).toThrow(ActionError);
+    try {
+      handleEndActivation(state, { type: 'END_ACTIVATION' });
+    } catch (e) {
+      expect(e.code).toBe('INVALID_ACTION');
+    }
   });
 
   it('does not mutate input state', () => {
+    const snapshot = JSON.parse(JSON.stringify(MID_ACTIVATION_STATE));
     handleEndActivation(MID_ACTIVATION_STATE, { type: 'END_ACTIVATION' });
-    expect(MID_ACTIVATION_STATE.activityPhase.currentActivation).toBe('29.22');
-    expect(MID_ACTIVATION_STATE.activityPhase.activatedUnits).toEqual([]);
+    expect(MID_ACTIVATION_STATE).toEqual(snapshot);
   });
 });
