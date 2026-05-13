@@ -52,17 +52,17 @@ already resolved in code — verify and close the issue.
 
 ### Tasks
 
-- [ ] Task 1.1: Verify #369 closed — confirm `'stopped'` already in UnitOrderState enum;
+- [x] Task 1.1: Verify #369 closed — confirm `'stopped'` already in UnitOrderState enum;
       close GitHub issue with explanation
-- [ ] Task 1.2: Add `.default(false)` to `isDetached` in UnitStateSchema (#367)
-- [ ] Task 1.3: Add `path` option to all five UnitOrderState `.refine()` calls (#372)
-- [ ] Task 1.4: Add `isDetached ↔ orders !== null` cross-field refinement to
+- [x] Task 1.2: Add `.default(false)` to `isDetached` in UnitStateSchema (#367)
+- [x] Task 1.3: Add `path` option to all five UnitOrderState `.refine()` calls (#372)
+- [x] Task 1.4: Add `isDetached ↔ orders !== null` cross-field refinement to
       UnitStateSchema with positive test + two rejection tests (#362)
-- [ ] Task 1.5: Run `npm run test` — confirm all existing tests pass, no regressions
+- [x] Task 1.5: Run `npm run test` — confirm all existing tests pass, no regressions
 
 ### Verification
 
-- [ ] `npm run test` passes with new refinement tests green
+- [x] `npm run test` passes with new refinement tests green (2122 tests, 117 files)
 - [ ] Checkpoint: human approval before Phase 2
 
 ---

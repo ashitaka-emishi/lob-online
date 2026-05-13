@@ -2,15 +2,20 @@
   "id": "m5-engine-debt-2_20260513",
   "title": "M5 Engine Debt Bundle 2 — Schema Hardening & Code Quality",
   "type": "chore",
-  "status": "pending",
+  "status": "in_progress",
   "created": "2026-05-13T00:00:00Z",
-  "updated": "2026-05-13T00:00:00Z",
+  "updated": "2026-05-13T04:25:00Z",
+  "current_phase": 1,
+  "current_task": "1.5",
   "phases": {
     "total": 3,
     "completed": 0
   },
   "tasks": {
     "total": 14,
-    "completed": 0
-  }
+    "completed": 5
+  },
+  "commits": [
+    "581b6ca: fix(schema): UnitStateSchema hardening — isDetached default, path metadata, cross-field refinement (#362 #367 #372)"
+  ]
 }
