@@ -135,4 +135,9 @@ export const GameStateSchema = z
   .refine((data) => (data.status === 'setup') === (data.phase === null), {
     message: "phase must be null when status is 'setup', and non-null otherwise",
     path: ['phase'],
+  })
+  // LOB §3.0d — activityPhase tracks mid-activation state; must be null outside Activity Phase (#378)
+  .refine((data) => (data.phase === 'activity') === (data.activityPhase !== null), {
+    message: "activityPhase must be non-null iff phase is 'activity'",
+    path: ['activityPhase'],
   });

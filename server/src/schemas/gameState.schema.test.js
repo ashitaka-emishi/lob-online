@@ -445,4 +445,34 @@ describe('GameStateSchema', () => {
     };
     expect(GameStateSchema.safeParse(state).success).toBe(false);
   });
+
+  // Cross-field invariants (#378, #380) — activityPhase ↔ phase === 'activity'
+  it("rejects non-null activityPhase when phase is not 'activity' (#378)", () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      status: 'active',
+      phase: 'command',
+      activePlayer: 'union',
+      step: 'orders',
+      ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+      activityPhase: { activatedUnits: [], currentActivation: null },
+    };
+    const result = GameStateSchema.safeParse(state);
+    expect(result.success).toBe(false);
+    expect(result.error.issues.some((i) => i.path.includes('activityPhase'))).toBe(true);
+  });
+
+  it("rejects null activityPhase when phase is 'activity' (#378)", () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      status: 'active',
+      phase: 'activity',
+      activePlayer: 'union',
+      step: 'activation',
+      activityPhase: null,
+    };
+    const result = GameStateSchema.safeParse(state);
+    expect(result.success).toBe(false);
+    expect(result.error.issues.some((i) => i.path.includes('activityPhase'))).toBe(true);
+  });
 });
