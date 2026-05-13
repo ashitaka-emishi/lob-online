@@ -191,13 +191,31 @@ describe('dispatch', () => {
     }
   });
 
-  it('throws ActionError{ code: INVALID_ACTION } for action in setup state', () => {
+  it('throws ActionError{ code: INVALID_ACTION } for action in setup state — via validActions path, not whose-turn guard (M3)', () => {
     const action = { type: 'END_PHASE', payload: null, playerSide: 'union' };
     expect(() => dispatch(SETUP_STATE, action)).toThrow(ActionError);
     try {
       dispatch(SETUP_STATE, action);
     } catch (e) {
       expect(e.code).toBe('INVALID_ACTION');
+      // Must hit the getValidActions path (activePlayer===null skips the whose-turn guard)
+      expect(e.message).toMatch(/not valid in the current state/);
+    }
+  });
+
+  it('throws INVALID_ACTION via validActions path (not whose-turn guard) when pendingResolution blocks correct side (L6)', () => {
+    const state = {
+      ...COMMAND_ORDERS_STATE,
+      pendingResolution: { type: 'looseCannonRoll', context: {} },
+    };
+    const action = { type: 'END_PHASE', payload: null, playerSide: 'union' };
+    expect(() => dispatch(state, action)).toThrow(ActionError);
+    try {
+      dispatch(state, action);
+    } catch (e) {
+      expect(e.code).toBe('INVALID_ACTION');
+      // Correct side but pendingResolution blocks — validActions returns [], not the whose-turn guard
+      expect(e.message).toMatch(/not valid in the current state/);
     }
   });
 

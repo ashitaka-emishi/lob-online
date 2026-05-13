@@ -505,4 +505,48 @@ describe('GameStateSchema', () => {
     expect(result.success).toBe(false);
     expect(result.error.issues.some((i) => i.path.includes('ordersPhase'))).toBe(true);
   });
+
+  // Rally phase envelope invariants (LOB §2.1) — both envelopes must be null during rally
+  it('accepts rally phase with both envelopes null (LOB §2.1)', () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      status: 'active',
+      phase: 'rally',
+      activePlayer: 'confederate',
+      step: 'rally',
+      activityPhase: null,
+      ordersPhase: null,
+    };
+    expect(GameStateSchema.safeParse(state).success).toBe(true);
+  });
+
+  it('rejects non-null activityPhase during rally phase', () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      status: 'active',
+      phase: 'rally',
+      activePlayer: 'confederate',
+      step: 'rally',
+      activityPhase: { activatedUnits: [], currentActivation: null },
+      ordersPhase: null,
+    };
+    const result = GameStateSchema.safeParse(state);
+    expect(result.success).toBe(false);
+    expect(result.error.issues.some((i) => i.path.includes('activityPhase'))).toBe(true);
+  });
+
+  it('rejects non-null ordersPhase during rally phase', () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      status: 'active',
+      phase: 'rally',
+      activePlayer: 'confederate',
+      step: 'rally',
+      activityPhase: null,
+      ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+    };
+    const result = GameStateSchema.safeParse(state);
+    expect(result.success).toBe(false);
+    expect(result.error.issues.some((i) => i.path.includes('activityPhase'))).toBe(true);
+  });
 });

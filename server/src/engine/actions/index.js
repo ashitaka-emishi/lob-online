@@ -53,6 +53,9 @@ const HANDLERS = {
   END_ACTIVATION: handleEndActivation,
 };
 
+// Current auto-advance steps: attackRecovery, flukeStoppage, rally (3 steps, 8 gives headroom for M6+)
+const MAX_AUTO_STEPS = 8;
+
 // LOB §2.1 — advances through automatic steps until the next interactive step.
 // Called by dispatch after every handler invocation.
 export function drainAutoSteps(state) {
@@ -60,7 +63,7 @@ export function drainAutoSteps(state) {
 
   // Iteration cap guards against a future handler bug that creates a cycle in the step state machine,
   // which would otherwise block the Node event loop indefinitely (single-process Express).
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < MAX_AUTO_STEPS; i++) {
     const { phase, step } = s;
 
     // LOB §10.6b — Attack Recovery: auto-advance at M5 depth (no stopped orders exist yet).
@@ -116,8 +119,11 @@ export function drainAutoSteps(state) {
 export function dispatch(state, action) {
   const { type, payload, playerSide } = action;
 
-  // LOB §2.1 — explicit side check before getValidActions so the error is unambiguous.
+  // LOB §2.1 — explicit side check before getValidActions so the error is unambiguous whose-turn message.
   // Skipped during setup (activePlayer === null) where no player is designated active.
+  // getValidActions() also returns [] for the wrong side (defense-in-depth), but this guard owns the
+  // public error contract. Callers must source playerSide from the authenticated session, never from
+  // the request body — the route layer is responsible for that mapping.
   if (state.activePlayer !== null && playerSide !== state.activePlayer) {
     throw new ActionError(
       'INVALID_ACTION',

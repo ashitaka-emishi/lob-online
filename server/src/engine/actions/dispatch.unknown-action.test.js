@@ -1,7 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 
-// vi.mock is hoisted before imports. Mock handleEndPhase as undefined so HANDLERS.END_PHASE
-// is undefined — the only way to trigger the UNKNOWN_ACTION path in ESM without exporting HANDLERS.
+// ⚠ FILE ISOLATION: this file's vi.mock replaces handleEndPhase with undefined for the entire module
+// scope so HANDLERS.END_PHASE is undefined, triggering the UNKNOWN_ACTION path in dispatch().
+// Do NOT add tests here that require the real handleEndPhase — they will silently receive undefined.
+// For tests needing real handlers, use index.test.js or dispatch.invalid-state.test.js.
 vi.mock('./endPhase.js', () => ({
   handleEndPhase: undefined,
 }));
