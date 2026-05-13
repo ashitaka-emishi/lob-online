@@ -140,4 +140,9 @@ export const GameStateSchema = z
   .refine((data) => (data.phase === 'activity') === (data.activityPhase !== null), {
     message: "activityPhase must be non-null iff phase is 'activity'",
     path: ['activityPhase'],
+  })
+  // LOB §10.6 — ordersPhase holds Command Phase order-issuance state; null outside Command Phase (#380)
+  .refine((data) => (data.phase === 'command') === (data.ordersPhase !== null), {
+    message: "ordersPhase must be non-null iff phase is 'command'",
+    path: ['ordersPhase'],
   });
