@@ -547,6 +547,6 @@ describe('GameStateSchema', () => {
     };
     const result = GameStateSchema.safeParse(state);
     expect(result.success).toBe(false);
-    expect(result.error.issues.some((i) => i.path.includes('activityPhase'))).toBe(true);
+    expect(result.error.issues.some((i) => i.path.includes('ordersPhase'))).toBe(true);
   });
 });

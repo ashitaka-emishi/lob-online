@@ -146,11 +146,15 @@ export const GameStateSchema = z
     message: "ordersPhase must be non-null iff phase is 'command'",
     path: ['ordersPhase'],
   })
-  // LOB §2.1 — during Rally Phase both phase-scoped envelopes must be null (no orders or activations in progress)
-  .refine(
-    (data) => data.phase !== 'rally' || (data.activityPhase === null && data.ordersPhase === null),
-    {
-      message: "activityPhase and ordersPhase must both be null during 'rally' phase",
-      path: ['activityPhase'],
-    }
-  );
+  // LOB §2.1 — during Rally Phase both phase-scoped envelopes must be null.
+  // These are logically implied by the two biconditionals above (rally ≠ activity → activityPhase null;
+  // rally ≠ command → ordersPhase null), but stated explicitly here as belt-and-suspenders so the
+  // schema self-documents the full phase-envelope invariant set at the reading site.
+  .refine((data) => data.phase !== 'rally' || data.activityPhase === null, {
+    message: "activityPhase must be null during 'rally' phase",
+    path: ['activityPhase'],
+  })
+  .refine((data) => data.phase !== 'rally' || data.ordersPhase === null, {
+    message: "ordersPhase must be null during 'rally' phase",
+    path: ['ordersPhase'],
+  });

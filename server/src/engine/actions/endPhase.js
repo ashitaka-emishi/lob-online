@@ -46,6 +46,7 @@ export function handleEndPhase(state, _action) {
         completedSteps: [],
         activePlayer: otherSide,
         activityPhase: null,
+        ordersPhase: null,
       };
     }
 
