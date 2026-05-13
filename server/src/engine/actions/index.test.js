@@ -165,6 +165,39 @@ describe('drainAutoSteps', () => {
     const drained = drainAutoSteps(COMMAND_ORDERS_STATE);
     expect(drainAutoSteps(drained)).toBe(drained);
   });
+
+  it('throws INVALID_STATE if ordersPhase is non-null in non-command phase (#389)', () => {
+    // Simulates a future handler bug that leaves ordersPhase set after leaving command phase.
+    const corrupt = {
+      ...ACTIVITY_STATE,
+      ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+    };
+    expect(() => drainAutoSteps(corrupt)).toThrow(ActionError);
+    try {
+      drainAutoSteps(corrupt);
+    } catch (e) {
+      expect(e.code).toBe('INVALID_STATE');
+      expect(e.message).toMatch(/ordersPhase/);
+    }
+  });
+
+  it('throws INVALID_STATE if activityPhase is non-null outside activity phase (#389)', () => {
+    // Simulates a future handler bug that sets activityPhase during command phase.
+    const corrupt = {
+      ...COMMAND_ORDERS_STATE,
+      step: 'attackRecovery',
+      completedSteps: ['orders'],
+      ordersPhase: null,
+      activityPhase: { activatedUnits: [], currentActivation: null },
+    };
+    expect(() => drainAutoSteps(corrupt)).toThrow(ActionError);
+    try {
+      drainAutoSteps(corrupt);
+    } catch (e) {
+      expect(e.code).toBe('INVALID_STATE');
+      expect(e.message).toMatch(/activityPhase/);
+    }
+  });
 });
 
 // ── dispatch ─────────────────────────────────────────────────────────────────

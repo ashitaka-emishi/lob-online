@@ -1,3 +1,4 @@
+import { PHASES, STEPS } from '../phases.js';
 import { ActionError } from './actionError.js';
 
 // LOB §2.1 — END_PHASE advances the turn sequence from the current interactive step.
@@ -6,17 +7,17 @@ export function handleEndPhase(state, _action) {
   const { phase, step } = state;
 
   // Command phase → end Orders step; drainAutoSteps handles attackRecovery → flukeStoppage → activity
-  if (phase === 'command' && step === 'orders') {
+  if (phase === PHASES.COMMAND && step === STEPS.ORDERS) {
     return {
       ...state,
-      step: 'attackRecovery',
-      completedSteps: [...state.completedSteps, 'orders'],
+      step: STEPS.ATTACK_RECOVERY,
+      completedSteps: [...state.completedSteps, STEPS.ORDERS],
       ordersPhase: null,
     };
   }
 
   // Activity phase → end a player's activation turn (LOB §2.1 — activity ends per player)
-  if (phase === 'activity' && step === 'activation') {
+  if (phase === PHASES.ACTIVITY && step === STEPS.ACTIVATION) {
     // LOB §3.0d — cannot end phase while a stack is mid-activation
     if (state.activityPhase?.currentActivation !== null) {
       throw new ActionError(
@@ -41,8 +42,8 @@ export function handleEndPhase(state, _action) {
       // correct next-turn first player. Both files must be edited together if this invariant changes.
       return {
         ...state,
-        phase: 'rally',
-        step: 'rally',
+        phase: PHASES.RALLY,
+        step: STEPS.RALLY,
         completedSteps: [],
         activePlayer: otherSide,
         activityPhase: null,
