@@ -15,11 +15,18 @@ const BASE_VERSIONED_STATE = {
   version: 0,
   turn: 1,
   phase: null,
+  activePlayer: null,
+  step: null,
+  completedSteps: [],
   initiative: null,
   sides: { union: null, confederate: null },
   units: {},
   reinforcementQueue: [],
   status: 'setup',
+  leaderState: {},
+  pendingResolution: null,
+  activityPhase: null,
+  ordersPhase: null,
 };
 
 let tmpDir;
@@ -99,12 +106,19 @@ describe('loadGame', () => {
       scenarioId: 'south-mountain',
       version: 0,
       turn: 3,
-      phase: 'initiative',
+      phase: 'command',
+      activePlayer: 'union',
+      step: 'orders',
+      completedSteps: [],
       initiative: null,
       sides: { union: null, confederate: null },
       units: {},
       reinforcementQueue: [],
       status: 'active',
+      leaderState: {},
+      pendingResolution: null,
+      activityPhase: null,
+      ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
     };
     await saveGame('game2', state, tmpDir);
     const loaded = await loadGame('game2', tmpDir);
@@ -119,6 +133,9 @@ describe('loadGame', () => {
       version: 0,
       turn: 1,
       phase: null,
+      activePlayer: null,
+      step: null,
+      completedSteps: [],
       initiative: null,
       sides: { union: null, confederate: null },
       units: {
@@ -137,6 +154,10 @@ describe('loadGame', () => {
       },
       reinforcementQueue: [{ unitId: 'u2', turn: 5, entryHex: '1.1' }],
       status: 'setup',
+      leaderState: {},
+      pendingResolution: null,
+      activityPhase: null,
+      ordersPhase: null,
     };
     await saveGame('rt1', state, tmpDir);
     const loaded = await loadGame('rt1', tmpDir);

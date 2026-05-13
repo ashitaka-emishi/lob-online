@@ -98,4 +98,6 @@
 
 | [x] | m5-schema-prereqs_20260507 | M5 Schema Prerequisites — UnitOrderState + isDetached | 2026-05-07 | 2026-05-08 |
 
+| [x] | m5-phase-engine_20260508 | M5 Phase Engine — Turn Reducer and Valid Actions | 2026-05-08 | 2026-05-12 |
+
 <!-- Tracks registered by /conductor:new-track -->
