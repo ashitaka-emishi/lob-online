@@ -116,6 +116,15 @@ export function drainAutoSteps(state) {
 export function dispatch(state, action) {
   const { type, payload, playerSide } = action;
 
+  // LOB §2.1 — explicit side check before getValidActions so the error is unambiguous.
+  // Skipped during setup (activePlayer === null) where no player is designated active.
+  if (state.activePlayer !== null && playerSide !== state.activePlayer) {
+    throw new ActionError(
+      'INVALID_ACTION',
+      `It is ${state.activePlayer}'s turn, not ${playerSide}'s`
+    );
+  }
+
   const validActions = getValidActions(state, playerSide);
   if (!validActions.some((a) => a.type === type)) {
     throw new ActionError('INVALID_ACTION', `Action '${type}' is not valid in the current state`);

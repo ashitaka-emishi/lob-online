@@ -180,13 +180,14 @@ describe('dispatch', () => {
     }
   });
 
-  it('throws ActionError{ code: INVALID_ACTION } for wrong playerSide', () => {
+  it('throws ActionError{ code: INVALID_ACTION } for wrong playerSide with whose-turn message (#377)', () => {
     const action = { type: 'END_PHASE', payload: null, playerSide: 'confederate' };
     expect(() => dispatch(COMMAND_ORDERS_STATE, action)).toThrow(ActionError);
     try {
       dispatch(COMMAND_ORDERS_STATE, action);
     } catch (e) {
       expect(e.code).toBe('INVALID_ACTION');
+      expect(e.message).toContain("union's turn");
     }
   });
 
