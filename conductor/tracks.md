@@ -100,4 +100,6 @@
 
 | [x] | m5-phase-engine_20260508 | M5 Phase Engine — Turn Reducer and Valid Actions | 2026-05-08 | 2026-05-12 |
 
+| [~] | m5-engine-debt_20260513 | M5 Engine Debt Bundle — Issues #377 #378 #380 #384 | 2026-05-13 | 2026-05-13 |
+
 <!-- Tracks registered by /conductor:new-track -->
