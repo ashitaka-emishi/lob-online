@@ -96,13 +96,37 @@ describe('UnitStateSchema', () => {
     expect(UnitStateSchema.safeParse({ ...BASE_UNIT, isDetached: true }).success).toBe(true);
   });
 
-  it('rejects missing isDetached field', () => {
+  it('accepts missing isDetached field (defaults to false — #367)', () => {
     const { isDetached: _d, ...noDetached } = BASE_UNIT;
-    expect(UnitStateSchema.safeParse(noDetached).success).toBe(false);
+    const result = UnitStateSchema.safeParse(noDetached);
+    expect(result.success).toBe(true);
+    expect(result.data.isDetached).toBe(false);
   });
 
   it('rejects non-boolean isDetached', () => {
     expect(UnitStateSchema.safeParse({ ...BASE_UNIT, isDetached: 'true' }).success).toBe(false);
+  });
+
+  it('rejects isDetached: true with orders: null — detached brigade must have own order state (#362)', () => {
+    const result = UnitStateSchema.safeParse({ ...BASE_UNIT, isDetached: true, orders: null });
+    expect(result.success).toBe(false);
+    expect(result.error.issues[0].path).toEqual(['orders']);
+    expect(result.error.issues[0].message).toMatch(/detached/i);
+  });
+
+  it('accepts isDetached: true with non-null orders — valid detached brigade (#362)', () => {
+    const unit = {
+      ...BASE_UNIT,
+      isDetached: true,
+      orders: { type: 'attack', status: 'accepted', deliveryTurnDue: null },
+    };
+    expect(UnitStateSchema.safeParse(unit).success).toBe(true);
+  });
+
+  it('accepts isDetached: false with orders: null — non-detached brigade inherits from division (#362)', () => {
+    expect(
+      UnitStateSchema.safeParse({ ...BASE_UNIT, isDetached: false, orders: null }).success
+    ).toBe(true);
   });
 });
 

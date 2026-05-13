@@ -6,7 +6,7 @@ const HexId = z.string().regex(/^\d+\.\d+$/, 'Hex ID must be in col.row format (
 // LOB §6.0 — Morale States: Normal, Blood Lust (BL), Shaken (Sh), Disorganized (DG), Routed (R)
 export const MoraleState = z.enum(['normal', 'bloodLust', 'shaken', 'DG', 'routed']);
 
-// LOB §10.4a–b — Attack and Move order types; null = no current order in pipeline
+// LOB §10.4a–b — Attack and Move order types; null = no order type assigned (distinct from in-delivery)
 export const OrderType = z.enum(['attack', 'move']).nullable();
 
 // LOB §10.6, §10.6a, §10.6b — Full order state for divisions and detached brigades.
@@ -23,18 +23,23 @@ export const UnitOrderState = z
   .strict()
   .refine((o) => o.status !== 'delay' || o.deliveryTurnDue !== null, {
     message: 'deliveryTurnDue must be set when status is delay',
+    path: ['deliveryTurnDue'],
   })
   .refine((o) => o.status !== 'none' || o.type === null, {
     message: 'type must be null when status is none',
+    path: ['type'],
   })
   .refine((o) => o.status !== 'accepted' || o.deliveryTurnDue === null, {
     message: 'deliveryTurnDue must be null when status is accepted',
+    path: ['deliveryTurnDue'],
   })
   .refine((o) => o.status === 'none' || o.type !== null, {
     message: 'type must be set when status is accepted, delay, or stopped',
+    path: ['type'],
   })
   .refine((o) => o.status === 'delay' || o.deliveryTurnDue === null, {
     message: 'deliveryTurnDue must be null unless status is delay',
+    path: ['deliveryTurnDue'],
   });
 
 // LOB §8.2b — Shell Depletion / Canister Depletion mapped to RSS Low/No Ammo markers (LOB_GAME_UPDATES)
@@ -50,16 +55,27 @@ export const UnitStateSchema = z
     moraleState: MoraleState,
     // LOB §5.7 — Wrecked Status: separate from morale; unit is Wrecked when current SPs < 50% of printed strength
     wrecked: z.boolean(),
-    // LOB §10.6 — null = non-order-holding unit; inherits effective order from parent division at query time
-    // Non-null = division or detached brigade with independent order state (SM detachment rules)
+    // LOB §10.6 — null = non-order-holding unit; inherits effective order from parent division at query time.
+    // Non-null = division or detached brigade with independent order state (SM detachment rules).
+    // Parent-order inheritance: when orders is null, the engine resolves effective order from the unit's
+    // parent division at query time — the division's UnitOrderState applies to all non-detached brigades.
     orders: UnitOrderState.nullable(),
     ammo: AmmoState,
     isOnBoard: z.boolean(),
     entryTurn: z.number().int().positive().nullable(),
-    // SM detachment rules — true when a brigade is operating independently of its parent division
-    isDetached: z.boolean(),
+    // SM §7.3 — true when a brigade is operating independently of its parent division (detachment rules).
+    // Detached brigades hold their own order state; non-detached brigades inherit from their division.
+    isDetached: z.boolean().default(false),
   })
-  .strict();
+  .strict()
+  // SM §7.3 — a detached brigade must carry its own order state; isDetached: true with orders: null
+  // is an invalid combination (silent correctness bug — the engine would try to inherit an order that
+  // doesn't exist for a unit that is supposed to be operating independently).
+  .refine((u) => !u.isDetached || u.orders !== null, {
+    message:
+      'A detached brigade must have its own order state (orders must be non-null when isDetached is true)',
+    path: ['orders'],
+  });
 
 const ReinforcementEntry = z
   .object({
