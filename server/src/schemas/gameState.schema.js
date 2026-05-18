@@ -56,19 +56,21 @@ export const UnitStateSchema = z
     // LOB §5.7 — Wrecked Status: separate from morale; unit is Wrecked when current SPs < 50% of printed strength
     wrecked: z.boolean(),
     // LOB §10.6 — null = non-order-holding unit; inherits effective order from parent division at query time.
-    // Non-null = division or detached brigade with independent order state (SM detachment rules).
+    // Non-null = division or detached brigade with independent order state (SM §2.3, §3.3 detachment rules).
     // Parent-order inheritance: when orders is null, the engine resolves effective order from the unit's
     // parent division at query time — the division's UnitOrderState applies to all non-detached brigades.
     orders: UnitOrderState.nullable(),
     ammo: AmmoState,
     isOnBoard: z.boolean(),
     entryTurn: z.number().int().positive().nullable(),
-    // SM §7.3 — true when a brigade is operating independently of its parent division (detachment rules).
+    // SM §2.3, §3.3 — true when a brigade is operating independently of its parent division.
+    // Union: 1st Corps may detach one brigade; 9th Corps may detach up to two divisions (§2.3).
+    // Confederate: D.H. Hill and D.R. Jones may each detach up to three brigades (§3.3).
     // Detached brigades hold their own order state; non-detached brigades inherit from their division.
     isDetached: z.boolean().default(false),
   })
   .strict()
-  // SM §7.3 — a detached brigade must carry its own order state; isDetached: true with orders: null
+  // SM §2.3, §3.3 — a detached brigade must carry its own order state; isDetached: true with orders: null
   // is an invalid combination (silent correctness bug — the engine would try to inherit an order that
   // doesn't exist for a unit that is supposed to be operating independently).
   .refine((u) => !u.isDetached || u.orders !== null, {
