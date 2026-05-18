@@ -2,20 +2,22 @@
   "id": "m5-engine-debt-2_20260513",
   "title": "M5 Engine Debt Bundle 2 — Schema Hardening & Code Quality",
   "type": "chore",
-  "status": "in_progress",
+  "status": "complete",
   "created": "2026-05-13T00:00:00Z",
-  "updated": "2026-05-13T04:25:00Z",
-  "current_phase": 1,
-  "current_task": "1.5",
+  "updated": "2026-05-18T04:50:00Z",
+  "current_phase": 3,
+  "current_task": "3.4",
   "phases": {
     "total": 3,
-    "completed": 0
+    "completed": 3
   },
   "tasks": {
     "total": 14,
-    "completed": 5
+    "completed": 14
   },
   "commits": [
-    "581b6ca: fix(schema): UnitStateSchema hardening — isDetached default, path metadata, cross-field refinement (#362 #367 #372)"
+    "581b6ca: fix(schema): UnitStateSchema hardening — isDetached default, path metadata, cross-field refinement (#362 #367 #372)",
+    "486bf83: refactor(engine): extract PHASES/STEPS constants and add drainAutoSteps envelope guard (#388 #389)",
+    "b319788: docs(schema): fix isDetached/orders citations and add parent-order inheritance comment (#365 #366 #368)"
   ]
 }
