@@ -35,7 +35,7 @@ function defaultUnit(id, hex, orderRaw, isOnBoard, entryTurn, isDetached = false
     ammo: 'full',
     isOnBoard,
     entryTurn: entryTurn ?? null,
-    // SM detachment rules — false at init; set true by dispatch when a brigade is detached
+    // SM §2.3, §3.3 — false at init; set true by dispatch when a brigade is detached
     isDetached,
   };
 }

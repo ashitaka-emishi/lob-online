@@ -1,4 +1,5 @@
 import { GameStateSchema } from '../../schemas/gameState.schema.js';
+import { PHASES, STEPS } from '../../constants/phases.js';
 import { ActionError } from './actionError.js';
 import { handleEndPhase } from './endPhase.js';
 import { handleRollInitiative, handleIssueOrder } from './issueOrder.js';
@@ -17,7 +18,7 @@ export function getValidActions(state, playerSide) {
   const { phase, step } = state;
 
   // Command phase — Orders step
-  if (phase === 'command' && step === 'orders') {
+  if (phase === PHASES.COMMAND && step === STEPS.ORDERS) {
     // LOB §10.6 — after a successful initiative roll, only order issuance is valid
     if (state.ordersPhase?.pendingOrderIssuance !== null) {
       return [{ type: 'ISSUE_ORDER', payload: null }];
@@ -30,7 +31,7 @@ export function getValidActions(state, playerSide) {
   }
 
   // Activity phase — Activation step
-  if (phase === 'activity' && step === 'activation') {
+  if (phase === PHASES.ACTIVITY && step === STEPS.ACTIVATION) {
     // LOB §3.0d — if a stack is mid-activation, only END_ACTIVATION is valid
     if (state.activityPhase?.currentActivation !== null) {
       return [{ type: 'END_ACTIVATION', payload: null }];
@@ -56,6 +57,23 @@ const HANDLERS = {
 // Current auto-advance steps: attackRecovery, flukeStoppage, rally (3 steps, 8 gives headroom for M6+)
 const MAX_AUTO_STEPS = 8;
 
+// Phase-envelope guard: a per-phase envelope (activityPhase / ordersPhase) must not bleed into a
+// phase where it does not belong. See the biconditional .refine() calls in GameStateSchema
+// (server/src/schemas/gameState.schema.js) for the full bidirectional invariant enforced at the
+// terminal safeParse() in dispatch(). This one-directional check fires earlier in the loop to give
+// a more specific error: ordersPhase may legitimately be null mid-command (after attackRecovery /
+// flukeStoppage transitions), so only the "non-null in wrong phase" direction is checked here.
+// TODO(route-layer): INVALID_STATE messages embed internal phase/step details for server diagnostics;
+// sanitize before surfacing to clients when the dispatch HTTP route is wired.
+function assertEnvelope(value, key, expectedPhase, phase, step) {
+  if (value !== null && phase !== expectedPhase) {
+    throw new ActionError(
+      'INVALID_STATE',
+      `drainAutoSteps: ${key} is non-null outside ${expectedPhase} phase (phase='${phase}', step='${step}')`
+    );
+  }
+}
+
 // LOB §2.1 — advances through automatic steps until the next interactive step.
 // Called by dispatch after every handler invocation.
 export function drainAutoSteps(state) {
@@ -66,20 +84,27 @@ export function drainAutoSteps(state) {
   for (let i = 0; i < MAX_AUTO_STEPS; i++) {
     const { phase, step } = s;
 
+    assertEnvelope(s.activityPhase, 'activityPhase', PHASES.ACTIVITY, phase, step);
+    assertEnvelope(s.ordersPhase, 'ordersPhase', PHASES.COMMAND, phase, step);
+
     // LOB §10.6b — Attack Recovery: auto-advance at M5 depth (no stopped orders exist yet).
     // TODO(M6): roll per stopped attack order before advancing — see LOB §10.6b recovery table.
-    if (phase === 'command' && step === 'attackRecovery') {
-      s = { ...s, step: 'flukeStoppage', completedSteps: [...s.completedSteps, 'attackRecovery'] };
+    if (phase === PHASES.COMMAND && step === STEPS.ATTACK_RECOVERY) {
+      s = {
+        ...s,
+        step: STEPS.FLUKE_STOPPAGE,
+        completedSteps: [...s.completedSteps, STEPS.ATTACK_RECOVERY],
+      };
       continue;
     }
 
     // LOB §10.7 — Fluke Stoppage: auto-advance at M5 depth (no active attack orders exist yet).
     // TODO(M6): roll for each accepted attack order before advancing — see LOB §10.7 stoppage table.
-    if (phase === 'command' && step === 'flukeStoppage') {
+    if (phase === PHASES.COMMAND && step === STEPS.FLUKE_STOPPAGE) {
       s = {
         ...s,
-        phase: 'activity',
-        step: 'activation',
+        phase: PHASES.ACTIVITY,
+        step: STEPS.ACTIVATION,
         completedSteps: [],
         activityPhase: { activatedUnits: [], currentActivation: null },
         ordersPhase: null,
@@ -89,13 +114,13 @@ export function drainAutoSteps(state) {
 
     // LOB §2.1, §6.3 — Rally Phase: auto-advance at M5 depth (all units start normal morale).
     // TODO(M6): roll Rally for each DG/Routed unit before advancing — see LOB §6.3.
-    if (phase === 'rally' && step === 'rally') {
+    if (phase === PHASES.RALLY && step === STEPS.RALLY) {
       const nextActivePlayer = s.activePlayer === 'union' ? 'confederate' : 'union';
       s = {
         ...s,
         turn: s.turn + 1,
-        phase: 'command',
-        step: 'orders',
+        phase: PHASES.COMMAND,
+        step: STEPS.ORDERS,
         completedSteps: [],
         activePlayer: nextActivePlayer,
         activityPhase: null,

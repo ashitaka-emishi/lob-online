@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-05-13 after PR #386._
+_Last updated: 2026-05-18 after PR #391._
 
 ---
 
@@ -8,10 +8,10 @@ _Last updated: 2026-05-13 after PR #386._
 
 | Metric                           | Value                                                                                       |
 | -------------------------------- | ------------------------------------------------------------------------------------------- |
-| Open debt items                  | 30                                                                                          |
-| Cumulative debt score (net open) | 60                                                                                          |
+| Open debt items                  | 21                                                                                          |
+| Cumulative debt score (net open) | 43                                                                                          |
 | Highest-risk item                | Scenario-start detached brigades not flagged isDetached:true (e.g. Garland) (#361, score 4) |
-| PRs tracked                      | 156                                                                                         |
+| PRs tracked                      | 166                                                                                         |
 
 ---
 
@@ -175,6 +175,16 @@ _Last updated: 2026-05-13 after PR #386._
 | 2026-05-13 | PR #386 (resolved #378) | -2                   | —         | 284                      |
 | 2026-05-13 | PR #386 (resolved #380) | -2                   | —         | 284                      |
 | 2026-05-13 | PR #386 (resolved #384) | -1                   | —         | 284                      |
+| 2026-05-18 | PR #391                 | 0                    | -17       | 284                      |
+| 2026-05-18 | PR #391 (resolved #362) | -3                   | —         | 284                      |
+| 2026-05-18 | PR #391 (resolved #365) | -2                   | —         | 284                      |
+| 2026-05-18 | PR #391 (resolved #366) | -1                   | —         | 284                      |
+| 2026-05-18 | PR #391 (resolved #367) | -2                   | —         | 284                      |
+| 2026-05-18 | PR #391 (resolved #368) | -2                   | —         | 284                      |
+| 2026-05-18 | PR #391 (resolved #369) | -2                   | —         | 284                      |
+| 2026-05-18 | PR #391 (resolved #372) | -1                   | —         | 284                      |
+| 2026-05-18 | PR #391 (resolved #388) | -2                   | —         | 284                      |
+| 2026-05-18 | PR #391 (resolved #389) | -2                   | —         | 284                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -184,7 +194,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 High risk. Critical or significant deferred items pose a threat to production stability or block future work. Immediate attention recommended.
 
-PR #386 (M5 engine debt bundle) closed 7 debt points (resolving #377, #378, #380, #384 plus earlier items) and added 5 (new issues #387–#389), for a net delta of −2 and a new net open score of 60 across 30 items. The three score-4 items (#361 detached brigades, #360 reinforcement orderType, #340 join endpoint auth) remain the top priority for the next debt sprint. The bulk of remaining debt is concentrated in schema hardening and order-system design items from PR #359 (7 score-2 items) and M5 engine stubs correctly deferred to M6 (#381–#383 auto-step handlers, #379 getValidActions enumeration, #389 mid-loop validation). Two new score-2 items landed this PR: #388 (phase/step magic strings, extract before M6 adds phases) and #389 (drainAutoSteps mid-loop invariant check, add before M6 extends the drain loop). No new high-risk items were introduced.
+PR #391 (M5 engine debt bundle 2) closed 17 debt points with zero new deferred findings, for a net delta of −17 and a new net open score of 43 across 21 items. The three score-4 items (#361 scenario-start detached brigades, #360 reinforcement orderType, #340 join endpoint auth) remain the top priority and should be addressed before M5 ships playable turns. The score-3 item #363 (no migration path for the orders schema change) must be resolved before persistent saves go live. The bulk of remaining score-2 debt is concentrated in M6-blocked engine stubs (#379, #381, #382, #383), order-system design gaps (#364, #371), and performance items (#295, #294, #324, #322) that are non-blocking at current scale. No new high-risk items were introduced.
 
 ---
 
@@ -198,14 +208,7 @@ _Ordered by score descending (ties: newest first). Resolved items are removed._
 | 4     | #360  | Reinforcement units silently drop `orderType` during initGameState                    | PR #359       | `initGameState()` reads `orderType` from reinforcement group entries but ignores it, initializing all reinforcement units with `orders: null`. Will cause incorrect reinforcement behavior when the M5 order-delivery pipeline is implemented.                           |
 | 4     | #340  | Fix sideToken validation and add auth guard to join endpoint                          | PR #339       | Any caller knowing a game UUID can claim the confederate seat; `sideToken` is stored without format validation, allowing empty strings or arbitrary values. Real access-control gap that must be closed before M5 order submission wires token-based move authorization. |
 | 3     | #363  | No migration path for breaking `orders` schema change                                 | PR #359       | `orders` changed from raw string to `UnitOrderState` object with no migration utility or versioned schema check. No production risk yet, but must be addressed before M5 ships with persistent saves.                                                                    |
-| 3     | #362  | No cross-field invariant between `isDetached` and `orders` in UnitStateSchema         | PR #359       | Schema allows `isDetached: true` with `orders: null` and vice versa. Per SM detachment rules, only divisions and detached brigades hold independent orders; invalid states are representable and will cause silent correctness bugs.                                     |
-| 2     | #389  | drainAutoSteps transient states bypass schema validation mid-loop                     | PR #386       | All transitions are correctly atomic today. Risk is future contributors adding partial multi-step updates across drain iterations. Add per-iteration invariant check before M6 extensions.                                                                               |
-| 2     | #388  | Extract PHASES and STEPS constants to eliminate magic string literals                 | PR #386       | Manageable with 3 phases; becomes fragile in M6 when morale/combat phases are added. Extract to shared `phases.js` before adding new phases.                                                                                                                             |
 | 2     | #371  | `defaultUnit()` positional parameter list is fragile (6 args)                         | PR #359       | 6 positional args with no guard against transposition; an options-object pattern would be safer and more readable as new fields are added.                                                                                                                               |
-| 2     | #369  | `'stopped'` order status not reserved in UnitOrderState schema                        | PR #359       | No slot reserved for a future 'stopped'/'hold' status; adding it later will require a schema migration.                                                                                                                                                                  |
-| 2     | #368  | Parent-order inheritance for `orders: null` undocumented in schema                    | PR #359       | The mechanism for resolving effective order when `orders: null` (inheriting from parent division) is not documented in the schema or any engine module. Will slow future query-layer implementation.                                                                     |
-| 2     | #367  | `isDetached` has no Zod schema default (`.default(false)`)                            | PR #359       | `z.boolean()` with no `.default(false)` means any programmatic unit creation that omits `isDetached` will fail validation rather than defaulting safely.                                                                                                                 |
-| 2     | #365  | `isDetached` field missing SM section rule citation                                   | PR #359       | Comment reads "SM detachment rules" without a specific section number, violating the project's rule-traceability coding standard.                                                                                                                                        |
 | 2     | #364  | Dual representation of no-order state (`null` vs `UnitOrderState{status:'none'}`)     | PR #359       | Two semantically distinct representations exist for no-order state. Query code must double-check both unless consolidated or the distinction is documented clearly.                                                                                                      |
 | 2     | #379  | getValidActions should enumerate all legal actions for current state                  | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                                                                                            |
 | 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                                   | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                                                                                        |
@@ -216,9 +219,7 @@ _Ordered by score descending (ties: newest first). Resolved items are removed._
 | 2     | #322  | feat: add numeric bounds validation in pickMods                                       | PR #315       | `pickMods()` coerces numeric modifier values but applies no min/max bounds. Extreme or negative values pass through to engine table functions without validation.                                                                                                        |
 | 2     | #295  | engine: Dijkstra lacks early termination for point-to-point queries                   | PR #283       | `movementPath` passes `Infinity` maxCost, exploring the entire reachable graph even for single target queries. Add optional `targetHex` to `dijkstra()` for 2–5× speedup on nearby pairs.                                                                                |
 | 2     | #294  | engine: hex.js hot-path allocations — memoize formatHexId/parseHexId                  | PR #283       | `parseHexId` and `formatHexId` called ~13K+ times per Dijkstra run; each creates temporary array/string allocations. Pre-compute a 2D ID grid at startup. Only worth addressing if profiling confirms bottleneck.                                                        |
-| 1     | #372  | `UnitOrderState` `.refine()` error messages lack path metadata                        | PR #359       | All five `.refine()` calls omit the `path` option, surfacing errors at the object root rather than the offending field. Affects error message quality in API validation responses.                                                                                       |
 | 1     | #370  | `complexDefense` sentinel in `mapOrder()` lacks pointer to LOB_GAME_UPDATES SM source | PR #359       | Comment cites `LOB_GAME_UPDATES SM section` without a specific section or page reference. Future maintainers may not know where to find the authoritative ruling.                                                                                                        |
-| 1     | #366  | `OrderType` JSDoc comment implies null means in-pipeline (ambiguous)                  | PR #359       | Comment `null = no current order in pipeline` conflates `OrderType` null with `UnitOrderState.status === 'delay'`. Misleading for future developers.                                                                                                                     |
 | 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                             | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis.                                                                           |
 | 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals          | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                                                                                                      |
 | 1     | #201  | oobTreeTransform: pre-index arty entries for O(1) lookups                             | PR #200       | Nested linear scan in `distributeCorpsArtillery` is O(M×(D+D×B)). No observable impact at South Mountain scale; flagged for awareness if OOB grows significantly.                                                                                                        |
