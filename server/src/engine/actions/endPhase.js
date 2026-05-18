@@ -1,4 +1,4 @@
-import { PHASES, STEPS } from '../phases.js';
+import { PHASES, STEPS } from '../../constants/phases.js';
 import { ActionError } from './actionError.js';
 
 // LOB §2.1 — END_PHASE advances the turn sequence from the current interactive step.

@@ -168,21 +168,23 @@ describe('drainAutoSteps', () => {
 
   it('throws INVALID_STATE if ordersPhase is non-null in non-command phase (#389)', () => {
     // Simulates a future handler bug that leaves ordersPhase set after leaving command phase.
+    expect.assertions(3);
     const corrupt = {
       ...ACTIVITY_STATE,
       ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
     };
-    expect(() => drainAutoSteps(corrupt)).toThrow(ActionError);
     try {
       drainAutoSteps(corrupt);
     } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
       expect(e.code).toBe('INVALID_STATE');
-      expect(e.message).toMatch(/ordersPhase/);
+      expect(e.message).toMatch(/ordersPhase is non-null outside command phase/);
     }
   });
 
   it('throws INVALID_STATE if activityPhase is non-null outside activity phase (#389)', () => {
     // Simulates a future handler bug that sets activityPhase during command phase.
+    expect.assertions(3);
     const corrupt = {
       ...COMMAND_ORDERS_STATE,
       step: 'attackRecovery',
@@ -190,12 +192,33 @@ describe('drainAutoSteps', () => {
       ordersPhase: null,
       activityPhase: { activatedUnits: [], currentActivation: null },
     };
-    expect(() => drainAutoSteps(corrupt)).toThrow(ActionError);
     try {
       drainAutoSteps(corrupt);
     } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
       expect(e.code).toBe('INVALID_STATE');
-      expect(e.message).toMatch(/activityPhase/);
+      expect(e.message).toMatch(/activityPhase is non-null outside activity phase/);
+    }
+  });
+
+  it('throws INVALID_STATE if ordersPhase is non-null during rally phase (#389)', () => {
+    // Rally phase must have both envelopes null; a leftover ordersPhase is a handler bug.
+    expect.assertions(3);
+    const corrupt = {
+      ...SETUP_STATE,
+      status: 'active',
+      phase: 'rally',
+      step: 'rally',
+      activePlayer: 'union',
+      completedSteps: [],
+      ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+    };
+    try {
+      drainAutoSteps(corrupt);
+    } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
+      expect(e.code).toBe('INVALID_STATE');
+      expect(e.message).toMatch(/ordersPhase is non-null outside command phase/);
     }
   });
 });

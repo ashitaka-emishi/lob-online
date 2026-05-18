@@ -1,5 +1,5 @@
 import { GameStateSchema } from '../../schemas/gameState.schema.js';
-import { PHASES, STEPS } from '../phases.js';
+import { PHASES, STEPS } from '../../constants/phases.js';
 import { ActionError } from './actionError.js';
 import { handleEndPhase } from './endPhase.js';
 import { handleRollInitiative, handleIssueOrder } from './issueOrder.js';
@@ -57,6 +57,23 @@ const HANDLERS = {
 // Current auto-advance steps: attackRecovery, flukeStoppage, rally (3 steps, 8 gives headroom for M6+)
 const MAX_AUTO_STEPS = 8;
 
+// Phase-envelope guard: a per-phase envelope (activityPhase / ordersPhase) must not bleed into a
+// phase where it does not belong. See the biconditional .refine() calls in GameStateSchema
+// (server/src/schemas/gameState.schema.js) for the full bidirectional invariant enforced at the
+// terminal safeParse() in dispatch(). This one-directional check fires earlier in the loop to give
+// a more specific error: ordersPhase may legitimately be null mid-command (after attackRecovery /
+// flukeStoppage transitions), so only the "non-null in wrong phase" direction is checked here.
+// TODO(route-layer): INVALID_STATE messages embed internal phase/step details for server diagnostics;
+// sanitize before surfacing to clients when the dispatch HTTP route is wired.
+function assertEnvelope(value, key, expectedPhase, phase, step) {
+  if (value !== null && phase !== expectedPhase) {
+    throw new ActionError(
+      'INVALID_STATE',
+      `drainAutoSteps: ${key} is non-null outside ${expectedPhase} phase (phase='${phase}', step='${step}')`
+    );
+  }
+}
+
 // LOB §2.1 — advances through automatic steps until the next interactive step.
 // Called by dispatch after every handler invocation.
 export function drainAutoSteps(state) {
@@ -67,22 +84,8 @@ export function drainAutoSteps(state) {
   for (let i = 0; i < MAX_AUTO_STEPS; i++) {
     const { phase, step } = s;
 
-    // Phase-envelope guard: envelope objects must not bleed into the wrong phase (#389).
-    // This is weaker than the terminal biconditional in GameStateSchema (which dispatch enforces via
-    // safeParse at the end) — ordersPhase may be null mid-command (e.g. attackRecovery/flukeStoppage),
-    // so only the reverse direction is checked here: non-null envelope in wrong phase is always corrupt.
-    if (s.activityPhase !== null && phase !== PHASES.ACTIVITY) {
-      throw new ActionError(
-        'INVALID_STATE',
-        `drainAutoSteps: activityPhase is non-null outside activity phase (phase='${phase}', step='${step}')`
-      );
-    }
-    if (s.ordersPhase !== null && phase !== PHASES.COMMAND) {
-      throw new ActionError(
-        'INVALID_STATE',
-        `drainAutoSteps: ordersPhase is non-null outside command phase (phase='${phase}', step='${step}')`
-      );
-    }
+    assertEnvelope(s.activityPhase, 'activityPhase', PHASES.ACTIVITY, phase, step);
+    assertEnvelope(s.ordersPhase, 'ordersPhase', PHASES.COMMAND, phase, step);
 
     // LOB §10.6b — Attack Recovery: auto-advance at M5 depth (no stopped orders exist yet).
     // TODO(M6): roll per stopped attack order before advancing — see LOB §10.6b recovery table.

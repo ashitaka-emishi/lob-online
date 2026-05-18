@@ -128,6 +128,19 @@ describe('UnitStateSchema', () => {
       UnitStateSchema.safeParse({ ...BASE_UNIT, isDetached: false, orders: null }).success
     ).toBe(true);
   });
+
+  it('rejects isDetached: true with structurally invalid orders — compound failure (#362)', () => {
+    // When orders is non-null but malformed, the UnitOrderState nested refinement fires
+    // (path: ['orders', 'type']) but the cross-field isDetached refinement does NOT fire
+    // (orders !== null satisfies the constraint). Pins Zod refinement ordering stability.
+    const result = UnitStateSchema.safeParse({
+      ...BASE_UNIT,
+      isDetached: true,
+      orders: { type: null, status: 'accepted', deliveryTurnDue: null },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error.issues.some((i) => i.path.includes('type'))).toBe(true);
+  });
 });
 
 describe('MoraleState enum exhaustiveness', () => {

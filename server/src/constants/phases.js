@@ -1,8 +1,9 @@
 // LOB §2.1 — Turn sequence: Command Phase → Activity Phase → Rally Phase → next turn.
-// These constants are the canonical string identifiers used throughout the engine and schema.
-// Add new phases here (before M6 combat/morale phases) rather than scattering string literals.
+// Canonical string identifiers for engine, schema, and client. Centralised here so both the
+// schema layer (server/src/schemas/) and the engine (server/src/engine/) can import without
+// inverting the dependency direction. Add new phases here before M6 combat/morale phases.
 
-export const PHASES = /** @type {const} */ ({
+export const PHASES = Object.freeze({
   COMMAND: 'command',
   ACTIVITY: 'activity',
   RALLY: 'rally',
@@ -12,7 +13,11 @@ export const PHASES = /** @type {const} */ ({
 // Command:  orders (interactive) → attackRecovery (auto) → flukeStoppage (auto)
 // Activity: activation (interactive)
 // Rally:    rally (auto at M5 depth; per-unit rolls added in M6)
-export const STEPS = /** @type {const} */ ({
+//
+// Note: STEPS.RALLY === PHASES.RALLY === 'rally'. The two constants are intentionally
+// distinct (step vs. phase namespace) — do not merge them. When M6 adds per-unit rally
+// rolls the step name will diverge from the phase name.
+export const STEPS = Object.freeze({
   // Command phase
   ORDERS: 'orders',
   ATTACK_RECOVERY: 'attackRecovery',
