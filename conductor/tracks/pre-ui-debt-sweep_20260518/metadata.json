@@ -1,0 +1,16 @@
+{
+  "id": "pre-ui-debt-sweep_20260518",
+  "title": "Pre-UI Debt Sweep — initGameState Correctness + Schema Quality",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-05-18T00:00:00.000Z",
+  "updated": "2026-05-18T00:00:00.000Z",
+  "phases": {
+    "total": 4,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 17,
+    "completed": 0
+  }
+}
