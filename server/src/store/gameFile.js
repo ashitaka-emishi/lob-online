@@ -1,6 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join, resolve, sep } from 'node:path';
 
+import { STATE_SCHEMA_VERSION } from '../constants/schemaVersion.js';
 import { GameStateSchema } from '../schemas/gameState.schema.js';
 
 const DEFAULT_DATA_DIR = process.env.GAMES_DIR || 'data/games';
@@ -53,5 +54,13 @@ export async function saveGame(id, state, dataDir = DEFAULT_DATA_DIR) {
 
 export async function loadGame(id, dataDir = DEFAULT_DATA_DIR) {
   const raw = await readFile(statePath(id, dataDir), 'utf8');
-  return GameStateSchema.parse(JSON.parse(raw));
+  const parsed = JSON.parse(raw);
+  // #363 — reject saves whose on-disk format differs from the current schema version
+  if (parsed.schemaVersion !== STATE_SCHEMA_VERSION) {
+    throw new Error(
+      `Game state schemaVersion mismatch: file has ${parsed.schemaVersion ?? '(none)'}, ` +
+        `expected ${STATE_SCHEMA_VERSION}. Delete the save file and create a new game.`
+    );
+  }
+  return GameStateSchema.parse(parsed);
 }

@@ -360,3 +360,11 @@ describe('initGameState — reinforcement orderType propagation (#360)', () => {
     expect(units['test-unit-no-order'].orders).toBeNull();
   });
 });
+
+// #363 — schemaVersion must be present in initGameState output
+describe('initGameState — schemaVersion (#363)', () => {
+  it('output includes schemaVersion: 1', () => {
+    const state = initGameState(SCENARIO, 'g1');
+    expect(state.schemaVersion).toBe(1);
+  });
+});

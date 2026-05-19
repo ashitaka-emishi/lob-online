@@ -113,6 +113,10 @@ export const GameStateSchema = z
   .object({
     id: z.string(),
     scenarioId: z.string(),
+    // Identifies the on-disk schema format version. loadGame() rejects files whose schemaVersion
+    // does not match STATE_SCHEMA_VERSION. Increment when GameStateSchema fields change in a
+    // breaking way and update constants/schemaVersion.js (#363).
+    schemaVersion: z.literal(1),
     // Monotonically incremented on every saveGame — used for optimistic concurrency control (#332)
     version: z.number().int().nonnegative(),
     turn: z.number().int().min(1),

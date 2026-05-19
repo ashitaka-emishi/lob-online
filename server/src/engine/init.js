@@ -1,3 +1,4 @@
+import { STATE_SCHEMA_VERSION } from '../constants/schemaVersion.js';
 import { GameStateSchema } from '../schemas/gameState.schema.js';
 
 // LOB §10.3 — artillery and non-order-holding units have null orders; effective behavior is §10.8a
@@ -156,6 +157,7 @@ export function initGameState(scenario, gameId) {
   const state = {
     id: gameId,
     scenarioId: scenario.id,
+    schemaVersion: STATE_SCHEMA_VERSION,
     version: 0,
     turn: 1,
     // LOB §2.1 — null until game starts (status: 'setup')
