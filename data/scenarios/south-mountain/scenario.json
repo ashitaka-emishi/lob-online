@@ -370,6 +370,7 @@
       },
       {
         "_groupNote": "Garland Brigade (G/dH) — DETACHED, defending Fox's Gap",
+        "isDetached": true,
         "order": "move",
         "units": [
           {

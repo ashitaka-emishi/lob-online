@@ -47,6 +47,16 @@ const SCENARIO = {
       { unitId: 'test-attack', hex: '25.20', order: 'attack' },
       // complexDefense legacy token — LOB_GAME_UPDATES SM section maps to 'move'
       { unitId: 'test-complex', hex: '26.20', order: 'complexDefense' },
+      // SM §3.3 — detached brigade; isDetached must propagate to UnitState (#361)
+      {
+        _groupNote: 'Garland Brigade — DETACHED (SM §3.3)',
+        isDetached: true,
+        order: 'move',
+        units: [
+          { unitId: 'garland-test', hex: '28.25' },
+          { unitId: '5nc-test', hex: '25.25' },
+        ],
+      },
     ],
   },
   reinforcements: {
@@ -279,5 +289,74 @@ describe('initGameState — reinforcement pre-queuing', () => {
     expect(units['cox'].entryTurn).toBe(1);
     expect(units['willcox'].entryTurn).toBe(8);
     expect(units['ripley'].entryTurn).toBe(8);
+  });
+});
+
+// #361 — scenario-start detached brigades must be flagged isDetached:true
+describe('initGameState — isDetached propagation from setup entries (#361)', () => {
+  it('group entry with isDetached:true produces units with isDetached:true', () => {
+    const { units } = initGameState(SCENARIO, 'g1');
+    expect(units['garland-test'].isDetached).toBe(true);
+    expect(units['5nc-test'].isDetached).toBe(true);
+  });
+
+  it('detached units still receive valid UnitOrderState (schema refine: isDetached requires orders !== null)', () => {
+    const { units } = initGameState(SCENARIO, 'g1');
+    expect(units['garland-test'].orders).not.toBeNull();
+    expect(units['garland-test'].orders.type).toBe('move');
+    expect(units['garland-test'].orders.status).toBe('accepted');
+  });
+
+  it('non-detached group entry still produces isDetached:false units', () => {
+    const { units } = initGameState(SCENARIO, 'g1');
+    expect(units['colquitt'].isDetached).toBe(false);
+    expect(units['23ga'].isDetached).toBe(false);
+  });
+});
+
+// #360 — reinforcement units must receive the orderType declared in scenario.json
+describe('initGameState — reinforcement orderType propagation (#360)', () => {
+  it('union reinforcement unit inherits orderType:move as accepted UnitOrderState', () => {
+    const { units } = initGameState(SCENARIO, 'g1');
+    expect(units['cox'].orders).toEqual({
+      type: 'move',
+      status: 'accepted',
+      deliveryTurnDue: null,
+    });
+    expect(units['willcox'].orders).toEqual({
+      type: 'move',
+      status: 'accepted',
+      deliveryTurnDue: null,
+    });
+  });
+
+  it('CSA reinforcement unit inherits orderType:move as accepted UnitOrderState', () => {
+    const { units } = initGameState(SCENARIO, 'g1');
+    expect(units['ripley'].orders).toEqual({
+      type: 'move',
+      status: 'accepted',
+      deliveryTurnDue: null,
+    });
+  });
+
+  it('variable reinforcement unit inherits orderType:move as accepted UnitOrderState', () => {
+    const { units } = initGameState(SCENARIO, 'g1');
+    expect(units['dr-jones'].orders).toEqual({
+      type: 'move',
+      status: 'accepted',
+      deliveryTurnDue: null,
+    });
+  });
+
+  it('reinforcement group with no orderType produces orders:null', () => {
+    const scenarioNoOrderType = {
+      ...SCENARIO,
+      reinforcements: {
+        union: [{ time: '09:00', entryHex: '01.09', units: ['test-unit-no-order'] }],
+        confederate: [],
+      },
+    };
+    const { units } = initGameState(scenarioNoOrderType, 'g1');
+    expect(units['test-unit-no-order'].orders).toBeNull();
   });
 });

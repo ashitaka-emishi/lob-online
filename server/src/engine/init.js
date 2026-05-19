@@ -44,11 +44,20 @@ function defaultUnit(id, hex, orderRaw, isOnBoard, entryTurn, isDetached = false
 function processSetupSide(entries, order) {
   const units = {};
   for (const entry of entries) {
+    // SM §2.3, §3.3 — scenario data flags scenario-start detached brigades (#361)
+    const isDetached = entry.isDetached ?? false;
     if (entry.setupZone) {
       // Zone-constraint group — M4 initial pass: place all units at referenceHex
       // (M5 setup-phase UI lets the player reposition within the zone)
       for (const unitId of entry.units) {
-        units[unitId] = defaultUnit(unitId, entry.referenceHex, entry.order ?? order, true, null);
+        units[unitId] = defaultUnit(
+          unitId,
+          entry.referenceHex,
+          entry.order ?? order,
+          true,
+          null,
+          isDetached
+        );
       }
     } else if (entry.unitId && entry.hex) {
       // Individual unit at fixed hex
@@ -57,7 +66,8 @@ function processSetupSide(entries, order) {
         entry.hex,
         entry.order !== undefined ? entry.order : order,
         true,
-        null
+        null,
+        isDetached
       );
     } else if (Array.isArray(entry.units)) {
       // Group where each unit specifies its own hex
@@ -65,10 +75,10 @@ function processSetupSide(entries, order) {
       for (const u of entry.units) {
         if (typeof u === 'string') {
           // Unit string with no hex — treat as zone-less group (shouldn't occur in CSA setup)
-          units[u] = defaultUnit(u, null, groupOrder, false, null);
+          units[u] = defaultUnit(u, null, groupOrder, false, null, isDetached);
         } else {
           // { unitId, hex }
-          units[u.unitId] = defaultUnit(u.unitId, u.hex, groupOrder, true, null);
+          units[u.unitId] = defaultUnit(u.unitId, u.hex, groupOrder, true, null, isDetached);
         }
       }
     }
@@ -97,9 +107,11 @@ function processReinforcementGroup(group, firstTurnTime, minutesPerTurn) {
 
   const turn = timeToTurn(timeStr, firstTurnTime, minutesPerTurn);
 
+  // LOB §10.6 — reinforcements arrive with their declared order already in transit (#360)
+  const orderRaw = group.orderType ?? null;
   for (const unitId of group.units) {
     queueEntries.push({ unitId, turn, entryHex });
-    units[unitId] = defaultUnit(unitId, null, null, false, turn);
+    units[unitId] = defaultUnit(unitId, null, orderRaw, false, turn);
   }
 
   return { queueEntries, units };
