@@ -58,12 +58,13 @@ export const UnitStateSchema = z
     moraleState: MoraleState,
     // LOB §5.7 — Wrecked Status: separate from morale; unit is Wrecked when current SPs < 50% of printed strength
     wrecked: z.boolean(),
-    // LOB §10.6 — null = non-order-holding unit; non-null = division or detached brigade with independent
-    // order state (SM §2.3, §3.3 detachment rules).
-    // Modeling convention (SM): brigades within a non-detached division do not carry their own
-    // UnitOrderState; the engine resolves their effective order from the parent division at query time.
-    // LOB §10.3f: orders are relayed division → brigade. A detached brigade (SM §2.3/§3.3) becomes
-    // the order-holding level and carries its own UnitOrderState.
+    // LOB §10.6 — null = non-order-holding unit (brigade within a non-detached division; inherits
+    // effective order from parent at query time). Non-null = division or detached brigade that holds
+    // its own UnitOrderState. NOTE: null and { status:'none' } are semantically distinct — null means
+    // "not an order-holding unit", whereas { status:'none' } means "order-holder with no active order".
+    // Use isOrderHolder() from engine/init.js rather than checking orders !== null directly (#364).
+    // LOB §10.3f: orders relayed division → brigade. SM §2.3, §3.3: detached brigade becomes
+    // the order-holding level.
     orders: UnitOrderState.nullable(),
     ammo: AmmoState,
     isOnBoard: z.boolean(),

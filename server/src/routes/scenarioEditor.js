@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { Router } from 'express';
 
 import { ScenarioSchema } from '../schemas/scenario.schema.js';
+import { clearScenarioCache } from './games.js';
 import { createEditorLimiter, createEditorRoute } from './editorRouteFactory.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -18,6 +19,7 @@ router.use(
     filePath: SCENARIO_PATH,
     filePrefix: 'scenario',
     backupDir: BACKUP_DIR,
+    afterSave: clearScenarioCache,
   })
 );
 

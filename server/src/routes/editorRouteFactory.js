@@ -34,7 +34,14 @@ export function createEditorLimiter() {
  * @param {string}  opts.backupDir                    - Absolute path to the backup directory
  * @param {number}  [opts.maxBackups=20]              - Maximum number of backup files to keep
  */
-export function createEditorRoute({ schema, filePath, filePrefix, backupDir, maxBackups = 20 }) {
+export function createEditorRoute({
+  schema,
+  filePath,
+  filePrefix,
+  backupDir,
+  maxBackups = 20,
+  afterSave,
+}) {
   const router = Router();
 
   router.get('/data', async (_req, res) => {
@@ -98,6 +105,7 @@ export function createEditorRoute({ schema, filePath, filePrefix, backupDir, max
       }
       return res.status(500).json({ ok: false, message: 'Write failed' });
     }
+    afterSave?.();
     res.json({ ok: true, _savedAt: savedAt });
   });
 

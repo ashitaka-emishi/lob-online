@@ -1,6 +1,23 @@
 import { STATE_SCHEMA_VERSION } from '../constants/schemaVersion.js';
 import { GameStateSchema } from '../schemas/gameState.schema.js';
 
+/**
+ * LOB §10.3 / SM §2.3 — True when the unit holds its own order state (divisions and detached
+ * brigades). False for brigades within a non-detached division, which inherit their effective
+ * order from the parent at query time (LOB §10.3f).
+ *
+ * Centralises the null-check so query code does not need to replicate it. Note that
+ * `orders: null` (non-order-holder) and `orders: { status: 'none' }` (order-holder with no
+ * active order) are semantically distinct: only non-null `orders` means the unit is the
+ * authoritative order level (#364).
+ *
+ * @param {{ orders: object|null }} unit
+ * @returns {boolean}
+ */
+export function isOrderHolder(unit) {
+  return unit.orders !== null;
+}
+
 // LOB §10.3 — artillery and non-order-holding units have null orders; effective behavior is §10.8a
 // LOB §10.6 — scenario setup orders are treated as already accepted at turn 1; they represent
 //   the pre-game historical posture and bypass the order-delivery pipeline
@@ -20,7 +37,7 @@ function timeToTurn(timeStr, firstTurnTime, minutesPerTurn) {
   return Math.floor(minutesSinceStart / minutesPerTurn) + 1;
 }
 
-function defaultUnit(id, hex, orderRaw, isOnBoard, entryTurn, isDetached = false) {
+function defaultUnit({ id, hex, orderRaw, isOnBoard, entryTurn, isDetached = false }) {
   return {
     id,
     hex: hex ?? null,
@@ -51,35 +68,49 @@ function processSetupSide(entries, order) {
       // Zone-constraint group — M4 initial pass: place all units at referenceHex
       // (M5 setup-phase UI lets the player reposition within the zone)
       for (const unitId of entry.units) {
-        units[unitId] = defaultUnit(
-          unitId,
-          entry.referenceHex,
-          entry.order ?? order,
-          true,
-          null,
-          isDetached
-        );
+        units[unitId] = defaultUnit({
+          id: unitId,
+          hex: entry.referenceHex,
+          orderRaw: entry.order ?? order,
+          isOnBoard: true,
+          entryTurn: null,
+          isDetached,
+        });
       }
     } else if (entry.unitId && entry.hex) {
       // Individual unit at fixed hex
-      units[entry.unitId] = defaultUnit(
-        entry.unitId,
-        entry.hex,
-        entry.order !== undefined ? entry.order : order,
-        true,
-        null,
-        isDetached
-      );
+      units[entry.unitId] = defaultUnit({
+        id: entry.unitId,
+        hex: entry.hex,
+        orderRaw: entry.order !== undefined ? entry.order : order,
+        isOnBoard: true,
+        entryTurn: null,
+        isDetached,
+      });
     } else if (Array.isArray(entry.units)) {
       // Group where each unit specifies its own hex
       const groupOrder = entry.order !== undefined ? entry.order : order;
       for (const u of entry.units) {
         if (typeof u === 'string') {
           // Unit string with no hex — treat as zone-less group (shouldn't occur in CSA setup)
-          units[u] = defaultUnit(u, null, groupOrder, false, null, isDetached);
+          units[u] = defaultUnit({
+            id: u,
+            hex: null,
+            orderRaw: groupOrder,
+            isOnBoard: false,
+            entryTurn: null,
+            isDetached,
+          });
         } else {
           // { unitId, hex }
-          units[u.unitId] = defaultUnit(u.unitId, u.hex, groupOrder, true, null, isDetached);
+          units[u.unitId] = defaultUnit({
+            id: u.unitId,
+            hex: u.hex,
+            orderRaw: groupOrder,
+            isOnBoard: true,
+            entryTurn: null,
+            isDetached,
+          });
         }
       }
     }
@@ -112,7 +143,13 @@ function processReinforcementGroup(group, firstTurnTime, minutesPerTurn) {
   const orderRaw = group.orderType ?? null;
   for (const unitId of group.units) {
     queueEntries.push({ unitId, turn, entryHex });
-    units[unitId] = defaultUnit(unitId, null, orderRaw, false, turn);
+    units[unitId] = defaultUnit({
+      id: unitId,
+      hex: null,
+      orderRaw,
+      isOnBoard: false,
+      entryTurn: turn,
+    });
   }
 
   return { queueEntries, units };

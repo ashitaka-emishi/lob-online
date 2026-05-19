@@ -11,6 +11,10 @@ vi.mock('fs/promises', () => ({
   unlink: vi.fn(() => Promise.resolve()),
 }));
 
+// #337 — clearScenarioCache must be called on successful scenario save
+const clearScenarioCacheMock = vi.fn();
+vi.mock('./games.js', () => ({ clearScenarioCache: clearScenarioCacheMock }));
+
 // eslint-disable-next-line import/order
 import { readFile, writeFile, mkdir, readdir, unlink } from 'fs/promises';
 
@@ -167,5 +171,21 @@ describe('PUT /data', () => {
       });
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
+  });
+
+  it('calls clearScenarioCache after a successful save (#337)', async () => {
+    clearScenarioCacheMock.mockReset();
+    const app = await buildApp();
+    const res = await request(app).put('/data').send(VALID_SCENARIO);
+    expect(res.status).toBe(200);
+    expect(clearScenarioCacheMock).toHaveBeenCalledOnce();
+  });
+
+  it('does not call clearScenarioCache on a failed save (#337)', async () => {
+    clearScenarioCacheMock.mockReset();
+    const app = await buildApp();
+    const res = await request(app).put('/data').send({ invalid: 'body' });
+    expect(res.status).toBe(400);
+    expect(clearScenarioCacheMock).not.toHaveBeenCalled();
   });
 });

@@ -37,7 +37,7 @@ vi.mock('./routes/games.js', () => {
     post: () => r,
     param: () => r,
   });
-  return { default: r };
+  return { default: r, clearScenarioCache: () => {} };
 });
 
 vi.mock('socket.io', () => ({
