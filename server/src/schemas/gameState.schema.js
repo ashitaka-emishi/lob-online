@@ -63,7 +63,7 @@ export const UnitStateSchema = z
     // effective order from parent at query time). Non-null = division or detached brigade that holds
     // its own UnitOrderState. NOTE: null and { status:'none' } are semantically distinct — null means
     // "not an order-holding unit", whereas { status:'none' } means "order-holder with no active order".
-    // Use isOrderHolder() from engine/init.js rather than checking orders !== null directly (#364).
+    // Use isOrderHolder() from engine/queries.js rather than checking orders !== null directly (#364).
     // LOB §10.3f: orders relayed division → brigade. SM §2.3, §3.3: detached brigade becomes
     // the order-holding level.
     orders: UnitOrderState.nullable(),

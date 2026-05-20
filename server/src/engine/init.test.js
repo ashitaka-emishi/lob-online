@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
-import { initGameState, isOrderHolder } from './init.js';
+import { initGameState } from './init.js';
+import { isOrderHolder } from './queries.js';
 import { GameStateSchema } from '../schemas/gameState.schema.js';
 
 // Minimal scenario fixture matching the real scenario.json structure
