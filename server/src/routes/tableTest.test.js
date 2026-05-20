@@ -560,3 +560,58 @@ describe('pickMods prototype-pollution guard', () => {
     expect({}.polluted).toBeUndefined();
   });
 });
+
+// ─── domain bounds clamping for pickMods numeric keys (#322) ──────────────────
+
+describe('pickMods numeric bounds clamping (#322)', () => {
+  beforeEach(() => {
+    moraleResult.mockReturnValue({
+      effectiveRoll: 7,
+      type: null,
+      retreatHexes: 0,
+      spLoss: 0,
+      leaderLossCheck: false,
+    });
+  });
+
+  it('clamps leaderMoraleValue above max (4) to 4 — LOB §6.1', async () => {
+    const res = await request(app)
+      .post('/api/tools/table-test/morale')
+      .send({ rating: 'B', diceRoll: 7, modifiers: { leaderMoraleValue: 99 } });
+    expect(res.status).toBe(200);
+    expect(moraleResult.mock.calls[0][1].leaderMoraleValue).toBe(4);
+  });
+
+  it('clamps leaderMoraleValue below min (0) to 0 — LOB §6.1', async () => {
+    const res = await request(app)
+      .post('/api/tools/table-test/morale')
+      .send({ rating: 'B', diceRoll: 7, modifiers: { leaderMoraleValue: -5 } });
+    expect(res.status).toBe(200);
+    expect(moraleResult.mock.calls[0][1].leaderMoraleValue).toBe(0);
+  });
+
+  it('clamps range above max (99) to 99 — LOB §5.6', async () => {
+    const res = await request(app)
+      .post('/api/tools/table-test/morale')
+      .send({ rating: 'B', diceRoll: 7, modifiers: { range: 200 } });
+    expect(res.status).toBe(200);
+    expect(moraleResult.mock.calls[0][1].range).toBe(99);
+  });
+
+  it('clamps range below min (0) to 0 — LOB §5.6', async () => {
+    const res = await request(app)
+      .post('/api/tools/table-test/morale')
+      .send({ rating: 'B', diceRoll: 7, modifiers: { range: -10 } });
+    expect(res.status).toBe(200);
+    expect(moraleResult.mock.calls[0][1].range).toBe(0);
+  });
+
+  it('passes in-bounds values through unchanged', async () => {
+    const res = await request(app)
+      .post('/api/tools/table-test/morale')
+      .send({ rating: 'B', diceRoll: 7, modifiers: { leaderMoraleValue: 2, range: 5 } });
+    expect(res.status).toBe(200);
+    expect(moraleResult.mock.calls[0][1].leaderMoraleValue).toBe(2);
+    expect(moraleResult.mock.calls[0][1].range).toBe(5);
+  });
+});
