@@ -53,13 +53,17 @@ export async function saveGame(id, state, dataDir = DEFAULT_DATA_DIR) {
 }
 
 export async function loadGame(id, dataDir = DEFAULT_DATA_DIR) {
-  const raw = await readFile(statePath(id, dataDir), 'utf8');
+  const path = statePath(id, dataDir);
+  const raw = await readFile(path, 'utf8');
   const parsed = JSON.parse(raw);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error(`Game state file is corrupted at ${path}: expected a JSON object.`);
+  }
   // #363 — reject saves whose on-disk format differs from the current schema version
   if (parsed.schemaVersion !== STATE_SCHEMA_VERSION) {
     throw new Error(
-      `Game state schemaVersion mismatch: file has ${parsed.schemaVersion ?? '(none)'}, ` +
-        `expected ${STATE_SCHEMA_VERSION}. Delete the save file and create a new game.`
+      `Game state schemaVersion mismatch at ${path}: file has ${parsed.schemaVersion ?? '(none)'}, ` +
+        `expected ${STATE_SCHEMA_VERSION}. Delete this file and create a new game.`
     );
   }
   return GameStateSchema.parse(parsed);

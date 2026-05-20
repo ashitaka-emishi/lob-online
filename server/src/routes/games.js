@@ -34,6 +34,7 @@ function getScenario() {
   if (!_scenario) _scenario = loadScenario();
   return _scenario;
 }
+/** Invalidate the lazy scenario cache. Next getScenario() call reads from disk. (#337) */
 export function clearScenarioCache() {
   _scenario = null;
 }

@@ -22,7 +22,6 @@ export function isOrderHolder(unit) {
 // LOB §10.6 — scenario setup orders are treated as already accepted at turn 1; they represent
 //   the pre-game historical posture and bypass the order-delivery pipeline
 // LOB_GAME_UPDATES SM section — "complexDefense" replaced by "move"
-// Returns a UnitOrderState object for order-holding units, or null for non-order-holding units.
 function mapOrder(rawOrder) {
   if (rawOrder === 'none' || rawOrder == null) return null;
   const type = rawOrder === 'complexDefense' ? 'move' : rawOrder;
@@ -59,7 +58,7 @@ function defaultUnit({ id, hex, orderRaw, isOnBoard, entryTurn, isDetached = fal
 }
 
 // Process at-start setup entries for one side, returning { unitId: UnitState }
-function processSetupSide(entries, order) {
+function processSetupSide(entries, defaultOrder) {
   const units = {};
   for (const entry of entries) {
     // SM §2.3, §3.3 — scenario data flags scenario-start detached brigades (#361)
@@ -71,7 +70,10 @@ function processSetupSide(entries, order) {
         units[unitId] = defaultUnit({
           id: unitId,
           hex: entry.referenceHex,
-          orderRaw: entry.order ?? order,
+          // Zone groups always carry an explicit order field; ?? is correct (null and undefined
+          // both mean "use the side default"). Individual entries use the ternary below to
+          // preserve explicit null as a meaningful "non-order-holder" signal.
+          orderRaw: entry.order ?? defaultOrder,
           isOnBoard: true,
           entryTurn: null,
           isDetached,
@@ -82,14 +84,15 @@ function processSetupSide(entries, order) {
       units[entry.unitId] = defaultUnit({
         id: entry.unitId,
         hex: entry.hex,
-        orderRaw: entry.order !== undefined ? entry.order : order,
+        // Preserve explicit null (e.g. leaders/artillery with order:null = non-order-holder).
+        orderRaw: entry.order !== undefined ? entry.order : defaultOrder,
         isOnBoard: true,
         entryTurn: null,
         isDetached,
       });
     } else if (Array.isArray(entry.units)) {
       // Group where each unit specifies its own hex
-      const groupOrder = entry.order !== undefined ? entry.order : order;
+      const groupOrder = entry.order !== undefined ? entry.order : defaultOrder;
       for (const u of entry.units) {
         if (typeof u === 'string') {
           // Unit string with no hex — treat as zone-less group (shouldn't occur in CSA setup)
@@ -139,8 +142,12 @@ function processReinforcementGroup(group, firstTurnTime, minutesPerTurn) {
 
   const turn = timeToTurn(timeStr, firstTurnTime, minutesPerTurn);
 
-  // LOB §10.6 — reinforcements arrive with their declared order already in transit (#360)
+  // LOB §10.6 — reinforcements carry their historical order already accepted; setup orders bypass
+  // the delivery pipeline (#360). SM §2.3, §3.3 — reinforcement groups may be pre-detached in
+  // scenario data (e.g. force-b Jones brigades); propagate the flag the same way processSetupSide
+  // does for at-start entries (#361).
   const orderRaw = group.orderType ?? null;
+  const isDetached = group.isDetached ?? false;
   for (const unitId of group.units) {
     queueEntries.push({ unitId, turn, entryHex });
     units[unitId] = defaultUnit({
@@ -149,6 +156,7 @@ function processReinforcementGroup(group, firstTurnTime, minutesPerTurn) {
       orderRaw,
       isOnBoard: false,
       entryTurn: turn,
+      isDetached,
     });
   }
 

@@ -6,7 +6,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 // Tests use a real temp directory — no mocking of fs.
 // gameFile.js is exercised with actual disk reads/writes.
-// DATA_DIR is overridden via the exported function signature.
+// DATA_DIR is overridden via the exported function signature (second argument).
+import { loadGame, saveGame } from './gameFile.js';
 
 // Minimal valid GameState for version-enforcement tests
 const BASE_VERSIONED_STATE = {
@@ -31,12 +32,9 @@ const BASE_VERSIONED_STATE = {
 };
 
 let tmpDir;
-let saveGame, loadGame;
 
-beforeEach(async () => {
+beforeEach(() => {
   tmpDir = mkdtempSync(join(tmpdir(), 'lob-gamefile-'));
-  // Re-import with patched DATA_DIR each time via direct import + module factory
-  ({ saveGame, loadGame } = await import('./gameFile.js'));
 });
 
 afterEach(() => {
@@ -199,5 +197,35 @@ describe('loadGame — schemaVersion guard (#363)', () => {
   it('loads successfully when schemaVersion matches', async () => {
     await saveGame('sv-ok', { ...BASE_VERSIONED_STATE, schemaVersion: 1 }, tmpDir);
     await expect(loadGame('sv-ok', tmpDir)).resolves.toMatchObject({ id: 'vtest' });
+  });
+
+  it('throws a descriptive error when schemaVersion is 0 (older format)', async () => {
+    const { writeFileSync, mkdirSync } = await import('node:fs');
+    mkdirSync(join(tmpDir, 'stale-zero'), { recursive: true });
+    writeFileSync(
+      join(tmpDir, 'stale-zero', 'state.json'),
+      JSON.stringify({ ...BASE_VERSIONED_STATE, schemaVersion: 0 })
+    );
+    await expect(loadGame('stale-zero', tmpDir)).rejects.toThrow(/schemaVersion/i);
+  });
+
+  it('throws a descriptive error when schemaVersion is a string "1" (type mismatch)', async () => {
+    const { writeFileSync, mkdirSync } = await import('node:fs');
+    mkdirSync(join(tmpDir, 'stale-str'), { recursive: true });
+    writeFileSync(
+      join(tmpDir, 'stale-str', 'state.json'),
+      JSON.stringify({ ...BASE_VERSIONED_STATE, schemaVersion: '1' })
+    );
+    await expect(loadGame('stale-str', tmpDir)).rejects.toThrow(/schemaVersion/i);
+  });
+
+  it('throws a descriptive error when schemaVersion is null', async () => {
+    const { writeFileSync, mkdirSync } = await import('node:fs');
+    mkdirSync(join(tmpDir, 'stale-null'), { recursive: true });
+    writeFileSync(
+      join(tmpDir, 'stale-null', 'state.json'),
+      JSON.stringify({ ...BASE_VERSIONED_STATE, schemaVersion: null })
+    );
+    await expect(loadGame('stale-null', tmpDir)).rejects.toThrow(/schemaVersion/i);
   });
 });

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { PHASES } from '../constants/phases.js';
+import { STATE_SCHEMA_VERSION } from '../constants/schemaVersion.js';
 
 // col.row format — e.g. "19.23"
 const HexId = z.string().regex(/^\d+\.\d+$/, 'Hex ID must be in col.row format (e.g. "19.23")');
@@ -117,7 +118,7 @@ export const GameStateSchema = z
     // Identifies the on-disk schema format version. loadGame() rejects files whose schemaVersion
     // does not match STATE_SCHEMA_VERSION. Increment when GameStateSchema fields change in a
     // breaking way and update constants/schemaVersion.js (#363).
-    schemaVersion: z.literal(1),
+    schemaVersion: z.literal(STATE_SCHEMA_VERSION),
     // Monotonically incremented on every saveGame — used for optimistic concurrency control (#332)
     version: z.number().int().nonnegative(),
     turn: z.number().int().min(1),
