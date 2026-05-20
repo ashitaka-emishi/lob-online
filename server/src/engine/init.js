@@ -21,7 +21,7 @@ export function isOrderHolder(unit) {
 // LOB §10.3 — artillery and non-order-holding units have null orders; effective behavior is §10.8a
 // LOB §10.6 — scenario setup orders are treated as already accepted at turn 1; they represent
 //   the pre-game historical posture and bypass the order-delivery pipeline
-// LOB_GAME_UPDATES SM section — "complexDefense" replaced by "move"
+// LOB_GAME_UPDATES SM (p.4) — "All those 'Complex' defense orders should be Move Orders."
 function mapOrder(rawOrder) {
   if (rawOrder === 'none' || rawOrder == null) return null;
   const type = rawOrder === 'complexDefense' ? 'move' : rawOrder;
