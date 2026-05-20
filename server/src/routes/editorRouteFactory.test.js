@@ -165,3 +165,101 @@ describe('createEditorRoute — PUT /data', () => {
     expect(unlink).toHaveBeenCalledWith(FILE_PATH + '.tmp');
   });
 });
+
+// #337 — afterSave callback is invoked after a successful PUT /data write
+describe('createEditorRoute — afterSave option (#337)', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    readFile.mockRejectedValue({ code: 'ENOENT' });
+    mkdir.mockResolvedValue(undefined);
+    writeFile.mockResolvedValue(undefined);
+    rename.mockResolvedValue(undefined);
+    readdir.mockResolvedValue([]);
+    unlink.mockResolvedValue(undefined);
+  });
+
+  it('calls afterSave() after a successful PUT', async () => {
+    const afterSave = vi.fn();
+    const app = express();
+    app.use(express.json());
+    app.use(
+      '/',
+      createEditorRoute({
+        schema: z.object({ name: z.string() }),
+        filePath: FILE_PATH,
+        filePrefix: 'test',
+        backupDir: '/tmp/bk',
+        afterSave,
+      })
+    );
+    const res = await request(app).put('/data').send({ name: 'hello' });
+    expect(res.status).toBe(200);
+    expect(afterSave).toHaveBeenCalledOnce();
+  });
+
+  it('does NOT call afterSave() when schema validation fails', async () => {
+    const afterSave = vi.fn();
+    const app = express();
+    app.use(express.json());
+    app.use(
+      '/',
+      createEditorRoute({
+        schema: z.object({ name: z.string() }),
+        filePath: FILE_PATH,
+        filePrefix: 'test',
+        backupDir: '/tmp/bk',
+        afterSave,
+      })
+    );
+    const res = await request(app).put('/data').send({ name: 42 });
+    expect(res.status).toBe(400);
+    expect(afterSave).not.toHaveBeenCalled();
+  });
+
+  it('works correctly when afterSave is omitted', async () => {
+    const app = buildApp(); // no afterSave
+    const res = await request(app).put('/data').send(VALID_BODY);
+    expect(res.status).toBe(200);
+  });
+
+  it('returns 200 and swallows error when afterSave throws (write already succeeded)', async () => {
+    const afterSave = vi.fn(() => {
+      throw new Error('cache reset failed');
+    });
+    const app = express();
+    app.use(express.json());
+    app.use(
+      '/',
+      createEditorRoute({
+        schema: z.object({ name: z.string() }),
+        filePath: FILE_PATH,
+        filePrefix: 'test',
+        backupDir: '/tmp/bk',
+        afterSave,
+      })
+    );
+    const res = await request(app).put('/data').send({ name: 'hello' });
+    expect(res.status).toBe(200);
+    expect(afterSave).toHaveBeenCalledOnce();
+  });
+
+  it('does NOT call afterSave when rename (atomic write) fails', async () => {
+    rename.mockRejectedValue(new Error('disk full'));
+    const afterSave = vi.fn();
+    const app = express();
+    app.use(express.json());
+    app.use(
+      '/',
+      createEditorRoute({
+        schema: z.object({ name: z.string() }),
+        filePath: FILE_PATH,
+        filePrefix: 'test',
+        backupDir: '/tmp/bk',
+        afterSave,
+      })
+    );
+    const res = await request(app).put('/data').send({ name: 'hello' });
+    expect(res.status).toBe(500);
+    expect(afterSave).not.toHaveBeenCalled();
+  });
+});

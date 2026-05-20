@@ -258,6 +258,34 @@ describe('GET /api/v1/games', () => {
   });
 });
 
+// #337 — clearScenarioCache invalidates the lazy scenario cache so the next request re-reads
+describe('clearScenarioCache (#337)', () => {
+  it('causes the next POST /games to call loadScenario again after cache is cleared', async () => {
+    const { clearScenarioCache } = await import('./games.js');
+    clearScenarioCache(); // ensure cache is empty at test start (module is shared across tests)
+    const app = await buildApp();
+
+    loadScenario.mockReturnValue({ id: 'v1', turnStructure: {} });
+    await request(app).post('/api/v1/games').send({});
+    expect(loadScenario).toHaveBeenCalledOnce(); // cache miss → disk read
+
+    // Second request uses cached value — loadScenario not called again
+    loadScenario.mockClear();
+    await request(app).post('/api/v1/games').send({});
+    expect(loadScenario).not.toHaveBeenCalled();
+
+    // After clearing, next request re-reads from disk
+    clearScenarioCache();
+    loadScenario.mockReturnValue({ id: 'v2', turnStructure: {} });
+    await request(app).post('/api/v1/games').send({});
+    expect(loadScenario).toHaveBeenCalledOnce();
+    expect(initGameState).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: 'v2' }),
+      expect.any(String)
+    );
+  });
+});
+
 describe('GET /api/v1/games/:id', () => {
   it('returns 200 with game state when player session is valid (#330)', async () => {
     getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok-1' });

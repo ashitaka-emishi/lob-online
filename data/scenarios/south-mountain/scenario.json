@@ -370,6 +370,7 @@
       },
       {
         "_groupNote": "Garland Brigade (G/dH) — DETACHED, defending Fox's Gap",
+        "isDetached": true,
         "order": "move",
         "units": [
           {
@@ -626,6 +627,7 @@
       {
         "_id": "force-b",
         "_note": "Detached Jones brigades (Garnett, Kemper, Walker) — same variable timing as Force A (roll separately)",
+        "isDetached": true,
         "variable": true,
         "variableTable": [
           {

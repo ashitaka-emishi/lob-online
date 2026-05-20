@@ -27,14 +27,24 @@ export function createEditorLimiter() {
  * `${filePrefix}-*.json`, so overlapping prefixes (e.g. `"map"` and `"map-overlay"`)
  * will cause incorrect trimming.
  *
- * @param {object} opts
+ * @param {object}    opts
  * @param {import('zod').ZodTypeAny} opts.schema      - Zod schema for PUT body validation
- * @param {string}  opts.filePath                     - Absolute path to the JSON data file
- * @param {string}  opts.filePrefix                   - Unique prefix for backup filenames (e.g. 'oob')
- * @param {string}  opts.backupDir                    - Absolute path to the backup directory
- * @param {number}  [opts.maxBackups=20]              - Maximum number of backup files to keep
+ * @param {string}    opts.filePath                   - Absolute path to the JSON data file
+ * @param {string}    opts.filePrefix                 - Unique prefix for backup filenames (e.g. 'oob')
+ * @param {string}    opts.backupDir                  - Absolute path to the backup directory
+ * @param {number}    [opts.maxBackups=20]            - Maximum number of backup files to keep
+ * @param {() => void} [opts.afterSave]               - Optional synchronous hook called after a
+ *   successful atomic write (e.g. to invalidate caches). Must not throw — errors are logged and
+ *   swallowed so a buggy hook cannot corrupt the 200 response contract.
  */
-export function createEditorRoute({ schema, filePath, filePrefix, backupDir, maxBackups = 20 }) {
+export function createEditorRoute({
+  schema,
+  filePath,
+  filePrefix,
+  backupDir,
+  maxBackups = 20,
+  afterSave,
+}) {
   const router = Router();
 
   router.get('/data', async (_req, res) => {
@@ -97,6 +107,11 @@ export function createEditorRoute({ schema, filePath, filePrefix, backupDir, max
         /* .tmp may not exist if writeFile failed before creating it */
       }
       return res.status(500).json({ ok: false, message: 'Write failed' });
+    }
+    try {
+      afterSave?.();
+    } catch (err) {
+      console.error('[editor] afterSave hook threw:', err.message);
     }
     res.json({ ok: true, _savedAt: savedAt });
   });

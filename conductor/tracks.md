@@ -104,4 +104,6 @@
 
 | [x] | m5-engine-debt-2_20260513 | M5 Engine Debt Bundle 2 — Schema Hardening & Code Quality | 2026-05-13 | 2026-05-18 |
 
+| [ ] | pre-ui-debt-sweep_20260518 | Pre-UI Debt Sweep — initGameState Correctness + Schema Quality | 2026-05-18 | 2026-05-18 |
+
 <!-- Tracks registered by /conductor:new-track -->

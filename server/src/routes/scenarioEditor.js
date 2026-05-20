@@ -5,6 +5,7 @@ import { Router } from 'express';
 
 import { ScenarioSchema } from '../schemas/scenario.schema.js';
 import { createEditorLimiter, createEditorRoute } from './editorRouteFactory.js';
+import { clearScenarioCache } from './games.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const SCENARIO_PATH = join(__dirname, '../../../data/scenarios/south-mountain/scenario.json');
@@ -18,6 +19,7 @@ router.use(
     filePath: SCENARIO_PATH,
     filePrefix: 'scenario',
     backupDir: BACKUP_DIR,
+    afterSave: clearScenarioCache,
   })
 );
 

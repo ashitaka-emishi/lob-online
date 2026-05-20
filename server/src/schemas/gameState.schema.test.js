@@ -27,6 +27,7 @@ const BASE_UNIT = {
 const BASE_GAME_STATE = {
   id: 'game-abc123',
   scenarioId: 'south-mountain',
+  schemaVersion: 1,
   version: 0,
   turn: 1,
   phase: null,

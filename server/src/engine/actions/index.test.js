@@ -20,6 +20,7 @@ const BASE_UNIT = {
 const SETUP_STATE = {
   id: 'game-1',
   scenarioId: 'south-mountain',
+  schemaVersion: 1,
   version: 1,
   turn: 1,
   phase: null,

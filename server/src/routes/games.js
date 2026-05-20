@@ -27,11 +27,16 @@ router.param('id', (req, res, next, id) => {
   next();
 });
 
-// Lazily load scenario once — scenario.json is immutable at runtime
+// Lazily load scenario once — scenario.json is immutable at runtime.
+// Call clearScenarioCache() when scenario.json is updated on disk (#337).
 let _scenario;
 function getScenario() {
   if (!_scenario) _scenario = loadScenario();
   return _scenario;
+}
+/** Invalidate the lazy scenario cache. Next getScenario() call reads from disk. (#337) */
+export function clearScenarioCache() {
+  _scenario = null;
 }
 
 // POST /api/v1/games — create a new game, assign creator as union
