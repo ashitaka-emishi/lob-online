@@ -1,17 +1,17 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-05-18 after pre-ui-debt-sweep (feat/pre-ui-debt-sweep)._
+_Last updated: 2026-05-20 after arch-debt-sprint (chore/arch-debt-sprint-393-394-370-322)._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                     |
-| -------------------------------- | ------------------------------------------------------------------------- |
-| Open debt items                  | 14                                                                        |
-| Cumulative debt score (net open) | 24                                                                        |
-| Highest-risk item                | No migration path for orders schema change — **resolved** (#363, score 3) |
-| PRs tracked                      | 166                                                                       |
+| Metric                           | Value                                                                            |
+| -------------------------------- | -------------------------------------------------------------------------------- |
+| Open debt items                  | 10                                                                               |
+| Cumulative debt score (net open) | 19                                                                               |
+| Highest-risk item                | Dijkstra lacks early termination (#295, score 2) — non-blocking at current scale |
+| PRs tracked                      | 168                                                                              |
 
 ---
 
@@ -185,6 +185,14 @@ _Last updated: 2026-05-18 after pre-ui-debt-sweep (feat/pre-ui-debt-sweep)._
 | 2026-05-18 | PR #391 (resolved #372) | -1                   | —         | 284                      |
 | 2026-05-18 | PR #391 (resolved #388) | -2                   | —         | 284                      |
 | 2026-05-18 | PR #391 (resolved #389) | -2                   | —         | 284                      |
+| 2026-05-18 | PR #392                 | 7                    | +7        | 291                      |
+| 2026-05-18 | PR #392 (added #393)    | +4                   | —         | 291                      |
+| 2026-05-18 | PR #392 (added #394)    | +3                   | —         | 291                      |
+| 2026-05-20 | PR #395                 | 0                    | -10       | 291                      |
+| 2026-05-20 | PR #395 (resolved #393) | -4                   | —         | 291                      |
+| 2026-05-20 | PR #395 (resolved #394) | -3                   | —         | 291                      |
+| 2026-05-20 | PR #395 (resolved #322) | -2                   | —         | 291                      |
+| 2026-05-20 | PR #395 (resolved #370) | -1                   | —         | 291                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -192,9 +200,9 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-High risk. Critical or significant deferred items pose a threat to production stability or block future work. Immediate attention recommended.
+Low risk. No critical or high-scoring items remain open. All score ≥3 items have been resolved.
 
-PR #391 (M5 engine debt bundle 2) closed 17 debt points with zero new deferred findings, for a net delta of −17 and a new net open score of 43 across 21 items. The three score-4 items (#361 scenario-start detached brigades, #360 reinforcement orderType, #340 join endpoint auth) remain the top priority and should be addressed before M5 ships playable turns. The score-3 item #363 (no migration path for the orders schema change) must be resolved before persistent saves go live. The bulk of remaining score-2 debt is concentrated in M6-blocked engine stubs (#379, #381, #382, #383), order-system design gaps (#364, #371), and performance items (#295, #294, #324, #322) that are non-blocking at current scale. No new high-risk items were introduced.
+PR #392 (pre-UI debt sweep) introduced two new architecture findings (#393 score 4, #394 score 3) from its team review. PR #395 (arch-debt-sprint) immediately closed all four actionable items: #393 (scenario cache route coupling), #394 (isOrderHolder module placement), #322 (pickMods unbounded numeric inputs), and #370 (complexDefense comment traceability), plus committed the tech-debt label workflow fix. Net delta for this sprint: −10 points across 4 issues. The remaining 10 open items (score 19) are all score ≤2: six M6-blocked engine stubs (#379, #381, #382, #383) and five performance/hygiene items (#295, #294, #324, #387, #385, #205, #204, #201). None block M5 UI delivery.
 
 ---
 
@@ -202,22 +210,20 @@ PR #391 (M5 engine debt bundle 2) closed 17 debt points with zero new deferred f
 
 _Ordered by score descending (ties: newest first). Resolved items are removed._
 
-| Score | Issue | Title                                                                                 | PR Introduced | Assessment                                                                                                                                                                                                        |
-| ----- | ----- | ------------------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2     | #379  | getValidActions should enumerate all legal actions for current state                  | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                                     |
-| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                                   | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                                 |
-| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                                     | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                               |
-| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)                    | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                                |
-| 2     | #324  | perf: hoist noEffectTerrain Set construction out of hexEntryCost hot path             | PR #315       | `hexEntryCostBreakdown` constructs `new Set(noEffectTerrain ?? [])` on every call when invoked without a pre-built Set. Internal Dijkstra callers hoist correctly; future single-step callers will pay per-call.  |
-| 2     | #322  | feat: add numeric bounds validation in pickMods                                       | PR #315       | `pickMods()` coerces numeric modifier values but applies no min/max bounds. Extreme or negative values pass through to engine table functions without validation.                                                 |
-| 2     | #295  | engine: Dijkstra lacks early termination for point-to-point queries                   | PR #283       | `movementPath` passes `Infinity` maxCost, exploring the entire reachable graph even for single target queries. Add optional `targetHex` to `dijkstra()` for 2–5× speedup on nearby pairs.                         |
-| 2     | #294  | engine: hex.js hot-path allocations — memoize formatHexId/parseHexId                  | PR #283       | `parseHexId` and `formatHexId` called ~13K+ times per Dijkstra run; each creates temporary array/string allocations. Pre-compute a 2D ID grid at startup. Only worth addressing if profiling confirms bottleneck. |
-| 1     | #370  | `complexDefense` sentinel in `mapOrder()` lacks pointer to LOB_GAME_UPDATES SM source | PR #359       | Comment cites `LOB_GAME_UPDATES SM section` without a specific section or page reference. Future maintainers may not know where to find the authoritative ruling.                                                 |
-| 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                             | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis.                    |
-| 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals          | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                                               |
-| 1     | #201  | oobTreeTransform: pre-index arty entries for O(1) lookups                             | PR #200       | Nested linear scan in `distributeCorpsArtillery` is O(M×(D+D×B)). No observable impact at South Mountain scale; flagged for awareness if OOB grows significantly.                                                 |
-| 1     | #387  | playerSide in dispatch must be sourced from session, not request body                 | PR #386       | No action endpoint exists yet (#356); the session-to-side mapping is a route-layer responsibility. Enforce at the route boundary when #356 is implemented.                                                        |
-| 1     | #385  | Add property-based / fuzz tests for dispatch round-trips                              | PR #375       | Nice-to-have for a rules engine; not blocking. No correctness impact; no milestone assigned.                                                                                                                      |
+| Score | Issue | Title                                                                        | PR Introduced | Assessment                                                                                                                                                                                                        |
+| ----- | ----- | ---------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2     | #379  | getValidActions should enumerate all legal actions for current state         | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                                     |
+| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                          | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                                 |
+| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                            | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                               |
+| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)           | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                                |
+| 2     | #324  | perf: hoist noEffectTerrain Set construction out of hexEntryCost hot path    | PR #315       | `hexEntryCostBreakdown` constructs `new Set(noEffectTerrain ?? [])` on every call when invoked without a pre-built Set. Internal Dijkstra callers hoist correctly; future single-step callers will pay per-call.  |
+| 2     | #295  | engine: Dijkstra lacks early termination for point-to-point queries          | PR #283       | `movementPath` passes `Infinity` maxCost, exploring the entire reachable graph even for single target queries. Add optional `targetHex` to `dijkstra()` for 2–5× speedup on nearby pairs.                         |
+| 2     | #294  | engine: hex.js hot-path allocations — memoize formatHexId/parseHexId         | PR #283       | `parseHexId` and `formatHexId` called ~13K+ times per Dijkstra run; each creates temporary array/string allocations. Pre-compute a 2D ID grid at startup. Only worth addressing if profiling confirms bottleneck. |
+| 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                    | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis.                    |
+| 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                                               |
+| 1     | #201  | oobTreeTransform: pre-index arty entries for O(1) lookups                    | PR #200       | Nested linear scan in `distributeCorpsArtillery` is O(M×(D+D×B)). No observable impact at South Mountain scale; flagged for awareness if OOB grows significantly.                                                 |
+| 1     | #387  | playerSide in dispatch must be sourced from session, not request body        | PR #386       | No action endpoint exists yet (#356); the session-to-side mapping is a route-layer responsibility. Enforce at the route boundary when #356 is implemented.                                                        |
+| 1     | #385  | Add property-based / fuzz tests for dispatch round-trips                     | PR #375       | Nice-to-have for a rules engine; not blocking. No correctness impact; no milestone assigned.                                                                                                                      |
 
 ---
 
