@@ -13,7 +13,7 @@ vi.mock('fs/promises', () => ({
 
 // #337 — clearScenarioCache must be called on successful scenario save
 const clearScenarioCacheMock = vi.fn();
-vi.mock('./games.js', () => ({ clearScenarioCache: clearScenarioCacheMock }));
+vi.mock('../engine/scenario.js', () => ({ clearScenarioCache: clearScenarioCacheMock }));
 
 // eslint-disable-next-line import/order
 import { readFile, writeFile, mkdir, readdir, unlink } from 'fs/promises';

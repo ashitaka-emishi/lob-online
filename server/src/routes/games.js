@@ -5,7 +5,7 @@ import express from 'express';
 import { requireSide } from '../auth/requireSide.js';
 import { getPlayerSession, setPlayerSession } from '../auth/session.js';
 import { initGameState } from '../engine/init.js';
-import { loadScenario } from '../engine/scenario.js';
+import { getScenario } from '../engine/scenario.js';
 import {
   createGame,
   GameNotFoundError,
@@ -26,18 +26,6 @@ router.param('id', (req, res, next, id) => {
   if (!UUID_RE.test(id)) return res.status(400).json({ error: 'Invalid game id' });
   next();
 });
-
-// Lazily load scenario once — scenario.json is immutable at runtime.
-// Call clearScenarioCache() when scenario.json is updated on disk (#337).
-let _scenario;
-function getScenario() {
-  if (!_scenario) _scenario = loadScenario();
-  return _scenario;
-}
-/** Invalidate the lazy scenario cache. Next getScenario() call reads from disk. (#337) */
-export function clearScenarioCache() {
-  _scenario = null;
-}
 
 // POST /api/v1/games — create a new game, assign creator as union
 router.post('/', async (req, res) => {

@@ -72,3 +72,28 @@ export function loadScenario(scenarioPath = DEFAULT_SCENARIO_PATH) {
 
   return Object.freeze(result.data);
 }
+
+// ─── Lazy cache (#393) ────────────────────────────────────────────────────────
+
+let _cache = null;
+
+/**
+ * Return the default scenario, loading from disk on first call and caching the
+ * result. Use this instead of calling loadScenario() directly from route handlers.
+ *
+ * @returns {import('zod').infer<typeof ScenarioSchema>} Validated, frozen scenario data.
+ */
+export function getScenario() {
+  if (!_cache) _cache = loadScenario();
+  return _cache;
+}
+
+/**
+ * Invalidate the lazy scenario cache. The next getScenario() call re-reads from
+ * disk. Called by the scenario editor after a successful save (#337).
+ */
+export function clearScenarioCache() {
+  // Reset the loadScenario call-count guard so the reload does not emit a warning.
+  _loadedScenarioPaths.delete(DEFAULT_SCENARIO_PATH);
+  _cache = null;
+}
