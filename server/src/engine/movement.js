@@ -123,6 +123,8 @@ function lookupTerrainCost(terrain, formationKey, terrainCosts) {
  * @param {string} formation  - 'line'|'column'|'mounted'|'limbered'|'horseArtillery'|'wagon'|'leader'
  * @param {object} scenario   - result of loadScenario()
  * @param {Map<string, object>} hexIndex - result of buildHexIndex()
+ * @param {Set<string>} [noEffectSet=null] - pre-built Set of noEffectTerrain types; built
+ *   internally when null. Pass a pre-built Set to avoid per-call allocation (#324).
  * @returns {{ terrainCost: number, hexsideCost: number, total: number }}
  */
 function hexEntryCostBreakdown(

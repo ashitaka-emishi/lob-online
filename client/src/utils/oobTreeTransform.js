@@ -79,7 +79,9 @@ function distributeCorpsArtillery(corps) {
   const divisions = corps.divisions.map((div) => {
     const divPrefix = div.id.match(/^([^d]+)d-/)?.[1];
 
-    // Division-level match: try O(1) legacy key first, then fall back to endsWith scan
+    // Division-level match: try O(1) legacy key first, then fall back to endsWith scan.
+    // Both branches must produce a [key, value] tuple (or null) — downstream reads divMatch[0]/[1].
+    // Legacy is preferred explicitly; SM oob.json has no division where both patterns coexist.
     const legacyKey = divPrefix ? `arty${divPrefix}-${corps.id}` : null;
     let divMatch = null;
     if (legacyKey && artyMap.has(legacyKey) && !matchedKeys.has(legacyKey)) {
