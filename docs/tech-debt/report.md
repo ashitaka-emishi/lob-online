@@ -8,8 +8,8 @@ _Last updated: 2026-05-21 after PR #397._
 
 | Metric                           | Value                                                                             |
 | -------------------------------- | --------------------------------------------------------------------------------- |
-| Open debt items                  | 8                                                                                 |
-| Cumulative debt score (net open) | 12                                                                                |
+| Open debt items                  | 10                                                                                |
+| Cumulative debt score (net open) | 16                                                                                |
 | Highest-risk item                | M6-blocked engine stubs (#379, #381, #382, #383, score 2) — deferred to M6 tracks |
 | PRs tracked                      | 174                                                                               |
 
@@ -206,9 +206,9 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Moderate risk. Some deferred workarounds and sub-optimal patterns that will slow future phases if not addressed.
+Elevated risk. Several significant deferred items that introduce coupling or architectural compromise. Recommend a debt reduction sprint before the next major phase.
 
-PR #397 (engine-perf-sprint) closed all four remaining performance/hygiene debt items: #324 (noEffectSet allocation), #295 (Dijkstra early termination), #294 (hex ID memoization), and #201 (artyMap pre-index), reducing net open score from 19 to 12. The team-review of PR #397 surfaced 15 findings — all fixed in place, 0 deferred. The remaining 8 open items are all score ≤2: four M6-blocked engine stubs (#379, #381, #382, #383) awaiting M6 combat and map data, and four minor hygiene items (#205, #204, #387, #385). No score ≥3 items remain. Current debt is concentrated in M6-blocked stubs that cannot be addressed until M6 combat/map tracks are underway.
+Registration of two previously-untracked PR #348 findings (#346 test consolidation, #350 rate limiting) raised the net open score from 12 to 16. The 10 open items are all score ≤2: four M6-blocked engine stubs (#379, #381, #382, #383) awaiting M6 combat and map data; two newly-registered hygiene items (#350 rate limiting deferred to M8, #346 test overlap deferred to a test-hygiene sprint); and four minor items (#205, #204, #387, #385). No score ≥3 items remain. The "Elevated" classification reflects score threshold arithmetic only — there is no new architectural risk. A test-hygiene sprint (#346) and M8 auth hardening (#350) are the natural resolution paths.
 
 ---
 
@@ -216,16 +216,18 @@ PR #397 (engine-perf-sprint) closed all four remaining performance/hygiene debt 
 
 _Ordered by score descending (ties: newest first). Resolved items are removed._
 
-| Score | Issue | Title                                                                        | PR Introduced | Assessment                                                                                                                                                                                     |
-| ----- | ----- | ---------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2     | #379  | getValidActions should enumerate all legal actions for current state         | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                  |
-| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                          | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                              |
-| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                            | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                            |
-| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)           | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                             |
-| 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                    | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis. |
-| 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                            |
-| 1     | #387  | playerSide in dispatch must be sourced from session, not request body        | PR #386       | No action endpoint exists yet (#356); the session-to-side mapping is a route-layer responsibility. Enforce at the route boundary when #356 is implemented.                                     |
-| 1     | #385  | Add property-based / fuzz tests for dispatch round-trips                     | PR #375       | Nice-to-have for a rules engine; not blocking. No correctness impact; no milestone assigned.                                                                                                   |
+| Score | Issue | Title                                                                        | PR Introduced | Assessment                                                                                                                                                                                                              |
+| ----- | ----- | ---------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2     | #379  | getValidActions should enumerate all legal actions for current state         | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                                           |
+| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                          | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                                       |
+| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                            | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                                     |
+| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)           | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                                      |
+| 2     | #350  | server: add rate limiting on POST /api/v1/games routes                       | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing phases.             |
+| 2     | #346  | test: consolidate low-risk overlapping coverage                              | PR #348       | Table-test panels, editor routes, and compass utils have overlapping assertions. Safe maintenance cleanup — consolidate to composable-level tests, trim per-panel/per-route duplication. No production behavior change. |
+| 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                    | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis.                          |
+| 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                                                     |
+| 1     | #387  | playerSide in dispatch must be sourced from session, not request body        | PR #386       | No action endpoint exists yet (#356); the session-to-side mapping is a route-layer responsibility. Enforce at the route boundary when #356 is implemented.                                                              |
+| 1     | #385  | Add property-based / fuzz tests for dispatch round-trips                     | PR #375       | Nice-to-have for a rules engine; not blocking. No correctness impact; no milestone assigned.                                                                                                                            |
 
 ---
 
