@@ -167,6 +167,8 @@ router.post(
     if (!rollR.ok) return res.status(400).json({ error: rollR.error });
     // #306 — allowlist-filter modifier object before forwarding to engine
     // #322 — clamp numeric mods to domain bounds before engine receives them
+    // Note: every key in MORALE_NUM_MOD_KEYS should appear in this bounds map;
+    //       omitting a key leaves it unbounded (passes through unclamped).
     const safeMods = pickMods(modifiers, MORALE_BOOL_MODS, MORALE_NUM_MOD_KEYS, {
       leaderMoraleValue: { min: 0, max: 4 }, // LOB §6.1 — leader morale values 0–4
       range: { min: 0, max: 99 }, // defensive cap; LOB §5.6 covers range modifiers but specifies no upper bound
