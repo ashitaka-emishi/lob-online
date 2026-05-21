@@ -36,34 +36,55 @@ export const DIR_CUBE_DELTAS = [
 
 // ─── ID parsing ────────────────────────────────────────────────────────────────
 
+// #294 — module-level caches eliminate repeated string allocations in the Dijkstra hot path.
+// Bounded: keyspace = one entry per valid hex ID on a fixed map (64×35 = 2240 max for SM).
+// All callers must validate hex IDs against the map index before reaching these functions.
+const _parseCache = new Map();
+// Integer-indexed sparse array: _formatCache[col][row] — zero-allocation on hit path.
+const _formatCache = [];
+
 /**
  * Parse a game hex ID into col/row integers.
+ * Result is memoized and frozen — the same object reference is returned on repeated calls.
  * @param {string} hexId - e.g. "19.23"
- * @returns {{ col: number, row: number }}
+ * @returns {Readonly<{ col: number, row: number }>}
  */
 export function parseHexId(hexId) {
   // LOB — hex IDs are "CC.RR" strings (1-indexed col.row, general LOB map convention)
   if (typeof hexId !== 'string' || hexId.length === 0) {
     throw new TypeError('hexId must be a non-empty string');
   }
+  if (_parseCache.has(hexId)) return _parseCache.get(hexId);
   const parts = hexId.split('.');
   const col = Number(parts[0]);
   const row = Number(parts[1]);
   if (parts.length !== 2 || !Number.isInteger(col) || !Number.isInteger(row)) {
-    throw new TypeError('hexId must be a non-empty string');
+    throw new TypeError('hexId must match "CC.RR" format with integer col and row');
   }
-  return { col, row };
+  const result = Object.freeze({ col, row });
+  _parseCache.set(hexId, result);
+  return result;
 }
 
 /**
  * Format 1-based col/row integers into a zero-padded hex ID string.
- * Single source of truth for the hex ID format.
+ * Single source of truth for the hex ID format. Result is memoized.
  * @param {number} col - 1-based column
  * @param {number} row - 1-based row
  * @returns {string} e.g. "01.03"
  */
 export function formatHexId(col, row) {
-  return `${String(col).padStart(2, '0')}.${String(row).padStart(2, '0')}`;
+  let colCache = _formatCache[col];
+  if (colCache !== undefined) {
+    const cached = colCache[row];
+    if (cached !== undefined) return cached;
+  } else {
+    colCache = [];
+    _formatCache[col] = colCache;
+  }
+  const result = `${String(col).padStart(2, '0')}.${String(row).padStart(2, '0')}`;
+  colCache[row] = result;
+  return result;
 }
 
 // ─── Coordinate conversions ────────────────────────────────────────────────────
@@ -309,11 +330,15 @@ class MinHeap {
  *   `dirIndex`. Return Infinity for impassable transitions.
  * @param {number} maxCost - stop expanding when cost exceeds this value (use Infinity for full path)
  * @param {{ cols: number, rows: number }} gridSpec
+ * @param {string|null} [targetHex=null] - optional early-termination target. When set, the search
+ *   stops as soon as `targetHex` is first popped from the heap (its optimal cost is then final).
+ *   The returned `costs` and `prev` maps are only guaranteed complete for hexes settled at or
+ *   before `targetHex`. Do not iterate `costs` for the full reachable set when `targetHex` is set.
  * @returns {{ costs: Map<string, number>, prev: Map<string, string|null> }}
- *   `costs` maps reachable hexId → lowest total cost from start.
- *   `prev` maps hexId → predecessor hexId (null for start).
+ *   `costs` maps hexId → lowest total cost from start (partial when `targetHex` is set).
+ *   `prev` maps hexId → predecessor hexId, null for start (partial when `targetHex` is set).
  */
-export function dijkstra(startHex, costFn, maxCost, gridSpec) {
+export function dijkstra(startHex, costFn, maxCost, gridSpec, targetHex = null) {
   const costs = new Map([[startHex, 0]]);
   const prev = new Map([[startHex, null]]);
   // [cost, hexId]
@@ -325,6 +350,8 @@ export function dijkstra(startHex, costFn, maxCost, gridSpec) {
 
     if (curCost > (costs.get(curHex) ?? Infinity)) continue; // stale entry
     if (curCost > maxCost) continue;
+    // #295 — early termination for point-to-point: first pop of target = optimal cost
+    if (targetHex !== null && curHex === targetHex) break;
 
     for (const { hexId: neighbor, dirIndex } of hexNeighbors(curHex, gridSpec)) {
       const moveCost = costFn(curHex, neighbor, dirIndex);

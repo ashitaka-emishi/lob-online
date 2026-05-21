@@ -67,35 +67,41 @@ function flattenArtillery(node) {
 // Brigade matching (Kanawha-style, applied after division pass):
 //   • arty-{bdeNum}{divPrefix}g-{corpsId}       e.g. arty-1kg-9c  → 1b-kd-9c
 
-// Acceptable at South Mountain scale (~15 divisions, ~40 brigades, ~20 arty entries).
-// If used with a significantly larger OOB, pre-index artyEntries into a Map for O(1)
-// lookups instead of the current linear scan. (#201)
+// #201 — artyMap pre-indexes exact-key lookups to O(1). The endsWith division-match
+// pattern still uses a linear scan (Map cannot accelerate suffix matching), but the
+// legacy division match and all brigade matches are now O(1) Map lookups.
 function distributeCorpsArtillery(corps) {
   if (!corps.artillery || !corps.divisions?.length) return corps;
   const artyEntries = Object.entries(corps.artillery);
+  const artyMap = new Map(artyEntries);
   const matchedKeys = new Set();
 
   const divisions = corps.divisions.map((div) => {
     const divPrefix = div.id.match(/^([^d]+)d-/)?.[1];
 
-    // Division-level match
-    const divMatch = artyEntries.find(
-      ([k]) =>
-        !matchedKeys.has(k) &&
-        (k.endsWith(`-${div.id}`) || (divPrefix && k === `arty${divPrefix}-${corps.id}`))
-    );
+    // Division-level match: try O(1) legacy key first, then fall back to endsWith scan.
+    // Both branches must produce a [key, value] tuple (or null) — downstream reads divMatch[0]/[1].
+    // Legacy is preferred explicitly; SM oob.json has no division where both patterns coexist.
+    const legacyKey = divPrefix ? `arty${divPrefix}-${corps.id}` : null;
+    let divMatch = null;
+    if (legacyKey && artyMap.has(legacyKey) && !matchedKeys.has(legacyKey)) {
+      divMatch = [legacyKey, artyMap.get(legacyKey)];
+    } else {
+      divMatch = artyEntries.find(([k]) => !matchedKeys.has(k) && k.endsWith(`-${div.id}`)) ?? null;
+    }
     if (divMatch) matchedKeys.add(divMatch[0]);
 
-    // Brigade-level match: arty-{bdeNum}{divPrefix}g-{corpsId} → {bdeNum}b-{div.id}
+    // Brigade-level match (O(1) with Map): arty-{bdeNum}{divPrefix}g-{corpsId} → {bdeNum}b-{div.id}
     const brigades = (div.brigades ?? []).map((bde) => {
       const bdeNum = bde.id.match(/^(\d+)b-/)?.[1];
       if (!bdeNum || !divPrefix) return bde;
-      const bdeMatch = artyEntries.find(
-        ([k]) => !matchedKeys.has(k) && k === `arty-${bdeNum}${divPrefix}g-${corps.id}`
-      );
-      if (!bdeMatch) return bde;
-      matchedKeys.add(bdeMatch[0]);
-      return { ...bde, batteries: [...(bde.batteries ?? []), ...(bdeMatch[1].batteries ?? [])] };
+      const bdeKey = `arty-${bdeNum}${divPrefix}g-${corps.id}`;
+      if (!artyMap.has(bdeKey) || matchedKeys.has(bdeKey)) return bde;
+      matchedKeys.add(bdeKey);
+      return {
+        ...bde,
+        batteries: [...(bde.batteries ?? []), ...(artyMap.get(bdeKey).batteries ?? [])],
+      };
     });
 
     const divBatteries = divMatch

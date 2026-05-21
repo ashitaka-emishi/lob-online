@@ -355,6 +355,47 @@ describe('hexEntryCost — dirIndex range validation (#286)', () => {
   });
 });
 
+// ─── hexEntryCost — noEffectSet passthrough (#324) ───────────────────────────
+
+describe('hexEntryCost — noEffectSet passthrough (#324)', () => {
+  // edges: { 0: [...] } is the correct format (N-face of fromHex stores dirIndex-0 features).
+  // Use a 'stream' hexside (cost +1 for line) for a discriminating behavioral wiring test:
+  // passing a Set that includes 'stream' suppresses that hexside cost; an empty Set does not.
+  const streamHexIndex = () =>
+    makeHexIndex([
+      { hex: '10.10', terrain: 'clear', edges: { 0: [{ type: 'stream' }] } },
+      { hex: '10.11', terrain: 'clear' },
+    ]);
+
+  it('pre-built noEffectSet produces same cost as internal Set construction', () => {
+    // Pass the real SM noEffectSet — should match the default (internally-built) path.
+    const hexIndex = streamHexIndex();
+    const noEffectSet = new Set(scenario.movementCosts.noEffectTerrain ?? []);
+    const withSet = hexEntryCost('10.10', '10.11', 0, 'line', scenario, hexIndex, noEffectSet);
+    const withoutSet = hexEntryCost('10.10', '10.11', 0, 'line', scenario, hexIndex);
+    expect(withSet).toBe(withoutSet);
+  });
+
+  it('noEffectSet containing stream suppresses stream hexside cost (#324)', () => {
+    // Synthetic wiring test: when 'stream' is in the passed Set, the +1 hexside cost is skipped.
+    // An empty Set lets the cost apply. This confirms noEffectSet is actually threaded through.
+    const hexIndex = streamHexIndex();
+    const withStream = hexEntryCost(
+      '10.10',
+      '10.11',
+      0,
+      'line',
+      scenario,
+      hexIndex,
+      new Set(['stream'])
+    );
+    const withEmpty = hexEntryCost('10.10', '10.11', 0, 'line', scenario, hexIndex, new Set());
+    // stream adds +1 MP for line formation — suppressing it yields a lower cost
+    expect(withStream).toBeLessThan(withEmpty);
+    expect(withEmpty - withStream).toBe(1); // exactly the stream hexside cost
+  });
+});
+
 // ─── movementPath — hexsideCost breakdown (#288) ─────────────────────────────
 
 describe('movementPath — hexsideCost breakdown (#288)', () => {

@@ -46,7 +46,7 @@ describe('parseHexId', () => {
 
   it('throws TypeError for malformed ID (no dot separator)', () => {
     expect(() => parseHexId('abc')).toThrow(TypeError);
-    expect(() => parseHexId('abc')).toThrow('hexId must be a non-empty string');
+    expect(() => parseHexId('abc')).toThrow('CC.RR');
   });
 });
 
@@ -244,6 +244,46 @@ describe('hexLine', () => {
 
 // ─── Dijkstra ──────────────────────────────────────────────────────────────────
 
+// ─── ID caching (#294) ─────────────────────────────────────────────────────────
+
+describe('parseHexId — memoization (#294)', () => {
+  it('returns the same frozen object reference on repeated calls', () => {
+    const a = parseHexId('19.23');
+    const b = parseHexId('19.23');
+    expect(a).toBe(b);
+    expect(a).toEqual({ col: 19, row: 23 });
+  });
+
+  it('distinct IDs return distinct objects with correct values', () => {
+    const a = parseHexId('10.10');
+    const b = parseHexId('20.24');
+    expect(a).not.toBe(b);
+    expect(a).toEqual({ col: 10, row: 10 });
+    expect(b).toEqual({ col: 20, row: 24 });
+  });
+
+  it('returned object is frozen — mutations do not corrupt the cache', () => {
+    const result = parseHexId('11.11');
+    expect(Object.isFrozen(result)).toBe(true);
+  });
+
+  it('still throws on invalid input', () => {
+    expect(() => parseHexId('')).toThrow(TypeError);
+    expect(() => parseHexId('abc')).toThrow(TypeError);
+  });
+});
+
+describe('formatHexId — memoization (#294)', () => {
+  it('returns correct zero-padded string on repeated calls', () => {
+    const a = formatHexId(5, 12);
+    const b = formatHexId(5, 12);
+    expect(a).toBe('05.12');
+    expect(b).toBe('05.12');
+  });
+});
+
+// ─── Dijkstra ─────────────────────────────────────────────────────────────────
+
 describe('dijkstra', () => {
   it('start hex has cost 0', () => {
     const { costs } = dijkstra('10.10', () => 1, 3, GRID);
@@ -275,6 +315,38 @@ describe('dijkstra', () => {
     for (const [, cost] of costs) {
       expect(cost).toBeLessThanOrEqual(2);
     }
+  });
+
+  it('early termination: fewer cost evaluations vs full search (#295)', () => {
+    // Use a non-adjacent target (distance 2) so early termination skips meaningful work.
+    // Count edges evaluated by the *same* instrumented costFn in both modes.
+    const target = '10.12'; // 2 steps N from '10.10'
+    let callsWithout = 0;
+    dijkstra(
+      '10.10',
+      () => {
+        callsWithout++;
+        return 1;
+      },
+      3,
+      GRID
+    );
+    let callsWith = 0;
+    dijkstra(
+      '10.10',
+      () => {
+        callsWith++;
+        return 1;
+      },
+      3,
+      GRID,
+      target
+    );
+    // Early termination stops expanding once target is popped — fewer edges evaluated
+    expect(callsWith).toBeLessThan(callsWithout);
+    // Target must be reachable with its correct optimal cost
+    const { costs } = dijkstra('10.10', () => 1, 3, GRID, target);
+    expect(costs.get(target)).toBe(2);
   });
 });
 

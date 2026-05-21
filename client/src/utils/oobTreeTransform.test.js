@@ -308,6 +308,94 @@ describe('buildDisplayTree — cavalry division Pleasonton variants (#246)', () 
   });
 });
 
+// ── distributeCorpsArtillery (#201) ───────────────────────────────────────────
+// Tests use buildDisplayTree to exercise distributeCorpsArtillery via processUSACorps.
+// After distribution, flattenArtillery collapses remaining arty groups into corps.batteries.
+
+describe('distributeCorpsArtillery — legacy division match (#201)', () => {
+  it('legacy key arty{divPrefix}-{corpsId} distributes batteries to division', () => {
+    const oob = makeOob({
+      id: '1c',
+      divisions: [{ id: '1d-1c', name: '1st Division', wreckThreshold: 2, brigades: [] }],
+      artillery: { 'arty1-1c': { batteries: [{ id: 'bat-a' }] } },
+    });
+    const tree = buildDisplayTree(oob, EMPTY_LEADERS, null, 'union');
+    const corps = tree[0].node.corps[0];
+    const div = corps.divisions[0];
+    // Battery landed on division; no arty remains at corps level
+    expect(div.batteries).toEqual(expect.arrayContaining([{ id: 'bat-a' }]));
+    expect(corps.batteries ?? []).not.toEqual(expect.arrayContaining([{ id: 'bat-a' }]));
+  });
+});
+
+describe('distributeCorpsArtillery — endsWith division match (#201)', () => {
+  it('key ending with -{div.id} distributes batteries to division', () => {
+    const oob = makeOob({
+      id: '9c',
+      divisions: [{ id: '1d-9c', name: '1st Division', wreckThreshold: 2, brigades: [] }],
+      artillery: { 'arty1-1d-9c': { batteries: [{ id: 'bat-b' }] } },
+    });
+    const tree = buildDisplayTree(oob, EMPTY_LEADERS, null, 'union');
+    const div = tree[0].node.corps[0].divisions[0];
+    expect(div.batteries).toEqual(expect.arrayContaining([{ id: 'bat-b' }]));
+  });
+});
+
+describe('distributeCorpsArtillery — brigade match (#201)', () => {
+  it('arty-{bdeNum}{divPrefix}g-{corpsId} distributes batteries to brigade', () => {
+    const oob = makeOob({
+      id: '9c',
+      divisions: [
+        {
+          id: 'kd-9c',
+          name: 'Kanawha Division',
+          wreckThreshold: 2,
+          brigades: [{ id: '1b-kd-9c', name: '1st Brigade', wreckThreshold: 2, regiments: [] }],
+        },
+      ],
+      artillery: { 'arty-1kg-9c': { batteries: [{ id: 'bat-c' }] } },
+    });
+    const tree = buildDisplayTree(oob, EMPTY_LEADERS, null, 'union');
+    const bde = tree[0].node.corps[0].divisions[0].brigades[0];
+    expect(bde.batteries).toEqual(expect.arrayContaining([{ id: 'bat-c' }]));
+  });
+});
+
+describe('distributeCorpsArtillery — unmatched arty stays at corps (#201)', () => {
+  it('arty with no matching division or brigade is flattened onto corps.batteries', () => {
+    const oob = makeOob({
+      id: '1c',
+      divisions: [{ id: '1d-1c', name: '1st Division', wreckThreshold: 2, brigades: [] }],
+      // 'artyX-1c' doesn't match any real divPrefix or brigade pattern
+      artillery: { 'artyX-1c': { batteries: [{ id: 'bat-unmatched' }] } },
+    });
+    const tree = buildDisplayTree(oob, EMPTY_LEADERS, null, 'union');
+    const corps = tree[0].node.corps[0];
+    // flattenArtillery moves remaining arty groups into corps.batteries
+    expect(corps.batteries ?? []).toEqual(expect.arrayContaining([{ id: 'bat-unmatched' }]));
+  });
+});
+
+describe('distributeCorpsArtillery — matchedKeys dedup (#201)', () => {
+  it('same arty key cannot match two divisions', () => {
+    const oob = makeOob({
+      id: '1c',
+      divisions: [
+        { id: '1d-1c', name: '1st Division', wreckThreshold: 2, brigades: [] },
+        { id: '2d-1c', name: '2nd Division', wreckThreshold: 2, brigades: [] },
+      ],
+      // 'arty1-1c' matches only '1d-1c' (legacy); '2d-1c' gets nothing
+      artillery: { 'arty1-1c': { batteries: [{ id: 'bat-d' }] } },
+    });
+    const tree = buildDisplayTree(oob, EMPTY_LEADERS, null, 'union');
+    const divs = tree[0].node.corps[0].divisions;
+    const firstDivBatteries = divs[0].batteries ?? [];
+    const secondDivBatteries = divs[1].batteries ?? [];
+    expect(firstDivBatteries).toEqual(expect.arrayContaining([{ id: 'bat-d' }]));
+    expect(secondDivBatteries).not.toEqual(expect.arrayContaining([{ id: 'bat-d' }]));
+  });
+});
+
 // ── buildDisplayTree — F/Cav Farnsworth variants (#237) ──────────────────────
 
 const LEADERS_WITH_FARNSWORTH = {
