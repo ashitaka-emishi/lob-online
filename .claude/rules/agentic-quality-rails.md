@@ -74,8 +74,9 @@ When a track accepts a deferred finding:
 
 1. File a GitHub issue before closing the task — do not defer filing.
 2. Include the debt score (1–5) and a written assessment in the issue.
-3. Add the finding to the per-PR debt report immediately, not at end-of-session.
-4. The debt register must reflect the finding before the PR is merged.
+3. Apply the `tech-debt` label to the issue.
+4. Add the finding to the per-PR debt report immediately, not at end-of-session.
+5. The debt register must reflect the finding before the PR is merged.
 
 ## Required Track Metadata Fields
 

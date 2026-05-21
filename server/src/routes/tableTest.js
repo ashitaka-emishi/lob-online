@@ -84,15 +84,18 @@ function requireEnum(raw, name, allowSet) {
  * @param {unknown} raw          - untrusted input (from req.body.modifiers)
  * @param {string[]} boolKeys    - boolean modifier key names
  * @param {string[]} [numKeys=[]] - numeric modifier key names
+ * @param {Object.<string,{min:number,max:number}>} [bounds={}] - domain clamp per numeric key
  * @returns {object}
  */
-function pickMods(raw, boolKeys, numKeys = []) {
+function pickMods(raw, boolKeys, numKeys = [], bounds = {}) {
   const src = typeof raw === 'object' && raw !== null ? raw : {};
   const out = {};
   for (const k of boolKeys) out[k] = Boolean(src[k]);
   for (const k of numKeys) {
     const n = Number(src[k]);
-    out[k] = Number.isFinite(n) ? n : 0;
+    let val = Number.isFinite(n) ? n : 0;
+    if (bounds[k]) val = Math.max(bounds[k].min, Math.min(bounds[k].max, val));
+    out[k] = val;
   }
   return out;
 }
@@ -163,7 +166,13 @@ router.post(
     const rollR = requireNumber(diceRoll, 'diceRoll', { min: 2, max: 12 });
     if (!rollR.ok) return res.status(400).json({ error: rollR.error });
     // #306 — allowlist-filter modifier object before forwarding to engine
-    const safeMods = pickMods(modifiers, MORALE_BOOL_MODS, MORALE_NUM_MOD_KEYS);
+    // #322 — clamp numeric mods to domain bounds before engine receives them
+    // Note: every key in MORALE_NUM_MOD_KEYS should appear in this bounds map;
+    //       omitting a key leaves it unbounded (passes through unclamped).
+    const safeMods = pickMods(modifiers, MORALE_BOOL_MODS, MORALE_NUM_MOD_KEYS, {
+      leaderMoraleValue: { min: 0, max: 4 }, // LOB §6.1 — leader morale values 0–4
+      range: { min: 0, max: 99 }, // defensive cap; LOB §5.6 covers range modifiers but specifies no upper bound
+    });
     return res.json(moraleResult(ratingR.value, safeMods, rollR.value));
   })
 );

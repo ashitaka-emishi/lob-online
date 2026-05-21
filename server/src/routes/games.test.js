@@ -42,6 +42,8 @@ vi.mock('../engine/init.js', () => ({
 
 vi.mock('../engine/scenario.js', () => ({
   loadScenario: vi.fn(),
+  getScenario: vi.fn(),
+  clearScenarioCache: vi.fn(),
 }));
 
 import { setPlayerSession, getPlayerSession } from '../auth/session.js';
@@ -57,7 +59,7 @@ import {
   saveGame,
 } from '../store/index.js';
 import { initGameState } from '../engine/init.js';
-import { loadScenario } from '../engine/scenario.js';
+import { getScenario } from '../engine/scenario.js';
 
 // Fixed UUID used as a stand-in game id in route tests
 const TEST_UUID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
@@ -92,7 +94,7 @@ async function buildApp() {
 // tests that use mockImplementation(() => throw) from bleeding into later tests
 beforeEach(() => {
   vi.resetAllMocks();
-  loadScenario.mockReturnValue({ id: 'south-mountain', turnStructure: {} });
+  getScenario.mockReturnValue({ id: 'south-mountain', turnStructure: {} });
   initGameState.mockReturnValue(MINIMAL_STATE);
   createGame.mockReturnValue(TEST_UUID);
   listGames.mockReturnValue([]);
@@ -258,29 +260,15 @@ describe('GET /api/v1/games', () => {
   });
 });
 
-// #337 — clearScenarioCache invalidates the lazy scenario cache so the next request re-reads
-describe('clearScenarioCache (#337)', () => {
-  it('causes the next POST /games to call loadScenario again after cache is cleared', async () => {
-    const { clearScenarioCache } = await import('./games.js');
-    clearScenarioCache(); // ensure cache is empty at test start (module is shared across tests)
+// #393 — getScenario() is called by POST /games; cache behaviour tested in scenario.test.js
+describe('POST /api/v1/games — scenario wiring', () => {
+  it('calls getScenario and passes result to initGameState', async () => {
     const app = await buildApp();
-
-    loadScenario.mockReturnValue({ id: 'v1', turnStructure: {} });
+    getScenario.mockReturnValue({ id: 'v1', turnStructure: {} });
     await request(app).post('/api/v1/games').send({});
-    expect(loadScenario).toHaveBeenCalledOnce(); // cache miss → disk read
-
-    // Second request uses cached value — loadScenario not called again
-    loadScenario.mockClear();
-    await request(app).post('/api/v1/games').send({});
-    expect(loadScenario).not.toHaveBeenCalled();
-
-    // After clearing, next request re-reads from disk
-    clearScenarioCache();
-    loadScenario.mockReturnValue({ id: 'v2', turnStructure: {} });
-    await request(app).post('/api/v1/games').send({});
-    expect(loadScenario).toHaveBeenCalledOnce();
-    expect(initGameState).toHaveBeenLastCalledWith(
-      expect.objectContaining({ id: 'v2' }),
+    expect(getScenario).toHaveBeenCalled();
+    expect(initGameState).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'v1' }),
       expect.any(String)
     );
   });

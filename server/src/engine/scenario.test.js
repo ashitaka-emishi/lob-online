@@ -2,9 +2,9 @@ import { writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { loadScenario } from './scenario.js';
+import { clearScenarioCache, getScenario, loadScenario } from './scenario.js';
 
 // ─── Happy path — real SM scenario file ───────────────────────────────────────
 
@@ -127,6 +127,55 @@ describe('loadScenario — error handling', () => {
       expect(() => loadScenario(tmpPath)).toThrow(/schema validation/);
     } finally {
       unlinkSync(tmpPath);
+    }
+  });
+});
+
+// ─── Lazy cache — getScenario / clearScenarioCache (#393 #337) ────────────────
+
+describe('getScenario / clearScenarioCache (#393 #337)', () => {
+  beforeEach(() => {
+    clearScenarioCache();
+  });
+
+  afterEach(() => {
+    clearScenarioCache();
+  });
+
+  it('getScenario returns a valid scenario object', () => {
+    const scenario = getScenario();
+    expect(scenario).toBeDefined();
+    expect(scenario.id).toBe('south-mountain');
+  });
+
+  it('getScenario returns the same reference on repeated calls (cache hit)', () => {
+    const a = getScenario();
+    const b = getScenario();
+    expect(a).toBe(b);
+  });
+
+  it('clearScenarioCache causes getScenario to return a fresh load', () => {
+    const a = getScenario();
+    clearScenarioCache();
+    const b = getScenario();
+    // Both valid; after clear a fresh frozen object is returned
+    expect(b).toBeDefined();
+    expect(b.id).toBe('south-mountain');
+    // Fresh load produces a new reference (different frozen object)
+    expect(a).not.toBe(b);
+  });
+
+  it('clearScenarioCache suppresses the call-count guard warning on reload', () => {
+    // Verify that clearScenarioCache removes the path from _loadedScenarioPaths so the
+    // next loadScenario() call (triggered by getScenario()) does not emit a console.warn.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      getScenario(); // first load — registers path in the call-count guard Set
+      clearScenarioCache(); // removes path from Set and nulls cache
+      getScenario(); // reload — path absent from Set, no warning
+      expect(warnSpy).not.toHaveBeenCalled();
+    } finally {
+      warnSpy.mockRestore();
     }
   });
 });

@@ -80,6 +80,8 @@ Deferred item "{title}" requires a linked GitHub issue before this workflow can 
 Please file the issue and provide the issue number.
 ```
 
+After confirming the issue number, apply the `tech-debt` label: `gh issue edit {number} --add-label "tech-debt"`
+
 Also confirm the second-pass trigger decision for fixes made after the primary review:
 
 ```
