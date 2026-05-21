@@ -3,7 +3,7 @@
 **Track ID:** m5-game-map-ui_20260521
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-05-21
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -31,12 +31,12 @@ Pinia store that drives game state rather than dev-tool state.
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -44,11 +44,11 @@ Pinia store that drives game state rather than dev-tool state.
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated if any debt was accepted
-- [ ] Ready for `/team-review`
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated if any debt was accepted (none deferred)
+- [x] Ready for `/team-review`
 
 ---
 
@@ -156,7 +156,7 @@ Smoke-test in the running app.
   - On `hex-click` on empty hex → `gameStore.deselectUnit()`
 - [x] Task 4.3: Write `client/src/views/GameView.test.js` covering mount → load → render
       cycle (mock `fetch`; assert `HexMapOverlay` and `UnitStatsPanel` are present)
-- [~] Task 4.4: Smoke-test in running dev server:
+- [x] Task 4.4: Smoke-test in running dev server:
   - `npm run dev` (or `/dev-start`)
   - Create or join a game via `/lobby`; navigate to `/games/:id`
   - Confirm units appear on the map at their start positions
@@ -164,18 +164,18 @@ Smoke-test in the running app.
 
 ### Verification
 
-- [ ] All acceptance criteria in spec.md checked off
-- [ ] `npm run quality:strict` passes (validate-data + lint + format:check + test + build)
-- [ ] No unexpected Vue warnings in browser console during smoke test
+- [x] All acceptance criteria in spec.md checked off
+- [x] `npm run quality:strict` passes (validate-data + lint + format:check + test + build)
+- [x] No unexpected Vue warnings in browser console during smoke test
 
 ---
 
 ## Final Verification
 
-- [ ] All acceptance criteria met (see spec.md)
-- [ ] Tests passing at ≥ 70% line coverage
-- [ ] No new tech debt deferred without a filed issue + debt register entry
-- [ ] Ready for `/team-review`
+- [x] All acceptance criteria met (see spec.md)
+- [x] Tests passing at ≥ 70% line coverage
+- [x] No new tech debt deferred without a filed issue + debt register entry
+- [x] Ready for `/team-review`
 
 ---
 
