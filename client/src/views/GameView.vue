@@ -16,6 +16,7 @@ const { calibration } = useCalibration();
 const mapData = ref(null);
 const oobData = ref(null);
 const mapError = ref(null);
+const oobError = ref(null);
 const imgNaturalWidth = ref(1400);
 const imgNaturalHeight = ref(900);
 
@@ -37,7 +38,9 @@ onMounted(async () => {
       .then((d) => {
         oobData.value = d;
       })
-      .catch(() => {}),
+      .catch((err) => {
+        oobError.value = `OOB load failed: ${err.message}`;
+      }),
   ]);
 });
 
@@ -96,7 +99,7 @@ const displayUnits = computed(() => {
         id: u.id,
         hexId: u.hex,
         counterFile: oob?.counterFile ?? null,
-        side: oob?.side ?? 'union',
+        side: oob?.side ?? null,
       };
     })
     .filter((u) => u.counterFile !== null);
@@ -110,7 +113,7 @@ const selectedDisplayUnit = computed(() => {
   return {
     id: unit.id,
     name: oob?.name ?? unit.id,
-    side: oob?.side ?? 'unknown',
+    side: oob?.side ?? null,
     sp: oob?.strengthPoints ?? '?',
     moraleState: unit.moraleState,
     orderType: unit.orders?.type ?? null,
@@ -140,7 +143,10 @@ function onImageLoad(event) {
 
 <template>
   <div class="game-view">
-    <div v-if="mapError" class="error-banner">{{ mapError }}</div>
+    <div v-if="gameStore.loading" class="loading-banner">Loading game…</div>
+    <div v-if="gameStore.error || mapError || oobError" class="error-banner">
+      {{ gameStore.error || mapError || oobError }}
+    </div>
     <div class="game-body">
       <!-- Map area: scrollable, fills remaining width -->
       <div class="map-area">
@@ -188,6 +194,13 @@ function onImageLoad(event) {
   flex-direction: column;
   background: #0e0c08;
   color: #c8b89a;
+}
+
+.loading-banner {
+  background: #1a2030;
+  color: #8090c0;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
 }
 
 .error-banner {

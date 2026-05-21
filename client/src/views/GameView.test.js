@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { createMemoryHistory, createRouter } from 'vue-router';
 
@@ -19,6 +19,23 @@ const STUB_OOB_DATA = {
   confederate: {},
 };
 
+// Minimal unit state shape
+function makeUnit(overrides = {}) {
+  return {
+    id: 'unit-a',
+    hex: '05.03',
+    facing: 0,
+    moraleState: 'normal',
+    wrecked: false,
+    orders: null,
+    ammo: 'full',
+    isOnBoard: true,
+    entryTurn: null,
+    isDetached: false,
+    ...overrides,
+  };
+}
+
 function makeGameStore(overrides = {}) {
   return {
     gameState: null,
@@ -34,14 +51,18 @@ function makeGameStore(overrides = {}) {
 }
 
 function makeFetchSequence(responses) {
-  // Returns a fetch mock that answers requests in order based on URL matching
+  // Returns a fetch mock that answers requests in order based on URL matching.
+  // If the data slot contains an Error, the fetch itself rejects (simulates network failure).
   return vi.fn().mockImplementation((url) => {
-    for (const [pattern, data, ok = true] of responses) {
+    for (const [pattern, dataOrError] of responses) {
       if (url.includes(pattern)) {
+        if (dataOrError instanceof Error) {
+          return Promise.reject(dataOrError);
+        }
         return Promise.resolve({
-          ok,
-          status: ok ? 200 : 500,
-          json: () => Promise.resolve(data),
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(dataOrError),
         });
       }
     }
@@ -139,6 +160,16 @@ describe('GameView — mount and structure', () => {
     await mountGameView();
     expect(vi.mocked(fetch)).toHaveBeenCalledWith(expect.stringContaining('oob-editor/data'));
   });
+
+  it('shows a loading banner while gameStore.loading is true', async () => {
+    const wrapper = await mountGameView({ loading: true });
+    expect(wrapper.find('.loading-banner').exists()).toBe(true);
+  });
+
+  it('shows an error banner when gameStore.error is set', async () => {
+    const wrapper = await mountGameView({ error: 'Game not found' });
+    expect(wrapper.find('.error-banner').text()).toContain('Game not found');
+  });
 });
 
 describe('GameView — game store integration', () => {
@@ -151,19 +182,11 @@ describe('GameView — game store integration', () => {
   it('passes selectedUnit enriched through OOB to UnitStatsPanel', async () => {
     // selectedUnit is the raw UnitState from the game store — GameView enriches it
     // via oobUnitMap before passing to the panel. With empty OOB data the enrichment
-    // produces fallback values (id as name, 'unknown' side, '?' sp).
-    const selectedUnit = {
-      id: 'unit-a',
-      hex: '05.03',
-      facing: 0,
+    // produces fallback values (id as name, null side, '?' sp).
+    const selectedUnit = makeUnit({
       moraleState: 'shaken',
-      wrecked: false,
       orders: { type: 'move', status: 'accepted', deliveryTurnDue: null },
-      ammo: 'full',
-      isOnBoard: true,
-      entryTurn: null,
-      isDetached: false,
-    };
+    });
     const wrapper = await mountGameView({ selectedUnit });
     const panel = wrapper.findComponent({ name: 'UnitStatsPanel' });
     const passed = panel.props('unit');
@@ -173,7 +196,7 @@ describe('GameView — game store integration', () => {
     expect(passed.orderType).toBe('move');
     // OOB empty → fallback values
     expect(passed.name).toBe('unit-a');
-    expect(passed.side).toBe('unknown');
+    expect(passed.side).toBeNull();
   });
 
   it('passes null to UnitStatsPanel when nothing is selected', async () => {
@@ -192,5 +215,70 @@ describe('GameView — click event wiring', () => {
     await overlay.trigger('click');
     // The stub emits hex-click on click
     expect(deselectUnit).toHaveBeenCalled();
+  });
+
+  it('calls selectUnit when hex-click lands on a hex occupied by a unit', async () => {
+    const selectUnit = vi.fn();
+    const gameState = { units: { 'unit-a': makeUnit() } }; // unit-a is at '05.03'
+    const wrapper = await mountGameView({ gameState, selectUnit });
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    await overlay.trigger('click'); // stub emits hex-click with '05.03'
+    expect(selectUnit).toHaveBeenCalledWith('unit-a');
+  });
+
+  it('calls selectUnit when unit-click event is received from HexMapOverlay', async () => {
+    const selectUnit = vi.fn();
+    const wrapper = await mountGameView({ selectUnit });
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    await overlay.vm.$emit('unit-click', 'unit-x');
+    expect(selectUnit).toHaveBeenCalledWith('unit-x');
+  });
+});
+
+describe('GameView — displayUnits computation', () => {
+  it('only passes on-board units with a counterFile to HexMapOverlay', async () => {
+    // OOB structure: unit-a has a counter, unit-b has none, unit-c is off-board.
+    const oobData = {
+      union: {
+        id: 'corps-1',
+        name: 'I Corps',
+        brigades: [
+          { id: 'unit-a', name: '1st Bde', counterRef: { front: 'unit-a.png' } },
+          { id: 'unit-b', name: '2nd Bde' }, // no counterRef → filtered out
+        ],
+      },
+      confederate: {},
+    };
+    const gameState = {
+      units: {
+        'unit-a': makeUnit({ id: 'unit-a', hex: '05.03', isOnBoard: true }),
+        'unit-b': makeUnit({ id: 'unit-b', hex: '06.03', isOnBoard: true }),
+        'unit-c': makeUnit({ id: 'unit-c', hex: null, isOnBoard: false }),
+      },
+    };
+    const wrapper = await mountGameView({ gameState }, [
+      ['map-test/data', STUB_MAP_DATA],
+      ['oob-editor/data', oobData],
+    ]);
+    await flushPromises();
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    const units = overlay.props('units');
+    expect(units).toHaveLength(1);
+    expect(units[0].id).toBe('unit-a');
+    expect(units[0].counterFile).toBe('unit-a.png');
+  });
+});
+
+describe('GameView — OOB fetch error handling', () => {
+  it('renders without crashing when OOB fetch fails', async () => {
+    const wrapper = await mountGameView({}, [
+      ['map-test/data', STUB_MAP_DATA],
+      ['oob-editor/data', new Error('Network error')],
+    ]);
+    await flushPromises();
+    expect(wrapper.find('.game-view').exists()).toBe(true);
+    // No OOB data → displayUnits is empty
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    expect(overlay.props('units')).toEqual([]);
   });
 });

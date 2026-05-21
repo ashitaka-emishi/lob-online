@@ -561,6 +561,8 @@ defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
   <svg
     :width="imageWidth * calibration.imageScale"
     :height="imageHeight * calibration.imageScale"
+    role="application"
+    aria-label="Hex map overlay"
     style="position: absolute; top: 0; left: 0; cursor: crosshair"
     @click="onSvgClick"
     @contextmenu="onSvgContextMenu"

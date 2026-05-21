@@ -12,36 +12,51 @@ const props = defineProps({
     type: Map,
     required: true,
   },
-  // Rendered counter size as a fraction of the hex inradius. 0.8 = 80%.
+  // Rendered counter size as a fraction of hex inradius (e.g. 0.8 = 80% of the inradius diameter).
   sizeRatio: {
     type: Number,
     default: 0.8,
   },
-  // Base hex inradius in SVG units — used to compute counter size.
+  // Hex inradius in SVG user units — matches hexHeight from HexMapOverlay calibration.
   hexInradius: {
     type: Number,
     default: 28,
+  },
+  // URL base path prepended to counterFile when building the image href. Must end with '/'.
+  counterBasePath: {
+    type: String,
+    default: '/counters/',
   },
 });
 
 const emit = defineEmits(['unit-click']);
 
-// Counter size in SVG units
+// Counter size in SVG user units.
 const counterSize = computed(() => props.hexInradius * props.sizeRatio);
 
-// Stack offset step: units sharing a hex are shifted right by this many pixels per index.
+// Horizontal stagger for counters sharing a hex, in SVG user units.
 const STACK_OFFSET = 4;
 
-// Build the render list: one entry per on-board unit with a known hex cell.
+// Allow filenames with alphanumeric, spaces, hyphens, underscores, dots — no path separators.
+const SAFE_FILENAME_RE = /^[\w. ()-]+$/;
+
+function counterHref(counterFile) {
+  if (!counterFile || !SAFE_FILENAME_RE.test(counterFile)) return null;
+  return `${props.counterBasePath}${counterFile}`;
+}
+
+// Build the render list: one entry per on-board unit with a known hex cell and a safe href.
 // Units at the same hex are sorted by insertion order and offset by STACK_OFFSET * stackIndex.
 const renderUnits = computed(() => {
   const size = counterSize.value;
-  // Track stacking index per hexId
   const stackCount = new Map();
 
   return props.units.flatMap((unit) => {
     const cell = props.cellById.get(unit.hexId);
-    if (!cell) return []; // off-board or hex not in grid — skip
+    if (!cell) return [];
+
+    const href = counterHref(unit.counterFile);
+    if (!href) return [];
 
     const stackIndex = stackCount.get(unit.hexId) ?? 0;
     stackCount.set(unit.hexId, stackIndex + 1);
@@ -50,9 +65,17 @@ const renderUnits = computed(() => {
     const x = cell.cx - size / 2 + xOffset;
     const y = cell.cy - size / 2;
 
-    return [{ unit, x, y, size, href: `/counters/${unit.counterFile}` }];
+    return [{ unit, x, y, size, href }];
   });
 });
+
+function handleKeydown(event, unitId) {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    event.stopPropagation();
+    emit('unit-click', unitId);
+  }
+}
 </script>
 
 <template>
@@ -65,8 +88,12 @@ const renderUnits = computed(() => {
       :y="entry.y"
       :width="entry.size"
       :height="entry.size"
+      :aria-label="`Select unit ${entry.unit.id}`"
+      role="button"
+      tabindex="0"
       style="pointer-events: all; cursor: pointer"
       @click.stop="emit('unit-click', entry.unit.id)"
+      @keydown="handleKeydown($event, entry.unit.id)"
     />
   </g>
 </template>

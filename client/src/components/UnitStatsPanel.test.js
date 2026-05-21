@@ -77,6 +77,27 @@ describe('UnitStatsPanel — unit display', () => {
     });
     expect(wrapper.text()).toMatch(/disorganized/i);
   });
+
+  it('renders "Shaken" for shaken morale state', () => {
+    const wrapper = mount(UnitStatsPanel, {
+      props: { unit: { ...FULL_UNIT, moraleState: 'shaken' } },
+    });
+    expect(wrapper.text()).toMatch(/shaken/i);
+  });
+
+  it('renders "Routed" for routed morale state', () => {
+    const wrapper = mount(UnitStatsPanel, {
+      props: { unit: { ...FULL_UNIT, moraleState: 'routed' } },
+    });
+    expect(wrapper.text()).toMatch(/routed/i);
+  });
+
+  it('renders "Unknown" when side is null', () => {
+    const wrapper = mount(UnitStatsPanel, {
+      props: { unit: { ...FULL_UNIT, side: null } },
+    });
+    expect(wrapper.text()).toContain('Unknown');
+  });
 });
 
 describe('UnitStatsPanel — prop change reactivity', () => {
