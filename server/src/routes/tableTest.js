@@ -169,7 +169,7 @@ router.post(
     // #322 — clamp numeric mods to domain bounds before engine receives them
     const safeMods = pickMods(modifiers, MORALE_BOOL_MODS, MORALE_NUM_MOD_KEYS, {
       leaderMoraleValue: { min: 0, max: 4 }, // LOB §6.1 — leader morale values 0–4
-      range: { min: 0, max: 99 }, // LOB §5.6 — fire range upper bound
+      range: { min: 0, max: 99 }, // defensive cap; LOB §5.6 covers range modifiers but specifies no upper bound
     });
     return res.json(moraleResult(ratingR.value, safeMods, rollR.value));
   })

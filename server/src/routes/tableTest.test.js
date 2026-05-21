@@ -614,4 +614,13 @@ describe('pickMods numeric bounds clamping (#322)', () => {
     expect(moraleResult.mock.calls[0][1].leaderMoraleValue).toBe(2);
     expect(moraleResult.mock.calls[0][1].range).toBe(5);
   });
+
+  it('coerces non-finite input (NaN) to 0 then clamps — LOB §6.1', async () => {
+    const res = await request(app)
+      .post('/api/tools/table-test/morale')
+      .send({ rating: 'B', diceRoll: 7, modifiers: { leaderMoraleValue: 'oops' } });
+    expect(res.status).toBe(200);
+    // 'oops' → Number('oops') = NaN → isFinite fallback = 0 → clamp(0,0,4) = 0
+    expect(moraleResult.mock.calls[0][1].leaderMoraleValue).toBe(0);
+  });
 });

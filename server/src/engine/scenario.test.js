@@ -2,7 +2,7 @@ import { writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { clearScenarioCache, getScenario, loadScenario } from './scenario.js';
 
@@ -138,6 +138,10 @@ describe('getScenario / clearScenarioCache (#393 #337)', () => {
     clearScenarioCache();
   });
 
+  afterEach(() => {
+    clearScenarioCache();
+  });
+
   it('getScenario returns a valid scenario object', () => {
     const scenario = getScenario();
     expect(scenario).toBeDefined();
@@ -159,5 +163,19 @@ describe('getScenario / clearScenarioCache (#393 #337)', () => {
     expect(b.id).toBe('south-mountain');
     // Fresh load produces a new reference (different frozen object)
     expect(a).not.toBe(b);
+  });
+
+  it('clearScenarioCache suppresses the call-count guard warning on reload', () => {
+    // Verify that clearScenarioCache removes the path from _loadedScenarioPaths so the
+    // next loadScenario() call (triggered by getScenario()) does not emit a console.warn.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      getScenario(); // first load — registers path in the call-count guard Set
+      clearScenarioCache(); // removes path from Set and nulls cache
+      getScenario(); // reload — path absent from Set, no warning
+      expect(warnSpy).not.toHaveBeenCalled();
+    } finally {
+      warnSpy.mockRestore();
+    }
   });
 });

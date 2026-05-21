@@ -31,8 +31,8 @@ const _loadedScenarioPaths = new Set();
  * Load and validate scenario.json.
  *
  * Returns a frozen plain object. Engine modules should call this once at
- * startup and pass the result through as needed — no singleton or lazy-load
- * pattern is used so that test injection stays straightforward.
+ * startup; use `getScenario()` for cached access from route handlers.
+ * Each call to this function reads from disk — no caching here.
  *
  * @param {string} [scenarioPath] - Override the default path (for tests).
  * @returns {import('zod').infer<typeof ScenarioSchema>} Validated, frozen scenario data.
@@ -91,6 +91,9 @@ export function getScenario() {
 /**
  * Invalidate the lazy scenario cache. The next getScenario() call re-reads from
  * disk. Called by the scenario editor after a successful save (#337).
+ *
+ * Also removes the default path from the loadScenario() call-count guard Set so
+ * the subsequent reload does not emit a spurious console.warn about duplicate loads.
  */
 export function clearScenarioCache() {
   // Reset the loadScenario call-count guard so the reload does not emit a warning.

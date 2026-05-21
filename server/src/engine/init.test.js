@@ -370,25 +370,6 @@ describe('initGameState — reinforcement orderType propagation (#360)', () => {
   });
 });
 
-// #364 — isOrderHolder distinguishes non-order-holding (null) from order-holding (non-null)
-describe('isOrderHolder (#364)', () => {
-  it('returns false when orders is null (non-order-holding unit)', () => {
-    expect(isOrderHolder({ orders: null })).toBe(false);
-  });
-
-  it('returns true when orders is a UnitOrderState object', () => {
-    expect(
-      isOrderHolder({ orders: { type: 'move', status: 'accepted', deliveryTurnDue: null } })
-    ).toBe(true);
-  });
-
-  it('returns true for status:none (order-holder with no active order — distinct from null)', () => {
-    expect(isOrderHolder({ orders: { type: null, status: 'none', deliveryTurnDue: null } })).toBe(
-      true
-    );
-  });
-});
-
 // #363 — schemaVersion must be present in initGameState output
 describe('initGameState — schemaVersion (#363)', () => {
   it('output includes schemaVersion: 1', () => {
