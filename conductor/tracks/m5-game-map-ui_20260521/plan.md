@@ -144,19 +144,19 @@ Smoke-test in the running app.
 
 ### Tasks
 
-- [ ] Task 4.1: Replace `GameView.vue` stub with full layout:
+- [x] Task 4.1: Replace `GameView.vue` stub with full layout:
   - On `onMounted`, call `gameStore.loadGame(route.params.id)` to fetch game state
   - Also fetch map data (`GET /api/tools/map-test/map` or the appropriate endpoint)
     so `HexMapOverlay` receives `hexes` and `calibration`
   - Layout: flex row — map area (fills remaining width) | sidebar (fixed ~280px)
   - Sidebar: `UnitStatsPanel :unit="gameStore.selectedUnit"`
   - Map: `HexMapOverlay … :units="gameStore.gameState?.units ?? []"`
-- [ ] Task 4.2: Wire click events:
+- [x] Task 4.2: Wire click events:
   - On `unit-click(unitId)` from overlay → `gameStore.selectUnit(unitId)`
   - On `hex-click` on empty hex → `gameStore.deselectUnit()`
-- [ ] Task 4.3: Write `client/src/views/GameView.test.js` covering mount → load → render
+- [x] Task 4.3: Write `client/src/views/GameView.test.js` covering mount → load → render
       cycle (mock `fetch`; assert `HexMapOverlay` and `UnitStatsPanel` are present)
-- [ ] Task 4.4: Smoke-test in running dev server:
+- [~] Task 4.4: Smoke-test in running dev server:
   - `npm run dev` (or `/dev-start`)
   - Create or join a game via `/lobby`; navigate to `/games/:id`
   - Confirm units appear on the map at their start positions
