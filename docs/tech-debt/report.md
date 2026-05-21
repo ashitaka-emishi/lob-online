@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-05-20 after arch-debt-sprint (chore/arch-debt-sprint-393-394-370-322)._
+_Last updated: 2026-05-20 after PR #396._
 
 ---
 
@@ -11,7 +11,7 @@ _Last updated: 2026-05-20 after arch-debt-sprint (chore/arch-debt-sprint-393-394
 | Open debt items                  | 10                                                                               |
 | Cumulative debt score (net open) | 19                                                                               |
 | Highest-risk item                | Dijkstra lacks early termination (#295, score 2) — non-blocking at current scale |
-| PRs tracked                      | 168                                                                              |
+| PRs tracked                      | 169                                                                              |
 
 ---
 
@@ -193,6 +193,7 @@ _Last updated: 2026-05-20 after arch-debt-sprint (chore/arch-debt-sprint-393-394
 | 2026-05-20 | PR #395 (resolved #394) | -3                   | —         | 291                      |
 | 2026-05-20 | PR #395 (resolved #322) | -2                   | —         | 291                      |
 | 2026-05-20 | PR #395 (resolved #370) | -1                   | —         | 291                      |
+| 2026-05-20 | PR #396                 | 0                    | 0         | 291                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -202,7 +203,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 Low risk. No critical or high-scoring items remain open. All score ≥3 items have been resolved.
 
-PR #392 (pre-UI debt sweep) introduced two new architecture findings (#393 score 4, #394 score 3) from its team review. PR #395 (arch-debt-sprint) immediately closed all four actionable items: #393 (scenario cache route coupling), #394 (isOrderHolder module placement), #322 (pickMods unbounded numeric inputs), and #370 (complexDefense comment traceability), plus committed the tech-debt label workflow fix. Net delta for this sprint: −10 points across 4 issues. The remaining 10 open items (score 19) are all score ≤2: six M6-blocked engine stubs (#379, #381, #382, #383) and five performance/hygiene items (#295, #294, #324, #387, #385, #205, #204, #201). None block M5 UI delivery.
+PR #392 (pre-UI debt sweep) introduced two new architecture findings (#393 score 4, #394 score 3) from its team review. PR #396 (arch-debt-sprint) closed all four actionable items: #393 (scenario cache route coupling), #394 (isOrderHolder module placement), #322 (pickMods unbounded numeric inputs), and #370 (complexDefense comment traceability), plus committed the tech-debt label workflow fix. The team-review of PR #396 surfaced 10 findings — all fixed in place, 0 deferred. Net delta for this sprint: −10 points across 4 issues. The remaining 10 open items (score 19) are all score ≤2: four M6-blocked engine stubs (#379, #381, #382, #383) and six performance/hygiene items (#295, #294, #324, #387, #385, #205, #204, #201). None block M5 UI delivery.
 
 ---
 
