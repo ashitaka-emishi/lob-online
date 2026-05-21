@@ -3,7 +3,7 @@
 **Track ID:** engine-perf-sprint_20260520
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-05-20
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -110,26 +110,26 @@ no Vue reactivity.
 
 ### Tasks
 
-- [ ] Task 3.1: Run `npm run quality:strict` — all gates green.
-- [ ] Task 3.2: Update `docs/tech-debt/report.md` — remove #324, #295, #294, #201 from Open
+- [x] Task 3.1: Run `npm run quality:strict` — all gates green.
+- [x] Task 3.2: Update `docs/tech-debt/report.md` — remove #324, #295, #294, #201 from Open
       Items; record in Debt Over Time table. (Handled by `/tech-debt-report` after PR merge, but
       pre-check the register for accuracy.)
-- [ ] Task 3.3: Close GitHub issues #324, #295, #294, #201 with merge commit reference.
+- [x] Task 3.3: Close GitHub issues #324, #295, #294, #201 with merge commit reference.
 
 ### Verification
 
-- [ ] `docs/tech-debt/report.md` open items no longer lists #324 #295 #294 #201
-- [ ] All four GitHub issues show as closed
+- [x] `docs/tech-debt/report.md` open items no longer lists #324 #295 #294 #201
+- [x] All four GitHub issues show as closed
 
 ---
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met
-- [ ] `npm run quality:strict` passes clean
-- [ ] No unexpected warnings in test output
-- [ ] Debt register updated
-- [ ] Ready for `/team-review`
+- [x] All acceptance criteria in spec.md met
+- [x] `npm run quality:strict` passes clean
+- [x] No unexpected warnings in test output
+- [x] Debt register updated
+- [x] Ready for `/team-review`
 
 ---
 
