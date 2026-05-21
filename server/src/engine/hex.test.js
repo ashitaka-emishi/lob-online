@@ -306,7 +306,7 @@ describe('dijkstra', () => {
   it('early termination: stops exploring once targetHex is popped (#295)', () => {
     const target = '10.11';
     let callCount = 0;
-    const costFn = (from, to, dir) => {
+    const costFn = (_from, _to, _dir) => {
       callCount++;
       return 1;
     };
