@@ -14,6 +14,7 @@ import {
 } from '../utils/hexGeometry.js';
 import { useEdgeLineLayer } from '../composables/useEdgeLineLayer.js';
 import { ROAD_LINE_TYPES } from '../config/feature-types.js';
+import UnitCounterLayer from './UnitCounterLayer.vue';
 
 const ALL_DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
 
@@ -64,6 +65,12 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // Units to render as counter images on the map. Each entry: { id, hexId, counterFile, side }.
+  // The game view enriches UnitState with counterFile before passing here.
+  units: {
+    type: Array,
+    default: () => [],
+  },
   // True when the active tool supports drag-paint. Gates hex-mouseenter to mousedown-only.
   dragPaintEnabled: {
     type: Boolean,
@@ -80,6 +87,7 @@ const emit = defineEmits([
   'edge-right-click',
   'paint-stroke-done',
   'paint-stroke-start',
+  'unit-click',
 ]);
 
 // Paint mousedown gate — true while the mouse button is held during drag-paint.
@@ -553,6 +561,8 @@ defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
   <svg
     :width="imageWidth * calibration.imageScale"
     :height="imageHeight * calibration.imageScale"
+    role="application"
+    aria-label="Hex map overlay"
     style="position: absolute; top: 0; left: 0; cursor: crosshair"
     @click="onSvgClick"
     @contextmenu="onSvgContextMenu"
@@ -774,6 +784,15 @@ defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
           stroke-linecap="round"
           stroke-opacity="0.85"
           pointer-events="none"
+        />
+
+        <!-- UnitCounterLayer — game unit counter images ─────────────────────-->
+        <UnitCounterLayer
+          v-if="units.length > 0"
+          :units="units"
+          :cell-by-id="gridData.cellById"
+          :hex-inradius="calibration.hexHeight"
+          @unit-click="emit('unit-click', $event)"
         />
 
         <!-- SlopeArrowLayer — slope direction arrows ─────────────────────────-->

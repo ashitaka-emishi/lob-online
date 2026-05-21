@@ -112,4 +112,6 @@
 
 | [x] | debt-housekeeping_20260521 | Debt Register Housekeeping + Conductor State Cleanup | 2026-05-21 | 2026-05-21 |
 
+| [x] | m5-game-map-ui_20260521 | M5 Game Map UI — Unit Layer, Stats Panel, Game Store | 2026-05-21 | 2026-05-21 |
+
 <!-- Tracks registered by /conductor:new-track -->

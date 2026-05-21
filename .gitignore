@@ -39,3 +39,9 @@ test-results/
 
 # Process PID tracking (written by /start, cleaned up by /stop)
 .pids
+
+# Runtime game state written by the dev server
+data/games/
+
+# Claude Code internal worktree scratch directories
+.claude/worktrees/
