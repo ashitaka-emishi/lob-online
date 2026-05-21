@@ -86,12 +86,12 @@ its hex-center coordinate. Wire it into `HexMapOverlay.vue`.
 
 ### Tasks
 
-- [ ] Task 2.1: Write `client/src/components/UnitCounterLayer.test.js` — cover:
+- [x] Task 2.1: Write `client/src/components/UnitCounterLayer.test.js` — cover:
   - Renders one `<image>` per unit in the `units` prop
   - Each `<image>` has correct `x`, `y` attributes derived from hex center coordinates
   - Units at the same hex stack correctly (offset or overlap — document the rule)
   - Renders nothing when `units` is empty
-- [ ] Task 2.2: Implement `client/src/components/UnitCounterLayer.vue`:
+- [x] Task 2.2: Implement `client/src/components/UnitCounterLayer.vue`:
   - Props: `units` (array of `{ unitId, hexId, counterId, side, … }`), `gridData`
     (computed hex geometry from `HexMapOverlay`)
   - For each unit, look up the hex center from `gridData`; render an SVG `<image>`
@@ -99,7 +99,7 @@ its hex-center coordinate. Wire it into `HexMapOverlay.vue`.
   - Size: ~80% of hex inradius; centered on hex center; `pointer-events: all` so
     clicks propagate to the parent overlay
   - Emit `unit-click(unitId)` when a counter image is clicked
-- [ ] Task 2.3: Extend `HexMapOverlay.vue` to accept a `units` prop and render
+- [x] Task 2.3: Extend `HexMapOverlay.vue` to accept a `units` prop and render
       `UnitCounterLayer` inside its SVG above the terrain layers:
   - New prop: `units` (Array, default `[]`)
   - Render `<UnitCounterLayer :units="units" :grid-data="gridData" … />` in the SVG
