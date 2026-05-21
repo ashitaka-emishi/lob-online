@@ -71,13 +71,13 @@ Score and register both issues formally in `docs/tech-debt/report.md`.
 
 ### Phase 2 Tasks
 
-- [ ] Task 2.1: Add #346 (test consolidation, score 2) to the Open Debt Items table in
+- [x] Task 2.1: Add #346 (test consolidation, score 2) to the Open Debt Items table in
       `docs/tech-debt/report.md`; confirm `tech-debt` label on the issue
-- [ ] Task 2.2: Add #350 (rate limiting, score 2) to the Open Debt Items table;
+- [x] Task 2.2: Add #350 (rate limiting, score 2) to the Open Debt Items table;
       confirm `tech-debt` label on the issue
-- [ ] Task 2.3: Re-sort Open Debt Items table by score descending (ties: newer PR first)
-- [ ] Task 2.4: Update Executive Summary — open items count, cumulative debt score
-- [ ] Task 2.5: Update Risk Assessment prose to reflect the two new score-2 items
+- [x] Task 2.3: Re-sort Open Debt Items table by score descending (ties: newer PR first)
+- [x] Task 2.4: Update Executive Summary — open items count, cumulative debt score
+- [x] Task 2.5: Update Risk Assessment prose to reflect the two new score-2 items
 
 ### Phase 2 Verification
 
