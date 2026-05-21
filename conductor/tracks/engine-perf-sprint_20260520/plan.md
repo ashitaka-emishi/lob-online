@@ -53,20 +53,20 @@ them together avoids touching the same files twice.
 
 ### Tasks
 
-- [ ] Task 1.1: **#294 — memoize `parseHexId`/`formatHexId`** in `hex.js`. Add two module-level
+- [x] Task 1.1: **#294 — memoize `parseHexId`/`formatHexId`** in `hex.js`. Add two module-level
       `Map` caches. Wrap both exports so they check the cache before computing. Cache key for
       `parseHexId` is the hex ID string; for `formatHexId` it is `"${col},${row}"`. No API
       change — callers are unaffected.
-- [ ] Task 1.2: **#295 — Dijkstra early termination** in `hex.js`. Add optional `targetHex =
+- [x] Task 1.2: **#295 — Dijkstra early termination** in `hex.js`. Add optional `targetHex =
 null` 5th parameter to `dijkstra()`. After the stale-entry check, add `if (targetHex !==
 null && curHex === targetHex) break;`. In `movement.js`, update the `movementPath()` call
       site to pass `endHexId` as `targetHex`; the `movementRange()` call site passes nothing
       (null default, full exploration unchanged).
-- [ ] Task 1.3: **#324 — `noEffectSet` passthrough** in `movement.js`. Add optional `noEffectSet
+- [x] Task 1.3: **#324 — `noEffectSet` passthrough** in `movement.js`. Add optional `noEffectSet
 = null` 7th parameter to `hexEntryCost()`. Pass it through to `hexEntryCostBreakdown()`.
       When null, the existing `new Set()` fallback inside `hexEntryCostBreakdown` fires as
       before. Update JSDoc.
-- [ ] Task 1.4: **Tests** — verify no regressions in `hex.test.js` and `movement.test.js`. Add:
+- [x] Task 1.4: **Tests** — verify no regressions in `hex.test.js` and `movement.test.js`. Add:
       (a) a `dijkstra()` test confirming early termination fires for a point-to-point call; (b) a
       `hexEntryCost()` test confirming the pre-built Set is used when supplied; (c) a
       `parseHexId`/`formatHexId` cache-hit test (call twice, verify same object reference for
