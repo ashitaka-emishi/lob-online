@@ -244,6 +244,32 @@ describe('hexLine', () => {
 
 // ─── Dijkstra ──────────────────────────────────────────────────────────────────
 
+// ─── ID caching (#294) ─────────────────────────────────────────────────────────
+
+describe('parseHexId — memoization (#294)', () => {
+  it('returns the same object reference on repeated calls (cache hit)', () => {
+    const a = parseHexId('19.23');
+    const b = parseHexId('19.23');
+    expect(a).toBe(b);
+  });
+
+  it('still throws on invalid input', () => {
+    expect(() => parseHexId('')).toThrow(TypeError);
+    expect(() => parseHexId('abc')).toThrow(TypeError);
+  });
+});
+
+describe('formatHexId — memoization (#294)', () => {
+  it('returns the same string on repeated calls (cache hit)', () => {
+    const a = formatHexId(5, 12);
+    const b = formatHexId(5, 12);
+    expect(a).toBe(b);
+    expect(a).toBe('05.12');
+  });
+});
+
+// ─── Dijkstra ─────────────────────────────────────────────────────────────────
+
 describe('dijkstra', () => {
   it('start hex has cost 0', () => {
     const { costs } = dijkstra('10.10', () => 1, 3, GRID);
@@ -275,6 +301,28 @@ describe('dijkstra', () => {
     for (const [, cost] of costs) {
       expect(cost).toBeLessThanOrEqual(2);
     }
+  });
+
+  it('early termination: stops exploring once targetHex is popped (#295)', () => {
+    const target = '10.11';
+    let callCount = 0;
+    const costFn = (from, to, dir) => {
+      callCount++;
+      return 1;
+    };
+    // Without targetHex, costFn is called for every reachable hex edge
+    const { costs: costsAll } = dijkstra('10.10', () => 1, 3, GRID);
+    const callsWithout = costsAll.size; // proxy for work done
+
+    callCount = 0;
+    dijkstra('10.10', costFn, 3, GRID, target);
+    const callsWith = callCount;
+
+    // Early termination should reduce the number of cost evaluations
+    expect(callsWith).toBeLessThan(callsWithout);
+    // Target must still be reachable and correct
+    const { costs } = dijkstra('10.10', () => 1, 3, GRID, target);
+    expect(costs.get(target)).toBe(1);
   });
 });
 

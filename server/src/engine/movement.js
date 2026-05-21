@@ -236,15 +236,33 @@ function hexEntryCostBreakdown(
  * @param {string} formation
  * @param {object} scenario
  * @param {Map<string, object>} hexIndex
+ * @param {Set<string>} [noEffectSet=null] - pre-built Set of noEffectTerrain types; built
+ *   internally when null. Pass a pre-built Set to avoid per-call allocation (#324).
  * @returns {number} MP cost (may be Infinity if impassable)
  */
-export function hexEntryCost(fromHexId, toHexId, dirIndex, formation, scenario, hexIndex) {
+export function hexEntryCost(
+  fromHexId,
+  toHexId,
+  dirIndex,
+  formation,
+  scenario,
+  hexIndex,
+  noEffectSet = null
+) {
   // LOB — dirIndex must be 0–5 (N/NE/SE/S/SW/NW); out-of-range values silently
   // return wrong edge data from array lookups (#286)
   if (!Number.isInteger(dirIndex) || dirIndex < 0 || dirIndex > 5) {
     throw new RangeError(`hexEntryCost: dirIndex must be 0–5, got ${dirIndex}`);
   }
-  return hexEntryCostBreakdown(fromHexId, toHexId, dirIndex, formation, scenario, hexIndex).total;
+  return hexEntryCostBreakdown(
+    fromHexId,
+    toHexId,
+    dirIndex,
+    formation,
+    scenario,
+    hexIndex,
+    noEffectSet
+  ).total;
 }
 
 /**
@@ -294,7 +312,8 @@ export function movementPath(startHexId, endHexId, formation, scenario, mapData,
   const costFn = (fromId, toId, dirIndex) =>
     hexEntryCostBreakdown(fromId, toId, dirIndex, formation, scenario, idx, noEffectSet).total;
 
-  const { costs, prev } = dijkstra(startHexId, costFn, Infinity, gridSpec);
+  // #295 — pass endHexId as targetHex for early termination once optimal path is found
+  const { costs, prev } = dijkstra(startHexId, costFn, Infinity, gridSpec, endHexId);
 
   const path = reconstructPath(endHexId, prev);
   if (!path) {

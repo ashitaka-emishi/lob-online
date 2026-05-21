@@ -355,6 +355,26 @@ describe('hexEntryCost — dirIndex range validation (#286)', () => {
   });
 });
 
+// ─── hexEntryCost — noEffectSet passthrough (#324) ───────────────────────────
+
+describe('hexEntryCost — noEffectSet passthrough (#324)', () => {
+  it('pre-built Set produces same result as internal Set construction', () => {
+    const hexIndex = makeHexIndex([
+      {
+        hex: '10.10',
+        terrain: 'clear',
+        hexsides: [{ type: 'stoneWall' }, null, null, null, null, null],
+      },
+      { hex: '10.11', terrain: 'clear' },
+    ]);
+    // stoneWall is a noEffectTerrain type in SM — hexside cost should be 0
+    const noEffectSet = new Set(scenario.movementCosts.noEffectTerrain ?? []);
+    const withSet = hexEntryCost('10.10', '10.11', 0, 'line', scenario, hexIndex, noEffectSet);
+    const withoutSet = hexEntryCost('10.10', '10.11', 0, 'line', scenario, hexIndex);
+    expect(withSet).toBe(withoutSet);
+  });
+});
+
 // ─── movementPath — hexsideCost breakdown (#288) ─────────────────────────────
 
 describe('movementPath — hexsideCost breakdown (#288)', () => {

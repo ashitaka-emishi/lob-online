@@ -36,8 +36,13 @@ export const DIR_CUBE_DELTAS = [
 
 // ─── ID parsing ────────────────────────────────────────────────────────────────
 
+// #294 — module-level caches eliminate repeated string allocations in the Dijkstra hot path
+const _parseCache = new Map();
+const _formatCache = new Map();
+
 /**
  * Parse a game hex ID into col/row integers.
+ * Result is memoized — repeated calls with the same ID are O(1) Map lookups.
  * @param {string} hexId - e.g. "19.23"
  * @returns {{ col: number, row: number }}
  */
@@ -46,24 +51,33 @@ export function parseHexId(hexId) {
   if (typeof hexId !== 'string' || hexId.length === 0) {
     throw new TypeError('hexId must be a non-empty string');
   }
+  const cached = _parseCache.get(hexId);
+  if (cached) return cached;
   const parts = hexId.split('.');
   const col = Number(parts[0]);
   const row = Number(parts[1]);
   if (parts.length !== 2 || !Number.isInteger(col) || !Number.isInteger(row)) {
     throw new TypeError('hexId must be a non-empty string');
   }
-  return { col, row };
+  const result = { col, row };
+  _parseCache.set(hexId, result);
+  return result;
 }
 
 /**
  * Format 1-based col/row integers into a zero-padded hex ID string.
- * Single source of truth for the hex ID format.
+ * Single source of truth for the hex ID format. Result is memoized.
  * @param {number} col - 1-based column
  * @param {number} row - 1-based row
  * @returns {string} e.g. "01.03"
  */
 export function formatHexId(col, row) {
-  return `${String(col).padStart(2, '0')}.${String(row).padStart(2, '0')}`;
+  const key = `${col},${row}`;
+  const cached = _formatCache.get(key);
+  if (cached) return cached;
+  const result = `${String(col).padStart(2, '0')}.${String(row).padStart(2, '0')}`;
+  _formatCache.set(key, result);
+  return result;
 }
 
 // ─── Coordinate conversions ────────────────────────────────────────────────────
@@ -313,7 +327,7 @@ class MinHeap {
  *   `costs` maps reachable hexId → lowest total cost from start.
  *   `prev` maps hexId → predecessor hexId (null for start).
  */
-export function dijkstra(startHex, costFn, maxCost, gridSpec) {
+export function dijkstra(startHex, costFn, maxCost, gridSpec, targetHex = null) {
   const costs = new Map([[startHex, 0]]);
   const prev = new Map([[startHex, null]]);
   // [cost, hexId]
@@ -325,6 +339,8 @@ export function dijkstra(startHex, costFn, maxCost, gridSpec) {
 
     if (curCost > (costs.get(curHex) ?? Infinity)) continue; // stale entry
     if (curCost > maxCost) continue;
+    // #295 — early termination for point-to-point: first pop of target = optimal cost
+    if (targetHex !== null && curHex === targetHex) break;
 
     for (const { hexId: neighbor, dirIndex } of hexNeighbors(curHex, gridSpec)) {
       const moveCost = costFn(curHex, neighbor, dirIndex);
