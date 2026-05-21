@@ -1,0 +1,19 @@
+{
+  "id": "engine-perf-sprint_20260520",
+  "title": "Engine & Utility Performance Sprint — Issues #324 #295 #294 #201",
+  "type": "chore",
+  "status": "in_progress",
+  "created": "2026-05-20T23:41:05Z",
+  "updated": "2026-05-20T23:55:00Z",
+  "current_phase": 1,
+  "current_task": "1.1",
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 9,
+    "completed": 0
+  },
+  "commits": []
+}

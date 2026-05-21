@@ -106,6 +106,8 @@
 
 | [ ] | pre-ui-debt-sweep_20260518 | Pre-UI Debt Sweep — initGameState Correctness + Schema Quality | 2026-05-18 | 2026-05-18 |
 
-| [ ] | arch-debt-sprint_20260520 | Architecture Debt Sprint — Issues #393 #394 #370 #322 + Process Fix | 2026-05-20 | 2026-05-20 |
+| [x] | arch-debt-sprint_20260520 | Architecture Debt Sprint — Issues #393 #394 #370 #322 + Process Fix | 2026-05-20 | 2026-05-20 |
+
+| [~] | engine-perf-sprint_20260520 | Engine & Utility Performance Sprint — Issues #324 #295 #294 #201 | 2026-05-20 | 2026-05-20 |
 
 <!-- Tracks registered by /conductor:new-track -->
