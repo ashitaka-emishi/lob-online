@@ -3,7 +3,7 @@
 **Track ID:** debt-housekeeping_20260521
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-05-21
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -24,12 +24,12 @@ changes are conductor/markdown/docs.
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -37,11 +37,11 @@ changes are conductor/markdown/docs.
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated (two new items registered)
-- [ ] Ready for `/team-review`
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated (two new items registered)
+- [x] Ready for `/team-review`
 
 ---
 
@@ -92,10 +92,10 @@ Triage open issues for staleness; verify devlog index is current.
 
 ### Phase 3 Tasks
 
-- [ ] Task 3.1: List all open GitHub issues; flag any that appear stale (reference closed PRs,
+- [x] Task 3.1: List all open GitHub issues; flag any that appear stale (reference closed PRs,
       describe already-implemented work, or lack a milestone/label)
-- [ ] Task 3.2: Close or comment on any genuinely stale issues with a reason
-- [ ] Task 3.3: Verify `docs/devlog.md` index is current through today's entries
+- [x] Task 3.2: Close or comment on any genuinely stale issues with a reason
+- [x] Task 3.3: Verify `docs/devlog.md` index is current through today's entries
 
 ### Phase 3 Verification
 
