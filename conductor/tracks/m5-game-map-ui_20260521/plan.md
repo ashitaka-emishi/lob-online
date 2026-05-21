@@ -117,12 +117,12 @@ Build `UnitStatsPanel.vue` — a sidebar card that shows the selected unit's key
 
 ### Tasks
 
-- [ ] Task 3.1: Write `client/src/components/UnitStatsPanel.test.js` — cover:
+- [x] Task 3.1: Write `client/src/components/UnitStatsPanel.test.js` — cover:
   - Renders "No unit selected" (or equivalent) when `unit` prop is null
   - Renders unit `name`, `side`, `sp` (strength points), `moraleState`, `orderType`
     when a unit object is passed
   - Updates correctly when the `unit` prop changes
-- [ ] Task 3.2: Implement `client/src/components/UnitStatsPanel.vue`:
+- [x] Task 3.2: Implement `client/src/components/UnitStatsPanel.vue`:
   - Prop: `unit` (Object or null)
   - Display fields: name, side (label: "Union" / "Confederate"), SP, morale state
     (formatted as a readable label), order type
