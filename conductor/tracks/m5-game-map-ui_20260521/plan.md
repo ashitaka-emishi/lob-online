@@ -3,7 +3,7 @@
 **Track ID:** m5-game-map-ui_20260521
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-05-21
-**Status:** [ ] Not Started
+**Status:** [~] In Progress
 
 ## Overview
 
@@ -58,14 +58,14 @@ Create `useGameStore.js` — loads game state from the server, tracks the select
 
 ### Tasks
 
-- [ ] Task 1.1: Write `client/src/stores/useGameStore.test.js` — cover:
+- [x] Task 1.1: Write `client/src/stores/useGameStore.test.js` — cover:
   - `loadGame(id)` calls `GET /api/v1/games/:id` and populates `gameState`
   - `gameState` is `null` before load
   - `selectedUnitId` is `null` by default
   - `selectUnit(unitId)` sets `selectedUnitId`
   - `deselectUnit()` clears `selectedUnitId`
   - `loading` and `error` refs behave correctly on success and fetch failure
-- [ ] Task 1.2: Implement `client/src/stores/useGameStore.js` (Pinia setup store):
+- [x] Task 1.2: Implement `client/src/stores/useGameStore.js` (Pinia setup store):
   - `gameState` ref — full `GameStateSchema` payload or null
   - `selectedUnitId` ref — string or null
   - `loading` ref, `error` ref
