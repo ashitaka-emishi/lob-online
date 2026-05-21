@@ -1,0 +1,16 @@
+{
+  "id": "debt-housekeeping_20260521",
+  "title": "Debt Register Housekeeping + Conductor State Cleanup",
+  "type": "chore",
+  "status": "complete",
+  "created": "2026-05-21T19:35:30Z",
+  "updated": "2026-05-21T19:55:00Z",
+  "phases": {
+    "total": 3,
+    "completed": 3
+  },
+  "tasks": {
+    "total": 11,
+    "completed": 11
+  }
+}
