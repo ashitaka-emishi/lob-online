@@ -87,7 +87,7 @@ no Vue reactivity.
 
 ### Tasks
 
-- [ ] Task 2.1: **#201 — pre-index arty Map** in `oobTreeTransform.js`. In
+- [x] Task 2.1: **#201 — pre-index arty Map** in `oobTreeTransform.js`. In
       `distributeCorpsArtillery()`, after `const artyEntries = Object.entries(corps.artillery)`,
       add `const artyMap = new Map(artyEntries)`. Replace the two exact-key
       `artyEntries.find(([k]) => !matchedKeys.has(k) && k === exactKey)` lookups (legacy
@@ -95,7 +95,7 @@ no Vue reactivity.
 !matchedKeys.has(exactKey)` checks using `artyMap.get(exactKey)`. Keep the `endsWith`
       division-match pattern as a linear scan (suffix matching cannot use Map). Update the
       comment at lines 70–72 to reflect the improvement.
-- [ ] Task 2.2: **Tests** — run `oobTreeTransform.test.js` to confirm no behavioral regressions.
+- [x] Task 2.2: **Tests** — run `oobTreeTransform.test.js` to confirm no behavioral regressions.
       No new tests required since the transform output is unchanged; the existing suite exercises
       all matching patterns.
 
