@@ -58,6 +58,33 @@ describe('useLobbyStore — fetchGames', () => {
     expect(store.games).toEqual([]);
     expect(store.error).toBeTruthy();
   });
+
+  it('resets identity and does not set error when /me fails but /games succeeds', async () => {
+    const games = [{ id: 'g1', status: 'open' }];
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        // First call: seed myGameId
+        .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(games) })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ gameId: 'g1', side: 'union' }),
+        })
+        // Second call: /games ok, /me fails
+        .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(games) })
+        .mockResolvedValueOnce({ ok: false, status: 500, json: () => Promise.resolve({}) })
+    );
+    const store = useLobbyStore();
+    await store.fetchGames();
+    expect(store.myGameId).toBe('g1');
+    await store.fetchGames();
+    expect(store.games).toEqual(games);
+    expect(store.myGameId).toBeNull();
+    expect(store.mySide).toBeNull();
+    expect(store.error).toBeNull();
+  });
 });
 
 describe('useLobbyStore — createGame', () => {

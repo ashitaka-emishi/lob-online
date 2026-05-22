@@ -2,9 +2,9 @@
   <div class="lobby">
     <h1>Game Lobby</h1>
 
-    <div v-if="store.error" class="error">{{ store.error }}</div>
+    <div v-if="store.error" class="error" role="alert">{{ store.error }}</div>
 
-    <table class="game-list">
+    <table class="game-list" aria-label="Available games">
       <thead>
         <tr>
           <th>Game ID</th>
