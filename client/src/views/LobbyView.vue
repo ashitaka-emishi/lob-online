@@ -10,13 +10,13 @@
           <th>Game ID</th>
           <th class="col-center">Status</th>
           <th class="col-center">Join</th>
-          <th>
+          <th class="col-center">
             <button
               data-testid="new-game-btn"
               :disabled="store.loading"
               @click="store.createGame()"
             >
-              New Game
+              New
             </button>
           </th>
         </tr>
@@ -24,7 +24,7 @@
       <tbody>
         <tr v-for="game in store.games" :key="game.id" data-testid="game-row">
           <td class="game-id">{{ game.id }}</td>
-          <td>
+          <td class="col-center">
             <span :class="['status-badge', game.status]">{{ statusLabel(game.status) }}</span>
           </td>
           <td class="join-actions">
@@ -43,7 +43,7 @@
               CSA
             </button>
           </td>
-          <td>
+          <td class="col-center">
             <button data-testid="delete-btn" @click="store.deleteGame(game.id)">Delete</button>
           </td>
         </tr>

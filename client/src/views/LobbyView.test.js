@@ -74,7 +74,7 @@ describe('LobbyView', () => {
     expect(wrapper.text()).toContain('No games yet.');
   });
 
-  it('"New Game" button calls createGame', async () => {
+  it('"New" button calls createGame', async () => {
     const createGame = vi.fn();
     const wrapper = mountLobby({ createGame });
     await wrapper.find('[data-testid="new-game-btn"]').trigger('click');
