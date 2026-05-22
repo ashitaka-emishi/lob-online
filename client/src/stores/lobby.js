@@ -1,7 +1,9 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
+import { useRouter } from 'vue-router';
 
 export const useLobbyStore = defineStore('lobby', () => {
+  const router = useRouter();
   const games = ref([]);
   const myGameId = ref(null);
   const mySide = ref(null);
@@ -34,18 +36,19 @@ export const useLobbyStore = defineStore('lobby', () => {
       const data = await res.json();
       myGameId.value = data.id;
       mySide.value = data.side;
+      router.push(`/games/${data.id}`);
     } catch (err) {
       error.value = err.message;
     }
   }
 
-  async function joinGame(id) {
+  async function joinGame(id, side) {
     error.value = null;
     try {
       const res = await fetch(`/api/v1/games/${id}/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ side }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -54,6 +57,7 @@ export const useLobbyStore = defineStore('lobby', () => {
       const data = await res.json();
       myGameId.value = data.id;
       mySide.value = data.side;
+      router.push(`/games/${data.id}`);
     } catch (err) {
       error.value = err.message;
     }
