@@ -91,9 +91,17 @@ function handleKeydown(event, unitId) {
       :aria-label="`Select unit ${entry.unit.id}`"
       role="button"
       tabindex="0"
+      class="unit-counter"
       style="pointer-events: all; cursor: pointer"
       @click.stop="emit('unit-click', entry.unit.id)"
       @keydown="handleKeydown($event, entry.unit.id)"
     />
   </g>
 </template>
+
+<style scoped>
+.unit-counter:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+</style>

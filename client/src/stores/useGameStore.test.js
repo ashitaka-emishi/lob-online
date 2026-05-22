@@ -102,7 +102,11 @@ describe('useGameStore — initial state', () => {
 
 describe('useGameStore — loadGame', () => {
   it('calls GET /api/v1/games/:id', async () => {
-    const fetchMock = makeFetch(makeGameState('g1'));
+    const gs = makeGameState('g1');
+    const fetchMock = makeMultiFetch([
+      ['/api/v1/games/g1/map-config', { gridSpec: null, hexes: null }],
+      ['/api/v1/games/g1', gs],
+    ]);
     vi.stubGlobal('fetch', fetchMock);
     const store = useGameStore();
     await store.loadGame('g1');
@@ -111,7 +115,13 @@ describe('useGameStore — loadGame', () => {
 
   it('populates gameState on success', async () => {
     const gs = makeGameState('g2');
-    vi.stubGlobal('fetch', makeFetch(gs));
+    vi.stubGlobal(
+      'fetch',
+      makeMultiFetch([
+        ['/api/v1/games/g2/map-config', { gridSpec: null, hexes: null }],
+        ['/api/v1/games/g2', gs],
+      ])
+    );
     const store = useGameStore();
     await store.loadGame('g2');
     expect(store.gameState).toEqual(gs);
@@ -148,6 +158,32 @@ describe('useGameStore — loadGame', () => {
     resolveFetch();
     await loadPromise;
     expect(store.loading).toBe(false);
+  });
+
+  it('leaves gridSpec and hexes null when game-state fetch fails even if map-config succeeds', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url) => {
+        if (url.includes('map-config')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            json: () =>
+              Promise.resolve({
+                gridSpec: { cols: 4, rows: 3, hexWidth: 20, hexHeight: 20, imageScale: 1 },
+                hexes: [],
+              }),
+          });
+        }
+        return Promise.resolve({ ok: false, status: 500, json: () => Promise.resolve({}) });
+      })
+    );
+    const store = useGameStore();
+    await store.loadGame('g-fail');
+    expect(store.gameState).toBeNull();
+    expect(store.gridSpec).toBeNull();
+    expect(store.hexes).toBeNull();
+    expect(store.error).toBeTruthy();
   });
 });
 

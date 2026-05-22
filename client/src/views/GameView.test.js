@@ -190,6 +190,12 @@ describe('GameView — calibration from gridSpec (#406)', () => {
     const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
     expect(overlay.props('hexes')).toEqual(hexes);
   });
+
+  it('passes empty array to HexMapOverlay when hexes is null (#406)', async () => {
+    const wrapper = await mountGameView({ hexes: null });
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    expect(overlay.props('hexes')).toEqual([]);
+  });
 });
 
 describe('GameView — game store integration', () => {
