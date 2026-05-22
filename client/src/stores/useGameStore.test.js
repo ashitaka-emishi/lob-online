@@ -101,16 +101,17 @@ describe('useGameStore — initial state', () => {
 });
 
 describe('useGameStore — loadGame', () => {
-  it('calls GET /api/v1/games/:id', async () => {
+  it('calls GET /api/v1/games/:id and then /api/v1/scenarios/:scenarioId/map-config', async () => {
     const gs = makeGameState('g1');
     const fetchMock = makeMultiFetch([
-      ['/api/v1/games/g1/map-config', { gridSpec: null, hexes: null }],
+      ['/api/v1/scenarios/south-mountain/map-config', { gridSpec: null, hexes: null }],
       ['/api/v1/games/g1', gs],
     ]);
     vi.stubGlobal('fetch', fetchMock);
     const store = useGameStore();
     await store.loadGame('g1');
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/games/g1');
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/scenarios/south-mountain/map-config');
   });
 
   it('populates gameState on success', async () => {
@@ -118,7 +119,7 @@ describe('useGameStore — loadGame', () => {
     vi.stubGlobal(
       'fetch',
       makeMultiFetch([
-        ['/api/v1/games/g2/map-config', { gridSpec: null, hexes: null }],
+        ['/api/v1/scenarios/south-mountain/map-config', { gridSpec: null, hexes: null }],
         ['/api/v1/games/g2', gs],
       ])
     );
@@ -224,7 +225,10 @@ describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
     vi.stubGlobal(
       'fetch',
       makeMultiFetch([
-        ['/api/v1/games/g1/map-config', { gridSpec: STUB_GRID_SPEC, hexes: STUB_HEXES }],
+        [
+          '/api/v1/scenarios/south-mountain/map-config',
+          { gridSpec: STUB_GRID_SPEC, hexes: STUB_HEXES },
+        ],
         ['/api/v1/games/g1', gs],
       ])
     );
