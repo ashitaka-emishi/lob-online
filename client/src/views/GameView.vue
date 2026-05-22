@@ -103,6 +103,9 @@ function onImageLoad(event) {
     <div v-if="gameStore.error || oobError" class="error-banner">
       {{ gameStore.error || oobError }}
     </div>
+    <div v-if="gameStore.mapConfigError" class="map-config-warning">
+      ⚠ {{ gameStore.mapConfigError }} — map hexes unavailable
+    </div>
     <div class="game-body">
       <!-- Map area: scrollable, fills remaining width -->
       <div class="map-area">
@@ -162,6 +165,13 @@ function onImageLoad(event) {
 .error-banner {
   background: #4a1010;
   color: #e08080;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}
+
+.map-config-warning {
+  background: #2a2010;
+  color: #c8a040;
   padding: 0.5rem 1rem;
   font-size: 0.85rem;
 }

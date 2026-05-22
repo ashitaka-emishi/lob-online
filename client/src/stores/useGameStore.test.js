@@ -98,6 +98,11 @@ describe('useGameStore — initial state', () => {
     const store = useGameStore();
     expect(store.error).toBeNull();
   });
+
+  it('mapConfigError is null by default', () => {
+    const store = useGameStore();
+    expect(store.mapConfigError).toBeNull();
+  });
 });
 
 describe('useGameStore — loadGame', () => {
@@ -254,7 +259,23 @@ describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
     expect(store.hexes).toBeNull();
     expect(store.gameState).toEqual(gs);
     expect(store.error).toBeNull();
+    expect(store.mapConfigError).toBeTruthy();
     expect(store.loading).toBe(false);
+  });
+
+  it('clears mapConfigError on successful map-config fetch', async () => {
+    const STUB_GRID_SPEC = { cols: 64, rows: 35, hexWidth: 40.5, hexHeight: 40.7, imageScale: 1 };
+    const gs = makeGameState('g3');
+    vi.stubGlobal(
+      'fetch',
+      makeMultiFetch([
+        ['/api/v1/scenarios/south-mountain/map-config', { gridSpec: STUB_GRID_SPEC, hexes: [] }],
+        ['/api/v1/games/g3', gs],
+      ])
+    );
+    const store = useGameStore();
+    await store.loadGame('g3');
+    expect(store.mapConfigError).toBeNull();
   });
 });
 
