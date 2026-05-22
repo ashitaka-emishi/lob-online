@@ -88,7 +88,7 @@ function handleKeydown(event, unitId) {
       :y="entry.y"
       :width="entry.size"
       :height="entry.size"
-      :aria-label="`Select unit ${entry.unit.id}`"
+      :aria-label="`Select ${entry.unit.name ?? entry.unit.id}`"
       role="button"
       tabindex="0"
       style="pointer-events: all; cursor: pointer"

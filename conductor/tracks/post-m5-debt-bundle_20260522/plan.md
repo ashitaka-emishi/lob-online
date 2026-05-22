@@ -48,12 +48,12 @@ These four items are interdependent. The composable (#401) must exist before #43
 
 ### Tasks
 
-- [ ] Task 1.1: Add `/api/v1/oob` GET route to `server/src/routes/games.js` (or a dedicated `oob.js` route) — not gated by `MAP_EDITOR_ENABLED`; write route test first
-- [ ] Task 1.2: Write `client/src/composables/useOobData.js` with `fetchOob()`, `walkOob()`, and enriched-unit computed — write unit tests first
-- [ ] Task 1.3: Update `GameView.vue` to use `useOobData` composable (removes inline OOB fetch + walk + computed, resolves #401 and #404)
-- [ ] Task 1.4: Update `GameView.vue` OOB fetch URL to `/api/v1/oob` (resolves #431)
-- [ ] Task 1.5: Update `UnitCounterLayer.vue` aria-label to use composable-provided human-readable name (resolves #432)
-- [ ] Task 1.6: Update `GameView.test.js` mock targets to match new composable surface
+- [x] Task 1.1: Add `/api/v1/oob` GET route to `server/src/routes/games.js` (or a dedicated `oob.js` route) — not gated by `MAP_EDITOR_ENABLED`; write route test first
+- [x] Task 1.2: Write `client/src/composables/useOobData.js` with `fetchOob()`, `walkOob()`, and enriched-unit computed — write unit tests first
+- [x] Task 1.3: Update `GameView.vue` to use `useOobData` composable (removes inline OOB fetch + walk + computed, resolves #401 and #404)
+- [x] Task 1.4: Update `GameView.vue` OOB fetch URL to `/api/v1/oob` (resolves #431)
+- [x] Task 1.5: Update `UnitCounterLayer.vue` aria-label to use composable-provided human-readable name (resolves #432)
+- [x] Task 1.6: Update `GameView.test.js` mock targets to match new composable surface
 
 ### Verification
 
@@ -64,6 +64,10 @@ These four items are interdependent. The composable (#401) must exist before #43
 ---
 
 ## Phase 2: Map-Config / Store Contract (#421–#427)
+
+> **NOTE:** All Phase 2 items were introduced by PR #420, which is still open and not yet merged into
+> master. These tasks CANNOT be executed on this branch until PR #420 merges. They are preserved here
+> for execution as a follow-on commit once the merge lands.
 
 Seven PR #420 store and map-config contract items. No inter-dependencies; tasks can be addressed in any order within the phase.
 
