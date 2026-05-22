@@ -1,0 +1,17 @@
+{
+  "id": "game-view-viewport_20260521",
+  "title": "Game Map Viewport Fix — Scrolling, Grid Config, Counter Size",
+  "type": "bug",
+  "status": "complete",
+  "created": "2026-05-21T00:00:00.000Z",
+  "updated": "2026-05-22T05:40:36.972Z",
+  "githubIssue": 406,
+  "phases": {
+    "total": 4,
+    "completed": 4
+  },
+  "tasks": {
+    "total": 11,
+    "completed": 11
+  }
+}

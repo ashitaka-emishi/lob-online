@@ -787,6 +787,7 @@ defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
         />
 
         <!-- UnitCounterLayer — game unit counter images ─────────────────────-->
+        <!-- hexWidth (xRadius) ≈ hexHeight (yRadius) for the SM map — counter sizing assumes a regular hex. -->
         <UnitCounterLayer
           v-if="units.length > 0"
           :units="units"

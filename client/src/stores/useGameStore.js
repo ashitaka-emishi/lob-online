@@ -3,6 +3,8 @@ import { defineStore } from 'pinia';
 
 export const useGameStore = defineStore('game', () => {
   const gameState = ref(null);
+  const gridSpec = ref(null);
+  const hexes = ref(null);
   const selectedUnitId = ref(null);
   const loading = ref(false);
   const error = ref(null);
@@ -16,9 +18,18 @@ export const useGameStore = defineStore('game', () => {
     loading.value = true;
     error.value = null;
     try {
-      const res = await fetch(`/api/v1/games/${id}`);
-      if (!res.ok) throw new Error(`Failed to load game: ${res.status}`);
-      gameState.value = await res.json();
+      const [stateRes, mapConfigRes] = await Promise.all([
+        fetch(`/api/v1/games/${id}`),
+        // map-config failure is non-fatal: leaves gridSpec/hexes null, game still loads.
+        fetch(`/api/v1/games/${id}/map-config`).catch(() => null),
+      ]);
+      if (!stateRes.ok) throw new Error(`Failed to load game: ${stateRes.status}`);
+      gameState.value = await stateRes.json();
+      if (mapConfigRes?.ok) {
+        const mapConfig = await mapConfigRes.json();
+        gridSpec.value = mapConfig.gridSpec ?? null;
+        hexes.value = mapConfig.hexes ?? null;
+      }
     } catch (err) {
       error.value = err.message;
     } finally {
@@ -36,6 +47,8 @@ export const useGameStore = defineStore('game', () => {
 
   return {
     gameState,
+    gridSpec,
+    hexes,
     selectedUnitId,
     selectedUnit,
     loading,

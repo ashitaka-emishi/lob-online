@@ -58,6 +58,18 @@ function makeFetch(data, ok = true) {
   });
 }
 
+// URL-pattern-based fetch mock for tests that need different responses per endpoint.
+function makeMultiFetch(responses) {
+  return vi.fn().mockImplementation((url) => {
+    for (const [pattern, data] of responses) {
+      if (url.includes(pattern)) {
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(data) });
+      }
+    }
+    return Promise.resolve({ ok: false, status: 404, json: () => Promise.resolve({}) });
+  });
+}
+
 beforeEach(() => {
   setActivePinia(createPinia());
 });
@@ -90,7 +102,11 @@ describe('useGameStore — initial state', () => {
 
 describe('useGameStore — loadGame', () => {
   it('calls GET /api/v1/games/:id', async () => {
-    const fetchMock = makeFetch(makeGameState('g1'));
+    const gs = makeGameState('g1');
+    const fetchMock = makeMultiFetch([
+      ['/api/v1/games/g1/map-config', { gridSpec: null, hexes: null }],
+      ['/api/v1/games/g1', gs],
+    ]);
     vi.stubGlobal('fetch', fetchMock);
     const store = useGameStore();
     await store.loadGame('g1');
@@ -99,7 +115,13 @@ describe('useGameStore — loadGame', () => {
 
   it('populates gameState on success', async () => {
     const gs = makeGameState('g2');
-    vi.stubGlobal('fetch', makeFetch(gs));
+    vi.stubGlobal(
+      'fetch',
+      makeMultiFetch([
+        ['/api/v1/games/g2/map-config', { gridSpec: null, hexes: null }],
+        ['/api/v1/games/g2', gs],
+      ])
+    );
     const store = useGameStore();
     await store.loadGame('g2');
     expect(store.gameState).toEqual(gs);
@@ -137,6 +159,32 @@ describe('useGameStore — loadGame', () => {
     await loadPromise;
     expect(store.loading).toBe(false);
   });
+
+  it('leaves gridSpec and hexes null when game-state fetch fails even if map-config succeeds', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url) => {
+        if (url.includes('map-config')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            json: () =>
+              Promise.resolve({
+                gridSpec: { cols: 4, rows: 3, hexWidth: 20, hexHeight: 20, imageScale: 1 },
+                hexes: [],
+              }),
+          });
+        }
+        return Promise.resolve({ ok: false, status: 500, json: () => Promise.resolve({}) });
+      })
+    );
+    const store = useGameStore();
+    await store.loadGame('g-fail');
+    expect(store.gameState).toBeNull();
+    expect(store.gridSpec).toBeNull();
+    expect(store.hexes).toBeNull();
+    expect(store.error).toBeTruthy();
+  });
 });
 
 describe('useGameStore — selectUnit / deselectUnit', () => {
@@ -158,6 +206,51 @@ describe('useGameStore — selectUnit / deselectUnit', () => {
     store.selectUnit('unit-a');
     store.selectUnit('unit-b');
     expect(store.selectedUnitId).toBe('unit-b');
+  });
+});
+
+describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
+  const STUB_GRID_SPEC = { cols: 64, rows: 35, hexWidth: 40.5, hexHeight: 40.7, imageScale: 1 };
+  const STUB_HEXES = [{ id: '01.01', terrain: 'clear', elevation: 0, edges: {} }];
+
+  it('gridSpec and hexes are null before any load', () => {
+    const store = useGameStore();
+    expect(store.gridSpec).toBeNull();
+    expect(store.hexes).toBeNull();
+  });
+
+  it('populates gridSpec and hexes when /map-config responds successfully', async () => {
+    const gs = makeGameState('g1');
+    vi.stubGlobal(
+      'fetch',
+      makeMultiFetch([
+        ['/api/v1/games/g1/map-config', { gridSpec: STUB_GRID_SPEC, hexes: STUB_HEXES }],
+        ['/api/v1/games/g1', gs],
+      ])
+    );
+    const store = useGameStore();
+    await store.loadGame('g1');
+    expect(store.gridSpec).toEqual(STUB_GRID_SPEC);
+    expect(store.hexes).toEqual(STUB_HEXES);
+    expect(store.gameState).toEqual(gs);
+  });
+
+  it('leaves gridSpec and hexes null when /map-config fetch rejects (non-fatal)', async () => {
+    const gs = makeGameState('g2');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url) => {
+        if (url.includes('map-config')) return Promise.reject(new Error('network'));
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(gs) });
+      })
+    );
+    const store = useGameStore();
+    await store.loadGame('g2');
+    expect(store.gridSpec).toBeNull();
+    expect(store.hexes).toBeNull();
+    expect(store.gameState).toEqual(gs);
+    expect(store.error).toBeNull();
+    expect(store.loading).toBe(false);
   });
 });
 

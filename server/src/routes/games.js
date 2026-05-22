@@ -5,6 +5,7 @@ import express from 'express';
 import { requireSide } from '../auth/requireSide.js';
 import { getPlayerSession, setPlayerSession } from '../auth/session.js';
 import { initGameState } from '../engine/init.js';
+import { loadMap } from '../engine/map.js';
 import { getScenario } from '../engine/scenario.js';
 import {
   createGame,
@@ -31,6 +32,16 @@ function regenerateSession(req) {
 }
 
 const router = express.Router();
+
+// Map data is static for the scenario — load once at module init so /map-config is synchronous.
+let _mapData = null;
+let _mapStartupError = null;
+try {
+  _mapData = loadMap();
+} catch (err) {
+  _mapStartupError = err;
+  console.error('[route] games: map data load failed at startup:', err.message);
+}
 
 // Validate :id is a UUID — prevents path traversal into gameFile storage
 router.param('id', (req, res, next, id) => {
@@ -127,6 +138,13 @@ router.get('/', (_req, res) => {
 router.get('/me', (req, res) => {
   const player = getPlayerSession(req);
   res.json({ gameId: player?.gameId ?? null, side: player?.side ?? null });
+});
+
+// GET /api/v1/games/:id/map-config — static scenario map data (gridSpec + hexes)
+// No requireSide: this is read-only scenario data identical for all players.
+router.get('/:id/map-config', (_req, res) => {
+  if (_mapStartupError) return res.status(503).json({ error: 'Map data unavailable' });
+  res.json({ gridSpec: _mapData.gridSpec, hexes: _mapData.hexes });
 });
 
 // GET /api/v1/games/:id — load game state (player must have a valid session for this game)
