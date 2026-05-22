@@ -64,6 +64,7 @@ Navigation hub for project context.
 | [debt-housekeeping_20260521](./tracks/debt-housekeeping_20260521/index.md) | Debt Register Housekeeping + Conductor State Cleanup | Pending |
 | [m5-game-map-ui_20260521](./tracks/m5-game-map-ui_20260521/index.md) | M5 Game Map UI — Unit Layer, Stats Panel, Game Store | Pending |
 | [lobby-routing-fix_20260521](./tracks/lobby-routing-fix_20260521/index.md) | Lobby Join/Create Routing Fix | Pending |
+| [post-m5-debt-bundle_20260522](./tracks/post-m5-debt-bundle_20260522/index.md) | Post-M5 Debt Bundle — Issues #431 #401 #421–#427 #432 #411 #412 #346 #413 #428 #429 #430 | Pending |
 
 ## Getting Started
 
