@@ -13,11 +13,12 @@
 
 html {
   height: 100%;
+  overflow: hidden;
 }
 
 body {
   height: 100%;
-  overflow: auto;
+  overflow: hidden;
   background: #1a1a1a;
   color: #e0d8c8;
   font-family: Georgia, serif;

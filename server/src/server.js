@@ -13,6 +13,7 @@ import { Server } from 'socket.io';
 
 import { initDb, getDb } from './store/gameSqlite.js';
 import gamesRouter from './routes/games.js';
+import oobRouter from './routes/oob.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -65,6 +66,10 @@ export async function startServer() {
   // Game API
   app.use('/api/v1/games', gamesRouter);
   console.log('[server] game API enabled at /api/v1/games');
+
+  // Scenario data API — production-safe, not gated by MAP_EDITOR_ENABLED (#431)
+  app.use('/api/v1/oob', oobRouter);
+  console.log('[server] OOB API enabled at /api/v1/oob');
 
   // E2E coverage endpoint — returns Istanbul coverage collected via esm-loader-hook
   if (process.env.CYPRESS_COVERAGE === 'true') {

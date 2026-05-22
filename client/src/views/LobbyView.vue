@@ -81,7 +81,9 @@ function statusLabel(status) {
 }
 
 .error {
-  color: red;
+  color: #c0392b;
+  border-left: 3px solid #c0392b;
+  padding-left: 0.5rem;
   margin-bottom: 1rem;
 }
 
