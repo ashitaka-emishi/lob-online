@@ -4,17 +4,21 @@
 
     <div v-if="store.error" class="error">{{ store.error }}</div>
 
-    <button data-testid="new-game-btn" :disabled="store.loading" @click="store.createGame()">
-      New Game
-    </button>
-
-    <table v-if="store.games.length > 0" class="game-list">
+    <table class="game-list">
       <thead>
         <tr>
           <th>Game ID</th>
           <th class="col-center">Status</th>
           <th class="col-center">Join</th>
-          <th></th>
+          <th>
+            <button
+              data-testid="new-game-btn"
+              :disabled="store.loading"
+              @click="store.createGame()"
+            >
+              New Game
+            </button>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -43,10 +47,11 @@
             <button data-testid="delete-btn" @click="store.deleteGame(game.id)">Delete</button>
           </td>
         </tr>
+        <tr v-if="!store.loading && store.games.length === 0">
+          <td colspan="4" class="empty-state">No games yet.</td>
+        </tr>
       </tbody>
     </table>
-
-    <p v-else-if="!store.loading">No games yet.</p>
   </div>
 </template>
 
@@ -116,6 +121,12 @@ function statusLabel(status) {
 
 .col-center {
   text-align: center;
+}
+
+.empty-state {
+  text-align: center;
+  color: #666;
+  padding: 1rem;
 }
 
 .join-actions {

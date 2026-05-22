@@ -69,9 +69,9 @@ describe('LobbyView', () => {
     expect(rows).toHaveLength(2);
   });
 
-  it('shows "No games" message when list is empty', () => {
-    const wrapper = mountLobby({ games: [] });
-    expect(wrapper.text()).toContain('No games');
+  it('shows "No games yet." row when list is empty', () => {
+    const wrapper = mountLobby({ games: [], loading: false });
+    expect(wrapper.text()).toContain('No games yet.');
   });
 
   it('"New Game" button calls createGame', async () => {
