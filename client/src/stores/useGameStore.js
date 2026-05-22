@@ -1,6 +1,8 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 
+import { sanitizeCalibration } from '../utils/calibration.js';
+
 export const useGameStore = defineStore('game', () => {
   const gameState = ref(null);
   const gridSpec = ref(null);
@@ -34,7 +36,8 @@ export const useGameStore = defineStore('game', () => {
       );
       if (mapConfigRes?.ok) {
         const mapConfig = await mapConfigRes.json();
-        gridSpec.value = mapConfig.gridSpec ?? null;
+        // sanitizeCalibration enforces the shape contract at the store boundary (#425)
+        gridSpec.value = mapConfig.gridSpec ? sanitizeCalibration(mapConfig.gridSpec) : null;
         hexes.value = mapConfig.hexes ?? null;
       } else if (mapConfigRes && !mapConfigRes.ok) {
         mapConfigError.value = `Map data unavailable (${mapConfigRes.status})`;

@@ -239,7 +239,8 @@ describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
     );
     const store = useGameStore();
     await store.loadGame('g1');
-    expect(store.gridSpec).toEqual(STUB_GRID_SPEC);
+    // sanitizeCalibration fills in defaults — use toMatchObject for the fields we care about
+    expect(store.gridSpec).toMatchObject(STUB_GRID_SPEC);
     expect(store.hexes).toEqual(STUB_HEXES);
     expect(store.gameState).toEqual(gs);
   });
@@ -276,6 +277,28 @@ describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
     const store = useGameStore();
     await store.loadGame('g3');
     expect(store.mapConfigError).toBeNull();
+  });
+
+  it('sanitizes gridSpec at the store boundary — bad numeric falls back to default (#425)', async () => {
+    const gs = makeGameState('g4');
+    vi.stubGlobal(
+      'fetch',
+      makeMultiFetch([
+        [
+          '/api/v1/scenarios/south-mountain/map-config',
+          {
+            gridSpec: { cols: NaN, rows: 35, hexWidth: 40, hexHeight: 40, imageScale: 1 },
+            hexes: [],
+          },
+        ],
+        ['/api/v1/games/g4', gs],
+      ])
+    );
+    const store = useGameStore();
+    await store.loadGame('g4');
+    // cols: NaN should be sanitized to the default (64)
+    expect(store.gridSpec.cols).toBe(64);
+    expect(store.gridSpec.rows).toBe(35);
   });
 });
 
