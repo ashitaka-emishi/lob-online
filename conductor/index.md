@@ -63,6 +63,7 @@ Navigation hub for project context.
 | [engine-perf-sprint_20260520](./tracks/engine-perf-sprint_20260520/index.md) | Engine & Utility Performance Sprint — Issues #324 #295 #294 #201 | Complete |
 | [debt-housekeeping_20260521](./tracks/debt-housekeeping_20260521/index.md) | Debt Register Housekeeping + Conductor State Cleanup | Pending |
 | [m5-game-map-ui_20260521](./tracks/m5-game-map-ui_20260521/index.md) | M5 Game Map UI — Unit Layer, Stats Panel, Game Store | Pending |
+| [lobby-routing-fix_20260521](./tracks/lobby-routing-fix_20260521/index.md) | Lobby Join/Create Routing Fix | Pending |
 
 ## Getting Started
 
