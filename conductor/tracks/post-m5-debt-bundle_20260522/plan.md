@@ -65,10 +65,6 @@ These four items are interdependent. The composable (#401) must exist before #43
 
 ## Phase 2: Map-Config / Store Contract (#421–#427)
 
-> **NOTE:** All Phase 2 items were introduced by PR #420, which is still open and not yet merged into
-> master. These tasks CANNOT be executed on this branch until PR #420 merges. They are preserved here
-> for execution as a follow-on commit once the merge lands.
-
 Seven PR #420 store and map-config contract items. No inter-dependencies; tasks can be addressed in any order within the phase.
 
 ### Tasks
@@ -112,9 +108,9 @@ Trivial fixes with no behavioral risk.
 ### Tasks
 
 - [x] Task 4.1: Change `.error { color: red }` to `color: #c0392b` and add a non-color indicator (e.g., `⚠` prefix or border) in `LobbyView.vue` (resolves #413)
-- [ ] Task 4.2: Add explicit test assertions for `sanitizeCalibration` partial-override cases (e.g., only `hexSize` overridden, only `origin` overridden) in `calibration.test.js` (resolves #428) — **DEFERRED: requires PR #420 merge**
-- [ ] Task 4.3: Extract `STUB_GRID_SPEC` into a shared test fixture file (e.g., `client/src/test/fixtures.js`) and import it in both test files that currently define it independently (resolves #429) — **DEFERRED: requires PR #420 merge**
-- [ ] Task 4.4: Add `Cache-Control: public, max-age=3600` header to the `/map-config` GET handler (resolves #430) — **DEFERRED: requires PR #420 merge**
+- [ ] Task 4.2: Add explicit test assertions for `sanitizeCalibration` partial-override cases (e.g., only `hexSize` overridden, only `origin` overridden) in `calibration.test.js` (resolves #428)
+- [ ] Task 4.3: Extract `STUB_GRID_SPEC` into a shared test fixture file (e.g., `client/src/test/fixtures.js`) and import it in both test files that currently define it independently (resolves #429)
+- [ ] Task 4.4: Add `Cache-Control: public, max-age=3600` header to the `/map-config` GET handler (resolves #430)
 
 ### Verification
 
