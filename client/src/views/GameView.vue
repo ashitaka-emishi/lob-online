@@ -13,6 +13,10 @@ const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
 const route = useRoute();
 const gameStore = useGameStore();
 
+// gridSpec and DEFAULT_CALIBRATION share the same field names by contract (#426).
+// sanitizeCalibration (called at the store boundary in useGameStore) enforces this:
+// it only reads fields defined in DEFAULT_CALIBRATION, so a rename on either side
+// produces a fallback to the default rather than a silent wrong value.
 const calibration = computed(() =>
   sanitizeCalibration({ ...DEFAULT_CALIBRATION, ...(gameStore.gridSpec ?? {}) })
 );
