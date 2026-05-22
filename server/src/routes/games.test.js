@@ -231,23 +231,27 @@ describe('POST /api/v1/games/:id/join', () => {
     expect(res.status).toBe(400);
   });
 
-  // ARCH-H2: session conflict guard — prevent same-session double-join (#340)
-  it('returns 409 with correct error body and does not call joinGame when session matches route :id (#340)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'confederate', token: 'tok-1' });
+  // ARCH-H2: same-game re-join updates side (scaffolded) — joinGame not called again (#340)
+  it('returns 200 and updates side when session already holds this game (#340)', async () => {
+    getPlayerSession.mockReturnValue({
+      gameId: TEST_UUID,
+      side: 'confederate',
+      sideToken: 'tok-1',
+    });
     const app = await buildApp();
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
-    expect(res.status).toBe(409);
-    expect(res.body.error).toBe('Already in this game');
+    expect(res.status).toBe(200);
+    expect(res.body.side).toBe('union');
     expect(joinGame).not.toHaveBeenCalled();
-    expect(setPlayerSession).not.toHaveBeenCalled();
+    expect(setPlayerSession).toHaveBeenCalledWith(expect.anything(), TEST_UUID, 'union', 'tok-1');
   });
 
-  it('returns 409 when caller holds union session for same game (#340)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok-2' });
+  it('returns 200 and keeps same side when session matches and same side requested (#340)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok-2' });
     const app = await buildApp();
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
-    expect(res.status).toBe(409);
-    expect(res.body.error).toBe('Already in this game');
+    expect(res.status).toBe(200);
+    expect(res.body.side).toBe('union');
     expect(joinGame).not.toHaveBeenCalled();
   });
 

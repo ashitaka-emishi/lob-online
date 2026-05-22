@@ -63,12 +63,15 @@ router.post('/:id/join', async (req, res) => {
       return res.status(400).json({ error: 'side must be "union" or "confederate"' });
     }
 
-    // ARCH-H2: reject if the caller is already in this game (#340)
-    // Game-switching is intentionally allowed: a player already in game A may join game B,
-    // overwriting their session. Only same-game re-join is blocked. Policy documented in #349.
     const existingSession = getPlayerSession(req);
+
+    // ARCH-H2: same-game re-join updates side and re-enters without calling joinGame again.
+    // Scaffolded behavior: allows side-switching for dev/testing; full enforcement deferred.
+    // Game-switching (different gameId) overwrites the session normally. Policy in #349.
     if (existingSession?.gameId === id) {
-      return res.status(409).json({ error: 'Already in this game' });
+      await new Promise((res, rej) => req.session.regenerate((e) => (e ? rej(e) : res())));
+      setPlayerSession(req, id, side, existingSession.sideToken);
+      return res.json({ id, side });
     }
 
     const sideToken = randomUUID();
