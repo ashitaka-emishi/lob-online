@@ -85,6 +85,39 @@ describe('useLobbyStore — createGame', () => {
   });
 });
 
+describe('useLobbyStore — deleteGame', () => {
+  it('calls DELETE /api/v1/games/:id and refreshes the list (#407)', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, status: 204, json: () => Promise.resolve(null) })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve([{ id: 'g2', status: 'open' }]),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+    const store = useLobbyStore();
+    await store.deleteGame('g1');
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/games/g1');
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: 'DELETE' });
+    expect(store.games).toEqual([{ id: 'g2', status: 'open' }]);
+  });
+
+  it('sets error on failure', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: () => Promise.resolve({ error: 'Game not found' }),
+      })
+    );
+    const store = useLobbyStore();
+    await store.deleteGame('missing');
+    expect(store.error).toBe('Game not found');
+  });
+});
+
 describe('useLobbyStore — joinGame', () => {
   it('sets myGameId and mySide on success', async () => {
     vi.stubGlobal('fetch', mockFetch({ id: 'game-join', side: 'union' }));

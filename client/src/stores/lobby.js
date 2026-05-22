@@ -42,6 +42,20 @@ export const useLobbyStore = defineStore('lobby', () => {
     }
   }
 
+  async function deleteGame(id) {
+    error.value = null;
+    try {
+      const res = await fetch(`/api/v1/games/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Failed to delete game: ${res.status}`);
+      }
+      await fetchGames();
+    } catch (err) {
+      error.value = err.message;
+    }
+  }
+
   async function joinGame(id, side) {
     error.value = null;
     try {
@@ -63,5 +77,5 @@ export const useLobbyStore = defineStore('lobby', () => {
     }
   }
 
-  return { games, myGameId, mySide, loading, error, fetchGames, createGame, joinGame };
+  return { games, myGameId, mySide, loading, error, fetchGames, createGame, deleteGame, joinGame };
 });

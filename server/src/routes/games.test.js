@@ -14,6 +14,8 @@ vi.mock('../store/index.js', () => ({
   loadGame: vi.fn(),
   createGame: vi.fn(),
   joinGame: vi.fn(),
+  deleteGame: vi.fn(),
+  deleteGameFile: vi.fn().mockResolvedValue(undefined),
   getGame: vi.fn(),
   listGames: vi.fn(),
   GameNotFoundError: class GameNotFoundError extends Error {
@@ -49,6 +51,8 @@ vi.mock('../engine/scenario.js', () => ({
 import { setPlayerSession, getPlayerSession } from '../auth/session.js';
 import {
   createGame,
+  deleteGame,
+  deleteGameFile,
   GameNotFoundError,
   GameNotOpenError,
   InvalidTokenError,
@@ -100,6 +104,8 @@ beforeEach(() => {
   listGames.mockReturnValue([]);
   getGame.mockReturnValue(null);
   loadGame.mockResolvedValue(MINIMAL_STATE);
+  deleteGame.mockReturnValue(undefined);
+  deleteGameFile.mockResolvedValue(undefined);
 });
 
 describe('POST /api/v1/games', () => {
@@ -337,6 +343,39 @@ describe('GET /api/v1/games/:id', () => {
   it('returns 400 for non-UUID game id', async () => {
     const app = await buildApp();
     const res = await request(app).get('/api/v1/games/not-a-uuid');
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('DELETE /api/v1/games/:id', () => {
+  it('returns 204 and calls deleteGame + deleteGameFile (#407)', async () => {
+    const app = await buildApp();
+    const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+    expect(res.status).toBe(204);
+    expect(deleteGame).toHaveBeenCalledWith(TEST_UUID);
+    expect(deleteGameFile).toHaveBeenCalledWith(TEST_UUID);
+  });
+
+  it('returns 404 when deleteGame throws GameNotFoundError (#407)', async () => {
+    deleteGame.mockImplementation(() => {
+      throw new GameNotFoundError(TEST_UUID);
+    });
+    const app = await buildApp();
+    const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Game not found');
+  });
+
+  it('returns 500 when deleteGameFile throws (#407)', async () => {
+    deleteGameFile.mockRejectedValue(new Error('disk error'));
+    const app = await buildApp();
+    const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+    expect(res.status).toBe(500);
+  });
+
+  it('returns 400 for non-UUID game id', async () => {
+    const app = await buildApp();
+    const res = await request(app).delete('/api/v1/games/not-a-uuid');
     expect(res.status).toBe(400);
   });
 });

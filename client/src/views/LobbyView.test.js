@@ -28,6 +28,7 @@ function makeStore(overrides = {}) {
     error: null,
     fetchGames: vi.fn(),
     createGame: vi.fn(),
+    deleteGame: vi.fn(),
     joinGame: vi.fn(),
     ...overrides,
   };
@@ -106,6 +107,16 @@ describe('LobbyView', () => {
     });
     expect(wrapper.find('[data-testid="join-usa-btn"]').attributes('disabled')).toBeDefined();
     expect(wrapper.find('[data-testid="join-csa-btn"]').attributes('disabled')).toBeDefined();
+  });
+
+  it('"Delete" button calls deleteGame with the game id (#407)', async () => {
+    const deleteGame = vi.fn();
+    const wrapper = mountLobby({
+      games: [{ id: 'g1', status: 'open' }],
+      deleteGame,
+    });
+    await wrapper.find('[data-testid="delete-btn"]').trigger('click');
+    expect(deleteGame).toHaveBeenCalledWith('g1');
   });
 
   it('shows error message when store has error', () => {

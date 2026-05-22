@@ -8,6 +8,8 @@ import { initGameState } from '../engine/init.js';
 import { getScenario } from '../engine/scenario.js';
 import {
   createGame,
+  deleteGame,
+  deleteGameFile,
   GameNotFoundError,
   GameNotOpenError,
   getGame,
@@ -86,6 +88,20 @@ router.post('/:id/join', async (req, res) => {
     if (err instanceof InvalidTokenError) return res.status(400).json({ error: err.message });
     console.error('[route] POST /games/:id/join error:', err.message);
     res.status(500).json({ error: 'Failed to join game' });
+  }
+});
+
+// DELETE /api/v1/games/:id — remove a game from the lobby
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    deleteGame(id);
+    await deleteGameFile(id);
+    res.status(204).send();
+  } catch (err) {
+    if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });
+    console.error('[route] DELETE /games/:id error:', err.message);
+    res.status(500).json({ error: 'Failed to delete game' });
   }
 });
 

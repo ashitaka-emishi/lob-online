@@ -35,6 +35,7 @@
             >
               Join as CSA
             </button>
+            <button data-testid="delete-btn" @click="store.deleteGame(game.id)">Delete</button>
           </td>
         </tr>
       </tbody>
