@@ -12,8 +12,8 @@
       <thead>
         <tr>
           <th>Game ID</th>
-          <th>Status</th>
-          <th>Join</th>
+          <th class="col-center">Status</th>
+          <th class="col-center">Join</th>
           <th></th>
         </tr>
       </thead>
@@ -112,6 +112,10 @@ function statusLabel(status) {
 .status-badge.active {
   background: #d4edda;
   color: #155724;
+}
+
+.col-center {
+  text-align: center;
 }
 
 .join-actions {
