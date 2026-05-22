@@ -13,13 +13,21 @@
         <tr>
           <th>Game ID</th>
           <th>Status</th>
+          <th>You</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="game in store.games" :key="game.id" data-testid="game-row">
-          <td>{{ game.id }}</td>
-          <td>{{ game.status }}</td>
+          <td class="game-id">{{ game.id }}</td>
+          <td>
+            <span :class="['status-badge', game.status]">{{ statusLabel(game.status) }}</span>
+          </td>
+          <td data-testid="you-cell">
+            <span v-if="game.id === store.myGameId" class="you-badge">
+              {{ sideLabel(store.mySide) }}
+            </span>
+          </td>
           <td class="join-actions">
             <button
               data-testid="join-usa-btn"
@@ -55,11 +63,23 @@ const store = useLobbyStore();
 onMounted(() => {
   store.fetchGames();
 });
+
+function statusLabel(status) {
+  if (status === 'open') return 'Waiting for player';
+  if (status === 'active') return 'In progress';
+  return status;
+}
+
+function sideLabel(side) {
+  if (side === 'union') return 'USA';
+  if (side === 'confederate') return 'CSA';
+  return side ?? '';
+}
 </script>
 
 <style scoped>
 .lobby {
-  max-width: 640px;
+  max-width: 720px;
   margin: 2rem auto;
   font-family: sans-serif;
 }
@@ -80,6 +100,32 @@ onMounted(() => {
   border: 1px solid #ccc;
   padding: 0.5rem 0.75rem;
   text-align: left;
+}
+
+.game-id {
+  font-family: monospace;
+  font-size: 0.85em;
+}
+
+.status-badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.status-badge.open {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.you-badge {
+  font-weight: bold;
+  color: #1a73e8;
 }
 
 .join-actions {

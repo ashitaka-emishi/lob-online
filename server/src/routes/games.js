@@ -110,6 +110,13 @@ router.get('/', (_req, res) => {
   res.json(listGames());
 });
 
+// GET /api/v1/games/me — current player's session identity
+// Must be defined before /:id so the literal "me" is not captured by router.param
+router.get('/me', (req, res) => {
+  const player = getPlayerSession(req);
+  res.json({ gameId: player?.gameId ?? null, side: player?.side ?? null });
+});
+
 // GET /api/v1/games/:id — load game state (player must have a valid session for this game)
 router.get('/:id', requireSide, async (req, res) => {
   try {

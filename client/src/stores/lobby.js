@@ -14,9 +14,17 @@ export const useLobbyStore = defineStore('lobby', () => {
     loading.value = true;
     error.value = null;
     try {
-      const res = await fetch('/api/v1/games');
-      if (!res.ok) throw new Error(`Failed to fetch games: ${res.status}`);
-      games.value = await res.json();
+      const [gamesRes, meRes] = await Promise.all([
+        fetch('/api/v1/games'),
+        fetch('/api/v1/games/me'),
+      ]);
+      if (!gamesRes.ok) throw new Error(`Failed to fetch games: ${gamesRes.status}`);
+      games.value = await gamesRes.json();
+      if (meRes.ok) {
+        const me = await meRes.json();
+        myGameId.value = me.gameId;
+        mySide.value = me.side;
+      }
     } catch (err) {
       error.value = err.message;
     } finally {

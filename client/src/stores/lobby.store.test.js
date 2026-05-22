@@ -26,15 +26,27 @@ afterEach(() => {
 });
 
 describe('useLobbyStore — fetchGames', () => {
-  it('populates games list on success', async () => {
+  it('populates games list and restores session from /me (#407)', async () => {
     const games = [
       { id: 'g1', status: 'open' },
       { id: 'g2', status: 'active' },
     ];
-    vi.stubGlobal('fetch', mockFetch(games));
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(games) })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ gameId: 'g1', side: 'confederate' }),
+        })
+    );
     const store = useLobbyStore();
     await store.fetchGames();
     expect(store.games).toEqual(games);
+    expect(store.myGameId).toBe('g1');
+    expect(store.mySide).toBe('confederate');
     expect(store.loading).toBe(false);
     expect(store.error).toBeNull();
   });

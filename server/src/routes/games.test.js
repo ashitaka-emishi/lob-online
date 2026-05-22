@@ -271,6 +271,24 @@ describe('POST /api/v1/games/:id/join', () => {
   });
 });
 
+describe('GET /api/v1/games/me', () => {
+  it('returns gameId and side when player has a session (#407)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'confederate', token: 'tok-1' });
+    const app = await buildApp();
+    const res = await request(app).get('/api/v1/games/me');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ gameId: TEST_UUID, side: 'confederate' });
+  });
+
+  it('returns null gameId and side when no session (#407)', async () => {
+    getPlayerSession.mockReturnValue(null);
+    const app = await buildApp();
+    const res = await request(app).get('/api/v1/games/me');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ gameId: null, side: null });
+  });
+});
+
 describe('GET /api/v1/games', () => {
   it('returns 200 with empty array when no games', async () => {
     listGames.mockReturnValue([]);
