@@ -94,14 +94,14 @@ Low-risk code quality improvements with no behavior change.
 
 ### Tasks
 
-- [~] Task 3.1: Extract `session.regenerate()` promise wrapper to a named helper (`regenerateSession`) in `server/src/routes/games.js`; replace all three inline copy-paste sites (resolves #411)
-- [ ] Task 3.2: Define `SIDES` constant (`{ UNION: 'union', CONFEDERATE: 'confederate' }`) in a shared server module; replace all magic string literals across server routes, client store, and tests (resolves #412)
-- [ ] Task 3.3: Consolidate overlapping assertions in table-test panel tests, editor route tests, and compass utility tests — remove per-panel/per-route duplication, keep composable-level coverage (resolves #346)
+- [x] Task 3.1: Extract `session.regenerate()` promise wrapper to a named helper (`regenerateSession`) in `server/src/routes/games.js`; replace all three inline copy-paste sites (resolves #411)
+- [x] Task 3.2: Define `SIDES` constant (`{ UNION: 'union', CONFEDERATE: 'confederate' }`) in a shared server module; replace all magic string literals across server routes, client store, and tests (resolves #412)
+- [x] Task 3.3: Consolidate overlapping assertions in table-test panel tests, editor route tests, and compass utility tests — remove per-panel/per-route duplication, keep composable-level coverage (resolves #346)
 
 ### Verification
 
-- [ ] `npm run test` green with ≥ 70% line coverage
-- [ ] `npm run lint` zero warnings
+- [x] `npm run test` green with ≥ 70% line coverage
+- [x] `npm run lint` zero warnings
 
 ---
 
@@ -111,14 +111,14 @@ Trivial fixes with no behavioral risk.
 
 ### Tasks
 
-- [ ] Task 4.1: Change `.error { color: red }` to `color: #c0392b` and add a non-color indicator (e.g., `⚠` prefix or border) in `LobbyView.vue` (resolves #413)
-- [ ] Task 4.2: Add explicit test assertions for `sanitizeCalibration` partial-override cases (e.g., only `hexSize` overridden, only `origin` overridden) in `calibration.test.js` (resolves #428)
-- [ ] Task 4.3: Extract `STUB_GRID_SPEC` into a shared test fixture file (e.g., `client/src/test/fixtures.js`) and import it in both test files that currently define it independently (resolves #429)
-- [ ] Task 4.4: Add `Cache-Control: public, max-age=3600` header to the `/map-config` GET handler (resolves #430)
+- [x] Task 4.1: Change `.error { color: red }` to `color: #c0392b` and add a non-color indicator (e.g., `⚠` prefix or border) in `LobbyView.vue` (resolves #413)
+- [ ] Task 4.2: Add explicit test assertions for `sanitizeCalibration` partial-override cases (e.g., only `hexSize` overridden, only `origin` overridden) in `calibration.test.js` (resolves #428) — **DEFERRED: requires PR #420 merge**
+- [ ] Task 4.3: Extract `STUB_GRID_SPEC` into a shared test fixture file (e.g., `client/src/test/fixtures.js`) and import it in both test files that currently define it independently (resolves #429) — **DEFERRED: requires PR #420 merge**
+- [ ] Task 4.4: Add `Cache-Control: public, max-age=3600` header to the `/map-config` GET handler (resolves #430) — **DEFERRED: requires PR #420 merge**
 
 ### Verification
 
-- [ ] `npm run quality:strict` passes with zero warnings
+- [x] `npm run quality:strict` passes with zero warnings
 
 ---
 
