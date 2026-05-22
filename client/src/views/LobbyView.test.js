@@ -80,27 +80,32 @@ describe('LobbyView', () => {
     expect(createGame).toHaveBeenCalledOnce();
   });
 
-  it('"Join" button calls joinGame with the game id', async () => {
+  it('"Join as USA" button calls joinGame with id and "union" (#407)', async () => {
     const joinGame = vi.fn();
     const wrapper = mountLobby({
       games: [{ id: 'g1', status: 'open' }],
       joinGame,
     });
-    await wrapper.find('[data-testid="join-btn"]').trigger('click');
-    expect(joinGame).toHaveBeenCalledWith('g1');
+    await wrapper.find('[data-testid="join-usa-btn"]').trigger('click');
+    expect(joinGame).toHaveBeenCalledWith('g1', 'union');
   });
 
-  it('"Join" button is disabled for active (full) games', () => {
+  it('"Join as CSA" button calls joinGame with id and "confederate" (#407)', async () => {
+    const joinGame = vi.fn();
+    const wrapper = mountLobby({
+      games: [{ id: 'g1', status: 'open' }],
+      joinGame,
+    });
+    await wrapper.find('[data-testid="join-csa-btn"]').trigger('click');
+    expect(joinGame).toHaveBeenCalledWith('g1', 'confederate');
+  });
+
+  it('join buttons are disabled for active (full) games (#407)', () => {
     const wrapper = mountLobby({
       games: [{ id: 'g2', status: 'active' }],
     });
-    const joinBtn = wrapper.find('[data-testid="join-btn"]');
-    expect(joinBtn.attributes('disabled')).toBeDefined();
-  });
-
-  it('shows assigned side after create/join', () => {
-    const wrapper = mountLobby({ myGameId: 'g1', mySide: 'union' });
-    expect(wrapper.text()).toContain('union');
+    expect(wrapper.find('[data-testid="join-usa-btn"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.find('[data-testid="join-csa-btn"]').attributes('disabled')).toBeDefined();
   });
 
   it('shows error message when store has error', () => {

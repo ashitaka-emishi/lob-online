@@ -4,11 +4,6 @@
 
     <div v-if="store.error" class="error">{{ store.error }}</div>
 
-    <div v-if="store.myGameId" class="side-assignment">
-      Joined game <strong>{{ store.myGameId }}</strong> as
-      <strong>{{ store.mySide }}</strong>
-    </div>
-
     <button data-testid="new-game-btn" :disabled="store.loading" @click="store.createGame()">
       New Game
     </button>
@@ -25,13 +20,20 @@
         <tr v-for="game in store.games" :key="game.id" data-testid="game-row">
           <td>{{ game.id }}</td>
           <td>{{ game.status }}</td>
-          <td>
+          <td class="join-actions">
             <button
-              data-testid="join-btn"
+              data-testid="join-usa-btn"
               :disabled="game.status !== 'open'"
-              @click="store.joinGame(game.id)"
+              @click="store.joinGame(game.id, 'union')"
             >
-              Join
+              Join as USA
+            </button>
+            <button
+              data-testid="join-csa-btn"
+              :disabled="game.status !== 'open'"
+              @click="store.joinGame(game.id, 'confederate')"
+            >
+              Join as CSA
             </button>
           </td>
         </tr>
@@ -66,13 +68,6 @@ onMounted(() => {
   margin-bottom: 1rem;
 }
 
-.side-assignment {
-  margin-bottom: 1rem;
-  padding: 0.5rem;
-  background: #e8f5e9;
-  border-radius: 4px;
-}
-
 .game-list {
   width: 100%;
   border-collapse: collapse;
@@ -84,5 +79,10 @@ onMounted(() => {
   border: 1px solid #ccc;
   padding: 0.5rem 0.75rem;
   text-align: left;
+}
+
+.join-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 </style>
