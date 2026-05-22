@@ -94,7 +94,7 @@ Low-risk code quality improvements with no behavior change.
 
 ### Tasks
 
-- [ ] Task 3.1: Extract `session.regenerate()` promise wrapper to a named helper (`regenerateSession`) in `server/src/routes/games.js`; replace all three inline copy-paste sites (resolves #411)
+- [~] Task 3.1: Extract `session.regenerate()` promise wrapper to a named helper (`regenerateSession`) in `server/src/routes/games.js`; replace all three inline copy-paste sites (resolves #411)
 - [ ] Task 3.2: Define `SIDES` constant (`{ UNION: 'union', CONFEDERATE: 'confederate' }`) in a shared server module; replace all magic string literals across server routes, client store, and tests (resolves #412)
 - [ ] Task 3.3: Consolidate overlapping assertions in table-test panel tests, editor route tests, and compass utility tests — remove per-panel/per-route duplication, keep composable-level coverage (resolves #346)
 

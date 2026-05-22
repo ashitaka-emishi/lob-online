@@ -12,13 +12,13 @@ const props = defineProps({
     type: Map,
     required: true,
   },
-  // Rendered counter size as a fraction of hex inradius (e.g. 0.8 = 80% of the inradius diameter).
+  // Rendered counter size as a fraction of hex side length (e.g. 1.1 = 110% of the side length).
   sizeRatio: {
     type: Number,
-    default: 0.8,
+    default: 1.1,
   },
-  // Hex inradius in SVG user units — matches hexHeight from HexMapOverlay calibration.
-  hexInradius: {
+  // Hex side length in SVG user units — matches hexWidth from HexMapOverlay calibration.
+  hexSideLength: {
     type: Number,
     default: 28,
   },
@@ -32,7 +32,7 @@ const props = defineProps({
 const emit = defineEmits(['unit-click']);
 
 // Counter size in SVG user units.
-const counterSize = computed(() => props.hexInradius * props.sizeRatio);
+const counterSize = computed(() => props.hexSideLength * props.sizeRatio);
 
 // Horizontal stagger for counters sharing a hex, in SVG user units.
 const STACK_OFFSET = 4;

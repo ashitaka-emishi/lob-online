@@ -1,5 +1,7 @@
 import { computed, ref } from 'vue';
 
+import { SIDES } from '../utils/sides.js';
+
 // Flatten an OOB node and all descendants into map entries.
 // Each node with an `id` field becomes one entry with name, side, strengthPoints, counterFile.
 function collectOobUnits(obj, side, map) {
@@ -41,7 +43,7 @@ export function useOobData() {
   const oobUnitMap = computed(() => {
     const map = new Map();
     if (!oobData.value) return map;
-    for (const side of ['union', 'confederate']) {
+    for (const side of [SIDES.UNION, SIDES.CONFEDERATE]) {
       if (oobData.value[side]) collectOobUnits(oobData.value[side], side, map);
     }
     return map;
