@@ -61,11 +61,6 @@ router.post('/:id/join', async (req, res) => {
       return res.status(400).json({ error: 'side must be "union" or "confederate"' });
     }
 
-    // Creator always holds confederate (#407); reject requests for the taken side
-    if (side === 'confederate') {
-      return res.status(409).json({ error: 'Side already taken' });
-    }
-
     // ARCH-H2: reject if the caller is already in this game (#340)
     // Game-switching is intentionally allowed: a player already in game A may join game B,
     // overwriting their session. Only same-game re-join is blocked. Policy documented in #349.

@@ -171,14 +171,14 @@ describe('POST /api/v1/games/:id/join', () => {
     expect(res.body.error).toMatch(/side/);
   });
 
-  it('returns 409 with "Side already taken" when side is confederate (#407)', async () => {
+  it('returns 200 with confederate side when side is confederate (#407)', async () => {
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/join`)
       .send({ side: 'confederate' });
-    expect(res.status).toBe(409);
-    expect(res.body.error).toBe('Side already taken');
-    expect(joinGame).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(res.body.side).toBe('confederate');
+    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String));
   });
 
   it('returns 404 when joinGame throws GameNotFoundError (#PERF-H1)', async () => {
