@@ -57,9 +57,9 @@ function makeGameStore(overrides = {}) {
 
 import { ref, computed } from 'vue';
 
-function makeOobStore(oobDataValue = STUB_OOB_DATA) {
+function makeOobStore(oobDataValue = STUB_OOB_DATA, oobErrorValue = null) {
   const oobData = ref(oobDataValue);
-  const oobError = ref(null);
+  const oobError = ref(oobErrorValue);
   const fetchOob = vi.fn().mockResolvedValue(undefined);
   const oobUnitMap = computed(() => {
     const map = new Map();
@@ -121,11 +121,12 @@ function makeRouter() {
 async function mountGameView(
   storeOverrides = {},
   fetchResponses = null,
-  oobDataValue = STUB_OOB_DATA
+  oobDataValue = STUB_OOB_DATA,
+  oobErrorValue = null
 ) {
   setActivePinia(createPinia());
   useGameStore.mockReturnValue(makeGameStore(storeOverrides));
-  useOobData.mockReturnValue(makeOobStore(oobDataValue));
+  useOobData.mockReturnValue(makeOobStore(oobDataValue, oobErrorValue));
 
   const fetchMock = makeFetchSequence(fetchResponses ?? [['map-test/data', STUB_MAP_DATA]]);
   vi.stubGlobal('fetch', fetchMock);
@@ -314,5 +315,12 @@ describe('GameView — OOB fetch error handling', () => {
     // No OOB data → displayUnits is empty
     const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
     expect(overlay.props('units')).toEqual([]);
+  });
+
+  it('shows error banner when OOB composable reports an error', async () => {
+    const wrapper = await mountGameView({}, null, null, 'OOB data unavailable');
+    await flushPromises();
+    expect(wrapper.find('.error-banner').exists()).toBe(true);
+    expect(wrapper.find('.error-banner').text()).toContain('OOB data unavailable');
   });
 });

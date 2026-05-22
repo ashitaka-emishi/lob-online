@@ -23,7 +23,7 @@ import { SIDES } from '../util/sides.js';
 import { UUID_RE } from '../util/uuid.js';
 
 // Promisify session.regenerate — prevents session fixation by rotating the session ID
-// before writing new identity. (#411, #SEC-M1)
+// before writing new identity. (#411)
 function regenerateSession(req) {
   return new Promise((resolve, reject) =>
     req.session.regenerate((e) => (e ? reject(e) : resolve()))

@@ -12,15 +12,17 @@ const props = defineProps({
     type: Map,
     required: true,
   },
-  // Rendered counter size as a fraction of hex side length (e.g. 1.1 = 110% of the side length).
+  // Rendered counter size as a fraction of hex side length. >1.0 is intentional: counters
+  // are meant to slightly overlap hex borders for visual weight (1.1 = 110%).
   sizeRatio: {
     type: Number,
     default: 1.1,
   },
-  // Hex side length in SVG user units — matches hexWidth from HexMapOverlay calibration.
+  // Hex side length in SVG user units — matches hexWidth from HexMapOverlay calibration
+  // (useCalibration.js default: 35).
   hexSideLength: {
     type: Number,
-    default: 28,
+    default: 35,
   },
   // URL base path prepended to counterFile when building the image href. Must end with '/'.
   counterBasePath: {

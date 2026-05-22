@@ -6,11 +6,14 @@ import { OOBSchema } from '../schemas/oob.schema.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
+// Single-scenario hardcode: path is relative to this file's location (server/src/engine/).
+// When multi-scenario support lands, replace with an ACTIVE_SCENARIO env var or paths.js util.
 const DEFAULT_OOB_PATH = join(__dirname, '../../../data/scenarios/south-mountain/oob.json');
 
 /**
- * Load and validate oob.json.
- * Returns a validated plain object. Safe to call once at startup or per-request.
+ * Load and validate oob.json. Reads and parses the file synchronously on each call.
+ * Not cached — re-reads on every call so dev-mode edits via the OOB editor take effect
+ * without restart. For production, consider a module-level cache if per-request latency matters.
  *
  * @param {string} [oobPath] - Override the default path (for tests).
  * @returns {import('zod').infer<typeof OOBSchema>} Validated OOB data.

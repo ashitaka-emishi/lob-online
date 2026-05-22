@@ -63,6 +63,32 @@ describe('useOobData — fetchOob', () => {
     await fetchOob();
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/oob');
   });
+
+  it('sets oobError when server responds with non-ok status', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 503,
+        json: () => Promise.resolve({ error: 'OOB data unavailable' }),
+      })
+    );
+    const { oobData, oobError, fetchOob } = useOobData();
+    await fetchOob();
+    expect(oobError.value).toContain('503');
+    expect(oobData.value).toBeNull();
+  });
+
+  it('clears oobError on success after a previous failure', async () => {
+    vi.stubGlobal('fetch', mockFetchFail('initial error'));
+    const { oobError, fetchOob } = useOobData();
+    await fetchOob();
+    expect(oobError.value).toContain('initial error');
+
+    vi.stubGlobal('fetch', mockFetch(STUB_OOB));
+    await fetchOob();
+    expect(oobError.value).toBeNull();
+  });
 });
 
 describe('useOobData — oobUnitMap', () => {

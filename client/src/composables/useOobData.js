@@ -3,7 +3,10 @@ import { computed, ref } from 'vue';
 import { SIDES } from '../utils/sides.js';
 
 // Flatten an OOB node and all descendants into map entries.
-// Each node with an `id` field becomes one entry with name, side, strengthPoints, counterFile.
+// Any node with an `id` field is treated as a displayable entity (unit, corps, leader, etc.).
+// This is intentional: the map is used for OOB enrichment only, and consumers filter on
+// counterFile/strengthPoints as needed. If the OOB schema adds non-unit nodes with `id`
+// fields, revisit this heuristic.
 function collectOobUnits(obj, side, map) {
   if (!obj || typeof obj !== 'object') return;
   if (obj.id) {
@@ -32,6 +35,10 @@ export function useOobData() {
   async function fetchOob() {
     try {
       const res = await fetch('/api/v1/oob');
+      if (!res.ok) {
+        oobError.value = `OOB request failed (${res.status})`;
+        return;
+      }
       oobData.value = await res.json();
       oobError.value = null;
     } catch (err) {
@@ -40,6 +47,8 @@ export function useOobData() {
   }
 
   // Flat Map<unitId, { name, side, strengthPoints, counterFile }> derived from oobData.
+  // Iterates top-level keys matching SIDES constants — depends on OOBSchema having `union`
+  // and `confederate` as top-level keys. Update if the schema shape changes.
   const oobUnitMap = computed(() => {
     const map = new Map();
     if (!oobData.value) return map;
