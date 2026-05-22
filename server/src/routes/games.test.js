@@ -14,6 +14,8 @@ vi.mock('../store/index.js', () => ({
   loadGame: vi.fn(),
   createGame: vi.fn(),
   joinGame: vi.fn(),
+  deleteGame: vi.fn(),
+  deleteGameFile: vi.fn().mockResolvedValue(undefined),
   getGame: vi.fn(),
   listGames: vi.fn(),
   GameNotFoundError: class GameNotFoundError extends Error {
@@ -49,6 +51,8 @@ vi.mock('../engine/scenario.js', () => ({
 import { setPlayerSession, getPlayerSession } from '../auth/session.js';
 import {
   createGame,
+  deleteGame,
+  deleteGameFile,
   GameNotFoundError,
   GameNotOpenError,
   InvalidTokenError,
@@ -100,16 +104,18 @@ beforeEach(() => {
   listGames.mockReturnValue([]);
   getGame.mockReturnValue(null);
   loadGame.mockResolvedValue(MINIMAL_STATE);
+  deleteGame.mockReturnValue(undefined);
+  deleteGameFile.mockResolvedValue(undefined);
 });
 
 describe('POST /api/v1/games', () => {
-  it('returns 201 with id and union side', async () => {
+  it('returns 201 with id and confederate side (#407)', async () => {
     const app = await buildApp();
     const res = await request(app).post('/api/v1/games').send({});
     expect(res.status).toBe(201);
     expect(typeof res.body.id).toBe('string');
     expect(res.body.id.length).toBeGreaterThan(0);
-    expect(res.body.side).toBe('union');
+    expect(res.body.side).toBe('confederate');
   });
 
   it('calls createGame before saveGame (#ARCH-H4)', async () => {
@@ -129,30 +135,56 @@ describe('POST /api/v1/games', () => {
     expect(createGame).toHaveBeenCalledOnce();
   });
 
-  it('sets player session via setPlayerSession with union side (#335)', async () => {
+  it('sets player session with confederate side for creator (#335 #407)', async () => {
     const app = await buildApp();
     await request(app).post('/api/v1/games').send({});
     expect(setPlayerSession).toHaveBeenCalledOnce();
     const [, , side] = setPlayerSession.mock.calls[0];
-    expect(side).toBe('union');
+    expect(side).toBe('confederate');
   });
 });
 
 describe('POST /api/v1/games/:id/join', () => {
-  it('returns 200 with id and confederate side', async () => {
+  it('returns 200 with id and requested side when side is union (#407)', async () => {
     const app = await buildApp();
-    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(TEST_UUID);
-    expect(res.body.side).toBe('confederate');
+    expect(res.body.side).toBe('union');
   });
 
-  it('sets player session via setPlayerSession with confederate side (#335)', async () => {
+  it('sets player session with the requested side (#335 #407)', async () => {
     const app = await buildApp();
-    await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(setPlayerSession).toHaveBeenCalledOnce();
     const [, , side] = setPlayerSession.mock.calls[0];
-    expect(side).toBe('confederate');
+    expect(side).toBe('union');
+  });
+
+  it('returns 400 when side is missing from request body (#407)', async () => {
+    const app = await buildApp();
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/side/);
+  });
+
+  it('returns 400 when side is an invalid value (#407)', async () => {
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/join`)
+      .send({ side: 'neutral' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/side/);
+  });
+
+  it('returns 200 with confederate side when side is confederate (#407)', async () => {
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/join`)
+      .send({ side: 'confederate' });
+    expect(res.status).toBe(200);
+    expect(res.body.side).toBe('confederate');
+    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String));
   });
 
   it('returns 404 when joinGame throws GameNotFoundError (#PERF-H1)', async () => {
@@ -160,7 +192,7 @@ describe('POST /api/v1/games/:id/join', () => {
       throw new GameNotFoundError(TEST_UUID);
     });
     const app = await buildApp();
-    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(404);
   });
 
@@ -169,7 +201,7 @@ describe('POST /api/v1/games/:id/join', () => {
       throw new GameNotOpenError(TEST_UUID);
     });
     const app = await buildApp();
-    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(409);
     expect(res.body.error).toBe('Game is already full');
   });
@@ -179,7 +211,7 @@ describe('POST /api/v1/games/:id/join', () => {
       throw new InvalidTokenError('sideBToken', 'bad');
     });
     const app = await buildApp();
-    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(400);
   });
 
@@ -188,54 +220,76 @@ describe('POST /api/v1/games/:id/join', () => {
       throw new Error('unexpected');
     });
     const app = await buildApp();
-    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(500);
     expect(res.body.error).toBe('Failed to join game');
   });
 
   it('returns 400 for non-UUID game id', async () => {
     const app = await buildApp();
-    const res = await request(app).post('/api/v1/games/not-a-uuid/join').send({});
+    const res = await request(app).post('/api/v1/games/not-a-uuid/join').send({ side: 'union' });
     expect(res.status).toBe(400);
   });
 
-  // ARCH-H2: session conflict guard — prevent same-session double-join (#340)
-  it('returns 409 with correct error body and does not call joinGame when session matches route :id (#340)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok-1' });
+  // ARCH-H2: same-game re-join updates side (scaffolded) — joinGame not called again (#340)
+  it('returns 200 and updates side when session already holds this game (#340)', async () => {
+    getPlayerSession.mockReturnValue({
+      gameId: TEST_UUID,
+      side: 'confederate',
+      sideToken: 'tok-1',
+    });
     const app = await buildApp();
-    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
-    expect(res.status).toBe(409);
-    expect(res.body.error).toBe('Already in this game');
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
+    expect(res.status).toBe(200);
+    expect(res.body.side).toBe('union');
     expect(joinGame).not.toHaveBeenCalled();
-    expect(setPlayerSession).not.toHaveBeenCalled();
+    expect(setPlayerSession).toHaveBeenCalledWith(expect.anything(), TEST_UUID, 'union', 'tok-1');
   });
 
-  it('returns 409 when caller holds confederate session for same game (#340)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'confederate', token: 'tok-2' });
+  it('returns 200 and keeps same side when session matches and same side requested (#340)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok-2' });
     const app = await buildApp();
-    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
-    expect(res.status).toBe(409);
-    expect(res.body.error).toBe('Already in this game');
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
+    expect(res.status).toBe(200);
+    expect(res.body.side).toBe('union');
     expect(joinGame).not.toHaveBeenCalled();
   });
 
-  it('joins successfully and returns confederate side when caller has no session (#340)', async () => {
+  it('joins successfully as union when caller has no session (#340 #407)', async () => {
     getPlayerSession.mockReturnValue(null);
     const app = await buildApp();
-    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(200);
-    expect(res.body.side).toBe('confederate');
+    expect(res.body.side).toBe('union');
     expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String));
   });
 
-  it('joins successfully and returns confederate side when caller session is for a different game (#340)', async () => {
+  it('joins successfully as union when caller session is for a different game (#340 #407)', async () => {
     const OTHER_UUID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
-    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', token: 'tok-1' });
+    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'confederate', token: 'tok-1' });
     const app = await buildApp();
-    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({});
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(200);
-    expect(res.body.side).toBe('confederate');
+    expect(res.body.side).toBe('union');
     expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String));
+  });
+});
+
+describe('GET /api/v1/games/me', () => {
+  it('returns gameId and side when player has a session (#407)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'confederate', token: 'tok-1' });
+    const app = await buildApp();
+    const res = await request(app).get('/api/v1/games/me');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ gameId: TEST_UUID, side: 'confederate' });
+  });
+
+  it('returns null gameId and side when no session (#407)', async () => {
+    getPlayerSession.mockReturnValue(null);
+    const app = await buildApp();
+    const res = await request(app).get('/api/v1/games/me');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ gameId: null, side: null });
   });
 });
 
@@ -311,6 +365,39 @@ describe('GET /api/v1/games/:id', () => {
   it('returns 400 for non-UUID game id', async () => {
     const app = await buildApp();
     const res = await request(app).get('/api/v1/games/not-a-uuid');
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('DELETE /api/v1/games/:id', () => {
+  it('returns 204 and calls deleteGame + deleteGameFile (#407)', async () => {
+    const app = await buildApp();
+    const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+    expect(res.status).toBe(204);
+    expect(deleteGame).toHaveBeenCalledWith(TEST_UUID);
+    expect(deleteGameFile).toHaveBeenCalledWith(TEST_UUID);
+  });
+
+  it('returns 404 when deleteGame throws GameNotFoundError (#407)', async () => {
+    deleteGame.mockImplementation(() => {
+      throw new GameNotFoundError(TEST_UUID);
+    });
+    const app = await buildApp();
+    const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Game not found');
+  });
+
+  it('returns 500 when deleteGameFile throws (#407)', async () => {
+    deleteGameFile.mockRejectedValue(new Error('disk error'));
+    const app = await buildApp();
+    const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+    expect(res.status).toBe(500);
+  });
+
+  it('returns 400 for non-UUID game id', async () => {
+    const app = await buildApp();
+    const res = await request(app).delete('/api/v1/games/not-a-uuid');
     expect(res.status).toBe(400);
   });
 });

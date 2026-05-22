@@ -46,6 +46,7 @@ export function createStore(db) {
     updateJoin: db.prepare(
       "UPDATE games SET side_b_token = ?, status = 'active' WHERE id = ? AND status = 'open'"
     ),
+    delete: db.prepare('DELETE FROM games WHERE id = ?'),
     // LIMIT 200 guards against unbounded memory growth as game count scales (#PERF-M1)
     selectAll: db.prepare(
       'SELECT id, status, created_at FROM games ORDER BY created_at DESC LIMIT 200'
@@ -69,6 +70,11 @@ export function createStore(db) {
         if (!row) throw new GameNotFoundError(id);
         throw new GameNotOpenError(id);
       }
+    },
+
+    deleteGame(id) {
+      const result = stmts.delete.run(id);
+      if (result.changes === 0) throw new GameNotFoundError(id);
     },
 
     getGame(id) {
@@ -105,5 +111,6 @@ function requireStore() {
 // Convenience delegates — guarded so callers get a clear error before initDb() (#ARCH-H5)
 export const createGame = (...args) => requireStore().createGame(...args);
 export const joinGame = (...args) => requireStore().joinGame(...args);
+export const deleteGame = (...args) => requireStore().deleteGame(...args);
 export const getGame = (...args) => requireStore().getGame(...args);
 export const listGames = (...args) => requireStore().listGames(...args);

@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 
+const mockPush = vi.fn();
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
 import { useLobbyStore } from './lobby.js';
 
 function mockFetch(data, ok = true) {
@@ -13,6 +18,7 @@ function mockFetch(data, ok = true) {
 
 beforeEach(() => {
   setActivePinia(createPinia());
+  mockPush.mockClear();
 });
 
 afterEach(() => {
@@ -20,15 +26,27 @@ afterEach(() => {
 });
 
 describe('useLobbyStore — fetchGames', () => {
-  it('populates games list on success', async () => {
+  it('populates games list and restores session from /me (#407)', async () => {
     const games = [
       { id: 'g1', status: 'open' },
       { id: 'g2', status: 'active' },
     ];
-    vi.stubGlobal('fetch', mockFetch(games));
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(games) })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ gameId: 'g1', side: 'confederate' }),
+        })
+    );
     const store = useLobbyStore();
     await store.fetchGames();
     expect(store.games).toEqual(games);
+    expect(store.myGameId).toBe('g1');
+    expect(store.mySide).toBe('confederate');
     expect(store.loading).toBe(false);
     expect(store.error).toBeNull();
   });
@@ -44,15 +62,22 @@ describe('useLobbyStore — fetchGames', () => {
 
 describe('useLobbyStore — createGame', () => {
   it('sets myGameId and mySide on success', async () => {
-    vi.stubGlobal('fetch', mockFetch({ id: 'game-new', side: 'union' }));
+    vi.stubGlobal('fetch', mockFetch({ id: 'game-new', side: 'confederate' }));
     const store = useLobbyStore();
     await store.createGame();
     expect(store.myGameId).toBe('game-new');
-    expect(store.mySide).toBe('union');
+    expect(store.mySide).toBe('confederate');
+  });
+
+  it('navigates to /games/:id after success (#407)', async () => {
+    vi.stubGlobal('fetch', mockFetch({ id: 'game-new', side: 'confederate' }));
+    const store = useLobbyStore();
+    await store.createGame();
+    expect(mockPush).toHaveBeenCalledWith('/games/game-new');
   });
 
   it('calls POST /api/v1/games', async () => {
-    const fetchMock = mockFetch({ id: 'g1', side: 'union' });
+    const fetchMock = mockFetch({ id: 'g1', side: 'confederate' });
     vi.stubGlobal('fetch', fetchMock);
     const store = useLobbyStore();
     await store.createGame();
@@ -62,36 +87,86 @@ describe('useLobbyStore — createGame', () => {
     );
   });
 
-  it('sets error on failure', async () => {
+  it('sets error on failure and does not navigate', async () => {
     vi.stubGlobal('fetch', mockFetch({}, false));
     const store = useLobbyStore();
     await store.createGame();
     expect(store.myGameId).toBeNull();
     expect(store.error).toBeTruthy();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+});
+
+describe('useLobbyStore — deleteGame', () => {
+  it('calls DELETE /api/v1/games/:id and refreshes the list (#407)', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, status: 204, json: () => Promise.resolve(null) })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve([{ id: 'g2', status: 'open' }]),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+    const store = useLobbyStore();
+    await store.deleteGame('g1');
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/games/g1');
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: 'DELETE' });
+    expect(store.games).toEqual([{ id: 'g2', status: 'open' }]);
+  });
+
+  it('sets error on failure', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: () => Promise.resolve({ error: 'Game not found' }),
+      })
+    );
+    const store = useLobbyStore();
+    await store.deleteGame('missing');
+    expect(store.error).toBe('Game not found');
   });
 });
 
 describe('useLobbyStore — joinGame', () => {
   it('sets myGameId and mySide on success', async () => {
-    vi.stubGlobal('fetch', mockFetch({ id: 'game-join', side: 'confederate' }));
+    vi.stubGlobal('fetch', mockFetch({ id: 'game-join', side: 'union' }));
     const store = useLobbyStore();
-    await store.joinGame('game-join');
+    await store.joinGame('game-join', 'union');
     expect(store.myGameId).toBe('game-join');
-    expect(store.mySide).toBe('confederate');
+    expect(store.mySide).toBe('union');
+  });
+
+  it('navigates to /games/:id after success (#407)', async () => {
+    vi.stubGlobal('fetch', mockFetch({ id: 'game-join', side: 'union' }));
+    const store = useLobbyStore();
+    await store.joinGame('game-join', 'union');
+    expect(mockPush).toHaveBeenCalledWith('/games/game-join');
+  });
+
+  it('sends side in request body (#407)', async () => {
+    const fetchMock = mockFetch({ id: 'gx', side: 'union' });
+    vi.stubGlobal('fetch', fetchMock);
+    const store = useLobbyStore();
+    await store.joinGame('gx', 'union');
+    const [, options] = fetchMock.mock.calls[0];
+    expect(JSON.parse(options.body)).toEqual({ side: 'union' });
   });
 
   it('calls POST /api/v1/games/:id/join', async () => {
-    const fetchMock = mockFetch({ id: 'gx', side: 'confederate' });
+    const fetchMock = mockFetch({ id: 'gx', side: 'union' });
     vi.stubGlobal('fetch', fetchMock);
     const store = useLobbyStore();
-    await store.joinGame('gx');
+    await store.joinGame('gx', 'union');
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/games/gx/join',
       expect.objectContaining({ method: 'POST' })
     );
   });
 
-  it('sets error on 409 (game full)', async () => {
+  it('sets error on 409 (game full) and does not navigate', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -101,8 +176,9 @@ describe('useLobbyStore — joinGame', () => {
       })
     );
     const store = useLobbyStore();
-    await store.joinGame('full-game');
+    await store.joinGame('full-game', 'union');
     expect(store.myGameId).toBeNull();
     expect(store.error).toBeTruthy();
+    expect(mockPush).not.toHaveBeenCalled();
   });
 });

@@ -28,6 +28,7 @@ function makeStore(overrides = {}) {
     error: null,
     fetchGames: vi.fn(),
     createGame: vi.fn(),
+    deleteGame: vi.fn(),
     joinGame: vi.fn(),
     ...overrides,
   };
@@ -68,39 +69,66 @@ describe('LobbyView', () => {
     expect(rows).toHaveLength(2);
   });
 
-  it('shows "No games" message when list is empty', () => {
-    const wrapper = mountLobby({ games: [] });
-    expect(wrapper.text()).toContain('No games');
+  it('shows "No games yet." row when list is empty', () => {
+    const wrapper = mountLobby({ games: [], loading: false });
+    expect(wrapper.text()).toContain('No games yet.');
   });
 
-  it('"New Game" button calls createGame', async () => {
+  it('"New" button calls createGame', async () => {
     const createGame = vi.fn();
     const wrapper = mountLobby({ createGame });
     await wrapper.find('[data-testid="new-game-btn"]').trigger('click');
     expect(createGame).toHaveBeenCalledOnce();
   });
 
-  it('"Join" button calls joinGame with the game id', async () => {
+  it('"USA" join button calls joinGame with id and "union" (#407)', async () => {
     const joinGame = vi.fn();
     const wrapper = mountLobby({
       games: [{ id: 'g1', status: 'open' }],
       joinGame,
     });
-    await wrapper.find('[data-testid="join-btn"]').trigger('click');
-    expect(joinGame).toHaveBeenCalledWith('g1');
+    await wrapper.find('[data-testid="join-usa-btn"]').trigger('click');
+    expect(joinGame).toHaveBeenCalledWith('g1', 'union');
   });
 
-  it('"Join" button is disabled for active (full) games', () => {
+  it('"CSA" join button calls joinGame with id and "confederate" (#407)', async () => {
+    const joinGame = vi.fn();
+    const wrapper = mountLobby({
+      games: [{ id: 'g1', status: 'open' }],
+      joinGame,
+    });
+    await wrapper.find('[data-testid="join-csa-btn"]').trigger('click');
+    expect(joinGame).toHaveBeenCalledWith('g1', 'confederate');
+  });
+
+  it('join buttons are disabled for active (full) games (#407)', () => {
     const wrapper = mountLobby({
       games: [{ id: 'g2', status: 'active' }],
     });
-    const joinBtn = wrapper.find('[data-testid="join-btn"]');
-    expect(joinBtn.attributes('disabled')).toBeDefined();
+    expect(wrapper.find('[data-testid="join-usa-btn"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.find('[data-testid="join-csa-btn"]').attributes('disabled')).toBeDefined();
   });
 
-  it('shows assigned side after create/join', () => {
-    const wrapper = mountLobby({ myGameId: 'g1', mySide: 'union' });
-    expect(wrapper.text()).toContain('union');
+  it('shows "Waiting for player" for open games and "In progress" for active (#407)', () => {
+    const wrapper = mountLobby({
+      games: [
+        { id: 'g1', status: 'open' },
+        { id: 'g2', status: 'active' },
+      ],
+    });
+    const rows = wrapper.findAll('[data-testid="game-row"]');
+    expect(rows[0].text()).toContain('Waiting for player');
+    expect(rows[1].text()).toContain('In progress');
+  });
+
+  it('"Delete" button calls deleteGame with the game id (#407)', async () => {
+    const deleteGame = vi.fn();
+    const wrapper = mountLobby({
+      games: [{ id: 'g1', status: 'open' }],
+      deleteGame,
+    });
+    await wrapper.find('[data-testid="delete-btn"]').trigger('click');
+    expect(deleteGame).toHaveBeenCalledWith('g1');
   });
 
   it('shows error message when store has error', () => {

@@ -1,4 +1,4 @@
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { join, resolve, sep } from 'node:path';
 
 import { STATE_SCHEMA_VERSION } from '../constants/schemaVersion.js';
@@ -50,6 +50,11 @@ export async function saveGame(id, state, dataDir = DEFAULT_DATA_DIR) {
   await writeFile(tmp, JSON.stringify(toWrite));
   await rename(tmp, dest);
   return toWrite;
+}
+
+export async function deleteGameFile(id, dataDir = DEFAULT_DATA_DIR) {
+  const dir = gameDir(id, dataDir);
+  await rm(dir, { recursive: true, force: true });
 }
 
 export async function loadGame(id, dataDir = DEFAULT_DATA_DIR) {

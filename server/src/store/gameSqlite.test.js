@@ -137,3 +137,15 @@ describe('listGames', () => {
     expect(rows.map((r) => r.id).sort()).toEqual(['la', 'lb']);
   });
 });
+
+describe('deleteGame', () => {
+  it('removes an existing game row', () => {
+    store.createGame('del1', 'tok-a');
+    store.deleteGame('del1');
+    expect(store.getGame('del1')).toBeNull();
+  });
+
+  it('throws GameNotFoundError for an unknown id', () => {
+    expect(() => store.deleteGame('no-such')).toThrow(GameNotFoundError);
+  });
+});
