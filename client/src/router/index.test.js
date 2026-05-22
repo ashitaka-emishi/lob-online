@@ -2,38 +2,17 @@ import { describe, it, expect } from 'vitest';
 import router from './index.js';
 
 describe('router', () => {
-  it('has a route for /', () => {
-    const routes = router.getRoutes();
-    const home = routes.find((r) => r.path === '/');
-    expect(home).toBeDefined();
-  });
-
-  it('has a route for /tools/map-editor', () => {
-    const routes = router.getRoutes();
-    const mapEditor = routes.find((r) => r.path === '/tools/map-editor');
-    expect(mapEditor).toBeDefined();
-  });
-
-  it('has a route for /tools/oob-editor', () => {
-    const routes = router.getRoutes();
-    const oobEditor = routes.find((r) => r.path === '/tools/oob-editor');
-    expect(oobEditor).toBeDefined();
-  });
-
-  it('has a route for /tools/map-test', () => {
-    const routes = router.getRoutes();
-    const mapTest = routes.find((r) => r.path === '/tools/map-test');
-    expect(mapTest).toBeDefined();
-  });
-
-  it('has a route for /tools/table-test', () => {
-    const routes = router.getRoutes();
-    const tableTest = routes.find((r) => r.path === '/tools/table-test');
-    expect(tableTest).toBeDefined();
-  });
-
-  it('exports a router instance', () => {
+  it('exports a valid router instance', () => {
     expect(router).toBeTruthy();
     expect(typeof router.push).toBe('function');
+  });
+
+  it('has routes for all primary views and tool pages', () => {
+    const paths = router.getRoutes().map((r) => r.path);
+    expect(paths).toContain('/');
+    expect(paths).toContain('/tools/map-editor');
+    expect(paths).toContain('/tools/oob-editor');
+    expect(paths).toContain('/tools/map-test');
+    expect(paths).toContain('/tools/table-test');
   });
 });

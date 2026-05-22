@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 
@@ -16,7 +16,7 @@ const clearScenarioCacheMock = vi.fn();
 vi.mock('../engine/scenario.js', () => ({ clearScenarioCache: clearScenarioCacheMock }));
 
 // eslint-disable-next-line import/order
-import { readFile, writeFile, mkdir, readdir, unlink } from 'fs/promises';
+import { readFile } from 'fs/promises';
 
 const VALID_SCENARIO = {
   _status: 'available',
@@ -56,6 +56,9 @@ async function buildApp() {
   return app;
 }
 
+// Schema-specific tests only — generic GET/PUT/backup behavior is covered
+// in editorRouteFactory.test.js. (#346)
+
 describe('GET /data', () => {
   it('returns parsed JSON from file', async () => {
     readFile.mockResolvedValue(JSON.stringify(VALID_SCENARIO));
@@ -67,21 +70,11 @@ describe('GET /data', () => {
 });
 
 describe('PUT /data', () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
-    readFile.mockRejectedValue({ code: 'ENOENT' });
-    mkdir.mockResolvedValue(undefined);
-    writeFile.mockResolvedValue(undefined);
-    readdir.mockResolvedValue([]);
-    unlink.mockResolvedValue(undefined);
-  });
-
   it('accepts valid body, writes file, returns { ok: true }', async () => {
     const app = await buildApp();
     const res = await request(app).put('/data').send(VALID_SCENARIO);
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
-    expect(writeFile).toHaveBeenCalledOnce();
   });
 
   it('rejects invalid body with 400 and issues array', async () => {
@@ -90,68 +83,6 @@ describe('PUT /data', () => {
     expect(res.status).toBe(400);
     expect(res.body.ok).toBe(false);
     expect(Array.isArray(res.body.issues)).toBe(true);
-    expect(writeFile).not.toHaveBeenCalled();
-  });
-
-  it('creates backup file before main write when current file exists', async () => {
-    readFile.mockResolvedValue(JSON.stringify(VALID_SCENARIO));
-    const app = await buildApp();
-    const res = await request(app).put('/data').send(VALID_SCENARIO);
-    expect(res.status).toBe(200);
-    expect(writeFile).toHaveBeenCalledTimes(2);
-  });
-
-  it('backup filename uses scenario- prefix', async () => {
-    readFile.mockResolvedValue(JSON.stringify(VALID_SCENARIO));
-    const app = await buildApp();
-    await request(app).put('/data').send(VALID_SCENARIO);
-    const backupCall = writeFile.mock.calls[0];
-    expect(backupCall[0]).toMatch(/scenario-.*\.json$/);
-  });
-
-  it('sets _savedAt on written data', async () => {
-    const before = Date.now();
-    const app = await buildApp();
-    await request(app).put('/data').send(VALID_SCENARIO);
-    const writtenJson = writeFile.mock.calls[0][1];
-    const written = JSON.parse(writtenJson);
-    expect(written._savedAt).toBeGreaterThanOrEqual(before);
-    expect(written._savedAt).toBeLessThanOrEqual(Date.now());
-  });
-
-  it('returns _savedAt in response', async () => {
-    const app = await buildApp();
-    const res = await request(app).put('/data').send(VALID_SCENARIO);
-    expect(res.status).toBe(200);
-    expect(typeof res.body._savedAt).toBe('number');
-  });
-
-  it('returns 500 when backup write throws', async () => {
-    readFile.mockResolvedValue(JSON.stringify(VALID_SCENARIO));
-    writeFile.mockRejectedValueOnce(new Error('disk full'));
-    const app = await buildApp();
-    const res = await request(app).put('/data').send(VALID_SCENARIO);
-    expect(res.status).toBe(500);
-    expect(res.body.ok).toBe(false);
-    expect(writeFile).toHaveBeenCalledOnce();
-  });
-
-  it('trims backups when count exceeds MAX_BACKUPS (20)', async () => {
-    readFile.mockResolvedValue(JSON.stringify(VALID_SCENARIO));
-    const existing = Array.from(
-      { length: 21 },
-      (_, i) => `scenario-2026-03-${String(i + 1).padStart(2, '0')}.json`
-    );
-    readdir.mockResolvedValue(existing);
-    const app = await buildApp();
-    await request(app).put('/data').send(VALID_SCENARIO);
-    expect(unlink).toHaveBeenCalledOnce();
-  });
-
-  it('creates backup directory via mkdir', async () => {
-    const app = await buildApp();
-    await request(app).put('/data').send(VALID_SCENARIO);
-    expect(mkdir).toHaveBeenCalledWith(expect.stringContaining('backups'), { recursive: true });
   });
 
   it('accepts scenario with all lighting/rules fields', async () => {
