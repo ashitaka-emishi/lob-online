@@ -81,7 +81,7 @@ describe('LobbyView', () => {
     expect(createGame).toHaveBeenCalledOnce();
   });
 
-  it('"Join as USA" button calls joinGame with id and "union" (#407)', async () => {
+  it('"USA" join button calls joinGame with id and "union" (#407)', async () => {
     const joinGame = vi.fn();
     const wrapper = mountLobby({
       games: [{ id: 'g1', status: 'open' }],
@@ -91,7 +91,7 @@ describe('LobbyView', () => {
     expect(joinGame).toHaveBeenCalledWith('g1', 'union');
   });
 
-  it('"Join as CSA" button calls joinGame with id and "confederate" (#407)', async () => {
+  it('"CSA" join button calls joinGame with id and "confederate" (#407)', async () => {
     const joinGame = vi.fn();
     const wrapper = mountLobby({
       games: [{ id: 'g1', status: 'open' }],

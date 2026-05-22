@@ -29,14 +29,14 @@
               :disabled="game.status !== 'open'"
               @click="store.joinGame(game.id, 'union')"
             >
-              Join as USA
+              USA
             </button>
             <button
               data-testid="join-csa-btn"
               :disabled="game.status !== 'open'"
               @click="store.joinGame(game.id, 'confederate')"
             >
-              Join as CSA
+              CSA
             </button>
           </td>
           <td>
