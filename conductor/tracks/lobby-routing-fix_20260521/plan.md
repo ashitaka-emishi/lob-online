@@ -3,7 +3,7 @@
 **Track ID:** lobby-routing-fix_20260521
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-05-21
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
