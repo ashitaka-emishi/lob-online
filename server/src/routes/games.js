@@ -27,7 +27,7 @@ router.param('id', (req, res, next, id) => {
   next();
 });
 
-// POST /api/v1/games — create a new game, assign creator as union
+// POST /api/v1/games — create a new game, assign creator as confederate (CSA)
 router.post('/', async (req, res) => {
   try {
     const id = randomUUID();
@@ -41,19 +41,30 @@ router.post('/', async (req, res) => {
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
     await new Promise((res, rej) => req.session.regenerate((e) => (e ? rej(e) : res())));
-    setPlayerSession(req, id, 'union', sideToken);
+    setPlayerSession(req, id, 'confederate', sideToken);
 
-    res.status(201).json({ id, side: 'union' });
+    res.status(201).json({ id, side: 'confederate' });
   } catch (err) {
     console.error('[route] POST /games error:', err.message);
     res.status(500).json({ error: 'Failed to create game' });
   }
 });
 
-// POST /api/v1/games/:id/join — second player joins as confederate
+// POST /api/v1/games/:id/join — second player joins; side must be specified in body
 router.post('/:id/join', async (req, res) => {
   try {
     const { id } = req.params;
+    const { side } = req.body;
+
+    // Validate explicit side choice
+    if (side !== 'union' && side !== 'confederate') {
+      return res.status(400).json({ error: 'side must be "union" or "confederate"' });
+    }
+
+    // Creator always holds confederate (#407); reject requests for the taken side
+    if (side === 'confederate') {
+      return res.status(409).json({ error: 'Side already taken' });
+    }
 
     // ARCH-H2: reject if the caller is already in this game (#340)
     // Game-switching is intentionally allowed: a player already in game A may join game B,
@@ -70,9 +81,9 @@ router.post('/:id/join', async (req, res) => {
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
     await new Promise((res, rej) => req.session.regenerate((e) => (e ? rej(e) : res())));
-    setPlayerSession(req, id, 'confederate', sideToken);
+    setPlayerSession(req, id, side, sideToken);
 
-    res.json({ id, side: 'confederate' });
+    res.json({ id, side });
   } catch (err) {
     if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });
     if (err instanceof GameNotOpenError)
