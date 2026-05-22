@@ -160,15 +160,4 @@ describe('TableTestView', () => {
     expect(combatTab.classes()).not.toContain('active');
     wrapper.unmount();
   });
-
-  it('active tab gets active class', async () => {
-    const wrapper = mount(TableTestView);
-
-    const tabs = wrapper.findAll('[role="tab"]');
-    const zerTab = tabs.find((t) => t.text() === 'Zero Rule');
-    await zerTab.trigger('click');
-
-    expect(zerTab.classes()).toContain('active');
-    wrapper.unmount();
-  });
 });

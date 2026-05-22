@@ -7,13 +7,18 @@ vi.mock('../stores/useGameStore.js', () => ({
   useGameStore: vi.fn(),
 }));
 
+vi.mock('../composables/useOobData.js', () => ({
+  useOobData: vi.fn(),
+}));
+
 import { useGameStore } from '../stores/useGameStore.js';
+import { useOobData } from '../composables/useOobData.js';
 import GameView from './GameView.vue';
 
 // Minimal map-data response (hexes array + gridSpec)
 const STUB_MAP_DATA = { hexes: [], gridSpec: { cols: 4, rows: 3 } };
 
-// Minimal OOB response
+// Minimal OOB response (used for fetch-level assertions in displayUnits tests)
 const STUB_OOB_DATA = {
   union: {},
   confederate: {},
@@ -50,6 +55,36 @@ function makeGameStore(overrides = {}) {
   };
 }
 
+import { ref, computed } from 'vue';
+
+function makeOobStore(oobDataValue = STUB_OOB_DATA, oobErrorValue = null) {
+  const oobData = ref(oobDataValue);
+  const oobError = ref(oobErrorValue);
+  const fetchOob = vi.fn().mockResolvedValue(undefined);
+  const oobUnitMap = computed(() => {
+    const map = new Map();
+    if (!oobData.value) return map;
+    function collect(obj, side) {
+      if (!obj || typeof obj !== 'object') return;
+      if (obj.id)
+        map.set(obj.id, {
+          name: obj.name ?? obj.id,
+          side,
+          strengthPoints: obj.strengthPoints ?? null,
+          counterFile: obj.counterRef?.front ?? null,
+        });
+      for (const val of Object.values(obj)) {
+        if (val && typeof val === 'object') collect(val, side);
+      }
+    }
+    for (const side of ['union', 'confederate']) {
+      if (oobData.value[side]) collect(oobData.value[side], side);
+    }
+    return map;
+  });
+  return { oobData, oobError, fetchOob, oobUnitMap };
+}
+
 function makeFetchSequence(responses) {
   // Returns a fetch mock that answers requests in order based on URL matching.
   // If the data slot contains an Error, the fetch itself rejects (simulates network failure).
@@ -83,16 +118,17 @@ function makeRouter() {
 
 // Push to the game route before mounting so route.params.id is resolved synchronously
 // when onMounted fires.
-async function mountGameView(storeOverrides = {}, fetchResponses = null) {
+async function mountGameView(
+  storeOverrides = {},
+  fetchResponses = null,
+  oobDataValue = STUB_OOB_DATA,
+  oobErrorValue = null
+) {
   setActivePinia(createPinia());
   useGameStore.mockReturnValue(makeGameStore(storeOverrides));
+  useOobData.mockReturnValue(makeOobStore(oobDataValue, oobErrorValue));
 
-  const fetchMock = makeFetchSequence(
-    fetchResponses ?? [
-      ['map-test/data', STUB_MAP_DATA],
-      ['oob-editor/data', STUB_OOB_DATA],
-    ]
-  );
+  const fetchMock = makeFetchSequence(fetchResponses ?? [['map-test/data', STUB_MAP_DATA]]);
   vi.stubGlobal('fetch', fetchMock);
 
   const router = makeRouter();
@@ -156,9 +192,12 @@ describe('GameView — mount and structure', () => {
     expect(vi.mocked(fetch)).toHaveBeenCalledWith(expect.stringContaining('map-test/data'));
   });
 
-  it('fetches OOB data from /api/tools/oob-editor/data on mount', async () => {
-    await mountGameView();
-    expect(vi.mocked(fetch)).toHaveBeenCalledWith(expect.stringContaining('oob-editor/data'));
+  it('calls fetchOob from useOobData composable on mount', async () => {
+    const wrapper = await mountGameView();
+    // fetchOob is provided by the mocked useOobData composable
+    const { fetchOob } = useOobData.mock.results[0].value;
+    await vi.waitFor(() => expect(fetchOob).toHaveBeenCalled());
+    expect(wrapper.find('.game-view').exists()).toBe(true);
   });
 
   it('shows a loading banner while gameStore.loading is true', async () => {
@@ -256,10 +295,8 @@ describe('GameView — displayUnits computation', () => {
         'unit-c': makeUnit({ id: 'unit-c', hex: null, isOnBoard: false }),
       },
     };
-    const wrapper = await mountGameView({ gameState }, [
-      ['map-test/data', STUB_MAP_DATA],
-      ['oob-editor/data', oobData],
-    ]);
+    // Pass oobData as third arg — the mocked useOobData composable drives enrichment
+    const wrapper = await mountGameView({ gameState }, null, oobData);
     await flushPromises();
     const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
     const units = overlay.props('units');
@@ -271,14 +308,19 @@ describe('GameView — displayUnits computation', () => {
 
 describe('GameView — OOB fetch error handling', () => {
   it('renders without crashing when OOB fetch fails', async () => {
-    const wrapper = await mountGameView({}, [
-      ['map-test/data', STUB_MAP_DATA],
-      ['oob-editor/data', new Error('Network error')],
-    ]);
+    // Simulate composable reporting an error with no OOB data loaded
+    const wrapper = await mountGameView({}, null, null);
     await flushPromises();
     expect(wrapper.find('.game-view').exists()).toBe(true);
     // No OOB data → displayUnits is empty
     const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
     expect(overlay.props('units')).toEqual([]);
+  });
+
+  it('shows error banner when OOB composable reports an error', async () => {
+    const wrapper = await mountGameView({}, null, null, 'OOB data unavailable');
+    await flushPromises();
+    expect(wrapper.find('.error-banner').exists()).toBe(true);
+    expect(wrapper.find('.error-banner').text()).toContain('OOB data unavailable');
   });
 });

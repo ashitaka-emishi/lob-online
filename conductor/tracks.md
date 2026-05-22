@@ -116,4 +116,6 @@
 
 | [x] | lobby-routing-fix_20260521 | Lobby Join/Create Routing Fix | 2026-05-21 | 2026-05-21 |
 
+| [~] | post-m5-debt-bundle_20260522 | Post-M5 Debt Bundle — Issues #431 #401 #421–#427 #432 #411 #412 #346 #413 #428 #429 #430 | 2026-05-22 | 2026-05-22 |
+
 <!-- Tracks registered by /conductor:new-track -->

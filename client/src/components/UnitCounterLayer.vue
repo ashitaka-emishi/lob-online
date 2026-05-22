@@ -12,15 +12,17 @@ const props = defineProps({
     type: Map,
     required: true,
   },
-  // Rendered counter size as a fraction of hex inradius (e.g. 0.8 = 80% of the inradius diameter).
+  // Rendered counter size as a fraction of hex side length. >1.0 is intentional: counters
+  // are meant to slightly overlap hex borders for visual weight (1.1 = 110%).
   sizeRatio: {
     type: Number,
-    default: 0.8,
+    default: 1.1,
   },
-  // Hex inradius in SVG user units — matches hexHeight from HexMapOverlay calibration.
-  hexInradius: {
+  // Hex side length in SVG user units — matches hexWidth from HexMapOverlay calibration
+  // (useCalibration.js default: 35).
+  hexSideLength: {
     type: Number,
-    default: 28,
+    default: 35,
   },
   // URL base path prepended to counterFile when building the image href. Must end with '/'.
   counterBasePath: {
@@ -32,7 +34,7 @@ const props = defineProps({
 const emit = defineEmits(['unit-click']);
 
 // Counter size in SVG user units.
-const counterSize = computed(() => props.hexInradius * props.sizeRatio);
+const counterSize = computed(() => props.hexSideLength * props.sizeRatio);
 
 // Horizontal stagger for counters sharing a hex, in SVG user units.
 const STACK_OFFSET = 4;
@@ -88,7 +90,7 @@ function handleKeydown(event, unitId) {
       :y="entry.y"
       :width="entry.size"
       :height="entry.size"
-      :aria-label="`Select unit ${entry.unit.id}`"
+      :aria-label="`Select ${entry.unit.name ?? entry.unit.id}`"
       role="button"
       tabindex="0"
       style="pointer-events: all; cursor: pointer"

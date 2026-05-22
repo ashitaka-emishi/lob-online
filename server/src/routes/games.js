@@ -19,7 +19,16 @@ import {
   loadGame,
   saveGame,
 } from '../store/index.js';
+import { SIDES } from '../util/sides.js';
 import { UUID_RE } from '../util/uuid.js';
+
+// Promisify session.regenerate — prevents session fixation by rotating the session ID
+// before writing new identity. (#411)
+function regenerateSession(req) {
+  return new Promise((resolve, reject) =>
+    req.session.regenerate((e) => (e ? reject(e) : resolve()))
+  );
+}
 
 const router = express.Router();
 
@@ -42,12 +51,10 @@ router.post('/', async (req, res) => {
     await saveGame(id, state);
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
-    await new Promise((resolve, reject) =>
-      req.session.regenerate((e) => (e ? reject(e) : resolve()))
-    );
-    setPlayerSession(req, id, 'confederate', sideToken);
+    await regenerateSession(req);
+    setPlayerSession(req, id, SIDES.CONFEDERATE, sideToken);
 
-    res.status(201).json({ id, side: 'confederate' });
+    res.status(201).json({ id, side: SIDES.CONFEDERATE });
   } catch (err) {
     console.error('[route] POST /games error:', err.message);
     res.status(500).json({ error: 'Failed to create game' });
@@ -61,7 +68,7 @@ router.post('/:id/join', async (req, res) => {
     const { side } = req.body;
 
     // Validate explicit side choice
-    if (side !== 'union' && side !== 'confederate') {
+    if (side !== SIDES.UNION && side !== SIDES.CONFEDERATE) {
       return res.status(400).json({ error: 'side must be "union" or "confederate"' });
     }
 
@@ -71,9 +78,7 @@ router.post('/:id/join', async (req, res) => {
     // Scaffolded behavior: allows side-switching for dev/testing; full enforcement deferred.
     // Game-switching (different gameId) overwrites the session normally. Policy in #349.
     if (existingSession?.gameId === id) {
-      await new Promise((resolve, reject) =>
-        req.session.regenerate((e) => (e ? reject(e) : resolve()))
-      );
+      await regenerateSession(req);
       setPlayerSession(req, id, side, existingSession.sideToken);
       return res.json({ id, side });
     }
@@ -84,9 +89,7 @@ router.post('/:id/join', async (req, res) => {
     joinGame(id, sideToken);
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
-    await new Promise((resolve, reject) =>
-      req.session.regenerate((e) => (e ? reject(e) : resolve()))
-    );
+    await regenerateSession(req);
     setPlayerSession(req, id, side, sideToken);
 
     res.json({ id, side });

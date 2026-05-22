@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router';
 import HexMapOverlay from '../components/HexMapOverlay.vue';
 import UnitStatsPanel from '../components/UnitStatsPanel.vue';
 import { useCalibration } from '../composables/useCalibration.js';
+import { useOobData } from '../composables/useOobData.js';
 import { useGameStore } from '../stores/useGameStore.js';
 
 const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
@@ -12,15 +13,14 @@ const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
 const route = useRoute();
 const gameStore = useGameStore();
 const { calibration } = useCalibration();
+const { oobUnitMap, oobError, fetchOob } = useOobData();
 
 const mapData = ref(null);
-const oobData = ref(null);
 const mapError = ref(null);
-const oobError = ref(null);
 const imgNaturalWidth = ref(1400);
 const imgNaturalHeight = ref(900);
 
-// M8: these dev-tool endpoints will be replaced by production-stable public routes.
+// M8: map data endpoint will be replaced by a production-stable public route.
 onMounted(async () => {
   const gameId = route.params.id;
   await Promise.all([
@@ -33,42 +33,8 @@ onMounted(async () => {
       .catch((err) => {
         mapError.value = `Map load failed: ${err.message}`;
       }),
-    fetch('/api/tools/oob-editor/data')
-      .then((r) => r.json())
-      .then((d) => {
-        oobData.value = d;
-      })
-      .catch((err) => {
-        oobError.value = `OOB load failed: ${err.message}`;
-      }),
+    fetchOob(),
   ]);
-});
-
-// ── OOB enrichment ────────────────────────────────────────────────────────────
-
-// Flatten OOB hierarchy into Map<unitId, { name, side, strengthPoints, counterFile }>.
-function _collectOobUnits(obj, side, map) {
-  if (!obj || typeof obj !== 'object') return;
-  if (obj.id) {
-    map.set(obj.id, {
-      name: obj.name ?? obj.id,
-      side,
-      strengthPoints: obj.strengthPoints ?? null,
-      counterFile: obj.counterRef?.front ?? null,
-    });
-  }
-  for (const val of Object.values(obj)) {
-    if (val && typeof val === 'object') _collectOobUnits(val, side, map);
-  }
-}
-
-const oobUnitMap = computed(() => {
-  const map = new Map();
-  if (!oobData.value) return map;
-  for (const side of ['union', 'confederate']) {
-    if (oobData.value[side]) _collectOobUnits(oobData.value[side], side, map);
-  }
-  return map;
 });
 
 // ── Derived display data ──────────────────────────────────────────────────────
@@ -98,6 +64,7 @@ const displayUnits = computed(() => {
       return {
         id: u.id,
         hexId: u.hex,
+        name: oob?.name ?? u.id,
         counterFile: oob?.counterFile ?? null,
         side: oob?.side ?? null,
       };
@@ -218,6 +185,7 @@ function onImageLoad(event) {
 
 .map-area {
   flex: 1;
+  min-width: 0;
   overflow: auto;
   position: relative;
 }

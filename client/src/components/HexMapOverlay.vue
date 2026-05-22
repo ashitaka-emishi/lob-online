@@ -791,7 +791,7 @@ defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
           v-if="units.length > 0"
           :units="units"
           :cell-by-id="gridData.cellById"
-          :hex-inradius="calibration.hexHeight"
+          :hex-side-length="calibration.hexWidth"
           @unit-click="emit('unit-click', $event)"
         />
 
