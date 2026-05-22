@@ -185,6 +185,7 @@ function onImageLoad(event) {
 
 .map-area {
   flex: 1;
+  min-width: 0;
   overflow: auto;
   position: relative;
 }
