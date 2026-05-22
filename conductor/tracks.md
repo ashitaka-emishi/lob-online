@@ -104,16 +104,18 @@
 
 | [x] | m5-engine-debt-2_20260513 | M5 Engine Debt Bundle 2 — Schema Hardening & Code Quality | 2026-05-13 | 2026-05-18 |
 
-| [x] | pre-ui-debt-sweep_20260518 | Pre-UI Debt Sweep — initGameState Correctness + Schema Quality | 2026-05-18 | 2026-05-21 |
+| [x] | pre-ui-debt-sweep_20260518 | Pre-UI Debt Sweep — initGameState Correctness + Schema Quality | 2026-05-18 | 2026-05-22 |
 
 | [x] | arch-debt-sprint_20260520 | Architecture Debt Sprint — Issues #393 #394 #370 #322 + Process Fix | 2026-05-20 | 2026-05-20 |
 
-| [x] | engine-perf-sprint_20260520 | Engine & Utility Performance Sprint — Issues #324 #295 #294 #201 | 2026-05-20 | 2026-05-21 |
+| [x] | engine-perf-sprint_20260520 | Engine & Utility Performance Sprint — Issues #324 #295 #294 #201 | 2026-05-20 | 2026-05-22 |
 
-| [x] | debt-housekeeping_20260521 | Debt Register Housekeeping + Conductor State Cleanup | 2026-05-21 | 2026-05-21 |
+| [x] | debt-housekeeping_20260521 | Debt Register Housekeeping + Conductor State Cleanup | 2026-05-21 | 2026-05-22 |
 
-| [x] | m5-game-map-ui_20260521 | M5 Game Map UI — Unit Layer, Stats Panel, Game Store | 2026-05-21 | 2026-05-21 |
+| [x] | m5-game-map-ui_20260521 | M5 Game Map UI — Unit Layer, Stats Panel, Game Store | 2026-05-21 | 2026-05-22 |
 
-| [x] | lobby-routing-fix_20260521 | Lobby Join/Create Routing Fix | 2026-05-21 | 2026-05-21 |
+| [x] | lobby-routing-fix_20260521 | Lobby Join/Create Routing Fix | 2026-05-21 | 2026-05-22 |
+
+| [x] | game-view-viewport_20260521 | Game Map Viewport Fix — Scrolling, Grid Config, Counter Size | 2026-05-21 | 2026-05-22 |
 
 <!-- Tracks registered by /conductor:new-track -->
