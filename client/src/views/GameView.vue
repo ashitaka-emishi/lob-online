@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 
 import HexMapOverlay from '../components/HexMapOverlay.vue';
 import UnitStatsPanel from '../components/UnitStatsPanel.vue';
-import { DEFAULT_CALIBRATION, sanitizeCalibration } from '../composables/useCalibration.js';
+import { DEFAULT_CALIBRATION, sanitizeCalibration } from '../utils/calibration.js';
 import { useOobData } from '../composables/useOobData.js';
 import { useGameStore } from '../stores/useGameStore.js';
 
