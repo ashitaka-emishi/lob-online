@@ -24,6 +24,9 @@ export const useLobbyStore = defineStore('lobby', () => {
         const me = await meRes.json();
         myGameId.value = me.gameId;
         mySide.value = me.side;
+      } else {
+        myGameId.value = null;
+        mySide.value = null;
       }
     } catch (err) {
       error.value = err.message;

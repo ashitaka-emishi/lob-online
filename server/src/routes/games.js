@@ -42,7 +42,9 @@ router.post('/', async (req, res) => {
     await saveGame(id, state);
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
-    await new Promise((res, rej) => req.session.regenerate((e) => (e ? rej(e) : res())));
+    await new Promise((resolve, reject) =>
+      req.session.regenerate((e) => (e ? reject(e) : resolve()))
+    );
     setPlayerSession(req, id, 'confederate', sideToken);
 
     res.status(201).json({ id, side: 'confederate' });
@@ -69,7 +71,9 @@ router.post('/:id/join', async (req, res) => {
     // Scaffolded behavior: allows side-switching for dev/testing; full enforcement deferred.
     // Game-switching (different gameId) overwrites the session normally. Policy in #349.
     if (existingSession?.gameId === id) {
-      await new Promise((res, rej) => req.session.regenerate((e) => (e ? rej(e) : res())));
+      await new Promise((resolve, reject) =>
+        req.session.regenerate((e) => (e ? reject(e) : resolve()))
+      );
       setPlayerSession(req, id, side, existingSession.sideToken);
       return res.json({ id, side });
     }
@@ -80,7 +84,9 @@ router.post('/:id/join', async (req, res) => {
     joinGame(id, sideToken);
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
-    await new Promise((res, rej) => req.session.regenerate((e) => (e ? rej(e) : res())));
+    await new Promise((resolve, reject) =>
+      req.session.regenerate((e) => (e ? reject(e) : resolve()))
+    );
     setPlayerSession(req, id, side, sideToken);
 
     res.json({ id, side });

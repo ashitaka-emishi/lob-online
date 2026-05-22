@@ -266,7 +266,11 @@ describe('POST /api/v1/games/:id/join', () => {
 
   it('joins successfully as union when caller session is for a different game (#340 #407)', async () => {
     const OTHER_UUID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
-    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'confederate', token: 'tok-1' });
+    getPlayerSession.mockReturnValue({
+      gameId: OTHER_UUID,
+      side: 'confederate',
+      sideToken: 'tok-1',
+    });
     const app = await buildApp();
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(200);

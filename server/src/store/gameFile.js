@@ -54,6 +54,8 @@ export async function saveGame(id, state, dataDir = DEFAULT_DATA_DIR) {
 
 export async function deleteGameFile(id, dataDir = DEFAULT_DATA_DIR) {
   const dir = gameDir(id, dataDir);
+  // force:true intentionally succeeds when the directory doesn't exist — idempotent cleanup.
+  // SQLite throws GameNotFoundError for a missing row; the file store does not mirror that — by design.
   await rm(dir, { recursive: true, force: true });
 }
 
