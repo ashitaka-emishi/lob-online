@@ -1,17 +1,17 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-05-21 after PR #409._
+_Last updated: 2026-05-22 after PR #433._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                  |
-| -------------------------------- | ---------------------------------------------------------------------- |
-| Open debt items                  | 17                                                                     |
-| Cumulative debt score (net open) | 29                                                                     |
-| Highest-risk item                | Extract OOB enrichment from GameView into a composable (#401, score 3) |
-| PRs tracked                      | 177                                                                    |
+| Metric                           | Value                                                                         |
+| -------------------------------- | ----------------------------------------------------------------------------- |
+| Open debt items                  | 14                                                                            |
+| Cumulative debt score (net open) | 24                                                                            |
+| Highest-risk item                | SVG `<image>` button AT reliability + missing focus indicator (#434, score 3) |
+| PRs tracked                      | 184                                                                           |
 
 ---
 
@@ -204,6 +204,13 @@ _Last updated: 2026-05-21 after PR #409._
 | 2026-05-21 | PR #415                                                        | 0                    | -6        | 310                      |
 | 2026-05-21 | PR #415 (reclassified #410 — planned implementation, not debt) | -5                   | —         | 310                      |
 | 2026-05-21 | PR #415 (resolved #414 — absorbed into #410)                   | -1                   | —         | 310                      |
+| 2026-05-22 | PR #433                                                        | 6                    | -5        | 316                      |
+| 2026-05-22 | PR #433 (resolved #401)                                        | -3                   | —         | 316                      |
+| 2026-05-22 | PR #433 (resolved #411)                                        | -2                   | —         | 316                      |
+| 2026-05-22 | PR #433 (resolved #412)                                        | -2                   | —         | 316                      |
+| 2026-05-22 | PR #433 (resolved #346)                                        | -2                   | —         | 316                      |
+| 2026-05-22 | PR #433 (resolved #413)                                        | -1                   | —         | 316                      |
+| 2026-05-22 | PR #433 (resolved #404)                                        | -1                   | —         | 316                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -211,11 +218,11 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Elevated risk. Some deferred workarounds and sub-optimal patterns that will slow future phases if not addressed.
+Elevated risk. Several significant deferred items that introduce coupling or architectural compromise. Recommend a debt reduction sprint before the next major phase.
 
-PR #409 (retroactive team-review) initially added 11 points across 5 items. On review, #410 was reclassified as a planned implementation item rather than accumulated debt — the lobby was deliberately scaffolded for early game testing, and the work to make it production-correct (auth, ownership, CSRF, UX) is intentional M8 scope, not an oversight. #414 (unnecessary `/me` refetch) was absorbed into #410 as a related UX improvement. Neither item belongs in the debt register: one is a planned feature, the other a minor enhancement bundled with it. Removing them drops the net open score from 35 back to 29. The 7 findings fixed in place and the 4 remaining deferred items (#411–#413 plus the existing register) represent the true residual debt from this PR cycle.
+PR #433 closed 6 items (net score −5): the OOB composable (#401, score 3), session helper and SIDES constants (#411, #412), test consolidation (#346), error color (#413), and the composable testability stub (#404). Seven findings were fixed in place including the critical `res.ok` gap in `fetchOob`. Three new items were deferred: two accessibility issues (#434 SVG button AT reliability score 3, #435 overflow:hidden scroll trap score 2) and one minor test gap (#436 score 1).
 
-Current debt is concentrated in minor maintainability and engine-stub categories. The highest-risk actionable item is #401 (score 3, OOB composable extraction) — the only item that will compound as new game views are added in M6. The two lobby maintainability items (#411, #412) are low-risk cleanup candidates for a focused lobby sprint. Four M6-blocked engine stubs (#379, #381, #382, #383) are intentional stubs with no game-correctness impact until combat is implemented. Recommended resolution: #401 before any new game view in M6; #411 and #412 in a lobby cleanup sprint; engine stubs naturally close during M6 combat implementation.
+Current debt is concentrated in two categories: accessibility gaps and M6-blocked engine stubs. The highest-risk open item is #434 (score 3, SVG `<image>` button pattern) — affects keyboard and AT users on any route rendering unit counters; requires a dedicated accessibility track before multiplayer launch. The `overflow:hidden` issue (#435) affects non-game routes at 200% zoom but has low practical impact today. Four M6-blocked engine stubs (#379, #381, #382, #383) are intentional stubs with no game-correctness impact until combat is implemented. Two security/infra items (#403 CSP, #350 rate limiting) are appropriately deferred to M8 auth hardening.
 
 ---
 
@@ -223,25 +230,22 @@ Current debt is concentrated in minor maintainability and engine-stub categories
 
 _Ordered by score descending (ties: newest first). Resolved items are removed._
 
-| Score | Issue | Title                                                                        | PR Introduced | Assessment                                                                                                                                                                                                              |
-| ----- | ----- | ---------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 3     | #401  | Extract OOB enrichment from GameView into a composable                       | PR #400       | OOB fetch + walk + computed live in the view layer. Any future game view (M6, M7) that needs OOB metadata will duplicate this logic. Extraction to `useOobData.js` resolves it cleanly.                                 |
-| 2     | #411  | Extract `session.regenerate()` into a helper in `games.js`                   | PR #409       | Promise wrapper copy-pasted in three route handlers; a fix to error handling in one site will not propagate to the others. Low coupling risk today but grows with each new auth route.                                  |
-| 2     | #412  | Define SIDES constant — eliminate `'union'`/`'confederate'` magic strings    | PR #409       | Side values duplicated across server routes, client store, and tests. Rename risk is low but grows with each new endpoint or side-aware test.                                                                           |
-| 2     | #402  | Unify GameView.vue fetch strategies (store vs raw fetch)                     | PR #400       | Three different loading patterns in one `onMounted`: store action, raw fetch ×2. Low coupling risk today; natural resolution at M8 when dev-tool endpoints are replaced by production routes.                           |
-| 2     | #403  | Add Content-Security-Policy headers to Express server                        | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                                     |
-| 2     | #379  | getValidActions should enumerate all legal actions for current state         | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                                           |
-| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                          | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                                       |
-| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                            | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                                     |
-| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)           | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                                      |
-| 2     | #350  | server: add rate limiting on POST /api/v1/games routes                       | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing phases.             |
-| 2     | #346  | test: consolidate low-risk overlapping coverage                              | PR #348       | Table-test panels, editor routes, and compass utils have overlapping assertions. Safe maintenance cleanup — consolidate to composable-level tests, trim per-panel/per-route duplication. No production behavior change. |
-| 1     | #413  | Fix `.error` text color contrast to meet WCAG AA in LobbyView                | PR #409       | `color: red` (#FF0000) on white yields ~4.0:1 contrast, below WCAG 2.1 AA threshold of 4.5:1 for normal text. Trivial CSS fix — darken to `#c0392b` and add a non-color cue.                                            |
-| 1     | #404  | Extract `_collectOobUnits` for unit-testability                              | PR #400       | Module-private function in `GameView.vue`; only exercised via integration tests. Naturally resolved when #401 (useOobData composable) is implemented.                                                                   |
-| 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                    | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis.                          |
-| 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                                                     |
-| 1     | #387  | playerSide in dispatch must be sourced from session, not request body        | PR #386       | No action endpoint exists yet (#356); the session-to-side mapping is a route-layer responsibility. Enforce at the route boundary when #356 is implemented.                                                              |
-| 1     | #385  | Add property-based / fuzz tests for dispatch round-trips                     | PR #375       | Nice-to-have for a rules engine; not blocking. No correctness impact; no milestone assigned.                                                                                                                            |
+| Score | Issue | Title                                                                            | PR Introduced | Assessment                                                                                                                                                                                           |
+| ----- | ----- | -------------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3     | #434  | a11y: SVG `<image>` button AT reliability + missing focus indicator              | PR #433       | Pre-existing pattern in `UnitCounterLayer.vue` touched by this PR. `role="button"` on SVG `<image>` is unreliable across NVDA/JAWS/VoiceOver; no `:focus-visible` indicator. WCAG 4.1.2/2.1.1/2.4.7. |
+| 2     | #435  | a11y: `overflow:hidden` on html/body clips non-game-route scroll and zoom reflow | PR #433       | Document-level `overflow:hidden` removes scroll from all routes including `LobbyView`. Low impact today; grows as routes or game-row count increases. Scope to game-route layout only.               |
+| 2     | #403  | Add Content-Security-Policy headers to Express server                            | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                  |
+| 2     | #402  | Unify GameView.vue fetch strategies (store vs raw fetch)                         | PR #400       | Three different loading patterns in one `onMounted`: store action, raw fetch ×2. Low coupling risk today; natural resolution at M8 when dev-tool endpoints are replaced by production routes.        |
+| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)               | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                   |
+| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                                | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                  |
+| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                              | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                    |
+| 2     | #379  | getValidActions should enumerate all legal actions for current state             | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                        |
+| 2     | #350  | server: add rate limiting on POST /api/v1/games routes                           | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing. |
+| 1     | #436  | test: useOobData deep-recursion gap; `oobError` raw server message to DOM        | PR #433       | `collectOobUnits` tested only one level deep; 3-level traversal regression undetected. Raw fetch error string assigned to reactive ref rendered in error banner — benign source but poor pattern.    |
+| 1     | #387  | playerSide in dispatch must be sourced from session, not request body            | PR #386       | No action endpoint exists yet (#356); the session-to-side mapping is a route-layer responsibility. Enforce at the route boundary when #356 is implemented.                                           |
+| 1     | #385  | Add property-based / fuzz tests for dispatch round-trips                         | PR #375       | Nice-to-have for a rules engine; not blocking. No correctness impact; no milestone assigned.                                                                                                         |
+| 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                        | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis.       |
+| 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals     | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                                  |
 
 ---
 
