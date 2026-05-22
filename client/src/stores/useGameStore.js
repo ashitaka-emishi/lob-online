@@ -20,6 +20,7 @@ export const useGameStore = defineStore('game', () => {
     try {
       const [stateRes, mapConfigRes] = await Promise.all([
         fetch(`/api/v1/games/${id}`),
+        // map-config failure is non-fatal: leaves gridSpec/hexes null, game still loads.
         fetch(`/api/v1/games/${id}/map-config`).catch(() => null),
       ]);
       if (!stateRes.ok) throw new Error(`Failed to load game: ${stateRes.status}`);

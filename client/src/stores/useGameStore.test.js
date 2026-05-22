@@ -214,6 +214,7 @@ describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
     expect(store.hexes).toBeNull();
     expect(store.gameState).toEqual(gs);
     expect(store.error).toBeNull();
+    expect(store.loading).toBe(false);
   });
 });
 

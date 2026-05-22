@@ -24,6 +24,7 @@ import { UUID_RE } from '../util/uuid.js';
 
 const router = express.Router();
 
+// Map data is static for the scenario — load once at module init so /map-config is synchronous.
 let _mapData = null;
 let _mapStartupError = null;
 try {

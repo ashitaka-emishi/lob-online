@@ -448,6 +448,7 @@ describe('GET /api/v1/games/:id/map-config', () => {
     expect(res.status).toBe(200);
   });
 
+  // 400 comes from router.param('id') UUID validation, not the handler itself.
   it('returns 400 for a non-UUID game id', async () => {
     const app = await buildApp();
     const res = await request(app).get('/api/v1/games/not-a-uuid/map-config');

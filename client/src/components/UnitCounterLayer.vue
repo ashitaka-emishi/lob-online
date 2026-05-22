@@ -20,7 +20,7 @@ const props = defineProps({
   // Hex side length (circumradius) in SVG user units — matches hexWidth from HexMapOverlay calibration.
   hexSideLength: {
     type: Number,
-    default: 28,
+    default: 40,
   },
   // URL base path prepended to counterFile when building the image href. Must end with '/'.
   counterBasePath: {
