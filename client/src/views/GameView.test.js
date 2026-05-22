@@ -10,8 +10,8 @@ vi.mock('../stores/useGameStore.js', () => ({
 import { useGameStore } from '../stores/useGameStore.js';
 import GameView from './GameView.vue';
 
-// Minimal map-data response (hexes array + gridSpec)
-const STUB_MAP_DATA = { hexes: [], gridSpec: { cols: 4, rows: 3 } };
+// Minimal gridSpec served by /map-config
+const STUB_GRID_SPEC = { cols: 4, rows: 3, hexWidth: 20, hexHeight: 20, imageScale: 1 };
 
 // Minimal OOB response
 const STUB_OOB_DATA = {
@@ -39,6 +39,8 @@ function makeUnit(overrides = {}) {
 function makeGameStore(overrides = {}) {
   return {
     gameState: null,
+    gridSpec: null,
+    hexes: null,
     selectedUnitId: null,
     selectedUnit: null,
     loading: false,
@@ -87,12 +89,7 @@ async function mountGameView(storeOverrides = {}, fetchResponses = null) {
   setActivePinia(createPinia());
   useGameStore.mockReturnValue(makeGameStore(storeOverrides));
 
-  const fetchMock = makeFetchSequence(
-    fetchResponses ?? [
-      ['map-test/data', STUB_MAP_DATA],
-      ['oob-editor/data', STUB_OOB_DATA],
-    ]
-  );
+  const fetchMock = makeFetchSequence(fetchResponses ?? [['oob-editor/data', STUB_OOB_DATA]]);
   vi.stubGlobal('fetch', fetchMock);
 
   const router = makeRouter();
@@ -151,11 +148,6 @@ describe('GameView — mount and structure', () => {
     expect(wrapper.findComponent({ name: 'UnitStatsPanel' }).exists()).toBe(true);
   });
 
-  it('fetches map data from /api/tools/map-test/data on mount', async () => {
-    await mountGameView();
-    expect(vi.mocked(fetch)).toHaveBeenCalledWith(expect.stringContaining('map-test/data'));
-  });
-
   it('fetches OOB data from /api/tools/oob-editor/data on mount', async () => {
     await mountGameView();
     expect(vi.mocked(fetch)).toHaveBeenCalledWith(expect.stringContaining('oob-editor/data'));
@@ -169,6 +161,34 @@ describe('GameView — mount and structure', () => {
   it('shows an error banner when gameStore.error is set', async () => {
     const wrapper = await mountGameView({ error: 'Game not found' });
     expect(wrapper.find('.error-banner').text()).toContain('Game not found');
+  });
+});
+
+describe('GameView — calibration from gridSpec (#406)', () => {
+  it('passes DEFAULT_CALIBRATION to HexMapOverlay when gridSpec is null', async () => {
+    const wrapper = await mountGameView({ gridSpec: null });
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    const cal = overlay.props('calibration');
+    // Default cols/rows from DEFAULT_CALIBRATION
+    expect(cal.cols).toBe(64);
+    expect(cal.rows).toBe(35);
+  });
+
+  it('passes gridSpec values to HexMapOverlay when gridSpec is loaded (#406)', async () => {
+    const wrapper = await mountGameView({ gridSpec: STUB_GRID_SPEC });
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    const cal = overlay.props('calibration');
+    expect(cal.cols).toBe(STUB_GRID_SPEC.cols);
+    expect(cal.rows).toBe(STUB_GRID_SPEC.rows);
+    expect(cal.hexWidth).toBe(STUB_GRID_SPEC.hexWidth);
+    expect(cal.hexHeight).toBe(STUB_GRID_SPEC.hexHeight);
+  });
+
+  it('uses gameStore.hexes as the hexes prop for HexMapOverlay (#406)', async () => {
+    const hexes = [{ id: '01.01', terrain: 'woods', elevation: 0, edges: {} }];
+    const wrapper = await mountGameView({ hexes });
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    expect(overlay.props('hexes')).toEqual(hexes);
   });
 });
 
@@ -256,10 +276,7 @@ describe('GameView — displayUnits computation', () => {
         'unit-c': makeUnit({ id: 'unit-c', hex: null, isOnBoard: false }),
       },
     };
-    const wrapper = await mountGameView({ gameState }, [
-      ['map-test/data', STUB_MAP_DATA],
-      ['oob-editor/data', oobData],
-    ]);
+    const wrapper = await mountGameView({ gameState }, [['oob-editor/data', oobData]]);
     await flushPromises();
     const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
     const units = overlay.props('units');
@@ -271,10 +288,7 @@ describe('GameView — displayUnits computation', () => {
 
 describe('GameView — OOB fetch error handling', () => {
   it('renders without crashing when OOB fetch fails', async () => {
-    const wrapper = await mountGameView({}, [
-      ['map-test/data', STUB_MAP_DATA],
-      ['oob-editor/data', new Error('Network error')],
-    ]);
+    const wrapper = await mountGameView({}, [['oob-editor/data', new Error('Network error')]]);
     await flushPromises();
     expect(wrapper.find('.game-view').exists()).toBe(true);
     // No OOB data → displayUnits is empty
