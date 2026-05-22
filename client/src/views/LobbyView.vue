@@ -13,7 +13,7 @@
         <tr>
           <th>Game ID</th>
           <th>Status</th>
-          <th>You</th>
+          <th>Join</th>
           <th></th>
         </tr>
       </thead>
@@ -22,11 +22,6 @@
           <td class="game-id">{{ game.id }}</td>
           <td>
             <span :class="['status-badge', game.status]">{{ statusLabel(game.status) }}</span>
-          </td>
-          <td data-testid="you-cell">
-            <span v-if="game.id === store.myGameId" class="you-badge">
-              {{ sideLabel(store.mySide) }}
-            </span>
           </td>
           <td class="join-actions">
             <button
@@ -43,6 +38,8 @@
             >
               Join as CSA
             </button>
+          </td>
+          <td>
             <button data-testid="delete-btn" @click="store.deleteGame(game.id)">Delete</button>
           </td>
         </tr>
@@ -68,12 +65,6 @@ function statusLabel(status) {
   if (status === 'open') return 'Waiting for player';
   if (status === 'active') return 'In progress';
   return status;
-}
-
-function sideLabel(side) {
-  if (side === 'union') return 'USA';
-  if (side === 'confederate') return 'CSA';
-  return side ?? '';
 }
 </script>
 
@@ -121,11 +112,6 @@ function sideLabel(side) {
 .status-badge.active {
   background: #d4edda;
   color: #155724;
-}
-
-.you-badge {
-  font-weight: bold;
-  color: #1a73e8;
 }
 
 .join-actions {

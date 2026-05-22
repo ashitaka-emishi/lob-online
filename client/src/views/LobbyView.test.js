@@ -121,33 +121,6 @@ describe('LobbyView', () => {
     expect(rows[1].text()).toContain('In progress');
   });
 
-  it('shows "CSA" badge in the You column for the current player\'s game (#407)', () => {
-    const wrapper = mountLobby({
-      games: [{ id: 'g1', status: 'active' }],
-      myGameId: 'g1',
-      mySide: 'confederate',
-    });
-    expect(wrapper.find('[data-testid="you-cell"]').text()).toBe('CSA');
-  });
-
-  it('shows "USA" badge when current player is union (#407)', () => {
-    const wrapper = mountLobby({
-      games: [{ id: 'g1', status: 'active' }],
-      myGameId: 'g1',
-      mySide: 'union',
-    });
-    expect(wrapper.find('[data-testid="you-cell"]').text()).toBe('USA');
-  });
-
-  it('shows empty You cell for games the current player is not in (#407)', () => {
-    const wrapper = mountLobby({
-      games: [{ id: 'g1', status: 'open' }],
-      myGameId: 'g2',
-      mySide: 'union',
-    });
-    expect(wrapper.find('[data-testid="you-cell"]').text()).toBe('');
-  });
-
   it('"Delete" button calls deleteGame with the game id (#407)', async () => {
     const deleteGame = vi.fn();
     const wrapper = mountLobby({
