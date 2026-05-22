@@ -4,35 +4,27 @@ import { useRoute } from 'vue-router';
 
 import HexMapOverlay from '../components/HexMapOverlay.vue';
 import UnitStatsPanel from '../components/UnitStatsPanel.vue';
-import { useCalibration } from '../composables/useCalibration.js';
+import { DEFAULT_CALIBRATION, sanitizeCalibration } from '../composables/useCalibration.js';
 import { useGameStore } from '../stores/useGameStore.js';
 
 const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
 
 const route = useRoute();
 const gameStore = useGameStore();
-const { calibration } = useCalibration();
 
-const mapData = ref(null);
+const calibration = computed(() =>
+  sanitizeCalibration({ ...DEFAULT_CALIBRATION, ...(gameStore.gridSpec ?? {}) })
+);
+
 const oobData = ref(null);
-const mapError = ref(null);
 const oobError = ref(null);
 const imgNaturalWidth = ref(1400);
 const imgNaturalHeight = ref(900);
 
-// M8: these dev-tool endpoints will be replaced by production-stable public routes.
 onMounted(async () => {
   const gameId = route.params.id;
   await Promise.all([
     gameStore.loadGame(gameId),
-    fetch('/api/tools/map-test/data')
-      .then((r) => r.json())
-      .then((d) => {
-        mapData.value = d;
-      })
-      .catch((err) => {
-        mapError.value = `Map load failed: ${err.message}`;
-      }),
     fetch('/api/tools/oob-editor/data')
       .then((r) => r.json())
       .then((d) => {
@@ -73,7 +65,7 @@ const oobUnitMap = computed(() => {
 
 // ── Derived display data ──────────────────────────────────────────────────────
 
-const hexes = computed(() => mapData.value?.hexes ?? []);
+const hexes = computed(() => gameStore.hexes ?? []);
 
 // hex → unitId index for click-to-select routing
 const hexUnitIndex = computed(() => {
@@ -144,8 +136,8 @@ function onImageLoad(event) {
 <template>
   <div class="game-view">
     <div v-if="gameStore.loading" class="loading-banner">Loading game…</div>
-    <div v-if="gameStore.error || mapError || oobError" class="error-banner">
-      {{ gameStore.error || mapError || oobError }}
+    <div v-if="gameStore.error || oobError" class="error-banner">
+      {{ gameStore.error || oobError }}
     </div>
     <div class="game-body">
       <!-- Map area: scrollable, fills remaining width -->

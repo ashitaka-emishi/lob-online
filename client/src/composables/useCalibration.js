@@ -4,7 +4,7 @@ export const STORAGE_KEY = 'lob-map-editor-calibration-v4';
 
 const VALID_ORIENTATIONS = ['flat', 'pointy'];
 
-const DEFAULT_CALIBRATION = {
+export const DEFAULT_CALIBRATION = {
   cols: 64,
   rows: 35,
   dx: 0,
@@ -25,7 +25,7 @@ const DEFAULT_CALIBRATION = {
  * dropped; known optional extension fields (rotation, locked) are type-checked
  * and included only when present.
  */
-function sanitizeCalibration(raw) {
+export function sanitizeCalibration(raw) {
   const safeNumeric = (val, fallback) => (Number.isFinite(val) ? val : fallback);
   const safeBoolean = (val, fallback) => (typeof val === 'boolean' ? val : fallback);
   const safeOrientation = (val, fallback) => (VALID_ORIENTATIONS.includes(val) ? val : fallback);
