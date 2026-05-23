@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { GridSpecSchema, MapSchema } from './map.schema.js';
+import { MapSchema } from './map.schema.js';
 
 const MINIMAL_VALID = {
   _status: 'draft',
@@ -1005,7 +1005,8 @@ describe('MapSchema — validateCoexistence (#135)', () => {
   });
 });
 
-describe('GridSpecSchema (#425)', () => {
+// GridSpecSchema is internal to MapSchema (#439) — validated via MapSchema.gridSpec
+describe('MapSchema — gridSpec validation (#425)', () => {
   const VALID_GRID_SPEC = {
     cols: 64,
     rows: 35,
@@ -1019,26 +1020,32 @@ describe('GridSpecSchema (#425)', () => {
     evenColUp: true,
   };
 
+  const withGridSpec = (gs) => MapSchema.safeParse({ ...MINIMAL_VALID, gridSpec: gs });
+
   it('accepts a valid gridSpec', () => {
-    expect(GridSpecSchema.safeParse(VALID_GRID_SPEC).success).toBe(true);
+    expect(withGridSpec(VALID_GRID_SPEC).success).toBe(true);
   });
 
-  it('rejects missing required fields', () => {
+  it('rejects missing required fields in gridSpec', () => {
     const { cols: _cols, ...missing } = VALID_GRID_SPEC;
-    expect(GridSpecSchema.safeParse(missing).success).toBe(false);
+    const result = withGridSpec(missing);
+    expect(result.success).toBe(false);
+    expect(result.error.issues[0].path[0]).toBe('gridSpec');
   });
 
-  it('rejects non-positive hexWidth', () => {
-    expect(GridSpecSchema.safeParse({ ...VALID_GRID_SPEC, hexWidth: 0 }).success).toBe(false);
+  it('rejects non-positive hexWidth in gridSpec', () => {
+    const result = withGridSpec({ ...VALID_GRID_SPEC, hexWidth: 0 });
+    expect(result.success).toBe(false);
+    expect(result.error.issues[0].path[0]).toBe('gridSpec');
   });
 
-  it('rejects invalid orientation', () => {
-    expect(GridSpecSchema.safeParse({ ...VALID_GRID_SPEC, orientation: 'diagonal' }).success).toBe(
-      false
-    );
+  it('rejects invalid orientation in gridSpec', () => {
+    const result = withGridSpec({ ...VALID_GRID_SPEC, orientation: 'diagonal' });
+    expect(result.success).toBe(false);
+    expect(result.error.issues[0].path[0]).toBe('gridSpec');
   });
 
-  it('accepts optional northOffset', () => {
-    expect(GridSpecSchema.safeParse({ ...VALID_GRID_SPEC, northOffset: 3 }).success).toBe(true);
+  it('accepts optional northOffset in gridSpec', () => {
+    expect(withGridSpec({ ...VALID_GRID_SPEC, northOffset: 3 }).success).toBe(true);
   });
 });

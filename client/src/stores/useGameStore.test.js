@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 
 import { DEFAULT_CALIBRATION } from '../utils/calibration.js';
-import { STUB_GRID_SPEC } from '../test/fixtures.js';
+import { STUB_GRID_SPEC_WIRE as STUB_GRID_SPEC } from '../test/fixtures.js';
 import { useGameStore } from './useGameStore.js';
 
 // Minimal GameState fixture matching GameStateSchema shape
@@ -61,6 +61,8 @@ function makeFetch(data, ok = true) {
 }
 
 // URL-pattern-based fetch mock for tests that need different responses per endpoint.
+// IMPORTANT: patterns are matched by substring — list more-specific patterns first to
+// avoid a shorter pattern matching before a longer one (e.g. '/games/g1' before '/games'). (#446)
 function makeMultiFetch(responses) {
   return vi.fn().mockImplementation((url) => {
     for (const [pattern, data] of responses) {

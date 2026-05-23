@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 
 import HexMapOverlay from '../components/HexMapOverlay.vue';
 import UnitStatsPanel from '../components/UnitStatsPanel.vue';
-import { DEFAULT_CALIBRATION, sanitizeCalibration } from '../utils/calibration.js';
+import { sanitizeCalibration } from '../utils/calibration.js';
 import { useOobData } from '../composables/useOobData.js';
 import { useGameStore } from '../stores/useGameStore.js';
 
@@ -13,13 +13,12 @@ const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
 const route = useRoute();
 const gameStore = useGameStore();
 
-// gridSpec and DEFAULT_CALIBRATION share the same field names by contract (#426).
-// sanitizeCalibration (called at the store boundary in useGameStore) enforces this:
-// it only reads fields defined in DEFAULT_CALIBRATION, so a rename on either side
-// produces a fallback to the default rather than a silent wrong value.
-const calibration = computed(() =>
-  sanitizeCalibration({ ...DEFAULT_CALIBRATION, ...(gameStore.gridSpec ?? {}) })
-);
+// sanitizeCalibration fills missing fields from DEFAULT_CALIBRATION; the store
+// already calls it at the API boundary, so gridSpec is always a full calibration
+// object or null. Passing gridSpec ?? {} handles the null case. (#438)
+// Field-name contract enforced inside sanitizeCalibration — a field absent from
+// gridSpec falls back to the DEFAULT_CALIBRATION value silently, never a wrong value.
+const calibration = computed(() => sanitizeCalibration(gameStore.gridSpec ?? {}));
 const { oobUnitMap, oobError, fetchOob } = useOobData();
 
 const imgNaturalWidth = ref(1400);
@@ -103,22 +102,24 @@ function onImageLoad(event) {
 
 <template>
   <div class="game-view">
-    <div v-if="gameStore.loading" class="loading-banner" role="status" aria-live="polite">
-      Loading game…
-    </div>
-    <div v-if="gameStore.error || oobError" class="error-banner" role="alert">
-      {{ gameStore.error || oobError }}
-    </div>
-    <div
-      v-show="gameStore.mapConfigError"
-      class="map-config-warning"
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
-    >
-      <span aria-hidden="true">⚠</span>
-      <span class="sr-only">Warning: </span>
-      {{ gameStore.mapConfigError }} — map hexes unavailable
+    <div class="status-banners">
+      <div v-if="gameStore.loading" class="loading-banner" role="status" aria-live="polite">
+        Loading game…
+      </div>
+      <div v-if="gameStore.error || oobError" class="error-banner" role="alert">
+        {{ gameStore.error || oobError }}
+      </div>
+      <div
+        v-show="gameStore.mapConfigError"
+        class="map-config-warning"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <span aria-hidden="true">⚠</span>
+        <span class="sr-only">Warning: </span>
+        {{ gameStore.mapConfigError }} — map hexes unavailable
+      </div>
     </div>
     <div class="game-body">
       <!-- Map area: scrollable, fills remaining width -->

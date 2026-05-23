@@ -108,8 +108,10 @@ function validateCoexistence(hex, hexIdx, ctx) {
   }
 }
 
-// GridSpecSchema is exported for use in API response validation (#425)
-export const GridSpecSchema = z.object({
+// GridSpecSchema is internal to MapSchema; not exported (#439).
+// API response validation goes through MapSchema — a standalone export created two
+// sources of truth and was unused outside this file.
+const GridSpecSchema = z.object({
   cols: z.number().int().positive(),
   rows: z.number().int().positive(),
   dx: z.number(),

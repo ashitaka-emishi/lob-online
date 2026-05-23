@@ -120,4 +120,6 @@
 
 | [x] | post-m5-debt-bundle_20260522 | Post-M5 Debt Bundle — Issues #431 #401 #421–#427 #432 #411 #412 #346 #413 #428 #429 #430 | 2026-05-22 | 2026-05-22 |
 
+| [x] | post-m5-debt-2_20260523 | Post-M5 Debt Bundle 2 — Minor Cleanups and Test Hardening (#436 #438 #439 #442 #443 #444 #445 #446 #447) | 2026-05-23 | 2026-05-23 |
+
 <!-- Tracks registered by /conductor:new-track -->

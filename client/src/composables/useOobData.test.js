@@ -141,4 +141,51 @@ describe('useOobData — oobUnitMap', () => {
     const unitB = oobUnitMap.value.get('unit-b');
     expect(unitB?.counterFile).toBeNull();
   });
+
+  it('flattens 3-level nesting (corps → division → brigade) — all leaf unit IDs appear in map (#436)', async () => {
+    const deepOob = {
+      union: {
+        id: 'corps-1',
+        name: 'I Corps',
+        divisions: [
+          {
+            id: 'div-1',
+            name: '1st Division',
+            brigades: [
+              {
+                id: 'bde-a',
+                name: '1st Bde',
+                counterRef: { front: 'bde-a.png' },
+                strengthPoints: 4,
+              },
+              {
+                id: 'bde-b',
+                name: '2nd Bde',
+                counterRef: { front: 'bde-b.png' },
+                strengthPoints: 5,
+              },
+            ],
+          },
+        ],
+      },
+      confederate: {},
+    };
+    vi.stubGlobal('fetch', mockFetch(deepOob));
+    const { fetchOob, oobUnitMap } = useOobData();
+    await fetchOob();
+    await nextTick();
+    // All four id-bearing nodes (corps, division, two brigades) must be in the map
+    expect(oobUnitMap.value.has('corps-1')).toBe(true);
+    expect(oobUnitMap.value.has('div-1')).toBe(true);
+    expect(oobUnitMap.value.has('bde-a')).toBe(true);
+    expect(oobUnitMap.value.has('bde-b')).toBe(true);
+    // Size assertion: counterRef objects must not produce spurious entries
+    expect(oobUnitMap.value.size).toBe(4);
+    expect(oobUnitMap.value.get('bde-a')).toEqual({
+      name: '1st Bde',
+      side: 'union',
+      strengthPoints: 4,
+      counterFile: 'bde-a.png',
+    });
+  });
 });
