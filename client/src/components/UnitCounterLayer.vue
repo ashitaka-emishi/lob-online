@@ -82,14 +82,11 @@ function handleKeydown(event, unitId) {
 
 <template>
   <g class="layer-units">
-    <image
+    <!-- #434: <g role="button"> is reliably announced by NVDA/JAWS/VoiceOver;
+         <image role="button"> is not. Event handlers and ARIA move to the wrapper. -->
+    <g
       v-for="entry in renderUnits"
       :key="entry.unit.id"
-      :href="entry.href"
-      :x="entry.x"
-      :y="entry.y"
-      :width="entry.size"
-      :height="entry.size"
       :aria-label="`Select ${entry.unit.name ?? entry.unit.id}`"
       role="button"
       tabindex="0"
@@ -97,7 +94,15 @@ function handleKeydown(event, unitId) {
       style="pointer-events: all; cursor: pointer"
       @click.stop="emit('unit-click', entry.unit.id)"
       @keydown="handleKeydown($event, entry.unit.id)"
-    />
+    >
+      <image
+        :href="entry.href"
+        :x="entry.x"
+        :y="entry.y"
+        :width="entry.size"
+        :height="entry.size"
+      />
+    </g>
   </g>
 </template>
 

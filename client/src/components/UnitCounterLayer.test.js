@@ -16,6 +16,7 @@ const BASE_CELL_BY_ID = makeCellById([
 const UNIT_A = { id: 'unit-a', hexId: '05.03', counterFile: 'C1 copy.png', side: 'confederate' };
 const UNIT_B = { id: 'unit-b', hexId: '07.04', counterFile: 'U1 copy.png', side: 'union' };
 const UNIT_C = { id: 'unit-c', hexId: '05.03', counterFile: 'C2 copy.png', side: 'confederate' };
+const UNIT_A_NAMED = { ...UNIT_A, name: '1st Brigade' };
 
 describe('UnitCounterLayer', () => {
   it('renders nothing when units array is empty', () => {
@@ -99,5 +100,55 @@ describe('UnitCounterLayer', () => {
     const images = wrapper.findAll('image');
     await images[1].trigger('click');
     expect(wrapper.emitted('unit-click')[0]).toEqual(['unit-b']);
+  });
+});
+
+describe('UnitCounterLayer — AT reliability (#434)', () => {
+  it('wraps each interactive counter in a <g role="button"> element, not <image> (#434)', () => {
+    const wrapper = mount(UnitCounterLayer, {
+      props: { units: [UNIT_A, UNIT_B], cellById: BASE_CELL_BY_ID },
+    });
+    const groups = wrapper.findAll('g[role="button"]');
+    expect(groups).toHaveLength(2);
+    // <image> must NOT carry role="button" — that pattern is unreliable across AT tools
+    const images = wrapper.findAll('image[role="button"]');
+    expect(images).toHaveLength(0);
+  });
+
+  it('interactive <g> carries tabindex="0" and aria-label with unit id fallback (#434)', () => {
+    const wrapper = mount(UnitCounterLayer, {
+      props: { units: [UNIT_A], cellById: BASE_CELL_BY_ID },
+    });
+    const g = wrapper.find('g[role="button"]');
+    expect(g.attributes('tabindex')).toBe('0');
+    expect(g.attributes('aria-label')).toContain('unit-a');
+  });
+
+  it('interactive <g> aria-label uses enriched unit name when available (#434)', () => {
+    const wrapper = mount(UnitCounterLayer, {
+      props: { units: [UNIT_A_NAMED], cellById: BASE_CELL_BY_ID },
+    });
+    const g = wrapper.find('g[role="button"]');
+    expect(g.attributes('aria-label')).toContain('1st Brigade');
+  });
+
+  it('<image> inside interactive <g> does not carry role, tabindex, or aria-label (#434)', () => {
+    const wrapper = mount(UnitCounterLayer, {
+      props: { units: [UNIT_A], cellById: BASE_CELL_BY_ID },
+    });
+    const img = wrapper.find('image');
+    expect(img.attributes('role')).toBeUndefined();
+    expect(img.attributes('tabindex')).toBeUndefined();
+    expect(img.attributes('aria-label')).toBeUndefined();
+  });
+
+  it('emits unit-click when Enter is pressed on the <g> wrapper (#434)', async () => {
+    const wrapper = mount(UnitCounterLayer, {
+      props: { units: [UNIT_A], cellById: BASE_CELL_BY_ID },
+    });
+    const g = wrapper.find('g[role="button"]');
+    await g.trigger('keydown', { key: 'Enter' });
+    expect(wrapper.emitted('unit-click')).toBeTruthy();
+    expect(wrapper.emitted('unit-click')[0]).toEqual(['unit-a']);
   });
 });
