@@ -5,15 +5,7 @@ import { TERRAIN_COLORS } from '../config/feature-types.js';
 defineProps({
   terrainTypes: {
     type: Array,
-    default: () => [
-      'unknown',
-      'clear',
-      'woods',
-      'slopingGround',
-      'woodedSloping',
-      'orchard',
-      'marsh',
-    ],
+    default: () => ['clear', 'woods', 'slopingGround', 'woodedSloping', 'orchard', 'marsh'],
   },
   paintTerrain: {
     type: String,
@@ -30,7 +22,6 @@ const TERRAIN_ICONS = {
   woodedSloping: '▲╱',
   orchard: '⬡',
   marsh: '≈',
-  unknown: '?',
   building: '⊞',
 };
 

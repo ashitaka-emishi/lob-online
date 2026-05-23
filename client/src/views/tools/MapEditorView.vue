@@ -5,6 +5,7 @@ import {
   STREAM_WALL_GROUPS,
   CONTOUR_GROUPS,
   EDGE_PREREQUISITES,
+  ALL_CONTOUR_TYPES,
 } from '../../config/feature-types.js';
 
 // Roads are excluded from the base overlay — they only render in the Road tool panel
@@ -161,18 +162,26 @@ function handleEdgePaint(hexId, faceIndex, type) {
   const { ownerId, ownerFace } = canonicalOwner(hexId, faceIndex, calibration.value);
   let idx = hexIndex.value.get(ownerId) ?? -1;
   if (idx < 0) {
-    mapData.value.hexes.push({ hex: ownerId, terrain: 'unknown' });
+    mapData.value.hexes.push({ hex: ownerId, terrain: 'clear' });
     idx = mapData.value.hexes.length - 1;
     hexIndex.value.set(ownerId, idx);
   }
   const hex = mapData.value.hexes[idx];
   if (!hex.edges) hex.edges = {};
   if (!hex.edges[ownerFace]) hex.edges[ownerFace] = [];
-  const existing = hex.edges[ownerFace];
+  let existing = hex.edges[ownerFace];
   const existingTypes = existing.map((f) => (typeof f === 'string' ? f : f.type));
   if (existingTypes.includes(type)) return false;
-  const { valid } = validateCoexistence(existingTypes, type);
-  if (!valid) return false;
+  // Contour types are mutually exclusive: replace any existing contour before adding the new one.
+  if (ALL_CONTOUR_TYPES.has(type) && existingTypes.some((t) => ALL_CONTOUR_TYPES.has(t))) {
+    existing = existing.filter((f) => {
+      const ft = typeof f === 'string' ? f : f.type;
+      return !ALL_CONTOUR_TYPES.has(ft);
+    });
+  } else {
+    const { valid } = validateCoexistence(existingTypes, type);
+    if (!valid) return false;
+  }
   hex.edges[ownerFace] = [...existing, { type }];
   onMutated();
   return true;
@@ -310,8 +319,22 @@ const seedHexIdsArray = computed(() => [...seedHexIds.value]);
 
 const terrainTypes = computed(() => {
   if (mapData.value?.terrainTypes) return mapData.value.terrainTypes;
-  return ['unknown', 'clear', 'woods', 'slopingGround', 'woodedSloping', 'orchard', 'marsh'];
+  return ['clear', 'woods', 'slopingGround', 'woodedSloping', 'orchard', 'marsh'];
 });
+
+// Normalize legacy 'unknown' terrain values to 'clear' whenever map data is loaded or replaced.
+watch(
+  () => mapData.value,
+  (data) => {
+    if (!data) return;
+    data.hexes.forEach((hex) => {
+      if (hex.terrain === 'unknown') hex.terrain = 'clear';
+    });
+    if (data.terrainTypes) {
+      data.terrainTypes = data.terrainTypes.filter((t) => t !== 'unknown');
+    }
+  }
+);
 
 // M3: watch-based hexIndex — only rebuilds on structural changes (length / full load),
 // not on in-place property mutations (terrain, elevation paints). This avoids O(n)

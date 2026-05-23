@@ -41,17 +41,20 @@ export const ROAD_LINE_TYPES = new Set(['trail', 'road', 'pike']);
 
 /** Stream and stone wall feature groups. */
 export const STREAM_WALL_GROUPS = [
-  { types: ['stream'], color: '#4a90d9', strokeWidth: 4 },
-  { types: ['stoneWall'], color: '#888888', strokeWidth: 3 },
+  { types: ['stream'], color: '#4a90d9', strokeWidth: 6 },
+  { types: ['stoneWall'], color: '#555555', strokeWidth: 5 },
 ];
 
 /** Contour / slope feature groups ordered from lowest to highest severity. */
 export const CONTOUR_GROUPS = [
-  { types: ['elevation'], color: '#aaaaaa', strokeWidth: 2 },
-  { types: ['slope'], color: '#444444', strokeWidth: 3 },
-  { types: ['extremeSlope'], color: '#111111', strokeWidth: 5 },
-  { types: ['verticalSlope'], color: '#cc0000', strokeWidth: 4 },
+  { types: ['elevation'], color: '#777777', strokeWidth: 3 },
+  { types: ['slope'], color: '#444444', strokeWidth: 4 },
+  { types: ['extremeSlope'], color: '#111111', strokeWidth: 6 },
+  { types: ['verticalSlope'], color: '#cc0000', strokeWidth: 5 },
 ];
+
+/** All contour type strings — mutually exclusive on any single edge. */
+export const ALL_CONTOUR_TYPES = new Set(CONTOUR_GROUPS.flatMap((g) => g.types));
 
 /** SVG glyph keys for ford and bridge point features. */
 export const FORD_BRIDGE_SYMBOLS = {

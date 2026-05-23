@@ -94,10 +94,9 @@ describe('formulas/edge-model', () => {
       expect(validateCoexistence(['verticalSlope'], 'slope').valid).toBe(false);
     });
 
-    it('elevation coexists with slope (both are contour features)', () => {
-      // 'elevation' (contour marker) and 'slope' can coexist — they are different layer types
+    it('elevation and slope are mutually exclusive (both are contour types)', () => {
       const { valid } = validateCoexistence(['elevation'], 'slope');
-      expect(valid).toBe(true);
+      expect(valid).toBe(false);
     });
 
     it('returns { valid, reason } shape', () => {

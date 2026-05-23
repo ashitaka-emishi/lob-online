@@ -4,7 +4,7 @@ import { useEdgeLineLayer } from './useEdgeLineLayer.js';
 
 // Minimal cell factory — supplies only what useEdgeLineLayer needs.
 function makeCell(id, edgesObj = {}, corners = null) {
-  // Six dummy corners sufficient for edgeLine20_80 and edgeToCenter geometry
+  // Six dummy corners sufficient for edgeLineFull and edgeToCenter geometry
   const c = corners ?? [
     { x: 10, y: 0 },
     { x: 20, y: 10 },

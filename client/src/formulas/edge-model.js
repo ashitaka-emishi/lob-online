@@ -63,7 +63,8 @@ export function getEdgeFeatures(hexMap, hexId, faceIndex, gridSpec) {
 
 // ── Coexistence rules ─────────────────────────────────────────────────────────
 
-const SLOPE_TYPES = new Set(['slope', 'extremeSlope', 'verticalSlope']);
+// All contour edge types are mutually exclusive — only one may exist per edge.
+const CONTOUR_TYPES = new Set(['elevation', 'slope', 'extremeSlope', 'verticalSlope']);
 
 /**
  * Validates whether `newType` can coexist with `existingFeatures` on the same edge.
@@ -78,12 +79,12 @@ const SLOPE_TYPES = new Set(['slope', 'extremeSlope', 'verticalSlope']);
  * @returns {{ valid: boolean, reason: string|null }}
  */
 export function validateCoexistence(existingFeatures, newType) {
-  if (SLOPE_TYPES.has(newType)) {
-    const conflicting = existingFeatures.find((f) => SLOPE_TYPES.has(f) && f !== newType);
+  if (CONTOUR_TYPES.has(newType)) {
+    const conflicting = existingFeatures.find((f) => CONTOUR_TYPES.has(f) && f !== newType);
     if (conflicting) {
       return {
         valid: false,
-        reason: `Cannot add '${newType}' — edge already has slope type '${conflicting}'`,
+        reason: `Cannot add '${newType}' — edge already has contour type '${conflicting}'`,
       };
     }
   }

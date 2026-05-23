@@ -66,6 +66,20 @@ export function edgeLine20_80(corners, dir) {
 }
 
 /**
+ * Return the full corner-to-corner line segment along the edge in direction `dir`.
+ * Used for along-edge features (contour lines, streams, stone walls) where the line
+ * should span the entire hex side rather than the 20–80% segment.
+ *
+ * @param {Array<{x:number,y:number}>} corners
+ * @param {string} dir
+ * @returns {{x1:number, y1:number, x2:number, y2:number}}
+ */
+export function edgeLineFull(corners, dir) {
+  const [i, j] = DIR_TO_CORNERS[dir];
+  return { x1: corners[i].x, y1: corners[i].y, x2: corners[j].x, y2: corners[j].y };
+}
+
+/**
  * Return the line segment from the hex centre to the midpoint of edge `dir`.
  * Used for "through-hex" style overlays (roads, trails, pikes) where the line
  * runs from the centre outward to the edge face so adjacent hexes connect.
@@ -288,9 +302,9 @@ export function adjacentHexId(hexId, dir, gridSpec) {
  * @param {Array<object>} hexes - the map's hex array
  * @param {Map<string, number>} indexMap - hexId → array index
  * @param {string} hexId
- * @returns {object} the existing hex entry, or `{ hex: hexId, terrain: 'unknown' }`
+ * @returns {object} the existing hex entry, or `{ hex: hexId, terrain: 'clear' }`
  */
 export function resolveHexOrStub(hexes, indexMap, hexId) {
   const idx = indexMap.get(hexId);
-  return idx !== undefined ? hexes[idx] : { hex: hexId, terrain: 'unknown' };
+  return idx !== undefined ? hexes[idx] : { hex: hexId, terrain: 'clear' };
 }

@@ -1,5 +1,5 @@
 import { computed } from 'vue';
-import { edgeLine20_80, edgeToCenter } from '../utils/hexGeometry.js';
+import { edgeLineFull, edgeToCenter } from '../utils/hexGeometry.js';
 
 const CANONICAL_EDGE_DIRS = ['N', 'NE', 'SE'];
 
@@ -69,11 +69,11 @@ export function useEdgeLineLayer(cells, overlayConfig, neighborMap) {
     });
   }
 
-  // Standard edge layer — 20/80 split segments.
+  // Standard edge layer — full corner-to-corner segments.
   // Short-circuits when through-hex style is active so both layers never render the same data.
   const cellsForEdges = computed(() => {
     if (overlayConfig.value?.edgeLine?.style === 'through-hex') return [];
-    return _buildCellEdgeData((cell, dir) => edgeLine20_80(cell.corners, dir));
+    return _buildCellEdgeData((cell, dir) => edgeLineFull(cell.corners, dir));
   });
 
   // Through-hex layer — centre-to-midpoint segments for all 6 edge directions.
