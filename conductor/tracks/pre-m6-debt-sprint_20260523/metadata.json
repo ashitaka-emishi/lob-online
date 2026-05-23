@@ -4,16 +4,19 @@
   "type": "chore",
   "status": "in_progress",
   "created": "2026-05-23T14:51:37Z",
-  "updated": "2026-05-23T15:30:00Z",
-  "current_phase": 3,
-  "current_task": "3.1",
+  "updated": "2026-05-23T15:45:00Z",
+  "current_phase": 4,
+  "current_task": "4.1",
   "phases": {
     "total": 4,
-    "completed": 2
+    "completed": 3
   },
   "tasks": {
     "total": 14,
-    "completed": 7
+    "completed": 11
   },
-  "commits": ["084c453: chore(debt): close #431 #432 #402 as already-resolved housekeeping"]
+  "commits": [
+    "084c453: chore(debt): close #431 #432 #402 as already-resolved housekeeping",
+    "9fe87ec: fix(a11y): replace <image role=button> with <g role=button><image/> (#434)"
+  ]
 }

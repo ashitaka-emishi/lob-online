@@ -105,15 +105,15 @@ and a generation-counter guard in `useGameStore`.
 
 ### Tasks
 
-- [ ] Task 3.1: Write failing test for #441 — add a test to `useGameStore.test.js` asserting
+- [x] Task 3.1: Write failing test for #441 — add a test to `useGameStore.test.js` asserting
       that if `loadGame` is called a second time before the first resolves, the stale state from
       the first call is not written after the second call begins. Run to confirm red.
-- [ ] Task 3.2: Fix #441 — add a generation counter to `useGameStore.loadGame`. Increment at
+- [x] Task 3.2: Fix #441 — add a generation counter to `useGameStore.loadGame`. Increment at
       call start; capture value; skip all state writes if the captured value no longer matches.
-- [ ] Task 3.3: Fix #435 — remove `overflow: hidden` from `html` and `body` in `App.vue`.
+- [x] Task 3.3: Fix #435 — remove `overflow: hidden` from `html` and `body` in `App.vue`.
       Confirm `.game-view` already has its own `overflow: hidden` in `GameView.vue` (it does).
       Add a smoke test or update an existing test to confirm `.game-view` still clips overflow.
-- [ ] Task 3.4: Run full suite green; verify no lint/format warnings.
+- [x] Task 3.4: Run full suite green; verify no lint/format warnings.
 
 ### Verification
 

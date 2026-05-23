@@ -327,6 +327,59 @@ describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
   });
 });
 
+describe('useGameStore — loadGame double-call guard (#441)', () => {
+  it('second call supersedes first: state from first call is not written after second completes (#441)', async () => {
+    const gs1 = makeGameState('game-1');
+    const gs2 = makeGameState('game-2');
+
+    let resolveGs1;
+    const gs1Deferred = new Promise((resolve) => {
+      resolveGs1 = resolve;
+    });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url) => {
+        if (url.includes('/games/game-1')) {
+          return gs1Deferred.then(() => ({
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve(gs1),
+          }));
+        }
+        if (url.includes('/games/game-2')) {
+          return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(gs2) });
+        }
+        if (url.includes('map-config')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve({ gridSpec: null, hexes: null }),
+          });
+        }
+        return Promise.resolve({ ok: false, status: 404, json: () => Promise.resolve({}) });
+      })
+    );
+
+    const store = useGameStore();
+
+    // Start first load — will hang until resolveGs1 is called
+    const load1 = store.loadGame('game-1');
+
+    // Start second load immediately — resolves fast
+    const load2 = store.loadGame('game-2');
+    await load2;
+    expect(store.gameState.id).toBe('game-2');
+
+    // Now let the first load's state fetch complete
+    resolveGs1();
+    await load1;
+
+    // First call's state write must have been discarded; game-2 state must survive
+    expect(store.gameState.id).toBe('game-2');
+  });
+});
+
 describe('useGameStore — selectedUnit computed', () => {
   it('returns null when nothing is selected', async () => {
     const gs = makeGameState();
