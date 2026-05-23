@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 
+import { STUB_GRID_SPEC } from '../test/fixtures.js';
 import { useGameStore } from './useGameStore.js';
 
 // Minimal GameState fixture matching GameStateSchema shape
@@ -216,7 +217,6 @@ describe('useGameStore — selectUnit / deselectUnit', () => {
 });
 
 describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
-  const STUB_GRID_SPEC = { cols: 64, rows: 35, hexWidth: 40.5, hexHeight: 40.7, imageScale: 1 };
   const STUB_HEXES = [{ id: '01.01', terrain: 'clear', elevation: 0, edges: {} }];
 
   it('gridSpec and hexes are null before any load', () => {
@@ -265,7 +265,6 @@ describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
   });
 
   it('clears mapConfigError on successful map-config fetch', async () => {
-    const STUB_GRID_SPEC = { cols: 64, rows: 35, hexWidth: 40.5, hexHeight: 40.7, imageScale: 1 };
     const gs = makeGameState('g3');
     vi.stubGlobal(
       'fetch',

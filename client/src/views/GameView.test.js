@@ -14,9 +14,7 @@ vi.mock('../composables/useOobData.js', () => ({
 import { useGameStore } from '../stores/useGameStore.js';
 import { useOobData } from '../composables/useOobData.js';
 import GameView from './GameView.vue';
-
-// Minimal gridSpec served by /map-config
-const STUB_GRID_SPEC = { cols: 4, rows: 3, hexWidth: 20, hexHeight: 20, imageScale: 1 };
+import { STUB_GRID_SPEC_MINI as STUB_GRID_SPEC } from '../test/fixtures.js';
 
 // Minimal OOB response (used for fetch-level assertions in displayUnits tests)
 const STUB_OOB_DATA = {
