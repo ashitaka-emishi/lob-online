@@ -2,8 +2,6 @@ import { ref } from 'vue';
 
 import { DEFAULT_CALIBRATION, sanitizeCalibration } from '../utils/calibration.js';
 
-export { DEFAULT_CALIBRATION, sanitizeCalibration };
-
 export const STORAGE_KEY = 'lob-map-editor-calibration-v4';
 
 function loadCalibration() {
