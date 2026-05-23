@@ -81,31 +81,31 @@ coverage.
 
 ### Tasks
 
-- [ ] Task 2.1: (#444) Rename `STUB_GRID_SPEC` → `STUB_GRID_SPEC_WIRE` and
+- [x] Task 2.1: (#444) Rename `STUB_GRID_SPEC` → `STUB_GRID_SPEC_WIRE` and
       `STUB_GRID_SPEC_MINI` → `STUB_GRID_SPEC_MINI_WIRE` in
       `client/src/test/fixtures.js`. Update all consumers:
   - `useGameStore.test.js` — update import name
   - `GameView.test.js` — update `STUB_GRID_SPEC_MINI as STUB_GRID_SPEC` alias
     to `STUB_GRID_SPEC_MINI_WIRE as STUB_GRID_SPEC_WIRE` (and update usage)
-- [ ] Task 2.2: (#442) Restructure the 503 test in `scenarios.test.js` to use
+- [x] Task 2.2: (#442) Restructure the 503 test in `scenarios.test.js` to use
       `vi.isolateModules(async () => { ... })` so the `vi.resetModules()` + dynamic
       import is scoped and order-independent. Add `afterEach(() => vi.restoreAllMocks())`
       to the describe block if not already present.
-- [ ] Task 2.3: (#446) In `useGameStore.test.js` and `GameView.test.js`, add a
+- [x] Task 2.3: (#446) In `useGameStore.test.js` and `GameView.test.js`, add a
       comment above `makeMultiFetch`/`makeFetchSequence` documenting that patterns must
       be ordered most-specific first to avoid substring collisions. No behavioral change.
-- [ ] Task 2.4: (#447) Add a new integration test to `scenarios.test.js` that
+- [x] Task 2.4: (#447) Add a new integration test to `scenarios.test.js` that
       mounts the real scenarios router (without mocking `loadMap`) and asserts a 200
       response with non-empty `gridSpec` and `hexes` for `south-mountain`. Use
       `supertest` as in the existing test file.
-- [ ] Task 2.5: (#436) Add a test in the `useOobData` composable test file that
+- [x] Task 2.5: (#436) Add a test in the `useOobData` composable test file that
       exercises 3-level OOB nesting (`corps → division → brigade`) and verifies all
       leaf unit IDs appear in `oobUnitMap`. Add a `// TODO: oobError` comment noting
       the raw error-string-to-DOM concern for future cleanup.
 
 ### Verification
 
-- [ ] `npm run test` — all tests pass; new tests exercise the intended paths
+- [x] `npm run test` — all tests pass; new tests exercise the intended paths
 
 ---
 
