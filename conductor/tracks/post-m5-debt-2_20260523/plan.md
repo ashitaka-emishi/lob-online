@@ -115,7 +115,7 @@ Wrap the banner stack in a named landmark so screen-reader users can navigate to
 
 ### Tasks
 
-- [ ] Task 3.1: (#445) In `GameView.vue`, wrap the three banners (`.loading-banner`,
+- [x] Task 3.1: (#445) In `GameView.vue`, wrap the three banners (`.loading-banner`,
       `.error-banner`, `.map-config-warning`) in:
   ```html
   <section class="status-banners" aria-label="Game status notifications">
@@ -128,7 +128,7 @@ Wrap the banner stack in a named landmark so screen-reader users can navigate to
 
 ### Verification
 
-- [ ] `npm run test` — new landmark test passes; no existing tests break
+- [x] `npm run test` — new landmark test passes; no existing tests break
 
 ---
 
