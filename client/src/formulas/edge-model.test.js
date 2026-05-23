@@ -99,6 +99,21 @@ describe('formulas/edge-model', () => {
       expect(valid).toBe(false);
     });
 
+    it('all contour type pairs are mutually exclusive in both directions', () => {
+      const CONTOUR_TYPES = ['elevation', 'slope', 'extremeSlope', 'verticalSlope'];
+      for (const a of CONTOUR_TYPES) {
+        for (const b of CONTOUR_TYPES) {
+          if (a === b) continue;
+          expect(validateCoexistence([a], b).valid).toBe(false);
+        }
+      }
+    });
+
+    it('reason names the conflicting existing type', () => {
+      const { reason } = validateCoexistence(['elevation'], 'slope');
+      expect(reason).toContain('elevation');
+    });
+
     it('returns { valid, reason } shape', () => {
       const result = validateCoexistence(['slope'], 'extremeSlope');
       expect(result).toHaveProperty('valid');

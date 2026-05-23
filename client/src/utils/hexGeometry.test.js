@@ -3,6 +3,7 @@ import { defineHex, Grid, rectangle, Orientation } from 'honeycomb-grid'; // use
 import {
   edgeMidpoint,
   edgeLine20_80,
+  edgeLineFull,
   resolveHexOrStub,
   wedgePolygonPoints,
   adjacentHexId,
@@ -91,6 +92,42 @@ describe('edgeLine20_80', () => {
   it('handles all 6 directions without error', () => {
     for (const dir of DIRS) {
       expect(() => edgeLine20_80(CORNERS, dir)).not.toThrow();
+    }
+  });
+});
+
+describe('edgeLineFull', () => {
+  it('returns exact corner-to-corner segment along N edge', () => {
+    // DIR_TO_CORNERS N = [5, 0]: NW(-1,-2) → NE(1,-2)
+    const seg = edgeLineFull(CORNERS, 'N');
+    expect(seg.x1).toBe(-1);
+    expect(seg.y1).toBe(-2);
+    expect(seg.x2).toBe(1);
+    expect(seg.y2).toBe(-2);
+  });
+
+  it('returns exact corner-to-corner segment along SE edge', () => {
+    // DIR_TO_CORNERS SE = [1, 2]: E(2,0) → SE(1,2)
+    const seg = edgeLineFull(CORNERS, 'SE');
+    expect(seg.x1).toBe(2);
+    expect(seg.y1).toBe(0);
+    expect(seg.x2).toBe(1);
+    expect(seg.y2).toBe(2);
+  });
+
+  it('handles all 6 directions without error', () => {
+    for (const dir of DIRS) {
+      expect(() => edgeLineFull(CORNERS, dir)).not.toThrow();
+    }
+  });
+
+  it('returns longer segment than edgeLine20_80 for each direction', () => {
+    for (const dir of DIRS) {
+      const full = edgeLineFull(CORNERS, dir);
+      const partial = edgeLine20_80(CORNERS, dir);
+      const fullLen = Math.hypot(full.x2 - full.x1, full.y2 - full.y1);
+      const partialLen = Math.hypot(partial.x2 - partial.x1, partial.y2 - partial.y1);
+      expect(fullLen).toBeGreaterThan(partialLen);
     }
   });
 });

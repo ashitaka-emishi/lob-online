@@ -8,7 +8,7 @@ const CONTOUR_TYPES = ['elevation', 'slope', 'extremeSlope', 'verticalSlope'];
 
 const HELP_TEXT =
   'Click an edge to paint the selected contour type. Right-click to remove it. ' +
-  'Toggle "Elevation info" to see elevation levels and gradient while editing.';
+  'Check "Show elevation overlay" to see elevation levels and gradient while editing.';
 
 const props = defineProps({
   selectedType: {
@@ -50,15 +50,16 @@ function handleEdgeRightClick(hexId, faceIndex) {
 defineExpose({ handleEdgeClick, handleEdgeRightClick });
 
 // ── Overlay config ─────────────────────────────────────────────────────────
-// hexFill drives the toggle checkbox (toggleLabel: 'Elevation info').
-// hexLabel is added/removed from the config when elevationInfoEnabled changes —
-// both layers respond to a single checkbox in BaseToolPanel (via hexFill's toggleLabel).
+// hexFill.alwaysOn is true; the elevation checkbox below drives elevationInfoEnabled directly.
+// hexLabel is added/removed from the config when elevationInfoEnabled changes.
 
-// Stable function reference: reads reactive state at call time so its identity
+// Stable function references: read reactive state at call time so their identity
 // doesn't change between ownOverlayConfig invalidations (avoids a new closure
 // on every toggle, which would always fail shallow prop equality checks).
 const hexFillFn = (hex) =>
   elevationInfoEnabled.value ? tintForLevel(hex.elevation ?? 0, palette.value) : null;
+
+const hexLabelFn = (hex) => String(hex.elevation ?? 0);
 
 const ownOverlayConfig = computed(() => {
   const cfg = {
@@ -76,7 +77,7 @@ const ownOverlayConfig = computed(() => {
   if (elevationInfoEnabled.value) {
     cfg.hexLabel = {
       alwaysOn: true,
-      labelFn: (hex) => String(hex.elevation ?? 0),
+      labelFn: hexLabelFn,
       size: 'large',
     };
   }
@@ -103,6 +104,7 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
       >
         <span
           class="type-swatch"
+          aria-hidden="true"
           :style="{
             background: group.color,
             height: `${group.strokeWidth}px`,

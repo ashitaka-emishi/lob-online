@@ -457,13 +457,14 @@ describe('movementPath', () => {
   });
 
   it('returns impassable=false when path exists', () => {
+    // 19.23 is clear; 20.23 is woods (passable, just costs more)
     const result = movementPath('19.23', '20.23', 'line', scenario, mapData);
     expect(result.impassable).toBe(false);
     expect(result.path).not.toBeNull();
   });
 
   it('path starts at startHex and ends at endHex', () => {
-    // Use adjacent hexes — both are digitized in the SM map
+    // 19.23 → 20.23: adjacent hexes in the SM map; 20.23 is woods
     const result = movementPath('19.23', '20.23', 'column', scenario, mapData);
     expect(result.impassable).toBe(false);
     expect(result.path[0]).toBe('19.23');

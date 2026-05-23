@@ -4,6 +4,7 @@ import {
   ROAD_GROUPS,
   STREAM_WALL_GROUPS,
   CONTOUR_GROUPS,
+  ALL_CONTOUR_TYPES,
   FORD_BRIDGE_SYMBOLS,
 } from './feature-types.js';
 
@@ -14,18 +15,14 @@ describe('feature-types', () => {
     });
 
     it('includes all required terrain types', () => {
-      const required = [
-        'clear',
-        'woods',
-        'orchard',
-        'marsh',
-        'slopingGround',
-        'woodedSloping',
-        'unknown',
-      ];
+      const required = ['clear', 'woods', 'orchard', 'marsh', 'slopingGround', 'woodedSloping'];
       for (const type of required) {
         expect(TERRAIN_COLORS).toHaveProperty(type);
       }
+    });
+
+    it('does not contain the legacy unknown type', () => {
+      expect(TERRAIN_COLORS).not.toHaveProperty('unknown');
     });
 
     it('clear terrain has null color (no fill)', () => {
@@ -33,7 +30,7 @@ describe('feature-types', () => {
     });
 
     it('non-clear terrains have rgba color strings', () => {
-      const colored = ['woods', 'orchard', 'marsh', 'slopingGround', 'woodedSloping', 'unknown'];
+      const colored = ['woods', 'orchard', 'marsh', 'slopingGround', 'woodedSloping'];
       for (const type of colored) {
         expect(TERRAIN_COLORS[type]).toMatch(/^rgba\(/);
       }
@@ -98,6 +95,29 @@ describe('feature-types', () => {
     it('verticalSlope has a red-ish color', () => {
       const group = CONTOUR_GROUPS.find((g) => g.types.includes('verticalSlope'));
       expect(group.color).toMatch(/#[cC][cC]/); // starts with #cc
+    });
+  });
+
+  describe('ALL_CONTOUR_TYPES', () => {
+    it('is a Set', () => {
+      expect(ALL_CONTOUR_TYPES).toBeInstanceOf(Set);
+    });
+
+    it('contains exactly 4 types', () => {
+      expect(ALL_CONTOUR_TYPES.size).toBe(4);
+    });
+
+    it('contains all four contour type strings', () => {
+      expect(ALL_CONTOUR_TYPES.has('elevation')).toBe(true);
+      expect(ALL_CONTOUR_TYPES.has('slope')).toBe(true);
+      expect(ALL_CONTOUR_TYPES.has('extremeSlope')).toBe(true);
+      expect(ALL_CONTOUR_TYPES.has('verticalSlope')).toBe(true);
+    });
+
+    it('matches the flattened types from CONTOUR_GROUPS', () => {
+      const derived = new Set(CONTOUR_GROUPS.flatMap((g) => g.types));
+      for (const t of derived) expect(ALL_CONTOUR_TYPES.has(t)).toBe(true);
+      expect(ALL_CONTOUR_TYPES.size).toBe(derived.size);
     });
   });
 

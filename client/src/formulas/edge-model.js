@@ -69,10 +69,15 @@ const CONTOUR_TYPES = new Set(['elevation', 'slope', 'extremeSlope', 'verticalSl
 /**
  * Validates whether `newType` can coexist with `existingFeatures` on the same edge.
  *
- * Rules (from docs/map-editor-design.md §2):
- * - Slope types (slope, extremeSlope, verticalSlope) are mutually exclusive.
+ * Rules:
+ * - Contour types (elevation, slope, extremeSlope, verticalSlope) are mutually exclusive
+ *   — only one may exist per edge. SM §1.1 / LOB §3 contour definitions.
  * - Road types (trail, road, pike) coexist with each other and with other features.
  * - Stream/stoneWall coexist with road types and with each other.
+ *
+ * Note: MapEditorView uses strip-then-add semantics for contour replacement rather than
+ * calling this function — see handleEdgePaint. This function is the guard for all other
+ * callers (import scripts, engine consumers, etc.).
  *
  * @param {string[]} existingFeatures
  * @param {string} newType

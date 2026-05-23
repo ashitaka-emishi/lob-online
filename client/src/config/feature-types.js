@@ -14,7 +14,6 @@ export const TERRAIN_COLORS = {
   marsh: 'rgba(60,120,100,0.8)',
   slopingGround: 'rgba(139,100,60,0.8)',
   woodedSloping: 'rgba(55,35,10,0.85)',
-  unknown: 'rgba(150,150,150,0.3)',
 };
 
 /**
@@ -46,6 +45,7 @@ export const STREAM_WALL_GROUPS = [
 ];
 
 /** Contour / slope feature groups ordered from lowest to highest severity. */
+// verticalSlope uses red color for emphasis; stroke width need not be the maximum.
 export const CONTOUR_GROUPS = [
   { types: ['elevation'], color: '#777777', strokeWidth: 3 },
   { types: ['slope'], color: '#444444', strokeWidth: 4 },

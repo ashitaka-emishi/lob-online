@@ -50,6 +50,7 @@ describe('ContourToolPanel', () => {
     const cfg = wrapper.emitted('overlay-config').at(-1)[0];
     expect(cfg.hexFill.alwaysOn).toBe(true);
     expect(typeof cfg.hexFill.fillFn).toBe('function');
+    expect(cfg.hexFill.toggleLabel).toBeUndefined();
   });
 
   it('hexFill fillFn returns null when elevation info is off', () => {
@@ -65,7 +66,7 @@ describe('ContourToolPanel', () => {
     await checkbox.setValue(true);
     const cfg = wrapper.emitted('overlay-config').at(-1)[0];
     const result = cfg.hexFill.fillFn({ elevation: 5 });
-    expect(result).toMatch(/^hsl\(/);
+    expect(result).toMatch(/^hsl\(\d+(?:\.\d+)?,\s*\d+(?:\.\d+)?%,\s*\d+(?:\.\d+)?%\)$/);
   });
 
   it('hexLabel not present in config when elevation info is off', () => {
@@ -81,6 +82,27 @@ describe('ContourToolPanel', () => {
     const cfg = wrapper.emitted('overlay-config').at(-1)[0];
     expect(cfg.hexLabel).toBeTruthy();
     expect(cfg.hexLabel.labelFn({ elevation: 7 })).toBe('7');
+  });
+
+  it('hexLabel removed from config when checkbox is unchecked after being checked', async () => {
+    const wrapper = mount(ContourToolPanel);
+    const checkbox = wrapper.find('.elevation-toggle input[type="checkbox"]');
+    await checkbox.setValue(true);
+    await checkbox.setValue(false);
+    const cfg = wrapper.emitted('overlay-config').at(-1)[0];
+    expect(cfg.hexLabel).toBeUndefined();
+    expect(cfg.hexFill.fillFn({ elevation: 5 })).toBeNull();
+  });
+
+  it('hexLabelFn is a stable reference (not recreated on each config invalidation)', async () => {
+    const wrapper = mount(ContourToolPanel);
+    const checkbox = wrapper.find('.elevation-toggle input[type="checkbox"]');
+    await checkbox.setValue(true);
+    const cfg1 = wrapper.emitted('overlay-config').at(-1)[0];
+    await checkbox.setValue(false);
+    await checkbox.setValue(true);
+    const cfg2 = wrapper.emitted('overlay-config').at(-1)[0];
+    expect(cfg1.hexLabel.labelFn).toBe(cfg2.hexLabel.labelFn);
   });
 
   // ── Edge paint events ───────────────────────────────────────────────────────
