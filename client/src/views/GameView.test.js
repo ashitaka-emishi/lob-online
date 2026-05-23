@@ -207,6 +207,11 @@ describe('GameView — mount and structure', () => {
     const wrapper = await mountGameView({ error: 'Game not found' });
     expect(wrapper.find('.error-banner').text()).toContain('Game not found');
   });
+
+  it('wraps status banners in a named landmark section (#445)', async () => {
+    const wrapper = await mountGameView();
+    expect(wrapper.find('section[aria-label="Game status notifications"]').exists()).toBe(true);
+  });
 });
 
 describe('GameView — calibration from gridSpec (#406)', () => {

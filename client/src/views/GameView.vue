@@ -100,23 +100,25 @@ function onImageLoad(event) {
 
 <template>
   <div class="game-view">
-    <div v-if="gameStore.loading" class="loading-banner" role="status" aria-live="polite">
-      Loading game…
-    </div>
-    <div v-if="gameStore.error || oobError" class="error-banner" role="alert">
-      {{ gameStore.error || oobError }}
-    </div>
-    <div
-      v-show="gameStore.mapConfigError"
-      class="map-config-warning"
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
-    >
-      <span aria-hidden="true">⚠</span>
-      <span class="sr-only">Warning: </span>
-      {{ gameStore.mapConfigError }} — map hexes unavailable
-    </div>
+    <section class="status-banners" aria-label="Game status notifications">
+      <div v-if="gameStore.loading" class="loading-banner" role="status" aria-live="polite">
+        Loading game…
+      </div>
+      <div v-if="gameStore.error || oobError" class="error-banner" role="alert">
+        {{ gameStore.error || oobError }}
+      </div>
+      <div
+        v-show="gameStore.mapConfigError"
+        class="map-config-warning"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <span aria-hidden="true">⚠</span>
+        <span class="sr-only">Warning: </span>
+        {{ gameStore.mapConfigError }} — map hexes unavailable
+      </div>
+    </section>
     <div class="game-body">
       <!-- Map area: scrollable, fills remaining width -->
       <div class="map-area">
