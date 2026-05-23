@@ -136,8 +136,8 @@ Wrap the banner stack in a named landmark so screen-reader users can navigate to
 
 ### Tasks
 
-- [ ] Task 4.1: Run `npm run quality:strict` — all five gates pass
-- [ ] Task 4.2: Close GitHub issues #436, #438, #439, #442, #443, #444, #445,
+- [x] Task 4.1: Run `npm run quality:strict` — all five gates pass
+- [x] Task 4.2: Close GitHub issues #436, #438, #439, #442, #443, #444, #445,
       #446, #447
 - [ ] Task 4.3: Run `/tech-debt-report` for this PR
 
