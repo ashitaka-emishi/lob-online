@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 
@@ -31,6 +31,8 @@ async function buildApp() {
 }
 
 describe('GET /api/v1/scenarios/:scenarioId/map-config', () => {
+  afterEach(() => vi.restoreAllMocks());
+
   it('returns 200 with gridSpec and hexes (#421)', async () => {
     const app = await buildApp();
     const res = await request(app).get('/api/v1/scenarios/south-mountain/map-config');
@@ -63,15 +65,20 @@ describe('GET /api/v1/scenarios/:scenarioId/map-config', () => {
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: 'Unknown scenario' });
   });
+});
+
+// 503 startup-error branch requires module re-evaluation — isolated in its own
+// describe block so beforeEach/afterEach scoped resets don't affect other tests. (#442)
+describe('GET /api/v1/scenarios/:scenarioId/map-config — startup error', () => {
+  beforeEach(() => vi.resetModules());
+  afterEach(() => vi.restoreAllMocks());
 
   it('returns 503 when map data failed to load at startup (#421)', async () => {
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { loadMap } = await import('../engine/map.js');
     loadMap.mockImplementationOnce(() => {
       throw new Error('map load failed');
     });
-    // Re-import to trigger module re-evaluation with the throwing mock
-    vi.resetModules();
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { default: router } = await import('./scenarios.js');
     const app = express();
     app.use(express.json());
@@ -84,6 +91,5 @@ describe('GET /api/v1/scenarios/:scenarioId/map-config', () => {
       expect.stringContaining('map data load failed at startup'),
       expect.any(String)
     );
-    errSpy.mockRestore();
   });
 });
