@@ -14,6 +14,7 @@ import { Server } from 'socket.io';
 import { initDb, getDb } from './store/gameSqlite.js';
 import gamesRouter from './routes/games.js';
 import oobRouter from './routes/oob.js';
+import scenariosRouter from './routes/scenarios.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -70,6 +71,10 @@ export async function startServer() {
   // Scenario data API — production-safe, not gated by MAP_EDITOR_ENABLED (#431)
   app.use('/api/v1/oob', oobRouter);
   console.log('[server] OOB API enabled at /api/v1/oob');
+
+  // Scenario map config — static data, no auth required (#421)
+  app.use('/api/v1/scenarios', scenariosRouter);
+  console.log('[server] scenarios API enabled at /api/v1/scenarios');
 
   // E2E coverage endpoint — returns Istanbul coverage collected via esm-loader-hook
   if (process.env.CYPRESS_COVERAGE === 'true') {

@@ -14,9 +14,7 @@ vi.mock('../composables/useOobData.js', () => ({
 import { useGameStore } from '../stores/useGameStore.js';
 import { useOobData } from '../composables/useOobData.js';
 import GameView from './GameView.vue';
-
-// Minimal gridSpec served by /map-config
-const STUB_GRID_SPEC = { cols: 4, rows: 3, hexWidth: 20, hexHeight: 20, imageScale: 1 };
+import { STUB_GRID_SPEC_MINI as STUB_GRID_SPEC } from '../test/fixtures.js';
 
 // Minimal OOB response (used for fetch-level assertions in displayUnits tests)
 const STUB_OOB_DATA = {
@@ -50,6 +48,7 @@ function makeGameStore(overrides = {}) {
     selectedUnit: null,
     loading: false,
     error: null,
+    mapConfigError: null,
     loadGame: vi.fn(),
     selectUnit: vi.fn(),
     deselectUnit: vi.fn(),
@@ -334,6 +333,20 @@ describe('GameView — displayUnits computation', () => {
     expect(units).toHaveLength(1);
     expect(units[0].id).toBe('unit-a');
     expect(units[0].counterFile).toBe('unit-a.png');
+  });
+});
+
+describe('GameView — map-config error handling (#422)', () => {
+  it('shows a map-config warning banner when mapConfigError is set', async () => {
+    const wrapper = await mountGameView({ mapConfigError: 'Map data unavailable' });
+    expect(wrapper.find('.map-config-warning').exists()).toBe(true);
+    expect(wrapper.find('.map-config-warning').text()).toContain('Map data unavailable');
+  });
+
+  it('does not show map-config warning when mapConfigError is null', async () => {
+    const wrapper = await mountGameView({ mapConfigError: null });
+    // v-show: element exists in DOM but is hidden when mapConfigError is null
+    expect(wrapper.find('.map-config-warning').isVisible()).toBe(false);
   });
 });
 

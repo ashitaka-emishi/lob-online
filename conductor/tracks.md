@@ -118,6 +118,6 @@
 
 | [x] | game-view-viewport_20260521 | Game Map Viewport Fix — Scrolling, Grid Config, Counter Size | 2026-05-21 | 2026-05-22 |
 
-| [~] | post-m5-debt-bundle_20260522 | Post-M5 Debt Bundle — Issues #431 #401 #421–#427 #432 #411 #412 #346 #413 #428 #429 #430 | 2026-05-22 | 2026-05-22 |
+| [x] | post-m5-debt-bundle_20260522 | Post-M5 Debt Bundle — Issues #431 #401 #421–#427 #432 #411 #412 #346 #413 #428 #429 #430 | 2026-05-22 | 2026-05-22 |
 
 <!-- Tracks registered by /conductor:new-track -->

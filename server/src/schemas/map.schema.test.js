@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { MapSchema } from './map.schema.js';
+import { GridSpecSchema, MapSchema } from './map.schema.js';
 
 const MINIMAL_VALID = {
   _status: 'draft',
@@ -1002,5 +1002,43 @@ describe('MapSchema — validateCoexistence (#135)', () => {
       hexes: [{ ...BASE_HEX, edges: { 0: [{ type: 'road' }, { type: 'trail' }] } }],
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe('GridSpecSchema (#425)', () => {
+  const VALID_GRID_SPEC = {
+    cols: 64,
+    rows: 35,
+    dx: 0,
+    dy: 0,
+    hexWidth: 40.5,
+    hexHeight: 40.7,
+    imageScale: 1,
+    strokeWidth: 2,
+    orientation: 'flat',
+    evenColUp: true,
+  };
+
+  it('accepts a valid gridSpec', () => {
+    expect(GridSpecSchema.safeParse(VALID_GRID_SPEC).success).toBe(true);
+  });
+
+  it('rejects missing required fields', () => {
+    const { cols: _cols, ...missing } = VALID_GRID_SPEC;
+    expect(GridSpecSchema.safeParse(missing).success).toBe(false);
+  });
+
+  it('rejects non-positive hexWidth', () => {
+    expect(GridSpecSchema.safeParse({ ...VALID_GRID_SPEC, hexWidth: 0 }).success).toBe(false);
+  });
+
+  it('rejects invalid orientation', () => {
+    expect(GridSpecSchema.safeParse({ ...VALID_GRID_SPEC, orientation: 'diagonal' }).success).toBe(
+      false
+    );
+  });
+
+  it('accepts optional northOffset', () => {
+    expect(GridSpecSchema.safeParse({ ...VALID_GRID_SPEC, northOffset: 3 }).success).toBe(true);
   });
 });

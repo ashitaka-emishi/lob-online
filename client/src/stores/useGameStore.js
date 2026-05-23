@@ -1,6 +1,8 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 
+import { sanitizeCalibration } from '../utils/calibration.js';
+
 export const useGameStore = defineStore('game', () => {
   const gameState = ref(null);
   const gridSpec = ref(null);
@@ -8,6 +10,7 @@ export const useGameStore = defineStore('game', () => {
   const selectedUnitId = ref(null);
   const loading = ref(false);
   const error = ref(null);
+  const mapConfigError = ref(null);
 
   const selectedUnit = computed(() => {
     if (!gameState.value || !selectedUnitId.value) return null;
@@ -18,17 +21,31 @@ export const useGameStore = defineStore('game', () => {
     loading.value = true;
     error.value = null;
     try {
-      const [stateRes, mapConfigRes] = await Promise.all([
-        fetch(`/api/v1/games/${id}`),
-        // map-config failure is non-fatal: leaves gridSpec/hexes null, game still loads.
-        fetch(`/api/v1/games/${id}/map-config`).catch(() => null),
-      ]);
+      const stateRes = await fetch(`/api/v1/games/${id}`);
       if (!stateRes.ok) throw new Error(`Failed to load game: ${stateRes.status}`);
-      gameState.value = await stateRes.json();
+      const state = await stateRes.json();
+      gameState.value = state;
+
+      // map-config is scenario-static (#421); failure is non-fatal — game still loads. (#422)
+      mapConfigError.value = null;
+      const scenarioId = encodeURIComponent(state.scenarioId ?? '');
+      const mapConfigRes = await fetch(`/api/v1/scenarios/${scenarioId}/map-config`).catch(
+        (err) => {
+          mapConfigError.value = err.message;
+          return null;
+        }
+      );
       if (mapConfigRes?.ok) {
-        const mapConfig = await mapConfigRes.json();
-        gridSpec.value = mapConfig.gridSpec ?? null;
-        hexes.value = mapConfig.hexes ?? null;
+        try {
+          const mapConfig = await mapConfigRes.json();
+          // sanitizeCalibration enforces the shape contract at the store boundary (#425)
+          gridSpec.value = mapConfig.gridSpec ? sanitizeCalibration(mapConfig.gridSpec) : null;
+          hexes.value = mapConfig.hexes ?? null;
+        } catch (e) {
+          mapConfigError.value = `Map data parse error: ${e.message}`;
+        }
+      } else if (mapConfigRes && !mapConfigRes.ok) {
+        mapConfigError.value = `Map data unavailable (${mapConfigRes.status})`;
       }
     } catch (err) {
       error.value = err.message;
@@ -53,6 +70,7 @@ export const useGameStore = defineStore('game', () => {
     selectedUnit,
     loading,
     error,
+    mapConfigError,
     loadGame,
     selectUnit,
     deselectUnit,

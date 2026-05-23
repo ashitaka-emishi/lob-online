@@ -3,7 +3,7 @@
 **Track ID:** post-m5-debt-bundle_20260522
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-05-22
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -65,26 +65,22 @@ These four items are interdependent. The composable (#401) must exist before #43
 
 ## Phase 2: Map-Config / Store Contract (#421–#427)
 
-> **NOTE:** All Phase 2 items were introduced by PR #420, which is still open and not yet merged into
-> master. These tasks CANNOT be executed on this branch until PR #420 merges. They are preserved here
-> for execution as a follow-on commit once the merge lands.
-
 Seven PR #420 store and map-config contract items. No inter-dependencies; tasks can be addressed in any order within the phase.
 
 ### Tasks
 
-- [ ] Task 2.1: Change map-config server route from `/:id/map-config` to `/scenarios/:scenarioId/map-config` and update client fetch path (resolves #421); update affected tests
-- [ ] Task 2.2: Add non-fatal error indicator (e.g., `v-if="mapConfigError"` banner) to `GameView.vue` when map-config fetch fails (resolves #422)
-- [ ] Task 2.3: Restructure `games.js` module-init `loadMap()` error path so the 503 branch is exercisable in tests (resolves #423)
-- [ ] Task 2.4: Extract `sanitizeCalibration` from `useCalibration.js` to `client/src/utils/calibration.js`; update all importers (resolves #424)
-- [ ] Task 2.5: Add Zod schema `GridSpecSchema` in `server/src/schemas/` and validate at store load in `useGameStore` (resolves #425)
-- [ ] Task 2.6: Add an explicit field-mapping guard (or type assertion) between gridSpec and calibration merge; document the contract in a comment (resolves #426)
-- [ ] Task 2.7: Ensure `loadMap()` is called at most once at module scope — deduplicate the call between `games.js` and `mapTest.js` (resolves #427)
+- [x] Task 2.1: Change map-config server route from `/:id/map-config` to `/scenarios/:scenarioId/map-config` and update client fetch path (resolves #421); update affected tests
+- [x] Task 2.2: Add non-fatal error indicator (e.g., `v-if="mapConfigError"` banner) to `GameView.vue` when map-config fetch fails (resolves #422)
+- [x] Task 2.3: Restructure `games.js` module-init `loadMap()` error path so the 503 branch is exercisable in tests (resolves #423)
+- [x] Task 2.4: Extract `sanitizeCalibration` from `useCalibration.js` to `client/src/utils/calibration.js`; update all importers (resolves #424)
+- [x] Task 2.5: Add Zod schema `GridSpecSchema` in `server/src/schemas/` and validate at store load in `useGameStore` (resolves #425)
+- [x] Task 2.6: Add an explicit field-mapping guard (or type assertion) between gridSpec and calibration merge; document the contract in a comment (resolves #426)
+- [x] Task 2.7: Ensure `loadMap()` is called at most once at module scope — deduplicate the call between `games.js` and `mapTest.js` (resolves #427)
 
 ### Verification
 
-- [ ] `npm run test` green, zero new Vue warnings in test output
-- [ ] Dev run: no double-loadMap console warning
+- [x] `npm run test` green, zero new Vue warnings in test output
+- [x] Dev run: no double-loadMap console warning
 
 ---
 
@@ -112,9 +108,9 @@ Trivial fixes with no behavioral risk.
 ### Tasks
 
 - [x] Task 4.1: Change `.error { color: red }` to `color: #c0392b` and add a non-color indicator (e.g., `⚠` prefix or border) in `LobbyView.vue` (resolves #413)
-- [ ] Task 4.2: Add explicit test assertions for `sanitizeCalibration` partial-override cases (e.g., only `hexSize` overridden, only `origin` overridden) in `calibration.test.js` (resolves #428) — **DEFERRED: requires PR #420 merge**
-- [ ] Task 4.3: Extract `STUB_GRID_SPEC` into a shared test fixture file (e.g., `client/src/test/fixtures.js`) and import it in both test files that currently define it independently (resolves #429) — **DEFERRED: requires PR #420 merge**
-- [ ] Task 4.4: Add `Cache-Control: public, max-age=3600` header to the `/map-config` GET handler (resolves #430) — **DEFERRED: requires PR #420 merge**
+- [x] Task 4.2: Add explicit test assertions for `sanitizeCalibration` partial-override cases (e.g., only `hexSize` overridden, only `origin` overridden) in `calibration.test.js` (resolves #428)
+- [x] Task 4.3: Extract `STUB_GRID_SPEC` into a shared test fixture file (e.g., `client/src/test/fixtures.js`) and import it in both test files that currently define it independently (resolves #429)
+- [x] Task 4.4: Add `Cache-Control: public, max-age=3600` header to the `/map-config` GET handler (resolves #430)
 
 ### Verification
 
@@ -124,10 +120,10 @@ Trivial fixes with no behavioral risk.
 
 ## Final Verification
 
-- [ ] All 17 debt items resolved; GitHub issues #431 #401 #404 #432 #421 #422 #423 #424 #425 #426 #427 #411 #412 #346 #413 #428 #429 #430 closed
+- [x] All 17 debt items resolved; GitHub issues #431 #401 #404 #432 #421 #422 #423 #424 #425 #426 #427 #411 #412 #346 #413 #428 #429 #430 closed
 - [ ] Debt register updated: score 51 → ≤ 18 (12 deferred items remain)
-- [ ] `npm run quality:strict` passes
-- [ ] No unexpected warnings in test output
+- [x] `npm run quality:strict` passes
+- [x] No unexpected warnings in test output
 - [ ] Ready for `/team-review`
 
 ---

@@ -5,9 +5,9 @@
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 
-import { buildHexIndex, loadMap } from './map.js';
+import { buildHexIndex, loadMap, _clearMapCacheForTests } from './map.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -56,6 +56,27 @@ describe('loadMap — path traversal guard (#284)', () => {
     const fakePath = join(__dirname, 'nonexistent-test.json');
     // Positive assertion: the specific file-I/O error message is reached
     expect(() => loadMap(fakePath)).toThrow(/failed to read map file/);
+  });
+});
+
+// ─── loadMap caching (#427) ────────────────────────────────────────────────────
+
+describe('loadMap — startup caching (#427)', () => {
+  beforeEach(() => _clearMapCacheForTests());
+  afterEach(() => vi.restoreAllMocks());
+
+  it('returns the same cached object on subsequent calls (referential equality)', () => {
+    const first = loadMap();
+    const second = loadMap();
+    expect(second).toBe(first);
+  });
+
+  it('returns a distinct object after cache is cleared', () => {
+    const first = loadMap();
+    _clearMapCacheForTests();
+    const second = loadMap();
+    expect(second).not.toBe(first);
+    expect(second).toEqual(first);
   });
 });
 

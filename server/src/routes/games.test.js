@@ -48,26 +48,6 @@ vi.mock('../engine/scenario.js', () => ({
   clearScenarioCache: vi.fn(),
 }));
 
-const STUB_GRID_SPEC = {
-  cols: 64,
-  rows: 35,
-  dx: 39.75,
-  dy: 36,
-  hexWidth: 40.5,
-  hexHeight: 40.7,
-  imageScale: 1,
-  strokeWidth: 2,
-  orientation: 'flat',
-  evenColUp: true,
-  northOffset: 3,
-};
-const STUB_HEXES = [{ id: '01.01', terrain: 'clear', elevation: 0, edges: {} }];
-
-vi.mock('../engine/map.js', () => ({
-  loadMap: vi.fn(() => ({ gridSpec: STUB_GRID_SPEC, hexes: STUB_HEXES })),
-  buildHexIndex: vi.fn(() => new Map()),
-}));
-
 import { setPlayerSession, getPlayerSession } from '../auth/session.js';
 import {
   createGame,
@@ -422,36 +402,6 @@ describe('DELETE /api/v1/games/:id', () => {
   it('returns 400 for non-UUID game id', async () => {
     const app = await buildApp();
     const res = await request(app).delete('/api/v1/games/not-a-uuid');
-    expect(res.status).toBe(400);
-  });
-});
-
-describe('GET /api/v1/games/:id/map-config', () => {
-  it('returns 200 with gridSpec and hexes from map data (#406)', async () => {
-    const app = await buildApp();
-    const res = await request(app).get(`/api/v1/games/${TEST_UUID}/map-config`);
-    expect(res.status).toBe(200);
-    expect(res.body.gridSpec).toMatchObject({
-      cols: STUB_GRID_SPEC.cols,
-      rows: STUB_GRID_SPEC.rows,
-      hexWidth: STUB_GRID_SPEC.hexWidth,
-      hexHeight: STUB_GRID_SPEC.hexHeight,
-    });
-    expect(Array.isArray(res.body.hexes)).toBe(true);
-    expect(res.body.hexes.length).toBeGreaterThan(0);
-  });
-
-  it('requires no authentication — returns 200 without a player session (#406)', async () => {
-    getPlayerSession.mockReturnValue(null);
-    const app = await buildApp();
-    const res = await request(app).get(`/api/v1/games/${TEST_UUID}/map-config`);
-    expect(res.status).toBe(200);
-  });
-
-  // 400 comes from router.param('id') UUID validation, not the handler itself.
-  it('returns 400 for a non-UUID game id', async () => {
-    const app = await buildApp();
-    const res = await request(app).get('/api/v1/games/not-a-uuid/map-config');
     expect(res.status).toBe(400);
   });
 });

@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 
+import { DEFAULT_CALIBRATION } from '../utils/calibration.js';
+import { STUB_GRID_SPEC } from '../test/fixtures.js';
 import { useGameStore } from './useGameStore.js';
 
 // Minimal GameState fixture matching GameStateSchema shape
@@ -98,19 +100,25 @@ describe('useGameStore — initial state', () => {
     const store = useGameStore();
     expect(store.error).toBeNull();
   });
+
+  it('mapConfigError is null by default', () => {
+    const store = useGameStore();
+    expect(store.mapConfigError).toBeNull();
+  });
 });
 
 describe('useGameStore — loadGame', () => {
-  it('calls GET /api/v1/games/:id', async () => {
+  it('calls GET /api/v1/games/:id and then /api/v1/scenarios/:scenarioId/map-config', async () => {
     const gs = makeGameState('g1');
     const fetchMock = makeMultiFetch([
-      ['/api/v1/games/g1/map-config', { gridSpec: null, hexes: null }],
+      ['/api/v1/scenarios/south-mountain/map-config', { gridSpec: null, hexes: null }],
       ['/api/v1/games/g1', gs],
     ]);
     vi.stubGlobal('fetch', fetchMock);
     const store = useGameStore();
     await store.loadGame('g1');
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/games/g1');
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/scenarios/south-mountain/map-config');
   });
 
   it('populates gameState on success', async () => {
@@ -118,7 +126,7 @@ describe('useGameStore — loadGame', () => {
     vi.stubGlobal(
       'fetch',
       makeMultiFetch([
-        ['/api/v1/games/g2/map-config', { gridSpec: null, hexes: null }],
+        ['/api/v1/scenarios/south-mountain/map-config', { gridSpec: null, hexes: null }],
         ['/api/v1/games/g2', gs],
       ])
     );
@@ -210,7 +218,6 @@ describe('useGameStore — selectUnit / deselectUnit', () => {
 });
 
 describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
-  const STUB_GRID_SPEC = { cols: 64, rows: 35, hexWidth: 40.5, hexHeight: 40.7, imageScale: 1 };
   const STUB_HEXES = [{ id: '01.01', terrain: 'clear', elevation: 0, edges: {} }];
 
   it('gridSpec and hexes are null before any load', () => {
@@ -224,13 +231,17 @@ describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
     vi.stubGlobal(
       'fetch',
       makeMultiFetch([
-        ['/api/v1/games/g1/map-config', { gridSpec: STUB_GRID_SPEC, hexes: STUB_HEXES }],
+        [
+          '/api/v1/scenarios/south-mountain/map-config',
+          { gridSpec: STUB_GRID_SPEC, hexes: STUB_HEXES },
+        ],
         ['/api/v1/games/g1', gs],
       ])
     );
     const store = useGameStore();
     await store.loadGame('g1');
-    expect(store.gridSpec).toEqual(STUB_GRID_SPEC);
+    // sanitizeCalibration fills in all DEFAULT_CALIBRATION defaults on top of STUB_GRID_SPEC
+    expect(store.gridSpec).toEqual({ ...DEFAULT_CALIBRATION, ...STUB_GRID_SPEC });
     expect(store.hexes).toEqual(STUB_HEXES);
     expect(store.gameState).toEqual(gs);
   });
@@ -250,7 +261,67 @@ describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
     expect(store.hexes).toBeNull();
     expect(store.gameState).toEqual(gs);
     expect(store.error).toBeNull();
+    expect(store.mapConfigError).toBeTruthy();
     expect(store.loading).toBe(false);
+  });
+
+  it('clears mapConfigError on successful map-config fetch', async () => {
+    const gs = makeGameState('g3');
+    vi.stubGlobal(
+      'fetch',
+      makeMultiFetch([
+        ['/api/v1/scenarios/south-mountain/map-config', { gridSpec: STUB_GRID_SPEC, hexes: [] }],
+        ['/api/v1/games/g3', gs],
+      ])
+    );
+    const store = useGameStore();
+    await store.loadGame('g3');
+    expect(store.mapConfigError).toBeNull();
+  });
+
+  it('sanitizes gridSpec at the store boundary — bad numeric falls back to default (#425)', async () => {
+    const gs = makeGameState('g4');
+    vi.stubGlobal(
+      'fetch',
+      makeMultiFetch([
+        [
+          '/api/v1/scenarios/south-mountain/map-config',
+          {
+            gridSpec: { cols: NaN, rows: 35, hexWidth: 40, hexHeight: 40, imageScale: 1 },
+            hexes: [],
+          },
+        ],
+        ['/api/v1/games/g4', gs],
+      ])
+    );
+    const store = useGameStore();
+    await store.loadGame('g4');
+    // cols: NaN should be sanitized to the default (64)
+    expect(store.gridSpec.cols).toBe(64);
+    expect(store.gridSpec.rows).toBe(35);
+  });
+
+  it('treats malformed JSON in map-config 200 response as non-fatal mapConfigError', async () => {
+    const gs = makeGameState('g5');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url) => {
+        if (url.includes('map-config')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            json: () => Promise.reject(new SyntaxError('bad json')),
+          });
+        }
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(gs) });
+      })
+    );
+    const store = useGameStore();
+    await store.loadGame('g5');
+    expect(store.gameState).toEqual(gs);
+    expect(store.error).toBeNull();
+    expect(store.mapConfigError).toBeTruthy();
+    expect(store.gridSpec).toBeNull();
   });
 });
 

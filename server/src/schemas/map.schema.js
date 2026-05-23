@@ -108,6 +108,24 @@ function validateCoexistence(hex, hexIdx, ctx) {
   }
 }
 
+// GridSpecSchema is exported for use in API response validation (#425)
+export const GridSpecSchema = z.object({
+  cols: z.number().int().positive(),
+  rows: z.number().int().positive(),
+  dx: z.number(),
+  dy: z.number(),
+  hexWidth: z.number().positive(),
+  hexHeight: z.number().positive(),
+  imageScale: z.number().positive(),
+  strokeWidth: z.number().positive(),
+  orientation: z.enum(['flat', 'pointy']),
+  evenColUp: z.boolean(),
+  rotation: z.number().min(-15).max(15).optional(),
+  northOffset: z.number().int().min(0).max(11).optional(),
+  locked: z.boolean().optional(),
+  _note: z.string().optional(),
+});
+
 export const MapSchema = z
   .object({
     _status: z.string(),
@@ -117,24 +135,7 @@ export const MapSchema = z
     scenario: z.string(),
     layout: z.literal('pointy-top'),
     hexIdFormat: z.string().optional(),
-    gridSpec: z
-      .object({
-        cols: z.number().int().positive(),
-        rows: z.number().int().positive(),
-        dx: z.number(),
-        dy: z.number(),
-        hexWidth: z.number().positive(),
-        hexHeight: z.number().positive(),
-        imageScale: z.number().positive(),
-        strokeWidth: z.number().positive(),
-        orientation: z.enum(['flat', 'pointy']),
-        evenColUp: z.boolean(),
-        rotation: z.number().min(-15).max(15).optional(),
-        northOffset: z.number().int().min(0).max(11).optional(),
-        locked: z.boolean().optional(),
-        _note: z.string().optional(),
-      })
-      .optional(),
+    gridSpec: GridSpecSchema.optional(),
     terrainTypes: z.array(z.string()).optional(),
     hexFeatureTypes: z.array(z.string()).optional(),
     edgeFeatureTypes: z.array(z.string()).optional(),
