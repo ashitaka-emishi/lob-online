@@ -3,7 +3,7 @@
 **Track ID:** pre-m6-debt-sprint_20260523
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-05-23
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -130,11 +130,11 @@ Close remaining GitHub issues, finalize debt register, run quality gates.
 
 ### Tasks
 
-- [ ] Task 4.1: Close GitHub issues #434, #435, #441.
-- [ ] Task 4.2: Update debt register — remove #434, #435, #441 from Open Debt Items; add
+- [x] Task 4.1: Close GitHub issues #434, #435, #441.
+- [x] Task 4.2: Update debt register — remove #434, #435, #441 from Open Debt Items; add
       resolution rows to Debt Over Time; recalculate Executive Summary.
-- [ ] Task 4.3: Run `npm run quality:strict` — all gates must pass.
-- [ ] Task 4.4: Commit debt register changes.
+- [x] Task 4.3: Run `npm run quality:strict` — all gates must pass.
+- [x] Task 4.4: Commit debt register changes.
 
 ### Verification
 
@@ -146,11 +146,11 @@ Close remaining GitHub issues, finalize debt register, run quality gates.
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met
-- [ ] 6 GitHub issues closed (#431 #432 #402 #434 #435 #441)
-- [ ] Debt register: 11 open items, net score 17
-- [ ] CI gates green
-- [ ] Ready for `/pr-create` and `/team-review`
+- [x] All acceptance criteria in spec.md met
+- [x] 6 GitHub issues closed (#431 #432 #402 #434 #435 #441)
+- [x] Debt register: 11 open items, net score 18
+- [x] CI gates green
+- [x] Ready for `/pr-create` and `/team-review`
 
 ---
 
