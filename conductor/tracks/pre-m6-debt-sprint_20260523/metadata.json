@@ -1,0 +1,19 @@
+{
+  "id": "pre-m6-debt-sprint_20260523",
+  "title": "Pre-M6 Debt Sprint — Issues #431 #432 #402 #434 #435 #441",
+  "type": "chore",
+  "status": "in_progress",
+  "created": "2026-05-23T14:51:37Z",
+  "updated": "2026-05-23T15:20:00Z",
+  "current_phase": 2,
+  "current_task": "2.1",
+  "phases": {
+    "total": 4,
+    "completed": 1
+  },
+  "tasks": {
+    "total": 14,
+    "completed": 4
+  },
+  "commits": []
+}

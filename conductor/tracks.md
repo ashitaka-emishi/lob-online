@@ -122,4 +122,6 @@
 
 | [x] | post-m5-debt-2_20260523 | Post-M5 Debt Bundle 2 — Minor Cleanups and Test Hardening (#436 #438 #439 #442 #443 #444 #445 #446 #447) | 2026-05-23 | 2026-05-23 |
 
+| [~] | pre-m6-debt-sprint_20260523 | Pre-M6 Debt Sprint — Issues #431 #432 #402 #434 #435 #441 | 2026-05-23 | 2026-05-23 |
+
 <!-- Tracks registered by /conductor:new-track -->
