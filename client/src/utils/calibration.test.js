@@ -80,4 +80,31 @@ describe('sanitizeCalibration (#424)', () => {
     const result = sanitizeCalibration({ ...DEFAULT_CALIBRATION, bogus: 'ignored' });
     expect(result.bogus).toBeUndefined();
   });
+
+  it('fills in all DEFAULT_CALIBRATION fields when given a sparse object (production wire format)', () => {
+    const result = sanitizeCalibration({
+      cols: 64,
+      rows: 35,
+      hexWidth: 40.5,
+      hexHeight: 40.7,
+      imageScale: 1,
+    });
+    expect(result).toEqual({
+      cols: 64,
+      rows: 35,
+      hexWidth: 40.5,
+      hexHeight: 40.7,
+      imageScale: 1,
+      dx: DEFAULT_CALIBRATION.dx,
+      dy: DEFAULT_CALIBRATION.dy,
+      strokeWidth: DEFAULT_CALIBRATION.strokeWidth,
+      northOffset: DEFAULT_CALIBRATION.northOffset,
+      orientation: DEFAULT_CALIBRATION.orientation,
+      evenColUp: DEFAULT_CALIBRATION.evenColUp,
+    });
+  });
+
+  it('returns DEFAULT_CALIBRATION when given an empty object', () => {
+    expect(sanitizeCalibration({})).toEqual(DEFAULT_CALIBRATION);
+  });
 });

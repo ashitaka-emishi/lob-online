@@ -57,7 +57,15 @@ describe('GET /api/v1/scenarios/:scenarioId/map-config', () => {
     expect(res.headers['cache-control']).toBe('public, max-age=3600');
   });
 
+  it('returns 404 for an unknown scenarioId', async () => {
+    const app = await buildApp();
+    const res = await request(app).get('/api/v1/scenarios/unknown-battle/map-config');
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ error: 'Unknown scenario' });
+  });
+
   it('returns 503 when map data failed to load at startup (#421)', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { loadMap } = await import('../engine/map.js');
     loadMap.mockImplementationOnce(() => {
       throw new Error('map load failed');
@@ -70,5 +78,12 @@ describe('GET /api/v1/scenarios/:scenarioId/map-config', () => {
     app.use('/api/v1/scenarios', router);
     const res = await request(app).get('/api/v1/scenarios/south-mountain/map-config');
     expect(res.status).toBe(503);
+    expect(res.body).toEqual({ error: 'Map data unavailable' });
+    expect(res.headers['cache-control']).toBeUndefined();
+    expect(errSpy).toHaveBeenCalledWith(
+      expect.stringContaining('map data load failed at startup'),
+      expect.any(String)
+    );
+    errSpy.mockRestore();
   });
 });

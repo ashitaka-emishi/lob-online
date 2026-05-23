@@ -28,17 +28,22 @@ export const useGameStore = defineStore('game', () => {
 
       // map-config is scenario-static (#421); failure is non-fatal — game still loads. (#422)
       mapConfigError.value = null;
-      const mapConfigRes = await fetch(`/api/v1/scenarios/${state.scenarioId}/map-config`).catch(
+      const scenarioId = encodeURIComponent(state.scenarioId ?? '');
+      const mapConfigRes = await fetch(`/api/v1/scenarios/${scenarioId}/map-config`).catch(
         (err) => {
           mapConfigError.value = err.message;
           return null;
         }
       );
       if (mapConfigRes?.ok) {
-        const mapConfig = await mapConfigRes.json();
-        // sanitizeCalibration enforces the shape contract at the store boundary (#425)
-        gridSpec.value = mapConfig.gridSpec ? sanitizeCalibration(mapConfig.gridSpec) : null;
-        hexes.value = mapConfig.hexes ?? null;
+        try {
+          const mapConfig = await mapConfigRes.json();
+          // sanitizeCalibration enforces the shape contract at the store boundary (#425)
+          gridSpec.value = mapConfig.gridSpec ? sanitizeCalibration(mapConfig.gridSpec) : null;
+          hexes.value = mapConfig.hexes ?? null;
+        } catch (e) {
+          mapConfigError.value = `Map data parse error: ${e.message}`;
+        }
       } else if (mapConfigRes && !mapConfigRes.ok) {
         mapConfigError.value = `Map data unavailable (${mapConfigRes.status})`;
       }

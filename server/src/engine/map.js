@@ -64,6 +64,11 @@ export function loadMap(mapPath = DEFAULT_MAP_PATH) {
 
 // ─── Hex index ─────────────────────────────────────────────────────────────────
 
+/** Test-only: clear the module-level cache so tests start from a cold load. */
+export function _clearMapCacheForTests() {
+  _mapDataCache.clear();
+}
+
 /**
  * Build a Map<hexId, hexEntry> from loaded map data for O(1) lookup.
  * Call once after loadMap(); pass the result to hexEntryCost and friends.

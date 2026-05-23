@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 
+import { DEFAULT_CALIBRATION } from '../utils/calibration.js';
 import { STUB_GRID_SPEC } from '../test/fixtures.js';
 import { useGameStore } from './useGameStore.js';
 
@@ -239,8 +240,8 @@ describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
     );
     const store = useGameStore();
     await store.loadGame('g1');
-    // sanitizeCalibration fills in defaults — use toMatchObject for the fields we care about
-    expect(store.gridSpec).toMatchObject(STUB_GRID_SPEC);
+    // sanitizeCalibration fills in all DEFAULT_CALIBRATION defaults on top of STUB_GRID_SPEC
+    expect(store.gridSpec).toEqual({ ...DEFAULT_CALIBRATION, ...STUB_GRID_SPEC });
     expect(store.hexes).toEqual(STUB_HEXES);
     expect(store.gameState).toEqual(gs);
   });
@@ -298,6 +299,29 @@ describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
     // cols: NaN should be sanitized to the default (64)
     expect(store.gridSpec.cols).toBe(64);
     expect(store.gridSpec.rows).toBe(35);
+  });
+
+  it('treats malformed JSON in map-config 200 response as non-fatal mapConfigError', async () => {
+    const gs = makeGameState('g5');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url) => {
+        if (url.includes('map-config')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            json: () => Promise.reject(new SyntaxError('bad json')),
+          });
+        }
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(gs) });
+      })
+    );
+    const store = useGameStore();
+    await store.loadGame('g5');
+    expect(store.gameState).toEqual(gs);
+    expect(store.error).toBeNull();
+    expect(store.mapConfigError).toBeTruthy();
+    expect(store.gridSpec).toBeNull();
   });
 });
 

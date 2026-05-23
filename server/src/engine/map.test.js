@@ -5,9 +5,9 @@
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 
-import { buildHexIndex, loadMap } from './map.js';
+import { buildHexIndex, loadMap, _clearMapCacheForTests } from './map.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -62,6 +62,7 @@ describe('loadMap — path traversal guard (#284)', () => {
 // ─── loadMap caching (#427) ────────────────────────────────────────────────────
 
 describe('loadMap — startup caching (#427)', () => {
+  beforeEach(() => _clearMapCacheForTests());
   afterEach(() => vi.restoreAllMocks());
 
   it('returns the same cached object on subsequent calls (referential equality)', () => {
@@ -70,11 +71,12 @@ describe('loadMap — startup caching (#427)', () => {
     expect(second).toBe(first);
   });
 
-  it('does not emit a console.warn on second call — caching is not misuse', () => {
-    const spy = vi.spyOn(console, 'warn');
-    loadMap();
-    loadMap();
-    expect(spy).not.toHaveBeenCalled();
+  it('returns a distinct object after cache is cleared', () => {
+    const first = loadMap();
+    _clearMapCacheForTests();
+    const second = loadMap();
+    expect(second).not.toBe(first);
+    expect(second).toEqual(first);
   });
 });
 

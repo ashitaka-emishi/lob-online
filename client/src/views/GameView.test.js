@@ -345,7 +345,8 @@ describe('GameView — map-config error handling (#422)', () => {
 
   it('does not show map-config warning when mapConfigError is null', async () => {
     const wrapper = await mountGameView({ mapConfigError: null });
-    expect(wrapper.find('.map-config-warning').exists()).toBe(false);
+    // v-show: element exists in DOM but is hidden when mapConfigError is null
+    expect(wrapper.find('.map-config-warning').isVisible()).toBe(false);
   });
 });
 
