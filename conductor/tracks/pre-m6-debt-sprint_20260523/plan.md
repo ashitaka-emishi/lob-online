@@ -82,13 +82,13 @@ announce the interactive counter element.
 
 ### Tasks
 
-- [ ] Task 2.1: Write failing test — add a test to `UnitCounterLayer.test.js` (or create it)
+- [x] Task 2.1: Write failing test — add a test to `UnitCounterLayer.test.js` (or create it)
       asserting that interactive counter elements are `<g>` (not `<image>`) with `role="button"`,
       `tabindex="0"`, and an `aria-label` containing the unit name. Run to confirm red.
-- [ ] Task 2.2: Refactor `UnitCounterLayer.vue` — wrap each `<image>` in a `<g role="button"
+- [x] Task 2.2: Refactor `UnitCounterLayer.vue` — wrap each `<image>` in a `<g role="button"
 tabindex="0" :aria-label="..." @click @keydown>`. Move event handlers and ARIA attributes
       to the `<g>`; remove them from `<image>`. Move `:focus-visible` outline CSS to the `<g>`.
-- [ ] Task 2.3: Run tests green; verify no lint/format warnings.
+- [x] Task 2.3: Run tests green; verify no lint/format warnings.
 
 ### Verification
 
