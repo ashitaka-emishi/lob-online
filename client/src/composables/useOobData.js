@@ -30,6 +30,8 @@ function collectOobUnits(obj, side, map) {
  */
 export function useOobData() {
   const oobData = ref(null);
+  // TODO: oobError is a raw error string passed directly to the DOM by consumers (e.g. GameView).
+  // Consider sanitizing or wrapping before display to avoid raw API messages reaching users. (#436)
   const oobError = ref(null);
 
   async function fetchOob() {
