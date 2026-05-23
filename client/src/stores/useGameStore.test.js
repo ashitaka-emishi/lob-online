@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 
 import { DEFAULT_CALIBRATION } from '../utils/calibration.js';
-import { STUB_GRID_SPEC } from '../test/fixtures.js';
+import { STUB_GRID_SPEC_WIRE as STUB_GRID_SPEC } from '../test/fixtures.js';
 import { useGameStore } from './useGameStore.js';
 
 // Minimal GameState fixture matching GameStateSchema shape
