@@ -151,4 +151,22 @@ describe('UnitCounterLayer — AT reliability (#434)', () => {
     expect(wrapper.emitted('unit-click')).toBeTruthy();
     expect(wrapper.emitted('unit-click')[0]).toEqual(['unit-a']);
   });
+
+  it('emits unit-click when Space is pressed on the <g> wrapper (#434)', async () => {
+    const wrapper = mount(UnitCounterLayer, {
+      props: { units: [UNIT_A], cellById: BASE_CELL_BY_ID },
+    });
+    const g = wrapper.find('g[role="button"]');
+    await g.trigger('keydown', { key: ' ' });
+    expect(wrapper.emitted('unit-click')).toBeTruthy();
+    expect(wrapper.emitted('unit-click')[0]).toEqual(['unit-a']);
+  });
+
+  it('<image> child carries aria-hidden="true" to prevent double AT announcement (#434)', () => {
+    const wrapper = mount(UnitCounterLayer, {
+      props: { units: [UNIT_A], cellById: BASE_CELL_BY_ID },
+    });
+    const img = wrapper.find('image');
+    expect(img.attributes('aria-hidden')).toBe('true');
+  });
 });

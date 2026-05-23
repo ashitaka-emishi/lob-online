@@ -91,11 +91,11 @@ function handleKeydown(event, unitId) {
       role="button"
       tabindex="0"
       class="unit-counter"
-      style="pointer-events: all; cursor: pointer"
       @click.stop="emit('unit-click', entry.unit.id)"
       @keydown="handleKeydown($event, entry.unit.id)"
     >
       <image
+        aria-hidden="true"
         :href="entry.href"
         :x="entry.x"
         :y="entry.y"
@@ -107,6 +107,11 @@ function handleKeydown(event, unitId) {
 </template>
 
 <style scoped>
+.unit-counter {
+  pointer-events: all;
+  cursor: pointer;
+}
+
 .unit-counter:focus-visible {
   outline: 2px solid #ffffff;
   outline-offset: 2px;

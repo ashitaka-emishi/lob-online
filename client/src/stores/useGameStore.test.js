@@ -377,6 +377,8 @@ describe('useGameStore — loadGame double-call guard (#441)', () => {
 
     // First call's state write must have been discarded; game-2 state must survive
     expect(store.gameState.id).toBe('game-2');
+    // loading must be false — the winner's finally ran; the superseded call's finally was guarded
+    expect(store.loading).toBe(false);
   });
 });
 
