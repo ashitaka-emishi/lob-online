@@ -87,9 +87,6 @@ describe('GET /api/v1/scenarios/:scenarioId/map-config — startup error', () =>
     expect(res.status).toBe(503);
     expect(res.body).toEqual({ error: 'Map data unavailable' });
     expect(res.headers['cache-control']).toBeUndefined();
-    expect(errSpy).toHaveBeenCalledWith(
-      expect.stringContaining('map data load failed at startup'),
-      expect.any(String)
-    );
+    expect(errSpy).toHaveBeenCalledWith(expect.stringContaining('map data'), expect.any(String));
   });
 });

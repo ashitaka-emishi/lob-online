@@ -174,11 +174,13 @@ describe('useOobData — oobUnitMap', () => {
     const { fetchOob, oobUnitMap } = useOobData();
     await fetchOob();
     await nextTick();
-    // All three id-bearing nodes (corps, division, two brigades) must be in the map
+    // All four id-bearing nodes (corps, division, two brigades) must be in the map
     expect(oobUnitMap.value.has('corps-1')).toBe(true);
     expect(oobUnitMap.value.has('div-1')).toBe(true);
     expect(oobUnitMap.value.has('bde-a')).toBe(true);
     expect(oobUnitMap.value.has('bde-b')).toBe(true);
+    // Size assertion: counterRef objects must not produce spurious entries
+    expect(oobUnitMap.value.size).toBe(4);
     expect(oobUnitMap.value.get('bde-a')).toEqual({
       name: '1st Bde',
       side: 'union',

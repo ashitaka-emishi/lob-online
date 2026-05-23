@@ -16,6 +16,8 @@ const gameStore = useGameStore();
 // sanitizeCalibration fills missing fields from DEFAULT_CALIBRATION; the store
 // already calls it at the API boundary, so gridSpec is always a full calibration
 // object or null. Passing gridSpec ?? {} handles the null case. (#438)
+// Field-name contract enforced inside sanitizeCalibration — a field absent from
+// gridSpec falls back to the DEFAULT_CALIBRATION value silently, never a wrong value.
 const calibration = computed(() => sanitizeCalibration(gameStore.gridSpec ?? {}));
 const { oobUnitMap, oobError, fetchOob } = useOobData();
 
@@ -100,7 +102,7 @@ function onImageLoad(event) {
 
 <template>
   <div class="game-view">
-    <section class="status-banners" aria-label="Game status notifications">
+    <div class="status-banners">
       <div v-if="gameStore.loading" class="loading-banner" role="status" aria-live="polite">
         Loading game…
       </div>
@@ -118,7 +120,7 @@ function onImageLoad(event) {
         <span class="sr-only">Warning: </span>
         {{ gameStore.mapConfigError }} — map hexes unavailable
       </div>
-    </section>
+    </div>
     <div class="game-body">
       <!-- Map area: scrollable, fills remaining width -->
       <div class="map-area">

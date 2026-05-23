@@ -1028,15 +1028,21 @@ describe('MapSchema — gridSpec validation (#425)', () => {
 
   it('rejects missing required fields in gridSpec', () => {
     const { cols: _cols, ...missing } = VALID_GRID_SPEC;
-    expect(withGridSpec(missing).success).toBe(false);
+    const result = withGridSpec(missing);
+    expect(result.success).toBe(false);
+    expect(result.error.issues[0].path[0]).toBe('gridSpec');
   });
 
   it('rejects non-positive hexWidth in gridSpec', () => {
-    expect(withGridSpec({ ...VALID_GRID_SPEC, hexWidth: 0 }).success).toBe(false);
+    const result = withGridSpec({ ...VALID_GRID_SPEC, hexWidth: 0 });
+    expect(result.success).toBe(false);
+    expect(result.error.issues[0].path[0]).toBe('gridSpec');
   });
 
   it('rejects invalid orientation in gridSpec', () => {
-    expect(withGridSpec({ ...VALID_GRID_SPEC, orientation: 'diagonal' }).success).toBe(false);
+    const result = withGridSpec({ ...VALID_GRID_SPEC, orientation: 'diagonal' });
+    expect(result.success).toBe(false);
+    expect(result.error.issues[0].path[0]).toBe('gridSpec');
   });
 
   it('accepts optional northOffset in gridSpec', () => {

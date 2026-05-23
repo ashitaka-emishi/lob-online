@@ -14,7 +14,7 @@ vi.mock('../composables/useOobData.js', () => ({
 import { useGameStore } from '../stores/useGameStore.js';
 import { useOobData } from '../composables/useOobData.js';
 import GameView from './GameView.vue';
-import { STUB_GRID_SPEC_MINI_WIRE as STUB_GRID_SPEC } from '../test/fixtures.js';
+import { STUB_GRID_SPEC_MINI_WIRE } from '../test/fixtures.js';
 
 // Minimal OOB response (used for fetch-level assertions in displayUnits tests)
 const STUB_OOB_DATA = {
@@ -208,9 +208,19 @@ describe('GameView — mount and structure', () => {
     expect(wrapper.find('.error-banner').text()).toContain('Game not found');
   });
 
-  it('wraps status banners in a named landmark section (#445)', async () => {
+  it('wraps status banners in a .status-banners container (#445)', async () => {
     const wrapper = await mountGameView();
-    expect(wrapper.find('section[aria-label="Game status notifications"]').exists()).toBe(true);
+    expect(wrapper.find('.status-banners').exists()).toBe(true);
+  });
+
+  it('renders loading banner inside .status-banners container (#445)', async () => {
+    const wrapper = await mountGameView({ loading: true });
+    expect(wrapper.find('.status-banners .loading-banner').exists()).toBe(true);
+  });
+
+  it('renders error banner inside .status-banners container (#445)', async () => {
+    const wrapper = await mountGameView({ error: 'fail' });
+    expect(wrapper.find('.status-banners .error-banner').exists()).toBe(true);
   });
 });
 
@@ -225,13 +235,13 @@ describe('GameView — calibration from gridSpec (#406)', () => {
   });
 
   it('passes gridSpec values to HexMapOverlay when gridSpec is loaded (#406)', async () => {
-    const wrapper = await mountGameView({ gridSpec: STUB_GRID_SPEC });
+    const wrapper = await mountGameView({ gridSpec: STUB_GRID_SPEC_MINI_WIRE });
     const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
     const cal = overlay.props('calibration');
-    expect(cal.cols).toBe(STUB_GRID_SPEC.cols);
-    expect(cal.rows).toBe(STUB_GRID_SPEC.rows);
-    expect(cal.hexWidth).toBe(STUB_GRID_SPEC.hexWidth);
-    expect(cal.hexHeight).toBe(STUB_GRID_SPEC.hexHeight);
+    expect(cal.cols).toBe(STUB_GRID_SPEC_MINI_WIRE.cols);
+    expect(cal.rows).toBe(STUB_GRID_SPEC_MINI_WIRE.rows);
+    expect(cal.hexWidth).toBe(STUB_GRID_SPEC_MINI_WIRE.hexWidth);
+    expect(cal.hexHeight).toBe(STUB_GRID_SPEC_MINI_WIRE.hexHeight);
   });
 
   it('uses gameStore.hexes as the hexes prop for HexMapOverlay (#406)', async () => {
