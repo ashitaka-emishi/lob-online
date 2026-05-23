@@ -51,6 +51,12 @@ describe('GET /api/v1/scenarios/:scenarioId/map-config', () => {
     expect(res.status).toBe(200);
   });
 
+  it('sets Cache-Control: public, max-age=3600 (#430)', async () => {
+    const app = await buildApp();
+    const res = await request(app).get('/api/v1/scenarios/south-mountain/map-config');
+    expect(res.headers['cache-control']).toBe('public, max-age=3600');
+  });
+
   it('returns 503 when map data failed to load at startup (#421)', async () => {
     const { loadMap } = await import('../engine/map.js');
     loadMap.mockImplementationOnce(() => {
