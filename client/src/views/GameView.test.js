@@ -86,6 +86,8 @@ function makeOobStore(oobDataValue = STUB_OOB_DATA, oobErrorValue = null) {
   return { oobData, oobError, fetchOob, oobUnitMap };
 }
 
+// IMPORTANT: patterns are matched by substring — list more-specific patterns first to
+// avoid a shorter pattern matching before a longer one (e.g. '/games/g1' before '/games'). (#446)
 function makeFetchSequence(responses) {
   // Returns a fetch mock that answers requests in order based on URL matching.
   // If the data slot contains an Error, the fetch itself rejects (simulates network failure).
