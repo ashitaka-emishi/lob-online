@@ -1,6 +1,6 @@
 {
   "_status": "partial",
-  "_savedAt": 1779427029881,
+  "_savedAt": 1779576735401,
   "_description": "Hex data for known/referenced hexes extracted from scenario data. Full terrain digitization requires SM_Map.jpg — use map-digitizer script to complete.",
   "_digitizationNote": "The full map is approximately 56 columns × 35 rows (pointy-top hex grid). All hexes listed here are confirmed from SM_Rules.pdf scenario text. Terrain type for non-confirmed hexes is 'unknown' and must be verified against SM_Map.jpg.",
   "scenario": "south-mountain",
@@ -138,12 +138,12 @@
       "edges": {
         "0": [
           {
-            "type": "road"
+            "type": "trail"
           }
         ],
         "1": [
           {
-            "type": "road"
+            "type": "trail"
           }
         ],
         "2": []
@@ -1010,7 +1010,11 @@
       "elevation": 1,
       "edges": {
         "0": [],
-        "1": [],
+        "1": [
+          {
+            "type": "elevation"
+          }
+        ],
         "2": [
           {
             "type": "elevation"
@@ -1543,7 +1547,11 @@
       "terrain": "clear",
       "elevation": 2,
       "edges": {
-        "0": [],
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
         "1": [],
         "2": [
           {
@@ -1560,7 +1568,11 @@
       "terrain": "clear",
       "elevation": 2,
       "edges": {
-        "0": [],
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
         "1": [],
         "2": []
       }
@@ -1570,8 +1582,21 @@
       "terrain": "clear",
       "elevation": 2,
       "edges": {
-        "0": [],
-        "1": []
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
       }
     },
     {
@@ -1579,7 +1604,11 @@
       "terrain": "clear",
       "elevation": 2,
       "edges": {
-        "1": [],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
         "2": []
       }
     },
@@ -1588,7 +1617,16 @@
       "terrain": "clear",
       "elevation": 2,
       "edges": {
-        "1": [],
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
         "2": []
       }
     },
@@ -1597,7 +1635,16 @@
       "terrain": "slopingGround",
       "elevation": 2,
       "edges": {
-        "1": [],
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
         "2": [
           {
             "type": "slope"
@@ -2081,16 +2128,8 @@
       "terrain": "clear",
       "elevation": 4,
       "edges": {
-        "0": [
-          {
-            "type": "elevation"
-          }
-        ],
-        "1": [
-          {
-            "type": "elevation"
-          }
-        ],
+        "0": [],
+        "1": [],
         "2": [
           {
             "type": "elevation"
@@ -2262,9 +2301,16 @@
         "0": [
           {
             "type": "road"
+          },
+          {
+            "type": "elevation"
           }
         ],
-        "1": [],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
         "2": [
           {
             "type": "road"
@@ -2285,6 +2331,9 @@
         "1": [
           {
             "type": "stream"
+          },
+          {
+            "type": "elevation"
           }
         ],
         "2": [
@@ -2419,6 +2468,11 @@
       "terrain": "orchard",
       "elevation": 3,
       "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
         "1": []
       }
     },
@@ -2503,7 +2557,16 @@
       "terrain": "clear",
       "elevation": 3,
       "edges": {
-        "1": []
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
       }
     },
     {
@@ -2511,7 +2574,16 @@
       "terrain": "clear",
       "elevation": 3,
       "edges": {
-        "1": [],
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "1": [
+          {
+            "type": "elevation"
+          }
+        ],
         "2": []
       }
     },
@@ -2520,8 +2592,16 @@
       "terrain": "clear",
       "elevation": 3,
       "edges": {
-        "0": [],
-        "1": []
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "1": [
+          {
+            "type": "elevation"
+          }
+        ]
       }
     },
     {
@@ -2529,13 +2609,30 @@
       "terrain": "clear",
       "elevation": 3,
       "edges": {
-        "1": []
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "1": [],
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
       }
     },
     {
       "hex": "10.07",
       "terrain": "clear",
-      "elevation": 3
+      "elevation": 3,
+      "edges": {
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "09.08",
@@ -2569,6 +2666,16 @@
       "terrain": "clear",
       "elevation": 3,
       "edges": {
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "1": [
+          {
+            "type": "elevation"
+          }
+        ],
         "2": []
       }
     },
@@ -2577,7 +2684,16 @@
       "terrain": "clear",
       "elevation": 3,
       "edges": {
-        "1": []
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "1": [
+          {
+            "type": "elevation"
+          }
+        ]
       }
     },
     {
@@ -2603,7 +2719,12 @@
       "terrain": "clear",
       "elevation": 3,
       "edges": {
-        "0": []
+        "0": [],
+        "1": [
+          {
+            "type": "elevation"
+          }
+        ]
       }
     },
     {
@@ -2623,13 +2744,30 @@
       "terrain": "clear",
       "elevation": 4,
       "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
         "2": []
       }
     },
     {
       "hex": "14.09",
       "terrain": "clear",
-      "elevation": 4
+      "elevation": 4,
+      "edges": {
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "15.10",
@@ -2639,7 +2777,19 @@
     {
       "hex": "16.09",
       "terrain": "clear",
-      "elevation": 4
+      "elevation": 4,
+      "edges": {
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "17.10",
@@ -2669,13 +2819,35 @@
     {
       "hex": "09.10",
       "terrain": "clear",
-      "elevation": 4
+      "elevation": 4,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "10.09",
       "terrain": "clear",
       "elevation": 4,
       "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
         "2": []
       }
     },
@@ -2684,7 +2856,17 @@
       "terrain": "clear",
       "elevation": 4,
       "edges": {
-        "1": []
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [],
+        "2": [
+          {
+            "type": "elevation"
+          }
+        ]
       }
     },
     {
@@ -2692,13 +2874,25 @@
       "terrain": "clear",
       "elevation": 4,
       "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
         "2": []
       }
     },
     {
       "hex": "16.08",
       "terrain": "clear",
-      "elevation": 3
+      "elevation": 3,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "17.09",
@@ -2778,7 +2972,16 @@
       "terrain": "clear",
       "elevation": 4,
       "edges": {
-        "2": []
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
       }
     },
     {
@@ -2786,13 +2989,29 @@
       "terrain": "clear",
       "elevation": 4,
       "edges": {
-        "2": []
+        "2": [
+          {
+            "type": "elevation"
+          }
+        ]
       }
     },
     {
       "hex": "11.10",
       "terrain": "clear",
-      "elevation": 5
+      "elevation": 5,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "06.07",
@@ -3095,12 +3314,12 @@
             "type": "elevation"
           }
         ],
-        "1": [],
-        "2": [
+        "1": [
           {
-            "type": "elevation"
+            "type": "slope"
           }
-        ]
+        ],
+        "2": []
       }
     },
     {
@@ -3126,11 +3345,7 @@
             "type": "slope"
           }
         ],
-        "2": [
-          {
-            "type": "slope"
-          }
-        ]
+        "2": []
       }
     },
     {
@@ -3138,11 +3353,7 @@
       "terrain": "clear",
       "elevation": 3,
       "edges": {
-        "0": [
-          {
-            "type": "slope"
-          }
-        ],
+        "0": [],
         "2": []
       }
     },
@@ -3151,11 +3362,7 @@
       "terrain": "clear",
       "elevation": 3,
       "edges": {
-        "1": [
-          {
-            "type": "slope"
-          }
-        ],
+        "1": [],
         "2": [
           {
             "type": "slope"
@@ -3455,7 +3662,7 @@
     },
     {
       "hex": "20.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "0": [
@@ -3467,7 +3674,7 @@
     },
     {
       "hex": "07.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "1": [
@@ -3479,61 +3686,119 @@
     },
     {
       "hex": "08.10",
-      "terrain": "unknown",
-      "elevation": 4
+      "terrain": "clear",
+      "elevation": 4,
+      "edges": {
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "08.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "1": [
           {
             "type": "road"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
           }
         ]
       }
     },
     {
       "hex": "09.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "1": [
           {
             "type": "road"
+          },
+          {
+            "type": "elevation"
+          }
+        ],
+        "2": [
+          {
+            "type": "extremeSlope"
           }
         ]
       }
     },
     {
       "hex": "08.12",
-      "terrain": "unknown",
-      "elevation": 4
+      "terrain": "clear",
+      "elevation": 4,
+      "edges": {
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "07.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "07.13",
-      "terrain": "unknown",
-      "elevation": 4
+      "terrain": "clear",
+      "elevation": 4,
+      "edges": {
+        "0": [
+          {
+            "type": "extremeSlope"
+          }
+        ],
+        "1": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "09.13",
-      "terrain": "unknown",
-      "elevation": 4
+      "terrain": "clear",
+      "elevation": 4,
+      "edges": {
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "2": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "06.11",
-      "terrain": "unknown",
-      "elevation": 4
+      "terrain": "clear",
+      "elevation": 4,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "05.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "2": [
@@ -3545,7 +3810,7 @@
     },
     {
       "hex": "04.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "1": [
@@ -3557,7 +3822,7 @@
     },
     {
       "hex": "01.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "0": [
@@ -3574,7 +3839,7 @@
     },
     {
       "hex": "02.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "1": [
@@ -3598,63 +3863,183 @@
     },
     {
       "hex": "04.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "05.12",
-      "terrain": "unknown",
-      "elevation": 4
+      "terrain": "clear",
+      "elevation": 4,
+      "edges": {
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "05.13",
-      "terrain": "unknown",
-      "elevation": 4
+      "terrain": "clear",
+      "elevation": 4,
+      "edges": {
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "06.12",
-      "terrain": "unknown",
-      "elevation": 5
+      "terrain": "clear",
+      "elevation": 5,
+      "edges": {
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "06.13",
-      "terrain": "unknown",
-      "elevation": 5
+      "terrain": "clear",
+      "elevation": 5,
+      "edges": {
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "1": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "09.11",
       "terrain": "slopingGround",
-      "elevation": 5
+      "elevation": 5,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "10.10",
-      "terrain": "unknown",
-      "elevation": 5
+      "terrain": "clear",
+      "elevation": 5,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "12.10",
-      "terrain": "unknown",
-      "elevation": 5
+      "terrain": "clear",
+      "elevation": 5,
+      "edges": {
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "13.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "13.10",
-      "terrain": "unknown",
-      "elevation": 5
+      "terrain": "clear",
+      "elevation": 5,
+      "edges": {
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "14.10",
-      "terrain": "unknown",
-      "elevation": 5
+      "terrain": "clear",
+      "elevation": 5,
+      "edges": {
+        "1": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "2": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "14.11",
-      "terrain": "unknown",
-      "elevation": 5
+      "terrain": "clear",
+      "elevation": 5,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "13.12",
@@ -3668,7 +4053,7 @@
     },
     {
       "hex": "11.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "0": [
@@ -3680,39 +4065,92 @@
     },
     {
       "hex": "10.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ],
         "1": [
           {
             "type": "road"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
           }
         ]
       }
     },
     {
       "hex": "10.11",
-      "terrain": "unknown",
-      "elevation": 6
+      "terrain": "clear",
+      "elevation": 6,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "11.11",
-      "terrain": "unknown",
-      "elevation": 6
+      "terrain": "clear",
+      "elevation": 6,
+      "edges": {
+        "2": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "11.12",
-      "terrain": "unknown",
-      "elevation": 6
+      "terrain": "clear",
+      "elevation": 6,
+      "edges": {
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "1": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "12.11",
-      "terrain": "unknown",
-      "elevation": 6
+      "terrain": "clear",
+      "elevation": 6,
+      "edges": {
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "1": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "2": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "11.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "0": [
@@ -3729,22 +4167,63 @@
     },
     {
       "hex": "10.13",
-      "terrain": "unknown",
-      "elevation": 4
+      "terrain": "clear",
+      "elevation": 4,
+      "edges": {
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "1": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "2": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "09.14",
-      "terrain": "unknown",
-      "elevation": 5
+      "terrain": "clear",
+      "elevation": 5,
+      "edges": {
+        "0": [
+          {
+            "type": "extremeSlope"
+          }
+        ],
+        "2": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "08.13",
-      "terrain": "unknown",
-      "elevation": 5
+      "terrain": "clear",
+      "elevation": 5,
+      "edges": {
+        "0": [
+          {
+            "type": "extremeSlope"
+          }
+        ],
+        "2": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "10.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "2": [
@@ -3756,12 +4235,12 @@
     },
     {
       "hex": "10.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "11.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6,
       "edges": {
         "0": [
@@ -3778,12 +4257,22 @@
     },
     {
       "hex": "09.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "0": [
           {
             "type": "trail"
+          }
+        ],
+        "1": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
           }
         ]
       }
@@ -3807,12 +4296,12 @@
     },
     {
       "hex": "11.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "11.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "1": [
@@ -3875,13 +4364,32 @@
     },
     {
       "hex": "16.10",
-      "terrain": "unknown",
-      "elevation": 4
+      "terrain": "clear",
+      "elevation": 4,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "15.11",
-      "terrain": "unknown",
-      "elevation": 4
+      "terrain": "clear",
+      "elevation": 4,
+      "edges": {
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "15.12",
@@ -3900,22 +4408,46 @@
     },
     {
       "hex": "16.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "16.11",
-      "terrain": "unknown",
-      "elevation": 3
+      "terrain": "clear",
+      "elevation": 3,
+      "edges": {
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "17.11",
       "terrain": "slopingGround",
-      "elevation": 3
+      "elevation": 3,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "18.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2,
       "edges": {
         "2": [
@@ -3927,17 +4459,17 @@
     },
     {
       "hex": "18.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
       "hex": "17.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
       "hex": "19.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
@@ -3947,7 +4479,7 @@
     },
     {
       "hex": "17.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
@@ -3957,7 +4489,7 @@
     },
     {
       "hex": "19.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
@@ -3996,7 +4528,7 @@
     },
     {
       "hex": "17.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "1": [
@@ -4008,22 +4540,22 @@
     },
     {
       "hex": "17.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "18.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "19.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "19.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "1": [
@@ -4035,17 +4567,17 @@
     },
     {
       "hex": "19.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "18.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "19.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
@@ -4080,7 +4612,7 @@
     },
     {
       "hex": "18.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6,
       "edges": {
         "1": [
@@ -4092,7 +4624,7 @@
     },
     {
       "hex": "12.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "1": [
@@ -4104,7 +4636,7 @@
     },
     {
       "hex": "12.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
@@ -4117,9 +4649,17 @@
             "type": "trail"
           }
         ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
         "2": [
           {
             "type": "trail"
+          },
+          {
+            "type": "extremeSlope"
           }
         ]
       }
@@ -4127,52 +4667,172 @@
     {
       "hex": "08.14",
       "terrain": "slopingGround",
-      "elevation": 7
+      "elevation": 7,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": [
+          {
+            "type": "extremeSlope"
+          }
+        ]
+      }
     },
     {
       "hex": "07.14",
       "terrain": "slopingGround",
-      "elevation": 6
+      "elevation": 6,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "06.14",
       "terrain": "slopingGround",
-      "elevation": 6
+      "elevation": 6,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "05.14",
-      "terrain": "unknown",
-      "elevation": 5
+      "terrain": "clear",
+      "elevation": 5,
+      "edges": {
+        "0": [
+          {
+            "type": "elevation"
+          }
+        ],
+        "1": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "05.15",
-      "terrain": "unknown",
-      "elevation": 6
+      "terrain": "clear",
+      "elevation": 6,
+      "edges": {
+        "0": [
+          {
+            "type": "extremeSlope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "06.15",
       "terrain": "slopingGround",
-      "elevation": 7
+      "elevation": 7,
+      "edges": {
+        "0": [
+          {
+            "type": "extremeSlope"
+          }
+        ],
+        "1": [
+          {
+            "type": "extremeSlope"
+          }
+        ]
+      }
     },
     {
       "hex": "07.15",
       "terrain": "slopingGround",
-      "elevation": 7
+      "elevation": 7,
+      "edges": {
+        "0": [
+          {
+            "type": "extremeSlope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "08.15",
       "terrain": "slopingGround",
-      "elevation": 8
+      "elevation": 8,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "08.16",
       "terrain": "woodedSloping",
-      "elevation": 9
+      "elevation": 9,
+      "edges": {
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "07.16",
       "terrain": "woodedSloping",
-      "elevation": 9
+      "elevation": 9,
+      "edges": {
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "06.16",
@@ -4182,11 +4842,23 @@
     {
       "hex": "05.16",
       "terrain": "woodedSloping",
-      "elevation": 8
+      "elevation": 8,
+      "edges": {
+        "0": [
+          {
+            "type": "extremeSlope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "01.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "0": [
@@ -4198,7 +4870,7 @@
     },
     {
       "hex": "01.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "1": [
@@ -4210,7 +4882,7 @@
     },
     {
       "hex": "02.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
@@ -4221,17 +4893,48 @@
     {
       "hex": "04.12",
       "terrain": "woods",
-      "elevation": 4
+      "elevation": 4,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "04.13",
       "terrain": "woodedSloping",
-      "elevation": 5
+      "elevation": 5,
+      "edges": {
+        "0": [
+          {
+            "type": "extremeSlope"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "03.13",
       "terrain": "woods",
-      "elevation": 4
+      "elevation": 4,
+      "edges": {
+        "0": [
+          {
+            "type": "extremeSlope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "02.12",
@@ -4241,6 +4944,9 @@
         "0": [
           {
             "type": "trail"
+          },
+          {
+            "type": "slope"
           }
         ]
       }
@@ -4248,12 +4954,36 @@
     {
       "hex": "01.13",
       "terrain": "woods",
-      "elevation": 4
+      "elevation": 4,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "01.14",
       "terrain": "woodedSloping",
-      "elevation": 5
+      "elevation": 5,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "02.13",
@@ -4263,6 +4993,19 @@
         "0": [
           {
             "type": "trail"
+          },
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": [
+          {
+            "type": "slope"
           }
         ]
       }
@@ -4270,7 +5013,24 @@
     {
       "hex": "03.14",
       "terrain": "woodedSloping",
-      "elevation": 6
+      "elevation": 6,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "02.14",
@@ -4280,6 +5040,14 @@
         "0": [
           {
             "type": "trail"
+          },
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
           }
         ]
       }
@@ -4287,7 +5055,15 @@
     {
       "hex": "01.15",
       "terrain": "woods",
-      "elevation": 6
+      "elevation": 6,
+      "edges": {
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": []
+      }
     },
     {
       "hex": "01.16",
@@ -4297,6 +5073,14 @@
         "0": [
           {
             "type": "trail"
+          },
+          {
+            "type": "extremeSlope"
+          }
+        ],
+        "1": [
+          {
+            "type": "extremeSlope"
           }
         ],
         "2": [
@@ -4309,32 +5093,99 @@
     {
       "hex": "02.15",
       "terrain": "woods",
-      "elevation": 7
+      "elevation": 7,
+      "edges": {
+        "0": [
+          {
+            "type": "extremeSlope"
+          }
+        ],
+        "1": [
+          {
+            "type": "extremeSlope"
+          }
+        ]
+      }
     },
     {
       "hex": "04.14",
       "terrain": "woodedSloping",
-      "elevation": 7
+      "elevation": 7,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": [
+          {
+            "type": "elevation"
+          }
+        ]
+      }
     },
     {
       "hex": "03.15",
       "terrain": "woodedSloping",
-      "elevation": 7
+      "elevation": 7,
+      "edges": {
+        "0": [
+          {
+            "type": "extremeSlope"
+          }
+        ],
+        "1": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "04.15",
       "terrain": "woodedSloping",
-      "elevation": 8
+      "elevation": 8,
+      "edges": {
+        "0": [
+          {
+            "type": "slope"
+          }
+        ],
+        "2": [
+          {
+            "type": "extremeSlope"
+          }
+        ]
+      }
     },
     {
       "hex": "03.16",
       "terrain": "woodedSloping",
-      "elevation": 9
+      "elevation": 9,
+      "edges": {
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "04.16",
       "terrain": "woodedSloping",
-      "elevation": 9
+      "elevation": 9,
+      "edges": {
+        "2": [
+          {
+            "type": "slope"
+          }
+        ]
+      }
     },
     {
       "hex": "02.16",
@@ -4464,7 +5315,7 @@
     },
     {
       "hex": "14.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
@@ -4555,12 +5406,12 @@
     },
     {
       "hex": "14.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "15.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
@@ -4987,7 +5838,7 @@
     },
     {
       "hex": "15.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "0": [
@@ -5004,7 +5855,7 @@
     },
     {
       "hex": "13.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "0": [
@@ -5021,17 +5872,17 @@
     },
     {
       "hex": "12.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "11.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "11.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "0": [
@@ -5048,7 +5899,7 @@
     },
     {
       "hex": "12.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "0": [
@@ -5065,12 +5916,12 @@
     },
     {
       "hex": "14.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "15.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "1": [
@@ -5087,12 +5938,12 @@
     },
     {
       "hex": "16.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "16.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "0": [
@@ -5109,7 +5960,7 @@
     },
     {
       "hex": "19.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "0": [
@@ -5126,7 +5977,7 @@
     },
     {
       "hex": "19.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "0": [
@@ -5143,7 +5994,7 @@
     },
     {
       "hex": "18.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "0": [
@@ -5160,7 +6011,7 @@
     },
     {
       "hex": "14.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12,
       "edges": {
         "0": [
@@ -5172,7 +6023,7 @@
     },
     {
       "hex": "15.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12,
       "edges": {
         "1": [
@@ -5189,7 +6040,7 @@
     },
     {
       "hex": "19.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "0": [
@@ -5211,12 +6062,12 @@
     },
     {
       "hex": "18.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
       "hex": "11.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "2": [
@@ -5228,12 +6079,12 @@
     },
     {
       "hex": "11.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "12.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "1": [
@@ -5250,7 +6101,7 @@
     },
     {
       "hex": "13.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12,
       "edges": {
         "0": [
@@ -5267,7 +6118,7 @@
     },
     {
       "hex": "12.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13,
       "edges": {
         "1": [
@@ -5318,7 +6169,7 @@
     },
     {
       "hex": "15.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13,
       "edges": {
         "0": [
@@ -5688,7 +6539,7 @@
     },
     {
       "hex": "20.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "0": [
@@ -5700,12 +6551,12 @@
     },
     {
       "hex": "21.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "21.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12,
       "edges": {
         "0": [
@@ -5766,17 +6617,17 @@
     },
     {
       "hex": "28.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "28.26",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
       "hex": "31.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "1": [
@@ -5800,7 +6651,7 @@
     },
     {
       "hex": "33.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "1": [
@@ -5812,12 +6663,12 @@
     },
     {
       "hex": "34.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "35.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "0": [
@@ -5839,7 +6690,7 @@
     },
     {
       "hex": "35.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "0": [
@@ -5856,7 +6707,7 @@
     },
     {
       "hex": "34.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "1": [
@@ -5868,32 +6719,32 @@
     },
     {
       "hex": "33.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "32.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "31.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "30.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "30.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "36.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12,
       "edges": {
         "0": [
@@ -5910,7 +6761,7 @@
     },
     {
       "hex": "37.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
@@ -6020,12 +6871,12 @@
     },
     {
       "hex": "51.26",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "52.26",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17,
       "edges": {
         "2": [
@@ -6037,12 +6888,12 @@
     },
     {
       "hex": "53.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "54.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
@@ -6062,12 +6913,12 @@
     },
     {
       "hex": "57.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 22
     },
     {
       "hex": "10.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
@@ -6139,7 +6990,7 @@
     },
     {
       "hex": "23.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "0": [
@@ -6185,7 +7036,7 @@
     },
     {
       "hex": "20.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "0": [
@@ -6281,7 +7132,7 @@
     },
     {
       "hex": "18.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12,
       "edges": {
         "2": [
@@ -6351,12 +7202,12 @@
     },
     {
       "hex": "29.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "30.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
@@ -6371,7 +7222,7 @@
     },
     {
       "hex": "31.28",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
@@ -6412,7 +7263,7 @@
     },
     {
       "hex": "28.28",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12,
       "edges": {
         "2": [
@@ -6424,7 +7275,7 @@
     },
     {
       "hex": "29.28",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12,
       "edges": {
         "1": [
@@ -6448,22 +7299,22 @@
     },
     {
       "hex": "31.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
       "hex": "32.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
       "hex": "33.28",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
       "hex": "33.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
@@ -6503,7 +7354,7 @@
     },
     {
       "hex": "20.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "2": [
@@ -6515,17 +7366,17 @@
     },
     {
       "hex": "28.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "27.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "27.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
@@ -6565,22 +7416,22 @@
     },
     {
       "hex": "27.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "27.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "26.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "27.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "1": [
@@ -6604,17 +7455,17 @@
     },
     {
       "hex": "28.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "28.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "28.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6,
       "edges": {
         "1": [
@@ -6631,12 +7482,12 @@
     },
     {
       "hex": "28.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "29.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "1": [
@@ -6648,7 +7499,7 @@
     },
     {
       "hex": "29.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "0": [
@@ -6660,7 +7511,7 @@
     },
     {
       "hex": "29.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "0": [
@@ -6672,12 +7523,12 @@
     },
     {
       "hex": "29.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "29.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
@@ -6704,7 +7555,7 @@
     },
     {
       "hex": "27.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
@@ -6724,12 +7575,12 @@
     },
     {
       "hex": "29.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "26.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "0": [
@@ -6746,22 +7597,22 @@
     },
     {
       "hex": "26.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "25.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "25.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "26.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
@@ -6771,12 +7622,12 @@
     },
     {
       "hex": "24.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "23.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "2": [
@@ -6788,7 +7639,7 @@
     },
     {
       "hex": "22.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "1": [
@@ -6800,32 +7651,32 @@
     },
     {
       "hex": "21.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "20.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "20.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "21.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "22.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "20.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "1": [
@@ -6837,7 +7688,7 @@
     },
     {
       "hex": "21.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "2": [
@@ -6849,7 +7700,7 @@
     },
     {
       "hex": "22.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
@@ -6859,7 +7710,7 @@
     },
     {
       "hex": "22.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2,
       "edges": {
         "2": [
@@ -6871,22 +7722,22 @@
     },
     {
       "hex": "22.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
       "hex": "23.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
       "hex": "23.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
       "hex": "23.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "1": [
@@ -6898,7 +7749,7 @@
     },
     {
       "hex": "24.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "1": [
@@ -6910,12 +7761,12 @@
     },
     {
       "hex": "25.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "26.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "0": [
@@ -6932,7 +7783,7 @@
     },
     {
       "hex": "27.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "1": [
@@ -6944,12 +7795,12 @@
     },
     {
       "hex": "26.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "25.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "2": [
@@ -6961,217 +7812,217 @@
     },
     {
       "hex": "24.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "24.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "25.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "25.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "26.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "27.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "27.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "26.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "25.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "26.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "27.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "27.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "26.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "26.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "25.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "24.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "23.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "23.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "24.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "24.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "25.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "25.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "25.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "26.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "24.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "23.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "22.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "23.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "24.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "25.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "22.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
       "hex": "23.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "24.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "23.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "22.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "21.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "22.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "23.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "24.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "22.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "22.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "22.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "20.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "1": [
@@ -7183,7 +8034,7 @@
     },
     {
       "hex": "21.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "2": [
@@ -7195,7 +8046,7 @@
     },
     {
       "hex": "21.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "0": [
@@ -7207,57 +8058,57 @@
     },
     {
       "hex": "20.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
       "hex": "20.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
       "hex": "21.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
       "hex": "21.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
       "hex": "20.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "20.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "21.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "22.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "22.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "22.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "22.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "1": [
@@ -7269,12 +8120,12 @@
     },
     {
       "hex": "22.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "21.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "1": [
@@ -7286,22 +8137,22 @@
     },
     {
       "hex": "23.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "24.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "24.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "24.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "0": [
@@ -7313,12 +8164,12 @@
     },
     {
       "hex": "25.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "23.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "0": [
@@ -7330,7 +8181,7 @@
     },
     {
       "hex": "23.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "1": [
@@ -7342,22 +8193,22 @@
     },
     {
       "hex": "23.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "23.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "23.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "24.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "2": [
@@ -7381,12 +8232,12 @@
     },
     {
       "hex": "24.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "24.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "1": [
@@ -7398,7 +8249,7 @@
     },
     {
       "hex": "25.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "1": [
@@ -7410,27 +8261,27 @@
     },
     {
       "hex": "26.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "25.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "25.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "25.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "26.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
@@ -7445,7 +8296,7 @@
     },
     {
       "hex": "26.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
@@ -7455,12 +8306,12 @@
     },
     {
       "hex": "10.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "10.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
@@ -7470,7 +8321,7 @@
     },
     {
       "hex": "11.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
@@ -7487,7 +8338,7 @@
     },
     {
       "hex": "10.26",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13,
       "edges": {
         "1": [
@@ -7499,12 +8350,12 @@
     },
     {
       "hex": "11.26",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "12.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13,
       "edges": {
         "1": [
@@ -7521,7 +8372,7 @@
     },
     {
       "hex": "19.34",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "0": [],
@@ -7535,7 +8386,7 @@
     },
     {
       "hex": "18.34",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "1": []
@@ -7543,7 +8394,7 @@
     },
     {
       "hex": "18.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "2": []
@@ -7551,7 +8402,7 @@
     },
     {
       "hex": "12.34",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6,
       "edges": {
         "1": [
@@ -7863,7 +8714,7 @@
     },
     {
       "hex": "01.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 18,
       "edges": {
         "1": [
@@ -8049,7 +8900,7 @@
     },
     {
       "hex": "12.26",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13,
       "edges": {
         "2": [
@@ -8183,7 +9034,7 @@
     },
     {
       "hex": "12.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12,
       "edges": {
         "0": [
@@ -8476,7 +9327,7 @@
     },
     {
       "hex": "30.31",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "2": [
@@ -8488,7 +9339,7 @@
     },
     {
       "hex": "33.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "1": [
@@ -8500,7 +9351,7 @@
     },
     {
       "hex": "32.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "1": [
@@ -8512,7 +9363,7 @@
     },
     {
       "hex": "31.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "1": [
@@ -8554,17 +9405,17 @@
     },
     {
       "hex": "28.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "28.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "32.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "1": [
@@ -8576,12 +9427,12 @@
     },
     {
       "hex": "33.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "33.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "1": [
@@ -8593,7 +9444,7 @@
     },
     {
       "hex": "33.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
@@ -8618,7 +9469,7 @@
     },
     {
       "hex": "38.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
@@ -8650,7 +9501,7 @@
     },
     {
       "hex": "42.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "1": [
@@ -8662,12 +9513,12 @@
     },
     {
       "hex": "42.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "43.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
@@ -8702,7 +9553,7 @@
     },
     {
       "hex": "46.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "0": [
@@ -8714,12 +9565,12 @@
     },
     {
       "hex": "47.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "48.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
@@ -8734,12 +9585,12 @@
     },
     {
       "hex": "47.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "46.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "0": [
@@ -8751,7 +9602,7 @@
     },
     {
       "hex": "48.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "1": [
@@ -8763,7 +9614,7 @@
     },
     {
       "hex": "49.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
@@ -8783,17 +9634,17 @@
     },
     {
       "hex": "55.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "56.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "56.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
@@ -8813,7 +9664,7 @@
     },
     {
       "hex": "57.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
@@ -8823,17 +9674,17 @@
     },
     {
       "hex": "58.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "59.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "60.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "0": [
@@ -8850,12 +9701,12 @@
     },
     {
       "hex": "59.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "57.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
@@ -8875,12 +9726,12 @@
     },
     {
       "hex": "30.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "30.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
@@ -8910,7 +9761,7 @@
     },
     {
       "hex": "28.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8,
       "edges": {
         "2": [
@@ -8922,7 +9773,7 @@
     },
     {
       "hex": "29.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8,
       "edges": {
         "2": [
@@ -8934,7 +9785,7 @@
     },
     {
       "hex": "30.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8,
       "edges": {
         "1": [
@@ -8946,7 +9797,7 @@
     },
     {
       "hex": "31.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8,
       "edges": {
         "1": [
@@ -8963,7 +9814,7 @@
     },
     {
       "hex": "34.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
@@ -8978,12 +9829,12 @@
     },
     {
       "hex": "38.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "41.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8,
       "edges": {
         "0": [
@@ -8995,12 +9846,12 @@
     },
     {
       "hex": "42.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "43.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8,
       "edges": {
         "2": [
@@ -9012,7 +9863,7 @@
     },
     {
       "hex": "44.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8,
       "edges": {
         "1": [
@@ -9024,22 +9875,22 @@
     },
     {
       "hex": "45.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "46.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "46.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "45.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
@@ -9059,12 +9910,12 @@
     },
     {
       "hex": "44.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "46.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8,
       "edges": {
         "0": [
@@ -9081,7 +9932,7 @@
     },
     {
       "hex": "45.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8,
       "edges": {
         "1": [
@@ -9093,27 +9944,27 @@
     },
     {
       "hex": "46.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "47.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "48.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "47.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "47.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8,
       "edges": {
         "2": [
@@ -9125,32 +9976,32 @@
     },
     {
       "hex": "48.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "49.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "50.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "49.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "50.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "49.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
@@ -9160,42 +10011,42 @@
     },
     {
       "hex": "50.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "51.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "52.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "53.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "54.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "55.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "54.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "54.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
@@ -9210,17 +10061,17 @@
     },
     {
       "hex": "57.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "59.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "60.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8,
       "edges": {
         "0": [
@@ -9232,22 +10083,22 @@
     },
     {
       "hex": "61.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "62.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "63.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "59.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
@@ -9257,7 +10108,7 @@
     },
     {
       "hex": "60.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
@@ -9267,47 +10118,47 @@
     },
     {
       "hex": "58.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "57.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "58.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "57.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "58.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "58.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "59.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "62.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "63.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
@@ -9322,17 +10173,17 @@
     },
     {
       "hex": "27.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
       "hex": "27.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
       "hex": "28.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2,
       "edges": {
         "2": [
@@ -9344,7 +10195,7 @@
     },
     {
       "hex": "29.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2,
       "edges": {
         "1": [
@@ -9356,12 +10207,12 @@
     },
     {
       "hex": "31.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
       "hex": "31.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2,
       "edges": {
         "1": [
@@ -9373,7 +10224,7 @@
     },
     {
       "hex": "32.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2,
       "edges": {
         "2": [
@@ -9385,12 +10236,12 @@
     },
     {
       "hex": "33.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
       "hex": "37.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2,
       "edges": {
         "2": [
@@ -9402,32 +10253,32 @@
     },
     {
       "hex": "38.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 2
     },
     {
       "hex": "28.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "29.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "28.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "29.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "30.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "1": [
@@ -9439,52 +10290,52 @@
     },
     {
       "hex": "30.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "31.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "31.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "31.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "30.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "32.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "33.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "33.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "32.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "33.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
@@ -9506,7 +10357,7 @@
     },
     {
       "hex": "36.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "2": [
@@ -9518,42 +10369,42 @@
     },
     {
       "hex": "37.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "38.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "39.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "39.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "40.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "39.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "38.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "37.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "1": [
@@ -9565,32 +10416,32 @@
     },
     {
       "hex": "37.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "36.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "35.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "34.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "34.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3
     },
     {
       "hex": "35.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "1": [
@@ -9607,7 +10458,7 @@
     },
     {
       "hex": "36.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "1": [
@@ -9619,7 +10470,7 @@
     },
     {
       "hex": "37.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 3,
       "edges": {
         "0": [
@@ -9631,7 +10482,7 @@
     },
     {
       "hex": "60.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "0": [
@@ -9648,27 +10499,27 @@
     },
     {
       "hex": "61.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "62.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "63.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "63.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "61.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "0": [
@@ -9685,12 +10536,12 @@
     },
     {
       "hex": "61.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "62.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6,
       "edges": {
         "0": [
@@ -9702,22 +10553,22 @@
     },
     {
       "hex": "63.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "56.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "57.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "56.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
@@ -9747,57 +10598,57 @@
     },
     {
       "hex": "53.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "53.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "54.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "53.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "52.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "51.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "51.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "50.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "51.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "50.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "52.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
@@ -9827,17 +10678,17 @@
     },
     {
       "hex": "46.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "45.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "45.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
@@ -9847,17 +10698,17 @@
     },
     {
       "hex": "43.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "42.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "44.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "2": [
@@ -9869,7 +10720,7 @@
     },
     {
       "hex": "45.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
@@ -9904,17 +10755,17 @@
     },
     {
       "hex": "44.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "44.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "43.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
@@ -9924,7 +10775,7 @@
     },
     {
       "hex": "41.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "0": [
@@ -9936,12 +10787,12 @@
     },
     {
       "hex": "40.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "39.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
@@ -9961,12 +10812,12 @@
     },
     {
       "hex": "35.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "34.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "0": [
@@ -9983,12 +10834,12 @@
     },
     {
       "hex": "34.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "34.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
@@ -10045,7 +10896,7 @@
     },
     {
       "hex": "27.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "0": [
@@ -10057,7 +10908,7 @@
     },
     {
       "hex": "27.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "0": [
@@ -10079,27 +10930,27 @@
     },
     {
       "hex": "34.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "35.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "35.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "35.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "35.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6,
       "edges": {
         "2": [
@@ -10111,17 +10962,17 @@
     },
     {
       "hex": "38.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "39.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "40.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6,
       "edges": {
         "1": [
@@ -10133,12 +10984,12 @@
     },
     {
       "hex": "40.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "41.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6,
       "edges": {
         "0": [
@@ -10160,22 +11011,22 @@
     },
     {
       "hex": "43.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "43.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "43.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "42.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
@@ -10195,117 +11046,117 @@
     },
     {
       "hex": "44.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "41.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "41.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "40.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "43.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "44.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "45.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "46.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "49.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "50.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "51.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "52.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "52.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "52.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "53.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "54.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "55.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "55.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "55.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "55.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "27.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "27.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "28.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
@@ -10320,7 +11171,7 @@
     },
     {
       "hex": "31.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
@@ -10330,42 +11181,42 @@
     },
     {
       "hex": "33.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "34.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "35.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "36.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "37.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "36.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "36.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "36.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "2": [
@@ -10377,7 +11228,7 @@
     },
     {
       "hex": "37.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "2": [
@@ -10389,17 +11240,17 @@
     },
     {
       "hex": "37.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "39.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "41.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
@@ -10409,12 +11260,12 @@
     },
     {
       "hex": "42.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "42.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "1": [
@@ -10426,7 +11277,7 @@
     },
     {
       "hex": "43.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "2": [
@@ -10438,7 +11289,7 @@
     },
     {
       "hex": "41.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "2": [
@@ -10450,12 +11301,12 @@
     },
     {
       "hex": "40.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "39.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "0": [
@@ -10467,237 +11318,237 @@
     },
     {
       "hex": "39.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "40.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "41.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "42.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "43.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "44.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "44.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "44.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "43.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "45.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "46.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "47.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "46.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "47.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "54.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "53.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "53.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "54.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "53.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "52.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "51.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "50.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "49.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "48.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "52.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "52.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "51.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "51.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "50.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "49.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "49.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "48.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "48.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "47.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "45.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "42.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "41.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "40.01",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "41.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "42.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "43.02",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "43.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "42.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "41.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "40.03",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "39.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "38.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "0": [
@@ -10709,7 +11560,7 @@
     },
     {
       "hex": "38.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "1": [
@@ -10721,22 +11572,22 @@
     },
     {
       "hex": "37.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "38.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "38.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "39.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "1": [
@@ -10748,12 +11599,12 @@
     },
     {
       "hex": "41.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "40.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "0": [
@@ -10765,7 +11616,7 @@
     },
     {
       "hex": "40.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "1": [
@@ -10777,7 +11628,7 @@
     },
     {
       "hex": "39.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "1": [
@@ -10789,7 +11640,7 @@
     },
     {
       "hex": "38.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4,
       "edges": {
         "2": [
@@ -10801,107 +11652,107 @@
     },
     {
       "hex": "36.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "36.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "35.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "35.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "34.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "34.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "28.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "28.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "28.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "29.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "29.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "29.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "30.04",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "30.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "30.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "31.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "31.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "32.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "33.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "33.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "32.05",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
@@ -10972,7 +11823,7 @@
     },
     {
       "hex": "29.31",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "1": [
@@ -11014,7 +11865,7 @@
     },
     {
       "hex": "22.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
@@ -11197,7 +12048,7 @@
     },
     {
       "hex": "06.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "2": [
@@ -11209,7 +12060,7 @@
     },
     {
       "hex": "07.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "2": [
@@ -11221,7 +12072,7 @@
     },
     {
       "hex": "08.34",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "1": [
@@ -11233,7 +12084,7 @@
     },
     {
       "hex": "09.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "1": [
@@ -11245,7 +12096,7 @@
     },
     {
       "hex": "10.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "2": [
@@ -11257,7 +12108,7 @@
     },
     {
       "hex": "11.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "2": [
@@ -11358,12 +12209,12 @@
     },
     {
       "hex": "23.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "23.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
@@ -11461,12 +12312,12 @@
     },
     {
       "hex": "08.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "12.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
@@ -11498,12 +12349,12 @@
     },
     {
       "hex": "21.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "22.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
@@ -11518,17 +12369,17 @@
     },
     {
       "hex": "19.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 6
     },
     {
       "hex": "20.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "13.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "2": [
@@ -11540,7 +12391,7 @@
     },
     {
       "hex": "14.34",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "2": [
@@ -11552,7 +12403,7 @@
     },
     {
       "hex": "15.34",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "2": [
@@ -11564,7 +12415,7 @@
     },
     {
       "hex": "16.33",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "2": [
@@ -11576,7 +12427,7 @@
     },
     {
       "hex": "17.33",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
@@ -11652,7 +12503,7 @@
     },
     {
       "hex": "19.33",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5,
       "edges": {
         "0": [
@@ -11664,12 +12515,12 @@
     },
     {
       "hex": "17.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
       "hex": "16.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 5
     },
     {
@@ -11686,27 +12537,27 @@
     },
     {
       "hex": "18.33",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "17.34",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "16.34",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "15.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
       "hex": "14.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 4
     },
     {
@@ -11826,7 +12677,7 @@
     },
     {
       "hex": "32.32",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
@@ -11888,7 +12739,7 @@
     },
     {
       "hex": "35.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12,
       "edges": {
         "1": [
@@ -11930,17 +12781,17 @@
     },
     {
       "hex": "36.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
       "hex": "35.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
       "hex": "36.28",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12,
       "edges": {
         "1": [
@@ -11952,7 +12803,7 @@
     },
     {
       "hex": "36.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12,
       "edges": {
         "0": [
@@ -11964,7 +12815,7 @@
     },
     {
       "hex": "37.26",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
@@ -11984,7 +12835,7 @@
     },
     {
       "hex": "36.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12,
       "edges": {
         "0": [
@@ -11996,7 +12847,7 @@
     },
     {
       "hex": "34.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "1": [
@@ -12008,7 +12859,7 @@
     },
     {
       "hex": "36.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "0": [
@@ -12072,42 +12923,42 @@
     },
     {
       "hex": "31.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "30.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "30.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "29.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "30.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "31.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "31.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "32.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
@@ -12152,7 +13003,7 @@
     },
     {
       "hex": "37.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
@@ -12162,12 +13013,12 @@
     },
     {
       "hex": "33.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "32.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
@@ -12192,7 +13043,7 @@
     },
     {
       "hex": "30.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
@@ -12202,27 +13053,27 @@
     },
     {
       "hex": "32.28",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "33.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "33.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "34.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "35.28",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
@@ -12232,62 +13083,62 @@
     },
     {
       "hex": "34.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
       "hex": "34.28",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
       "hex": "35.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
       "hex": "30.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
       "hex": "31.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
       "hex": "32.34",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
       "hex": "33.34",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
       "hex": "33.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
       "hex": "32.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
       "hex": "34.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "34.34",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "34.33",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
@@ -12302,32 +13153,32 @@
     },
     {
       "hex": "34.32",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "33.33",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "32.33",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "31.34",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "30.34",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "29.35",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
@@ -12377,7 +13228,7 @@
     },
     {
       "hex": "37.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13,
       "edges": {
         "0": [
@@ -12477,7 +13328,7 @@
     },
     {
       "hex": "39.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13,
       "edges": {
         "0": [
@@ -12556,7 +13407,7 @@
     },
     {
       "hex": "40.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12,
       "edges": {
         "2": [
@@ -12605,7 +13456,7 @@
     },
     {
       "hex": "49.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
@@ -12650,7 +13501,7 @@
     },
     {
       "hex": "59.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
@@ -12682,47 +13533,47 @@
     },
     {
       "hex": "63.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
       "hex": "63.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
       "hex": "63.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
       "hex": "62.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
       "hex": "62.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
       "hex": "63.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
       "hex": "63.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "63.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "62.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "0": [
@@ -12734,7 +13585,7 @@
     },
     {
       "hex": "61.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "1": [
@@ -12746,42 +13597,42 @@
     },
     {
       "hex": "60.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "60.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "59.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "58.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "57.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "58.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "59.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "58.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
@@ -12836,17 +13687,17 @@
     },
     {
       "hex": "49.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "48.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "47.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "0": [
@@ -12863,12 +13714,12 @@
     },
     {
       "hex": "47.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "47.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "1": [
@@ -12880,7 +13731,7 @@
     },
     {
       "hex": "48.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "0": [
@@ -12892,7 +13743,7 @@
     },
     {
       "hex": "48.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "0": [
@@ -12904,7 +13755,7 @@
     },
     {
       "hex": "48.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "1": [
@@ -12958,7 +13809,7 @@
     },
     {
       "hex": "41.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "0": [
@@ -12970,7 +13821,7 @@
     },
     {
       "hex": "42.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "0": [
@@ -12982,7 +13833,7 @@
     },
     {
       "hex": "47.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
@@ -13002,17 +13853,17 @@
     },
     {
       "hex": "46.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "46.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "46.09",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "1": [
@@ -13024,7 +13875,7 @@
     },
     {
       "hex": "47.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "0": [
@@ -13036,7 +13887,7 @@
     },
     {
       "hex": "47.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "1": [
@@ -13065,12 +13916,12 @@
     },
     {
       "hex": "48.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "49.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
@@ -13085,17 +13936,17 @@
     },
     {
       "hex": "50.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "51.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "51.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
@@ -13125,12 +13976,12 @@
     },
     {
       "hex": "56.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "57.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
@@ -13145,22 +13996,22 @@
     },
     {
       "hex": "58.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "58.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "59.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "60.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "1": [
@@ -13172,12 +14023,12 @@
     },
     {
       "hex": "61.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "61.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "0": [
@@ -13189,22 +14040,22 @@
     },
     {
       "hex": "62.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "63.08",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "63.07",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
       "hex": "62.06",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
@@ -13214,12 +14065,12 @@
     },
     {
       "hex": "46.28",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
       "hex": "47.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12,
       "edges": {
         "2": [
@@ -13231,12 +14082,12 @@
     },
     {
       "hex": "48.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
       "hex": "47.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 12
     },
     {
@@ -13306,7 +14157,7 @@
     },
     {
       "hex": "48.28",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13,
       "edges": {
         "1": [
@@ -13318,7 +14169,7 @@
     },
     {
       "hex": "49.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13,
       "edges": {
         "0": [
@@ -13335,7 +14186,7 @@
     },
     {
       "hex": "49.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
@@ -13435,7 +14286,7 @@
     },
     {
       "hex": "36.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "2": [
@@ -13447,7 +14298,7 @@
     },
     {
       "hex": "37.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "0": [
@@ -13459,7 +14310,7 @@
     },
     {
       "hex": "37.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "0": [
@@ -13471,17 +14322,17 @@
     },
     {
       "hex": "37.28",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "38.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "37.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
@@ -13506,12 +14357,12 @@
     },
     {
       "hex": "45.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
       "hex": "46.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11,
       "edges": {
         "2": [
@@ -13523,7 +14374,7 @@
     },
     {
       "hex": "41.33",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 11
     },
     {
@@ -13553,7 +14404,7 @@
     },
     {
       "hex": "37.31",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "1": [
@@ -13565,7 +14416,7 @@
     },
     {
       "hex": "38.28",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
@@ -13595,7 +14446,7 @@
     },
     {
       "hex": "44.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "1": [
@@ -13607,7 +14458,7 @@
     },
     {
       "hex": "45.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10,
       "edges": {
         "2": [
@@ -13619,7 +14470,7 @@
     },
     {
       "hex": "44.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 10
     },
     {
@@ -13649,7 +14500,7 @@
     },
     {
       "hex": "42.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "2": [
@@ -13661,7 +14512,7 @@
     },
     {
       "hex": "43.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "2": [
@@ -13673,32 +14524,32 @@
     },
     {
       "hex": "41.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "40.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "39.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "38.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "38.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9
     },
     {
       "hex": "38.31",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 9,
       "edges": {
         "1": [
@@ -13730,7 +14581,7 @@
     },
     {
       "hex": "39.33",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8,
       "edges": {
         "0": [
@@ -13742,7 +14593,7 @@
     },
     {
       "hex": "39.32",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8,
       "edges": {
         "0": [
@@ -13754,17 +14605,17 @@
     },
     {
       "hex": "39.31",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "40.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8
     },
     {
       "hex": "41.31",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8,
       "edges": {
         "2": [
@@ -13776,7 +14627,7 @@
     },
     {
       "hex": "40.31",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 8,
       "edges": {
         "0": [
@@ -13803,12 +14654,12 @@
     },
     {
       "hex": "40.33",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7
     },
     {
       "hex": "40.32",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 7,
       "edges": {
         "0": [
@@ -13905,7 +14756,7 @@
     },
     {
       "hex": "50.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
@@ -13922,7 +14773,7 @@
     },
     {
       "hex": "37.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14,
       "edges": {
         "0": [
@@ -13934,12 +14785,12 @@
     },
     {
       "hex": "36.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
       "hex": "35.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14,
       "edges": {
         "1": [
@@ -13951,12 +14802,12 @@
     },
     {
       "hex": "34.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
       "hex": "34.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14,
       "edges": {
         "2": [
@@ -14005,7 +14856,7 @@
     },
     {
       "hex": "39.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
@@ -14094,12 +14945,12 @@
     },
     {
       "hex": "59.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "60.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13,
       "edges": {
         "0": [
@@ -14111,17 +14962,17 @@
     },
     {
       "hex": "59.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "59.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "60.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13,
       "edges": {
         "0": [
@@ -14138,12 +14989,12 @@
     },
     {
       "hex": "61.13",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "61.12",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13,
       "edges": {
         "2": [
@@ -14155,12 +15006,12 @@
     },
     {
       "hex": "60.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "60.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
@@ -14170,12 +15021,12 @@
     },
     {
       "hex": "62.10",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "62.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13,
       "edges": {
         "2": [
@@ -14187,17 +15038,17 @@
     },
     {
       "hex": "61.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "62.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "62.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
@@ -14207,12 +15058,12 @@
     },
     {
       "hex": "63.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 13
     },
     {
       "hex": "61.11",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
@@ -14232,7 +15083,7 @@
     },
     {
       "hex": "61.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
@@ -14242,7 +15093,7 @@
     },
     {
       "hex": "59.15",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14,
       "edges": {
         "0": [
@@ -14259,7 +15110,7 @@
     },
     {
       "hex": "60.14",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
@@ -14309,12 +15160,12 @@
     },
     {
       "hex": "62.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
       "hex": "63.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
@@ -14324,7 +15175,7 @@
     },
     {
       "hex": "62.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14,
       "edges": {
         "1": [
@@ -14336,7 +15187,7 @@
     },
     {
       "hex": "63.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 14
     },
     {
@@ -14361,7 +15212,7 @@
     },
     {
       "hex": "36.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15,
       "edges": {
         "0": [
@@ -14383,7 +15234,7 @@
     },
     {
       "hex": "37.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15,
       "edges": {
         "0": [
@@ -14395,7 +15246,7 @@
     },
     {
       "hex": "35.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15,
       "edges": {
         "2": [
@@ -14407,7 +15258,7 @@
     },
     {
       "hex": "35.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15,
       "edges": {
         "0": [
@@ -14424,7 +15275,7 @@
     },
     {
       "hex": "34.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15,
       "edges": {
         "0": [
@@ -14516,7 +15367,7 @@
     },
     {
       "hex": "37.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15,
       "edges": {
         "0": [
@@ -14533,7 +15384,7 @@
     },
     {
       "hex": "37.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15,
       "edges": {
         "1": [
@@ -14553,7 +15404,7 @@
     },
     {
       "hex": "38.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15,
       "edges": {
         "2": [
@@ -14595,7 +15446,7 @@
     },
     {
       "hex": "38.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15,
       "edges": {
         "0": [
@@ -14691,7 +15542,7 @@
     },
     {
       "hex": "35.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16,
       "edges": {
         "0": [
@@ -14713,7 +15564,7 @@
     },
     {
       "hex": "36.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16,
       "edges": {
         "1": [
@@ -14730,7 +15581,7 @@
     },
     {
       "hex": "36.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16,
       "edges": {
         "0": [
@@ -14750,7 +15601,7 @@
     },
     {
       "hex": "36.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16,
       "edges": {
         "0": [
@@ -14859,12 +15710,12 @@
     },
     {
       "hex": "47.33",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "46.33",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
@@ -15004,7 +15855,7 @@
     },
     {
       "hex": "51.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
@@ -15074,7 +15925,7 @@
     },
     {
       "hex": "50.32",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
@@ -15124,7 +15975,7 @@
     },
     {
       "hex": "51.32",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
@@ -15139,7 +15990,7 @@
     },
     {
       "hex": "52.31",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
@@ -15154,12 +16005,12 @@
     },
     {
       "hex": "53.28",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "52.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
@@ -15194,7 +16045,7 @@
     },
     {
       "hex": "55.28",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
@@ -15239,12 +16090,12 @@
     },
     {
       "hex": "51.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "51.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
@@ -15289,7 +16140,7 @@
     },
     {
       "hex": "51.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17,
       "edges": {
         "1": [
@@ -15301,7 +16152,7 @@
     },
     {
       "hex": "51.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17,
       "edges": {
         "0": [
@@ -15318,37 +16169,37 @@
     },
     {
       "hex": "51.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "51.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "52.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "53.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "54.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "54.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "54.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17,
       "edges": {
         "1": [
@@ -15365,72 +16216,72 @@
     },
     {
       "hex": "55.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "55.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "56.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "56.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "57.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "57.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "56.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "56.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "55.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "55.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "54.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "53.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "53.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
       "hex": "52.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17,
       "edges": {
         "0": [
@@ -15442,7 +16293,7 @@
     },
     {
       "hex": "52.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17,
       "edges": {
         "0": [
@@ -15459,7 +16310,7 @@
     },
     {
       "hex": "52.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 17
     },
     {
@@ -15573,12 +16424,12 @@
     },
     {
       "hex": "58.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "59.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16,
       "edges": {
         "0": [
@@ -15605,7 +16456,7 @@
     },
     {
       "hex": "59.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
@@ -15615,7 +16466,7 @@
     },
     {
       "hex": "58.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16,
       "edges": {
         "0": [
@@ -15632,7 +16483,7 @@
     },
     {
       "hex": "59.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
@@ -15642,12 +16493,12 @@
     },
     {
       "hex": "58.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "57.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16,
       "edges": {
         "0": [
@@ -15664,12 +16515,12 @@
     },
     {
       "hex": "56.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "55.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16,
       "edges": {
         "1": [
@@ -15681,12 +16532,12 @@
     },
     {
       "hex": "55.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "56.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16,
       "edges": {
         "0": [
@@ -15698,7 +16549,7 @@
     },
     {
       "hex": "57.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
@@ -15708,32 +16559,32 @@
     },
     {
       "hex": "57.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "58.19",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "55.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "54.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "53.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "53.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16,
       "edges": {
         "0": [
@@ -15750,7 +16601,7 @@
     },
     {
       "hex": "54.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16,
       "edges": {
         "2": [
@@ -15762,12 +16613,12 @@
     },
     {
       "hex": "55.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "55.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16,
       "edges": {
         "2": [
@@ -15779,22 +16630,22 @@
     },
     {
       "hex": "56.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "57.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "58.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "59.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
@@ -15828,12 +16679,12 @@
     },
     {
       "hex": "58.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "57.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16,
       "edges": {
         "2": [
@@ -15845,37 +16696,37 @@
     },
     {
       "hex": "53.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "52.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "51.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "52.23",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "52.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "52.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "53.26",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
@@ -15892,7 +16743,7 @@
     },
     {
       "hex": "50.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15,
       "edges": {
         "2": [
@@ -15956,7 +16807,7 @@
     },
     {
       "hex": "59.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15,
       "edges": {
         "0": [
@@ -15968,7 +16819,7 @@
     },
     {
       "hex": "60.16",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
@@ -16003,22 +16854,22 @@
     },
     {
       "hex": "59.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
       "hex": "58.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
       "hex": "57.22",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
       "hex": "57.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
@@ -16050,7 +16901,7 @@
     },
     {
       "hex": "61.24",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15,
       "edges": {
         "1": [
@@ -16072,7 +16923,7 @@
     },
     {
       "hex": "63.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
@@ -16087,57 +16938,57 @@
     },
     {
       "hex": "59.26",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
       "hex": "58.26",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
       "hex": "57.26",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
       "hex": "56.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
       "hex": "55.26",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
       "hex": "54.25",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
       "hex": "56.26",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
       "hex": "57.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 15
     },
     {
       "hex": "54.26",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "55.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
       "hex": "56.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
@@ -16152,7 +17003,7 @@
     },
     {
       "hex": "59.27",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 16
     },
     {
@@ -16187,12 +17038,12 @@
     },
     {
       "hex": "52.32",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 18
     },
     {
       "hex": "54.32",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 18
     },
     {
@@ -16342,12 +17193,12 @@
     },
     {
       "hex": "55.32",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 19
     },
     {
       "hex": "53.32",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 19
     },
     {
@@ -16397,27 +17248,27 @@
     },
     {
       "hex": "58.29",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 21
     },
     {
       "hex": "55.31",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 21
     },
     {
       "hex": "54.31",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 20
     },
     {
       "hex": "56.30",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 22
     },
     {
       "hex": "53.21",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 18,
       "edges": {
         "2": [
@@ -16429,7 +17280,7 @@
     },
     {
       "hex": "52.20",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 18,
       "edges": {
         "1": [
@@ -16456,22 +17307,22 @@
     },
     {
       "hex": "54.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 18
     },
     {
       "hex": "55.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 18
     },
     {
       "hex": "54.17",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 18
     },
     {
       "hex": "53.18",
-      "terrain": "unknown",
+      "terrain": "clear",
       "elevation": 18
     },
     {
