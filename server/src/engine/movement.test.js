@@ -472,7 +472,7 @@ describe('movementPath', () => {
 
   it('adjacent clear-terrain hexes cost 1 for line formation', () => {
     // LOB §3 / SM movement chart — clear terrain = 1 MP for line
-    const result = movementPath('19.23', '20.23', 'line', scenario, mapData);
+    const result = movementPath('29.22', '30.22', 'line', scenario, mapData);
     expect(result.totalCost).toBe(1);
   });
 

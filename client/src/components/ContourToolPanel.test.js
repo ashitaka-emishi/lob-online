@@ -45,11 +45,11 @@ describe('ContourToolPanel', () => {
     expect(cfg.grid.weight).toBe('faint');
   });
 
-  it('emitted overlay-config has hexFill with Elevation info toggleLabel', () => {
+  it('emitted overlay-config has hexFill with alwaysOn true and a fillFn', () => {
     const wrapper = mount(ContourToolPanel);
     const cfg = wrapper.emitted('overlay-config').at(-1)[0];
-    expect(cfg.hexFill.toggleLabel).toBe('Elevation info');
-    expect(cfg.hexFill.alwaysOn).toBe(false);
+    expect(cfg.hexFill.alwaysOn).toBe(true);
+    expect(typeof cfg.hexFill.fillFn).toBe('function');
   });
 
   it('hexFill fillFn returns null when elevation info is off', () => {
@@ -59,11 +59,10 @@ describe('ContourToolPanel', () => {
     expect(result).toBeNull();
   });
 
-  it('hexFill fillFn returns hsl color when elevation info is on', async () => {
+  it('hexFill fillFn returns hsl color when elevation info checkbox is checked', async () => {
     const wrapper = mount(ContourToolPanel, { props: { elevationLevels: 22 } });
-    // Simulate turning elevation info on via overlay-toggle
-    wrapper.vm.onOverlayToggle('hexFill');
-    await wrapper.vm.$nextTick();
+    const checkbox = wrapper.find('.elevation-toggle input[type="checkbox"]');
+    await checkbox.setValue(true);
     const cfg = wrapper.emitted('overlay-config').at(-1)[0];
     const result = cfg.hexFill.fillFn({ elevation: 5 });
     expect(result).toMatch(/^hsl\(/);
@@ -75,10 +74,10 @@ describe('ContourToolPanel', () => {
     expect(cfg.hexLabel).toBeUndefined();
   });
 
-  it('hexLabel added to config when elevation info is on', async () => {
+  it('hexLabel added to config when elevation info checkbox is checked', async () => {
     const wrapper = mount(ContourToolPanel);
-    wrapper.vm.onOverlayToggle('hexFill');
-    await wrapper.vm.$nextTick();
+    const checkbox = wrapper.find('.elevation-toggle input[type="checkbox"]');
+    await checkbox.setValue(true);
     const cfg = wrapper.emitted('overlay-config').at(-1)[0];
     expect(cfg.hexLabel).toBeTruthy();
     expect(cfg.hexLabel.labelFn({ elevation: 7 })).toBe('7');

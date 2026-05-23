@@ -691,7 +691,7 @@ onUnmounted(() => {
           </button>
           <div v-if="openPanel === 'road'" class="accordion-hex-content">
             <RoadToolPanel
-              :selected-type="road.selectedType"
+              :selected-type="road.selectedType.value"
               :get-edge-features="getEdgeFeaturesAt"
               @type-change="road.onTypeChange"
               @edge-paint="road.onEdgePaint"
@@ -716,7 +716,7 @@ onUnmounted(() => {
           </button>
           <div v-if="openPanel === 'stream'" class="accordion-hex-content">
             <StreamWallToolPanel
-              :selected-type="stream.selectedType"
+              :selected-type="stream.selectedType.value"
               :get-edge-features="getEdgeFeaturesAt"
               @type-change="stream.onTypeChange"
               @edge-paint="stream.onEdgePaint"
@@ -741,7 +741,7 @@ onUnmounted(() => {
           </button>
           <div v-if="openPanel === 'contour'" class="accordion-hex-content">
             <ContourToolPanel
-              :selected-type="contour.selectedType"
+              :selected-type="contour.selectedType.value"
               :elevation-levels="elevationLevels"
               @type-change="contour.onTypeChange"
               @edge-paint="contour.onEdgePaint"

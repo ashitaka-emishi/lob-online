@@ -35,10 +35,6 @@ const elevationInfoEnabled = ref(false);
 
 const palette = computed(() => elevationTintPalette(props.elevationLevels));
 
-function onOverlayToggle(key) {
-  if (key === 'hexFill') elevationInfoEnabled.value = !elevationInfoEnabled.value;
-}
-
 // ── Edge event routing ──────────────────────────────────────────────────────
 
 function handleEdgeClick(hexId, faceIndex) {
@@ -73,8 +69,7 @@ const ownOverlayConfig = computed(() => {
       featureGroups: CONTOUR_GROUPS,
     },
     hexFill: {
-      alwaysOn: false,
-      toggleLabel: 'Elevation info',
+      alwaysOn: true,
       fillFn: hexFillFn,
     },
   };
@@ -95,7 +90,6 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
   <EdgeToolPanelShell
     :overlay-config="ownOverlayConfig"
     :help-text="HELP_TEXT"
-    @overlay-toggle="onOverlayToggle"
     @clear-all="emit('edge-clear-all', CONTOUR_TYPES)"
   >
     <!-- Contour type chooser -->
@@ -110,7 +104,7 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
         <span
           class="type-swatch"
           :style="{
-            background: group.color /* hardcoded hex constant from CONTOUR_GROUPS */,
+            background: group.color,
             height: `${group.strokeWidth}px`,
             width: '24px',
           }"
@@ -119,8 +113,28 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
       </button>
     </div>
 
+    <label class="elevation-toggle">
+      <input v-model="elevationInfoEnabled" type="checkbox" />
+      Show elevation overlay
+    </label>
+
     <div class="tool-hint">Click an edge to paint. Right-click to remove.</div>
   </EdgeToolPanelShell>
 </template>
 
-<style scoped></style>
+<style scoped>
+.elevation-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #a09880;
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+
+.elevation-toggle input[type='checkbox'] {
+  accent-color: #7aab3e;
+  cursor: pointer;
+}
+</style>
