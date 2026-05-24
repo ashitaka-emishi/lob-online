@@ -3,6 +3,7 @@ import {
   TERRAIN_COLORS,
   ROAD_GROUPS,
   STREAM_WALL_GROUPS,
+  CONTOUR_TYPES,
   CONTOUR_GROUPS,
   FORD_BRIDGE_SYMBOLS,
 } from './feature-types.js';
@@ -78,6 +79,26 @@ describe('feature-types', () => {
       const allTypes = STREAM_WALL_GROUPS.flatMap((g) => g.types);
       expect(allTypes).toContain('stream');
       expect(allTypes).toContain('stoneWall');
+    });
+  });
+
+  describe('CONTOUR_TYPES', () => {
+    it('exports an array of four contour type strings', () => {
+      expect(Array.isArray(CONTOUR_TYPES)).toBe(true);
+      expect(CONTOUR_TYPES).toHaveLength(4);
+    });
+
+    it('contains elevation, slope, extremeSlope, verticalSlope', () => {
+      expect(CONTOUR_TYPES).toContain('elevation');
+      expect(CONTOUR_TYPES).toContain('slope');
+      expect(CONTOUR_TYPES).toContain('extremeSlope');
+      expect(CONTOUR_TYPES).toContain('verticalSlope');
+    });
+
+    it('is consistent with CONTOUR_GROUPS types', () => {
+      const groupTypes = CONTOUR_GROUPS.flatMap((g) => g.types);
+      expect(CONTOUR_TYPES).toEqual(expect.arrayContaining(groupTypes));
+      expect(groupTypes).toEqual(expect.arrayContaining(CONTOUR_TYPES));
     });
   });
 

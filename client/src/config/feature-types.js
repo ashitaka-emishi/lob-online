@@ -45,6 +45,9 @@ export const STREAM_WALL_GROUPS = [
   { types: ['stoneWall'], color: '#888888', strokeWidth: 3 },
 ];
 
+/** All contour feature type strings, ordered from lowest to highest severity. */
+export const CONTOUR_TYPES = ['elevation', 'slope', 'extremeSlope', 'verticalSlope'];
+
 /** Contour / slope feature groups ordered from lowest to highest severity. */
 export const CONTOUR_GROUPS = [
   { types: ['elevation'], color: '#aaaaaa', strokeWidth: 2 },

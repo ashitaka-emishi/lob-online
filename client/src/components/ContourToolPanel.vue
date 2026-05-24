@@ -1,10 +1,8 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import EdgeToolPanelShell from './EdgeToolPanelShell.vue';
-import { CONTOUR_GROUPS } from '../config/feature-types.js';
+import { CONTOUR_GROUPS, CONTOUR_TYPES } from '../config/feature-types.js';
 import { elevationTintPalette, tintForLevel } from '../formulas/elevation.js';
-
-const CONTOUR_TYPES = ['elevation', 'slope', 'extremeSlope', 'verticalSlope'];
 
 const HELP_TEXT =
   'Click an edge to paint the selected contour type. Right-click to remove it. ' +
