@@ -5,15 +5,7 @@ import { TERRAIN_COLORS } from '../config/feature-types.js';
 defineProps({
   terrainTypes: {
     type: Array,
-    default: () => [
-      'unknown',
-      'clear',
-      'woods',
-      'slopingGround',
-      'woodedSloping',
-      'orchard',
-      'marsh',
-    ],
+    default: () => ['clear', 'woods', 'slopingGround', 'woodedSloping', 'orchard', 'marsh'],
   },
   paintTerrain: {
     type: String,
@@ -68,7 +60,7 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
 
 <template>
   <div class="terrain-tool-panel">
-    <div class="terrain-palette">
+    <div class="terrain-palette" role="group" aria-label="Terrain type">
       <button
         v-for="t in terrainTypes"
         :key="t"
@@ -79,6 +71,7 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
       >
         <span
           class="terrain-swatch"
+          aria-hidden="true"
           :style="TERRAIN_COLORS[t] ? { backgroundColor: TERRAIN_COLORS[t] } : {}"
         />
         <span class="terrain-name">{{ TERRAIN_LABELS[t] ?? t }}</span>
@@ -89,9 +82,9 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
         :aria-pressed="paintTerrain === BUILDING_TYPE ? 'true' : 'false'"
         @click="emit('terrain-change', BUILDING_TYPE)"
       >
-        <span class="terrain-swatch" />
-        <span class="terrain-icon">{{ TERRAIN_ICONS.building }}</span>
-        <span class="terrain-name">Building</span>
+        <span class="terrain-swatch" aria-hidden="true" />
+        <span class="terrain-icon" aria-hidden="true">{{ TERRAIN_ICONS.building }}</span>
+        <span class="terrain-name">{{ TERRAIN_LABELS[BUILDING_TYPE] ?? BUILDING_TYPE }}</span>
       </button>
     </div>
 

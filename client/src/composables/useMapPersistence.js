@@ -92,9 +92,10 @@ export function useMapPersistence({
     pendingTimers.clear();
   }
 
-  // Data-ingress migration: hexes created during edge painting get terrain:'unknown'
-  // as a placeholder. Convert to 'clear' at load time so stale unknown terrain values
-  // never persist into the rendered map state.
+  // Data-ingress migration: terrain:'unknown' is used as a placeholder in two
+  // producers — hexes auto-created during edge painting, and any legacy map data
+  // predating the 'clear' default. Convert to 'clear' at all three load paths
+  // (server fetch, draft restore, pull confirm) so stale values never reach render.
   function migrateUnknownTerrain(data) {
     if (!data?.hexes) return;
     for (const hex of data.hexes) {

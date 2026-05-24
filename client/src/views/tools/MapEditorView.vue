@@ -333,7 +333,7 @@ const seedHexIdsArray = computed(() => [...seedHexIds.value]);
 
 const terrainTypes = computed(() => {
   if (mapData.value?.terrainTypes) return mapData.value.terrainTypes;
-  return ['unknown', 'clear', 'woods', 'slopingGround', 'woodedSloping', 'orchard', 'marsh'];
+  return ['clear', 'woods', 'slopingGround', 'woodedSloping', 'orchard', 'marsh'];
 });
 
 // M3: watch-based hexIndex — only rebuilds on structural changes (length / full load),

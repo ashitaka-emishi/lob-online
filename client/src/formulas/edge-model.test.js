@@ -185,6 +185,22 @@ describe('formulas/edge-model', () => {
       expect(result).not.toContainEqual({ type: 'elevation' });
       expect(result.some((f) => f === 'road' || f?.type === 'road')).toBe(true);
     });
+
+    it('does not mutate the existingFeatures array', () => {
+      // L4: immutability — caller's array must remain unchanged
+      const existing = [{ type: 'elevation' }];
+      applyContourPaint(existing, 'slope');
+      expect(existing).toEqual([{ type: 'elevation' }]);
+    });
+
+    it('non-CONTOUR_TYPES newType still strips existing contour features', () => {
+      // L3: documents behavior for out-of-spec input — the filter strips based on
+      // EXISTING features being in CONTOUR_TYPES, not on newType being in CONTOUR_TYPES.
+      // Callers must only pass valid CONTOUR_TYPES values (see JSDoc).
+      const result = applyContourPaint([{ type: 'elevation' }], 'unknownType');
+      expect(result).not.toContainEqual({ type: 'elevation' }); // elevation stripped
+      expect(result).toContainEqual({ type: 'unknownType' });
+    });
   });
 
   describe('removeEdgeFeature(hexMap, hexId, faceIndex, type, gridSpec)', () => {

@@ -104,7 +104,7 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
     @clear-all="emit('edge-clear-all', CONTOUR_TYPES)"
   >
     <!-- Contour type chooser -->
-    <div class="type-chooser">
+    <div class="type-chooser" role="group" aria-label="Contour type">
       <button
         v-for="group in CONTOUR_GROUPS"
         :key="group.types[0]"
@@ -115,8 +115,9 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
       >
         <span
           class="type-swatch"
+          aria-hidden="true"
           :style="{
-            background: group.color /* hardcoded hex constant from CONTOUR_GROUPS */,
+            background: group.color,
             height: `${group.strokeWidth}px`,
             width: '24px',
           }"

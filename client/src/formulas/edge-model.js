@@ -104,8 +104,13 @@ export function validateCoexistence(existingFeatures, newType) {
  * function enforces the rule that only ONE contour type may exist per edge —
  * replacing rather than co-existing. All non-contour features are preserved.
  *
- * @param {Array<string|{type:string}>} existingFeatures - current edge features
- * @param {string} newType - contour type to paint
+ * Output shape: existing string features are preserved as-is; the new contour
+ * entry is appended as an object `{ type: newType }`. Mixed arrays (strings + objects)
+ * are intentional — existing road/stream features remain strings for backward
+ * compatibility.
+ *
+ * @param {Array<string|{type:string}>} existingFeatures - current edge features (not mutated)
+ * @param {string} newType - contour type to paint (must be a value in CONTOUR_TYPES)
  * @returns {Array<string|{type:string}>|null}
  */
 export function applyContourPaint(existingFeatures, newType) {

@@ -572,6 +572,41 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 
+  it('edge-click with Contour panel open paints contour feature and marks draft dirty', async () => {
+    // M4: handleContourPaint integration — edge-click routes through EDGE_DISPATCH to
+    // applyContourPaint, which mutates the hex's edge array and triggers onMutated().
+    vi.useFakeTimers();
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    // Open Contour Tool panel so EDGE_DISPATCH routes to handleContourPaint
+    const headers = wrapper.findAll('button.accordion-header');
+    const contourHeader = headers.find((h) => h.text().includes('Contour Tool'));
+    await contourHeader.trigger('click');
+    await flushPromises();
+
+    // Emit edge-click from the HexMapOverlay stub (default contour type: 'elevation')
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    await overlay.vm.$emit('edge-click', { hexId: '01.01', dir: 'N' });
+    await flushPromises();
+
+    // Advance past the 1000ms draft-save debounce — setItem signals onMutated fired
+    vi.advanceTimersByTime(1100);
+    expect(localStorage.setItem).toHaveBeenCalled();
+
+    // Second click with same args: applyContourPaint returns null (idempotent)
+    // — onMutated is not called again, so no additional debounced setItem
+    const callsBefore = localStorage.setItem.mock.calls.length;
+    await overlay.vm.$emit('edge-click', { hexId: '01.01', dir: 'N' });
+    await flushPromises();
+    vi.advanceTimersByTime(1100);
+    expect(localStorage.setItem.mock.calls.length).toBe(callsBefore);
+
+    vi.useRealTimers();
+    wrapper.unmount();
+  });
+
   it('save success clears the v2 localStorage draft key', async () => {
     const fetchMock = vi
       .fn()

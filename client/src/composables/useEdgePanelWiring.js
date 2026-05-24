@@ -41,6 +41,8 @@ export function useEdgePanelWiring(defaultType, deps) {
 
   // reactive() auto-unwraps the selectedType ref so callers access road.selectedType
   // directly (no .value needed), matching Vue 3 template auto-unwrap behaviour.
+  // Do NOT destructure the return value — destructuring breaks reactivity by extracting
+  // raw values from the reactive proxy at the moment of destructuring.
   return reactive({
     selectedType,
     onTypeChange,

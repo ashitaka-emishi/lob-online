@@ -427,6 +427,34 @@ describe('useMapPersistence', () => {
       await fetchMapData();
       expect(mapData.value.hexes[0].terrain).toBe('clear');
     });
+
+    it('migration preserves edges on hexes with unknown terrain', async () => {
+      // M5: round-trip — terrain migrated to clear AND edges survive intact
+      mockFetch({
+        hexes: [{ hex: '01.01', terrain: 'unknown', edges: { 0: [{ type: 'elevation' }] } }],
+        _savedAt: 500,
+      });
+      const {
+        state: { mapData },
+        actions: { fetchMapData },
+      } = useMapPersistence(makeArgs());
+      await fetchMapData();
+      expect(mapData.value.hexes[0].terrain).toBe('clear');
+      expect(mapData.value.hexes[0].edges[0]).toEqual([{ type: 'elevation' }]);
+    });
+
+    it('migration is a no-op on already-clean data', async () => {
+      // L5: running migration on data with no unknown terrain must not mutate it
+      const originalHex = { hex: '01.01', terrain: 'clear' };
+      mockFetch({ hexes: [originalHex], _savedAt: 500 });
+      const {
+        state: { mapData },
+        actions: { fetchMapData },
+      } = useMapPersistence(makeArgs());
+      await fetchMapData();
+      expect(mapData.value.hexes[0].terrain).toBe('clear');
+      expect(mapData.value.hexes.length).toBe(1);
+    });
   });
 
   describe('pullFromServer', () => {

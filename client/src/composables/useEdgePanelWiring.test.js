@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { ref } from 'vue';
+import { ref, watchEffect } from 'vue';
 import { useEdgePanelWiring } from './useEdgePanelWiring.js';
 
 describe('useEdgePanelWiring', () => {
@@ -70,5 +70,23 @@ describe('useEdgePanelWiring', () => {
     expect(result.selectedType).toBe('trail');
     result.onTypeChange('road');
     expect(result.selectedType).toBe('road');
+  });
+
+  it('selectedType is reactive — watchEffect re-fires after onTypeChange', () => {
+    // L7: reactive() wrapping ensures watchers track selectedType changes.
+    // flush:'sync' runs the effect immediately on each reactive mutation.
+    const deps = makeDeps();
+    const result = useEdgePanelWiring('trail', deps);
+    const seen = [];
+    const stop = watchEffect(
+      () => {
+        seen.push(result.selectedType);
+      },
+      { flush: 'sync' }
+    );
+    result.onTypeChange('road');
+    result.onTypeChange('pike');
+    stop();
+    expect(seen).toEqual(['trail', 'road', 'pike']);
   });
 });
