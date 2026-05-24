@@ -565,10 +565,10 @@ describe('MapEditorView', () => {
     await contourHeader.trigger('click');
     await flushPromises();
     const text = wrapper.text();
-    expect(text).toContain('elevation');
-    expect(text).toContain('slope');
-    expect(text).toContain('extremeSlope');
-    expect(text).toContain('verticalSlope');
+    expect(text).toContain('Elevation');
+    expect(text).toContain('Slope');
+    expect(text).toContain('Extreme Slope');
+    expect(text).toContain('Vertical Slope');
     wrapper.unmount();
   });
 

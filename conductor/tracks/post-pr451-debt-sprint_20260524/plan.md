@@ -105,21 +105,21 @@ tasks target the moved code and the behavioral fixes that currently lack coverag
 
 ### Tasks
 
-- [ ] Task 2.1: (#457) In `edge-model.test.js`, add a `describe('replaceContourFeature')`
+- [x] Task 2.1: (#457) In `edge-model.test.js`, add a `describe('replaceContourFeature')`
       block that covers: (a) basic replace — painting `slope` on an edge that has `elevation`
       strips `elevation` and adds `slope`; (b) idempotent — painting the same type is a
       no-op; (c) invalid coexistence after strip is still blocked (if applicable). Run red
       before the function exists (or green after Phase 1.2 lands). Confirm the test
       specifically exercises the strip-then-add path.
 
-- [ ] Task 2.2: (#458) In `MapEditorView.test.js` (or `useMapPersistence.test.js` as
+- [x] Task 2.2: (#458) In `MapEditorView.test.js` (or `useMapPersistence.test.js` as
       appropriate), add tests for: (a) the migration watcher/function — a draft with
       `terrain: 'unknown'` hexes is converted to `'clear'` at load time, and re-loading
       already-clean data does NOT mutate it; (b) the `useEdgePanelWiring` `.value` fix —
       accessing `selectedType` on the returned reactive object does not require `.value` and
       reflects changes made via `onTypeChange`. Run tests green.
 
-- [ ] Task 2.3: (#456) In `useEdgeLineLayer.test.js`, add assertions on the `lineAttrs`
+- [x] Task 2.3: (#456) In `useEdgeLineLayer.test.js`, add assertions on the `lineAttrs`
       coordinates returned for a representative edge using `edgeLineFull`. Assert at least
       `x1`, `y1`, `x2`, `y2` (or `points`) have numeric values consistent with the
       full-edge geometry (not the 20%–80% segment). A revert to `edgeLine20_80` must fail
@@ -138,16 +138,16 @@ Add `aria-pressed` and humanized labels to contour and terrain type-selection bu
 
 ### Tasks
 
-- [ ] Task 3.1: (#459) In `ContourToolPanel.vue`, on each type-selection `<button>`,
+- [x] Task 3.1: (#459) In `ContourToolPanel.vue`, on each type-selection `<button>`,
       add `:aria-pressed="selectedType === group.types[0] ? 'true' : 'false'"`. Add a
       display label mapping (`'elevation' → 'Elevation'`, `'slope' → 'Slope'`,
       `'extremeSlope' → 'Extreme Slope'`, `'verticalSlope' → 'Vertical Slope'`) and
       render it as visible text or `aria-label` instead of the raw camelCase key.
 
-- [ ] Task 3.2: (#459) Apply the same `aria-pressed` pattern and label humanization to
+- [x] Task 3.2: (#459) Apply the same `aria-pressed` pattern and label humanization to
       `TerrainToolPanel.vue` if it uses the same button pattern (verify first).
 
-- [ ] Task 3.3: Add or update tests in `ContourToolPanel.test.js` asserting
+- [x] Task 3.3: Add or update tests in `ContourToolPanel.test.js` asserting
       `aria-pressed="true"` on the active button and `aria-pressed="false"` on inactive
       buttons. Confirm human-readable label text appears in the rendered output.
       Run tests green.
