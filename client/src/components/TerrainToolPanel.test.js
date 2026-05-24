@@ -15,7 +15,7 @@ describe('TerrainToolPanel', () => {
     const wrapper = mount(TerrainToolPanel, {
       props: { terrainTypes: TERRAIN_TYPES, paintTerrain: 'woods' },
     });
-    const woodsBtn = wrapper.findAll('.terrain-btn').find((b) => b.text().includes('woods'));
+    const woodsBtn = wrapper.findAll('.terrain-btn').find((b) => b.text().includes('Woods'));
     expect(woodsBtn.classes()).toContain('active');
   });
 
@@ -23,7 +23,7 @@ describe('TerrainToolPanel', () => {
     const wrapper = mount(TerrainToolPanel, {
       props: { terrainTypes: TERRAIN_TYPES, paintTerrain: 'clear' },
     });
-    const woodsBtn = wrapper.findAll('.terrain-btn').find((b) => b.text().includes('woods'));
+    const woodsBtn = wrapper.findAll('.terrain-btn').find((b) => b.text().includes('Woods'));
     await woodsBtn.trigger('click');
     expect(wrapper.emitted('terrain-change')?.[0][0]).toBe('woods');
   });
@@ -76,22 +76,76 @@ describe('TerrainToolPanel', () => {
   it('renders a building button in the palette', () => {
     const wrapper = mount(TerrainToolPanel, { props: { terrainTypes: TERRAIN_TYPES } });
     const btns = wrapper.findAll('.terrain-btn');
-    const buildingBtn = btns.find((b) => b.text().includes('building'));
+    const buildingBtn = btns.find((b) => b.classes().includes('building-btn'));
     expect(buildingBtn).toBeTruthy();
   });
 
   it('clicking building button emits terrain-change with building', async () => {
     const wrapper = mount(TerrainToolPanel, { props: { terrainTypes: TERRAIN_TYPES } });
-    const buildingBtn = wrapper.findAll('.terrain-btn').find((b) => b.text().includes('building'));
+    const buildingBtn = wrapper.find('.building-btn');
     await buildingBtn.trigger('click');
     expect(wrapper.emitted('terrain-change')?.[0][0]).toBe('building');
   });
 
   it('building button has no color swatch background', () => {
     const wrapper = mount(TerrainToolPanel, { props: { terrainTypes: TERRAIN_TYPES } });
-    const buildingBtn = wrapper.findAll('.terrain-btn').find((b) => b.text().includes('building'));
+    const buildingBtn = wrapper.find('.building-btn');
     const swatch = buildingBtn.find('.terrain-swatch');
     const style = swatch.exists() ? (swatch.attributes('style') ?? '') : '';
     expect(style).not.toContain('background-color');
+  });
+
+  // ── Accessibility (#459) ────────────────────────────────────────────────────
+
+  it('active terrain button has aria-pressed="true"', () => {
+    const wrapper = mount(TerrainToolPanel, {
+      props: { terrainTypes: TERRAIN_TYPES, paintTerrain: 'woods' },
+    });
+    const activeBtn = wrapper.findAll('.terrain-btn').find((b) => b.classes().includes('active'));
+    expect(activeBtn.attributes('aria-pressed')).toBe('true');
+  });
+
+  it('inactive terrain buttons have aria-pressed="false"', () => {
+    const wrapper = mount(TerrainToolPanel, {
+      props: { terrainTypes: TERRAIN_TYPES, paintTerrain: 'woods' },
+    });
+    const inactiveBtns = wrapper
+      .findAll('.terrain-btn')
+      .filter((b) => !b.classes().includes('active'));
+    inactiveBtns.forEach((btn) => {
+      expect(btn.attributes('aria-pressed')).toBe('false');
+    });
+  });
+
+  it('renders humanized labels — Sloping Ground and Wooded Sloping', () => {
+    const wrapper = mount(TerrainToolPanel, {
+      props: { terrainTypes: ['slopingGround', 'woodedSloping'] },
+    });
+    const text = wrapper.text();
+    expect(text).toContain('Sloping Ground');
+    expect(text).toContain('Wooded Sloping');
+  });
+
+  it('all 8 TERRAIN_LABELS entries render as humanized text', () => {
+    // L6: parameterized coverage of every label including unknown and building
+    const allTypes = [
+      'clear',
+      'woods',
+      'slopingGround',
+      'woodedSloping',
+      'orchard',
+      'marsh',
+      'unknown',
+    ];
+    const wrapper = mount(TerrainToolPanel, { props: { terrainTypes: allTypes } });
+    const text = wrapper.text();
+    expect(text).toContain('Clear');
+    expect(text).toContain('Woods');
+    expect(text).toContain('Sloping Ground');
+    expect(text).toContain('Wooded Sloping');
+    expect(text).toContain('Orchard');
+    expect(text).toContain('Marsh');
+    expect(text).toContain('Unknown');
+    expect(text).toContain('Building'); // always-rendered building button
   });
 });

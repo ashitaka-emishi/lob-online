@@ -3,6 +3,7 @@ import { defineHex, Grid, rectangle, Orientation } from 'honeycomb-grid'; // use
 import {
   edgeMidpoint,
   edgeLine20_80,
+  edgeLineFull,
   resolveHexOrStub,
   wedgePolygonPoints,
   adjacentHexId,
@@ -432,6 +433,35 @@ describe('resolveHexOrStub', () => {
   it('stub has the correct hexId', () => {
     const result = resolveHexOrStub(hexes, indexMap, '03.05');
     expect(result.hex).toBe('03.05');
+  });
+});
+
+describe('edgeLineFull', () => {
+  // L8: direct unit tests for all 6 directions.
+  // CORNERS: [NE(1,-2), E(2,0), SE(1,2), SW(-1,2), W(-2,0), NW(-1,-2)]
+  // DIR_TO_CORNERS: N=[5,0], NE=[0,1], SE=[1,2], S=[2,3], SW=[3,4], NW=[4,5]
+  it('N edge: corners[5] to corners[0]', () => {
+    expect(edgeLineFull(CORNERS, 'N')).toEqual({ x1: -1, y1: -2, x2: 1, y2: -2 });
+  });
+
+  it('NE edge: corners[0] to corners[1]', () => {
+    expect(edgeLineFull(CORNERS, 'NE')).toEqual({ x1: 1, y1: -2, x2: 2, y2: 0 });
+  });
+
+  it('SE edge: corners[1] to corners[2]', () => {
+    expect(edgeLineFull(CORNERS, 'SE')).toEqual({ x1: 2, y1: 0, x2: 1, y2: 2 });
+  });
+
+  it('S edge: corners[2] to corners[3]', () => {
+    expect(edgeLineFull(CORNERS, 'S')).toEqual({ x1: 1, y1: 2, x2: -1, y2: 2 });
+  });
+
+  it('SW edge: corners[3] to corners[4]', () => {
+    expect(edgeLineFull(CORNERS, 'SW')).toEqual({ x1: -1, y1: 2, x2: -2, y2: 0 });
+  });
+
+  it('NW edge: corners[4] to corners[5]', () => {
+    expect(edgeLineFull(CORNERS, 'NW')).toEqual({ x1: -2, y1: 0, x2: -1, y2: -2 });
   });
 });
 

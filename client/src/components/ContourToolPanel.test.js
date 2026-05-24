@@ -3,24 +3,26 @@ import { mount } from '@vue/test-utils';
 import ContourToolPanel from './ContourToolPanel.vue';
 
 describe('ContourToolPanel', () => {
-  it('renders all four contour type buttons', () => {
+  it('renders all four contour type buttons with humanized labels', () => {
     const wrapper = mount(ContourToolPanel);
     const text = wrapper.text();
-    expect(text).toContain('elevation');
-    expect(text).toContain('slope');
-    expect(text).toContain('extremeSlope');
-    expect(text).toContain('verticalSlope');
+    expect(text).toContain('Elevation');
+    expect(text).toContain('Slope');
+    expect(text).toContain('Extreme Slope');
+    expect(text).toContain('Vertical Slope');
   });
 
   it('highlights the selected type button', () => {
     const wrapper = mount(ContourToolPanel, { props: { selectedType: 'slope' } });
-    const btn = wrapper.findAll('.type-btn').find((b) => b.text().includes('slope'));
+    const btn = wrapper.findAll('.type-btn').find((b) => b.find('.type-name').text() === 'Slope');
     expect(btn.classes()).toContain('active');
   });
 
   it('emits type-change when a type button is clicked', async () => {
     const wrapper = mount(ContourToolPanel);
-    const btn = wrapper.findAll('.type-btn').find((b) => b.text().includes('extremeSlope'));
+    const btn = wrapper
+      .findAll('.type-btn')
+      .find((b) => b.find('.type-name').text() === 'Extreme Slope');
     await btn.trigger('click');
     expect(wrapper.emitted('type-change')?.[0][0]).toBe('extremeSlope');
   });
@@ -128,5 +130,30 @@ describe('ContourToolPanel', () => {
   it('does not render auto-detect button', () => {
     const wrapper = mount(ContourToolPanel);
     expect(wrapper.find('.auto-detect-btn').exists()).toBe(false);
+  });
+
+  // ── Accessibility (#459) ────────────────────────────────────────────────────
+
+  it('active type button has aria-pressed="true"', () => {
+    const wrapper = mount(ContourToolPanel, { props: { selectedType: 'slope' } });
+    const activeBtn = wrapper.findAll('.type-btn').find((b) => b.classes().includes('active'));
+    expect(activeBtn.attributes('aria-pressed')).toBe('true');
+  });
+
+  it('inactive type buttons have aria-pressed="false"', () => {
+    const wrapper = mount(ContourToolPanel, { props: { selectedType: 'slope' } });
+    const inactiveBtns = wrapper
+      .findAll('.type-btn')
+      .filter((b) => !b.classes().includes('active'));
+    inactiveBtns.forEach((btn) => {
+      expect(btn.attributes('aria-pressed')).toBe('false');
+    });
+  });
+
+  it('renders humanized labels — Extreme Slope and Vertical Slope', () => {
+    const wrapper = mount(ContourToolPanel);
+    const text = wrapper.text();
+    expect(text).toContain('Extreme Slope');
+    expect(text).toContain('Vertical Slope');
   });
 });

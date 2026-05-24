@@ -48,6 +48,19 @@ export function edgeMidpoint(corners, dir) {
 }
 
 /**
+ * Return the full line segment along the edge in direction `dir` (corner to corner).
+ * @param {Array<{x:number,y:number}>} corners
+ * @param {string} dir
+ * @returns {{x1:number, y1:number, x2:number, y2:number}}
+ */
+export function edgeLineFull(corners, dir) {
+  const [i, j] = DIR_TO_CORNERS[dir];
+  const a = corners[i];
+  const b = corners[j];
+  return { x1: a.x, y1: a.y, x2: b.x, y2: b.y };
+}
+
+/**
  * Return the 20%→80% line segment along the edge in direction `dir`.
  * @param {Array<{x:number,y:number}>} corners
  * @param {string} dir

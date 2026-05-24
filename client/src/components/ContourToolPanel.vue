@@ -1,14 +1,19 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import EdgeToolPanelShell from './EdgeToolPanelShell.vue';
-import { CONTOUR_GROUPS } from '../config/feature-types.js';
+import { CONTOUR_GROUPS, CONTOUR_TYPES } from '../config/feature-types.js';
 import { elevationTintPalette, tintForLevel } from '../formulas/elevation.js';
-
-const CONTOUR_TYPES = ['elevation', 'slope', 'extremeSlope', 'verticalSlope'];
 
 const HELP_TEXT =
   'Click an edge to paint the selected contour type. Right-click to remove it. ' +
   'Toggle "Elevation info" to see elevation levels and gradient while editing.';
+
+const CONTOUR_LABELS = {
+  elevation: 'Elevation',
+  slope: 'Slope',
+  extremeSlope: 'Extreme Slope',
+  verticalSlope: 'Vertical Slope',
+};
 
 const props = defineProps({
   selectedType: {
@@ -99,23 +104,25 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
     @clear-all="emit('edge-clear-all', CONTOUR_TYPES)"
   >
     <!-- Contour type chooser -->
-    <div class="type-chooser">
+    <div class="type-chooser" role="group" aria-label="Contour type">
       <button
         v-for="group in CONTOUR_GROUPS"
         :key="group.types[0]"
         class="type-btn"
         :class="{ active: selectedType === group.types[0] }"
+        :aria-pressed="selectedType === group.types[0] ? 'true' : 'false'"
         @click="emit('type-change', group.types[0])"
       >
         <span
           class="type-swatch"
+          aria-hidden="true"
           :style="{
-            background: group.color /* hardcoded hex constant from CONTOUR_GROUPS */,
+            background: group.color,
             height: `${group.strokeWidth}px`,
             width: '24px',
           }"
         />
-        <span class="type-name">{{ group.types[0] }}</span>
+        <span class="type-name">{{ CONTOUR_LABELS[group.types[0]] ?? group.types[0] }}</span>
       </button>
     </div>
 

@@ -75,4 +75,22 @@ describe('useEdgeLineLayer', () => {
     cells.value = [makeCell('01.01'), makeCell('01.02')];
     expect(cellsForEdges.value.length).toBe(2);
   });
+
+  // #456: lineAttrs for standard (non-through-hex) edges must use the full edge geometry.
+  // Corners for 'N' edge: DIR_TO_CORNERS['N'] = [5, 0]
+  //   corners[5] = {x:0, y:10}, corners[0] = {x:10, y:0}
+  // edgeLineFull → x1=0, y1=10, x2=10, y2=0  (raw corner endpoints)
+  // edgeLine20_80 → x1=2, y1=8, x2=8, y2=2   (trimmed — fails this test)
+  it('lineAttrs for N edge uses full-edge geometry (not 20/80 trimmed)', () => {
+    const cells = ref([makeCell('01.01')]);
+    const overlayConfig = ref({ edgeLine: { featureGroups: [] } });
+    const { cellsForEdges } = useEdgeLineLayer(cells, overlayConfig);
+    const northFace = cellsForEdges.value[0].edgeFaces.find((f) => f.dir === 'N');
+    const { x1, y1, x2, y2 } = northFace.lineAttrs;
+    // Full-edge: endpoints are exactly the raw corner coordinates (NW and NE corners)
+    expect(x1).toBe(0);
+    expect(y1).toBe(10);
+    expect(x2).toBe(10);
+    expect(y2).toBe(0);
+  });
 });

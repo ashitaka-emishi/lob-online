@@ -92,6 +92,17 @@ export function useMapPersistence({
     pendingTimers.clear();
   }
 
+  // Data-ingress migration: terrain:'unknown' is used as a placeholder in two
+  // producers — hexes auto-created during edge painting, and any legacy map data
+  // predating the 'clear' default. Convert to 'clear' at all three load paths
+  // (server fetch, draft restore, pull confirm) so stale values never reach render.
+  function migrateUnknownTerrain(data) {
+    if (!data?.hexes) return;
+    for (const hex of data.hexes) {
+      if (hex.terrain === 'unknown') hex.terrain = 'clear';
+    }
+  }
+
   // L1: wrapper to track and auto-remove timeouts
   function trackedTimeout(fn, ms) {
     const t = setTimeout(() => {
@@ -155,6 +166,7 @@ export function useMapPersistence({
       if (!isValidDraft(serverData)) {
         throw new Error('Server returned an invalid map data shape');
       }
+      migrateUnknownTerrain(serverData);
       mapData.value = serverData;
       serverSavedAt.value = serverData._savedAt ?? 0;
       localStorage.removeItem(draftKey);
@@ -230,6 +242,7 @@ export function useMapPersistence({
       if (!isValidDraft(serverData)) {
         throw new Error('Server returned an invalid map data shape');
       }
+      migrateUnknownTerrain(serverData);
       mapData.value = serverData;
       if (mapData.value.gridSpec) {
         // M4: caller owns the calibration write via onCalibrationLoaded callback
@@ -243,6 +256,7 @@ export function useMapPersistence({
           const draft = JSON.parse(draftStr);
           // M1: validate shape before assigning to application state
           if (isValidDraft(draft)) {
+            migrateUnknownTerrain(draft);
             mapData.value = draft;
             if (draft.gridSpec) {
               // M4: caller owns the calibration write via onCalibrationLoaded callback

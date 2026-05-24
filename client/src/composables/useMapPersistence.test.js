@@ -396,6 +396,65 @@ describe('useMapPersistence', () => {
       expect(localStorage.getItem(DRAFT_KEY_V1)).toBeNull();
       // v1 data migrated (then removed as stale since server data has _savedAt: 0)
     });
+
+    it('converts unknown terrain to clear in server data at load', async () => {
+      mockFetch({
+        hexes: [
+          { hex: '01.01', terrain: 'unknown' },
+          { hex: '01.02', terrain: 'clear' },
+        ],
+        _savedAt: 500,
+      });
+      const {
+        state: { mapData },
+        actions: { fetchMapData },
+      } = useMapPersistence(makeArgs());
+      await fetchMapData();
+      expect(mapData.value.hexes[0].terrain).toBe('clear');
+      expect(mapData.value.hexes[1].terrain).toBe('clear');
+    });
+
+    it('converts unknown terrain to clear in offline draft fallback', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ hexes: [{ hex: '01.01', terrain: 'unknown' }], _savedAt: 500 })
+      );
+      const {
+        state: { mapData },
+        actions: { fetchMapData },
+      } = useMapPersistence(makeArgs());
+      await fetchMapData();
+      expect(mapData.value.hexes[0].terrain).toBe('clear');
+    });
+
+    it('migration preserves edges on hexes with unknown terrain', async () => {
+      // M5: round-trip — terrain migrated to clear AND edges survive intact
+      mockFetch({
+        hexes: [{ hex: '01.01', terrain: 'unknown', edges: { 0: [{ type: 'elevation' }] } }],
+        _savedAt: 500,
+      });
+      const {
+        state: { mapData },
+        actions: { fetchMapData },
+      } = useMapPersistence(makeArgs());
+      await fetchMapData();
+      expect(mapData.value.hexes[0].terrain).toBe('clear');
+      expect(mapData.value.hexes[0].edges[0]).toEqual([{ type: 'elevation' }]);
+    });
+
+    it('migration is a no-op on already-clean data', async () => {
+      // L5: running migration on data with no unknown terrain must not mutate it
+      const originalHex = { hex: '01.01', terrain: 'clear' };
+      mockFetch({ hexes: [originalHex], _savedAt: 500 });
+      const {
+        state: { mapData },
+        actions: { fetchMapData },
+      } = useMapPersistence(makeArgs());
+      await fetchMapData();
+      expect(mapData.value.hexes[0].terrain).toBe('clear');
+      expect(mapData.value.hexes.length).toBe(1);
+    });
   });
 
   describe('pullFromServer', () => {
@@ -422,6 +481,19 @@ describe('useMapPersistence', () => {
   });
 
   describe('confirmPull', () => {
+    it('converts unknown terrain to clear in pulled server data', async () => {
+      mockFetch({
+        hexes: [{ hex: '01.01', terrain: 'unknown' }],
+        _savedAt: 999,
+      });
+      const {
+        state: { mapData },
+        actions: { confirmPull },
+      } = useMapPersistence(makeArgs());
+      await confirmPull();
+      expect(mapData.value.hexes[0].terrain).toBe('clear');
+    });
+
     it('loads server data, clears draft, resets unsaved', async () => {
       mockFetch({ hexes: [], _savedAt: 42 });
       localStorage.setItem(DRAFT_KEY, 'something');

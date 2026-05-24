@@ -11,6 +11,7 @@
  */
 
 import { adjacentHexId } from '../utils/hexGeometry.js';
+import { CONTOUR_TYPES } from '../config/feature-types.js';
 
 /** Face-index to compass direction (flat-top, clockwise from top face). */
 const FACE_TO_DIR = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
@@ -88,6 +89,38 @@ export function validateCoexistence(existingFeatures, newType) {
     }
   }
   return { valid: true, reason: null };
+}
+
+// ── Contour paint (replace semantics) ────────────────────────────────────────
+
+/**
+ * Applies contour-paint semantics: strips any existing contour type from the
+ * edge features array, then appends the new type as `{ type }`.
+ *
+ * Returns the updated features array, or null if `newType` is already present
+ * (idempotent — caller should treat null as "no change needed").
+ *
+ * Unlike `validateCoexistence`, which only blocks slope–slope conflicts, this
+ * function enforces the rule that only ONE contour type may exist per edge —
+ * replacing rather than co-existing. All non-contour features are preserved.
+ *
+ * Output shape: existing string features are preserved as-is; the new contour
+ * entry is appended as an object `{ type: newType }`. Mixed arrays (strings + objects)
+ * are intentional — existing road/stream features remain strings for backward
+ * compatibility.
+ *
+ * @param {Array<string|{type:string}>} existingFeatures - current edge features (not mutated)
+ * @param {string} newType - contour type to paint (must be a value in CONTOUR_TYPES)
+ * @returns {Array<string|{type:string}>|null}
+ */
+export function applyContourPaint(existingFeatures, newType) {
+  const existingTypes = existingFeatures.map((f) => (typeof f === 'string' ? f : f.type));
+  if (existingTypes.includes(newType)) return null;
+  const kept = existingFeatures.filter((f) => {
+    const t = typeof f === 'string' ? f : f.type;
+    return !CONTOUR_TYPES.includes(t);
+  });
+  return [...kept, { type: newType }];
 }
 
 // ── Mutators ──────────────────────────────────────────────────────────────────
