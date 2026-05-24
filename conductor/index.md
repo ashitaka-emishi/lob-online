@@ -67,6 +67,7 @@ Navigation hub for project context.
 | [post-m5-debt-bundle_20260522](./tracks/post-m5-debt-bundle_20260522/index.md) | Post-M5 Debt Bundle — Issues #431 #401 #421–#427 #432 #411 #412 #346 #413 #428 #429 #430 | Complete |
 | [post-m5-debt-2_20260523](./tracks/post-m5-debt-2_20260523/index.md) | Post-M5 Debt Bundle 2 — Minor Cleanups and Test Hardening (#436 #438 #439 #442 #443 #444 #445 #446 #447) | Pending |
 | [pre-m6-debt-sprint_20260523](./tracks/pre-m6-debt-sprint_20260523/index.md) | Pre-M6 Debt Sprint — Issues #431 #432 #402 #434 #435 #441 | Pending |
+| [post-pr451-debt-sprint_20260524](./tracks/post-pr451-debt-sprint_20260524/index.md) | Post-PR-451 Debt Sprint — Issues #452–#459 | Pending |
 
 ## Getting Started
 
