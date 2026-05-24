@@ -145,7 +145,7 @@ an implicit contract to an explicit, verified invariant.
 
 - [x] Task 4.1: Run `npm run quality:strict` — all five gates pass with zero warnings.
 - [x] Task 4.2: Close GitHub issues #461, #462, #463, #464.
-- [ ] Task 4.3: Run `/tech-debt-report` for this PR to update the debt register.
+- [x] Task 4.3: Run `/tech-debt-report` for this PR to update the debt register.
 
 ## Final Verification
 
