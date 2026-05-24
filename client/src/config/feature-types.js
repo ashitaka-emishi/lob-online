@@ -47,6 +47,8 @@ export const STREAM_WALL_GROUPS = [
 /** All contour feature type strings, ordered from lowest to highest severity. */
 export const CONTOUR_TYPES = ['elevation', 'slope', 'extremeSlope', 'verticalSlope'];
 
+// Stroke widths and grayscale ramp tuned for legibility over the SM map background (#416).
+// Maintain monotonic darkening and width progression: elevation < slope < extremeSlope.
 /** Contour / slope feature groups ordered from lowest to highest severity. */
 export const CONTOUR_GROUPS = [
   { types: ['elevation'], color: '#595959', strokeWidth: 3 },

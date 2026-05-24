@@ -32,6 +32,7 @@ import {
   validateCoexistence,
   applyContourPaint,
   stripNonPlayableBoundaryEdges,
+  isEdgeAtNonPlayableBoundary,
 } from '../../formulas/edge-model.js';
 import { adjacentHexId } from '../../utils/hexGeometry.js';
 
@@ -77,6 +78,11 @@ const {
   draftKey: MAP_DRAFT_KEY,
   draftKeyV1: MAP_DRAFT_KEY_V1,
   onCalibrationLoaded,
+  // Strip edges on non-playable boundaries before every push — covers both the
+  // direct save() path and the confirmSave() overwrite path (M-1 review fix).
+  beforeSave: () => {
+    if (mapData.value) stripNonPlayableBoundaryEdges(mapData.value.hexes, calibration.value);
+  },
 });
 
 // ── Map export (composable) ────────────────────────────────────────────────────
@@ -456,12 +462,10 @@ function isNonPlayableBoundary(hexId, dir) {
   if (!mapData.value) return false;
   const idx = hexIndex.value.get(hexId);
   const hex = idx !== undefined ? mapData.value.hexes[idx] : null;
-  if (hex?.playable === false) return true;
   const adjId = adjacentHexId(hexId, dir, calibration.value);
-  if (!adjId) return false;
-  const adjIdx = hexIndex.value.get(adjId);
+  const adjIdx = adjId !== null ? hexIndex.value.get(adjId) : undefined;
   const adjHex = adjIdx !== undefined ? mapData.value.hexes[adjIdx] : null;
-  return adjHex?.playable === false;
+  return isEdgeAtNonPlayableBoundary(hex, adjHex);
 }
 
 function onEdgeClick({ hexId, dir }) {
@@ -482,8 +486,9 @@ function onEdgeClick({ hexId, dir }) {
   entry.paintFn(hexId, faceIndex, type);
 }
 
+// Boundary-edge stripping runs via the beforeSave hook wired into useMapPersistence,
+// covering both this path and the confirmSave() overwrite path.
 function handleSave() {
-  if (mapData.value) stripNonPlayableBoundaryEdges(mapData.value.hexes, calibration.value);
   save();
 }
 

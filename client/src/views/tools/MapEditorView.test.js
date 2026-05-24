@@ -769,11 +769,41 @@ describe('MapEditorView', () => {
     await flushPromises();
 
     vi.advanceTimersByTime(DEBOUNCE_MS + 100);
-    // No draft should be saved — the click was silently ignored
-    expect(localStorage.setItem).not.toHaveBeenCalledWith(
-      MAP_DRAFT_KEY,
-      expect.stringContaining('"01.02"')
-    );
+    // No draft save triggered — the click was silently ignored (no mutation)
+    const draftCalls = localStorage.setItem.mock.calls.filter(([key]) => key === MAP_DRAFT_KEY);
+    expect(draftCalls).toHaveLength(0);
+    vi.useRealTimers();
+    wrapper.unmount();
+  });
+
+  it('edge-click on a playable hex saves a draft with the new edge', async () => {
+    vi.useFakeTimers();
+    const nonPlayableMap = {
+      ...VALID_MAP,
+      hexes: [
+        { hex: '01.01', terrain: 'clear' },
+        { hex: '01.02', terrain: 'clear', playable: false },
+      ],
+    };
+    vi.stubGlobal('fetch', mockFetch(nonPlayableMap));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    const headers = wrapper.findAll('button.accordion-header');
+    await headers.find((h) => h.text().includes('Road Tool')).trigger('click');
+    await flushPromises();
+
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    // Click on the playable hex (dir NE; N neighbor 01.02 is non-playable, so use NE)
+    await overlay.vm.$emit('edge-click', { hexId: '01.01', dir: 'NE' });
+    await flushPromises();
+
+    vi.advanceTimersByTime(DEBOUNCE_MS + 100);
+    const draftCalls = localStorage.setItem.mock.calls.filter(([key]) => key === MAP_DRAFT_KEY);
+    expect(draftCalls.length).toBeGreaterThan(0);
+    const saved = JSON.parse(draftCalls[0][1]);
+    const hex = saved.hexes.find((h) => h.hex === '01.01');
+    expect(hex.edges).toBeDefined();
     vi.useRealTimers();
     wrapper.unmount();
   });

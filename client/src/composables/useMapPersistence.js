@@ -63,6 +63,7 @@ export function useMapPersistence({
   draftKey,
   draftKeyV1,
   onCalibrationLoaded,
+  beforeSave,
 }) {
   // L4: guard against accidental empty/missing key args
   if (!storageKey || !draftKey) {
@@ -285,6 +286,10 @@ export function useMapPersistence({
 
   async function _executePush() {
     if (!mapData.value) return;
+    // Run caller-provided pre-save hook (e.g. strip non-playable boundary edges).
+    // Called here rather than only in save() so the confirmSave overwrite path
+    // is also covered — both paths converge on _executePush.
+    beforeSave?.();
     saveStatus.value = 'saving';
     saveErrors.value = [];
     try {

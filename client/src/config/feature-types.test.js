@@ -31,6 +31,10 @@ describe('feature-types', () => {
         expect(TERRAIN_COLORS[type]).toMatch(/^rgba\(/);
       }
     });
+
+    it('does not include the removed unknown terrain type', () => {
+      expect(TERRAIN_COLORS).not.toHaveProperty('unknown');
+    });
   });
 
   describe('ROAD_GROUPS', () => {
