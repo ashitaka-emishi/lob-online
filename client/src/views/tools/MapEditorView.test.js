@@ -429,6 +429,38 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 
+  it('single-open invariant: switching panels replaces overlay-config, no stale A config', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    const headers = wrapper.findAll('button.accordion-header');
+
+    // Open Road Tool — emit a distinctive overlay-config from it
+    await headers.find((h) => h.text().includes('Road Tool')).trigger('click');
+    await flushPromises();
+    await wrapper.findComponent({ name: 'RoadToolPanel' }).vm.$emit('overlay-config', {
+      highlightMode: 'road-test',
+    });
+    await flushPromises();
+
+    // Switch to Stream Tool — MapEditorView resets activePanelOverlayConfig on transition
+    await headers.find((h) => h.text().includes('Stream')).trigger('click');
+    await flushPromises();
+
+    // Emit overlay-config from the new panel
+    await wrapper.findComponent({ name: 'StreamWallToolPanel' }).vm.$emit('overlay-config', {
+      highlightMode: 'stream-test',
+    });
+    await flushPromises();
+
+    // HexMapOverlay should see stream config only — A's stale config must not bleed through
+    const overlayConfig = wrapper.findComponent({ name: 'HexMapOverlay' }).props('overlayConfig');
+    expect(overlayConfig).toMatchObject({ highlightMode: 'stream-test' });
+    expect(overlayConfig.highlightMode).not.toBe('road-test');
+    wrapper.unmount();
+  });
+
   it('top bar displays active tool name when a panel is open', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_MAP));
     const wrapper = mount(MapEditorView, { attachTo: document.body });

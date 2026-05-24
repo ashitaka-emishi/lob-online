@@ -120,7 +120,7 @@ an implicit contract to an explicit, verified invariant.
 
 ### Tasks
 
-- [ ] Task 3.1: (#464) In `useEdgePanelWiring.js`, update the JSDoc on the
+- [x] Task 3.1: (#464) In `useEdgePanelWiring.js`, update the JSDoc on the
       `activePanelOverlayConfig` parameter to: (a) name the invariant explicitly — "caller
       must guarantee only one panel instance is active at a time"; (b) describe the
       enforcement mechanism — MapEditorView watches `openPanel` and resets
@@ -128,7 +128,7 @@ an implicit contract to an explicit, verified invariant.
       `// INVARIANT: single-panel exclusivity guaranteed by caller` comment on the
       `onOverlayConfig` write line.
 
-- [ ] Task 3.2: (#464) In `MapEditorView.test.js`, add a test verifying the single-open
+- [x] Task 3.2: (#464) In `MapEditorView.test.js`, add a test verifying the single-open
       invariant: open panel A (overlay-config emitted), then open panel B — assert
       `activePanelOverlayConfig` reflects B's config, not A's stale config (last-writer-wins
       is correct when single-open exclusivity holds). Run `npm run test` green.

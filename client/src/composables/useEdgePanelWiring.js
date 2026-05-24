@@ -7,12 +7,14 @@ import { ref, reactive } from 'vue';
  *
  * @param {string} defaultType - Initial selected edge type for this panel.
  * @param {{ handleEdgePaint, handleEdgeClear, handleEdgeClearAll, activePanelOverlayConfig }} deps
- *   `activePanelOverlayConfig` is a shared Ref written by all panel instances. This is an
- *   intentional last-writer-wins pattern that relies on the accordion's single-panel exclusivity
- *   guarantee — only one panel is active at a time. If multiple panels were ever open
- *   simultaneously they would race on this ref.
- *   The caller (MapEditorView) watches `openPanel` and resets this ref to `null` on every
- *   panel transition, so stale config from the previous panel never bleeds into the next.
+ *   `activePanelOverlayConfig` is a shared Ref written by all panel instances.
+ *
+ *   **INVARIANT: caller must guarantee only one panel instance is active at a time.**
+ *   This composable uses a last-writer-wins pattern on the shared ref; if multiple panels
+ *   were ever open simultaneously they would race. The enforcement mechanism lives in
+ *   MapEditorView: it watches `openPanel` and resets `activePanelOverlayConfig` to `null`
+ *   on every panel transition, so stale config from the previous panel never bleeds into
+ *   the next.
  * @returns {{ selectedType, onTypeChange, onEdgePaint, onEdgeClear, onEdgeClearAll, onOverlayConfig }}
  */
 export function useEdgePanelWiring(defaultType, deps) {
@@ -36,7 +38,7 @@ export function useEdgePanelWiring(defaultType, deps) {
   }
 
   function onOverlayConfig(cfg) {
-    activePanelOverlayConfig.value = cfg;
+    activePanelOverlayConfig.value = cfg; // INVARIANT: single-panel exclusivity guaranteed by caller
   }
 
   // reactive() auto-unwraps the selectedType ref so callers access road.selectedType
