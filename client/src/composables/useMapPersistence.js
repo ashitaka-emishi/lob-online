@@ -96,11 +96,9 @@ export function useMapPersistence({
    * Converts `terrain:'unknown'` → `'clear'` at every data-ingress point.
    *
    * Authoritative producer list — the ONLY paths that may produce `terrain:'unknown'`:
-   *   (a) `mutateEdgeFeatures` in MapEditorView.vue, when auto-creating a hex stub during
-   *       edge painting (marked `// MIGRATION-ONLY` at that call site).
-   *   (b) `resolveHexOrStub` in hexGeometry.js via the `useEdgeToggle` legacy path, when
+   *   (a) `resolveHexOrStub` in hexGeometry.js via the `useEdgeToggle` legacy path, when
    *       an edge-click targets a hex not yet in the map index.
-   *   (c) Legacy map data predating the `'clear'` default.
+   *   (b) Legacy map data predating the `'clear'` default.
    * No other code may assign `terrain:'unknown'`. Grep `terrain.*unknown` to audit all sites.
    *
    * Called at all three load paths (server fetch, draft restore, pull confirm) so stale

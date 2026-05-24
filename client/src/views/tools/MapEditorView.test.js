@@ -62,6 +62,7 @@ function makeElevationMap() {
 }
 
 const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
+const DEBOUNCE_MS = 1000;
 
 function mockFetch(data, ok = true, status = 200) {
   return vi.fn().mockResolvedValue({
@@ -429,7 +430,7 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 
-  it('single-open invariant: switching panels replaces overlay-config, no stale A config', async () => {
+  it('single-open invariant: switching panels resets then replaces overlay-config', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_MAP));
     const wrapper = mount(MapEditorView, { attachTo: document.body });
     await flushPromises();
@@ -444,9 +445,14 @@ describe('MapEditorView', () => {
     });
     await flushPromises();
 
-    // Switch to Stream Tool — MapEditorView resets activePanelOverlayConfig on transition
+    // Switch to Stream Tool — MapEditorView watch resets activePanelOverlayConfig to null
     await headers.find((h) => h.text().includes('Stream')).trigger('click');
     await flushPromises();
+
+    // Assert the reset happened: road config is gone before stream panel emits anything
+    expect(
+      wrapper.findComponent({ name: 'HexMapOverlay' }).props('overlayConfig').highlightMode
+    ).toBeUndefined();
 
     // Emit overlay-config from the new panel
     await wrapper.findComponent({ name: 'StreamWallToolPanel' }).vm.$emit('overlay-config', {
@@ -454,10 +460,10 @@ describe('MapEditorView', () => {
     });
     await flushPromises();
 
-    // HexMapOverlay should see stream config only — A's stale config must not bleed through
-    const overlayConfig = wrapper.findComponent({ name: 'HexMapOverlay' }).props('overlayConfig');
-    expect(overlayConfig).toMatchObject({ highlightMode: 'stream-test' });
-    expect(overlayConfig.highlightMode).not.toBe('road-test');
+    // HexMapOverlay should reflect stream config
+    expect(wrapper.findComponent({ name: 'HexMapOverlay' }).props('overlayConfig')).toMatchObject({
+      highlightMode: 'stream-test',
+    });
     wrapper.unmount();
   });
 
@@ -624,7 +630,7 @@ describe('MapEditorView', () => {
     await flushPromises();
 
     // Advance past the 1000ms draft-save debounce — setItem signals onMutated fired
-    vi.advanceTimersByTime(1100);
+    vi.advanceTimersByTime(DEBOUNCE_MS + 100);
     expect(localStorage.setItem).toHaveBeenCalled();
 
     // Second click with same args: applyContourPaint returns null (idempotent)
@@ -632,7 +638,7 @@ describe('MapEditorView', () => {
     const callsBefore = localStorage.setItem.mock.calls.length;
     await overlay.vm.$emit('edge-click', { hexId: '01.01', dir: 'N' });
     await flushPromises();
-    vi.advanceTimersByTime(1100);
+    vi.advanceTimersByTime(DEBOUNCE_MS + 100);
     expect(localStorage.setItem.mock.calls.length).toBe(callsBefore);
 
     vi.useRealTimers();
@@ -641,14 +647,17 @@ describe('MapEditorView', () => {
 
   // #461 — shared hex-setup path (mutateEdgeFeatures contract)
   describe('shared hex-setup path (auto-create stub contract)', () => {
+    let wrapper;
     beforeEach(() => {
+      wrapper = null;
       vi.useFakeTimers();
     });
     afterEach(() => {
+      wrapper?.unmount();
       vi.useRealTimers();
     });
 
-    it('handleEdgePaint: auto-creates hex stub with terrain:unknown when hexId not in index', async () => {
+    it('handleEdgePaint: auto-creates hex stub with terrain:clear when hexId not in index', async () => {
       const store = {};
       vi.stubGlobal('localStorage', {
         getItem: vi.fn((k) => store[k] ?? null),
@@ -658,27 +667,26 @@ describe('MapEditorView', () => {
         removeItem: vi.fn(),
       });
       vi.stubGlobal('fetch', mockFetch(VALID_MAP));
-      const wrapper = mount(MapEditorView, { attachTo: document.body });
+      wrapper = mount(MapEditorView, { attachTo: document.body });
       await flushPromises();
 
       const headers = wrapper.findAll('button.accordion-header');
       await headers.find((h) => h.text().includes('Road Tool')).trigger('click');
       await flushPromises();
 
-      // '99.99' is not in the map index — handler should create a stub
+      // '99.99' is not in the map index — handler should create a stub (default type: trail)
       const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
       await overlay.vm.$emit('edge-click', { hexId: '99.99', dir: 'N' });
       await flushPromises();
 
-      vi.advanceTimersByTime(1100);
+      vi.advanceTimersByTime(DEBOUNCE_MS + 100);
       const saved = JSON.parse(store[MAP_DRAFT_KEY]);
       // canonicalOwner('99.99', 0 /* N */) → ownerId:'99.99', ownerFace:0
       const stub = saved.hexes.find((h) => h.hex === '99.99');
       expect(stub).toBeDefined();
-      expect(stub.terrain).toBe('unknown');
+      expect(stub.terrain).toBe('clear');
       expect(stub.edges).toBeDefined();
-
-      wrapper.unmount();
+      expect(stub.edges[0]).toContainEqual({ type: 'trail' });
     });
 
     it('handleEdgePaint: initializes edges and edges[ownerFace] when absent from existing hex', async () => {
@@ -693,54 +701,49 @@ describe('MapEditorView', () => {
       // Hex with terrain but no edges field
       const mapNoEdges = { ...VALID_MAP, hexes: [{ hex: '05.05', terrain: 'woods' }] };
       vi.stubGlobal('fetch', mockFetch(mapNoEdges));
-      const wrapper = mount(MapEditorView, { attachTo: document.body });
+      wrapper = mount(MapEditorView, { attachTo: document.body });
       await flushPromises();
 
       const headers = wrapper.findAll('button.accordion-header');
       await headers.find((h) => h.text().includes('Road Tool')).trigger('click');
       await flushPromises();
 
-      // '05.05' exists but has no edges — handler should init edges and edges[0]
+      // '05.05' exists but has no edges — handler should init edges and append the road feature
       const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
       await overlay.vm.$emit('edge-click', { hexId: '05.05', dir: 'N' });
       await flushPromises();
 
-      vi.advanceTimersByTime(1100);
+      vi.advanceTimersByTime(DEBOUNCE_MS + 100);
       const saved = JSON.parse(store[MAP_DRAFT_KEY]);
       const hex = saved.hexes.find((h) => h.hex === '05.05');
       expect(hex.edges).toBeDefined();
       expect(Array.isArray(hex.edges[0])).toBe(true);
-
-      wrapper.unmount();
+      expect(hex.edges[0]).toContainEqual({ type: 'trail' });
     });
 
-    it('handleContourPaint: auto-creates hex stub with terrain:unknown when hexId not in index', async () => {
+    it('handleContourPaint: auto-creates hex stub and paints contour feature', async () => {
       vi.stubGlobal('fetch', mockFetch(VALID_MAP));
-      const wrapper = mount(MapEditorView, { attachTo: document.body });
+      wrapper = mount(MapEditorView, { attachTo: document.body });
       await flushPromises();
 
       const headers = wrapper.findAll('button.accordion-header');
       await headers.find((h) => h.text().includes('Contour Tool')).trigger('click');
       await flushPromises();
 
-      // '99.99' is not in the map index — handler should create a stub.
-      // Verify via mapData.hexes prop on HexMapOverlay (no debounce needed).
+      // '99.99' is not in the map index — handler should create a stub and paint the contour.
+      // Verify via mapData.hexes prop on HexMapOverlay (no debounce needed for reactive prop).
       const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
       await overlay.vm.$emit('edge-click', { hexId: '99.99', dir: 'N' });
       await flushPromises();
 
-      // onMutated fires synchronously — "* unsaved" confirms handleContourPaint ran
-      expect(wrapper.text()).toContain('* unsaved');
       // mapData.hexes is passed reactively to HexMapOverlay as the :hexes prop
       const hexes = overlay.props('hexes');
       // canonicalOwner('99.99', 0 /* N */) → ownerId:'99.99', ownerFace:0
       const stub = hexes.find((h) => h.hex === '99.99');
       expect(stub).toBeDefined();
       expect(stub.edges).toBeDefined();
-      // same face key as handleEdgePaint (face 0 for dir N) — structural contract
-      expect(Object.keys(stub.edges)).toContain('0');
-
-      wrapper.unmount();
+      // face key 0 for dir N; default contour type is 'elevation'
+      expect(stub.edges[0]).toContainEqual({ type: 'elevation' });
     });
   });
 

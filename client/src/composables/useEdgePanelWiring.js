@@ -38,7 +38,7 @@ export function useEdgePanelWiring(defaultType, deps) {
   }
 
   function onOverlayConfig(cfg) {
-    activePanelOverlayConfig.value = cfg; // INVARIANT: single-panel exclusivity guaranteed by caller
+    activePanelOverlayConfig.value = cfg; // INVARIANT: see JSDoc for single-open contract
   }
 
   // reactive() auto-unwraps the selectedType ref so callers access road.selectedType

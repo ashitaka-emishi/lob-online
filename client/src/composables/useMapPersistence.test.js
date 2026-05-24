@@ -459,7 +459,10 @@ describe('useMapPersistence', () => {
     it('migration is idempotent across two consecutive load cycles', async () => {
       // First cycle: 'unknown' → 'clear'
       mockFetch({
-        hexes: [{ hex: '01.01', terrain: 'unknown', edges: { 0: [{ type: 'elevation' }] } }],
+        hexes: [
+          { hex: '01.01', terrain: 'unknown', edges: { 0: [{ type: 'elevation' }] } },
+          { hex: '02.02', terrain: 'unknown' },
+        ],
         _savedAt: 500,
       });
       const {
@@ -468,12 +471,16 @@ describe('useMapPersistence', () => {
       } = useMapPersistence(makeArgs());
       await fetchMapData();
       expect(mapData.value.hexes[0].terrain).toBe('clear');
+      expect(mapData.value.hexes[1].terrain).toBe('clear');
+      expect(mapData.value.hexes.length).toBe(2);
       // Second cycle: serialize result from first load, reload — no terrain should change
       const serialized = JSON.parse(JSON.stringify(mapData.value));
       mockFetch(serialized);
       await fetchMapData();
       expect(mapData.value.hexes[0].terrain).toBe('clear');
+      expect(mapData.value.hexes[1].terrain).toBe('clear');
       expect(mapData.value.hexes[0].edges[0]).toEqual([{ type: 'elevation' }]);
+      expect(mapData.value.hexes.length).toBe(2);
     });
   });
 
