@@ -160,47 +160,49 @@ function getEdgeFeaturesAt(hexId, faceIndex) {
   return raw.map((f) => (typeof f === 'string' ? f : f.type));
 }
 
-function handleEdgePaint(hexId, faceIndex, type) {
+/**
+ * Looks up or creates the hex stub for `hexId`, ensures `edges[ownerFace]` exists, then
+ * delegates to `mutateFn(currentEdges) => newEdges | null`. If `mutateFn` returns a non-null
+ * array, writes it back to `hex.edges[ownerFace]`, calls `onMutated()`, and returns true.
+ * Returns false if `mapData` is unset or `mutateFn` returns null.
+ */
+function mutateEdgeFeatures(hexId, faceIndex, mutateFn) {
   if (!mapData.value) return false;
   const { ownerId, ownerFace } = canonicalOwner(hexId, faceIndex, calibration.value);
   let idx = hexIndex.value.get(ownerId) ?? -1;
   if (idx < 0) {
-    mapData.value.hexes.push({ hex: ownerId, terrain: 'unknown' });
+    mapData.value.hexes.push({ hex: ownerId, terrain: 'clear' });
     idx = mapData.value.hexes.length - 1;
     hexIndex.value.set(ownerId, idx);
   }
   const hex = mapData.value.hexes[idx];
   if (!hex.edges) hex.edges = {};
   if (!hex.edges[ownerFace]) hex.edges[ownerFace] = [];
-  const existing = hex.edges[ownerFace];
-  const existingTypes = existing.map((f) => (typeof f === 'string' ? f : f.type));
-  if (existingTypes.includes(type)) return false;
-  const { valid } = validateCoexistence(existingTypes, type);
-  if (!valid) return false;
-  hex.edges[ownerFace] = [...existing, { type }];
-  onMutated();
-  return true;
-}
-
-function handleContourPaint(hexId, faceIndex, type) {
-  if (!mapData.value) return false;
-  const { ownerId, ownerFace } = canonicalOwner(hexId, faceIndex, calibration.value);
-  let idx = hexIndex.value.get(ownerId) ?? -1;
-  if (idx < 0) {
-    mapData.value.hexes.push({ hex: ownerId, terrain: 'unknown' });
-    idx = mapData.value.hexes.length - 1;
-    hexIndex.value.set(ownerId, idx);
-  }
-  const hex = mapData.value.hexes[idx];
-  if (!hex.edges) hex.edges = {};
-  if (!hex.edges[ownerFace]) hex.edges[ownerFace] = [];
-  const updated = applyContourPaint(hex.edges[ownerFace], type);
+  const updated = mutateFn(hex.edges[ownerFace]);
   if (updated === null) return false;
   hex.edges[ownerFace] = updated;
   onMutated();
   return true;
 }
 
+function handleEdgePaint(hexId, faceIndex, type) {
+  return mutateEdgeFeatures(hexId, faceIndex, (currentEdges) => {
+    const existingTypes = currentEdges.map((f) => (typeof f === 'string' ? f : f.type));
+    if (existingTypes.includes(type)) return null;
+    const { valid } = validateCoexistence(existingTypes, type);
+    if (!valid) return null;
+    return [...currentEdges, { type }];
+  });
+}
+
+function handleContourPaint(hexId, faceIndex, type) {
+  return mutateEdgeFeatures(hexId, faceIndex, (currentEdges) =>
+    applyContourPaint(currentEdges, type)
+  );
+}
+
+// Edge-clear functions operate on existing hexes only — they do not create stubs.
+// mutateEdgeFeatures (above) is the sole stub-creation path during edge painting.
 function handleEdgeClear(hexId, faceIndex, type) {
   if (!mapData.value) return;
   const { ownerId, ownerFace } = canonicalOwner(hexId, faceIndex, calibration.value);
@@ -413,6 +415,8 @@ const { selectedHexId, selectedHex, onHexClick, onHexRightClick, onHexMouseenter
   });
 
 // ── Edge feature toggle (M2: extracted from useHexInteraction) ─────────────────
+// Legacy fallback: panels not covered by EDGE_DISPATCH route through useEdgeToggle.
+// Pending removal once all tool panels migrate to EDGE_DISPATCH.
 
 const { onEdgeClick: legacyOnEdgeClick } = useEdgeToggle({
   mapData,
@@ -422,25 +426,27 @@ const { onEdgeClick: legacyOnEdgeClick } = useEdgeToggle({
   onHexUpdate,
 });
 
-// Routes edge-click from HexMapOverlay to the active tool panel's handler.
-// { hexId, dir, clientX, clientY } — clientX/Y are screen coords for logging.
 // Dispatch table for edge click and right-click — one entry per panel.
-// selectedType: reactive ref for the currently active tool type.
-// clearTypes: feature type strings removed on right-click (whole-hex clear).
-// clearSingle: if true, right-click removes only selectedType from the clicked face.
+// selectedType(): returns the currently active tool type (dynamic; tool state changes at runtime).
+// paintFn: direct reference to the handler (stable; set at definition time).
+// clear.mode 'hex': right-click removes all clear.types from every canonical face.
+// clear.mode 'face': right-click removes only selectedType() from the clicked face.
+// clear.types: present only when mode === 'hex'; omitted for 'face' mode.
 const EDGE_DISPATCH = {
   road: {
     selectedType: () => road.selectedType,
-    clearTypes: ['trail', 'road', 'pike', 'bridge'],
+    paintFn: handleEdgePaint,
+    clear: { mode: 'hex', types: ['trail', 'road', 'pike', 'bridge'] },
   },
   stream: {
     selectedType: () => stream.selectedType,
-    clearTypes: ['stream', 'stoneWall', 'ford'],
+    paintFn: handleEdgePaint,
+    clear: { mode: 'hex', types: ['stream', 'stoneWall', 'ford'] },
   },
   contour: {
     selectedType: () => contour.selectedType,
     paintFn: handleContourPaint,
-    clearSingle: true,
+    clear: { mode: 'face' },
   },
 };
 
@@ -458,8 +464,7 @@ function onEdgeClick({ hexId, dir }) {
     const feats = getEdgeFeaturesAt(hexId, faceIndex);
     if (!prereqs.some((p) => feats.includes(p))) return;
   }
-  const paintFn = entry.paintFn ?? handleEdgePaint;
-  paintFn(hexId, faceIndex, type);
+  entry.paintFn(hexId, faceIndex, type);
 }
 
 function onEdgeRightClick({ hexId, dir }) {
@@ -467,10 +472,10 @@ function onEdgeRightClick({ hexId, dir }) {
   if (faceIndex === -1) return;
   const entry = EDGE_DISPATCH[openPanel.value];
   if (!entry) return;
-  if (entry.clearSingle) {
+  if (entry.clear.mode === 'face') {
     handleEdgeClear(hexId, faceIndex, entry.selectedType());
   } else {
-    handleHexEdgeClearAll(hexId, entry.clearTypes);
+    handleHexEdgeClearAll(hexId, entry.clear.types);
   }
 }
 
