@@ -14,7 +14,6 @@ export const TERRAIN_COLORS = {
   marsh: 'rgba(60,120,100,0.8)',
   slopingGround: 'rgba(139,100,60,0.8)',
   woodedSloping: 'rgba(55,35,10,0.85)',
-  unknown: 'rgba(150,150,150,0.3)',
 };
 
 /**

@@ -126,17 +126,9 @@ describe('TerrainToolPanel', () => {
     expect(text).toContain('Wooded Sloping');
   });
 
-  it('all 8 TERRAIN_LABELS entries render as humanized text', () => {
-    // L6: parameterized coverage of every label including unknown and building
-    const allTypes = [
-      'clear',
-      'woods',
-      'slopingGround',
-      'woodedSloping',
-      'orchard',
-      'marsh',
-      'unknown',
-    ];
+  it('all 7 TERRAIN_LABELS entries render as humanized text', () => {
+    // L6: parameterized coverage of every label including building
+    const allTypes = ['clear', 'woods', 'slopingGround', 'woodedSloping', 'orchard', 'marsh'];
     const wrapper = mount(TerrainToolPanel, { props: { terrainTypes: allTypes } });
     const text = wrapper.text();
     expect(text).toContain('Clear');
@@ -145,7 +137,6 @@ describe('TerrainToolPanel', () => {
     expect(text).toContain('Wooded Sloping');
     expect(text).toContain('Orchard');
     expect(text).toContain('Marsh');
-    expect(text).toContain('Unknown');
     expect(text).toContain('Building'); // always-rendered building button
   });
 });

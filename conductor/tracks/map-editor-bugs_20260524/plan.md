@@ -73,18 +73,18 @@ overlay fallback, UI options, color table, and test assertions.
 
 ### Tasks
 
-- [ ] Task 2.1: `client/src/utils/hexGeometry.js` — `resolveHexOrStub` stub changes
+- [x] Task 2.1: `client/src/utils/hexGeometry.js` — `resolveHexOrStub` stub changes
       `terrain: 'unknown'` → `terrain: 'clear'`
-- [ ] Task 2.2: `client/src/components/HexMapOverlay.vue` — terrain fallback changes
+- [x] Task 2.2: `client/src/components/HexMapOverlay.vue` — terrain fallback changes
       `'unknown'` → `'clear'` (line ~226)
-- [ ] Task 2.3: `client/src/components/TerrainToolPanel.vue` — remove `unknown` key
+- [x] Task 2.3: `client/src/components/TerrainToolPanel.vue` — remove `unknown` key
       from both the icon map (line ~25) and label map (line ~39)
-- [ ] Task 2.4: `client/src/config/feature-types.js` — remove `unknown` entry from
+- [x] Task 2.4: `client/src/config/feature-types.js` — remove `unknown` entry from
       `TERRAIN_COLORS`
-- [ ] Task 2.5: `client/src/composables/useMapPersistence.js` — update
+- [x] Task 2.5: `client/src/composables/useMapPersistence.js` — update
       `migrateUnknownTerrain` comment: note that `resolveHexOrStub` no longer produces
       `'unknown'`; function is now a migration-only safety net for legacy persisted data
-- [ ] Task 2.6: `client/src/composables/useEdgeToggle.test.js` — update stub-terrain
+- [x] Task 2.6: `client/src/composables/useEdgeToggle.test.js` — update stub-terrain
       assertion (line ~87) from `'unknown'` → `'clear'`
 
 ### Verification
