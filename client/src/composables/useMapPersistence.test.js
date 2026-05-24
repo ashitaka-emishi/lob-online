@@ -396,6 +396,37 @@ describe('useMapPersistence', () => {
       expect(localStorage.getItem(DRAFT_KEY_V1)).toBeNull();
       // v1 data migrated (then removed as stale since server data has _savedAt: 0)
     });
+
+    it('converts unknown terrain to clear in server data at load', async () => {
+      mockFetch({
+        hexes: [
+          { hex: '01.01', terrain: 'unknown' },
+          { hex: '01.02', terrain: 'clear' },
+        ],
+        _savedAt: 500,
+      });
+      const {
+        state: { mapData },
+        actions: { fetchMapData },
+      } = useMapPersistence(makeArgs());
+      await fetchMapData();
+      expect(mapData.value.hexes[0].terrain).toBe('clear');
+      expect(mapData.value.hexes[1].terrain).toBe('clear');
+    });
+
+    it('converts unknown terrain to clear in offline draft fallback', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ hexes: [{ hex: '01.01', terrain: 'unknown' }], _savedAt: 500 })
+      );
+      const {
+        state: { mapData },
+        actions: { fetchMapData },
+      } = useMapPersistence(makeArgs());
+      await fetchMapData();
+      expect(mapData.value.hexes[0].terrain).toBe('clear');
+    });
   });
 
   describe('pullFromServer', () => {
@@ -422,6 +453,19 @@ describe('useMapPersistence', () => {
   });
 
   describe('confirmPull', () => {
+    it('converts unknown terrain to clear in pulled server data', async () => {
+      mockFetch({
+        hexes: [{ hex: '01.01', terrain: 'unknown' }],
+        _savedAt: 999,
+      });
+      const {
+        state: { mapData },
+        actions: { confirmPull },
+      } = useMapPersistence(makeArgs());
+      await confirmPull();
+      expect(mapData.value.hexes[0].terrain).toBe('clear');
+    });
+
     it('loads server data, clears draft, resets unsaved', async () => {
       mockFetch({ hexes: [], _savedAt: 42 });
       localStorage.setItem(DRAFT_KEY, 'something');
