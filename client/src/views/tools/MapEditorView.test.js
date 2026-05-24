@@ -607,6 +607,111 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 
+  // #461 — shared hex-setup path (mutateEdgeFeatures contract)
+  describe('shared hex-setup path (auto-create stub contract)', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('handleEdgePaint: auto-creates hex stub with terrain:unknown when hexId not in index', async () => {
+      const store = {};
+      vi.stubGlobal('localStorage', {
+        getItem: vi.fn((k) => store[k] ?? null),
+        setItem: vi.fn((k, v) => {
+          store[k] = v;
+        }),
+        removeItem: vi.fn(),
+      });
+      vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+      const wrapper = mount(MapEditorView, { attachTo: document.body });
+      await flushPromises();
+
+      const headers = wrapper.findAll('button.accordion-header');
+      await headers.find((h) => h.text().includes('Road Tool')).trigger('click');
+      await flushPromises();
+
+      // '99.99' is not in the map index — handler should create a stub
+      const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+      await overlay.vm.$emit('edge-click', { hexId: '99.99', dir: 'N' });
+      await flushPromises();
+
+      vi.advanceTimersByTime(1100);
+      const saved = JSON.parse(store[MAP_DRAFT_KEY]);
+      // canonicalOwner('99.99', 0 /* N */) → ownerId:'99.99', ownerFace:0
+      const stub = saved.hexes.find((h) => h.hex === '99.99');
+      expect(stub).toBeDefined();
+      expect(stub.terrain).toBe('unknown');
+      expect(stub.edges).toBeDefined();
+
+      wrapper.unmount();
+    });
+
+    it('handleEdgePaint: initializes edges and edges[ownerFace] when absent from existing hex', async () => {
+      const store = {};
+      vi.stubGlobal('localStorage', {
+        getItem: vi.fn((k) => store[k] ?? null),
+        setItem: vi.fn((k, v) => {
+          store[k] = v;
+        }),
+        removeItem: vi.fn(),
+      });
+      // Hex with terrain but no edges field
+      const mapNoEdges = { ...VALID_MAP, hexes: [{ hex: '05.05', terrain: 'woods' }] };
+      vi.stubGlobal('fetch', mockFetch(mapNoEdges));
+      const wrapper = mount(MapEditorView, { attachTo: document.body });
+      await flushPromises();
+
+      const headers = wrapper.findAll('button.accordion-header');
+      await headers.find((h) => h.text().includes('Road Tool')).trigger('click');
+      await flushPromises();
+
+      // '05.05' exists but has no edges — handler should init edges and edges[0]
+      const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+      await overlay.vm.$emit('edge-click', { hexId: '05.05', dir: 'N' });
+      await flushPromises();
+
+      vi.advanceTimersByTime(1100);
+      const saved = JSON.parse(store[MAP_DRAFT_KEY]);
+      const hex = saved.hexes.find((h) => h.hex === '05.05');
+      expect(hex.edges).toBeDefined();
+      expect(Array.isArray(hex.edges[0])).toBe(true);
+
+      wrapper.unmount();
+    });
+
+    it('handleContourPaint: auto-creates hex stub with terrain:unknown when hexId not in index', async () => {
+      vi.stubGlobal('fetch', mockFetch(VALID_MAP));
+      const wrapper = mount(MapEditorView, { attachTo: document.body });
+      await flushPromises();
+
+      const headers = wrapper.findAll('button.accordion-header');
+      await headers.find((h) => h.text().includes('Contour Tool')).trigger('click');
+      await flushPromises();
+
+      // '99.99' is not in the map index — handler should create a stub.
+      // Verify via mapData.hexes prop on HexMapOverlay (no debounce needed).
+      const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+      await overlay.vm.$emit('edge-click', { hexId: '99.99', dir: 'N' });
+      await flushPromises();
+
+      // onMutated fires synchronously — "* unsaved" confirms handleContourPaint ran
+      expect(wrapper.text()).toContain('* unsaved');
+      // mapData.hexes is passed reactively to HexMapOverlay as the :hexes prop
+      const hexes = overlay.props('hexes');
+      // canonicalOwner('99.99', 0 /* N */) → ownerId:'99.99', ownerFace:0
+      const stub = hexes.find((h) => h.hex === '99.99');
+      expect(stub).toBeDefined();
+      expect(stub.edges).toBeDefined();
+      // same face key as handleEdgePaint (face 0 for dir N) — structural contract
+      expect(Object.keys(stub.edges)).toContain('0');
+
+      wrapper.unmount();
+    });
+  });
+
   it('save success clears the v2 localStorage draft key', async () => {
     const fetchMock = vi
       .fn()
