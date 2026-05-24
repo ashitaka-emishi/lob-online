@@ -1,17 +1,17 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-05-24 after PR #465._
+_Last updated: 2026-05-24 after PR #466._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                      |
-| -------------------------------- | ---------------------------------------------------------- |
-| Open debt items                  | 11                                                         |
-| Cumulative debt score (net open) | 18                                                         |
-| Highest-risk item                | perf: sequential fetch latency in loadGame (#440, score 2) |
-| PRs tracked                      | 222                                                        |
+| Metric                           | Value                                                                                            |
+| -------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Open debt items                  | 15                                                                                               |
+| Cumulative debt score (net open) | 25                                                                                               |
+| Highest-risk item                | sec: mirror stripNonPlayableBoundaryEdges validation on server PUT /map endpoint (#470, score 2) |
+| PRs tracked                      | 223                                                                                              |
 
 ---
 
@@ -259,6 +259,7 @@ _Last updated: 2026-05-24 after PR #465._
 | 2026-05-24 | PR #465 (resolved #462)                                        | -2                   | —         | 381                      |
 | 2026-05-24 | PR #465 (resolved #463)                                        | -3                   | —         | 381                      |
 | 2026-05-24 | PR #465 (resolved #464)                                        | -2                   | —         | 381                      |
+| 2026-05-24 | PR #466                                                        | 7                    | +7        | 388                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -268,7 +269,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 Elevated risk. Several significant deferred items that introduce coupling or architectural compromise. Recommend a debt reduction sprint before the next major phase.
 
-PR #465 (pre-M6 debt sprint) closed all four map-editor items from PR #460 (#461 #462 #463 #464), bringing net open score from 28 to 18. No new debt was introduced. Remaining debt is distributed across four categories: four rules-engine stubs deferred to M6 (#379 #381 #382 #383 — all score 2, safe until combat/morale phases land), two security/infrastructure items deferred to M8 (#350 #403 — score 2, no production risk at current dev-only scale), one game-map performance item (#440 — score 2, no user-visible impact at current scale), and four low-priority items (#387 #385 #205 #204 — score 1). The highest-priority items entering M6 are the rules-engine stubs, which will become correctness gaps once combat and morale orders are implemented.
+PR #466 (map editor bug fixes: contour visibility, playable boundary edges, unknown terrain elimination) fixed 15 findings in place and deferred 4 minor items, raising net open score from 18 to 25. Remaining debt is distributed across five categories: four rules-engine stubs deferred to M6 (#379 #381 #382 #383 — all score 2, safe until combat/morale phases land), three map-editor quality items from PR #466 (#467 #468 #470 — all score 2, dev-only tool with no production impact), two security/infrastructure items deferred to M8 (#350 #403 — score 2, no production risk at current dev-only scale), one game-map performance item (#440 — score 2, no user-visible impact at current scale), and five low-priority items (#469 #387 #385 #205 #204 — score 1). The highest-priority items entering M6 are the rules-engine stubs, which will become correctness gaps once combat and morale orders are implemented.
 
 ---
 
@@ -276,19 +277,23 @@ PR #465 (pre-M6 debt sprint) closed all four map-editor items from PR #460 (#461
 
 _Ordered by score descending (ties: newest first). Resolved items are removed._
 
-| Score | Issue | Title                                                                        | PR Introduced | Assessment                                                                                                                                                                                                               |
-| ----- | ----- | ---------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 2     | #440  | perf: sequential fetch latency in loadGame                                   | PR #437       | `loadGame` serializes game-state and map-config fetches because `scenarioId` is only known after the first response. Could be parallelized with `scenarioId` available up-front. No user-visible issue at current scale. |
-| 2     | #403  | Add Content-Security-Policy headers to Express server                        | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                                      |
-| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)           | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                                       |
-| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                            | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                                      |
-| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                          | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                                        |
-| 2     | #379  | getValidActions should enumerate all legal actions for current state         | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                                            |
-| 2     | #350  | server: add rate limiting on POST /api/v1/games routes                       | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing.                     |
-| 1     | #387  | playerSide in dispatch must be sourced from session, not request body        | PR #386       | No action endpoint exists yet (#356); the session-to-side mapping is a route-layer responsibility. Enforce at the route boundary when #356 is implemented.                                                               |
-| 1     | #385  | Add property-based / fuzz tests for dispatch round-trips                     | PR #375       | Nice-to-have for a rules engine; not blocking. No correctness impact; no milestone assigned.                                                                                                                             |
-| 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                    | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis.                           |
-| 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                                                      |
+| Score | Issue | Title                                                                            | PR Introduced | Assessment                                                                                                                                                                                                                                                     |
+| ----- | ----- | -------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2     | #470  | sec: mirror stripNonPlayableBoundaryEdges validation on server PUT /map endpoint | PR #466       | Client-side strip is authoritative but the server performs no equivalent validation. Defense-in-depth gap: a client bug or direct API call could persist non-playable boundary edges. Dev-only tool with no player-facing surface, so actual risk is low.      |
+| 2     | #468  | feat(map-editor): announce silent edge-click rejection and save-time strip       | PR #466       | Silent no-ops confuse the map editor user when clicks on non-playable boundary edges are discarded and when save silently strips stored edges. Dev-only tool, so no production impact, but the UX friction slows digitization work.                            |
+| 2     | #467  | test(edge-model): expand stripNonPlayableBoundaryEdges coverage to all 6 faces   | PR #466       | Coverage gap for canonical direction adjacency — faces 1 (NE) and 2 (SE) added but parity/odd-column variants and the remaining three face directions are missing. Low risk given the predicate is pure; gaps could mask edge-parity bugs in future refactors. |
+| 2     | #440  | perf: sequential fetch latency in loadGame                                       | PR #437       | `loadGame` serializes game-state and map-config fetches because `scenarioId` is only known after the first response. Could be parallelized with `scenarioId` available up-front. No user-visible issue at current scale.                                       |
+| 2     | #403  | Add Content-Security-Policy headers to Express server                            | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                                                                            |
+| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)               | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                                                                             |
+| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                                | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                                                                            |
+| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                              | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                                                                              |
+| 2     | #379  | getValidActions should enumerate all legal actions for current state             | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                                                                                  |
+| 2     | #350  | server: add rate limiting on POST /api/v1/games routes                           | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing.                                                           |
+| 1     | #469  | chore: remove migrateUnknownTerrain once all checked-in maps are unknown-free    | PR #466       | Dead migration code that will never run once digitization is complete. Trivial to remove but blocked on map digitization milestone; premature removal would break any partially-digitized scenario files still in flight.                                      |
+| 1     | #387  | playerSide in dispatch must be sourced from session, not request body            | PR #386       | No action endpoint exists yet (#356); the session-to-side mapping is a route-layer responsibility. Enforce at the route boundary when #356 is implemented.                                                                                                     |
+| 1     | #385  | Add property-based / fuzz tests for dispatch round-trips                         | PR #375       | Nice-to-have for a rules engine; not blocking. No correctness impact; no milestone assigned.                                                                                                                                                                   |
+| 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                        | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis.                                                                 |
+| 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals     | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                                                                                            |
 
 ---
 
