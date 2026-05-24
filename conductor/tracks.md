@@ -125,6 +125,6 @@
 | [x] | pre-m6-debt-sprint_20260523 | Pre-M6 Debt Sprint — Issues #431 #432 #402 #434 #435 #441 | 2026-05-23 | 2026-05-23 |
 
 | [x] | post-pr451-debt-sprint_20260524 | Post-PR-451 Debt Sprint — Issues #452–#459 | 2026-05-24 | 2026-05-24 |
-| [ ] | pre-m6-debt-sprint_20260524 | Pre-M6 Debt Sprint — Issues #461–#464 | 2026-05-24 | 2026-05-24 |
+| [x] | pre-m6-debt-sprint_20260524 | Pre-M6 Debt Sprint — Issues #461–#464 | 2026-05-24 | 2026-05-24 |
 
 <!-- Tracks registered by /conductor:new-track -->

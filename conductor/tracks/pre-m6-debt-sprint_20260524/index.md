@@ -1,7 +1,7 @@
 # Track: Pre-M6 Debt Sprint — Issues #461–#464
 
 **ID:** pre-m6-debt-sprint_20260524
-**Status:** Pending
+**Status:** Complete
 
 ## Documents
 
@@ -10,8 +10,8 @@
 
 ## Progress
 
-- Phases: 0/4 complete
-- Tasks: 0/10 complete
+- Phases: 4/4 complete
+- Tasks: 10/10 complete
 
 ## Quick Links
 

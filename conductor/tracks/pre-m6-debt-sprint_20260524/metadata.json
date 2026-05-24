@@ -2,15 +2,15 @@
   "id": "pre-m6-debt-sprint_20260524",
   "title": "Pre-M6 Debt Sprint — Issues #461–#464",
   "type": "refactor",
-  "status": "pending",
+  "status": "complete",
   "created": "2026-05-24T00:00:00Z",
-  "updated": "2026-05-24T00:00:00Z",
+  "updated": "2026-05-24T12:00:00Z",
   "phases": {
     "total": 4,
-    "completed": 0
+    "completed": 4
   },
   "tasks": {
     "total": 10,
-    "completed": 0
+    "completed": 10
   }
 }
