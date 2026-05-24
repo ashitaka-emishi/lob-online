@@ -65,12 +65,12 @@ tasks operate on MapEditorView.vue.
       same edge init). Run red — these will fail until 1.2 lands (or green if the behavior
       already exists). Confirm the tests specifically exercise the shared path.
 
-- [~] Task 1.2: (#461) Extract a private `mutateEdgeFeatures(hexId, faceIndex, mutateFn)`
-  helper in `MapEditorView.vue`. It handles: guard `mapData`, resolve `canonicalOwner`,
-  look up `hexIndex` (create stub with `terrain:'unknown'` if missing), init `hex.edges`
-  and `hex.edges[ownerFace]`, then call `mutateFn(hex, ownerFace)`. Wire
-  `handleEdgePaint` and `handleContourPaint` through it (each becomes a one-line body
-  calling `mutateEdgeFeatures` with a type-specific mutateFn). Run `npm run test` green.
+- [x] Task 1.2: (#461) Extract a private `mutateEdgeFeatures(hexId, faceIndex, mutateFn)`
+      helper in `MapEditorView.vue`. It handles: guard `mapData`, resolve `canonicalOwner`,
+      look up `hexIndex` (create stub with `terrain:'unknown'` if missing), init `hex.edges`
+      and `hex.edges[ownerFace]`, then call `mutateFn(hex, ownerFace)`. Wire
+      `handleEdgePaint` and `handleContourPaint` through it (each becomes a one-line body
+      calling `mutateEdgeFeatures` with a type-specific mutateFn). Run `npm run test` green.
 
 - [ ] Task 1.3: (#462) Normalize `EDGE_DISPATCH`. Add explicit `paintFn: handleEdgePaint` to
       road and stream entries. Replace `clearSingle: boolean` + `clearTypes: string[]` with

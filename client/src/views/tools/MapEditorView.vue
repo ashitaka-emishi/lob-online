@@ -160,45 +160,42 @@ function getEdgeFeaturesAt(hexId, faceIndex) {
   return raw.map((f) => (typeof f === 'string' ? f : f.type));
 }
 
-function handleEdgePaint(hexId, faceIndex, type) {
+function mutateEdgeFeatures(hexId, faceIndex, mutateFn) {
   if (!mapData.value) return false;
   const { ownerId, ownerFace } = canonicalOwner(hexId, faceIndex, calibration.value);
   let idx = hexIndex.value.get(ownerId) ?? -1;
   if (idx < 0) {
-    mapData.value.hexes.push({ hex: ownerId, terrain: 'unknown' });
+    mapData.value.hexes.push({ hex: ownerId, terrain: 'unknown' }); // MIGRATION-ONLY
     idx = mapData.value.hexes.length - 1;
     hexIndex.value.set(ownerId, idx);
   }
   const hex = mapData.value.hexes[idx];
   if (!hex.edges) hex.edges = {};
   if (!hex.edges[ownerFace]) hex.edges[ownerFace] = [];
-  const existing = hex.edges[ownerFace];
-  const existingTypes = existing.map((f) => (typeof f === 'string' ? f : f.type));
-  if (existingTypes.includes(type)) return false;
-  const { valid } = validateCoexistence(existingTypes, type);
-  if (!valid) return false;
-  hex.edges[ownerFace] = [...existing, { type }];
-  onMutated();
-  return true;
+  return mutateFn(hex, ownerFace);
+}
+
+function handleEdgePaint(hexId, faceIndex, type) {
+  return mutateEdgeFeatures(hexId, faceIndex, (hex, ownerFace) => {
+    const existing = hex.edges[ownerFace];
+    const existingTypes = existing.map((f) => (typeof f === 'string' ? f : f.type));
+    if (existingTypes.includes(type)) return false;
+    const { valid } = validateCoexistence(existingTypes, type);
+    if (!valid) return false;
+    hex.edges[ownerFace] = [...existing, { type }];
+    onMutated();
+    return true;
+  });
 }
 
 function handleContourPaint(hexId, faceIndex, type) {
-  if (!mapData.value) return false;
-  const { ownerId, ownerFace } = canonicalOwner(hexId, faceIndex, calibration.value);
-  let idx = hexIndex.value.get(ownerId) ?? -1;
-  if (idx < 0) {
-    mapData.value.hexes.push({ hex: ownerId, terrain: 'unknown' });
-    idx = mapData.value.hexes.length - 1;
-    hexIndex.value.set(ownerId, idx);
-  }
-  const hex = mapData.value.hexes[idx];
-  if (!hex.edges) hex.edges = {};
-  if (!hex.edges[ownerFace]) hex.edges[ownerFace] = [];
-  const updated = applyContourPaint(hex.edges[ownerFace], type);
-  if (updated === null) return false;
-  hex.edges[ownerFace] = updated;
-  onMutated();
-  return true;
+  return mutateEdgeFeatures(hexId, faceIndex, (hex, ownerFace) => {
+    const updated = applyContourPaint(hex.edges[ownerFace], type);
+    if (updated === null) return false;
+    hex.edges[ownerFace] = updated;
+    onMutated();
+    return true;
+  });
 }
 
 function handleEdgeClear(hexId, faceIndex, type) {
