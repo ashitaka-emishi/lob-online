@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
 
 /**
  * Encapsulates the repeated per-panel wiring for edge tool panels
@@ -39,5 +39,14 @@ export function useEdgePanelWiring(defaultType, deps) {
     activePanelOverlayConfig.value = cfg;
   }
 
-  return { selectedType, onTypeChange, onEdgePaint, onEdgeClear, onEdgeClearAll, onOverlayConfig };
+  // reactive() auto-unwraps the selectedType ref so callers access road.selectedType
+  // directly (no .value needed), matching Vue 3 template auto-unwrap behaviour.
+  return reactive({
+    selectedType,
+    onTypeChange,
+    onEdgePaint,
+    onEdgeClear,
+    onEdgeClearAll,
+    onOverlayConfig,
+  });
 }

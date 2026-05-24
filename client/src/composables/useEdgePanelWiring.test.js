@@ -14,15 +14,15 @@ describe('useEdgePanelWiring', () => {
 
   it('initialises selectedType from defaultType', () => {
     const deps = makeDeps();
-    const { selectedType } = useEdgePanelWiring('trail', deps);
-    expect(selectedType.value).toBe('trail');
+    const result = useEdgePanelWiring('trail', deps);
+    expect(result.selectedType).toBe('trail');
   });
 
   it('onTypeChange updates selectedType', () => {
     const deps = makeDeps();
-    const { selectedType, onTypeChange } = useEdgePanelWiring('trail', deps);
-    onTypeChange('road');
-    expect(selectedType.value).toBe('road');
+    const result = useEdgePanelWiring('trail', deps);
+    result.onTypeChange('road');
+    expect(result.selectedType).toBe('road');
   });
 
   it('onEdgePaint delegates to handleEdgePaint with unpacked args', () => {
@@ -60,7 +60,15 @@ describe('useEdgePanelWiring', () => {
     const road = useEdgePanelWiring('trail', deps);
     const stream = useEdgePanelWiring('stream', deps);
     road.onTypeChange('road');
-    expect(road.selectedType.value).toBe('road');
-    expect(stream.selectedType.value).toBe('stream');
+    expect(road.selectedType).toBe('road');
+    expect(stream.selectedType).toBe('stream');
+  });
+
+  it('selectedType is accessible directly without .value on the returned object', () => {
+    const deps = makeDeps();
+    const result = useEdgePanelWiring('trail', deps);
+    expect(result.selectedType).toBe('trail');
+    result.onTypeChange('road');
+    expect(result.selectedType).toBe('road');
   });
 });

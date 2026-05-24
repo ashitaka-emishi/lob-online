@@ -430,15 +430,15 @@ const { onEdgeClick: legacyOnEdgeClick } = useEdgeToggle({
 // clearSingle: if true, right-click removes only selectedType from the clicked face.
 const EDGE_DISPATCH = {
   road: {
-    selectedType: () => road.selectedType.value,
+    selectedType: () => road.selectedType,
     clearTypes: ['trail', 'road', 'pike', 'bridge'],
   },
   stream: {
-    selectedType: () => stream.selectedType.value,
+    selectedType: () => stream.selectedType,
     clearTypes: ['stream', 'stoneWall', 'ford'],
   },
   contour: {
-    selectedType: () => contour.selectedType.value,
+    selectedType: () => contour.selectedType,
     paintFn: handleContourPaint,
     clearSingle: true,
   },
