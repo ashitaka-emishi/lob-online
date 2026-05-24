@@ -37,6 +37,17 @@ const TERRAIN_ICONS = {
 // Building is always appended after terrain types; not a terrain value itself.
 const BUILDING_TYPE = 'building';
 
+const TERRAIN_LABELS = {
+  clear: 'Clear',
+  woods: 'Woods',
+  slopingGround: 'Sloping Ground',
+  woodedSloping: 'Wooded Sloping',
+  orchard: 'Orchard',
+  marsh: 'Marsh',
+  unknown: 'Unknown',
+  building: 'Building',
+};
+
 // ── Overlay config ────────────────────────────────────────────────────────────
 // TerrainToolPanel owns its overlay slice: terrain fill colors + building icon only.
 // Terrain icons are hidden; only the building icon (⊞) renders on hexes.
@@ -63,22 +74,24 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
         :key="t"
         class="terrain-btn"
         :class="{ active: paintTerrain === t }"
+        :aria-pressed="paintTerrain === t ? 'true' : 'false'"
         @click="emit('terrain-change', t)"
       >
         <span
           class="terrain-swatch"
           :style="TERRAIN_COLORS[t] ? { backgroundColor: TERRAIN_COLORS[t] } : {}"
         />
-        <span class="terrain-name">{{ t }}</span>
+        <span class="terrain-name">{{ TERRAIN_LABELS[t] ?? t }}</span>
       </button>
       <button
         class="terrain-btn building-btn"
         :class="{ active: paintTerrain === BUILDING_TYPE }"
+        :aria-pressed="paintTerrain === BUILDING_TYPE ? 'true' : 'false'"
         @click="emit('terrain-change', BUILDING_TYPE)"
       >
         <span class="terrain-swatch" />
         <span class="terrain-icon">{{ TERRAIN_ICONS.building }}</span>
-        <span class="terrain-name">building</span>
+        <span class="terrain-name">Building</span>
       </button>
     </div>
 

@@ -8,6 +8,13 @@ const HELP_TEXT =
   'Click an edge to paint the selected contour type. Right-click to remove it. ' +
   'Toggle "Elevation info" to see elevation levels and gradient while editing.';
 
+const CONTOUR_LABELS = {
+  elevation: 'Elevation',
+  slope: 'Slope',
+  extremeSlope: 'Extreme Slope',
+  verticalSlope: 'Vertical Slope',
+};
+
 const props = defineProps({
   selectedType: {
     type: String,
@@ -103,6 +110,7 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
         :key="group.types[0]"
         class="type-btn"
         :class="{ active: selectedType === group.types[0] }"
+        :aria-pressed="selectedType === group.types[0] ? 'true' : 'false'"
         @click="emit('type-change', group.types[0])"
       >
         <span
@@ -113,7 +121,7 @@ watch(ownOverlayConfig, (cfg) => emit('overlay-config', cfg), { immediate: true 
             width: '24px',
           }"
         />
-        <span class="type-name">{{ group.types[0] }}</span>
+        <span class="type-name">{{ CONTOUR_LABELS[group.types[0]] ?? group.types[0] }}</span>
       </button>
     </div>
 
