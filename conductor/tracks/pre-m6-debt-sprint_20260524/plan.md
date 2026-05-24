@@ -93,7 +93,7 @@ asserted contract that `'unknown'` is a migration-only reserved value with no ot
 
 ### Tasks
 
-- [ ] Task 2.1: (#463) Add a JSDoc block above `migrateUnknownTerrain` in
+- [x] Task 2.1: (#463) Add a JSDoc block above `migrateUnknownTerrain` in
       `useMapPersistence.js` explicitly stating: "The only producers of `terrain:'unknown'`
       are (a) `handleEdgePaint`/`handleContourPaint` in MapEditorView.vue when auto-creating
       a hex stub (via `mutateEdgeFeatures` after #461 lands), and (b) legacy map data. No
@@ -101,7 +101,7 @@ asserted contract that `'unknown'` is a migration-only reserved value with no ot
       at the auto-create call site in `mutateEdgeFeatures` in MapEditorView.vue so a grep
       for `terrain.*unknown` surfaces all producers.
 
-- [ ] Task 2.2: (#463) In `useMapPersistence.test.js`, add a test that asserts the migration
+- [x] Task 2.2: (#463) In `useMapPersistence.test.js`, add a test that asserts the migration
       is idempotent across two consecutive load cycles: load once (terrain:'unknown' → 'clear'),
       serialize the result, load again — assert no hex terrain changes on the second load.
       Run `npm run test` green.

@@ -92,10 +92,20 @@ export function useMapPersistence({
     pendingTimers.clear();
   }
 
-  // Data-ingress migration: terrain:'unknown' is used as a placeholder in two
-  // producers — hexes auto-created during edge painting, and any legacy map data
-  // predating the 'clear' default. Convert to 'clear' at all three load paths
-  // (server fetch, draft restore, pull confirm) so stale values never reach render.
+  /**
+   * Converts `terrain:'unknown'` → `'clear'` at every data-ingress point.
+   *
+   * Authoritative producer list — the ONLY paths that may produce `terrain:'unknown'`:
+   *   (a) `mutateEdgeFeatures` in MapEditorView.vue, when auto-creating a hex stub during
+   *       edge painting (marked `// MIGRATION-ONLY` at that call site).
+   *   (b) `resolveHexOrStub` in hexGeometry.js via the `useEdgeToggle` legacy path, when
+   *       an edge-click targets a hex not yet in the map index.
+   *   (c) Legacy map data predating the `'clear'` default.
+   * No other code may assign `terrain:'unknown'`. Grep `terrain.*unknown` to audit all sites.
+   *
+   * Called at all three load paths (server fetch, draft restore, pull confirm) so stale
+   * values never reach the renderer or the schema validator.
+   */
   function migrateUnknownTerrain(data) {
     if (!data?.hexes) return;
     for (const hex of data.hexes) {
