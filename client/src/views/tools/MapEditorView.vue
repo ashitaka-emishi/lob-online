@@ -422,22 +422,25 @@ const { onEdgeClick: legacyOnEdgeClick } = useEdgeToggle({
 // Routes edge-click from HexMapOverlay to the active tool panel's handler.
 // { hexId, dir, clientX, clientY } — clientX/Y are screen coords for logging.
 // Dispatch table for edge click and right-click — one entry per panel.
-// selectedType: reactive ref for the currently active tool type.
-// clearTypes: feature type strings removed on right-click (whole-hex clear).
-// clearSingle: if true, right-click removes only selectedType from the clicked face.
+// selectedType: returns the currently active tool type.
+// paintFn: called on left-click with (hexId, faceIndex, type).
+// clear.mode 'hex': right-click removes all clear.types from every canonical face.
+// clear.mode 'face': right-click removes only selectedType from the clicked face.
 const EDGE_DISPATCH = {
   road: {
     selectedType: () => road.selectedType,
-    clearTypes: ['trail', 'road', 'pike', 'bridge'],
+    paintFn: handleEdgePaint,
+    clear: { mode: 'hex', types: ['trail', 'road', 'pike', 'bridge'] },
   },
   stream: {
     selectedType: () => stream.selectedType,
-    clearTypes: ['stream', 'stoneWall', 'ford'],
+    paintFn: handleEdgePaint,
+    clear: { mode: 'hex', types: ['stream', 'stoneWall', 'ford'] },
   },
   contour: {
     selectedType: () => contour.selectedType,
     paintFn: handleContourPaint,
-    clearSingle: true,
+    clear: { mode: 'face' },
   },
 };
 
@@ -455,8 +458,7 @@ function onEdgeClick({ hexId, dir }) {
     const feats = getEdgeFeaturesAt(hexId, faceIndex);
     if (!prereqs.some((p) => feats.includes(p))) return;
   }
-  const paintFn = entry.paintFn ?? handleEdgePaint;
-  paintFn(hexId, faceIndex, type);
+  entry.paintFn(hexId, faceIndex, type);
 }
 
 function onEdgeRightClick({ hexId, dir }) {
@@ -464,10 +466,10 @@ function onEdgeRightClick({ hexId, dir }) {
   if (faceIndex === -1) return;
   const entry = EDGE_DISPATCH[openPanel.value];
   if (!entry) return;
-  if (entry.clearSingle) {
+  if (entry.clear.mode === 'face') {
     handleEdgeClear(hexId, faceIndex, entry.selectedType());
   } else {
-    handleHexEdgeClearAll(hexId, entry.clearTypes);
+    handleHexEdgeClearAll(hexId, entry.clear.types);
   }
 }
 

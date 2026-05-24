@@ -72,7 +72,7 @@ tasks operate on MapEditorView.vue.
       `handleEdgePaint` and `handleContourPaint` through it (each becomes a one-line body
       calling `mutateEdgeFeatures` with a type-specific mutateFn). Run `npm run test` green.
 
-- [ ] Task 1.3: (#462) Normalize `EDGE_DISPATCH`. Add explicit `paintFn: handleEdgePaint` to
+- [x] Task 1.3: (#462) Normalize `EDGE_DISPATCH`. Add explicit `paintFn: handleEdgePaint` to
       road and stream entries. Replace `clearSingle: boolean` + `clearTypes: string[]` with
       `clear: { mode: 'face', type: () => entry.selectedType() }` (contour) and
       `clear: { mode: 'hex', types: [...] }` (road, stream). Update `onEdgeClick` to use
