@@ -6,6 +6,7 @@ import {
   validateCoexistence,
   addEdgeFeature,
   removeEdgeFeature,
+  applyContourPaint,
 } from './edge-model.js';
 
 const GRID_SPEC = { rows: 10, cols: 10 };
@@ -138,6 +139,51 @@ describe('formulas/edge-model', () => {
       const hexMap = new Map([['05.05', { hex: '05.05', edges: { 0: ['slope'] } }]]);
       addEdgeFeature(hexMap, '05.05', 0, 'extremeSlope', GRID_SPEC);
       expect(hexMap.get('05.05').edges[0]).not.toContain('extremeSlope');
+    });
+  });
+
+  describe('applyContourPaint(existingFeatures, newType)', () => {
+    it('adds contour type to empty edge', () => {
+      const result = applyContourPaint([], 'slope');
+      expect(result).toEqual([{ type: 'slope' }]);
+    });
+
+    it('adds contour type to edge with no existing contour features', () => {
+      const result = applyContourPaint([{ type: 'road' }], 'elevation');
+      expect(result).toContainEqual({ type: 'elevation' });
+      expect(result).toContainEqual({ type: 'road' });
+    });
+
+    it('replaces existing contour type (strip-then-add)', () => {
+      const result = applyContourPaint([{ type: 'elevation' }], 'slope');
+      expect(result).toContainEqual({ type: 'slope' });
+      expect(result).not.toContainEqual({ type: 'elevation' });
+    });
+
+    it('replaces any contour type regardless of which one', () => {
+      const result = applyContourPaint([{ type: 'extremeSlope' }], 'verticalSlope');
+      expect(result).toContainEqual({ type: 'verticalSlope' });
+      expect(result).not.toContainEqual({ type: 'extremeSlope' });
+    });
+
+    it('preserves non-contour features (road, stream) when replacing contour', () => {
+      const existing = [{ type: 'road' }, { type: 'elevation' }];
+      const result = applyContourPaint(existing, 'slope');
+      expect(result).toContainEqual({ type: 'road' });
+      expect(result).toContainEqual({ type: 'slope' });
+      expect(result).not.toContainEqual({ type: 'elevation' });
+    });
+
+    it('is idempotent — returns null when type is already present', () => {
+      const result = applyContourPaint([{ type: 'slope' }], 'slope');
+      expect(result).toBeNull();
+    });
+
+    it('handles mixed string/object feature arrays', () => {
+      const result = applyContourPaint(['road', { type: 'elevation' }], 'slope');
+      expect(result).toContainEqual({ type: 'slope' });
+      expect(result).not.toContainEqual({ type: 'elevation' });
+      expect(result.some((f) => f === 'road' || f?.type === 'road')).toBe(true);
     });
   });
 

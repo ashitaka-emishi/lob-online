@@ -27,7 +27,11 @@ import { useMapPersistence } from '../../composables/useMapPersistence.js';
 import { useEdgeToggle } from '../../composables/useEdgeToggle.js';
 import { useEdgePanelWiring } from '../../composables/useEdgePanelWiring.js';
 import { DIRS } from '../../utils/hexGeometry.js';
-import { canonicalOwner, validateCoexistence } from '../../formulas/edge-model.js';
+import {
+  canonicalOwner,
+  validateCoexistence,
+  applyContourPaint,
+} from '../../formulas/edge-model.js';
 
 const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
 const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
@@ -174,6 +178,25 @@ function handleEdgePaint(hexId, faceIndex, type) {
   const { valid } = validateCoexistence(existingTypes, type);
   if (!valid) return false;
   hex.edges[ownerFace] = [...existing, { type }];
+  onMutated();
+  return true;
+}
+
+function handleContourPaint(hexId, faceIndex, type) {
+  if (!mapData.value) return false;
+  const { ownerId, ownerFace } = canonicalOwner(hexId, faceIndex, calibration.value);
+  let idx = hexIndex.value.get(ownerId) ?? -1;
+  if (idx < 0) {
+    mapData.value.hexes.push({ hex: ownerId, terrain: 'unknown' });
+    idx = mapData.value.hexes.length - 1;
+    hexIndex.value.set(ownerId, idx);
+  }
+  const hex = mapData.value.hexes[idx];
+  if (!hex.edges) hex.edges = {};
+  if (!hex.edges[ownerFace]) hex.edges[ownerFace] = [];
+  const updated = applyContourPaint(hex.edges[ownerFace], type);
+  if (updated === null) return false;
+  hex.edges[ownerFace] = updated;
   onMutated();
   return true;
 }
@@ -416,6 +439,7 @@ const EDGE_DISPATCH = {
   },
   contour: {
     selectedType: () => contour.selectedType.value,
+    paintFn: handleContourPaint,
     clearSingle: true,
   },
 };
@@ -434,7 +458,8 @@ function onEdgeClick({ hexId, dir }) {
     const feats = getEdgeFeaturesAt(hexId, faceIndex);
     if (!prereqs.some((p) => feats.includes(p))) return;
   }
-  handleEdgePaint(hexId, faceIndex, type);
+  const paintFn = entry.paintFn ?? handleEdgePaint;
+  paintFn(hexId, faceIndex, type);
 }
 
 function onEdgeRightClick({ hexId, dir }) {
