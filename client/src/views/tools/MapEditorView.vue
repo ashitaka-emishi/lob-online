@@ -31,7 +31,9 @@ import {
   canonicalOwner,
   validateCoexistence,
   applyContourPaint,
+  stripNonPlayableBoundaryEdges,
 } from '../../formulas/edge-model.js';
+import { adjacentHexId } from '../../utils/hexGeometry.js';
 
 const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
 const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
@@ -450,7 +452,20 @@ const EDGE_DISPATCH = {
   },
 };
 
+function isNonPlayableBoundary(hexId, dir) {
+  if (!mapData.value) return false;
+  const idx = hexIndex.value.get(hexId);
+  const hex = idx !== undefined ? mapData.value.hexes[idx] : null;
+  if (hex?.playable === false) return true;
+  const adjId = adjacentHexId(hexId, dir, calibration.value);
+  if (!adjId) return false;
+  const adjIdx = hexIndex.value.get(adjId);
+  const adjHex = adjIdx !== undefined ? mapData.value.hexes[adjIdx] : null;
+  return adjHex?.playable === false;
+}
+
 function onEdgeClick({ hexId, dir }) {
+  if (isNonPlayableBoundary(hexId, dir)) return;
   const faceIndex = DIRS.indexOf(dir);
   if (faceIndex === -1) return;
   const entry = EDGE_DISPATCH[openPanel.value];
@@ -465,6 +480,11 @@ function onEdgeClick({ hexId, dir }) {
     if (!prereqs.some((p) => feats.includes(p))) return;
   }
   entry.paintFn(hexId, faceIndex, type);
+}
+
+function handleSave() {
+  if (mapData.value) stripNonPlayableBoundaryEdges(mapData.value.hexes, calibration.value);
+  save();
 }
 
 function onEdgeRightClick({ hexId, dir }) {
@@ -547,7 +567,7 @@ onUnmounted(() => {
       >
         {{ isPulling ? 'Pulling…' : 'Pull from Server' }}
       </button>
-      <button class="save-btn" :disabled="isOffline || saveStatus === 'saving'" @click="save">
+      <button class="save-btn" :disabled="isOffline || saveStatus === 'saving'" @click="handleSave">
         {{ isOffline ? 'Offline' : saveStatus === 'saving' ? 'Saving…' : 'Push to Server' }}
       </button>
     </header>

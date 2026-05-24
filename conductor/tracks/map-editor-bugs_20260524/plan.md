@@ -102,7 +102,7 @@ before pushing to the server.
 
 ### Tasks
 
-- [ ] Task 3.1: `client/src/formulas/edge-model.js` — add exported function
+- [x] Task 3.1: `client/src/formulas/edge-model.js` — add exported function
       `stripNonPlayableBoundaryEdges(hexes, gridSpec)`:
   - Build a `Map<hexId, hex>` from `hexes`
   - For each hex, iterate canonical face indices 0, 1, 2 (dirs N, NE, SE)
@@ -110,23 +110,23 @@ before pushing to the server.
     `hex.edges[faceIndex]`
   - Clean up empty `hex.edges` objects
   - Mutates `hexes` in place; returns nothing
-- [ ] Task 3.2: `client/src/formulas/edge-model.test.js` — add tests for
+- [x] Task 3.2: `client/src/formulas/edge-model.test.js` — add tests for
       `stripNonPlayableBoundaryEdges`:
   - Strips a face when the owning hex is non-playable
   - Strips a face when the adjacent hex is non-playable
   - Leaves faces between two playable hexes untouched
   - Cleans up empty edges object
-- [ ] Task 3.3: `client/src/views/tools/MapEditorView.vue` — add
+- [x] Task 3.3: `client/src/views/tools/MapEditorView.vue` — add
       `isNonPlayableBoundary(hexId, dir)` local helper that looks up both the clicked
       hex and its neighbor in `hexIndex`/`mapData` and returns `true` if either has
       `playable === false`
-- [ ] Task 3.4: `client/src/views/tools/MapEditorView.vue` — add early-return guard
+- [x] Task 3.4: `client/src/views/tools/MapEditorView.vue` — add early-return guard
       at the top of `onEdgeClick`: `if (isNonPlayableBoundary(hexId, dir)) return`
       (covers both EDGE_DISPATCH and `legacyOnEdgeClick` paths)
-- [ ] Task 3.5: `client/src/views/tools/MapEditorView.vue` — add `handleSave()`
+- [x] Task 3.5: `client/src/views/tools/MapEditorView.vue` — add `handleSave()`
       wrapper that calls `stripNonPlayableBoundaryEdges(mapData.value.hexes, calibration.value)`
       then `save()`; update save button `@click` from `save` to `handleSave`
-- [ ] Task 3.6: `client/src/views/tools/MapEditorView.test.js` — add test that
+- [x] Task 3.6: `client/src/views/tools/MapEditorView.test.js` — add test that
       `onEdgeClick` is a no-op when the clicked hex is non-playable
 
 ### Verification

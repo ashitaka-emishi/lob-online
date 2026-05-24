@@ -747,6 +747,37 @@ describe('MapEditorView', () => {
     });
   });
 
+  it('edge-click on a non-playable hex is a no-op', async () => {
+    vi.useFakeTimers();
+    const nonPlayableMap = {
+      ...VALID_MAP,
+      hexes: [
+        { hex: '01.01', terrain: 'clear' },
+        { hex: '01.02', terrain: 'clear', playable: false },
+      ],
+    };
+    vi.stubGlobal('fetch', mockFetch(nonPlayableMap));
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    const headers = wrapper.findAll('button.accordion-header');
+    await headers.find((h) => h.text().includes('Road Tool')).trigger('click');
+    await flushPromises();
+
+    const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
+    await overlay.vm.$emit('edge-click', { hexId: '01.02', dir: 'N' });
+    await flushPromises();
+
+    vi.advanceTimersByTime(DEBOUNCE_MS + 100);
+    // No draft should be saved — the click was silently ignored
+    expect(localStorage.setItem).not.toHaveBeenCalledWith(
+      MAP_DRAFT_KEY,
+      expect.stringContaining('"01.02"')
+    );
+    vi.useRealTimers();
+    wrapper.unmount();
+  });
+
   it('save success clears the v2 localStorage draft key', async () => {
     const fetchMock = vi
       .fn()

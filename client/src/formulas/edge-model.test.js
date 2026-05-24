@@ -7,6 +7,7 @@ import {
   addEdgeFeature,
   removeEdgeFeature,
   applyContourPaint,
+  stripNonPlayableBoundaryEdges,
 } from './edge-model.js';
 
 const GRID_SPEC = { rows: 10, cols: 10 };
@@ -220,6 +221,41 @@ describe('formulas/edge-model', () => {
     it('is a no-op when the hex has no edges', () => {
       const hexMap = new Map([['05.05', { hex: '05.05' }]]);
       expect(() => removeEdgeFeature(hexMap, '05.05', 0, 'road', GRID_SPEC)).not.toThrow();
+    });
+  });
+
+  describe('stripNonPlayableBoundaryEdges(hexes, gridSpec)', () => {
+    it('strips a face when the owning hex is non-playable', () => {
+      const hexes = [{ hex: '05.05', playable: false, edges: { 0: [{ type: 'road' }] } }];
+      stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
+      expect(hexes[0].edges).toBeUndefined();
+    });
+
+    it('strips a face when the adjacent hex is non-playable', () => {
+      // face 0 (N) of 05.05 is adjacent to 05.06 (col.row format, N increments row)
+      const hexes = [
+        { hex: '05.05', edges: { 0: [{ type: 'stream' }] } },
+        { hex: '05.06', playable: false },
+      ];
+      stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
+      expect(hexes[0].edges).toBeUndefined();
+    });
+
+    it('leaves faces between two playable hexes untouched', () => {
+      const hexes = [{ hex: '05.05', edges: { 0: [{ type: 'road' }] } }, { hex: '05.06' }];
+      stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
+      expect(hexes[0].edges[0]).toEqual([{ type: 'road' }]);
+    });
+
+    it('cleans up empty edges object after stripping', () => {
+      const hexes = [{ hex: '05.05', playable: false, edges: { 0: [{ type: 'road' }] } }];
+      stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
+      expect(Object.prototype.hasOwnProperty.call(hexes[0], 'edges')).toBe(false);
+    });
+
+    it('is a no-op for hexes with no edges', () => {
+      const hexes = [{ hex: '05.05', playable: false }];
+      expect(() => stripNonPlayableBoundaryEdges(hexes, GRID_SPEC)).not.toThrow();
     });
   });
 });
