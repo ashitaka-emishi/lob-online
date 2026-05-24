@@ -69,6 +69,7 @@ Navigation hub for project context.
 | [pre-m6-debt-sprint_20260523](./tracks/pre-m6-debt-sprint_20260523/index.md) | Pre-M6 Debt Sprint — Issues #431 #432 #402 #434 #435 #441 | Pending |
 | [post-pr451-debt-sprint_20260524](./tracks/post-pr451-debt-sprint_20260524/index.md) | Post-PR-451 Debt Sprint — Issues #452–#459 | Complete |
 | [pre-m6-debt-sprint_20260524](./tracks/pre-m6-debt-sprint_20260524/index.md) | Pre-M6 Debt Sprint — Issues #461–#464 | Pending |
+| [map-editor-bugs_20260524](./tracks/map-editor-bugs_20260524/index.md) | Map Editor Bug Fixes — #416, #418, #419 | Pending |
 
 ## Getting Started
 

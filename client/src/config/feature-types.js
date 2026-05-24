@@ -50,9 +50,9 @@ export const CONTOUR_TYPES = ['elevation', 'slope', 'extremeSlope', 'verticalSlo
 
 /** Contour / slope feature groups ordered from lowest to highest severity. */
 export const CONTOUR_GROUPS = [
-  { types: ['elevation'], color: '#aaaaaa', strokeWidth: 2 },
-  { types: ['slope'], color: '#444444', strokeWidth: 3 },
-  { types: ['extremeSlope'], color: '#111111', strokeWidth: 5 },
+  { types: ['elevation'], color: '#595959', strokeWidth: 3 },
+  { types: ['slope'], color: '#666666', strokeWidth: 5 },
+  { types: ['extremeSlope'], color: '#000000', strokeWidth: 7 },
   { types: ['verticalSlope'], color: '#cc0000', strokeWidth: 4 },
 ];
 
