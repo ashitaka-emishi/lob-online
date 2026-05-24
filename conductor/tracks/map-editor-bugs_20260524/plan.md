@@ -3,7 +3,7 @@
 **Track ID:** map-editor-bugs_20260524
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-05-24
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
