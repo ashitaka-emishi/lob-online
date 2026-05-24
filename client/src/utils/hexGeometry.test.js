@@ -424,6 +424,7 @@ describe('resolveHexOrStub', () => {
   });
 
   it('returns a stub object for an unknown hexId', () => {
+    // 'clear' is the stub terrain default — see resolveHexOrStub (#419)
     expect(resolveHexOrStub(hexes, indexMap, '99.99')).toEqual({
       hex: '99.99',
       terrain: 'clear',

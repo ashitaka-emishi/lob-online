@@ -84,7 +84,7 @@ describe('useEdgeToggle', () => {
       onEdgeClick({ hexId: '99.99', dir: 'N' });
       const call = args.onHexUpdate.mock.calls.find(([h]) => h.hex === '99.99');
       expect(call).toBeDefined();
-      expect(call[0].terrain).toBe('clear');
+      expect(call[0].terrain).toBe('clear'); // resolveHexOrStub stub default (#419)
     });
   });
 });

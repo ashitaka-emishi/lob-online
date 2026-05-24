@@ -305,5 +305,5 @@ export function adjacentHexId(hexId, dir, gridSpec) {
  */
 export function resolveHexOrStub(hexes, indexMap, hexId) {
   const idx = indexMap.get(hexId);
-  return idx !== undefined ? hexes[idx] : { hex: hexId, terrain: 'clear' };
+  return idx !== undefined ? hexes[idx] : { hex: hexId, terrain: 'clear' }; // 'clear' is the safe stub default (#419)
 }
