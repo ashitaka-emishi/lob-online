@@ -63,6 +63,7 @@ export function useMapPersistence({
   draftKey,
   draftKeyV1,
   onCalibrationLoaded,
+  beforeSave,
 }) {
   // L4: guard against accidental empty/missing key args
   if (!storageKey || !draftKey) {
@@ -95,11 +96,10 @@ export function useMapPersistence({
   /**
    * Converts `terrain:'unknown'` → `'clear'` at every data-ingress point.
    *
-   * Authoritative producer list — the ONLY paths that may produce `terrain:'unknown'`:
-   *   (a) `resolveHexOrStub` in hexGeometry.js via the `useEdgeToggle` legacy path, when
-   *       an edge-click targets a hex not yet in the map index.
-   *   (b) Legacy map data predating the `'clear'` default.
-   * No other code may assign `terrain:'unknown'`. Grep `terrain.*unknown` to audit all sites.
+   * Migration-only safety net for legacy persisted data predating the `'clear'` default.
+   * `resolveHexOrStub` (hexGeometry.js) now emits `'clear'` stubs, so this function no
+   * longer fires in normal use — it only normalises old map files that were saved before
+   * that fix landed.
    *
    * Called at all three load paths (server fetch, draft restore, pull confirm) so stale
    * values never reach the renderer or the schema validator.
@@ -286,6 +286,10 @@ export function useMapPersistence({
 
   async function _executePush() {
     if (!mapData.value) return;
+    // Run caller-provided pre-save hook (e.g. strip non-playable boundary edges).
+    // Called here rather than only in save() so the confirmSave overwrite path
+    // is also covered — both paths converge on _executePush.
+    beforeSave?.();
     saveStatus.value = 'saving';
     saveErrors.value = [];
     try {

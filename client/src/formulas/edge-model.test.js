@@ -7,6 +7,8 @@ import {
   addEdgeFeature,
   removeEdgeFeature,
   applyContourPaint,
+  stripNonPlayableBoundaryEdges,
+  isEdgeAtNonPlayableBoundary,
 } from './edge-model.js';
 
 const GRID_SPEC = { rows: 10, cols: 10 };
@@ -220,6 +222,106 @@ describe('formulas/edge-model', () => {
     it('is a no-op when the hex has no edges', () => {
       const hexMap = new Map([['05.05', { hex: '05.05' }]]);
       expect(() => removeEdgeFeature(hexMap, '05.05', 0, 'road', GRID_SPEC)).not.toThrow();
+    });
+  });
+
+  describe('isEdgeAtNonPlayableBoundary(hex, adjHex)', () => {
+    it('returns true when the owning hex has playable: false', () => {
+      expect(isEdgeAtNonPlayableBoundary({ playable: false }, { playable: true })).toBe(true);
+    });
+
+    it('returns true when the adjacent hex has playable: false', () => {
+      expect(isEdgeAtNonPlayableBoundary({ playable: true }, { playable: false })).toBe(true);
+    });
+
+    it('returns false when both hexes are playable', () => {
+      expect(isEdgeAtNonPlayableBoundary({ playable: true }, { playable: true })).toBe(false);
+    });
+
+    it('returns false when both hexes have no playable field (implicitly playable)', () => {
+      expect(isEdgeAtNonPlayableBoundary({}, {})).toBe(false);
+    });
+
+    it('returns true when adjHex is null (edge leads off-map)', () => {
+      expect(isEdgeAtNonPlayableBoundary({ playable: false }, null)).toBe(true);
+    });
+  });
+
+  describe('stripNonPlayableBoundaryEdges(hexes, gridSpec)', () => {
+    it('returns undefined (mutates in place)', () => {
+      const hexes = [{ hex: '05.05', playable: false, edges: { 0: [{ type: 'road' }] } }];
+      expect(stripNonPlayableBoundaryEdges(hexes, GRID_SPEC)).toBeUndefined();
+    });
+
+    it('strips face 0 (N) when the owning hex is non-playable', () => {
+      const hexes = [
+        { hex: '05.05', playable: false, terrain: 'clear', edges: { 0: [{ type: 'road' }] } },
+      ];
+      stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
+      expect(hexes[0].edges).toBeUndefined();
+      // non-edge fields are preserved
+      expect(hexes[0].terrain).toBe('clear');
+      expect(hexes.length).toBe(1);
+    });
+
+    it('strips face 0 (N) when the adjacent hex is non-playable', () => {
+      // N neighbor of 05.05 is 05.06 (col.row; N increments row)
+      const hexes = [
+        { hex: '05.05', edges: { 0: [{ type: 'stream' }] } },
+        { hex: '05.06', playable: false },
+      ];
+      stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
+      expect(hexes[0].edges).toBeUndefined();
+    });
+
+    it('strips face 1 (NE) when the adjacent hex is non-playable', () => {
+      // NE neighbor of 05.05 is 06.05
+      const hexes = [
+        { hex: '05.05', edges: { 1: [{ type: 'road' }] } },
+        { hex: '06.05', playable: false },
+      ];
+      stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
+      expect(hexes[0].edges).toBeUndefined();
+    });
+
+    it('strips face 2 (SE) when the adjacent hex is non-playable', () => {
+      // SE neighbor of 05.05 is 06.04
+      const hexes = [
+        { hex: '05.05', edges: { 2: [{ type: 'stream' }] } },
+        { hex: '06.04', playable: false },
+      ];
+      stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
+      expect(hexes[0].edges).toBeUndefined();
+    });
+
+    it('selectively strips only the boundary face, preserving the interior face', () => {
+      // face 0 (N) → 05.06 is non-playable; face 1 (NE) → 06.05 is playable
+      const hexes = [
+        { hex: '05.05', edges: { 0: [{ type: 'road' }], 1: [{ type: 'stream' }] } },
+        { hex: '05.06', playable: false },
+        { hex: '06.05' },
+      ];
+      stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
+      expect(hexes[0].edges[0]).toBeUndefined();
+      expect(hexes[0].edges[1]).toEqual([{ type: 'stream' }]);
+      expect(hexes[0].edges).toBeDefined(); // edges object not deleted
+    });
+
+    it('leaves faces between two playable hexes untouched', () => {
+      const hexes = [{ hex: '05.05', edges: { 0: [{ type: 'road' }] } }, { hex: '05.06' }];
+      stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
+      expect(hexes[0].edges[0]).toEqual([{ type: 'road' }]);
+    });
+
+    it('cleans up empty edges object after stripping', () => {
+      const hexes = [{ hex: '05.05', playable: false, edges: { 0: [{ type: 'road' }] } }];
+      stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
+      expect(Object.prototype.hasOwnProperty.call(hexes[0], 'edges')).toBe(false);
+    });
+
+    it('is a no-op for hexes with no edges', () => {
+      const hexes = [{ hex: '05.05', playable: false }];
+      expect(() => stripNonPlayableBoundaryEdges(hexes, GRID_SPEC)).not.toThrow();
     });
   });
 });

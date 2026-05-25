@@ -22,7 +22,6 @@ const TERRAIN_ICONS = {
   woodedSloping: '▲╱',
   orchard: '⬡',
   marsh: '≈',
-  unknown: '?',
   building: '⊞',
 };
 
@@ -36,7 +35,6 @@ const TERRAIN_LABELS = {
   woodedSloping: 'Wooded Sloping',
   orchard: 'Orchard',
   marsh: 'Marsh',
-  unknown: 'Unknown',
   building: 'Building',
 };
 

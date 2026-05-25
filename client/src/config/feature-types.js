@@ -14,7 +14,6 @@ export const TERRAIN_COLORS = {
   marsh: 'rgba(60,120,100,0.8)',
   slopingGround: 'rgba(139,100,60,0.8)',
   woodedSloping: 'rgba(55,35,10,0.85)',
-  unknown: 'rgba(150,150,150,0.3)',
 };
 
 /**
@@ -48,11 +47,13 @@ export const STREAM_WALL_GROUPS = [
 /** All contour feature type strings, ordered from lowest to highest severity. */
 export const CONTOUR_TYPES = ['elevation', 'slope', 'extremeSlope', 'verticalSlope'];
 
+// Stroke widths and grayscale ramp tuned for legibility over the SM map background (#416).
+// Maintain monotonic darkening and width progression: elevation < slope < extremeSlope.
 /** Contour / slope feature groups ordered from lowest to highest severity. */
 export const CONTOUR_GROUPS = [
-  { types: ['elevation'], color: '#aaaaaa', strokeWidth: 2 },
-  { types: ['slope'], color: '#444444', strokeWidth: 3 },
-  { types: ['extremeSlope'], color: '#111111', strokeWidth: 5 },
+  { types: ['elevation'], color: '#595959', strokeWidth: 3 },
+  { types: ['slope'], color: '#666666', strokeWidth: 5 },
+  { types: ['extremeSlope'], color: '#000000', strokeWidth: 7 },
   { types: ['verticalSlope'], color: '#cc0000', strokeWidth: 4 },
 ];
 

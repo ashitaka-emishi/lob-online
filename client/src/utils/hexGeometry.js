@@ -301,9 +301,9 @@ export function adjacentHexId(hexId, dir, gridSpec) {
  * @param {Array<object>} hexes - the map's hex array
  * @param {Map<string, number>} indexMap - hexId → array index
  * @param {string} hexId
- * @returns {object} the existing hex entry, or `{ hex: hexId, terrain: 'unknown' }`
+ * @returns {object} the existing hex entry, or `{ hex: hexId, terrain: 'clear' }`
  */
 export function resolveHexOrStub(hexes, indexMap, hexId) {
   const idx = indexMap.get(hexId);
-  return idx !== undefined ? hexes[idx] : { hex: hexId, terrain: 'unknown' };
+  return idx !== undefined ? hexes[idx] : { hex: hexId, terrain: 'clear' }; // 'clear' is the safe stub default (#419)
 }

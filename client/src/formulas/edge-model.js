@@ -170,3 +170,62 @@ export function removeEdgeFeature(hexMap, hexId, faceIndex, type, gridSpec) {
 
   hex.edges[ownerFace] = hex.edges[ownerFace].filter((f) => f !== type);
 }
+
+// ── Playable boundary cleanup ─────────────────────────────────────────────────
+
+// Each edge is shared between exactly two hexes and owned by exactly one.
+// Faces 0–2 (N, NE, SE) are the canonical "owner" faces in the EVEN_Q offset
+// convention used by edge storage; faces 3–5 resolve to their mirror on the
+// adjacent hex. Iterating only 0–2 visits every owned edge exactly once.
+const CANONICAL_FACE_DIRS = ['N', 'NE', 'SE'];
+
+/**
+ * Returns true when the edge between `hex` and `adjHex` crosses a
+ * playable / non-playable boundary.
+ *
+ * Shared predicate used by both `stripNonPlayableBoundaryEdges` (save-time
+ * sweep) and `isNonPlayableBoundary` in MapEditorView (click-time guard).
+ * Keeping the rule in one place means any future change to the playability
+ * definition (e.g. a "semi-playable" state) only needs to be updated here.
+ *
+ * @param {object|null} hex
+ * @param {object|null} adjHex
+ * @returns {boolean}
+ */
+export function isEdgeAtNonPlayableBoundary(hex, adjHex) {
+  return hex?.playable === false || adjHex?.playable === false;
+}
+
+/**
+ * Removes edge features stored on canonical faces (0–2) that cross a playable/
+ * non-playable hex boundary.  Mutates `hexes` in place.
+ *
+ * // SM map convention (#418) — hex edges may not lie on a playable/non-playable
+ * // boundary; such edges are stripped at save time to prevent invalid persisted data.
+ *
+ * Takes the hex array directly (rather than a Map) because it operates on
+ * `mapData.hexes` in-place at save time — the caller already has the array.
+ * The function builds its own lookup Map internally for O(1) neighbour access.
+ *
+ * @param {Array<object>} hexes - the map's hex array (mutated in place)
+ * @param {{rows:number, cols:number}} gridSpec
+ * @returns {undefined}
+ */
+export function stripNonPlayableBoundaryEdges(hexes, gridSpec) {
+  const hexMap = new Map(hexes.map((h) => [h.hex, h]));
+
+  for (const hex of hexes) {
+    if (!hex.edges) continue;
+    for (let fi = 0; fi < CANONICAL_FACE_DIRS.length; fi++) {
+      if (!hex.edges[fi] || hex.edges[fi].length === 0) continue;
+      const adjId = adjacentHexId(hex.hex, CANONICAL_FACE_DIRS[fi], gridSpec);
+      const adjHex = adjId ? hexMap.get(adjId) : null;
+      if (isEdgeAtNonPlayableBoundary(hex, adjHex)) {
+        delete hex.edges[fi];
+      }
+    }
+    if (hex.edges && Object.keys(hex.edges).length === 0) {
+      delete hex.edges;
+    }
+  }
+}

@@ -31,7 +31,10 @@ import {
   canonicalOwner,
   validateCoexistence,
   applyContourPaint,
+  stripNonPlayableBoundaryEdges,
+  isEdgeAtNonPlayableBoundary,
 } from '../../formulas/edge-model.js';
+import { adjacentHexId } from '../../utils/hexGeometry.js';
 
 const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
 const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
@@ -75,6 +78,11 @@ const {
   draftKey: MAP_DRAFT_KEY,
   draftKeyV1: MAP_DRAFT_KEY_V1,
   onCalibrationLoaded,
+  // Strip edges on non-playable boundaries before every push — covers both the
+  // direct save() path and the confirmSave() overwrite path (M-1 review fix).
+  beforeSave: () => {
+    if (mapData.value) stripNonPlayableBoundaryEdges(mapData.value.hexes, calibration.value);
+  },
 });
 
 // ── Map export (composable) ────────────────────────────────────────────────────
@@ -450,7 +458,18 @@ const EDGE_DISPATCH = {
   },
 };
 
+function isNonPlayableBoundary(hexId, dir) {
+  if (!mapData.value) return false;
+  const idx = hexIndex.value.get(hexId);
+  const hex = idx !== undefined ? mapData.value.hexes[idx] : null;
+  const adjId = adjacentHexId(hexId, dir, calibration.value);
+  const adjIdx = adjId !== null ? hexIndex.value.get(adjId) : undefined;
+  const adjHex = adjIdx !== undefined ? mapData.value.hexes[adjIdx] : null;
+  return isEdgeAtNonPlayableBoundary(hex, adjHex);
+}
+
 function onEdgeClick({ hexId, dir }) {
+  if (isNonPlayableBoundary(hexId, dir)) return;
   const faceIndex = DIRS.indexOf(dir);
   if (faceIndex === -1) return;
   const entry = EDGE_DISPATCH[openPanel.value];
@@ -465,6 +484,12 @@ function onEdgeClick({ hexId, dir }) {
     if (!prereqs.some((p) => feats.includes(p))) return;
   }
   entry.paintFn(hexId, faceIndex, type);
+}
+
+// Boundary-edge stripping runs via the beforeSave hook wired into useMapPersistence,
+// covering both this path and the confirmSave() overwrite path.
+function handleSave() {
+  save();
 }
 
 function onEdgeRightClick({ hexId, dir }) {
@@ -547,7 +572,7 @@ onUnmounted(() => {
       >
         {{ isPulling ? 'Pulling…' : 'Pull from Server' }}
       </button>
-      <button class="save-btn" :disabled="isOffline || saveStatus === 'saving'" @click="save">
+      <button class="save-btn" :disabled="isOffline || saveStatus === 'saving'" @click="handleSave">
         {{ isOffline ? 'Offline' : saveStatus === 'saving' ? 'Saving…' : 'Push to Server' }}
       </button>
     </header>

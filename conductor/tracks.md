@@ -127,4 +127,6 @@
 | [x] | post-pr451-debt-sprint_20260524 | Post-PR-451 Debt Sprint — Issues #452–#459 | 2026-05-24 | 2026-05-24 |
 | [x] | pre-m6-debt-sprint_20260524 | Pre-M6 Debt Sprint — Issues #461–#464 | 2026-05-24 | 2026-05-24 |
 
+| [x] | map-editor-bugs_20260524 | Map Editor Bug Fixes — #416, #418, #419 | 2026-05-24 | 2026-05-24 |
+
 <!-- Tracks registered by /conductor:new-track -->

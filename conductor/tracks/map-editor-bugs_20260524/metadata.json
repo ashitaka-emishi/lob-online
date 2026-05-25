@@ -1,0 +1,16 @@
+{
+  "id": "map-editor-bugs_20260524",
+  "title": "Map Editor Bug Fixes — #416, #418, #419",
+  "type": "bug",
+  "status": "pending",
+  "created": "2026-05-24T00:00:00.000Z",
+  "updated": "2026-05-24T00:00:00.000Z",
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 12,
+    "completed": 0
+  }
+}

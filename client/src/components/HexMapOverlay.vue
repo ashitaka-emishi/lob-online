@@ -223,7 +223,7 @@ const gridData = computed(() => {
     const slopeMid = slopeDir ? edgeMidpoint(corners, slopeDir) : null;
     return {
       ...geoCell,
-      terrain: known?.terrain ?? 'unknown',
+      terrain: known?.terrain ?? 'clear', // 'clear' is the safe default (#419)
       elevation: known?.elevation ?? null,
       slope,
       wedgeElevations: known?.wedgeElevations ?? null,
