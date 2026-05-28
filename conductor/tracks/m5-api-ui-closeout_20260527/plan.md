@@ -111,15 +111,15 @@ and multi-unit paging for stacked hexes.
 
 ### Tasks
 
-- [ ] Task 3.1: Write component tests for the info panel: counter image renders, weapon
+- [x] Task 3.1: Write component tests for the info panel: counter image renders, weapon
       type displays, header color matches faction, paging controls appear for stacked hexes,
       paging updates unit without changing hex selection.
-- [ ] Task 3.2: Add counter image to the info panel — source the image path from
+- [x] Task 3.2: Add counter image to the info panel — source the image path from
       `oob.json` counter linkage via the game store / unit data.
-- [ ] Task 3.3: Display weapon type for the selected unit.
-- [ ] Task 3.4: Apply faction-specific header colors (CSA red / Union light blue) driven
+- [x] Task 3.3: Display weapon type for the selected unit.
+- [x] Task 3.4: Apply faction-specific header colors (CSA red / Union light blue) driven
       by `unit.side` or equivalent field.
-- [ ] Task 3.5: Implement previous/next arrow controls when `hexUnits.length > 1`;
+- [x] Task 3.5: Implement previous/next arrow controls when `hexUnits.length > 1`;
       paging state is local to the panel (does not affect selected hex).
 
 ### Verification

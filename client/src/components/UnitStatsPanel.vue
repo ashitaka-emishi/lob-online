@@ -1,12 +1,17 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 // Pre-enriched display unit combining game state + OOB data.
-// Shape: { id, name, side, sp, moraleState, orderType }
+// Shape: { id, name, side, sp, moraleState, orderType, weapon, counterFile }
 const props = defineProps({
   unit: {
     type: Object,
     default: null,
+  },
+  // All enriched units at the selected hex — enables paging when length > 1. (#408)
+  hexUnits: {
+    type: Array,
+    default: () => [],
   },
 });
 
@@ -23,23 +28,73 @@ const SIDE_LABELS = {
   confederate: 'Confederate',
 };
 
+// ── Paging ────────────────────────────────────────────────────────────────────
+
+const pageIndex = ref(0);
+
+// Reset to first unit whenever the hex changes (hexUnits array reference changes). (#408)
+watch(
+  () => props.hexUnits,
+  () => {
+    pageIndex.value = 0;
+  }
+);
+
+const isPaging = computed(() => props.hexUnits.length > 1);
+
+// When paging is active, show hexUnits[pageIndex]; otherwise fall back to unit prop.
+const displayUnit = computed(() => {
+  if (props.hexUnits.length > 0) return props.hexUnits[pageIndex.value] ?? null;
+  return props.unit;
+});
+
+const pageLabel = computed(() => `${pageIndex.value + 1} / ${props.hexUnits.length}`);
+
+function nextUnit() {
+  pageIndex.value = (pageIndex.value + 1) % props.hexUnits.length;
+}
+
+function prevUnit() {
+  pageIndex.value = (pageIndex.value - 1 + props.hexUnits.length) % props.hexUnits.length;
+}
+
+// ── Derived display values ────────────────────────────────────────────────────
+
 const moraleLabel = computed(() =>
-  props.unit ? (MORALE_LABELS[props.unit.moraleState] ?? props.unit.moraleState) : null
+  displayUnit.value
+    ? (MORALE_LABELS[displayUnit.value.moraleState] ?? displayUnit.value.moraleState)
+    : null
 );
 
 const sideLabel = computed(() => {
-  if (!props.unit) return null;
-  return SIDE_LABELS[props.unit.side] ?? props.unit.side ?? 'Unknown';
+  if (!displayUnit.value) return null;
+  return SIDE_LABELS[displayUnit.value.side] ?? displayUnit.value.side ?? 'Unknown';
 });
 
 const orderLabel = computed(() => {
-  if (!props.unit) return null;
-  if (!props.unit.orderType) return 'None';
-  return props.unit.orderType.charAt(0).toUpperCase() + props.unit.orderType.slice(1);
+  if (!displayUnit.value) return null;
+  if (!displayUnit.value.orderType) return 'None';
+  const t = displayUnit.value.orderType;
+  return t.charAt(0).toUpperCase() + t.slice(1);
+});
+
+// CSS modifier class for faction header color. (#408)
+const titleClass = computed(() => {
+  const side = displayUnit.value?.side;
+  if (side === 'confederate') return 'panel-title panel-title--confederate';
+  if (side === 'union') return 'panel-title panel-title--union';
+  return 'panel-title';
+});
+
+const counterSrc = computed(() => {
+  const cf = displayUnit.value?.counterFile;
+  return cf ? `/counters/${cf}` : null;
 });
 
 // Announced to screen readers when selection changes.
-const selectionAnnouncement = computed(() => (props.unit ? `${props.unit.name} selected` : ''));
+const selectionAnnouncement = computed(() =>
+  displayUnit.value ? `${displayUnit.value.name} selected` : ''
+);
 </script>
 
 <template>
@@ -48,8 +103,38 @@ const selectionAnnouncement = computed(() => (props.unit ? `${props.unit.name} s
     <div aria-live="polite" aria-atomic="true" class="sr-only">
       {{ selectionAnnouncement }}
     </div>
-    <template v-if="unit">
-      <p class="panel-title">{{ unit.name }}</p>
+    <template v-if="displayUnit">
+      <div class="panel-header">
+        <img
+          v-if="counterSrc"
+          :src="counterSrc"
+          :alt="`${displayUnit.name} counter`"
+          class="counter-image"
+        />
+        <p :class="titleClass">{{ displayUnit.name }}</p>
+      </div>
+
+      <!-- Multi-unit paging controls (#408) -->
+      <div v-if="isPaging" class="paging-controls" role="group" aria-label="Unit paging">
+        <button
+          data-testid="paging-prev"
+          class="paging-btn"
+          aria-label="Previous unit"
+          @click="prevUnit"
+        >
+          ‹
+        </button>
+        <span class="paging-label">{{ pageLabel }}</span>
+        <button
+          data-testid="paging-next"
+          class="paging-btn"
+          aria-label="Next unit"
+          @click="nextUnit"
+        >
+          ›
+        </button>
+      </div>
+
       <dl class="stat-list">
         <div class="stat-row">
           <dt>Side</dt>
@@ -57,7 +142,11 @@ const selectionAnnouncement = computed(() => (props.unit ? `${props.unit.name} s
         </div>
         <div class="stat-row">
           <dt>Strength</dt>
-          <dd>{{ unit.sp }} SP</dd>
+          <dd>{{ displayUnit.sp }} SP</dd>
+        </div>
+        <div v-if="displayUnit.weapon != null" class="stat-row stat-row--weapon">
+          <dt>Weapon</dt>
+          <dd>{{ displayUnit.weapon }}</dd>
         </div>
         <div class="stat-row">
           <dt>Morale</dt>
@@ -86,13 +175,68 @@ const selectionAnnouncement = computed(() => (props.unit ? `${props.unit.name} s
   min-height: 120px;
 }
 
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  border-bottom: 1px solid #3a3020;
+  padding-bottom: 0.4rem;
+}
+
+.counter-image {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border: 1px solid #3a3020;
+}
+
 .panel-title {
   font-size: 0.9rem;
   font-weight: 600;
   color: #e0d0b0;
-  margin: 0 0 0.6rem;
-  border-bottom: 1px solid #3a3020;
-  padding-bottom: 0.4rem;
+  margin: 0;
+  flex: 1;
+}
+
+/* Faction header colors (#408) */
+.panel-title--confederate {
+  color: #d46060;
+}
+
+.panel-title--union {
+  color: #6090d4;
+}
+
+/* Multi-unit paging (#408) */
+.paging-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.78rem;
+  color: #a09278;
+}
+
+.paging-btn {
+  background: none;
+  border: 1px solid #3a3020;
+  border-radius: 3px;
+  color: #c8b89a;
+  cursor: pointer;
+  padding: 0 0.35rem;
+  line-height: 1.4;
+  font-size: 0.9rem;
+}
+
+.paging-btn:hover {
+  background: #2a2418;
+}
+
+.paging-label {
+  min-width: 2.5rem;
+  text-align: center;
 }
 
 .stat-list {

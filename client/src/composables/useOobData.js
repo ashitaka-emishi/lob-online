@@ -15,6 +15,7 @@ function collectOobUnits(obj, side, map) {
       side,
       strengthPoints: obj.strengthPoints ?? null,
       counterFile: obj.counterRef?.front ?? null,
+      weapon: obj.weapon ?? null, // LOB weapon code (R, C, SR, etc.) for display (#408)
     });
   }
   for (const val of Object.values(obj)) {

@@ -64,19 +64,37 @@ const displayUnits = computed(() => {
     .filter((u) => u.counterFile !== null);
 });
 
-// Enriched selected unit for UnitStatsPanel — combines game state + OOB metadata.
-const selectedDisplayUnit = computed(() => {
-  const unit = gameStore.selectedUnit;
-  if (!unit) return null;
+// Enrich a single UnitState with OOB metadata for display in UnitStatsPanel.
+function enrichUnit(unit) {
   const oob = oobUnitMap.value.get(unit.id);
   return {
     id: unit.id,
     name: oob?.name ?? unit.id,
     side: oob?.side ?? null,
     sp: oob?.strengthPoints ?? '?',
+    weapon: oob?.weapon ?? null,
+    counterFile: oob?.counterFile ?? null,
     moraleState: unit.moraleState,
     orderType: unit.orders?.type ?? null,
   };
+}
+
+// Enriched selected unit for UnitStatsPanel — combines game state + OOB metadata.
+const selectedDisplayUnit = computed(() => {
+  const unit = gameStore.selectedUnit;
+  if (!unit) return null;
+  return enrichUnit(unit);
+});
+
+// All enriched units at the selected hex — drives paging in UnitStatsPanel. (#408)
+const hexUnits = computed(() => {
+  const hex = gameStore.selectedUnit?.hex;
+  if (!hex) return [];
+  const units = gameStore.gameState?.units;
+  if (!units) return [];
+  return Object.values(units)
+    .filter((u) => u.isOnBoard && u.hex === hex)
+    .map(enrichUnit);
 });
 
 // ── Event handlers ────────────────────────────────────────────────────────────
@@ -155,7 +173,7 @@ function onImageLoad(event) {
 
       <!-- Sidebar: fixed width, holds unit stats panel -->
       <aside class="sidebar">
-        <UnitStatsPanel :unit="selectedDisplayUnit" />
+        <UnitStatsPanel :unit="selectedDisplayUnit" :hex-units="hexUnits" />
       </aside>
     </div>
   </div>
