@@ -85,16 +85,16 @@ This phase is decision-complete work, not component implementation.
 
 ### Tasks
 
-- [ ] Task 2.1: Read the existing `docs/designs/m5-turn-structure-orders-game-map-ui.md`
+- [x] Task 2.1: Read the existing `docs/designs/m5-turn-structure-orders-game-map-ui.md`
       §4 and current `client/src/views/GameView.vue` / `client/src/stores/game.js` to
       understand what already exists.
-- [ ] Task 2.2: Draft `docs/designs/m5-game-ui-detail.md` covering component
+- [x] Task 2.2: Draft `docs/designs/m5-game-ui-detail.md` covering component
       responsibilities (`GameView`, `MapCanvas`, `UnitCounter`, `InfoPanel`, `ActionPanel`),
       Pinia store boundary, API/socket client contract, `MapCanvas` reuse strategy, and
       M5 visual treatment decisions.
-- [ ] Task 2.3: Create follow-up GitHub issues in milestone M5 for each implementation
+- [x] Task 2.3: Create follow-up GitHub issues in milestone M5 for each implementation
       slice identified in the design (store, MapCanvas, UnitCounter, InfoPanel, ActionPanel).
-- [ ] Task 2.4: Update `docs/designs/m5-turn-structure-orders-game-map-ui.md` issue list
+- [x] Task 2.4: Update `docs/designs/m5-turn-structure-orders-game-map-ui.md` issue list
       with the new follow-up issue numbers.
 
 ### Verification
