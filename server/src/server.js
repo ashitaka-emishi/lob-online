@@ -15,6 +15,7 @@ import { initDb, getDb } from './store/gameSqlite.js';
 import gamesRouter from './routes/games.js';
 import oobRouter from './routes/oob.js';
 import scenariosRouter from './routes/scenarios.js';
+import { registerGameSocket } from './socket/gameSocket.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -28,6 +29,9 @@ export async function startServer() {
   const io = new Server(httpServer, {
     cors: { origin: CLIENT_ORIGIN, credentials: true },
   });
+
+  // Expose io to route handlers via app.locals so POST /actions can emit after dispatch (#356)
+  app.locals.io = io;
 
   // Middleware
   app.use(helmet());
@@ -43,21 +47,23 @@ export async function startServer() {
   // Initialise DB and persistent session store (#329, #338)
   initDb();
   const SessionStore = SqliteStore(session);
-  app.use(
-    session({
-      store: new SessionStore({ client: getDb() }),
-      secret: process.env.SESSION_SECRET || 'dev-secret-change-in-prod',
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        // Drive secure flag from explicit env var so staging/preview HTTPS envs are covered (#SEC-M3)
-        secure: process.env.COOKIE_SECURE === 'true',
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 14 * 24 * 60 * 60 * 1000,
-      },
-    })
-  );
+  const sessionMiddleware = session({
+    store: new SessionStore({ client: getDb() }),
+    secret: process.env.SESSION_SECRET || 'dev-secret-change-in-prod',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      // Drive secure flag from explicit env var so staging/preview HTTPS envs are covered (#SEC-M3)
+      secure: process.env.COOKIE_SECURE === 'true',
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 14 * 24 * 60 * 60 * 1000,
+    },
+  });
+  app.use(sessionMiddleware);
+
+  // Share Express session with Socket.io so game:join/game:leave can read session.gameId (#356)
+  io.engine.use(sessionMiddleware);
 
   // Health check
   app.get('/api/health', (_req, res) => {
@@ -137,9 +143,10 @@ export async function startServer() {
     res.status(500).json({ error: 'Internal server error' });
   });
 
-  // Socket.io
+  // Socket.io — game room membership and state-change notifications (#356)
   io.on('connection', (socket) => {
     console.log(`[socket] connected: ${socket.id}`);
+    registerGameSocket(socket);
     socket.on('disconnect', () => {
       console.log(`[socket] disconnected: ${socket.id}`);
     });

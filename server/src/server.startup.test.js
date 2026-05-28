@@ -42,7 +42,9 @@ vi.mock('./routes/games.js', () => {
 
 vi.mock('socket.io', () => ({
   Server: class MockIo {
-    constructor() {}
+    constructor() {
+      this.engine = { use: vi.fn() };
+    }
     on() {}
   },
 }));
