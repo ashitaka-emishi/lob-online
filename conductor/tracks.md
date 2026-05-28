@@ -129,6 +129,6 @@
 
 | [x] | map-editor-bugs_20260524 | Map Editor Bug Fixes — #416, #418, #419 | 2026-05-24 | 2026-05-24 |
 
-| [~] | m5-api-ui-closeout_20260527 | M5 Closeout — Game Action API, GameView Design, and Info Panel Fix | 2026-05-27 | 2026-05-27 |
+| [x] | m5-api-ui-closeout_20260527 | M5 Closeout — Game Action API, GameView Design, and Info Panel Fix | 2026-05-27 | 2026-05-27 |
 
 <!-- Tracks registered by /conductor:new-track -->
