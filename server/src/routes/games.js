@@ -155,7 +155,8 @@ router.post('/:id/actions', requireSide, async (req, res) => {
 
     const state = await loadGame(id);
 
-    // Optimistic concurrency — reject before dispatch if client state is stale (#332)
+    // Optimistic concurrency — reject before dispatch if client state is stale (#332).
+    // Non-numeric / absent expectedVersion means the client opts out of the version guard.
     if (typeof expectedVersion === 'number' && expectedVersion !== state.version) {
       return res
         .status(409)

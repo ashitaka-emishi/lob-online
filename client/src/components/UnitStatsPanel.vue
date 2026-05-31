@@ -9,6 +9,8 @@ const props = defineProps({
     default: null,
   },
   // All enriched units at the selected hex — enables paging when length > 1. (#408)
+  // Takes precedence over `unit`: when hexUnits is non-empty, displayUnit is hexUnits[pageIndex].
+  // `unit` is the single-selection fallback used only when hexUnits is empty.
   hexUnits: {
     type: Array,
     default: () => [],
@@ -97,10 +99,14 @@ const counterSrc = computed(() => {
   return cf ? `/counters/${cf}` : null;
 });
 
-// Announced to screen readers when selection changes.
-const selectionAnnouncement = computed(() =>
-  displayUnit.value ? `${displayUnit.value.name} selected` : ''
-);
+// Announced to screen readers when selection changes. Including page position ensures the
+// live region re-fires even when adjacent units share a name (polite regions only fire on
+// text change). (#a11y)
+const selectionAnnouncement = computed(() => {
+  if (!displayUnit.value) return '';
+  const base = `${displayUnit.value.name} selected`;
+  return isPaging.value ? `${base}, ${pageLabel.value}` : base;
+});
 </script>
 
 <template>

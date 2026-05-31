@@ -51,11 +51,16 @@ function counterHref(counterFile) {
 const FALLBACK_FILL = { union: '#1a3a6a', confederate: '#5a4a28' };
 const FALLBACK_FILL_DEFAULT = '#3a3a3a';
 
-// Shorten a display name to at most 4 characters for the fallback label.
+// Max label length for fallback counter text. Labels are intentionally lossy — distinct
+// units can produce the same abbreviation (e.g. "2nd Bde" and "2nd Div" both → "2nd").
+// These are temporary placeholders until counter images are assigned via the OOB editor.
+const MAX_LABEL_CHARS = 4;
+
+// Shorten a display name to at most MAX_LABEL_CHARS characters for the fallback label.
 function abbreviate(name) {
   if (!name) return '??';
   const word = name.split(/\s+/)[0];
-  return word.length <= 4 ? word : word.slice(0, 4);
+  return word.length <= MAX_LABEL_CHARS ? word : word.slice(0, MAX_LABEL_CHARS);
 }
 
 // Build the render list: one entry per on-board unit with a known hex cell.
@@ -151,6 +156,8 @@ function handleKeydown(event, unitId) {
   cursor: pointer;
 }
 
+/* SVG <g> :focus-visible support is browser-dependent; plain :focus is the fallback. */
+.unit-counter:focus,
 .unit-counter:focus-visible {
   outline: 2px solid #ffffff;
   outline-offset: 2px;

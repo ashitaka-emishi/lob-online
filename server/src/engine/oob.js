@@ -28,7 +28,9 @@ export function loadOob(oobPath = DEFAULT_OOB_PATH) {
 }
 
 /**
- * Load and validate leaders.json.
+ * Load and validate leaders.json. Reads and parses the file synchronously on each call.
+ * Not cached — re-reads on every call so dev-mode edits via the leaders editor take effect
+ * without restart. For production, consider a module-level cache if per-request latency matters.
  *
  * @param {string} [leadersPath] - Override the default path (for tests).
  * @returns {import('zod').infer<typeof LeadersSchema>} Validated leaders data.

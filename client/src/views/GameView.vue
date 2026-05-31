@@ -47,7 +47,8 @@ const hexUnitIndex = computed(() => {
 // Enriched unit array consumed by HexMapOverlay → UnitCounterLayer.
 // Includes all on-board units with a hex; counterFile may be null for units that
 // haven't had a counter image assigned yet (leader/HQ units) — the counter layer
-// renders a fallback rect for those.
+// renders a fallback rect for those. Uses a narrower shape than enrichUnit (no
+// sp/weapon/moraleState/orderType) because the counter layer only needs id/hexId/name/counterFile/side.
 const displayUnits = computed(() => {
   const units = gameStore.gameState?.units;
   if (!units) return [];

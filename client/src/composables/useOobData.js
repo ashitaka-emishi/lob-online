@@ -58,7 +58,7 @@ export function useOobData() {
     }
   }
 
-  // Flat Map<unitId, { name, side, strengthPoints, counterFile }> derived from oobData + leadersData.
+  // Flat Map<unitId, { name, side, strengthPoints, counterFile, weapon }> derived from oobData + leadersData.
   // Iterates top-level keys matching SIDES constants — depends on both schemas having `union`
   // and `confederate` as top-level keys. Update if the schema shape changes.
   const oobUnitMap = computed(() => {

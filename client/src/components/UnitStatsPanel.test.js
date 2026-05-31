@@ -124,9 +124,9 @@ describe('UnitStatsPanel — counter image (#408)', () => {
 });
 
 describe('UnitStatsPanel — weapon type (#408)', () => {
-  it('renders the weapon code in the stat list', () => {
+  it('renders the weapon code in the weapon row', () => {
     const wrapper = mount(UnitStatsPanel, { props: { unit: FULL_UNIT } });
-    expect(wrapper.text()).toContain('R');
+    expect(wrapper.find('.stat-row--weapon').text()).toContain('R');
   });
 
   it('does not render a weapon row when weapon is null', () => {
