@@ -45,7 +45,9 @@ const hexUnitIndex = computed(() => {
 });
 
 // Enriched unit array consumed by HexMapOverlay → UnitCounterLayer.
-// Only includes on-board units that have a counter image assigned in OOB.
+// Includes all on-board units with a hex; counterFile may be null for units that
+// haven't had a counter image assigned yet (leader/HQ units) — the counter layer
+// renders a fallback rect for those.
 const displayUnits = computed(() => {
   const units = gameStore.gameState?.units;
   if (!units) return [];
@@ -60,8 +62,7 @@ const displayUnits = computed(() => {
         counterFile: oob?.counterFile ?? null,
         side: oob?.side ?? null,
       };
-    })
-    .filter((u) => u.counterFile !== null);
+    });
 });
 
 // Enrich a single UnitState with OOB metadata for display in UnitStatsPanel.
@@ -163,7 +164,7 @@ function onImageLoad(event) {
             :units="displayUnits"
             :image-width="imgNaturalWidth"
             :image-height="imgNaturalHeight"
-            :overlay-config="{}"
+            :overlay-config="{ selectedHex: { hexId: gameStore.selectedUnit?.hex ?? null } }"
             :interaction-enabled="true"
             @hex-click="onHexClick"
             @unit-click="onUnitClick"
@@ -173,7 +174,11 @@ function onImageLoad(event) {
 
       <!-- Sidebar: fixed width, holds unit stats panel -->
       <aside class="sidebar">
-        <UnitStatsPanel :unit="selectedDisplayUnit" :hex-units="hexUnits" />
+        <UnitStatsPanel
+          :unit="selectedDisplayUnit"
+          :hex-units="hexUnits"
+          @select-unit="gameStore.selectUnit"
+        />
       </aside>
     </div>
   </div>

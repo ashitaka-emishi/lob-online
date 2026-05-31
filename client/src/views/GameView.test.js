@@ -322,15 +322,16 @@ describe('GameView — click event wiring', () => {
 });
 
 describe('GameView — displayUnits computation', () => {
-  it('only passes on-board units with a counterFile to HexMapOverlay', async () => {
+  it('passes all on-board units to HexMapOverlay; counterFile is null for image-less units', async () => {
     // OOB structure: unit-a has a counter, unit-b has none, unit-c is off-board.
+    // Both on-board units are passed through; the counter layer handles the fallback display.
     const oobData = {
       union: {
         id: 'corps-1',
         name: 'I Corps',
         brigades: [
           { id: 'unit-a', name: '1st Bde', counterRef: { front: 'unit-a.png' } },
-          { id: 'unit-b', name: '2nd Bde' }, // no counterRef → filtered out
+          { id: 'unit-b', name: '2nd Bde' }, // no counterRef → counterFile: null, shown as fallback
         ],
       },
       confederate: {},
@@ -347,9 +348,11 @@ describe('GameView — displayUnits computation', () => {
     await flushPromises();
     const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
     const units = overlay.props('units');
-    expect(units).toHaveLength(1);
-    expect(units[0].id).toBe('unit-a');
-    expect(units[0].counterFile).toBe('unit-a.png');
+    expect(units).toHaveLength(2); // both on-board units, regardless of counterFile
+    const unitA = units.find((u) => u.id === 'unit-a');
+    const unitB = units.find((u) => u.id === 'unit-b');
+    expect(unitA.counterFile).toBe('unit-a.png');
+    expect(unitB.counterFile).toBeNull(); // no image → counter layer renders fallback
   });
 });
 

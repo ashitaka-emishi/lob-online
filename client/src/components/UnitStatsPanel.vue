@@ -15,6 +15,8 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(['select-unit']);
+
 const MORALE_LABELS = {
   normal: 'Normal',
   bloodLust: 'Blood Lust',
@@ -32,9 +34,11 @@ const SIDE_LABELS = {
 
 const pageIndex = ref(0);
 
-// Reset to first unit whenever the hex changes (hexUnits array reference changes). (#408)
+// Reset to first unit whenever the hex changes — compare by unit ID list so that
+// calling gameStore.selectUnit() during paging (same hex, new array reference) does
+// not spuriously reset the page index. (#408)
 watch(
-  () => props.hexUnits,
+  () => props.hexUnits.map((u) => u.id).join(','),
   () => {
     pageIndex.value = 0;
   }
@@ -52,10 +56,12 @@ const pageLabel = computed(() => `${pageIndex.value + 1} / ${props.hexUnits.leng
 
 function nextUnit() {
   pageIndex.value = (pageIndex.value + 1) % props.hexUnits.length;
+  emit('select-unit', props.hexUnits[pageIndex.value]?.id ?? null);
 }
 
 function prevUnit() {
   pageIndex.value = (pageIndex.value - 1 + props.hexUnits.length) % props.hexUnits.length;
+  emit('select-unit', props.hexUnits[pageIndex.value]?.id ?? null);
 }
 
 // ── Derived display values ────────────────────────────────────────────────────
