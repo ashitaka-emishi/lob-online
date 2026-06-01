@@ -1,0 +1,20 @@
+{
+  "id": "leader-counter-upload_20260601",
+  "title": "Leader Counter Image Upload",
+  "type": "feature",
+  "status": "complete",
+  "created": "2026-06-01T00:00:00.000Z",
+  "updated": "2026-06-01T00:00:00.000Z",
+  "phases": {
+    "total": 3,
+    "completed": 2
+  },
+  "tasks": {
+    "total": 10,
+    "completed": 7
+  },
+  "commits": [
+    "7969bc3: fix(oobStore): search leaders.value when findNodePath(oob) returns null for leader nodes (#484)",
+    "1da6851: feat(CounterImageWidget): add Browse/Upload to front/back slots in leader mode (#484)"
+  ]
+}
