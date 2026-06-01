@@ -175,6 +175,43 @@ function clearFace(e, face) {
 onMounted(() => window.addEventListener('keydown', onKeydown));
 onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
+// ── Standard slot upload (leader mode only) ───────────────────────────────────
+// Allows uploading a new image file directly to counterRef.front / counterRef.back
+// for leaders whose counter images don't yet exist in the manifest.
+
+const standardFileInput = ref(null);
+const activeStandardFace = ref(null); // 'front' | 'back'
+
+function browseStandard(face) {
+  activeStandardFace.value = face;
+  standardFileInput.value?.click();
+}
+
+async function onStandardFileSelected(e) {
+  const file = e.target.files?.[0];
+  if (!file || !props.nodePath) return;
+
+  const formData = new FormData();
+  formData.append('counter', file);
+
+  try {
+    const res = await fetch('/api/tools/counters/upload', { method: 'POST', body: formData });
+    if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+    const data = await res.json();
+    if (data.ok) {
+      const base = props.counterRef ?? getDefaultCounterRef();
+      store.updateCounterRef(props.nodePath, {
+        ...base,
+        [activeStandardFace.value]: data.filename,
+      });
+    }
+  } catch (err) {
+    console.error('[CounterImageWidget] standard upload error:', err);
+  } finally {
+    e.target.value = '';
+  }
+}
+
 // ── Promoted slots (leader mode only) ────────────────────────────────────────
 
 const promotedFileInput = ref(null);
@@ -235,6 +272,14 @@ async function onPromotedFileSelected(e) {
             >{{ activeIndex + 1 }}/{{ frontList.length }}</span
           >
           <button
+            v-if="mode === 'leader'"
+            class="standard-browse-btn"
+            title="Upload new counter image"
+            @click.stop="browseStandard('front')"
+          >
+            Browse…
+          </button>
+          <button
             v-if="counterRef?.front"
             class="clear-btn"
             title="Clear"
@@ -268,6 +313,14 @@ async function onPromotedFileSelected(e) {
             >{{ activeIndex + 1 }}/{{ backList.length }}</span
           >
           <button
+            v-if="mode === 'leader'"
+            class="standard-browse-btn"
+            title="Upload new counter image"
+            @click.stop="browseStandard('back')"
+          >
+            Browse…
+          </button>
+          <button
             v-if="counterRef?.back"
             class="clear-btn"
             title="Clear"
@@ -278,6 +331,18 @@ async function onPromotedFileSelected(e) {
         </div>
       </div>
     </div>
+
+    <!-- Standard upload input (leader mode only) -->
+    <input
+      v-if="mode === 'leader'"
+      ref="standardFileInput"
+      type="file"
+      accept="image/jpeg,image/png"
+      class="standard-file-input"
+      style="display: none"
+      @change="onStandardFileSelected"
+    />
+
     <p class="hint">Click a slot to activate, then ↑ / ↓ to assign a counter</p>
 
     <!-- Promoted row (leader mode only) -->
