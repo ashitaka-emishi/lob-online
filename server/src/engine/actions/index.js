@@ -161,7 +161,8 @@ export function dispatch(state, action) {
     throw new ActionError('INVALID_ACTION', `Action '${type}' is not valid in the current state`);
   }
 
-  const handler = HANDLERS[type];
+  // Use hasOwnProperty to guard against prototype-polluting action types (e.g. '__proto__').
+  const handler = Object.prototype.hasOwnProperty.call(HANDLERS, type) ? HANDLERS[type] : null;
   if (!handler) {
     throw new ActionError('UNKNOWN_ACTION', `No handler registered for action type '${type}'`);
   }

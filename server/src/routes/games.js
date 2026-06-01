@@ -173,8 +173,10 @@ router.post('/:id/actions', requireSide, async (req, res) => {
   } catch (err) {
     if (err instanceof ActionError) {
       const status = ACTION_ERROR_STATUS[err.code] ?? 500;
-      console.error(`[route] POST /games/:id/actions ActionError(${err.code}):`, err.message);
-      return res.status(status).json({ error: err.message });
+      console.error('[route] POST /games/:id/actions ActionError:', err.code, err.message);
+      // Server-fault codes must not leak internal Zod/phase details to the client (#478).
+      const clientMessage = status >= 500 ? 'Internal error processing action' : err.message;
+      return res.status(status).json({ error: clientMessage });
     }
     console.error('[route] POST /games/:id/actions error:', err.message);
     res.status(500).json({ error: 'Failed to process action' });

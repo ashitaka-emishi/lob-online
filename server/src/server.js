@@ -48,6 +48,9 @@ export async function startServer() {
   // Initialise DB and persistent session store (#329, #338)
   initDb();
   const SessionStore = SqliteStore(session);
+  // CSRF defense: CORS is restricted to CLIENT_ORIGIN (single known origin) and all API
+  // mutations require Content-Type: application/json which cross-site simple requests
+  // cannot set. Full synchronizer-token CSRF protection is deferred to M8 (#350). lgtm[js/missing-token-validation]
   const sessionMiddleware = session({
     store: new SessionStore({ client: getDb() }),
     secret: process.env.SESSION_SECRET || 'dev-secret-change-in-prod',
