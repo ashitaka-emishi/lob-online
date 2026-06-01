@@ -69,7 +69,14 @@ export const useOobStore = defineStore('oob', () => {
     } else if (nodePath !== null) {
       selectedNodePath.value = nodePath;
     } else {
-      selectedNodePath.value = findNodePath(oob.value, node.id);
+      // Leaders live in leaders.json, not oob.json — fall back to searching leaders.value.
+      const oobPath = findNodePath(oob.value, node.id);
+      if (oobPath) {
+        selectedNodePath.value = oobPath;
+      } else {
+        const leadersPath = findNodePath(leaders.value, node.id);
+        selectedNodePath.value = leadersPath ? `leaders.${leadersPath}` : null;
+      }
     }
   }
 

@@ -156,6 +156,25 @@ describe('useOobStore', () => {
     expect(store.selectedNodePath).toBeNull();
   });
 
+  it('selectNode: returns leaders.union.army.0 path for a leader node found in leaders.value', () => {
+    const store = useOobStore();
+    store.oob = { union: { corps: [] }, confederate: { corps: [] } };
+    store.leaders = {
+      union: { army: [{ id: 'pleasonton', name: 'Pleasonton', counterRef: null }] },
+      confederate: { army: [] },
+    };
+    store.selectNode({ id: 'pleasonton' }, 'leader');
+    expect(store.selectedNodePath).toBe('leaders.union.army.0');
+  });
+
+  it('selectNode: returns null for a node not found in oob or leaders', () => {
+    const store = useOobStore();
+    store.oob = { union: { corps: [] }, confederate: { corps: [] } };
+    store.leaders = { union: { army: [] }, confederate: { army: [] } };
+    store.selectNode({ id: 'ghost-node' }, 'leader');
+    expect(store.selectedNodePath).toBeNull();
+  });
+
   // ── usedCounterFiles ─────────────────────────────────────────────────────
 
   it('usedCounterFiles: returns empty Set when oob and leaders are null', () => {
