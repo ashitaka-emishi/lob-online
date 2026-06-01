@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { findNodePath } from './findNodePath.js';
+import { findNodePathInTree } from './findNodePath.js';
 
 const OOB = {
   _status: 'available',
@@ -33,37 +33,39 @@ const OOB = {
   },
 };
 
-describe('findNodePath', () => {
+describe('findNodePathInTree', () => {
   it('returns null for null oob', () => {
-    expect(findNodePath(null, '22ny')).toBeNull();
+    expect(findNodePathInTree(null, '22ny')).toBeNull();
   });
 
   it('returns null for null nodeId', () => {
-    expect(findNodePath(OOB, null)).toBeNull();
+    expect(findNodePathInTree(OOB, null)).toBeNull();
   });
 
   it('returns null when id does not exist', () => {
-    expect(findNodePath(OOB, 'nonexistent')).toBeNull();
+    expect(findNodePathInTree(OOB, 'nonexistent')).toBeNull();
   });
 
   it('finds a top-level corps node', () => {
-    expect(findNodePath(OOB, '1c')).toBe('union.corps.0');
+    expect(findNodePathInTree(OOB, '1c')).toBe('union.corps.0');
   });
 
   it('finds a division nested under corps', () => {
-    expect(findNodePath(OOB, '1d-1c')).toBe('union.corps.0.divisions.0');
+    expect(findNodePathInTree(OOB, '1d-1c')).toBe('union.corps.0.divisions.0');
   });
 
   it('finds a brigade nested under division', () => {
-    expect(findNodePath(OOB, '1b-1d-1c')).toBe('union.corps.0.divisions.0.brigades.0');
+    expect(findNodePathInTree(OOB, '1b-1d-1c')).toBe('union.corps.0.divisions.0.brigades.0');
   });
 
   it('finds a deeply nested regiment', () => {
-    expect(findNodePath(OOB, '22ny')).toBe('union.corps.0.divisions.0.brigades.0.regiments.0');
+    expect(findNodePathInTree(OOB, '22ny')).toBe(
+      'union.corps.0.divisions.0.brigades.0.regiments.0'
+    );
   });
 
   it('finds a node on the confederate side', () => {
-    expect(findNodePath(OOB, '1c-csa')).toBe('confederate.corps.0');
+    expect(findNodePathInTree(OOB, '1c-csa')).toBe('confederate.corps.0');
   });
 
   it('skips _-prefixed keys during traversal', () => {
@@ -75,8 +77,8 @@ describe('findNodePath', () => {
       },
       confederate: {},
     };
-    expect(findNodePath(oobWithUnderscore, 'should-not-find')).toBeNull();
-    expect(findNodePath(oobWithUnderscore, '1c')).toBe('union.corps.0');
+    expect(findNodePathInTree(oobWithUnderscore, 'should-not-find')).toBeNull();
+    expect(findNodePathInTree(oobWithUnderscore, '1c')).toBe('union.corps.0');
   });
 
   it('returns first match when multiple nodes share an id (unlikely but defined)', () => {
@@ -89,6 +91,6 @@ describe('findNodePath', () => {
       },
       confederate: {},
     };
-    expect(findNodePath(oobDupe, 'dup')).toBe('union.corps.0');
+    expect(findNodePathInTree(oobDupe, 'dup')).toBe('union.corps.0');
   });
 });

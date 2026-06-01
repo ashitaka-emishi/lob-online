@@ -22,8 +22,9 @@ const props = defineProps({
 const store = useOobStore();
 
 // ── Side detection ────────────────────────────────────────────────────────────
-// Leader paths are 'leaders.<side>.<level>.<i>' — side is the second segment.
-// Unit paths are '<side>.<level>.<i>' — side is the first segment.
+// Paths are produced by useOobStore.selectNode:
+//   Leaders: 'leaders.<side>.<level>.<i>' — side is the second segment.
+//   Units:   '<side>.<level>.<i>'         — side is the first segment.
 
 const sideSegment = computed(() => {
   const parts = props.nodePath?.split('.') ?? [];
@@ -40,7 +41,11 @@ function isKnownFile(name) {
   return name != null && COUNTER_SET.has(name);
 }
 
-// ── Already-used filenames — shared computed from store (#209) ────────────────
+// ── Face names ────────────────────────────────────────────────────────────────
+// Single source of truth for all four face identifiers. Used to derive imgError
+// shape and validate getList dispatch. Add a face here before using it elsewhere.
+
+const FACE_NAMES = ['front', 'back', 'promotedFront', 'promotedBack'];
 
 // ── File classification ───────────────────────────────────────────────────────
 // Front: files with "Front" in name, or cut-outs (U## / C##)
@@ -59,12 +64,16 @@ function isBack(name) {
 }
 
 // ── Filtered counter lists ────────────────────────────────────────────────────
+// Promoted faces share the same filtering rules as their non-promoted counterparts.
+
+const IS_FRONT_FACE = new Set(['front', 'promotedFront']);
+const IS_BACK_FACE = new Set(['back', 'promotedBack']);
 
 function buildList(face) {
-  const currentVal = face === 'front' ? props.counterRef?.front : props.counterRef?.back;
+  const currentVal = props.counterRef?.[face] ?? null;
   return ALL_COUNTERS.filter((name) => {
-    if (face === 'front' && !isFront(name)) return false;
-    if (face === 'back' && !isBack(name)) return false;
+    if (IS_FRONT_FACE.has(face) && !isFront(name)) return false;
+    if (IS_BACK_FACE.has(face) && !isBack(name)) return false;
     // Exclude cut-outs from the wrong side
     if (IS_UNION_CUT.test(name) && isConfederate.value) return false;
     if (IS_CSA_CUT.test(name) && isUnion.value) return false;
@@ -76,14 +85,23 @@ function buildList(face) {
 
 const frontList = computed(() => buildList('front'));
 const backList = computed(() => buildList('back'));
+const promotedFrontList = computed(() => buildList('promotedFront'));
+const promotedBackList = computed(() => buildList('promotedBack'));
+
+const LIST_BY_FACE = {
+  front: frontList,
+  back: backList,
+  promotedFront: promotedFrontList,
+  promotedBack: promotedBackList,
+};
 
 function getList(face) {
-  return face === 'front' ? frontList.value : backList.value;
+  return LIST_BY_FACE[face]?.value ?? [];
 }
 
 // ── Active slot state ─────────────────────────────────────────────────────────
 
-const activeFace = ref(null); // 'front' | 'back' | null
+const activeFace = ref(null); // 'front' | 'back' | 'promotedFront' | 'promotedBack' | null
 const activeIndex = ref(0);
 
 // Reset active slot when the selected node changes (prevents stale activeIndex
@@ -96,12 +114,14 @@ watch(
   }
 );
 
-// Per-face img error flags — reset together on any counterRef change (L3)
-const imgError = ref({ front: false, back: false, promotedFront: false, promotedBack: false });
+// Per-face img error flags — reset together on any counterRef change (L3).
+// Derived from FACE_NAMES so adding a face here automatically covers imgError.
+const EMPTY_IMG_ERROR = Object.fromEntries(FACE_NAMES.map((f) => [f, false]));
+const imgError = ref({ ...EMPTY_IMG_ERROR });
 watch(
   () => props.counterRef,
   () => {
-    imgError.value = { front: false, back: false, promotedFront: false, promotedBack: false };
+    imgError.value = { ...EMPTY_IMG_ERROR };
   }
 );
 
@@ -112,13 +132,17 @@ function activate(face) {
   }
   activeFace.value = face;
   const list = getList(face);
-  const current = face === 'front' ? props.counterRef?.front : props.counterRef?.back;
+  const current = props.counterRef?.[face] ?? null;
   const idx = current ? list.indexOf(current) : 0;
   activeIndex.value = idx >= 0 ? idx : 0;
   // Activation is preview-only — use ↑/↓ to commit a selection (#211)
 }
 
 // ── Keyboard cycling ──────────────────────────────────────────────────────────
+// Listener is on window so the user can click a slot to activate it and then
+// cycle with arrow keys without maintaining explicit focus. ArrowDown/Up call
+// preventDefault to suppress page scrolling while a slot is active. Deactivating
+// (Escape or clicking the active slot) restores normal arrow-key behaviour.
 
 function onKeydown(e) {
   if (!activeFace.value) return;
@@ -140,8 +164,8 @@ function onKeydown(e) {
 }
 
 // Returns the appropriate empty counterRef shape for this mode (HIGH-A1).
-// Must be used as the null-fallback in all three mutation paths (commit, clearFace,
-// onPromotedFileSelected) to prevent promoted fields being dropped by standard-face ops.
+// Must be used as the null-fallback in both mutation paths (commit, clearFace)
+// to prevent promoted fields being dropped by standard-face ops.
 function getDefaultCounterRef() {
   const base = { front: null, frontConfidence: null, back: null, backConfidence: null };
   if (props.mode === 'leader') {
@@ -172,51 +196,35 @@ function clearFace(e, face) {
   if (activeFace.value === face) activeFace.value = null;
 }
 
+// ── Live announcement for screen readers ──────────────────────────────────────
+const liveAnnouncement = computed(() => {
+  if (!activeFace.value) return '';
+  const list = getList(activeFace.value);
+  const filename = list[activeIndex.value] ?? '—';
+  return `${activeFace.value}: ${filename} (${activeIndex.value + 1} of ${list.length})`;
+});
+
 onMounted(() => window.addEventListener('keydown', onKeydown));
 onUnmounted(() => window.removeEventListener('keydown', onKeydown));
-
-// ── Promoted slots (leader mode only) ────────────────────────────────────────
-
-const promotedFileInput = ref(null);
-const activePromoFace = ref(null); // 'promotedFront' | 'promotedBack'
-
-function browsePromoted(face) {
-  activePromoFace.value = face;
-  promotedFileInput.value?.click();
-}
-
-async function onPromotedFileSelected(e) {
-  const file = e.target.files?.[0];
-  if (!file || !props.nodePath) return;
-
-  const formData = new FormData();
-  formData.append('counter', file);
-
-  try {
-    const res = await fetch('/api/tools/counters/upload', { method: 'POST', body: formData });
-    if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
-    const data = await res.json();
-    if (data.ok) {
-      const base = props.counterRef ?? getDefaultCounterRef();
-      store.updateCounterRef(props.nodePath, { ...base, [activePromoFace.value]: data.filename });
-    }
-  } catch (err) {
-    console.error('[CounterImageWidget] upload error:', err);
-  } finally {
-    e.target.value = '';
-  }
-}
 </script>
 
 <template>
   <div class="counter-widget">
+    <!-- Screen-reader live region announces the current selection as cycling occurs -->
+    <span class="sr-only" aria-live="polite" aria-atomic="true">{{ liveAnnouncement }}</span>
+
     <p class="widget-label">Counter Images</p>
     <div class="counter-sides">
       <!-- Front -->
       <div
         class="counter-side"
+        role="button"
+        tabindex="0"
+        :aria-pressed="activeFace === 'front'"
         :class="{ 'counter-side--active': activeFace === 'front' }"
         @click="activate('front')"
+        @keydown.enter.prevent="activate('front')"
+        @keydown.space.prevent="activate('front')"
       >
         <p class="side-label">Front</p>
         <div class="thumb-area">
@@ -237,10 +245,10 @@ async function onPromotedFileSelected(e) {
           <button
             v-if="counterRef?.front"
             class="clear-btn"
-            title="Clear"
+            aria-label="Clear front counter"
             @click="clearFace($event, 'front')"
           >
-            ×
+            <span aria-hidden="true">×</span>
           </button>
         </div>
       </div>
@@ -248,8 +256,13 @@ async function onPromotedFileSelected(e) {
       <!-- Back -->
       <div
         class="counter-side"
+        role="button"
+        tabindex="0"
+        :aria-pressed="activeFace === 'back'"
         :class="{ 'counter-side--active': activeFace === 'back' }"
         @click="activate('back')"
+        @keydown.enter.prevent="activate('back')"
+        @keydown.space.prevent="activate('back')"
       >
         <p class="side-label">Back</p>
         <div class="thumb-area">
@@ -270,14 +283,15 @@ async function onPromotedFileSelected(e) {
           <button
             v-if="counterRef?.back"
             class="clear-btn"
-            title="Clear"
+            aria-label="Clear back counter"
             @click="clearFace($event, 'back')"
           >
-            ×
+            <span aria-hidden="true">×</span>
           </button>
         </div>
       </div>
     </div>
+
     <p class="hint">Click a slot to activate, then ↑ / ↓ to assign a counter</p>
 
     <!-- Promoted row (leader mode only) -->
@@ -285,7 +299,16 @@ async function onPromotedFileSelected(e) {
       <p class="widget-label promoted-label">Promoted Counter</p>
       <div class="counter-sides promoted-row">
         <!-- Promoted Front -->
-        <div class="counter-side">
+        <div
+          class="counter-side"
+          role="button"
+          tabindex="0"
+          :aria-pressed="activeFace === 'promotedFront'"
+          :class="{ 'counter-side--active': activeFace === 'promotedFront' }"
+          @click="activate('promotedFront')"
+          @keydown.enter.prevent="activate('promotedFront')"
+          @keydown.space.prevent="activate('promotedFront')"
+        >
           <p class="side-label">Front</p>
           <div class="thumb-area">
             <img
@@ -303,14 +326,31 @@ async function onPromotedFileSelected(e) {
           </div>
           <div class="slot-footer">
             <span class="slot-filename">{{ counterRef?.promotedFront ?? '—' }}</span>
-            <button class="promoted-browse-btn" @click="browsePromoted('promotedFront')">
-              Browse…
+            <span v-if="activeFace === 'promotedFront'" class="slot-count"
+              >{{ activeIndex + 1 }}/{{ promotedFrontList.length }}</span
+            >
+            <button
+              v-if="counterRef?.promotedFront"
+              class="clear-btn"
+              aria-label="Clear promoted front counter"
+              @click="clearFace($event, 'promotedFront')"
+            >
+              <span aria-hidden="true">×</span>
             </button>
           </div>
         </div>
 
         <!-- Promoted Back -->
-        <div class="counter-side">
+        <div
+          class="counter-side"
+          role="button"
+          tabindex="0"
+          :aria-pressed="activeFace === 'promotedBack'"
+          :class="{ 'counter-side--active': activeFace === 'promotedBack' }"
+          @click="activate('promotedBack')"
+          @keydown.enter.prevent="activate('promotedBack')"
+          @keydown.space.prevent="activate('promotedBack')"
+        >
           <p class="side-label">Back</p>
           <div class="thumb-area">
             <img
@@ -328,21 +368,20 @@ async function onPromotedFileSelected(e) {
           </div>
           <div class="slot-footer">
             <span class="slot-filename">{{ counterRef?.promotedBack ?? '—' }}</span>
-            <button class="promoted-browse-btn" @click="browsePromoted('promotedBack')">
-              Browse…
+            <span v-if="activeFace === 'promotedBack'" class="slot-count"
+              >{{ activeIndex + 1 }}/{{ promotedBackList.length }}</span
+            >
+            <button
+              v-if="counterRef?.promotedBack"
+              class="clear-btn"
+              aria-label="Clear promoted back counter"
+              @click="clearFace($event, 'promotedBack')"
+            >
+              <span aria-hidden="true">×</span>
             </button>
           </div>
         </div>
       </div>
-
-      <input
-        ref="promotedFileInput"
-        type="file"
-        accept="image/jpeg,image/png"
-        class="promoted-file-input"
-        style="display: none"
-        @change="onPromotedFileSelected"
-      />
     </template>
   </div>
 </template>
@@ -352,6 +391,18 @@ async function onPromotedFileSelected(e) {
   margin-top: 1rem;
   border-top: 1px solid #3a3020;
   padding-top: 0.75rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .widget-label {
@@ -377,6 +428,10 @@ async function onPromotedFileSelected(e) {
   border-radius: 3px;
   border: 1px solid transparent;
   user-select: none;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  color: inherit;
 }
 
 .counter-side:hover {
@@ -386,6 +441,11 @@ async function onPromotedFileSelected(e) {
 .counter-side--active {
   border-color: #8a7040 !important;
   background: #1e1a10;
+}
+
+.counter-side:focus-visible {
+  outline: 2px solid #8a7040;
+  outline-offset: 1px;
 }
 
 .side-label {

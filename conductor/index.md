@@ -12,6 +12,12 @@ Navigation hub for project context.
 
 ## Active Tracks
 
+| Track ID                                                                           | Title                       | Status  |
+| ---------------------------------------------------------------------------------- | --------------------------- | ------- |
+| [leader-counter-upload_20260601](./tracks/leader-counter-upload_20260601/index.md) | Leader Counter Image Upload | Pending |
+
+## All Tracks
+
 | Track ID                                                                                 | Title                                                           | Status   |
 | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------- |
 | [north-calibration_20260317](./tracks/north-calibration_20260317/index.md)               | North Calibration — gridSpec northOffset + Cardinal Edge Labels | Complete |

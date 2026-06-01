@@ -2,7 +2,7 @@ import { ref, computed, toRaw } from 'vue';
 import { defineStore } from 'pinia';
 
 import { useOobPersistence } from '../composables/useOobPersistence.js';
-import { findNodePath } from '../utils/findNodePath.js';
+import { findNodePathInTree } from '../utils/findNodePath.js';
 
 // Keys that must never appear in a dot-path passed to updateField (M4 / prototype pollution guard).
 const FORBIDDEN_PATH_KEYS = new Set([
@@ -12,6 +12,11 @@ const FORBIDDEN_PATH_KEYS = new Set([
   'toString',
   'valueOf',
 ]);
+
+// Prefix prepended to leader paths so updateField can route them to leaders.value.
+// selectNode (producer) and updateField (consumer) both use this constant — do not change
+// one without the other.
+const LEADERS_ROOT = 'leaders';
 
 export const useOobStore = defineStore('oob', () => {
   const oob = ref(null);
@@ -23,6 +28,17 @@ export const useOobStore = defineStore('oob', () => {
   const dirty = ref(false);
 
   const persistence = useOobPersistence({ oob, leaders, succession, dirty });
+
+  // ── Path routing ──────────────────────────────────────────────────────────
+  // resolveRoot maps the first path segment to the correct store ref and
+  // computes navStart (the index at which navigation into the data begins).
+  // Both selectNode and updateField depend on this convention; keeping it here
+  // ensures a single source of truth for the leaders-prefix routing rule.
+
+  function resolveRoot(parts) {
+    const isLeaders = parts[0] === LEADERS_ROOT;
+    return { data: isLeaders ? leaders : oob, navStart: isLeaders ? 1 : 0 };
+  }
 
   // ── Used counter files ────────────────────────────────────────────────────
 
@@ -69,7 +85,16 @@ export const useOobStore = defineStore('oob', () => {
     } else if (nodePath !== null) {
       selectedNodePath.value = nodePath;
     } else {
-      selectedNodePath.value = findNodePath(oob.value, node.id);
+      // Search oob first; leaders share the same side-keyed tree shape so
+      // findNodePathInTree works for both. Prefix leaders paths with LEADERS_ROOT
+      // so updateField routes writes to the correct store ref.
+      const oobPath = findNodePathInTree(oob.value, node.id);
+      if (oobPath) {
+        selectedNodePath.value = oobPath;
+      } else {
+        const leadersPath = findNodePathInTree(leaders.value, node.id);
+        selectedNodePath.value = leadersPath ? `${LEADERS_ROOT}.${leadersPath}` : null;
+      }
     }
   }
 
@@ -77,7 +102,7 @@ export const useOobStore = defineStore('oob', () => {
 
   /**
    * Update a field by dot-path on either oob or leaders.
-   * The first segment selects the root ('leaders' or anything else → oob).
+   * The first segment selects the root ('leaders' → leaders ref, anything else → oob ref).
    * Example path: 'union.corps.0.name'
    *
    * Note: assignment to a *new* nested key that did not exist at initialisation
@@ -90,15 +115,12 @@ export const useOobStore = defineStore('oob', () => {
     // M4: guard against prototype pollution via crafted path segments
     if (parts.some((p) => FORBIDDEN_PATH_KEYS.has(p))) return;
 
-    const root = parts[0];
-    const data = root === 'leaders' ? leaders : oob;
+    const { data, navStart } = resolveRoot(parts);
     if (!data.value) return;
 
     let obj = data.value;
-    // Paths use bare side-key format (e.g. 'union.corps.0.name').
-    // For leaders paths, parts[0] is 'leaders' which selects the store above — skip it.
-    const navStart = root === 'leaders' ? 1 : 0;
-    // Navigate to parent, stopping before the last key
+    // Navigate to parent, stopping before the last key.
+    // navStart skips the LEADERS_ROOT prefix segment for leaders paths.
     for (let i = navStart; i < parts.length - 1; i++) {
       if (obj === null || typeof obj !== 'object') return;
       obj = obj[parts[i]];
