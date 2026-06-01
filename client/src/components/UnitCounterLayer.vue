@@ -47,7 +47,24 @@ function counterHref(counterFile) {
   return `${props.counterBasePath}${counterFile}`;
 }
 
-// Build the render list: one entry per on-board unit with a known hex cell and a safe href.
+// Fallback fill colors for units without a counter image, keyed by side.
+const FALLBACK_FILL = { union: '#1a3a6a', confederate: '#5a4a28' };
+const FALLBACK_FILL_DEFAULT = '#3a3a3a';
+
+// Max label length for fallback counter text. Labels are intentionally lossy — distinct
+// units can produce the same abbreviation (e.g. "2nd Bde" and "2nd Div" both → "2nd").
+// These are temporary placeholders until counter images are assigned via the OOB editor.
+const MAX_LABEL_CHARS = 4;
+
+// Shorten a display name to at most MAX_LABEL_CHARS characters for the fallback label.
+function abbreviate(name) {
+  if (!name) return '??';
+  const word = name.split(/\s+/)[0];
+  return word.length <= MAX_LABEL_CHARS ? word : word.slice(0, MAX_LABEL_CHARS);
+}
+
+// Build the render list: one entry per on-board unit with a known hex cell.
+// Units with a counter image use an <image>; units without use a fallback rect + label.
 // Units at the same hex are sorted by insertion order and offset by STACK_OFFSET * stackIndex.
 const renderUnits = computed(() => {
   const size = counterSize.value;
@@ -57,15 +74,13 @@ const renderUnits = computed(() => {
     const cell = props.cellById.get(unit.hexId);
     if (!cell) return [];
 
-    const href = counterHref(unit.counterFile);
-    if (!href) return [];
-
     const stackIndex = stackCount.get(unit.hexId) ?? 0;
     stackCount.set(unit.hexId, stackIndex + 1);
 
     const xOffset = stackIndex * STACK_OFFSET;
     const x = cell.cx - size / 2 + xOffset;
     const y = cell.cy - size / 2;
+    const href = counterHref(unit.counterFile);
 
     return [{ unit, x, y, size, href }];
   });
@@ -94,7 +109,9 @@ function handleKeydown(event, unitId) {
       @click.stop="emit('unit-click', entry.unit.id)"
       @keydown="handleKeydown($event, entry.unit.id)"
     >
+      <!-- Counter image if one has been assigned -->
       <image
+        v-if="entry.href"
         aria-hidden="true"
         :href="entry.href"
         :x="entry.x"
@@ -102,6 +119,33 @@ function handleKeydown(event, unitId) {
         :width="entry.size"
         :height="entry.size"
       />
+      <!-- Fallback rect + label for units without an assigned counter image -->
+      <template v-else>
+        <rect
+          aria-hidden="true"
+          :x="entry.x"
+          :y="entry.y"
+          :width="entry.size"
+          :height="entry.size"
+          :fill="FALLBACK_FILL[entry.unit.side] ?? FALLBACK_FILL_DEFAULT"
+          stroke="#c8b89a"
+          stroke-width="1.5"
+          rx="2"
+        />
+        <text
+          aria-hidden="true"
+          :x="entry.x + entry.size / 2"
+          :y="entry.y + entry.size / 2"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-size="10"
+          font-family="monospace"
+          font-weight="bold"
+          fill="#e8d8b0"
+          pointer-events="none"
+          >{{ abbreviate(entry.unit.name) }}</text
+        >
+      </template>
     </g>
   </g>
 </template>
@@ -112,6 +156,8 @@ function handleKeydown(event, unitId) {
   cursor: pointer;
 }
 
+/* SVG <g> :focus-visible support is browser-dependent; plain :focus is the fallback. */
+.unit-counter:focus,
 .unit-counter:focus-visible {
   outline: 2px solid #ffffff;
   outline-offset: 2px;

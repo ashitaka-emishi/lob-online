@@ -4,6 +4,7 @@ import express from 'express';
 
 import { requireSide } from '../auth/requireSide.js';
 import { getPlayerSession, setPlayerSession } from '../auth/session.js';
+import { dispatch, ActionError } from '../engine/actions/index.js';
 import { initGameState } from '../engine/init.js';
 import { getScenario } from '../engine/scenario.js';
 import {
@@ -127,6 +128,59 @@ router.get('/', (_req, res) => {
 router.get('/me', (req, res) => {
   const player = getPlayerSession(req);
   res.json({ gameId: player?.gameId ?? null, side: player?.side ?? null });
+});
+
+// ActionError.code → HTTP status. INVALID_ACTION / UNKNOWN_ACTION are client errors (422);
+// INVALID_STATE / DRAIN_LOOP are server-side faults (500). (#356)
+const ACTION_ERROR_STATUS = {
+  INVALID_ACTION: 422,
+  UNKNOWN_ACTION: 422,
+  INVALID_STATE: 500,
+  DRAIN_LOOP: 500,
+};
+
+// POST /api/v1/games/:id/actions — submit a game action through the pure phase reducer.
+// playerSide is sourced from the authenticated session, never from the request body. (#356 #387)
+router.post('/:id/actions', requireSide, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, payload = null, expectedVersion } = req.body;
+
+    if (typeof type !== 'string' || !type) {
+      return res.status(400).json({ error: 'action type must be a non-empty string' });
+    }
+
+    const player = getPlayerSession(req);
+    const playerSide = player.side; // session-sourced; body playerSide is intentionally ignored
+
+    const state = await loadGame(id);
+
+    // Optimistic concurrency — reject before dispatch if client state is stale (#332).
+    // Non-numeric / absent expectedVersion means the client opts out of the version guard.
+    if (typeof expectedVersion === 'number' && expectedVersion !== state.version) {
+      return res
+        .status(409)
+        .json({ error: `Version conflict: expected ${expectedVersion}, current ${state.version}` });
+    }
+
+    const nextState = dispatch(state, { type, payload, playerSide });
+    const saved = await saveGame(id, nextState);
+
+    // Notify connected players; they fetch the authoritative state via GET /:id (#356)
+    req.app.locals.io.to(id).emit('game:state-updated', { version: saved.version });
+
+    res.json(saved);
+  } catch (err) {
+    if (err instanceof ActionError) {
+      const status = ACTION_ERROR_STATUS[err.code] ?? 500;
+      console.error('[route] POST /games/:id/actions ActionError:', err.code, err.message);
+      // Server-fault codes must not leak internal Zod/phase details to the client (#478).
+      const clientMessage = status >= 500 ? 'Internal error processing action' : err.message;
+      return res.status(status).json({ error: clientMessage });
+    }
+    console.error('[route] POST /games/:id/actions error:', err.message);
+    res.status(500).json({ error: 'Failed to process action' });
+  }
 });
 
 // GET /api/v1/games/:id — load game state (player must have a valid session for this game)

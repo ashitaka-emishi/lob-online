@@ -1,14 +1,13 @@
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, it, expect } from 'vitest';
 
-// ⚠ FILE ISOLATION: this file's vi.mock replaces handleEndPhase with undefined for the entire module
-// scope so HANDLERS.END_PHASE is undefined, triggering the UNKNOWN_ACTION path in dispatch().
-// Do NOT add tests here that require the real handleEndPhase — they will silently receive undefined.
-// For tests needing real handlers, use index.test.js or dispatch.invalid-state.test.js.
-vi.mock('./endPhase.js', () => ({
-  handleEndPhase: undefined,
-}));
+import { dispatch, ActionError, ACTION_HANDLERS } from './index.js';
 
-import { dispatch, ActionError } from './index.js';
+// Save the real END_PHASE handler so we can restore it after each test.
+const REAL_END_PHASE = ACTION_HANDLERS.get('END_PHASE');
+
+afterEach(() => {
+  ACTION_HANDLERS.set('END_PHASE', REAL_END_PHASE);
+});
 
 const COMMAND_ORDERS_STATE = {
   id: 'game-1',
@@ -32,7 +31,10 @@ const COMMAND_ORDERS_STATE = {
 
 describe('dispatch — UNKNOWN_ACTION path (#384)', () => {
   it('throws ActionError{ code: UNKNOWN_ACTION } with the action type in the message', () => {
-    // END_PHASE is returned by getValidActions but its handler is mocked to undefined above.
+    // Remove END_PHASE from the handler Map to simulate a registered-but-unimplemented action.
+    // END_PHASE is returned by getValidActions for this state, so it passes the INVALID_ACTION
+    // check; the missing Map entry then triggers the UNKNOWN_ACTION guard in dispatch().
+    ACTION_HANDLERS.delete('END_PHASE');
     const action = { type: 'END_PHASE', payload: null, playerSide: 'union' };
     expect(() => dispatch(COMMAND_ORDERS_STATE, action)).toThrow(ActionError);
     try {

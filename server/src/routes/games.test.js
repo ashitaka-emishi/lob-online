@@ -48,6 +48,17 @@ vi.mock('../engine/scenario.js', () => ({
   clearScenarioCache: vi.fn(),
 }));
 
+vi.mock('../engine/actions/index.js', () => ({
+  dispatch: vi.fn(),
+  ActionError: class ActionError extends Error {
+    constructor(code, message) {
+      super(message);
+      this.name = 'ActionError';
+      this.code = code;
+    }
+  },
+}));
+
 import { setPlayerSession, getPlayerSession } from '../auth/session.js';
 import {
   createGame,
@@ -64,6 +75,7 @@ import {
 } from '../store/index.js';
 import { initGameState } from '../engine/init.js';
 import { getScenario } from '../engine/scenario.js';
+import { dispatch, ActionError } from '../engine/actions/index.js';
 
 // Fixed UUID used as a stand-in game id in route tests
 const TEST_UUID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
@@ -85,6 +97,12 @@ async function buildApp() {
   const { default: router } = await import('./games.js');
   const app = express();
   app.use(express.json());
+  // Mock Socket.io — route handlers call req.app.locals.io.to(id).emit(event, data)
+  const mockEmit = vi.fn();
+  const mockTo = vi.fn().mockReturnValue({ emit: mockEmit });
+  app.locals.io = { to: mockTo };
+  app.locals._mockEmit = mockEmit;
+  app.locals._mockTo = mockTo;
   // Minimal session stub — regenerate resets session and invokes callback (#SEC-M1)
   app.use((req, _res, next) => {
     req.session = { regenerate: (cb) => cb() };
@@ -402,6 +420,185 @@ describe('DELETE /api/v1/games/:id', () => {
   it('returns 400 for non-UUID game id', async () => {
     const app = await buildApp();
     const res = await request(app).delete('/api/v1/games/not-a-uuid');
+    expect(res.status).toBe(400);
+  });
+});
+
+// ─── POST /api/v1/games/:id/actions ──────────────────────────────────────────
+
+const ACTIVE_STATE = {
+  ...MINIMAL_STATE,
+  version: 3,
+  status: 'active',
+  activePlayer: 'union',
+};
+const NEXT_STATE = { ...ACTIVE_STATE, version: 4 };
+
+describe('POST /api/v1/games/:id/actions', () => {
+  it('returns 401 when player has no session (#356)', async () => {
+    getPlayerSession.mockReturnValue(null);
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 401 when session gameId does not match route :id (#356)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: 'other-game', side: 'union', token: 'tok' });
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 400 when action type is missing (#356)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ payload: null, expectedVersion: 3 });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/type/);
+  });
+
+  it('returns 409 when expectedVersion does not match state version (#332 #356)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE); // version: 3
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 99 });
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/version/i);
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it('dispatches action and returns saved state on success (#356)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockReturnValue(NEXT_STATE);
+    saveGame.mockResolvedValue(NEXT_STATE);
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(res.status).toBe(200);
+    expect(res.body.version).toBe(4);
+    expect(dispatch).toHaveBeenCalledWith(ACTIVE_STATE, {
+      type: 'END_PHASE',
+      payload: null,
+      playerSide: 'union',
+    });
+  });
+
+  it('sources playerSide from session, never from request body (#387)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'confederate', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockReturnValue(NEXT_STATE);
+    saveGame.mockResolvedValue(NEXT_STATE);
+    const app = await buildApp();
+    // Caller attempts to spoof playerSide in the body — must be ignored
+    await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, playerSide: 'union', expectedVersion: 3 });
+    expect(dispatch).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ playerSide: 'confederate' })
+    );
+  });
+
+  it('emits game:state-updated after successful action (#356)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockReturnValue(NEXT_STATE);
+    saveGame.mockResolvedValue(NEXT_STATE);
+    const app = await buildApp();
+    await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(app.locals._mockTo).toHaveBeenCalledWith(TEST_UUID);
+    expect(app.locals._mockEmit).toHaveBeenCalledWith('game:state-updated', {
+      version: NEXT_STATE.version,
+    });
+  });
+
+  it('does not emit game:state-updated when dispatch throws (#356)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockImplementation(() => {
+      throw new ActionError('INVALID_ACTION', 'bad action');
+    });
+    const app = await buildApp();
+    await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(app.locals._mockEmit).not.toHaveBeenCalled();
+  });
+
+  it('returns 422 for INVALID_ACTION without leaking stack trace (#356)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockImplementation(() => {
+      throw new ActionError('INVALID_ACTION', "Action 'FOO' is not valid");
+    });
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(res.status).toBe(422);
+    expect(res.body.error).toMatch(/not valid/);
+    expect(res.body.stack).toBeUndefined();
+  });
+
+  it('returns 422 for UNKNOWN_ACTION (#356)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockImplementation(() => {
+      throw new ActionError('UNKNOWN_ACTION', 'No handler for NOOP');
+    });
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(res.status).toBe(422);
+    expect(res.body.stack).toBeUndefined();
+  });
+
+  it('returns 500 for INVALID_STATE without leaking stack trace (#356)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockImplementation(() => {
+      throw new ActionError('INVALID_STATE', 'Schema violation');
+    });
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(res.status).toBe(500);
+    expect(res.body.stack).toBeUndefined();
+  });
+
+  it('returns 500 for DRAIN_LOOP (#356)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockImplementation(() => {
+      throw new ActionError('DRAIN_LOOP', 'Cycle detected');
+    });
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(res.status).toBe(500);
+  });
+
+  it('returns 400 for non-UUID game id (#356)', async () => {
+    const app = await buildApp();
+    const res = await request(app)
+      .post('/api/v1/games/not-a-uuid/actions')
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 0 });
     expect(res.status).toBe(400);
   });
 });

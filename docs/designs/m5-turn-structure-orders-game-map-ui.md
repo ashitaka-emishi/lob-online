@@ -350,5 +350,9 @@ None.
 
 - #354 — Apply M5 schema changes (9 additions to gameState.schema.js + tests)
 - #355 — Implement server phase engine (dispatch, getValidActions, action handlers)
-- #356 — Add game action endpoint and socket room notifications
-- #357 — Detail GameView component architecture and split UI tickets
+- #356 — Add game action endpoint and socket room notifications ✅
+- #357 — Detail GameView component architecture and split UI tickets ✅
+- #472 — useGameStore: add submitAction, pendingAction, socket game:state-updated listener
+- #473 — ActionPanel.vue: phase/turn/step display + action buttons
+- #474 — GameView.vue: wire socket setup, ActionPanel, pendingAction pass-through
+- #408 — UnitStatsPanel: counter image, weapon type, faction colors, multi-unit paging

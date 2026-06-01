@@ -118,6 +118,7 @@ describe('useOobData — oobUnitMap', () => {
       side: 'union',
       strengthPoints: 6,
       counterFile: 'unit-a.png',
+      weapon: null,
     });
   });
 
@@ -186,6 +187,7 @@ describe('useOobData — oobUnitMap', () => {
       side: 'union',
       strengthPoints: 4,
       counterFile: 'bde-a.png',
+      weapon: null,
     });
   });
 });

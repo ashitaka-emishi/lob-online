@@ -14,7 +14,9 @@ import { Server } from 'socket.io';
 import { initDb, getDb } from './store/gameSqlite.js';
 import gamesRouter from './routes/games.js';
 import oobRouter from './routes/oob.js';
+import leadersRouter from './routes/leaders.js';
 import scenariosRouter from './routes/scenarios.js';
+import { registerGameSocket } from './socket/gameSocket.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -28,6 +30,9 @@ export async function startServer() {
   const io = new Server(httpServer, {
     cors: { origin: CLIENT_ORIGIN, credentials: true },
   });
+
+  // Expose io to route handlers via app.locals so POST /actions can emit after dispatch (#356)
+  app.locals.io = io;
 
   // Middleware
   app.use(helmet());
@@ -43,21 +48,36 @@ export async function startServer() {
   // Initialise DB and persistent session store (#329, #338)
   initDb();
   const SessionStore = SqliteStore(session);
-  app.use(
-    session({
-      store: new SessionStore({ client: getDb() }),
-      secret: process.env.SESSION_SECRET || 'dev-secret-change-in-prod',
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        // Drive secure flag from explicit env var so staging/preview HTTPS envs are covered (#SEC-M3)
-        secure: process.env.COOKIE_SECURE === 'true',
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 14 * 24 * 60 * 60 * 1000,
-      },
-    })
-  );
+  const sessionMiddleware = session({
+    store: new SessionStore({ client: getDb() }),
+    secret: process.env.SESSION_SECRET || 'dev-secret-change-in-prod',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      // Drive secure flag from explicit env var so staging/preview HTTPS envs are covered (#SEC-M3)
+      secure: process.env.COOKIE_SECURE === 'true',
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 14 * 24 * 60 * 60 * 1000,
+    },
+  });
+  app.use(sessionMiddleware);
+
+  // CSRF defense: reject state-mutating requests whose Origin doesn't match the known
+  // client origin. This guards cookie-authenticated routes against cross-site request
+  // forgery from other origins. Full synchronizer-token CSRF is deferred to M8 (#350).
+  app.use((req, res, next) => {
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+      const origin = req.get('Origin');
+      if (origin && origin !== CLIENT_ORIGIN) {
+        return res.status(403).json({ error: 'Forbidden: cross-origin request blocked' });
+      }
+    }
+    return next();
+  });
+
+  // Share Express session with Socket.io so game:join/game:leave can read session.gameId (#356)
+  io.engine.use(sessionMiddleware);
 
   // Health check
   app.get('/api/health', (_req, res) => {
@@ -71,6 +91,9 @@ export async function startServer() {
   // Scenario data API — production-safe, not gated by MAP_EDITOR_ENABLED (#431)
   app.use('/api/v1/oob', oobRouter);
   console.log('[server] OOB API enabled at /api/v1/oob');
+
+  app.use('/api/v1/leaders', leadersRouter);
+  console.log('[server] leaders API enabled at /api/v1/leaders');
 
   // Scenario map config — static data, no auth required (#421)
   app.use('/api/v1/scenarios', scenariosRouter);
@@ -137,9 +160,10 @@ export async function startServer() {
     res.status(500).json({ error: 'Internal server error' });
   });
 
-  // Socket.io
+  // Socket.io — game room membership and state-change notifications (#356)
   io.on('connection', (socket) => {
     console.log(`[socket] connected: ${socket.id}`);
+    registerGameSocket(socket);
     socket.on('disconnect', () => {
       console.log(`[socket] disconnected: ${socket.id}`);
     });

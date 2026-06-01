@@ -1,0 +1,16 @@
+{
+  "id": "m5-api-ui-closeout_20260527",
+  "title": "M5 Closeout — Game Action API, GameView Design, and Info Panel Fix",
+  "type": "feature",
+  "status": "pending",
+  "created": "2026-05-27T00:00:00.000Z",
+  "updated": "2026-05-27T00:00:00.000Z",
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 17,
+    "completed": 0
+  }
+}

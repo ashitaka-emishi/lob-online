@@ -15,6 +15,7 @@ function collectOobUnits(obj, side, map) {
       side,
       strengthPoints: obj.strengthPoints ?? null,
       counterFile: obj.counterRef?.front ?? null,
+      weapon: obj.weapon ?? null, // LOB weapon code (R, C, SR, etc.) for display (#408)
     });
   }
   for (const val of Object.values(obj)) {
@@ -30,32 +31,41 @@ function collectOobUnits(obj, side, map) {
  */
 export function useOobData() {
   const oobData = ref(null);
+  const leadersData = ref(null);
   // TODO: oobError is a raw error string passed directly to the DOM by consumers (e.g. GameView).
   // Consider sanitizing or wrapping before display to avoid raw API messages reaching users. (#436)
   const oobError = ref(null);
 
   async function fetchOob() {
     try {
-      const res = await fetch('/api/v1/oob');
-      if (!res.ok) {
-        oobError.value = `OOB request failed (${res.status})`;
+      const [oobRes, leadersRes] = await Promise.all([
+        fetch('/api/v1/oob'),
+        fetch('/api/v1/leaders'),
+      ]);
+      if (!oobRes.ok) {
+        oobError.value = `OOB request failed (${oobRes.status})`;
         return;
       }
-      oobData.value = await res.json();
+      if (!leadersRes.ok) {
+        oobError.value = `Leaders request failed (${leadersRes.status})`;
+        return;
+      }
+      oobData.value = await oobRes.json();
+      leadersData.value = await leadersRes.json();
       oobError.value = null;
     } catch (err) {
       oobError.value = err.message;
     }
   }
 
-  // Flat Map<unitId, { name, side, strengthPoints, counterFile }> derived from oobData.
-  // Iterates top-level keys matching SIDES constants — depends on OOBSchema having `union`
+  // Flat Map<unitId, { name, side, strengthPoints, counterFile, weapon }> derived from oobData + leadersData.
+  // Iterates top-level keys matching SIDES constants — depends on both schemas having `union`
   // and `confederate` as top-level keys. Update if the schema shape changes.
   const oobUnitMap = computed(() => {
     const map = new Map();
-    if (!oobData.value) return map;
     for (const side of [SIDES.UNION, SIDES.CONFEDERATE]) {
-      if (oobData.value[side]) collectOobUnits(oobData.value[side], side, map);
+      if (oobData.value?.[side]) collectOobUnits(oobData.value[side], side, map);
+      if (leadersData.value?.[side]) collectOobUnits(leadersData.value[side], side, map);
     }
     return map;
   });
