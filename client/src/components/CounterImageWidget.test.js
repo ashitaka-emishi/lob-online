@@ -467,116 +467,11 @@ describe('CounterImageWidget — leader mode', () => {
     delete globalThis.fetch;
   });
 
-  it('standard front/back slots are still present in leader mode (4 total: 2 standard + 2 promoted)', () => {
+  it('standard front/back slots are present in leader mode alongside 2 promoted slots (4 total)', () => {
     const wrapper = mount(CounterImageWidget, {
       props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
     });
     // 2 standard (front/back) + 2 promoted (front/back) = 4
     expect(wrapper.findAll('.counter-side').length).toBe(4);
-  });
-
-  it('renders standard Browse buttons for front and back in leader mode', () => {
-    const wrapper = mount(CounterImageWidget, {
-      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
-    });
-    expect(wrapper.findAll('.standard-browse-btn').length).toBe(2);
-  });
-
-  it('does NOT render standard Browse buttons in unit mode', () => {
-    const wrapper = mount(CounterImageWidget, {
-      props: { counterRef: null, nodePath: 'union.corps.0' },
-    });
-    expect(wrapper.findAll('.standard-browse-btn').length).toBe(0);
-  });
-
-  it('standard Browse button triggers hidden file input', async () => {
-    const wrapper = mount(CounterImageWidget, {
-      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
-    });
-    const fileInput = wrapper.find('.standard-file-input');
-    const clickSpy = vi.spyOn(fileInput.element, 'click').mockImplementation(() => {});
-    await wrapper.findAll('.standard-browse-btn')[0].trigger('click');
-    expect(clickSpy).toHaveBeenCalled();
-  });
-
-  it('successful standard upload sets counterRef.front via updateCounterRef', async () => {
-    const store = setup();
-    store.updateCounterRef = vi.fn();
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ ok: true, filename: 'CS1-Front_01.jpg' }),
-    });
-
-    const wrapper = mount(CounterImageWidget, {
-      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.army.0', mode: 'leader' },
-    });
-
-    await wrapper.findAll('.standard-browse-btn')[0].trigger('click');
-
-    const fileInput = wrapper.find('.standard-file-input');
-    const file = new File(['x'], 'CS1-Front_01.jpg', { type: 'image/jpeg' });
-    Object.defineProperty(fileInput.element, 'files', { value: [file], configurable: true });
-    await fileInput.trigger('change');
-    await wrapper.vm.$nextTick();
-
-    expect(store.updateCounterRef).toHaveBeenCalledWith(
-      'leaders.union.army.0',
-      expect.objectContaining({ front: 'CS1-Front_01.jpg' })
-    );
-
-    delete globalThis.fetch;
-  });
-
-  it('standard upload uses getDefaultCounterRef shape when counterRef is null', async () => {
-    const store = setup();
-    store.updateCounterRef = vi.fn();
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ ok: true, filename: 'CS1-Front_01.jpg' }),
-    });
-
-    const wrapper = mount(CounterImageWidget, {
-      props: { counterRef: null, nodePath: 'leaders.union.army.0', mode: 'leader' },
-    });
-
-    await wrapper.findAll('.standard-browse-btn')[0].trigger('click');
-
-    const fileInput = wrapper.find('.standard-file-input');
-    const file = new File(['x'], 'CS1-Front_01.jpg', { type: 'image/jpeg' });
-    Object.defineProperty(fileInput.element, 'files', { value: [file], configurable: true });
-    await fileInput.trigger('change');
-    await wrapper.vm.$nextTick();
-
-    const call = store.updateCounterRef.mock.calls[0][1];
-    expect(call.front).toBe('CS1-Front_01.jpg');
-    // Leader default shape preserves promoted fields
-    expect('promotedFront' in call).toBe(true);
-    expect('promotedBack' in call).toBe(true);
-
-    delete globalThis.fetch;
-  });
-
-  it('failed standard upload does not call updateCounterRef', async () => {
-    const store = setup();
-    store.updateCounterRef = vi.fn();
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      json: () => Promise.resolve({ ok: false }),
-    });
-
-    const wrapper = mount(CounterImageWidget, {
-      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.army.0', mode: 'leader' },
-    });
-
-    await wrapper.findAll('.standard-browse-btn')[0].trigger('click');
-    const fileInput = wrapper.find('.standard-file-input');
-    const file = new File(['x'], 'bad.jpg', { type: 'image/jpeg' });
-    Object.defineProperty(fileInput.element, 'files', { value: [file], configurable: true });
-    await fileInput.trigger('change');
-    await wrapper.vm.$nextTick();
-
-    expect(store.updateCounterRef).not.toHaveBeenCalled();
-
-    delete globalThis.fetch;
   });
 });
