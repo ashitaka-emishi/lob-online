@@ -136,10 +136,18 @@ describe('CounterImageWidget — slot activation', () => {
 // ── Keyboard cycling ───────────────────────────────────────────────────────────
 
 describe('CounterImageWidget — keyboard cycling', () => {
+  // Hoist wrapper so afterEach can unmount it, preventing window keydown listener leaks
+  // across tests (each mount registers a global listener; unmount removes it).
+  let wrapper;
+  afterEach(() => {
+    wrapper?.unmount();
+    wrapper = undefined;
+  });
+
   it('activate does NOT commit to store when slot is empty (#211)', async () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
-    const wrapper = mount(CounterImageWidget, {
+    wrapper = mount(CounterImageWidget, {
       props: { counterRef: null, nodePath: 'union.corps.0' },
     });
     await wrapper.findAll('.counter-side')[0].trigger('click');
@@ -150,7 +158,7 @@ describe('CounterImageWidget — keyboard cycling', () => {
   it('ArrowDown commits counter after activation (↑/↓ is the write path)', async () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
-    const wrapper = mount(CounterImageWidget, {
+    wrapper = mount(CounterImageWidget, {
       props: { counterRef: null, nodePath: 'union.corps.0' },
     });
     await wrapper.findAll('.counter-side')[0].trigger('click');
@@ -165,7 +173,7 @@ describe('CounterImageWidget — keyboard cycling', () => {
   it('ArrowUp wraps around and calls updateCounterRef', async () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
-    const wrapper = mount(CounterImageWidget, {
+    wrapper = mount(CounterImageWidget, {
       props: { counterRef: null, nodePath: 'union.corps.0' },
     });
     await wrapper.findAll('.counter-side')[0].trigger('click');
@@ -175,7 +183,7 @@ describe('CounterImageWidget — keyboard cycling', () => {
   });
 
   it('Escape deactivates the slot', async () => {
-    const wrapper = mount(CounterImageWidget, {
+    wrapper = mount(CounterImageWidget, {
       props: { counterRef: null, nodePath: 'union.corps.0' },
     });
     await wrapper.findAll('.counter-side')[0].trigger('click');
@@ -188,7 +196,7 @@ describe('CounterImageWidget — keyboard cycling', () => {
   it('ignores arrow keys when no slot is active', async () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
-    mount(CounterImageWidget, {
+    wrapper = mount(CounterImageWidget, {
       props: { counterRef: null, nodePath: 'union.corps.0' },
     });
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
@@ -198,7 +206,7 @@ describe('CounterImageWidget — keyboard cycling', () => {
   it('commit() is a no-op when nodePath is null — store is never called (#213)', async () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
-    const wrapper = mount(CounterImageWidget, {
+    wrapper = mount(CounterImageWidget, {
       props: { counterRef: null, nodePath: null },
     });
     await wrapper.findAll('.counter-side')[0].trigger('click');
@@ -210,7 +218,7 @@ describe('CounterImageWidget — keyboard cycling', () => {
   it('arrow keys do not cycle counters when focus is inside a form field (#212)', async () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
-    const wrapper = mount(CounterImageWidget, {
+    wrapper = mount(CounterImageWidget, {
       props: { counterRef: null, nodePath: 'union.corps.0' },
     });
     await wrapper.findAll('.counter-side')[0].trigger('click');
@@ -366,24 +374,30 @@ const LEADER_COUNTER_REF = {
 };
 
 describe('CounterImageWidget — leader mode', () => {
+  // Hoist wrapper to prevent window keydown listener leaks across tests.
+  let wrapper;
   beforeEach(setup);
+  afterEach(() => {
+    wrapper?.unmount();
+    wrapper = undefined;
+  });
 
   it('does NOT render promoted row in default (unit) mode', () => {
-    const wrapper = mount(CounterImageWidget, {
+    wrapper = mount(CounterImageWidget, {
       props: { counterRef: null, nodePath: 'union.corps.0' },
     });
     expect(wrapper.find('.promoted-row').exists()).toBe(false);
   });
 
   it('renders promoted row when mode="leader"', () => {
-    const wrapper = mount(CounterImageWidget, {
+    wrapper = mount(CounterImageWidget, {
       props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
     });
     expect(wrapper.find('.promoted-row').exists()).toBe(true);
   });
 
   it('shows placeholder for promoted front and back when null', () => {
-    const wrapper = mount(CounterImageWidget, {
+    wrapper = mount(CounterImageWidget, {
       props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
     });
     const promoted = wrapper.find('.promoted-row');
@@ -392,7 +406,7 @@ describe('CounterImageWidget — leader mode', () => {
   });
 
   it('shows promotedFront filename when set', () => {
-    const wrapper = mount(CounterImageWidget, {
+    wrapper = mount(CounterImageWidget, {
       props: {
         counterRef: { ...LEADER_COUNTER_REF, promotedFront: 'CS1-Front_01.jpg' },
         nodePath: 'leaders.union.corps.0',
@@ -404,42 +418,73 @@ describe('CounterImageWidget — leader mode', () => {
   });
 
   it('all 4 counter slots are present in leader mode (2 standard + 2 promoted)', () => {
-    const wrapper = mount(CounterImageWidget, {
+    wrapper = mount(CounterImageWidget, {
       props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
     });
     expect(wrapper.findAll('.counter-side').length).toBe(4);
   });
 
   it('clicking promoted front slot activates it', async () => {
-    const wrapper = mount(CounterImageWidget, {
-      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
-    });
-    const promotedRow = wrapper.find('.promoted-row');
-    const promoFront = promotedRow.findAll('.counter-side')[0];
-    await promoFront.trigger('click');
-    expect(promoFront.classes()).toContain('counter-side--active');
-  });
-
-  it('ArrowDown on active promotedFront slot commits to promotedFront via updateCounterRef', async () => {
-    const store = setup();
-    store.updateCounterRef = vi.fn();
-    const wrapper = mount(CounterImageWidget, {
+    wrapper = mount(CounterImageWidget, {
       props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
     });
     const promoFront = wrapper.find('.promoted-row').findAll('.counter-side')[0];
     await promoFront.trigger('click');
+    expect(promoFront.classes()).toContain('counter-side--active');
+  });
+
+  it('ArrowDown on active promotedFront slot commits CS1-Front_02.jpg to promotedFront, leaves front untouched', async () => {
+    const store = setup();
+    store.updateCounterRef = vi.fn();
+    wrapper = mount(CounterImageWidget, {
+      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+    });
+    const promoFront = wrapper.find('.promoted-row').findAll('.counter-side')[0];
+    await promoFront.trigger('click');
+    // Index 0 = CS1-Front_01.jpg; ArrowDown advances to index 1 = CS1-Front_02.jpg
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     await wrapper.vm.$nextTick();
     expect(store.updateCounterRef).toHaveBeenCalledTimes(1);
-    expect(store.updateCounterRef.mock.calls[0][1]).toMatchObject(
-      expect.objectContaining({ promotedFront: expect.any(String) })
-    );
+    expect(store.updateCounterRef.mock.calls[0][1]).toMatchObject({
+      promotedFront: 'CS1-Front_02.jpg',
+      front: null,
+    });
   });
 
-  it('promoted slots show no Browse buttons', () => {
-    const wrapper = mount(CounterImageWidget, {
+  it('commit with null counterRef in leader mode preserves promoted fields in default shape', async () => {
+    const store = setup();
+    store.updateCounterRef = vi.fn();
+    // counterRef is null — getDefaultCounterRef() leader branch must include promoted keys
+    wrapper = mount(CounterImageWidget, {
+      props: { counterRef: null, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+    });
+    await wrapper.findAll('.counter-side')[0].trigger('click'); // activate front
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await wrapper.vm.$nextTick();
+    const committed = store.updateCounterRef.mock.calls[0][1];
+    expect(committed.front).toBeTruthy();
+    expect('promotedFront' in committed).toBe(true);
+    expect('promotedBack' in committed).toBe(true);
+  });
+
+  it('no file upload inputs are rendered in leader mode', () => {
+    wrapper = mount(CounterImageWidget, {
       props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
     });
-    expect(wrapper.find('.promoted-browse-btn').exists()).toBe(false);
+    expect(wrapper.find('input[type="file"]').exists()).toBe(false);
+  });
+
+  it('confederate leader path is detected as confederate side — excludes union cut-outs', async () => {
+    wrapper = mount(CounterImageWidget, {
+      props: {
+        counterRef: LEADER_COUNTER_REF,
+        nodePath: 'leaders.confederate.army.0',
+        mode: 'leader',
+      },
+    });
+    await wrapper.findAll('.counter-side')[0].trigger('click'); // activate front
+    const [, total] = wrapper.find('.slot-count').text().split('/').map(Number);
+    // CS1-Front_01, CS1-Front_02, C1 copy, C2 copy → 4 (U## excluded for confederate)
+    expect(total).toBe(4);
   });
 });
