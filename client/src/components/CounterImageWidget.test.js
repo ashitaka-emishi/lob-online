@@ -403,75 +403,43 @@ describe('CounterImageWidget — leader mode', () => {
     expect(promoted.text()).toContain('CS1-Front_01.jpg');
   });
 
-  it('Browse… button triggers hidden file input', async () => {
+  it('all 4 counter slots are present in leader mode (2 standard + 2 promoted)', () => {
     const wrapper = mount(CounterImageWidget, {
       props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
     });
-    const fileInput = wrapper.find('.promoted-file-input');
-    const clickSpy = vi.spyOn(fileInput.element, 'click').mockImplementation(() => {});
-    await wrapper.find('.promoted-browse-btn').trigger('click');
-    expect(clickSpy).toHaveBeenCalled();
-  });
-
-  it('successful upload updates promotedFront via updateCounterRef', async () => {
-    const store = setup();
-    store.updateCounterRef = vi.fn();
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ ok: true, filename: 'CS1-Front_01.jpg' }),
-    });
-
-    const wrapper = mount(CounterImageWidget, {
-      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
-    });
-
-    // Trigger browse for promotedFront
-    await wrapper.findAll('.promoted-browse-btn')[0].trigger('click');
-
-    // Simulate file selection on the hidden input
-    const fileInput = wrapper.find('.promoted-file-input');
-    const file = new File(['x'], 'CS1-Front_01.jpg', { type: 'image/jpeg' });
-    Object.defineProperty(fileInput.element, 'files', { value: [file], configurable: true });
-    await fileInput.trigger('change');
-    await wrapper.vm.$nextTick();
-
-    expect(store.updateCounterRef).toHaveBeenCalledWith(
-      'leaders.union.corps.0',
-      expect.objectContaining({ promotedFront: 'CS1-Front_01.jpg' })
-    );
-
-    delete globalThis.fetch;
-  });
-
-  it('failed upload does not call updateCounterRef', async () => {
-    const store = setup();
-    store.updateCounterRef = vi.fn();
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      json: () => Promise.resolve({ ok: false, message: 'Upload failed' }),
-    });
-
-    const wrapper = mount(CounterImageWidget, {
-      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
-    });
-
-    await wrapper.findAll('.promoted-browse-btn')[0].trigger('click');
-    const fileInput = wrapper.find('.promoted-file-input');
-    const file = new File(['x'], 'bad.jpg', { type: 'image/jpeg' });
-    Object.defineProperty(fileInput.element, 'files', { value: [file], configurable: true });
-    await fileInput.trigger('change');
-    await wrapper.vm.$nextTick();
-
-    expect(store.updateCounterRef).not.toHaveBeenCalled();
-
-    delete globalThis.fetch;
-  });
-
-  it('standard front/back slots are present in leader mode alongside 2 promoted slots (4 total)', () => {
-    const wrapper = mount(CounterImageWidget, {
-      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
-    });
-    // 2 standard (front/back) + 2 promoted (front/back) = 4
     expect(wrapper.findAll('.counter-side').length).toBe(4);
+  });
+
+  it('clicking promoted front slot activates it', async () => {
+    const wrapper = mount(CounterImageWidget, {
+      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+    });
+    const promotedRow = wrapper.find('.promoted-row');
+    const promoFront = promotedRow.findAll('.counter-side')[0];
+    await promoFront.trigger('click');
+    expect(promoFront.classes()).toContain('counter-side--active');
+  });
+
+  it('ArrowDown on active promotedFront slot commits to promotedFront via updateCounterRef', async () => {
+    const store = setup();
+    store.updateCounterRef = vi.fn();
+    const wrapper = mount(CounterImageWidget, {
+      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+    });
+    const promoFront = wrapper.find('.promoted-row').findAll('.counter-side')[0];
+    await promoFront.trigger('click');
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await wrapper.vm.$nextTick();
+    expect(store.updateCounterRef).toHaveBeenCalledTimes(1);
+    expect(store.updateCounterRef.mock.calls[0][1]).toMatchObject(
+      expect.objectContaining({ promotedFront: expect.any(String) })
+    );
+  });
+
+  it('promoted slots show no Browse buttons', () => {
+    const wrapper = mount(CounterImageWidget, {
+      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+    });
+    expect(wrapper.find('.promoted-browse-btn').exists()).toBe(false);
   });
 });
