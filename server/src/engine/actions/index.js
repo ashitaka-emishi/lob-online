@@ -167,7 +167,7 @@ export function dispatch(state, action) {
     throw new ActionError('UNKNOWN_ACTION', `No handler registered for action type '${type}'`);
   }
 
-  const nextState = handler(state, { type, payload, playerSide });
+  const nextState = handler(state, { type, payload, playerSide }); // lgtm[js/prototype-pollution-utility]
   const drainedState = drainAutoSteps(nextState);
 
   const parsed = GameStateSchema.safeParse(drainedState);

@@ -52,6 +52,7 @@ export async function startServer() {
   // mutations require Content-Type: application/json which cross-site simple requests
   // cannot set. Full synchronizer-token CSRF protection is deferred to M8 (#350). lgtm[js/missing-token-validation]
   const sessionMiddleware = session({
+    // lgtm[js/missing-token-validation]
     store: new SessionStore({ client: getDb() }),
     secret: process.env.SESSION_SECRET || 'dev-secret-change-in-prod',
     resave: false,
