@@ -46,13 +46,16 @@ export function getValidActions(state, playerSide) {
   return [{ type: 'END_PHASE', payload: null }];
 }
 
-const HANDLERS = {
-  END_PHASE: handleEndPhase,
-  ROLL_INITIATIVE: handleRollInitiative,
-  ISSUE_ORDER: handleIssueOrder,
-  ACTIVATE_STACK: handleActivateStack,
-  END_ACTIVATION: handleEndActivation,
-};
+// Map of action type → handler function. Exported so tests can manipulate entries
+// (e.g. delete a key to trigger the UNKNOWN_ACTION path). Map.get() is immune to
+// prototype-chain attacks since Maps don't inherit from Object.prototype. (#CodeQL)
+export const ACTION_HANDLERS = new Map([
+  ['END_PHASE', handleEndPhase],
+  ['ROLL_INITIATIVE', handleRollInitiative],
+  ['ISSUE_ORDER', handleIssueOrder],
+  ['ACTIVATE_STACK', handleActivateStack],
+  ['END_ACTIVATION', handleEndActivation],
+]);
 
 // Current auto-advance steps: attackRecovery, flukeStoppage, rally (3 steps, 8 gives headroom for M6+)
 const MAX_AUTO_STEPS = 8;
@@ -161,13 +164,14 @@ export function dispatch(state, action) {
     throw new ActionError('INVALID_ACTION', `Action '${type}' is not valid in the current state`);
   }
 
-  // Use hasOwnProperty to guard against prototype-polluting action types (e.g. '__proto__').
-  const handler = Object.prototype.hasOwnProperty.call(HANDLERS, type) ? HANDLERS[type] : null;
+  // Map.get() is safe for user-controlled keys: Maps have no prototype chain, so
+  // '__proto__' or 'constructor' can never reach Object.prototype methods. (#CodeQL)
+  const handler = ACTION_HANDLERS.get(type);
   if (!handler) {
     throw new ActionError('UNKNOWN_ACTION', `No handler registered for action type '${type}'`);
   }
 
-  const nextState = handler(state, { type, payload, playerSide }); // lgtm[js/prototype-pollution-utility]
+  const nextState = handler(state, { type, payload, playerSide });
   const drainedState = drainAutoSteps(nextState);
 
   const parsed = GameStateSchema.safeParse(drainedState);

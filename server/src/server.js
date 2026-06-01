@@ -48,11 +48,7 @@ export async function startServer() {
   // Initialise DB and persistent session store (#329, #338)
   initDb();
   const SessionStore = SqliteStore(session);
-  // CSRF defense: CORS is restricted to CLIENT_ORIGIN (single known origin) and all API
-  // mutations require Content-Type: application/json which cross-site simple requests
-  // cannot set. Full synchronizer-token CSRF protection is deferred to M8 (#350). lgtm[js/missing-token-validation]
   const sessionMiddleware = session({
-    // lgtm[js/missing-token-validation]
     store: new SessionStore({ client: getDb() }),
     secret: process.env.SESSION_SECRET || 'dev-secret-change-in-prod',
     resave: false,
@@ -66,6 +62,19 @@ export async function startServer() {
     },
   });
   app.use(sessionMiddleware);
+
+  // CSRF defense: reject state-mutating requests whose Origin doesn't match the known
+  // client origin. This guards cookie-authenticated routes against cross-site request
+  // forgery from other origins. Full synchronizer-token CSRF is deferred to M8 (#350).
+  app.use((req, res, next) => {
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+      const origin = req.get('Origin');
+      if (origin && origin !== CLIENT_ORIGIN) {
+        return res.status(403).json({ error: 'Forbidden: cross-origin request blocked' });
+      }
+    }
+    return next();
+  });
 
   // Share Express session with Socket.io so game:join/game:leave can read session.gameId (#356)
   io.engine.use(sessionMiddleware);
