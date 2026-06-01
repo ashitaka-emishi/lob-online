@@ -13,6 +13,7 @@
     "ammoClass": "B=high-quality, C=standard, D=depot/reserve — affects shell/canister supply rates",
     "wreckThreshold": "Number of wrecked regiments at which brigade is considered wrecked (checkmark position on Brigade Loss Chart)"
   },
+  "_savedAt": 1780331574629,
   "union": {
     "army": "Army of the Potomac",
     "supplyTrain": {
@@ -3044,6 +3045,5 @@
         ]
       }
     ]
-  },
-  "_savedAt": 1775108660059
+  }
 }

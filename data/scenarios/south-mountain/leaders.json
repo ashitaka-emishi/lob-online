@@ -9,6 +9,7 @@
     "looseCannonImmunity": "SM 3.2: D.H. Hill is the ONLY leader who may ignore Loose Cannon initiative results. This immunity is revoked when Longstreet arrives at 5pm.",
     "artilleryReplenishFromAnyReserve": "SM override (LOBv2_GameSpecificUpdates.pdf): Pelham and Pleasonton artillery may replenish from any friendly ammo reserve."
   },
+  "_savedAt": 1780331574629,
   "union": {
     "_note": "Army of the Potomac",
     "army": [
@@ -82,7 +83,16 @@
         "commandsId": "cav-div",
         "commandValue": null,
         "moraleValue": null,
-        "counterRef": null,
+        "counterRef": {
+          "front": "CS1-Front_130.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_130.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "artilleryReplenishFromAnyReserve": true,
           "replenishNote": "Pleasonton's artillery (C&G 3 US) may replenish from any friendly ammo reserve, not just the assigned corps reserve (SM override, LOBv2_GameSpecificUpdates.pdf)."
@@ -398,7 +408,16 @@
         "commandsId": "fcav",
         "commandValue": null,
         "moraleValue": null,
-        "counterRef": null
+        "counterRef": {
+          "front": "CS1-Front_132.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_132.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        }
       }
     ]
   },
@@ -495,7 +514,16 @@
         "commandsId": "adh",
         "commandValue": null,
         "moraleValue": null,
-        "counterRef": null
+        "counterRef": {
+          "front": "CS1-Front_146.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_146.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        }
       },
       {
         "id": "colquitt",
@@ -654,6 +682,5 @@
         }
       }
     ]
-  },
-  "_savedAt": 1775108660059
+  }
 }
