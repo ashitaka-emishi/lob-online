@@ -71,6 +71,11 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  // ID of the currently selected unit, passed through to UnitCounterLayer for aria-pressed. (#480)
+  selectedUnitId: {
+    type: String,
+    default: null,
+  },
   // True when the active tool supports drag-paint. Gates hex-mouseenter to mousedown-only.
   dragPaintEnabled: {
     type: Boolean,
@@ -793,6 +798,7 @@ defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
           :units="units"
           :cell-by-id="gridData.cellById"
           :hex-side-length="calibration.hexWidth"
+          :selected-unit-id="selectedUnitId"
           @unit-click="emit('unit-click', $event)"
         />
 

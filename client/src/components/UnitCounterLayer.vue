@@ -29,6 +29,11 @@ const props = defineProps({
     type: String,
     default: '/counters/',
   },
+  // ID of the currently selected unit. Used to bind aria-pressed and update aria-label. (#480)
+  selectedUnitId: {
+    type: String,
+    default: null,
+  },
 });
 
 const emit = defineEmits(['unit-click']);
@@ -86,6 +91,12 @@ const renderUnits = computed(() => {
   });
 });
 
+function handleClick(event, unitId) {
+  // Keep focus on the activated counter so keyboard users can continue navigating. (#480)
+  event.currentTarget.focus();
+  emit('unit-click', unitId);
+}
+
 function handleKeydown(event, unitId) {
   if (event.key === 'Enter' || event.key === ' ') {
     event.preventDefault();
@@ -102,11 +113,16 @@ function handleKeydown(event, unitId) {
     <g
       v-for="entry in renderUnits"
       :key="entry.unit.id"
-      :aria-label="`Select ${entry.unit.name ?? entry.unit.id}`"
+      :aria-label="
+        entry.unit.id === selectedUnitId
+          ? `Deselect ${entry.unit.name ?? entry.unit.id}`
+          : `Select ${entry.unit.name ?? entry.unit.id}`
+      "
+      :aria-pressed="entry.unit.id === selectedUnitId"
       role="button"
       tabindex="0"
       class="unit-counter"
-      @click.stop="emit('unit-click', entry.unit.id)"
+      @click.stop="handleClick($event, entry.unit.id)"
       @keydown="handleKeydown($event, entry.unit.id)"
     >
       <!-- Counter image if one has been assigned -->

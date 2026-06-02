@@ -170,3 +170,56 @@ describe('UnitCounterLayer — AT reliability (#434)', () => {
     expect(img.attributes('aria-hidden')).toBe('true');
   });
 });
+
+describe('UnitCounterLayer — selection state (#480)', () => {
+  it('aria-pressed is false for unselected units', () => {
+    const wrapper = mount(UnitCounterLayer, {
+      props: { units: [UNIT_A, UNIT_B], cellById: BASE_CELL_BY_ID, selectedUnitId: null },
+    });
+    for (const g of wrapper.findAll('g[role="button"]')) {
+      expect(g.attributes('aria-pressed')).toBe('false');
+    }
+  });
+
+  it('aria-pressed is true for the selected unit only', () => {
+    const wrapper = mount(UnitCounterLayer, {
+      props: { units: [UNIT_A, UNIT_B], cellById: BASE_CELL_BY_ID, selectedUnitId: 'unit-a' },
+    });
+    const groups = wrapper.findAll('g[role="button"]');
+    expect(groups[0].attributes('aria-pressed')).toBe('true');
+    expect(groups[1].attributes('aria-pressed')).toBe('false');
+  });
+
+  it('aria-label says "Deselect" for the selected unit', () => {
+    const wrapper = mount(UnitCounterLayer, {
+      props: {
+        units: [UNIT_A_NAMED],
+        cellById: BASE_CELL_BY_ID,
+        selectedUnitId: 'unit-a',
+      },
+    });
+    const g = wrapper.find('g[role="button"]');
+    expect(g.attributes('aria-label')).toContain('Deselect');
+    expect(g.attributes('aria-label')).toContain('1st Brigade');
+  });
+
+  it('aria-label says "Select" for unselected units', () => {
+    const wrapper = mount(UnitCounterLayer, {
+      props: {
+        units: [UNIT_A_NAMED],
+        cellById: BASE_CELL_BY_ID,
+        selectedUnitId: null,
+      },
+    });
+    const g = wrapper.find('g[role="button"]');
+    expect(g.attributes('aria-label')).toContain('Select');
+    expect(g.attributes('aria-label')).not.toContain('Deselect');
+  });
+
+  it('accepts selectedUnitId prop without error when undefined/null', () => {
+    const wrapper = mount(UnitCounterLayer, {
+      props: { units: [UNIT_A], cellById: BASE_CELL_BY_ID },
+    });
+    expect(wrapper.find('g[role="button"]').attributes('aria-pressed')).toBe('false');
+  });
+});

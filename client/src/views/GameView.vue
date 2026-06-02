@@ -167,6 +167,7 @@ function onImageLoad(event) {
             :image-height="imgNaturalHeight"
             :overlay-config="{ selectedHex: { hexId: gameStore.selectedUnit?.hex ?? null } }"
             :interaction-enabled="true"
+            :selected-unit-id="gameStore.selectedUnit?.id ?? null"
             @hex-click="onHexClick"
             @unit-click="onUnitClick"
           />
