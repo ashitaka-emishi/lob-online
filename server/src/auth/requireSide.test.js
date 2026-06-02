@@ -57,16 +57,17 @@ describe('requireSide', () => {
     expect(next).toHaveBeenCalledOnce();
   });
 
-  it('returns 401 when there is no session', () => {
+  it('returns 401 when there is no session — does not hit the DB', () => {
     const req = { params: { id: 'game-abc' }, session: {} };
     const res = mockRes();
     const next = vi.fn();
     requireSide(req, res, next);
     expect(next).not.toHaveBeenCalled();
     expect(res._status).toBe(401);
+    expect(getGame).not.toHaveBeenCalled();
   });
 
-  it('returns 401 when session gameId does not match the route :id', () => {
+  it('returns 401 when session gameId does not match the route :id — does not hit the DB', () => {
     const req = {
       params: { id: 'game-abc' },
       session: { gameId: 'other-game', side: 'union', sideToken: 'tok-a' },
@@ -76,9 +77,10 @@ describe('requireSide', () => {
     requireSide(req, res, next);
     expect(next).not.toHaveBeenCalled();
     expect(res._status).toBe(401);
+    expect(getGame).not.toHaveBeenCalled();
   });
 
-  it('returns 401 when session is missing sideToken', () => {
+  it('returns 401 when session is missing sideToken — does not hit the DB', () => {
     const req = {
       params: { id: 'game-abc' },
       session: { gameId: 'game-abc', side: 'union' },
@@ -88,6 +90,7 @@ describe('requireSide', () => {
     requireSide(req, res, next);
     expect(next).not.toHaveBeenCalled();
     expect(res._status).toBe(401);
+    expect(getGame).not.toHaveBeenCalled();
   });
 
   // ── DB validation (#477) ─────────────────────────────────────────────────────

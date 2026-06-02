@@ -162,6 +162,15 @@ describe('UnitCounterLayer — AT reliability (#434)', () => {
     expect(wrapper.emitted('unit-click')[0]).toEqual(['unit-a']);
   });
 
+  it('does not emit unit-click on auto-repeat keydown (Space held)', async () => {
+    const wrapper = mount(UnitCounterLayer, {
+      props: { units: [UNIT_A], cellById: BASE_CELL_BY_ID },
+    });
+    const g = wrapper.find('g[role="button"]');
+    await g.trigger('keydown', { key: ' ', repeat: true });
+    expect(wrapper.emitted('unit-click')).toBeFalsy();
+  });
+
   it('<image> child carries aria-hidden="true" to prevent double AT announcement (#434)', () => {
     const wrapper = mount(UnitCounterLayer, {
       props: { units: [UNIT_A], cellById: BASE_CELL_BY_ID },
@@ -190,30 +199,49 @@ describe('UnitCounterLayer — selection state (#480)', () => {
     expect(groups[1].attributes('aria-pressed')).toBe('false');
   });
 
-  it('aria-label says "Deselect" for the selected unit', () => {
+  it('aria-label uses stable unit name regardless of selection state', () => {
+    // aria-label is stable; aria-pressed conveys selected/unselected state to AT.
     const wrapper = mount(UnitCounterLayer, {
-      props: {
-        units: [UNIT_A_NAMED],
-        cellById: BASE_CELL_BY_ID,
-        selectedUnitId: 'unit-a',
-      },
+      props: { units: [UNIT_A_NAMED], cellById: BASE_CELL_BY_ID, selectedUnitId: 'unit-a' },
     });
     const g = wrapper.find('g[role="button"]');
-    expect(g.attributes('aria-label')).toContain('Deselect');
-    expect(g.attributes('aria-label')).toContain('1st Brigade');
+    expect(g.attributes('aria-label')).toBe('1st Brigade');
+    expect(g.attributes('aria-label')).not.toContain('Select');
+    expect(g.attributes('aria-label')).not.toContain('Deselect');
   });
 
-  it('aria-label says "Select" for unselected units', () => {
+  it('aria-label is the same for both selected and unselected state', () => {
+    const { wrapper: w1 } = {
+      wrapper: mount(UnitCounterLayer, {
+        props: { units: [UNIT_A_NAMED], cellById: BASE_CELL_BY_ID, selectedUnitId: 'unit-a' },
+      }),
+    };
+    const { wrapper: w2 } = {
+      wrapper: mount(UnitCounterLayer, {
+        props: { units: [UNIT_A_NAMED], cellById: BASE_CELL_BY_ID, selectedUnitId: null },
+      }),
+    };
+    expect(w1.find('g[role="button"]').attributes('aria-label')).toBe(
+      w2.find('g[role="button"]').attributes('aria-label')
+    );
+  });
+
+  it('aria-label falls back to unit id when name is absent', () => {
     const wrapper = mount(UnitCounterLayer, {
-      props: {
-        units: [UNIT_A_NAMED],
-        cellById: BASE_CELL_BY_ID,
-        selectedUnitId: null,
-      },
+      props: { units: [UNIT_A], cellById: BASE_CELL_BY_ID },
     });
-    const g = wrapper.find('g[role="button"]');
-    expect(g.attributes('aria-label')).toContain('Select');
-    expect(g.attributes('aria-label')).not.toContain('Deselect');
+    expect(wrapper.find('g[role="button"]').attributes('aria-label')).toContain('unit-a');
+  });
+
+  it('stacked counters include hex ID in aria-label for SR disambiguation', () => {
+    const wrapper = mount(UnitCounterLayer, {
+      props: { units: [UNIT_A_NAMED, UNIT_C], cellById: BASE_CELL_BY_ID },
+    });
+    const groups = wrapper.findAll('g[role="button"]');
+    // First counter (stackIndex 0): just the name
+    expect(groups[0].attributes('aria-label')).toBe('1st Brigade');
+    // Second counter (stackIndex 1): name + hex ID
+    expect(groups[1].attributes('aria-label')).toContain('05.03');
   });
 
   it('accepts selectedUnitId prop without error when undefined/null', () => {
