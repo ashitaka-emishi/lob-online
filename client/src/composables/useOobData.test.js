@@ -56,12 +56,28 @@ describe('useOobData — fetchOob', () => {
     expect(oobError.value).toContain('timeout');
   });
 
-  it('fetches from /api/v1/oob by default', async () => {
+  it('fetches from both /api/v1/oob and /api/v1/leaders (#476)', async () => {
     const fetchMock = mockFetch(STUB_OOB);
     vi.stubGlobal('fetch', fetchMock);
     const { fetchOob } = useOobData();
     await fetchOob();
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/oob');
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/leaders');
+  });
+
+  it('degrades gracefully when /api/v1/leaders returns non-ok — oobData loads, oobError stays null (#479)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url) => {
+        if (url === '/api/v1/oob')
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(STUB_OOB) });
+        return Promise.resolve({ ok: false, status: 503 });
+      })
+    );
+    const { oobData, oobError, fetchOob } = useOobData();
+    await fetchOob();
+    expect(oobError.value).toBeNull();
+    expect(oobData.value).toEqual(STUB_OOB);
   });
 
   it('sets oobError when server responds with non-ok status', async () => {
@@ -141,6 +157,49 @@ describe('useOobData — oobUnitMap', () => {
     await nextTick();
     const unitB = oobUnitMap.value.get('unit-b');
     expect(unitB?.counterFile).toBeNull();
+  });
+
+  it('merges leaders-specific fields into oobUnitMap when leaders fetch succeeds (#476)', async () => {
+    const STUB_LEADERS = {
+      union: {
+        army: [{ id: 'pleasonton', name: 'Pleasonton', counterRef: { front: 'leader-130.jpg' } }],
+      },
+      confederate: {},
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url) => {
+        const data = url === '/api/v1/leaders' ? STUB_LEADERS : STUB_OOB;
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(data) });
+      })
+    );
+    const { fetchOob, oobUnitMap } = useOobData();
+    await fetchOob();
+    await nextTick();
+    const leader = oobUnitMap.value.get('pleasonton');
+    expect(leader).toBeDefined();
+    expect(leader.name).toBe('Pleasonton');
+    expect(leader.counterFile).toBe('leader-130.jpg');
+    expect(leader.side).toBe('union');
+  });
+
+  it('oobUnitMap excludes leader fields when leaders fetch fails — OOB units still present (#479)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url) => {
+        if (url === '/api/v1/oob')
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(STUB_OOB) });
+        return Promise.resolve({ ok: false, status: 503 });
+      })
+    );
+    const { fetchOob, oobUnitMap } = useOobData();
+    await fetchOob();
+    await nextTick();
+    // OOB units still present
+    expect(oobUnitMap.value.has('unit-a')).toBe(true);
+    expect(oobUnitMap.value.has('unit-c')).toBe(true);
+    // No leader-only units
+    expect(oobUnitMap.value.has('pleasonton')).toBe(false);
   });
 
   it('flattens 3-level nesting (corps → division → brigade) — all leaf unit IDs appear in map (#436)', async () => {
