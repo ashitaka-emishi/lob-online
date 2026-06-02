@@ -66,8 +66,8 @@ const MAX_AUTO_STEPS = 8;
 // terminal safeParse() in dispatch(). This one-directional check fires earlier in the loop to give
 // a more specific error: ordersPhase may legitimately be null mid-command (after attackRecovery /
 // flukeStoppage transitions), so only the "non-null in wrong phase" direction is checked here.
-// TODO(route-layer): INVALID_STATE messages embed internal phase/step details for server diagnostics;
-// sanitize before surfacing to clients when the dispatch HTTP route is wired.
+// INVALID_STATE messages embed phase/step details for diagnostics; the route layer (#478)
+// sanitizes these before surfacing to clients.
 function assertEnvelope(value, key, expectedPhase, phase, step) {
   if (value !== null && phase !== expectedPhase) {
     throw new ActionError(
