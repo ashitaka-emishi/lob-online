@@ -1,17 +1,17 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-01 after PR #485._
+_Last updated: 2026-06-02 after PR #489._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                              |
-| -------------------------------- | ---------------------------------------------------------------------------------- |
-| Open debt items                  | 23                                                                                 |
-| Cumulative debt score (net open) | 47                                                                                 |
-| Highest-risk item                | requireSide: verify sideToken against DB record on action requests (#477, score 3) |
-| PRs tracked                      | 225                                                                                |
+| Metric                           | Value                                                                                               |
+| -------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Open debt items                  | 18                                                                                                  |
+| Cumulative debt score (net open) | 32                                                                                                  |
+| Highest-risk item                | CounterImageWidget: release activeFace on blur to bound global keydown interception (#487, score 2) |
+| PRs tracked                      | 231                                                                                                 |
 
 ---
 
@@ -263,6 +263,12 @@ _Last updated: 2026-06-01 after PR #485._
 | 2026-05-31 | PR #475                                                        | 19                   | +18       | 407                      |
 | 2026-05-31 | PR #475 (resolved #387)                                        | -1                   | —         | 407                      |
 | 2026-06-01 | PR #485                                                        | 4                    | +4        | 411                      |
+| 2026-06-02 | PR #489                                                        | 0                    | -15       | 411                      |
+| 2026-06-02 | PR #489 (resolved #476)                                        | -3                   | —         | 411                      |
+| 2026-06-02 | PR #489 (resolved #477)                                        | -3                   | —         | 411                      |
+| 2026-06-02 | PR #489 (resolved #478)                                        | -3                   | —         | 411                      |
+| 2026-06-02 | PR #489 (resolved #479)                                        | -3                   | —         | 411                      |
+| 2026-06-02 | PR #489 (resolved #480)                                        | -3                   | —         | 411                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -270,11 +276,9 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-High risk. Critical or significant deferred items pose a threat to production stability or block future work. Immediate attention recommended.
+Elevated risk. Several significant deferred items that introduce coupling or architectural compromise. Recommend a debt reduction sprint before the next major phase.
 
-PR #475 (M5 closeout) raised net open score from 25 to 43 with five score-3 items: an auth boundary gap (requireSide never validates stored side tokens — #477), server-fault error message leakage exposing Zod internals (#478), a brittle all-or-nothing OOB fetch (#479), missing test coverage for the leaders fetch (#476), and WCAG non-conformance in the interactive counter layer (#480). These should be prioritized in a debt sprint before M6 combat/morale work begins.
-
-PR #485 (OOB editor leader counter upload) fixed 14 findings in place — including two High accessibility regressions in `CounterImageWidget`, a shared-store routing convention gap, and a utility rename — and deferred 2 minor items totalling 4 points, raising net open score from 43 to 47. The new items (#486 side-detection coupling, #487 global keydown scope) are low-severity dev-tool issues with straightforward fixes. The remaining open debt continues to be concentrated in the five score-3 M5 auth/server/AT items and score-2 rules-engine stubs safe until M6.
+PR #489 (pre-M6 debt sprint) closed all five score-3 items from M5 (#476 #477 #478 #479 #480), reducing the net open score from 47 to 32 — a −15 improvement in a single PR. The remaining 18 open items are all score 1 or 2, with no remaining score-3 or higher items. Current debt is concentrated in: score-2 rules-engine stubs safe until M6 combat phases (#379 #381 #382 #383), minor security/infrastructure items deferred to M8 (#350 #403), dev-tool UX and test coverage gaps (#467 #468 #470 #481 #482), and two low-priority OOB editor coupling items from PR #485 (#486 #487). The elevated score is driven by item count rather than severity; no individual item is blocking M6 work.
 
 ---
 
@@ -284,11 +288,6 @@ _Ordered by score descending (ties: newest first). Resolved items are removed._
 
 | Score | Issue | Title                                                                               | PR Introduced | Assessment                                                                                                                                                                                                                                                                                           |
 | ----- | ----- | ----------------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 3     | #480  | UnitCounterLayer: add aria-pressed and focus management for keyboard/AT users       | PR #475       | Interactive `<g role="button">` counters expose no selected state to AT; selection is color-only (WCAG 1.4.1/4.1.2). Post-activation focus is not managed (WCAG 2.4.3). Paging count label lacks accessible context.                                                                                 |
-| 3     | #479  | useOobData: degrade gracefully when /api/v1/leaders unavailable                     | PR #475       | A leaders-only outage blanks all OOB enrichment (names, counters, faction colors) even when `/api/v1/oob` responded correctly. Disproportionate blast radius for a secondary enrichment source; pattern will compound as more sources are added.                                                     |
-| 3     | #478  | games.js actions route: sanitize INVALID_STATE message + add INVALID_PAYLOAD status | PR #475       | INVALID_STATE/DRAIN_LOOP `ActionError` messages reach clients verbatim, exposing raw Zod output and internal phase/step identifiers. INVALID_PAYLOAD falls through `?? 500` and is misreported as a server fault. Engine's own TODO flags the leakage.                                               |
-| 3     | #477  | requireSide: verify sideToken against DB record on action requests                  | PR #475       | `requireSide` authorizes on `session.gameId` only; stored side tokens are never compared. A stale/revoked session retains full action authority. Tokens exist in the DB to be authoritative but are never consulted on the hot action path.                                                          |
-| 3     | #476  | useOobData: test leaders fetch URL, failure branch, and map merge                   | PR #475       | Parallel leaders fetch has no URL-assertion test, no failure-branch test, and the leaders-merge path in `oobUnitMap` is entirely unverified. A dropped leaders call or broken error handling would pass the full suite silently.                                                                     |
 | 2     | #482  | games.js POST /actions: guard req.app.locals.io emit post-save                      | PR #475       | `req.app.locals.io.to(id).emit(...)` runs after `saveGame` with no guard. A missing `io` throws after a committed state change, producing a misleading 500 for a successful action.                                                                                                                  |
 | 2     | #481  | games.js + socket + UnitStatsPanel: test quality improvements                       | PR #475       | Success path cannot distinguish dispatch result from saveGame result. 409 omitted-version bypass untested. game:leave auth policy not pinned. Length-2 paging arrays can't detect direction/wrap bugs. `select-unit` emission contract unasserted.                                                   |
 | 2     | #470  | sec: mirror stripNonPlayableBoundaryEdges validation on server PUT /map endpoint    | PR #466       | Client-side strip is authoritative but the server performs no equivalent validation. Defense-in-depth gap: a client bug or direct API call could persist non-playable boundary edges. Dev-only tool with no player-facing surface, so actual risk is low.                                            |
