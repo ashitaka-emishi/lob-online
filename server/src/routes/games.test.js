@@ -120,7 +120,14 @@ beforeEach(() => {
   initGameState.mockReturnValue(MINIMAL_STATE);
   createGame.mockReturnValue(TEST_UUID);
   listGames.mockReturnValue([]);
-  getGame.mockReturnValue(null);
+  // Default: active game with side_a_token matching the most common test player token ('tok').
+  // Tests that need a different game state (null, open, different tokens) override this.
+  getGame.mockReturnValue({
+    id: TEST_UUID,
+    status: 'active',
+    side_a_token: 'tok',
+    side_b_token: 'tok-b',
+  });
   loadGame.mockResolvedValue(MINIMAL_STATE);
   deleteGame.mockReturnValue(undefined);
   deleteGameFile.mockResolvedValue(undefined);
@@ -353,7 +360,12 @@ describe('POST /api/v1/games — scenario wiring', () => {
 describe('GET /api/v1/games/:id', () => {
   it('returns 200 with game state when player session is valid (#330)', async () => {
     getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok-1' });
-    getGame.mockReturnValue({ id: TEST_UUID, status: 'open' });
+    getGame.mockReturnValue({
+      id: TEST_UUID,
+      status: 'active',
+      side_a_token: 'tok-1',
+      side_b_token: 'tok-b',
+    });
     loadGame.mockResolvedValue(MINIMAL_STATE);
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
@@ -592,6 +604,55 @@ describe('POST /api/v1/games/:id/actions', () => {
       .post(`/api/v1/games/${TEST_UUID}/actions`)
       .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
     expect(res.status).toBe(500);
+  });
+
+  it('sanitizes INVALID_STATE message — internal details do not reach the client (#478)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockImplementation(() => {
+      throw new ActionError(
+        'INVALID_STATE',
+        'drainAutoSteps: ordersPhase is non-null outside orders phase (phase=command, step=initiative)'
+      );
+    });
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe('Internal error processing action');
+    expect(res.body.error).not.toMatch(/ordersPhase|drainAutoSteps/);
+  });
+
+  it('sanitizes DRAIN_LOOP message — internal details do not reach the client (#478)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockImplementation(() => {
+      throw new ActionError(
+        'DRAIN_LOOP',
+        'Cycle detected in phase=command step=initiative after 100 iterations'
+      );
+    });
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe('Internal error processing action');
+  });
+
+  it('returns 400 for INVALID_PAYLOAD — client error, not server fault (#478)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockImplementation(() => {
+      throw new ActionError('INVALID_PAYLOAD', 'ISSUE_ORDER requires unitId and orderType');
+    });
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'ISSUE_ORDER', payload: {}, expectedVersion: 3 });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('ISSUE_ORDER requires unitId and orderType');
   });
 
   it('returns 400 for non-UUID game id (#356)', async () => {

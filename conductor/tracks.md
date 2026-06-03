@@ -134,4 +134,5 @@
 <!-- Tracks registered by /conductor:new-track -->
 
 | [x] | milestone-backfill_20260601 | Milestone Backfill — M1/M2 Creation, Issue Assignment, Leader Counter Upload | 2026-06-01 | 2026-06-01 |
+| [~] | pre-m6-debt-sprint_20260601 | Pre-M6 Debt Sprint — Issues #476 #477 #478 #479 #480 | 2026-06-01 | 2026-06-01 |
 | [x] | leader-counter-upload_20260601 | Leader Counter Image Upload | 2026-06-01 | 2026-06-01 |

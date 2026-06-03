@@ -46,12 +46,27 @@ export function useOobData() {
         oobError.value = `OOB request failed (${oobRes.status})`;
         return;
       }
-      if (!leadersRes.ok) {
-        oobError.value = `Leaders request failed (${leadersRes.status})`;
-        return;
-      }
       oobData.value = await oobRes.json();
-      leadersData.value = await leadersRes.json();
+      // Leaders is a secondary enrichment source (#479). A failure degrades gracefully:
+      // unit names and counter images from leaders.json will be absent, but the game
+      // map still renders with OOB data. OOB failure remains fatal.
+      // The .json() parse is also wrapped: a corrupt leaders body is non-fatal, unlike
+      // a corrupt OOB body (which would propagate to the outer catch and set oobError).
+      if (leadersRes.ok) {
+        try {
+          leadersData.value = await leadersRes.json();
+        } catch {
+          console.warn(
+            '[useOobData] leaders response could not be parsed — leader counter images and names will be absent'
+          );
+          leadersData.value = null;
+        }
+      } else {
+        console.warn(
+          `[useOobData] leaders fetch degraded (${leadersRes.status}) — leader counter images and names will be absent`
+        );
+        leadersData.value = null;
+      }
       oobError.value = null;
     } catch (err) {
       oobError.value = err.message;

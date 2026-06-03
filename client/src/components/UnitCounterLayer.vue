@@ -29,6 +29,11 @@ const props = defineProps({
     type: String,
     default: '/counters/',
   },
+  // ID of the currently selected unit. Used to bind aria-pressed and update aria-label. (#480)
+  selectedUnitId: {
+    type: String,
+    default: null,
+  },
 });
 
 const emit = defineEmits(['unit-click']);
@@ -66,6 +71,7 @@ function abbreviate(name) {
 // Build the render list: one entry per on-board unit with a known hex cell.
 // Units with a counter image use an <image>; units without use a fallback rect + label.
 // Units at the same hex are sorted by insertion order and offset by STACK_OFFSET * stackIndex.
+// Each entry includes displayName (resolved once) and stackIndex (for SR disambiguation).
 const renderUnits = computed(() => {
   const size = counterSize.value;
   const stackCount = new Map();
@@ -81,13 +87,23 @@ const renderUnits = computed(() => {
     const x = cell.cx - size / 2 + xOffset;
     const y = cell.cy - size / 2;
     const href = counterHref(unit.counterFile);
+    const displayName = unit.name ?? unit.id;
 
-    return [{ unit, x, y, size, href }];
+    return [{ unit, x, y, size, href, displayName, stackIndex }];
   });
 });
 
+function handleClick(event, unitId) {
+  // Keep focus on the activated counter so keyboard users can continue navigating. (#480)
+  event.currentTarget.focus();
+  emit('unit-click', unitId);
+}
+
 function handleKeydown(event, unitId) {
   if (event.key === 'Enter' || event.key === ' ') {
+    // Guard against auto-repeat: Space held down fires repeated keydown events that would
+    // rapidly toggle selection. Enter does not auto-repeat on buttons, but guard both.
+    if (event.repeat) return;
     event.preventDefault();
     event.stopPropagation();
     emit('unit-click', unitId);
@@ -99,14 +115,19 @@ function handleKeydown(event, unitId) {
   <g class="layer-units">
     <!-- #434: <g role="button"> is reliably announced by NVDA/JAWS/VoiceOver;
          <image role="button"> is not. Event handlers and ARIA move to the wrapper. -->
+    <!-- aria-label uses a stable name (state is conveyed by aria-pressed, not the label).
+         Stacked counters append the hex ID so AT users can distinguish them. (#480) -->
     <g
       v-for="entry in renderUnits"
       :key="entry.unit.id"
-      :aria-label="`Select ${entry.unit.name ?? entry.unit.id}`"
+      :aria-label="
+        entry.stackIndex > 0 ? `${entry.displayName} (${entry.unit.hexId})` : entry.displayName
+      "
+      :aria-pressed="entry.unit.id === selectedUnitId"
       role="button"
       tabindex="0"
       class="unit-counter"
-      @click.stop="emit('unit-click', entry.unit.id)"
+      @click.stop="handleClick($event, entry.unit.id)"
       @keydown="handleKeydown($event, entry.unit.id)"
     >
       <!-- Counter image if one has been assigned -->

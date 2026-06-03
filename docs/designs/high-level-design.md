@@ -23,7 +23,7 @@
 
 ---
 
-> **Implementation Status (as of 2026-05-08) — M4 Complete**
+> **Implementation Status (as of 2026-06-01) — M5 Complete**
 >
 > **M1 — Scaffold (complete):** tech stack selection, server scaffold (Express + Socket.io),
 > data models (five JSON files: map, scenario, oob, leaders, succession), Zod validation schemas,
@@ -51,12 +51,17 @@
 > games API routes with express-session auth; `LobbyView` + `useLobbyStore` client UI;
 > join/create/list endpoints with sideToken session guards.
 >
-> **M5 — Turn Structure, Orders, and Game Map UI (in progress):** schema prerequisites
-> landed (PR #359): `UnitOrderState` with cross-field Zod refinements, `isDetached` field.
-> Remaining M5 work: order-delivery pipeline, turn-phase sequencing, game map UI component.
+> **M5 — Turn Structure, Orders, and Game Map UI (complete):** `UnitOrderState` schema with
+> cross-field Zod refinements, `isDetached` field; turn reducer + valid-actions engine
+> (`engine/phase.js`) covering Command→Activity→Rally cycle; `POST /api/v1/games/:id/actions`
+> endpoint with Socket.io room events (`game:join`, `game:leave`, `game:state`); `GameView`
+> client with `UnitCounterLayer` SVG counter rendering and `UnitStatsPanel` sidebar;
+> `useGameStore` Pinia store. Leader counter images now assignable via OOB editor
+> (`selectNode` correctly paths leaders in `leaders.json`; all four counter slots use
+> manifest cycling).
 >
-> **In progress:** South Mountain scenario data digitization (841 hexes, turn structure,
-> setup zones, reinforcements, initial orders — ongoing refinement throughout development).
+> **In progress:** M6 planning — combat resolution, morale checks, orders pipeline.
+> South Mountain scenario data digitization ongoing (map hexes, counter linkages).
 >
 > Sections describing completed work are accurate to the implementation. Sections describing
 > planned work reflect design intent and may evolve.

@@ -130,11 +130,15 @@ router.get('/me', (req, res) => {
   res.json({ gameId: player?.gameId ?? null, side: player?.side ?? null });
 });
 
-// ActionError.code → HTTP status. INVALID_ACTION / UNKNOWN_ACTION are client errors (422);
-// INVALID_STATE / DRAIN_LOOP are server-side faults (500). (#356)
+// ActionError.code → HTTP status. INVALID_ACTION / UNKNOWN_ACTION / INVALID_PAYLOAD are client
+// errors (422/400); INVALID_STATE / DRAIN_LOOP are server-side faults (500). (#356 #478)
+// IMPORTANT: err.message is returned verbatim to the client for all <500 codes — every
+// ActionError throw site with a <500 code must keep its message client-safe (no internal
+// state, tokens, or opponent data). 500-class messages are sanitised below.
 const ACTION_ERROR_STATUS = {
   INVALID_ACTION: 422,
   UNKNOWN_ACTION: 422,
+  INVALID_PAYLOAD: 400,
   INVALID_STATE: 500,
   DRAIN_LOOP: 500,
 };
