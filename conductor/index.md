@@ -12,9 +12,9 @@ Navigation hub for project context.
 
 ## Active Tracks
 
-| Track ID                                                                           | Title                       | Status  |
-| ---------------------------------------------------------------------------------- | --------------------------- | ------- |
-| [leader-counter-upload_20260601](./tracks/leader-counter-upload_20260601/index.md) | Leader Counter Image Upload | Pending |
+| Track ID                                                                     | Title                                                | Status  |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------- | ------- |
+| [pre-m6-debt-sprint_20260601](./tracks/pre-m6-debt-sprint_20260601/index.md) | Pre-M6 Debt Sprint — Issues #476 #477 #478 #479 #480 | Pending |
 
 ## All Tracks
 

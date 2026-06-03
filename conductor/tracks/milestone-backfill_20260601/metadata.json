@@ -1,0 +1,16 @@
+{
+  "id": "milestone-backfill_20260601",
+  "title": "Milestone Backfill — M1/M2 Creation, Issue Assignment, Leader Counter Upload",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-06-01T00:00:00.000Z",
+  "updated": "2026-06-01T00:00:00.000Z",
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 13,
+    "completed": 0
+  }
+}
