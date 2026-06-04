@@ -1,0 +1,16 @@
+{
+  "id": "pre-m6-debt-score_20260604",
+  "title": "Pre-M6 Debt Score Sprint — Reduce Cumulative Score to < 15",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-06-04T00:00:00.000Z",
+  "updated": "2026-06-04T00:00:00.000Z",
+  "phases": {
+    "total": 4,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 18,
+    "completed": 0
+  }
+}
