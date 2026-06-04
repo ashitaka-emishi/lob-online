@@ -361,23 +361,39 @@ describe('CounterImageWidget — counter filtering', () => {
     expect(total).toBe(4);
   });
 
-  // Task 2.2 (#486): side prop (not path) drives the filter — switching side changes results
+  // Task 2.2 (#486): side prop (not path) drives the filter.
+  // Use counterRef.front = 'U1 copy.png' as a witness: union side finds it in the list
+  // (starts at slot position 3/4), CSA side excludes it and falls back to position 1/4.
+  // This distinguishes side-based from path-based filtering even when total counts match.
   it('side prop drives the correct cut-out filter regardless of nodePath', async () => {
+    // Union side on CSA nodePath: U1 is a valid union cut-out → found at index 2 → pos 3
     const union = mount(CounterImageWidget, {
-      props: { counterRef: null, nodePath: 'confederate.corps.0', side: 'union' },
+      props: {
+        counterRef: { ...NULL_COUNTER_REF, front: 'U1 copy.png' },
+        nodePath: 'confederate.corps.0',
+        side: 'union',
+      },
     });
     await union.findAll('.counter-side')[0].trigger('click');
-    const [, unionTotal] = union.find('.slot-count').text().split('/').map(Number);
+    const [unionPos, unionTotal] = union.find('.slot-count').text().split('/').map(Number);
+    union.unmount();
 
+    // CSA side on union nodePath: U1 is a union cut-out → excluded → fallback index 0 → pos 1
     const csa = mount(CounterImageWidget, {
-      props: { counterRef: null, nodePath: 'union.corps.0', side: 'confederate' },
+      props: {
+        counterRef: { ...NULL_COUNTER_REF, front: 'U1 copy.png' },
+        nodePath: 'union.corps.0',
+        side: 'confederate',
+      },
     });
     await csa.findAll('.counter-side')[0].trigger('click');
-    const [, csaTotal] = csa.find('.slot-count').text().split('/').map(Number);
+    const [csaPos, csaTotal] = csa.find('.slot-count').text().split('/').map(Number);
+    csa.unmount();
 
-    // Both have 4 front files (CS1-Front + own cut-outs), but different cut-out sets
-    expect(unionTotal).toBe(4); // CS1-Front_01/02 + U1/U2 (path says CSA, side says union)
-    expect(csaTotal).toBe(4); // CS1-Front_01/02 + C1/C2 (path says union, side says CSA)
+    expect(unionTotal).toBe(4); // CS1-Front_01/02 + U1/U2
+    expect(csaTotal).toBe(4); // CS1-Front_01/02 + C1/C2
+    expect(unionPos).toBe(3); // U1 found at index 2 → displayed position 3
+    expect(csaPos).toBe(1); // U1 not in CSA list → fallback index 0 → position 1
   });
 });
 
@@ -564,12 +580,15 @@ describe('CounterImageWidget — focusout deactivation (#487)', () => {
 
     const externalEl = document.createElement('button');
     document.body.appendChild(externalEl);
-    wrapper.element.dispatchEvent(
-      new FocusEvent('focusout', { bubbles: true, relatedTarget: externalEl })
-    );
-    await wrapper.vm.$nextTick();
-    expect(wrapper.find('.counter-side--active').exists()).toBe(false);
-    externalEl.remove();
+    try {
+      wrapper.element.dispatchEvent(
+        new FocusEvent('focusout', { bubbles: true, relatedTarget: externalEl })
+      );
+      await wrapper.vm.$nextTick();
+      expect(wrapper.find('.counter-side--active').exists()).toBe(false);
+    } finally {
+      externalEl.remove();
+    }
   });
 
   it('clears activeFace when focus leaves the document (null relatedTarget)', async () => {

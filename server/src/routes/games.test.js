@@ -718,4 +718,31 @@ describe('POST /api/v1/games/:id/actions', () => {
     expect(res.status).toBe(200);
     expect(dispatch).toHaveBeenCalled();
   });
+
+  // Boundary: numeric 0 is falsy but must still engage the version guard (#481)
+  it('engages version guard when expectedVersion is 0 and state version is 0 (match → 200)', async () => {
+    const zeroState = { ...ACTIVE_STATE, version: 0 };
+    const zeroNext = { ...NEXT_STATE, version: 1 };
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(zeroState);
+    dispatch.mockReturnValue(zeroNext);
+    saveGame.mockResolvedValue(zeroNext);
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 0 });
+    expect(res.status).toBe(200);
+    expect(dispatch).toHaveBeenCalled();
+  });
+
+  it('returns 409 when expectedVersion is 0 but state version is 3 (mismatch — guard active for zero) (#481)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE); // version: 3
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 0 });
+    expect(res.status).toBe(409);
+    expect(dispatch).not.toHaveBeenCalled();
+  });
 });

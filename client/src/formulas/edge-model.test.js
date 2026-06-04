@@ -10,6 +10,7 @@ import {
   stripNonPlayableBoundaryEdges,
   isEdgeAtNonPlayableBoundary,
 } from './edge-model.js';
+import { adjacentHexId } from '../utils/hexGeometry.js';
 
 const GRID_SPEC = { rows: 10, cols: 10 };
 
@@ -324,13 +325,13 @@ describe('formulas/edge-model', () => {
       expect(() => stripNonPlayableBoundaryEdges(hexes, GRID_SPEC)).not.toThrow();
     });
 
-    // ── Faces 3, 4, 5 coverage (#467) ─────────────────────────────────────────
-    // The function only iterates canonical faces 0–2. Faces 3–5 on hex A are owned
-    // by the adjacent hex as canonical faces 0–2. Confirm those are stripped when A
-    // is non-playable (i.e., the S/SW/NW sides of a non-playable hex are also cleaned).
+    // ── S/SW/NW boundary direction coverage (#467) ────────────────────────────
+    // The function only iterates canonical faces 0–2. A non-playable hex A affects
+    // adjacent hexes B whose canonical face 0/1/2 points toward A — confirming
+    // the S, SW, and NW directions from A's perspective are cleaned via B's entries.
 
-    it('strips face 0 (N) on playable hex whose N neighbor is non-playable — covers face-3/S direction (#467)', () => {
-      // 05.04's face 0 (N) borders non-playable 05.05 (the S face from 05.05's viewpoint)
+    it('strips face 0 (N) on a playable hex when its N neighbor is non-playable — S-direction boundary (#467)', () => {
+      // 05.04's face 0 (N) borders non-playable 05.05 (N from 05.04 = S from 05.05)
       const hexes = [
         { hex: '05.04', edges: { 0: [{ type: 'road' }] } },
         { hex: '05.05', playable: false },
@@ -339,8 +340,8 @@ describe('formulas/edge-model', () => {
       expect(hexes[0].edges).toBeUndefined();
     });
 
-    it('strips face 1 (NE) on playable hex whose NE neighbor is non-playable — covers face-4/SW direction (#467)', () => {
-      // 04.04's face 1 (NE) borders non-playable 05.05 (the SW face from 05.05's viewpoint)
+    it('strips face 1 (NE) on a playable hex when its NE neighbor is non-playable — SW-direction boundary (#467)', () => {
+      // 04.04's face 1 (NE) borders non-playable 05.05 (NE from 04.04 = SW from 05.05)
       const hexes = [
         { hex: '04.04', edges: { 1: [{ type: 'stream' }] } },
         { hex: '05.05', playable: false },
@@ -349,8 +350,8 @@ describe('formulas/edge-model', () => {
       expect(hexes[0].edges).toBeUndefined();
     });
 
-    it('strips face 2 (SE) on playable hex whose SE neighbor is non-playable — covers face-5/NW direction (#467)', () => {
-      // 04.05's face 2 (SE) borders non-playable 05.05 (the NW face from 05.05's viewpoint)
+    it('strips face 2 (SE) on a playable hex when its SE neighbor is non-playable — NW-direction boundary (#467)', () => {
+      // 04.05's face 2 (SE) borders non-playable 05.05 (SE from 04.05 = NW from 05.05)
       const hexes = [
         { hex: '04.05', edges: { 2: [{ type: 'road' }] } },
         { hex: '05.05', playable: false },
@@ -362,6 +363,13 @@ describe('formulas/edge-model', () => {
     // ── Even-column parity variants (#467) ────────────────────────────────────
     // EVEN_Q: even-column hexes have different NE/SE neighbor positions than odd-column hexes.
     // Verify stripping works correctly for even-column owners (col 6 = even).
+    // Pin the neighbor IDs first so a parity bug in adjacentHexId would fail here, not silently.
+    it('06.05 NE neighbor is 07.06 in EVEN_Q (parity pin)', () => {
+      expect(adjacentHexId('06.05', 'NE', GRID_SPEC)).toBe('07.06');
+    });
+    it('06.05 SE neighbor is 07.05 in EVEN_Q (parity pin)', () => {
+      expect(adjacentHexId('06.05', 'SE', GRID_SPEC)).toBe('07.05');
+    });
     // 06.05 neighbors: N=06.06, NE=07.06, SE=07.05
 
     it('strips face 0 (N) on even-column hex when N neighbor is non-playable — parity variant (#467)', () => {

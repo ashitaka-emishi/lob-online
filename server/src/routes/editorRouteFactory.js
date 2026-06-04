@@ -34,7 +34,9 @@ export function createEditorLimiter() {
  * @param {string}    opts.backupDir                  - Absolute path to the backup directory
  * @param {number}    [opts.maxBackups=20]            - Maximum number of backup files to keep
  * @param {(data: object) => object} [opts.transform] - Optional synchronous transform applied to
- *   validated data before saving (e.g. to strip invalid entries). Must return the data object.
+ *   validated data before saving (e.g. to strip invalid entries). May mutate `data` in-place
+ *   and/or return a replacement object; the returned value is what gets persisted (spread with
+ *   `_savedAt`). Must always return the data object (mutated or new).
  * @param {() => void} [opts.afterSave]               - Optional synchronous hook called after a
  *   successful atomic write (e.g. to invalidate caches). Must not throw — errors are logged and
  *   swallowed so a buggy hook cannot corrupt the 200 response contract.

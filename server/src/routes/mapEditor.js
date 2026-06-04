@@ -16,6 +16,17 @@ const BACKUP_DIR = join(__dirname, '../../../data/scenarios/south-mountain/backu
 // boundary-edge cleanup as the map editor client.
 // Only canonical faces 0 (N), 1 (NE), 2 (SE) are stored per hex; faces 3–5
 // resolve to the mirror face on the adjacent hex (see map.schema.js).
+//
+// NOTE: this function intentionally mirrors the predicate structure of the
+// client-side isEdgeAtNonPlayableBoundary (client/src/formulas/edge-model.js).
+// Any change to the playability rule must be made in both places. A shared
+// engine module is the correct long-term home — tracked in tech-debt. (#470)
+
+// Mirrors client/src/formulas/edge-model.js isEdgeAtNonPlayableBoundary.
+function isEdgeAtNonPlayableBoundary(hex, adjHex) {
+  return hex?.playable === false || adjHex?.playable === false;
+}
+
 function serverStripNonPlayableBoundaryEdges(hexes, gridSpec) {
   const hexMap = new Map(hexes.map((h) => [h.hex, h]));
   for (const hex of hexes) {
@@ -24,7 +35,7 @@ function serverStripNonPlayableBoundaryEdges(hexes, gridSpec) {
       if (!hex.edges[fi] || hex.edges[fi].length === 0) continue;
       const adjId = hexNeighborInDir(hex.hex, fi, gridSpec);
       const adjHex = adjId ? hexMap.get(adjId) : null;
-      if (hex.playable === false || adjHex?.playable === false) {
+      if (isEdgeAtNonPlayableBoundary(hex, adjHex)) {
         delete hex.edges[fi];
       }
     }
