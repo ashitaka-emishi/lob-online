@@ -77,21 +77,21 @@ gaps identified in #481.
 
 ### Tasks
 
-- [ ] Task 1.1: In `server/src/routes/games.js` POST `/actions`, add a null
+- [x] Task 1.1: In `server/src/routes/games.js` POST `/actions`, add a null
       guard — only call `req.app.locals.io.to(id).emit(...)` when
       `req.app.locals.io` is truthy; log a warning if it is absent (#482)
-- [ ] Task 1.2: Extend the POST /actions test suite: assert that a successful
+- [x] Task 1.2: Extend the POST /actions test suite: assert that a successful
       action + missing `io` returns the expected status and does not throw (#482)
-- [ ] Task 1.3: Add/fix test for the success path — confirm dispatch result is
+- [x] Task 1.3: Add/fix test for the success path — confirm dispatch result is
       distinguished from saveGame result in assertions (#481)
-- [ ] Task 1.4: Add test: 409 omitted-version bypass is caught and returns 409
+- [x] Task 1.4: Add test: 409 omitted-version bypass is caught and returns 409
       (#481)
-- [ ] Task 1.5: Add test: `game:leave` auth policy — room leave fires on the
+- [x] Task 1.5: Add test: `game:leave` auth policy — room leave fires on the
       correct socket (#481)
-- [ ] Task 1.6: Add test: paging direction/wrap is detectable with the current
+- [x] Task 1.6: Add test: paging direction/wrap is detectable with the current
       array structure (or assert that the direction is explicit in the payload)
       (#481)
-- [ ] Task 1.7: Add test: `select-unit` socket emission contract — event name,
+- [x] Task 1.7: Add test: `select-unit` socket emission contract — event name,
       payload shape, and room targeting asserted (#481)
 
 ### Verification

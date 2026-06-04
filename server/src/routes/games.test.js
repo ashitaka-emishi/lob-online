@@ -662,4 +662,60 @@ describe('POST /api/v1/games/:id/actions', () => {
       .send({ type: 'END_PHASE', payload: null, expectedVersion: 0 });
     expect(res.status).toBe(400);
   });
+
+  // Task 1.2 (#482): missing io must not produce a 500 after a successful state change
+  it('returns 200 and does not throw when req.app.locals.io is absent (#482)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockReturnValue(NEXT_STATE);
+    saveGame.mockResolvedValue(NEXT_STATE);
+    const app = await buildApp();
+    app.locals.io = null; // simulate Socket.io not yet attached
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(res.status).toBe(200);
+    expect(res.body.version).toBe(NEXT_STATE.version);
+  });
+
+  // Task 1.3 (#481): response body is saveGame result, not dispatch result
+  it('response body reflects saveGame result, not raw dispatch result (#481)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockReturnValue({ ...NEXT_STATE, version: 10 });
+    saveGame.mockResolvedValue({ ...NEXT_STATE, version: 11 });
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(res.status).toBe(200);
+    expect(res.body.version).toBe(11);
+  });
+
+  // Task 1.4 (#481): absent or non-numeric expectedVersion opts out of the version guard
+  it('bypasses version guard and dispatches when expectedVersion is absent (#481)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE); // version: 3
+    dispatch.mockReturnValue(NEXT_STATE);
+    saveGame.mockResolvedValue(NEXT_STATE);
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null }); // no expectedVersion
+    expect(res.status).toBe(200);
+    expect(dispatch).toHaveBeenCalled();
+  });
+
+  it('bypasses version guard when expectedVersion is a non-numeric string (#481)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockReturnValue(NEXT_STATE);
+    saveGame.mockResolvedValue(NEXT_STATE);
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 'latest' });
+    expect(res.status).toBe(200);
+    expect(dispatch).toHaveBeenCalled();
+  });
 });

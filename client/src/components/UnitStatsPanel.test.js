@@ -230,6 +230,50 @@ describe('UnitStatsPanel — multi-unit paging (#408)', () => {
   });
 });
 
+// Tasks 1.6–1.7 (#481): select-unit emission contract — event name, payload shape, direction, and wrap
+describe('UnitStatsPanel — select-unit emission contract (#481)', () => {
+  const UNIT_B = { ...FULL_UNIT, id: 'unit-b', name: '2nd Brigade', counterFile: 'C2.png' };
+
+  it('emits select-unit with the next unit id when next is clicked', async () => {
+    const wrapper = mount(UnitStatsPanel, {
+      props: { hexUnits: [FULL_UNIT, UNIT_B] },
+    });
+    await wrapper.find('[data-testid="paging-next"]').trigger('click');
+    const emitted = wrapper.emitted('select-unit');
+    expect(emitted).toBeTruthy();
+    expect(emitted[0]).toEqual(['unit-b']);
+  });
+
+  it('emits select-unit with the first unit id when next wraps from last to first', async () => {
+    const wrapper = mount(UnitStatsPanel, {
+      props: { hexUnits: [FULL_UNIT, UNIT_B] },
+    });
+    await wrapper.find('[data-testid="paging-next"]').trigger('click'); // → unit-b
+    await wrapper.find('[data-testid="paging-next"]').trigger('click'); // → unit-a (wrap)
+    const emitted = wrapper.emitted('select-unit');
+    expect(emitted[1]).toEqual(['unit-a']);
+  });
+
+  it('emits select-unit with the previous unit id when prev is clicked', async () => {
+    const wrapper = mount(UnitStatsPanel, {
+      props: { hexUnits: [FULL_UNIT, UNIT_B] },
+    });
+    await wrapper.find('[data-testid="paging-prev"]').trigger('click'); // wraps to unit-b
+    const emitted = wrapper.emitted('select-unit');
+    expect(emitted).toBeTruthy();
+    expect(emitted[0]).toEqual(['unit-b']);
+  });
+
+  it('emits select-unit with a string unit id (payload shape)', async () => {
+    const wrapper = mount(UnitStatsPanel, {
+      props: { hexUnits: [FULL_UNIT, UNIT_B] },
+    });
+    await wrapper.find('[data-testid="paging-next"]').trigger('click');
+    const emitted = wrapper.emitted('select-unit');
+    expect(typeof emitted[0][0]).toBe('string');
+  });
+});
+
 describe('UnitStatsPanel — prop change reactivity', () => {
   it('updates when unit prop changes from null to a unit', async () => {
     const wrapper = mount(UnitStatsPanel, { props: { unit: null } });

@@ -171,7 +171,12 @@ router.post('/:id/actions', requireSide, async (req, res) => {
     const saved = await saveGame(id, nextState);
 
     // Notify connected players; they fetch the authoritative state via GET /:id (#356)
-    req.app.locals.io.to(id).emit('game:state-updated', { version: saved.version });
+    // Guard: io may be absent in test environments or before Socket.io attaches (#482)
+    if (req.app.locals.io) {
+      req.app.locals.io.to(id).emit('game:state-updated', { version: saved.version });
+    } else {
+      console.warn('[route] POST /games/:id/actions: io unavailable, skipping socket emit');
+    }
 
     res.json(saved);
   } catch (err) {
