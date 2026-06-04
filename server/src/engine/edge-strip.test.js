@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { stripNonPlayableBoundaryEdges } from './edge-strip.js';
 
 // Minimal gridSpec for the south-mountain map (flat-top, EVEN_Q, 5-col offset).
