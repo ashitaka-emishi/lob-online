@@ -15,6 +15,7 @@ Navigation hub for project context.
 | Track ID                                                                     | Title                                                | Status  |
 | ---------------------------------------------------------------------------- | ---------------------------------------------------- | ------- |
 | [pre-m6-debt-sprint_20260601](./tracks/pre-m6-debt-sprint_20260601/index.md) | Pre-M6 Debt Sprint — Issues #476 #477 #478 #479 #480 | Pending |
+| [m5-debt-cleanup_20260603](./tracks/m5-debt-cleanup_20260603/index.md)       | M5 Debt Cleanup Sprint                               | Pending |
 
 ## All Tracks
 
