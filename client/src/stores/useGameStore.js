@@ -17,6 +17,8 @@ export const useGameStore = defineStore('game', () => {
   // meaning a newer call superseded this one. (#441)
   let _loadGeneration = 0;
 
+  const pendingAction = ref(null);
+
   const selectedUnit = computed(() => {
     if (!gameState.value || !selectedUnitId.value) return null;
     return gameState.value.units[selectedUnitId.value] ?? null;
@@ -66,6 +68,31 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  async function submitAction(gameId, type, payload = null) {
+    pendingAction.value = { type, payload };
+    try {
+      const res = await fetch(`/api/v1/games/${gameId}/actions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, payload, expectedVersion: gameState.value.version }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Action failed: ${res.status}`);
+      }
+      const saved = await res.json();
+      gameState.value = saved;
+    } catch (err) {
+      error.value = err.message;
+    } finally {
+      pendingAction.value = null;
+    }
+  }
+
+  function refreshGame(gameId) {
+    return loadGame(gameId);
+  }
+
   function selectUnit(unitId) {
     selectedUnitId.value = unitId;
   }
@@ -83,7 +110,10 @@ export const useGameStore = defineStore('game', () => {
     loading,
     error,
     mapConfigError,
+    pendingAction,
     loadGame,
+    submitAction,
+    refreshGame,
     selectUnit,
     deselectUnit,
   };
