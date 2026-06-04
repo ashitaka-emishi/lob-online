@@ -33,6 +33,8 @@ export function createEditorLimiter() {
  * @param {string}    opts.filePrefix                 - Unique prefix for backup filenames (e.g. 'oob')
  * @param {string}    opts.backupDir                  - Absolute path to the backup directory
  * @param {number}    [opts.maxBackups=20]            - Maximum number of backup files to keep
+ * @param {(data: object) => object} [opts.transform] - Optional synchronous transform applied to
+ *   validated data before saving (e.g. to strip invalid entries). Must return the data object.
  * @param {() => void} [opts.afterSave]               - Optional synchronous hook called after a
  *   successful atomic write (e.g. to invalidate caches). Must not throw — errors are logged and
  *   swallowed so a buggy hook cannot corrupt the 200 response contract.
@@ -43,6 +45,7 @@ export function createEditorRoute({
   filePrefix,
   backupDir,
   maxBackups = 20,
+  transform,
   afterSave,
 }) {
   const router = Router();
@@ -61,6 +64,9 @@ export function createEditorRoute({
     if (!result.success) {
       return res.status(400).json({ ok: false, issues: result.error.issues });
     }
+
+    // Apply optional transform (e.g. strip invalid edge entries) before persisting (#470)
+    const validated = transform ? transform(result.data) : result.data;
 
     await mkdir(backupDir, { recursive: true });
 
@@ -95,7 +101,7 @@ export function createEditorRoute({
     }
 
     const savedAt = Date.now();
-    const data = { ...result.data, _savedAt: savedAt };
+    const data = { ...validated, _savedAt: savedAt };
     const tmpPath = filePath + '.tmp';
     try {
       await writeFile(tmpPath, JSON.stringify(data, null, 2));

@@ -133,14 +133,14 @@ server-side validation. Autonomous.
 
 ### Tasks
 
-- [ ] Task 3.1: In `edge-model.test.js`, add test cases for all remaining face
+- [x] Task 3.1: In `edge-model.test.js`, add test cases for all remaining face
       directions (faces 0, 3, 4, 5) and both parity/odd-column variants for
       `stripNonPlayableBoundaryEdges`; confirm full 6-face coverage (#467)
-- [ ] Task 3.2: In the map editor Vue component(s), emit a visible user
+- [x] Task 3.2: In the map editor Vue component(s), emit a visible user
       notification (toast or status bar message) when a click on a non-playable
       boundary edge is silently discarded; similarly, show a notification at
       save-time listing how many edges were stripped (#468)
-- [ ] Task 3.3: In `server/src/routes/map.js` (or equivalent) PUT /map handler,
+- [x] Task 3.3: In `server/src/routes/map.js` (or equivalent) PUT /map handler,
       call `stripNonPlayableBoundaryEdges` on the incoming payload before saving,
       mirroring the client-side strip; add a server-side test asserting that a
       direct PUT with non-playable edges returns the stripped result (#470)
