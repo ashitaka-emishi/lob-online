@@ -9,6 +9,7 @@ const DEFAULT_PROPS = {
   activePlayer: 'union',
   validActions: [],
   pending: false,
+  pendingActionType: null,
   localPlayerSide: 'union',
 };
 
@@ -18,6 +19,131 @@ describe('ActionPanel — phase/turn summary', () => {
     expect(wrapper.text()).toMatch(/turn 3/i);
     expect(wrapper.text()).toMatch(/command/i);
     expect(wrapper.text()).toMatch(/orders/i);
+  });
+});
+
+describe('ActionPanel — landmark and ARIA structure (#498)', () => {
+  it('wraps panel in a <section> with role=region and aria-label=Actions', () => {
+    const wrapper = mount(ActionPanel, { props: DEFAULT_PROPS });
+    const section = wrapper.find('section');
+    expect(section.exists()).toBe(true);
+    expect(section.attributes('role')).toBe('region');
+    expect(section.attributes('aria-label')).toBe('Actions');
+  });
+
+  it('button container has role=group and aria-label', () => {
+    const wrapper = mount(ActionPanel, {
+      props: { ...DEFAULT_PROPS, validActions: [{ type: 'END_PHASE', payload: null }] },
+    });
+    const group = wrapper.find('[role="group"]');
+    expect(group.exists()).toBe(true);
+    expect(group.attributes('aria-label')).toBeTruthy();
+  });
+
+  it('button container has aria-describedby pointing to summary when turn and phase are set (#498)', () => {
+    const wrapper = mount(ActionPanel, {
+      props: { ...DEFAULT_PROPS, validActions: [{ type: 'END_PHASE', payload: null }] },
+    });
+    const group = wrapper.find('[role="group"]');
+    const summaryId = group.attributes('aria-describedby');
+    expect(summaryId).toBeTruthy();
+    expect(wrapper.find(`#${summaryId}`).exists()).toBe(true);
+  });
+
+  it('button container has no aria-describedby when phase is null (#498)', () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        phase: null,
+        turn: null,
+        validActions: [{ type: 'END_PHASE', payload: null }],
+      },
+    });
+    const group = wrapper.find('[role="group"]');
+    expect(group.attributes('aria-describedby')).toBeUndefined();
+  });
+});
+
+describe('ActionPanel — aria-live announcement (#497)', () => {
+  it('renders a polite aria-live region', () => {
+    const wrapper = mount(ActionPanel, { props: DEFAULT_PROPS });
+    const liveEl = wrapper.find('[aria-live="polite"]');
+    expect(liveEl.exists()).toBe(true);
+  });
+
+  it('live region announces "Your turn" when it is the local player turn', () => {
+    const wrapper = mount(ActionPanel, { props: { ...DEFAULT_PROPS, phase: 'command' } });
+    const liveEl = wrapper.find('[aria-live="polite"]');
+    expect(liveEl.text()).toMatch(/your turn/i);
+  });
+
+  it('live region announces waiting when it is not the local player turn', () => {
+    const wrapper = mount(ActionPanel, {
+      props: { ...DEFAULT_PROPS, activePlayer: 'confederate', localPlayerSide: 'union' },
+    });
+    const liveEl = wrapper.find('[aria-live="polite"]');
+    expect(liveEl.text()).toMatch(/waiting for/i);
+  });
+});
+
+describe('ActionPanel — aria-busy on pending (#497)', () => {
+  it('actions container has aria-busy=true when pending', () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [{ type: 'END_PHASE', payload: null }],
+        pending: true,
+      },
+    });
+    const group = wrapper.find('[role="group"]');
+    expect(group.attributes('aria-busy')).toBe('true');
+  });
+
+  it('actions container has aria-busy=false when not pending', () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [{ type: 'END_PHASE', payload: null }],
+        pending: false,
+      },
+    });
+    const group = wrapper.find('[role="group"]');
+    expect(group.attributes('aria-busy')).toBe('false');
+  });
+});
+
+describe('ActionPanel — pendingActionType spinner targeting (#500)', () => {
+  const TWO_ACTIONS = [
+    { type: 'END_PHASE', payload: null },
+    { type: 'PASS', payload: null },
+  ];
+
+  it('shows spinner on matching button when pendingActionType is set', () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: TWO_ACTIONS,
+        pending: true,
+        pendingActionType: 'PASS',
+      },
+    });
+    const buttons = wrapper.findAll('button');
+    expect(buttons[0].find('.spinner').exists()).toBe(false);
+    expect(buttons[1].find('.spinner').exists()).toBe(true);
+  });
+
+  it('falls back to first button spinner when pendingActionType is null', () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: TWO_ACTIONS,
+        pending: true,
+        pendingActionType: null,
+      },
+    });
+    const buttons = wrapper.findAll('button');
+    expect(buttons[0].find('.spinner').exists()).toBe(true);
+    expect(buttons[1].find('.spinner').exists()).toBe(false);
   });
 });
 
@@ -69,7 +195,7 @@ describe('ActionPanel — action buttons', () => {
     buttons.forEach((btn) => expect(btn.attributes('disabled')).toBeDefined());
   });
 
-  it('shows spinner only on first button when pending is true', () => {
+  it('shows spinner only on first button when pending is true and pendingActionType is null', () => {
     const wrapper = mount(ActionPanel, {
       props: {
         ...DEFAULT_PROPS,
@@ -78,6 +204,7 @@ describe('ActionPanel — action buttons', () => {
           { type: 'PASS', payload: null },
         ],
         pending: true,
+        pendingActionType: null,
       },
     });
     const buttons = wrapper.findAll('button');

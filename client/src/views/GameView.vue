@@ -15,6 +15,7 @@ const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
 const route = useRoute();
 const gameStore = useGameStore();
 const localPlayerSide = ref(null);
+const identityError = ref(null);
 
 // sanitizeCalibration fills missing fields from DEFAULT_CALIBRATION; the store
 // already calls it at the API boundary, so gridSpec is always a full calibration
@@ -46,7 +47,10 @@ onMounted(async () => {
     .then((data) => {
       localPlayerSide.value = data.side ?? null;
     })
-    .catch(() => {});
+    .catch((err) => {
+      console.error('[game] identity fetch failed:', err);
+      identityError.value = 'Could not load player identity. Try refreshing.';
+    });
 
   socket = io();
   socket.emit('game:join', { gameId });
@@ -170,8 +174,8 @@ function onImageLoad(event) {
       <div v-if="gameStore.loading" class="loading-banner" role="status" aria-live="polite">
         Loading game…
       </div>
-      <div v-if="gameStore.error || oobError" class="error-banner" role="alert">
-        {{ gameStore.error || oobError }}
+      <div v-if="gameStore.error || oobError || identityError" class="error-banner" role="alert">
+        {{ gameStore.error || oobError || identityError }}
       </div>
       <div
         v-show="gameStore.mapConfigError"
@@ -232,6 +236,7 @@ function onImageLoad(event) {
           :active-player="gameStore.gameState?.activePlayer ?? null"
           :valid-actions="validActions"
           :pending="gameStore.pendingAction !== null"
+          :pending-action-type="gameStore.pendingAction?.type ?? null"
           :local-player-side="localPlayerSide"
           @submit-action="onSubmitAction"
         />

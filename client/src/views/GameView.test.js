@@ -184,6 +184,7 @@ async function mountGameView(
             'activePlayer',
             'validActions',
             'pending',
+            'pendingActionType',
             'localPlayerSide',
           ],
           emits: ['submit-action'],
@@ -493,6 +494,25 @@ describe('GameView — localPlayerSide and validActions (#474)', () => {
     await flushPromises();
     const panel = wrapper.findComponent({ name: 'ActionPanel' });
     expect(panel.props('localPlayerSide')).toBeNull();
+  });
+
+  it('renders error banner when /games/me fetch fails (#496)', async () => {
+    const wrapper = await mountGameView({}, [['/api/v1/games/me', new Error('network failure')]]);
+    await flushPromises();
+    expect(wrapper.find('.error-banner').exists()).toBe(true);
+    expect(wrapper.find('.error-banner').text()).toMatch(/identity/i);
+  });
+
+  it('passes pendingActionType from store pendingAction to ActionPanel (#500)', async () => {
+    const wrapper = await mountGameView({ pendingAction: { type: 'END_PHASE', payload: null } });
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('pendingActionType')).toBe('END_PHASE');
+  });
+
+  it('passes pendingActionType=null to ActionPanel when pendingAction is null (#500)', async () => {
+    const wrapper = await mountGameView({ pendingAction: null });
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('pendingActionType')).toBeNull();
   });
 
   it('passes empty validActions when activePlayer does not match localPlayerSide', async () => {
