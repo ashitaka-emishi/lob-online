@@ -258,7 +258,11 @@ function onSelectChange(fieldName, e) {
 
       <!-- ── Counter image widget (regiments, batteries, HQ, supply) ────── -->
       <template v-if="(isRegiment || isBattery || isHqOrSupply) && nodePath">
-        <CounterImageWidget :counter-ref="node.counterRef ?? null" :node-path="nodePath" />
+        <CounterImageWidget
+          :counter-ref="node.counterRef ?? null"
+          :node-path="nodePath"
+          :side="side"
+        />
       </template>
       <template v-else-if="(isRegiment || isBattery || isHqOrSupply) && !nodePath">
         <p class="no-path-notice">
@@ -335,6 +339,7 @@ function onSelectChange(fieldName, e) {
           <CounterImageWidget
             :counter-ref="node.counterRef ?? null"
             :node-path="nodePath"
+            :side="side"
             mode="leader"
           />
         </template>

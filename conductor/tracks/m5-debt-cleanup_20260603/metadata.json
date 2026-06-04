@@ -1,0 +1,25 @@
+{
+  "id": "m5-debt-cleanup_20260603",
+  "title": "M5 Debt Cleanup Sprint",
+  "type": "chore",
+  "status": "complete",
+  "created": "2026-06-03T00:00:00.000Z",
+  "updated": "2026-06-04T00:00:00.000Z",
+  "current_phase": 4,
+  "current_task": "4.3",
+  "phases": {
+    "total": 5,
+    "completed": 5
+  },
+  "tasks": {
+    "total": 16,
+    "completed": 16
+  },
+  "commits": [
+    "2414a37: chore(.gitignore): exclude scenario editor backup files",
+    "9db46f7: fix(games): guard io.emit in POST /actions + close test gaps (#482 #481)",
+    "0bf6412: fix(oob-editor): focusout deactivation + explicit side prop (#487 #486)",
+    "aeae6b0: fix(map-editor): edge-model coverage, boundary click notice, server strip (#467 #468 #470)",
+    "3ba4eba: docs(useGameStore): document why loadGame fetches are sequential (#440)"
+  ]
+}

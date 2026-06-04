@@ -280,9 +280,10 @@ describe('CounterImageWidget — image error recovery', () => {
 describe('CounterImageWidget — counter filtering', () => {
   beforeEach(setup);
 
+  // Task 2.2 (#486): side prop drives the correct filter
   it('front slot for union includes CS1-Front and U## only (excludes C##)', async () => {
     const wrapper = mount(CounterImageWidget, {
-      props: { counterRef: null, nodePath: 'union.corps.0' },
+      props: { counterRef: null, nodePath: 'union.corps.0', side: 'union' },
     });
     await wrapper.findAll('.counter-side')[0].trigger('click');
     const [, total] = wrapper.find('.slot-count').text().split('/').map(Number);
@@ -292,7 +293,7 @@ describe('CounterImageWidget — counter filtering', () => {
 
   it('front slot for confederate includes CS1-Front and C## only (excludes U##)', async () => {
     const wrapper = mount(CounterImageWidget, {
-      props: { counterRef: null, nodePath: 'confederate.divisions.0' },
+      props: { counterRef: null, nodePath: 'confederate.divisions.0', side: 'confederate' },
     });
     await wrapper.findAll('.counter-side')[0].trigger('click');
     const [, total] = wrapper.find('.slot-count').text().split('/').map(Number);
@@ -302,7 +303,7 @@ describe('CounterImageWidget — counter filtering', () => {
 
   it('back slot includes only Back files', async () => {
     const wrapper = mount(CounterImageWidget, {
-      props: { counterRef: null, nodePath: 'union.corps.0' },
+      props: { counterRef: null, nodePath: 'union.corps.0', side: 'union' },
     });
     await wrapper.findAll('.counter-side')[1].trigger('click');
     const [, total] = wrapper.find('.slot-count').text().split('/').map(Number);
@@ -338,7 +339,7 @@ describe('CounterImageWidget — counter filtering', () => {
       },
     };
     const wrapper = mount(CounterImageWidget, {
-      props: { counterRef: null, nodePath: 'union.corps.0' },
+      props: { counterRef: null, nodePath: 'union.corps.0', side: 'union' },
     });
     await wrapper.findAll('.counter-side')[0].trigger('click');
     const [, total] = wrapper.find('.slot-count').text().split('/').map(Number);
@@ -351,12 +352,48 @@ describe('CounterImageWidget — counter filtering', () => {
       props: {
         counterRef: { ...NULL_COUNTER_REF, front: 'CS1-Front_01.jpg' },
         nodePath: 'union.corps.0',
+        side: 'union',
       },
     });
     await wrapper.findAll('.counter-side')[0].trigger('click');
     const [, total] = wrapper.find('.slot-count').text().split('/').map(Number);
     // CS1-Front_01 is the current value — it must remain in the list → 4
     expect(total).toBe(4);
+  });
+
+  // Task 2.2 (#486): side prop (not path) drives the filter.
+  // Use counterRef.front = 'U1 copy.png' as a witness: union side finds it in the list
+  // (starts at slot position 3/4), CSA side excludes it and falls back to position 1/4.
+  // This distinguishes side-based from path-based filtering even when total counts match.
+  it('side prop drives the correct cut-out filter regardless of nodePath', async () => {
+    // Union side on CSA nodePath: U1 is a valid union cut-out → found at index 2 → pos 3
+    const union = mount(CounterImageWidget, {
+      props: {
+        counterRef: { ...NULL_COUNTER_REF, front: 'U1 copy.png' },
+        nodePath: 'confederate.corps.0',
+        side: 'union',
+      },
+    });
+    await union.findAll('.counter-side')[0].trigger('click');
+    const [unionPos, unionTotal] = union.find('.slot-count').text().split('/').map(Number);
+    union.unmount();
+
+    // CSA side on union nodePath: U1 is a union cut-out → excluded → fallback index 0 → pos 1
+    const csa = mount(CounterImageWidget, {
+      props: {
+        counterRef: { ...NULL_COUNTER_REF, front: 'U1 copy.png' },
+        nodePath: 'union.corps.0',
+        side: 'confederate',
+      },
+    });
+    await csa.findAll('.counter-side')[0].trigger('click');
+    const [csaPos, csaTotal] = csa.find('.slot-count').text().split('/').map(Number);
+    csa.unmount();
+
+    expect(unionTotal).toBe(4); // CS1-Front_01/02 + U1/U2
+    expect(csaTotal).toBe(4); // CS1-Front_01/02 + C1/C2
+    expect(unionPos).toBe(3); // U1 found at index 2 → displayed position 3
+    expect(csaPos).toBe(1); // U1 not in CSA list → fallback index 0 → position 1
   });
 });
 
@@ -391,14 +428,24 @@ describe('CounterImageWidget — leader mode', () => {
 
   it('renders promoted row when mode="leader"', () => {
     wrapper = mount(CounterImageWidget, {
-      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+      props: {
+        counterRef: LEADER_COUNTER_REF,
+        nodePath: 'leaders.union.corps.0',
+        mode: 'leader',
+        side: 'union',
+      },
     });
     expect(wrapper.find('.promoted-row').exists()).toBe(true);
   });
 
   it('shows placeholder for promoted front and back when null', () => {
     wrapper = mount(CounterImageWidget, {
-      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+      props: {
+        counterRef: LEADER_COUNTER_REF,
+        nodePath: 'leaders.union.corps.0',
+        mode: 'leader',
+        side: 'union',
+      },
     });
     const promoted = wrapper.find('.promoted-row');
     // Both promoted slots have no filename set — show dash or placeholder
@@ -411,6 +458,7 @@ describe('CounterImageWidget — leader mode', () => {
         counterRef: { ...LEADER_COUNTER_REF, promotedFront: 'CS1-Front_01.jpg' },
         nodePath: 'leaders.union.corps.0',
         mode: 'leader',
+        side: 'union',
       },
     });
     const promoted = wrapper.find('.promoted-row');
@@ -419,14 +467,24 @@ describe('CounterImageWidget — leader mode', () => {
 
   it('all 4 counter slots are present in leader mode (2 standard + 2 promoted)', () => {
     wrapper = mount(CounterImageWidget, {
-      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+      props: {
+        counterRef: LEADER_COUNTER_REF,
+        nodePath: 'leaders.union.corps.0',
+        mode: 'leader',
+        side: 'union',
+      },
     });
     expect(wrapper.findAll('.counter-side').length).toBe(4);
   });
 
   it('clicking promoted front slot activates it', async () => {
     wrapper = mount(CounterImageWidget, {
-      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+      props: {
+        counterRef: LEADER_COUNTER_REF,
+        nodePath: 'leaders.union.corps.0',
+        mode: 'leader',
+        side: 'union',
+      },
     });
     const promoFront = wrapper.find('.promoted-row').findAll('.counter-side')[0];
     await promoFront.trigger('click');
@@ -437,7 +495,12 @@ describe('CounterImageWidget — leader mode', () => {
     const store = setup();
     store.updateCounterRef = vi.fn();
     wrapper = mount(CounterImageWidget, {
-      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+      props: {
+        counterRef: LEADER_COUNTER_REF,
+        nodePath: 'leaders.union.corps.0',
+        mode: 'leader',
+        side: 'union',
+      },
     });
     const promoFront = wrapper.find('.promoted-row').findAll('.counter-side')[0];
     await promoFront.trigger('click');
@@ -456,7 +519,7 @@ describe('CounterImageWidget — leader mode', () => {
     store.updateCounterRef = vi.fn();
     // counterRef is null — getDefaultCounterRef() leader branch must include promoted keys
     wrapper = mount(CounterImageWidget, {
-      props: { counterRef: null, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+      props: { counterRef: null, nodePath: 'leaders.union.corps.0', mode: 'leader', side: 'union' },
     });
     await wrapper.findAll('.counter-side')[0].trigger('click'); // activate front
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
@@ -469,22 +532,95 @@ describe('CounterImageWidget — leader mode', () => {
 
   it('no file upload inputs are rendered in leader mode', () => {
     wrapper = mount(CounterImageWidget, {
-      props: { counterRef: LEADER_COUNTER_REF, nodePath: 'leaders.union.corps.0', mode: 'leader' },
+      props: {
+        counterRef: LEADER_COUNTER_REF,
+        nodePath: 'leaders.union.corps.0',
+        mode: 'leader',
+        side: 'union',
+      },
     });
     expect(wrapper.find('input[type="file"]').exists()).toBe(false);
   });
 
-  it('confederate leader path is detected as confederate side — excludes union cut-outs', async () => {
+  it('confederate side prop excludes union cut-outs in leader mode (#486)', async () => {
     wrapper = mount(CounterImageWidget, {
       props: {
         counterRef: LEADER_COUNTER_REF,
         nodePath: 'leaders.confederate.army.0',
         mode: 'leader',
+        side: 'confederate',
       },
     });
     await wrapper.findAll('.counter-side')[0].trigger('click'); // activate front
     const [, total] = wrapper.find('.slot-count').text().split('/').map(Number);
     // CS1-Front_01, CS1-Front_02, C1 copy, C2 copy → 4 (U## excluded for confederate)
     expect(total).toBe(4);
+  });
+});
+
+// ── Focusout deactivation (#487) ───────────────────────────────────────────────
+// activeFace must be cleared when focus leaves the widget so Arrow keys stop
+// suppressing page scrolling. Within-widget focus moves must preserve activeFace.
+
+describe('CounterImageWidget — focusout deactivation (#487)', () => {
+  let wrapper;
+  beforeEach(setup);
+  afterEach(() => {
+    wrapper?.unmount();
+    wrapper = undefined;
+  });
+
+  it('clears activeFace when focus leaves the widget (external relatedTarget)', async () => {
+    wrapper = mount(CounterImageWidget, {
+      props: { counterRef: null, nodePath: 'union.corps.0', side: 'union' },
+      attachTo: document.body,
+    });
+    await wrapper.findAll('.counter-side')[0].trigger('click');
+    expect(wrapper.find('.counter-side--active').exists()).toBe(true);
+
+    const externalEl = document.createElement('button');
+    document.body.appendChild(externalEl);
+    try {
+      wrapper.element.dispatchEvent(
+        new FocusEvent('focusout', { bubbles: true, relatedTarget: externalEl })
+      );
+      await wrapper.vm.$nextTick();
+      expect(wrapper.find('.counter-side--active').exists()).toBe(false);
+    } finally {
+      externalEl.remove();
+    }
+  });
+
+  it('clears activeFace when focus leaves the document (null relatedTarget)', async () => {
+    wrapper = mount(CounterImageWidget, {
+      props: { counterRef: null, nodePath: 'union.corps.0', side: 'union' },
+      attachTo: document.body,
+    });
+    await wrapper.findAll('.counter-side')[0].trigger('click');
+    expect(wrapper.find('.counter-side--active').exists()).toBe(true);
+
+    // relatedTarget null means focus left the document entirely
+    wrapper.element.dispatchEvent(
+      new FocusEvent('focusout', { bubbles: true, relatedTarget: null })
+    );
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('.counter-side--active').exists()).toBe(false);
+  });
+
+  it('keeps activeFace when focus moves to another slot within the widget', async () => {
+    wrapper = mount(CounterImageWidget, {
+      props: { counterRef: null, nodePath: 'union.corps.0', side: 'union' },
+      attachTo: document.body,
+    });
+    await wrapper.findAll('.counter-side')[0].trigger('click');
+    expect(wrapper.find('.counter-side--active').exists()).toBe(true);
+
+    // relatedTarget is an element inside the widget — should NOT clear activeFace
+    const internalEl = wrapper.findAll('.counter-side')[1].element;
+    wrapper.element.dispatchEvent(
+      new FocusEvent('focusout', { bubbles: true, relatedTarget: internalEl })
+    );
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('.counter-side--active').exists()).toBe(true);
   });
 });

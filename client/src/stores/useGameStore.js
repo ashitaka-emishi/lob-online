@@ -33,7 +33,10 @@ export const useGameStore = defineStore('game', () => {
       if (gen !== _loadGeneration) return;
       gameState.value = state;
 
-      // map-config is scenario-static (#421); failure is non-fatal — game still loads. (#422)
+      // map-config fetch is sequential (not parallel) because scenarioId is only
+      // known after the game-state response returns (state.scenarioId). The server
+      // does not embed scenarioId in the game-join payload or route params, so both
+      // fetches cannot be issued concurrently with the current API shape. (#440)
       mapConfigError.value = null;
       const scenarioId = encodeURIComponent(state.scenarioId ?? '');
       const mapConfigRes = await fetch(`/api/v1/scenarios/${scenarioId}/map-config`).catch(

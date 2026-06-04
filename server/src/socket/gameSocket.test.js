@@ -74,4 +74,14 @@ describe('registerGameSocket — game:leave', () => {
     socket._trigger('game:leave', {});
     expect(socket.leave).not.toHaveBeenCalled();
   });
+
+  // Auth policy: game:leave intentionally skips session validation — leaving a room
+  // exposes no information, so any socket may leave. Fires on the triggering socket. (#481)
+  it('leaves room without requiring session authorization and emits no error (#481)', () => {
+    const socket = makeSocket({ session: {} }); // no gameId in session
+    registerGameSocket(socket);
+    socket._trigger('game:leave', { gameId: TEST_ID });
+    expect(socket.leave).toHaveBeenCalledWith(TEST_ID);
+    expect(socket.emit).not.toHaveBeenCalled(); // silent leave — no game:error emitted
+  });
 });

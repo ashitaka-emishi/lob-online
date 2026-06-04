@@ -81,7 +81,11 @@ const {
   // Strip edges on non-playable boundaries before every push — covers both the
   // direct save() path and the confirmSave() overwrite path (M-1 review fix).
   beforeSave: () => {
-    if (mapData.value) stripNonPlayableBoundaryEdges(mapData.value.hexes, calibration.value);
+    if (!mapData.value) return;
+    const before = countEdgeFeatures(mapData.value.hexes);
+    stripNonPlayableBoundaryEdges(mapData.value.hexes, calibration.value);
+    const stripped = before - countEdgeFeatures(mapData.value.hexes);
+    if (stripped > 0) showEdgeNotice(`${stripped} boundary edge(s) stripped on save`);
   },
 });
 
@@ -94,6 +98,31 @@ const { showExportOverlay, exportSnapshot, copyMapData, downloadExport } = useMa
 
 // L3: boolean guard replaces the expensive spread computed that ran on every paint
 const hasMapData = computed(() => !!mapData.value);
+
+// ── Edge notice (#468) ────────────────────────────────────────────────────────
+// Brief status message shown when a non-playable boundary click is discarded or
+// when edges are stripped at save-time. Auto-clears after 3 s.
+const edgeNotice = ref(null);
+let _edgeNoticeTimer = null;
+function showEdgeNotice(msg) {
+  edgeNotice.value = msg;
+  clearTimeout(_edgeNoticeTimer);
+  _edgeNoticeTimer = setTimeout(() => {
+    edgeNotice.value = null;
+  }, 3000);
+}
+
+// Count canonical face entries (0–2) that have at least one feature.
+function countEdgeFeatures(hexes) {
+  let count = 0;
+  for (const hex of hexes) {
+    if (!hex.edges) continue;
+    for (let fi = 0; fi <= 2; fi++) {
+      if (hex.edges[fi]?.length > 0) count++;
+    }
+  }
+  return count;
+}
 
 // ── Selection (H2: owned here so accordion's onClearSelection can reference it directly) ──
 
@@ -469,7 +498,10 @@ function isNonPlayableBoundary(hexId, dir) {
 }
 
 function onEdgeClick({ hexId, dir }) {
-  if (isNonPlayableBoundary(hexId, dir)) return;
+  if (isNonPlayableBoundary(hexId, dir)) {
+    showEdgeNotice('Edge on non-playable boundary — not saved (#468)');
+    return;
+  }
   const faceIndex = DIRS.indexOf(dir);
   if (faceIndex === -1) return;
   const entry = EDGE_DISPATCH[openPanel.value];
@@ -546,6 +578,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeyDown);
+  clearTimeout(_edgeNoticeTimer);
   cleanupPersistence();
 });
 </script>
@@ -558,6 +591,7 @@ onUnmounted(() => {
       <span v-if="selectedHexId" class="selected-hex">Hex: {{ selectedHexId }}</span>
       <span v-if="activeToolName" class="active-tool">| Tool: {{ activeToolName }}</span>
       <span class="spacer" />
+      <span class="edge-notice" role="status" aria-live="polite">{{ edgeNotice ?? '' }}</span>
       <span v-if="saveStatus === 'saved'" class="save-flash">Saved</span>
       <span v-if="saveStatus === 'error'" class="save-error">Error</span>
       <span v-if="unsaved" class="unsaved-marker">* unsaved</span>
@@ -884,6 +918,12 @@ onUnmounted(() => {
 .save-error {
   color: #c06060;
   font-size: 0.8rem;
+}
+
+.edge-notice {
+  color: #a09060;
+  font-size: 0.78rem;
+  font-style: italic;
 }
 
 .save-btn {
