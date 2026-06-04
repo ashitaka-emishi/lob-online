@@ -1,9 +1,11 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { io } from 'socket.io-client';
 
 import HexMapOverlay from '../components/HexMapOverlay.vue';
 import UnitStatsPanel from '../components/UnitStatsPanel.vue';
+import ActionPanel from '../components/game/ActionPanel.vue';
 import { sanitizeCalibration } from '../utils/calibration.js';
 import { useOobData } from '../composables/useOobData.js';
 import { useGameStore } from '../stores/useGameStore.js';
@@ -12,6 +14,7 @@ const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
 
 const route = useRoute();
 const gameStore = useGameStore();
+const localPlayerSide = ref(null);
 
 // sanitizeCalibration fills missing fields from DEFAULT_CALIBRATION; the store
 // already calls it at the API boundary, so gridSpec is always a full calibration
@@ -24,9 +27,46 @@ const { oobUnitMap, oobError, fetchOob } = useOobData();
 const imgNaturalWidth = ref(1400);
 const imgNaturalHeight = ref(900);
 
+// LOB M5 — valid actions are derived client-side from phase+step; dedicated endpoint deferred to M6
+function validActionsForState(phase, step) {
+  if (!phase || !step) return [];
+  // For M5 only END_PHASE is universally available when it is the active player's turn
+  return [{ type: 'END_PHASE', payload: null }];
+}
+
+let socket = null;
+const gameId = route.params.id;
+
 onMounted(async () => {
-  const gameId = route.params.id;
   await Promise.all([gameStore.loadGame(gameId), fetchOob()]);
+
+  // intentionally not awaited — identity is non-blocking for initial render
+  fetch('/api/v1/games/me')
+    .then((r) => r.json())
+    .then((data) => {
+      localPlayerSide.value = data.side ?? null;
+    })
+    .catch(() => {});
+
+  socket = io();
+  socket.emit('game:join', { gameId });
+  socket.on('game:state-updated', () => gameStore.refreshGame(gameId));
+});
+
+onUnmounted(() => {
+  if (socket) {
+    socket.emit('game:leave', { gameId });
+    socket.disconnect();
+    socket = null;
+  }
+});
+
+// ── Action panel data ─────────────────────────────────────────────────────────
+
+const validActions = computed(() => {
+  const gs = gameStore.gameState;
+  if (!gs || gs.activePlayer !== localPlayerSide.value) return [];
+  return validActionsForState(gs.phase, gs.step);
 });
 
 // ── Derived display data ──────────────────────────────────────────────────────
@@ -114,6 +154,10 @@ function onUnitClick(unitId) {
   gameStore.selectUnit(unitId);
 }
 
+function onSubmitAction({ type, payload }) {
+  gameStore.submitAction(gameId, type, payload);
+}
+
 function onImageLoad(event) {
   imgNaturalWidth.value = event.target.naturalWidth;
   imgNaturalHeight.value = event.target.naturalHeight;
@@ -174,12 +218,22 @@ function onImageLoad(event) {
         </div>
       </div>
 
-      <!-- Sidebar: fixed width, holds unit stats panel -->
+      <!-- Sidebar: fixed width, holds unit stats panel and action panel -->
       <aside class="sidebar">
         <UnitStatsPanel
           :unit="selectedDisplayUnit"
           :hex-units="hexUnits"
           @select-unit="gameStore.selectUnit"
+        />
+        <ActionPanel
+          :phase="gameStore.gameState?.phase ?? null"
+          :step="gameStore.gameState?.step ?? null"
+          :turn="gameStore.gameState?.turn ?? null"
+          :active-player="gameStore.gameState?.activePlayer ?? null"
+          :valid-actions="validActions"
+          :pending="gameStore.pendingAction !== null"
+          :local-player-side="localPlayerSide"
+          @submit-action="onSubmitAction"
         />
       </aside>
     </div>

@@ -134,6 +134,7 @@
 <!-- Tracks registered by /conductor:new-track -->
 
 | [x] | milestone-backfill_20260601 | Milestone Backfill — M1/M2 Creation, Issue Assignment, Leader Counter Upload | 2026-06-01 | 2026-06-01 |
-| [~] | pre-m6-debt-sprint_20260601 | Pre-M6 Debt Sprint — Issues #476 #477 #478 #479 #480 | 2026-06-01 | 2026-06-01 |
+| [x] | pre-m6-debt-sprint_20260601 | Pre-M6 Debt Sprint — Issues #476 #477 #478 #479 #480 | 2026-06-01 | 2026-06-04 |
 | [x] | leader-counter-upload_20260601 | Leader Counter Image Upload | 2026-06-01 | 2026-06-01 |
 | [x] | m5-debt-cleanup_20260603 | M5 Debt Cleanup Sprint — Issues #482 #481 #487 #486 #467 #468 #470 #440 + .gitignore | 2026-06-03 | 2026-06-04 |
+| [x] | m5-ui-completion_20260604 | M5 UI Completion — ActionPanel, Store Wiring, GameView Socket Integration (#472 #473 #474) | 2026-06-04 | 2026-06-04 |

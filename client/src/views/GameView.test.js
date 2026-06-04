@@ -11,6 +11,16 @@ vi.mock('../composables/useOobData.js', () => ({
   useOobData: vi.fn(),
 }));
 
+// Socket mock factory — returned by the vi.mock below
+const mockSocket = {
+  emit: vi.fn(),
+  on: vi.fn(),
+  disconnect: vi.fn(),
+};
+vi.mock('socket.io-client', () => ({
+  io: vi.fn(() => mockSocket),
+}));
+
 import { useGameStore } from '../stores/useGameStore.js';
 import { useOobData } from '../composables/useOobData.js';
 import GameView from './GameView.vue';
@@ -49,7 +59,10 @@ function makeGameStore(overrides = {}) {
     loading: false,
     error: null,
     mapConfigError: null,
+    pendingAction: null,
     loadGame: vi.fn(),
+    submitAction: vi.fn(),
+    refreshGame: vi.fn(),
     selectUnit: vi.fn(),
     deselectUnit: vi.fn(),
     ...overrides,
@@ -160,6 +173,20 @@ async function mountGameView(
           name: 'UnitStatsPanel',
           template: '<div class="stub-stats-panel"></div>',
           props: ['unit'],
+        },
+        ActionPanel: {
+          name: 'ActionPanel',
+          template: '<div class="stub-action-panel"></div>',
+          props: [
+            'phase',
+            'step',
+            'turn',
+            'activePlayer',
+            'validActions',
+            'pending',
+            'localPlayerSide',
+          ],
+          emits: ['submit-action'],
         },
       },
     },
@@ -386,5 +413,130 @@ describe('GameView — OOB fetch error handling', () => {
     await flushPromises();
     expect(wrapper.find('.error-banner').exists()).toBe(true);
     expect(wrapper.find('.error-banner').text()).toContain('OOB data unavailable');
+  });
+});
+
+describe('GameView — socket setup (#474)', () => {
+  it('emits game:join with gameId on mount', async () => {
+    await mountGameView();
+    await flushPromises();
+    expect(mockSocket.emit).toHaveBeenCalledWith('game:join', { gameId: 'game-1' });
+  });
+
+  it('registers game:state-updated listener on mount', async () => {
+    await mountGameView();
+    await flushPromises();
+    expect(mockSocket.on).toHaveBeenCalledWith('game:state-updated', expect.any(Function));
+  });
+
+  it('calls gameStore.refreshGame when game:state-updated fires', async () => {
+    const refreshGame = vi.fn();
+    await mountGameView({ refreshGame });
+    await flushPromises();
+    // Find the listener registered for game:state-updated and invoke it
+    const [, listener] = mockSocket.on.mock.calls.find(([event]) => event === 'game:state-updated');
+    listener();
+    expect(refreshGame).toHaveBeenCalledWith('game-1');
+  });
+
+  it('emits game:leave and disconnects socket on unmount', async () => {
+    const wrapper = await mountGameView();
+    await flushPromises();
+    wrapper.unmount();
+    expect(mockSocket.emit).toHaveBeenCalledWith('game:leave', { gameId: 'game-1' });
+    expect(mockSocket.disconnect).toHaveBeenCalled();
+  });
+});
+
+describe('GameView — ActionPanel rendering (#474)', () => {
+  it('renders ActionPanel in the sidebar', async () => {
+    const wrapper = await mountGameView();
+    expect(wrapper.findComponent({ name: 'ActionPanel' }).exists()).toBe(true);
+  });
+
+  it('passes pending=true to ActionPanel when store pendingAction is set', async () => {
+    const wrapper = await mountGameView({ pendingAction: { type: 'END_PHASE', payload: null } });
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('pending')).toBe(true);
+  });
+
+  it('passes pending=false to ActionPanel when store pendingAction is null', async () => {
+    const wrapper = await mountGameView({ pendingAction: null });
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('pending')).toBe(false);
+  });
+
+  it('calls gameStore.submitAction when ActionPanel emits submit-action', async () => {
+    const submitAction = vi.fn();
+    const wrapper = await mountGameView({ submitAction });
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    await panel.vm.$emit('submit-action', { type: 'END_PHASE', payload: { target: 'hex-1' } });
+    expect(submitAction).toHaveBeenCalledWith('game-1', 'END_PHASE', { target: 'hex-1' });
+  });
+
+  it('shows error banner when gameStore.error is set', async () => {
+    const wrapper = await mountGameView({ error: 'Action failed' });
+    expect(wrapper.find('.error-banner').text()).toContain('Action failed');
+  });
+});
+
+describe('GameView — localPlayerSide and validActions (#474)', () => {
+  it('passes localPlayerSide from /api/v1/games/me response to ActionPanel', async () => {
+    const wrapper = await mountGameView({}, [['/api/v1/games/me', { side: 'union' }]]);
+    await flushPromises();
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('localPlayerSide')).toBe('union');
+  });
+
+  it('localPlayerSide stays null when /games/me fetch fails', async () => {
+    const wrapper = await mountGameView({}, [['/api/v1/games/me', new Error('network failure')]]);
+    await flushPromises();
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('localPlayerSide')).toBeNull();
+  });
+
+  it('passes empty validActions when activePlayer does not match localPlayerSide', async () => {
+    const gameState = {
+      units: {},
+      phase: 'command',
+      step: 'orders',
+      turn: 1,
+      activePlayer: 'confederate',
+    };
+    const wrapper = await mountGameView({ gameState }, [['/api/v1/games/me', { side: 'union' }]]);
+    await flushPromises();
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('validActions')).toHaveLength(0);
+  });
+
+  it('passes non-empty validActions when activePlayer matches localPlayerSide', async () => {
+    const gameState = {
+      units: {},
+      phase: 'command',
+      step: 'orders',
+      turn: 1,
+      activePlayer: 'union',
+    };
+    const wrapper = await mountGameView({ gameState }, [['/api/v1/games/me', { side: 'union' }]]);
+    await flushPromises();
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('validActions').length).toBeGreaterThan(0);
+  });
+
+  it('passes empty validActions when gameState is null', async () => {
+    const wrapper = await mountGameView({ gameState: null }, [
+      ['/api/v1/games/me', { side: 'union' }],
+    ]);
+    await flushPromises();
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('validActions')).toHaveLength(0);
+  });
+
+  it('passes empty validActions when active player matches but phase/step are null', async () => {
+    const gameState = { units: {}, phase: null, step: null, turn: 1, activePlayer: 'union' };
+    const wrapper = await mountGameView({ gameState }, [['/api/v1/games/me', { side: 'union' }]]);
+    await flushPromises();
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('validActions')).toHaveLength(0);
   });
 });
