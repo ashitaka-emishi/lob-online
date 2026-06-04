@@ -3,7 +3,7 @@
 **Track ID:** pre-m6-debt-score_20260604
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-04
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -111,7 +111,7 @@ Engine refactor, test expansion, server validation, UX announcement. Score: 11 p
   - `games.test.js`: make `saveGame` return distinct object; assert it was called with `(TEST_UUID, NEXT_STATE)`; add test for omitted-version bypass.
   - `gameSocket.test.js`: add test documenting `game:leave` authorization policy; assert `game:joined` NOT emitted on reject paths.
   - `UnitStatsPanel.test.js`: add 3-unit `[A, B, C]` paging test (next→next→wrap, prev-from-A wraps); assert `select-unit` emission in next/prev tests.
-- [ ] Task 4.6: **Register reconciliation** — Add #467, #468, #470, #481, #486, #487 to the debt register historical tracking rows before closing them. Update open-items table to reflect all 12 closures. Recalculate cumulative score.
+- [x] Task 4.6: **Register reconciliation** — Add #467, #468, #470, #481, #486, #487 to the debt register historical tracking rows before closing them. Update open-items table to reflect all 12 closures. Recalculate cumulative score.
 
 ### Verification
 
