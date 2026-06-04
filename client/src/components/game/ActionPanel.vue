@@ -1,12 +1,12 @@
 <script setup>
-const props = defineProps({
-  phase: String,
-  step: String,
-  turn: Number,
-  activePlayer: String,
-  validActions: Array,
+defineProps({
+  phase: { type: String, default: null },
+  step: { type: String, default: null },
+  turn: { type: Number, default: null },
+  activePlayer: { type: String, default: null },
+  validActions: { type: Array, default: () => [] },
   pending: Boolean,
-  localPlayerSide: String,
+  localPlayerSide: { type: String, default: null },
 });
 
 const emit = defineEmits(['submit-action']);

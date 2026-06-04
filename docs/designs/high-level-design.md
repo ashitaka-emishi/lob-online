@@ -23,7 +23,7 @@
 
 ---
 
-> **Implementation Status (as of 2026-06-01) — M5 Complete**
+> **Implementation Status (as of 2026-06-04) — M5 Complete**
 >
 > **M1 — Scaffold (complete):** tech stack selection, server scaffold (Express + Socket.io),
 > data models (five JSON files: map, scenario, oob, leaders, succession), Zod validation schemas,
@@ -54,11 +54,13 @@
 > **M5 — Turn Structure, Orders, and Game Map UI (complete):** `UnitOrderState` schema with
 > cross-field Zod refinements, `isDetached` field; turn reducer + valid-actions engine
 > (`engine/phase.js`) covering Command→Activity→Rally cycle; `POST /api/v1/games/:id/actions`
-> endpoint with Socket.io room events (`game:join`, `game:leave`, `game:state`); `GameView`
-> client with `UnitCounterLayer` SVG counter rendering and `UnitStatsPanel` sidebar;
-> `useGameStore` Pinia store. Leader counter images now assignable via OOB editor
-> (`selectNode` correctly paths leaders in `leaders.json`; all four counter slots use
-> manifest cycling).
+> endpoint with Socket.io room events (`game:join`, `game:leave`, `game:state-updated`);
+> `GameView` client with `UnitCounterLayer` SVG counter rendering, `UnitStatsPanel` sidebar,
+> and `ActionPanel` (phase/turn/step display + action buttons); `useGameStore` Pinia store
+> with `submitAction`, `pendingAction`, and `refreshGame`; Socket.io client wiring in
+> `GameView` (join on mount, leave on unmount, `game:state-updated` → `refreshGame`);
+> client-side `validActions` derivation from `gameState.phase` + `gameState.step`.
+> Leader counter images now assignable via OOB editor.
 >
 > **In progress:** M6 planning — combat resolution, morale checks, orders pipeline.
 > South Mountain scenario data digitization ongoing (map hexes, counter linkages).
