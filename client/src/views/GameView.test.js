@@ -417,12 +417,6 @@ describe('GameView — OOB fetch error handling', () => {
 });
 
 describe('GameView — socket setup (#474)', () => {
-  beforeEach(() => {
-    mockSocket.emit.mockClear();
-    mockSocket.on.mockClear();
-    mockSocket.disconnect.mockClear();
-  });
-
   it('emits game:join with gameId on mount', async () => {
     await mountGameView();
     await flushPromises();
@@ -476,12 +470,65 @@ describe('GameView — ActionPanel rendering (#474)', () => {
     const submitAction = vi.fn();
     const wrapper = await mountGameView({ submitAction });
     const panel = wrapper.findComponent({ name: 'ActionPanel' });
-    await panel.vm.$emit('submit-action', { type: 'END_PHASE', payload: null });
-    expect(submitAction).toHaveBeenCalledWith('game-1', 'END_PHASE', null);
+    await panel.vm.$emit('submit-action', { type: 'END_PHASE', payload: { target: 'hex-1' } });
+    expect(submitAction).toHaveBeenCalledWith('game-1', 'END_PHASE', { target: 'hex-1' });
   });
 
   it('shows error banner when gameStore.error is set', async () => {
     const wrapper = await mountGameView({ error: 'Action failed' });
     expect(wrapper.find('.error-banner').text()).toContain('Action failed');
+  });
+});
+
+describe('GameView — localPlayerSide and validActions (#474)', () => {
+  it('passes localPlayerSide from /api/v1/games/me response to ActionPanel', async () => {
+    const wrapper = await mountGameView({}, [['/api/v1/games/me', { side: 'union' }]]);
+    await flushPromises();
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('localPlayerSide')).toBe('union');
+  });
+
+  it('localPlayerSide stays null when /games/me fetch fails', async () => {
+    const wrapper = await mountGameView({}, [['/api/v1/games/me', new Error('network failure')]]);
+    await flushPromises();
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('localPlayerSide')).toBeNull();
+  });
+
+  it('passes empty validActions when activePlayer does not match localPlayerSide', async () => {
+    const gameState = {
+      units: {},
+      phase: 'command',
+      step: 'orders',
+      turn: 1,
+      activePlayer: 'confederate',
+    };
+    const wrapper = await mountGameView({ gameState }, [['/api/v1/games/me', { side: 'union' }]]);
+    await flushPromises();
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('validActions')).toHaveLength(0);
+  });
+
+  it('passes non-empty validActions when activePlayer matches localPlayerSide', async () => {
+    const gameState = {
+      units: {},
+      phase: 'command',
+      step: 'orders',
+      turn: 1,
+      activePlayer: 'union',
+    };
+    const wrapper = await mountGameView({ gameState }, [['/api/v1/games/me', { side: 'union' }]]);
+    await flushPromises();
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('validActions').length).toBeGreaterThan(0);
+  });
+
+  it('passes empty validActions when gameState is null', async () => {
+    const wrapper = await mountGameView({ gameState: null }, [
+      ['/api/v1/games/me', { side: 'union' }],
+    ]);
+    await flushPromises();
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('validActions')).toHaveLength(0);
   });
 });

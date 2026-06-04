@@ -478,6 +478,116 @@ describe('useGameStore — submitAction', () => {
     expect(store.error).toBeTruthy();
     expect(store.pendingAction).toBeNull();
   });
+
+  it('uses fallback error message when error response body has no error field', async () => {
+    const gs = makeGameState('g7');
+    gs.version = 0;
+    vi.stubGlobal('fetch', makeActionFetch(500, {}));
+    const store = useGameStore();
+    store.gameState = gs;
+    await store.submitAction('g7', 'END_PHASE');
+    expect(store.error).toBe('Action failed: 500');
+    expect(store.pendingAction).toBeNull();
+  });
+
+  it('sets error when error response json() rejects (covers .catch(() => ({})) branch)', async () => {
+    const gs = makeGameState('g8');
+    gs.version = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 422,
+        json: () => Promise.reject(new SyntaxError('bad json')),
+      })
+    );
+    const store = useGameStore();
+    store.gameState = gs;
+    await store.submitAction('g8', 'END_PHASE');
+    expect(store.error).toBe('Action failed: 422');
+    expect(store.pendingAction).toBeNull();
+  });
+
+  it('sets error when success response json() rejects (non-JSON 2xx body)', async () => {
+    const gs = makeGameState('g9');
+    gs.version = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.reject(new SyntaxError('bad json')),
+      })
+    );
+    const store = useGameStore();
+    store.gameState = gs;
+    await store.submitAction('g9', 'END_PHASE');
+    expect(store.error).toBe('Server returned an invalid response');
+    expect(store.pendingAction).toBeNull();
+  });
+
+  it('does not mutate gameState on 422 failure', async () => {
+    const gs = makeGameState('g10');
+    gs.version = 2;
+    vi.stubGlobal('fetch', makeActionFetch(422, { error: 'Invalid action' }));
+    const store = useGameStore();
+    store.gameState = gs;
+    await store.submitAction('g10', 'END_PHASE');
+    expect(store.gameState).toEqual(gs);
+  });
+
+  it('does not mutate gameState on 500 failure', async () => {
+    const gs = makeGameState('g11');
+    gs.version = 5;
+    vi.stubGlobal('fetch', makeActionFetch(500, { error: 'Server error' }));
+    const store = useGameStore();
+    store.gameState = gs;
+    await store.submitAction('g11', 'END_PHASE');
+    expect(store.gameState).toEqual(gs);
+  });
+
+  it('serializes default null payload in request body when third arg omitted', async () => {
+    const gs = makeGameState('g12');
+    gs.version = 1;
+    const saved = { ...gs, version: 2 };
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(saved),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const store = useGameStore();
+    store.gameState = gs;
+    await store.submitAction('g12', 'END_PHASE');
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.payload).toBeNull();
+  });
+
+  it('sets pendingAction during in-flight error and clears it on rejection', async () => {
+    const gs = makeGameState('g13');
+    gs.version = 0;
+    let rejectFetch;
+    const deferred = new Promise((_, reject) => {
+      rejectFetch = reject;
+    });
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(deferred));
+    const store = useGameStore();
+    store.gameState = gs;
+    const p = store.submitAction('g13', 'END_PHASE', null);
+    expect(store.pendingAction).toEqual({ type: 'END_PHASE', payload: null });
+    rejectFetch(new Error('network'));
+    await p;
+    expect(store.pendingAction).toBeNull();
+  });
+
+  it('does nothing when gameState is null', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const store = useGameStore();
+    await store.submitAction('g-null', 'END_PHASE');
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(store.pendingAction).toBeNull();
+  });
 });
 
 describe('useGameStore — refreshGame', () => {

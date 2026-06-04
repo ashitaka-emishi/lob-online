@@ -53,17 +53,46 @@ describe('ActionPanel — action buttons', () => {
     expect(wrapper.findAll('button')).toHaveLength(0);
   });
 
-  it('disables all buttons when pending is true', () => {
+  it('disables all buttons when pending is true (two-button fixture)', () => {
     const wrapper = mount(ActionPanel, {
       props: {
         ...DEFAULT_PROPS,
-        validActions: [{ type: 'END_PHASE', payload: null }],
+        validActions: [
+          { type: 'END_PHASE', payload: null },
+          { type: 'PASS', payload: null },
+        ],
         pending: true,
       },
     });
     const buttons = wrapper.findAll('button');
-    expect(buttons.length).toBeGreaterThan(0);
+    expect(buttons).toHaveLength(2);
     buttons.forEach((btn) => expect(btn.attributes('disabled')).toBeDefined());
+  });
+
+  it('shows spinner only on first button when pending is true', () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [
+          { type: 'END_PHASE', payload: null },
+          { type: 'PASS', payload: null },
+        ],
+        pending: true,
+      },
+    });
+    const buttons = wrapper.findAll('button');
+    expect(buttons[0].find('.spinner').exists()).toBe(true);
+    expect(buttons[1].find('.spinner').exists()).toBe(false);
+  });
+
+  it('renders title-cased label for multi-segment action type', () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [{ type: 'SET_MORALE', payload: null }],
+      },
+    });
+    expect(wrapper.text()).toContain('Set Morale');
   });
 
   it('emits submit-action with { type, payload } on button click', async () => {
@@ -97,5 +126,33 @@ describe('ActionPanel — waiting state', () => {
   it('does not show waiting message when it is the local player turn', () => {
     const wrapper = mount(ActionPanel, { props: DEFAULT_PROPS });
     expect(wrapper.text()).not.toMatch(/waiting for/i);
+  });
+
+  it('renders no buttons when waiting even with non-empty validActions', () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        activePlayer: 'confederate',
+        localPlayerSide: 'union',
+        validActions: [{ type: 'END_PHASE', payload: null }],
+      },
+    });
+    expect(wrapper.findAll('button')).toHaveLength(0);
+  });
+});
+
+describe('ActionPanel — null-state summary', () => {
+  it('does not render summary line when turn and phase are null', () => {
+    const wrapper = mount(ActionPanel, {
+      props: { ...DEFAULT_PROPS, turn: null, phase: null, step: null },
+    });
+    expect(wrapper.find('.summary').exists()).toBe(false);
+  });
+
+  it('does not render summary line when phase is null even if turn is set', () => {
+    const wrapper = mount(ActionPanel, {
+      props: { ...DEFAULT_PROPS, turn: 1, phase: null, step: null },
+    });
+    expect(wrapper.find('.summary').exists()).toBe(false);
   });
 });

@@ -34,15 +34,13 @@ function validActionsForState(phase, step) {
   return [{ type: 'END_PHASE', payload: null }];
 }
 
-let _socket = null;
-let _mountedGameId = null;
+let socket = null;
+const gameId = route.params.id;
 
 onMounted(async () => {
-  const gameId = route.params.id;
-  _mountedGameId = gameId;
   await Promise.all([gameStore.loadGame(gameId), fetchOob()]);
 
-  // Fetch session identity so ActionPanel knows which side belongs to this player
+  // intentionally not awaited — identity is non-blocking for initial render
   fetch('/api/v1/games/me')
     .then((r) => r.json())
     .then((data) => {
@@ -50,16 +48,16 @@ onMounted(async () => {
     })
     .catch(() => {});
 
-  _socket = io();
-  _socket.emit('game:join', { gameId });
-  _socket.on('game:state-updated', () => gameStore.refreshGame(gameId));
+  socket = io();
+  socket.emit('game:join', { gameId });
+  socket.on('game:state-updated', () => gameStore.refreshGame(gameId));
 });
 
 onUnmounted(() => {
-  if (_socket) {
-    _socket.emit('game:leave', { gameId: _mountedGameId });
-    _socket.disconnect();
-    _socket = null;
+  if (socket) {
+    socket.emit('game:leave', { gameId });
+    socket.disconnect();
+    socket = null;
   }
 });
 

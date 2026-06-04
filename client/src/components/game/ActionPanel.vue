@@ -5,7 +5,7 @@ defineProps({
   turn: { type: Number, default: null },
   activePlayer: { type: String, default: null },
   validActions: { type: Array, default: () => [] },
-  pending: Boolean,
+  pending: { type: Boolean, default: false },
   localPlayerSide: { type: String, default: null },
 });
 
@@ -25,7 +25,9 @@ function handleClick(action) {
 
 <template>
   <div class="action-panel">
-    <div class="summary">Turn {{ turn }} — {{ phase }} ({{ step }})</div>
+    <div v-if="turn !== null && phase" class="summary">
+      Turn {{ turn }} — {{ phase }} ({{ step }})
+    </div>
     <div v-if="activePlayer !== localPlayerSide" class="waiting">
       Waiting for {{ activePlayer }}…
     </div>

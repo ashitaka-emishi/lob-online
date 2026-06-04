@@ -69,6 +69,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   async function submitAction(gameId, type, payload = null) {
+    if (!gameState.value) return;
     pendingAction.value = { type, payload };
     try {
       const res = await fetch(`/api/v1/games/${gameId}/actions`, {
@@ -80,7 +81,9 @@ export const useGameStore = defineStore('game', () => {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? `Action failed: ${res.status}`);
       }
-      const saved = await res.json();
+      const saved = await res.json().catch(() => {
+        throw new Error('Server returned an invalid response');
+      });
       gameState.value = saved;
     } catch (err) {
       error.value = err.message;
