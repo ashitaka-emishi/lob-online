@@ -1,0 +1,19 @@
+{
+  "id": "m5-debt-cleanup_20260603",
+  "title": "M5 Debt Cleanup Sprint",
+  "type": "chore",
+  "status": "in_progress",
+  "created": "2026-06-03T00:00:00.000Z",
+  "updated": "2026-06-03T00:00:00.000Z",
+  "current_phase": 0,
+  "current_task": "0.1",
+  "phases": {
+    "total": 5,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 16,
+    "completed": 0
+  },
+  "commits": []
+}
