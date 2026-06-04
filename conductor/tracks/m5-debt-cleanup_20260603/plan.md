@@ -3,7 +3,7 @@
 **Track ID:** m5-debt-cleanup_20260603
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-03
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -31,12 +31,12 @@ client-composable surfaces per quality-rails rules.
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -44,11 +44,11 @@ client-composable surfaces per quality-rails rules.
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All 8 issues (#482 #481 #487 #486 #467 #468 #470 #440) closed
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated (net −16, open score 16)
-- [ ] Ready for `/team-review`
+- [x] All plan tasks complete
+- [x] All 8 issues (#482 #481 #487 #486 #467 #468 #470 #440) closed
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated (net −16, open score 16)
+- [x] Ready for `/team-review`
 
 ---
 
