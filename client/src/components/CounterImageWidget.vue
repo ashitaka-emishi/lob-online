@@ -17,21 +17,19 @@ const props = defineProps({
     default: 'unit',
     validator: (v) => ['unit', 'leader'].includes(v),
   },
+  // Explicit side replaces internal path-prefix detection (#486)
+  side: {
+    type: String,
+    default: null,
+    validator: (v) => v == null || ['union', 'confederate'].includes(v),
+  },
 });
 
 const store = useOobStore();
 
-// ── Side detection ────────────────────────────────────────────────────────────
-// Paths are produced by useOobStore.selectNode:
-//   Leaders: 'leaders.<side>.<level>.<i>' — side is the second segment.
-//   Units:   '<side>.<level>.<i>'         — side is the first segment.
-
-const sideSegment = computed(() => {
-  const parts = props.nodePath?.split('.') ?? [];
-  return parts[0] === 'leaders' ? parts[1] : parts[0];
-});
-const isUnion = computed(() => sideSegment.value === 'union');
-const isConfederate = computed(() => sideSegment.value === 'confederate');
+// ── Side classification (driven by explicit `side` prop) ─────────────────────
+const isUnion = computed(() => props.side === 'union');
+const isConfederate = computed(() => props.side === 'confederate');
 
 // ── Manifest allowlist for src validation (L1) ────────────────────────────────
 // Guard against loading images from filenames not in the manifest (e.g. from
@@ -204,12 +202,24 @@ const liveAnnouncement = computed(() => {
   return `${activeFace.value}: ${filename} (${activeIndex.value + 1} of ${list.length})`;
 });
 
+// ── Focus-out deactivation (#487) ─────────────────────────────────────────────
+// When focus leaves the widget entirely, clear activeFace so Arrow keys no longer
+// suppress page scrolling. relatedTarget is null when focus leaves the document, or
+// an element outside the widget — both cases should clear.
+// If focus moves to another element WITHIN the widget, relatedTarget is contained
+// inside currentTarget, so activeFace is preserved.
+function onFocusout(e) {
+  if (!e.currentTarget.contains(e.relatedTarget)) {
+    activeFace.value = null;
+  }
+}
+
 onMounted(() => window.addEventListener('keydown', onKeydown));
 onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 </script>
 
 <template>
-  <div class="counter-widget">
+  <div class="counter-widget" @focusout="onFocusout">
     <!-- Screen-reader live region announces the current selection as cycling occurs -->
     <span class="sr-only" aria-live="polite" aria-atomic="true">{{ liveAnnouncement }}</span>
 

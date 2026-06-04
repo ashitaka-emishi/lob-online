@@ -108,12 +108,12 @@ Two isolated dev-tool improvements in `CounterImageWidget.vue` and
 
 ### Tasks
 
-- [ ] Task 2.1: Add a `@focusout` handler to `CounterImageWidget.vue` that sets
+- [x] Task 2.1: Add a `@focusout` handler to `CounterImageWidget.vue` that sets
       `activeFace` to `null` when focus leaves the widget entirely (use
       `relatedTarget` / `currentTarget` to distinguish within-widget focus moves
       from true blur); write a test or comment documenting the expected behavior
       (#487)
-- [ ] Task 2.2: Add a `side` prop (`'union' | 'confederate'`) to
+- [x] Task 2.2: Add a `side` prop (`'union' | 'confederate'`) to
       `CounterImageWidget.vue`; remove the internal path-prefix detection logic;
       update `OobDetailPanel.vue` to pass `side` explicitly; write a test asserting
       the prop drives the correct filter (#486)
