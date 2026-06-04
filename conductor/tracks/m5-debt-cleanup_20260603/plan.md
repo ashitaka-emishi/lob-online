@@ -161,15 +161,15 @@ game-state requests fire concurrently. Checkpointed surface.
 
 ### Tasks
 
-- [ ] Task 4.1: Identify where `scenarioId` is first known in the `loadGame`
+- [x] Task 4.1: Identify where `scenarioId` is first known in the `loadGame`
       flow (`useGameStore.js` or equivalent); determine whether it is available
       before the first fetch or only after (#440)
-- [ ] Task 4.2: If `scenarioId` is available up-front (from the route or lobby
-      params), rewrite `loadGame` to fire both fetches with `Promise.all`; add a
-      test asserting both requests are issued before either resolves (#440)
-- [ ] Task 4.3: If `scenarioId` is only known after game-state response, add a
-      comment documenting why parallelization is not yet possible and close the
-      issue with that explanation, then update the debt register accordingly (#440)
+      → `scenarioId` comes from `state.scenarioId` after the game-state fetch;
+      not available up-front. Task 4.3 applies.
+- [x] Task 4.2: (N/A — scenarioId not available up-front; Task 4.3 applies)
+- [x] Task 4.3: Added comment to `useGameStore.js` documenting why parallelization
+      is not possible with the current API shape; issue #440 closeable with this
+      explanation (#440)
 
 ### Verification
 
