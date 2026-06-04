@@ -28,11 +28,23 @@ const { oobUnitMap, oobError, fetchOob } = useOobData();
 const imgNaturalWidth = ref(1400);
 const imgNaturalHeight = ref(900);
 
-// LOB M5 — valid actions are derived client-side from phase+step; dedicated endpoint deferred to M6
-function validActionsForState(phase, step) {
-  if (!phase || !step) return [];
-  // For M5 only END_PHASE is universally available when it is the active player's turn
-  return [{ type: 'END_PHASE', payload: null }];
+// ── Valid actions (server-sourced) ────────────────────────────────────────────
+// Fetched from GET /api/v1/games/:id/actions after load and after each state update. (#495)
+// Falls back to [] while loading or when it is not the local player's turn.
+const serverValidActions = ref([]);
+
+async function refreshValidActions() {
+  try {
+    const r = await fetch(`/api/v1/games/${gameId}/actions`);
+    if (!r.ok) {
+      serverValidActions.value = [];
+      return;
+    }
+    const data = await r.json();
+    serverValidActions.value = data.validActions ?? [];
+  } catch {
+    serverValidActions.value = [];
+  }
 }
 
 let socket = null;
@@ -40,6 +52,7 @@ const gameId = route.params.id;
 
 onMounted(async () => {
   await Promise.all([gameStore.loadGame(gameId), fetchOob()]);
+  await refreshValidActions();
 
   // intentionally not awaited — identity is non-blocking for initial render
   fetch('/api/v1/games/me')
@@ -54,7 +67,10 @@ onMounted(async () => {
 
   socket = io();
   socket.emit('game:join', { gameId });
-  socket.on('game:state-updated', () => gameStore.refreshGame(gameId));
+  socket.on('game:state-updated', async () => {
+    await gameStore.refreshGame(gameId);
+    await refreshValidActions();
+  });
 });
 
 onUnmounted(() => {
@@ -70,7 +86,7 @@ onUnmounted(() => {
 const validActions = computed(() => {
   const gs = gameStore.gameState;
   if (!gs || gs.activePlayer !== localPlayerSide.value) return [];
-  return validActionsForState(gs.phase, gs.step);
+  return serverValidActions.value;
 });
 
 // ── Derived display data ──────────────────────────────────────────────────────
