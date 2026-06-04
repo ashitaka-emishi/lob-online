@@ -587,6 +587,7 @@ describe('useGameStore — submitAction', () => {
     await store.submitAction('g-null', 'END_PHASE');
     expect(fetchMock).not.toHaveBeenCalled();
     expect(store.pendingAction).toBeNull();
+    expect(store.error).toBeNull();
   });
 });
 

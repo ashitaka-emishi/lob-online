@@ -531,4 +531,12 @@ describe('GameView — localPlayerSide and validActions (#474)', () => {
     const panel = wrapper.findComponent({ name: 'ActionPanel' });
     expect(panel.props('validActions')).toHaveLength(0);
   });
+
+  it('passes empty validActions when active player matches but phase/step are null', async () => {
+    const gameState = { units: {}, phase: null, step: null, turn: 1, activePlayer: 'union' };
+    const wrapper = await mountGameView({ gameState }, [['/api/v1/games/me', { side: 'union' }]]);
+    await flushPromises();
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('validActions')).toHaveLength(0);
+  });
 });

@@ -155,7 +155,7 @@ function onUnitClick(unitId) {
 }
 
 function onSubmitAction({ type, payload }) {
-  gameStore.submitAction(route.params.id, type, payload);
+  gameStore.submitAction(gameId, type, payload);
 }
 
 function onImageLoad(event) {
