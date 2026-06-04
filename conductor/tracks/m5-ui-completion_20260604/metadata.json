@@ -1,0 +1,22 @@
+{
+  "id": "m5-ui-completion_20260604",
+  "title": "M5 UI Completion — ActionPanel, Store Wiring, GameView Socket Integration",
+  "type": "feature",
+  "status": "complete",
+  "created": "2026-06-04T00:00:00.000Z",
+  "updated": "2026-06-04T17:00:00.000Z",
+  "phases": {
+    "total": 4,
+    "completed": 4
+  },
+  "tasks": {
+    "total": 17,
+    "completed": 17
+  },
+  "commits": [
+    "b129dae: feat(store): add submitAction, pendingAction, refreshGame to useGameStore (#472)",
+    "892d1ef: feat(ui): add ActionPanel component with phase/step display and action buttons (#473)",
+    "a8f3904: feat(game): wire GameView socket, ActionPanel rendering, and submitAction handler (#474)",
+    "46f4bfb: chore: fix lint warnings in ActionPanel and update HLD M5 status block"
+  ]
+}
