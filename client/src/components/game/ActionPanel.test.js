@@ -197,7 +197,7 @@ describe('ActionPanel — action buttons', () => {
     expect(wrapper.findAll('button')).toHaveLength(0);
   });
 
-  it('disables all buttons when pending is true (two-button fixture)', () => {
+  it('sets aria-disabled=true on all buttons when pending (#505)', () => {
     const wrapper = mount(ActionPanel, {
       props: {
         ...DEFAULT_PROPS,
@@ -210,7 +210,35 @@ describe('ActionPanel — action buttons', () => {
     });
     const buttons = wrapper.findAll('button');
     expect(buttons).toHaveLength(2);
-    buttons.forEach((btn) => expect(btn.attributes('disabled')).toBeDefined());
+    buttons.forEach((btn) => {
+      expect(btn.attributes('aria-disabled')).toBe('true');
+      expect(btn.attributes('disabled')).toBeUndefined();
+    });
+  });
+
+  it('does not set aria-disabled when not pending (#505)', () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [{ type: 'END_PHASE', payload: null }],
+        pending: false,
+      },
+    });
+    const btn = wrapper.find('button');
+    expect(btn.attributes('aria-disabled')).toBe('false');
+    expect(btn.attributes('disabled')).toBeUndefined();
+  });
+
+  it('does not emit submit-action when button is clicked while pending (#505)', async () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [{ type: 'END_PHASE', payload: null }],
+        pending: true,
+      },
+    });
+    await wrapper.find('button').trigger('click');
+    expect(wrapper.emitted('submit-action')).toBeFalsy();
   });
 
   it('shows spinner only on first button when pending is true and pendingActionType is null', () => {

@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch, nextTick } from 'vue';
 
 const props = defineProps({
   phase: { type: String, default: null },
@@ -40,7 +40,25 @@ function toTitleCase(type) {
     .join(' ');
 }
 
-function handleClick(action) {
+// Track the last-clicked button element so focus can be restored when pending clears. (#505)
+const _lastClickedBtn = ref(null);
+
+// Restore focus to the button that triggered submission once the pending state clears. (#505)
+watch(
+  () => props.pending,
+  (isPending) => {
+    if (!isPending && _lastClickedBtn.value) {
+      nextTick(() => {
+        _lastClickedBtn.value?.focus();
+        _lastClickedBtn.value = null;
+      });
+    }
+  }
+);
+
+function handleClick(action, event) {
+  if (props.pending) return;
+  _lastClickedBtn.value = event.currentTarget;
   emit('submit-action', { type: action.type, payload: action.payload });
 }
 </script>
@@ -70,8 +88,8 @@ function handleClick(action) {
         v-for="action in validActions"
         :key="action.type"
         class="action-btn"
-        :disabled="pending"
-        @click="handleClick(action)"
+        :aria-disabled="pending"
+        @click="handleClick(action, $event)"
       >
         <!-- Spinner targets the action that was submitted, not always the first button (#500) -->
         <span
@@ -127,7 +145,7 @@ function handleClick(action) {
   position: relative;
 }
 
-.action-btn:hover:not(:disabled) {
+.action-btn:hover:not([aria-disabled='true']) {
   background: #1e1a14;
   border-color: #5a4a38;
 }
@@ -137,9 +155,10 @@ function handleClick(action) {
   outline-offset: 2px;
 }
 
-.action-btn:disabled {
+.action-btn[aria-disabled='true'] {
   opacity: 0.5;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
 .spinner {
