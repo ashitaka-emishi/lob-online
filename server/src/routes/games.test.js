@@ -769,6 +769,8 @@ describe('GET /api/v1/games/:id/actions (#495)', () => {
     expect(getValidActions).toHaveBeenCalledWith(MINIMAL_STATE, 'confederate');
   });
 
+  // 404 is produced by requireSide (line 31-33 of requireSide.js), not by the route body.
+  // getGame returning null causes the middleware to reject before the handler runs.
   it('returns 404 when the game does not exist', async () => {
     getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
     getGame.mockReturnValue(null);

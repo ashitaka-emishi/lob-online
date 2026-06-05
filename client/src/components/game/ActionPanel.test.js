@@ -84,6 +84,24 @@ describe('ActionPanel — aria-live announcement (#497)', () => {
     const liveEl = wrapper.find('[aria-live="polite"]');
     expect(liveEl.text()).toMatch(/waiting for/i);
   });
+
+  it('live region announces submitting when pending is true with pendingActionType', () => {
+    const wrapper = mount(ActionPanel, {
+      props: { ...DEFAULT_PROPS, pending: true, pendingActionType: 'END_PHASE' },
+    });
+    const liveEl = wrapper.find('[aria-live="polite"]');
+    expect(liveEl.text()).toMatch(/submitting/i);
+    expect(liveEl.text()).toMatch(/end phase/i);
+  });
+
+  it('live region announces generic "action" when pending but pendingActionType is null', () => {
+    const wrapper = mount(ActionPanel, {
+      props: { ...DEFAULT_PROPS, pending: true, pendingActionType: null },
+    });
+    const liveEl = wrapper.find('[aria-live="polite"]');
+    expect(liveEl.text()).toMatch(/submitting/i);
+    expect(liveEl.text()).toMatch(/action/i);
+  });
 });
 
 describe('ActionPanel — aria-busy on pending (#497)', () => {

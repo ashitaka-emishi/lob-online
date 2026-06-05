@@ -148,9 +148,7 @@ const ACTION_ERROR_STATUS = {
 router.get('/:id/actions', requireSide, async (req, res) => {
   try {
     const { id } = req.params;
-    const row = getGame(id);
-    if (!row) return res.status(404).json({ error: 'Game not found' });
-
+    // 401/404/409/403 all handled by requireSide before we reach here.
     const player = getPlayerSession(req);
     const state = await loadGame(id);
     const validActions = getValidActions(state, player.side);

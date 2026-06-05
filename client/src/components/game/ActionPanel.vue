@@ -18,8 +18,14 @@ const emit = defineEmits(['submit-action']);
 
 const SUMMARY_ID = 'action-panel-summary';
 
-// Screen reader live region — announces turn-handoff transitions. (#497)
+// Screen reader live region — announces turn-handoff and submission state. (#497)
+// Pending state must be announced here because aria-busy suppresses descendant
+// announcements without itself being spoken aloud.
 const turnAnnouncement = computed(() => {
+  if (props.pending) {
+    const action = props.pendingActionType ? toTitleCase(props.pendingActionType) : 'action';
+    return `Submitting ${action}…`;
+  }
   if (!props.phase) return '';
   if (props.activePlayer !== props.localPlayerSide) {
     return `Waiting for ${props.activePlayer}`;
@@ -100,7 +106,7 @@ function handleClick(action) {
 
 .waiting {
   font-size: 0.85rem;
-  color: #6a7a8a;
+  color: #7a8a9a;
   font-style: italic;
 }
 
@@ -126,6 +132,11 @@ function handleClick(action) {
   border-color: #5a4a38;
 }
 
+.action-btn:focus-visible {
+  outline: 2px solid #c8b89a;
+  outline-offset: 2px;
+}
+
 .action-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -146,6 +157,12 @@ function handleClick(action) {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
   }
 }
 
