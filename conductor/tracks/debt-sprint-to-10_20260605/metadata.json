@@ -1,0 +1,16 @@
+{
+  "id": "debt-sprint-to-10_20260605",
+  "title": "Debt Sprint — Score 32 → 10 (#508 #509 #502 #503 #504 #505 #510 #511 #512 #469 #385 #205 #204)",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-06-05T00:00:00.000Z",
+  "updated": "2026-06-05T00:00:00.000Z",
+  "phases": {
+    "total": 4,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 16,
+    "completed": 0
+  }
+}
