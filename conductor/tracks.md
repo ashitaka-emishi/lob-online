@@ -139,4 +139,4 @@
 | [x] | m5-debt-cleanup_20260603 | M5 Debt Cleanup Sprint — Issues #482 #481 #487 #486 #467 #468 #470 #440 + .gitignore | 2026-06-03 | 2026-06-04 |
 | [x] | m5-ui-completion_20260604 | M5 UI Completion — ActionPanel, Store Wiring, GameView Socket Integration (#472 #473 #474) | 2026-06-04 | 2026-06-04 |
 | [x] | pre-m6-debt-score_20260604 | Pre-M6 Debt Score Sprint — Reduce Cumulative Score to < 15 | 2026-06-04 | 2026-06-04 |
-| [~] | oob-editor-bugs_20260604 | OOB Editor Display/Data Bugs (#506) — back-counter, AotP HQ, Walker phantom, specialRules | 2026-06-04 | 2026-06-04 |
+| [x] | oob-editor-bugs_20260604 | OOB Editor Display/Data Bugs (#506) — back-counter, AotP HQ, Walker phantom, specialRules | 2026-06-04 | 2026-06-04 |
