@@ -115,6 +115,29 @@ describe('OobTreeNode — selection', () => {
     await wrapper.find('.node-row').trigger('click');
     expect(store.selectedNode?.id).toBe('bde');
   });
+
+  it('forwards node._nodePath as explicit path when present (#508b)', async () => {
+    const store = setup();
+    const wrapper = mount(OobTreeNode, {
+      props: {
+        node: { id: 'usa-army-hq', name: 'AotP HQ', _nodePath: 'union.hq' },
+        nodeType: 'hq',
+      },
+    });
+    await wrapper.find('.node-row').trigger('click');
+    expect(store.selectedNodePath).toBe('union.hq');
+  });
+
+  it('passes null as path when node has no _nodePath (#508b)', async () => {
+    const store = setup();
+    const wrapper = mount(OobTreeNode, {
+      props: { node: { id: '1c-hq', name: '1 Corps HQ' }, nodeType: 'hq' },
+    });
+    await wrapper.find('.node-row').trigger('click');
+    // No _nodePath — selectNode falls through to findNodePathInTree (returns null for fixture)
+    expect(store.selectedNode?.id).toBe('1c-hq');
+    expect(store.selectedNodePath).toBeNull();
+  });
 });
 
 // ── Succession variants in childEntries ───────────────────────────────────────

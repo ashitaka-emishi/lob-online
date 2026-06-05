@@ -85,7 +85,11 @@ function specialRulesDisplay(value) {
 function onSpecialRulesChange(e) {
   const raw = e.target.value;
   try {
-    updateField('specialRules', JSON.parse(raw));
+    const parsed = JSON.parse(raw);
+    // Only accept plain objects — numbers, booleans, null, arrays, and strings are stored
+    // as raw text to avoid silent type corruption of the specialRules field (#508).
+    const isPlainObject = parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed);
+    updateField('specialRules', isPlainObject ? parsed : raw);
   } catch {
     updateField('specialRules', raw); // invalid JSON — store raw text as fallback (#508)
   }

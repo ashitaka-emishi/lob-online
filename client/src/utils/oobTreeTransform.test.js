@@ -69,12 +69,34 @@ describe('buildDisplayTree — union top-level', () => {
       ...makeOob(),
       union: {
         ...makeOob().union,
+        hq: { id: 'real-hq-id', name: 'Custom HQ', counterRef: null },
+      },
+    };
+    const tree = buildDisplayTree(oobWithHq, EMPTY_LEADERS, null, 'union');
+    // Distinct id proves the real entry was read, not the fallback { id: 'usa-army-hq' }
+    expect(tree[0].node._hq.id).toBe('real-hq-id');
+    expect(tree[0].node._hq._nodePath).toBe('union.hq');
+  });
+
+  it("_nodePath 'union.hq' resolves to a real node in oob.json-shaped data (#509)", () => {
+    // Pinning: the hardcoded literal 'union.hq' in oobTreeTransform.js must match the actual
+    // key path in oob.json. If the schema key is renamed, this test breaks before the editor
+    // silently breaks.
+    const oobWithHq = {
+      ...makeOob(),
+      union: {
+        ...makeOob().union,
         hq: { id: 'usa-army-hq', name: 'AotP HQ', counterRef: null },
       },
     };
     const tree = buildDisplayTree(oobWithHq, EMPTY_LEADERS, null, 'union');
-    expect(tree[0].node._hq.id).toBe('usa-army-hq');
-    expect(tree[0].node._hq._nodePath).toBe('union.hq');
+    const nodePath = tree[0].node._hq._nodePath; // 'union.hq'
+    // Navigate the path segments against the raw data to prove they resolve
+    const segments = nodePath.split('.');
+    let node = oobWithHq;
+    for (const seg of segments) node = node?.[seg];
+    expect(node).toBeDefined();
+    expect(node.id).toBe('usa-army-hq');
   });
 });
 
@@ -197,8 +219,28 @@ describe('buildDisplayTree — succession variants (#235)', () => {
   });
 
   it('variant with accidental commandsId is not indexed as a unit leader (#506-3)', () => {
-    // walker-promoted given commandsId 'wj' — must not shadow the real Walker leader
-    const successionWithBadCommandsId = {
+    // The variant must be in leaders[side] (not just succession) to reach buildLeadersMap.
+    // This fixture reproduces the exact failure mode: walker-promoted appears as a brigade
+    // leader entry with commandsId 'wj', the same id as the real Walker. Without the
+    // variantIds guard, walker-promoted would shadow Walker and brigade._leader.id would be
+    // 'walker-promoted'. Removing the guard (!variantIds.has(l.id)) makes this test fail.
+    const leadersWithVariantInBrigades = {
+      union: {},
+      confederate: {
+        brigades: [
+          // Real Walker leader
+          { id: 'walker', name: 'Joseph Walker', commandsId: 'wj', commandLevel: 'brigade' },
+          // Variant accidentally given the same commandsId — must be excluded (#506-3)
+          {
+            id: 'walker-promoted',
+            name: 'Col Joseph Walker (Promoted)',
+            commandsId: 'wj',
+            commandLevel: 'brigade',
+          },
+        ],
+      },
+    };
+    const successionWithVariant = {
       union: [],
       confederate: [
         {
@@ -206,7 +248,7 @@ describe('buildDisplayTree — succession variants (#235)', () => {
           name: 'Col Joseph Walker (Promoted)',
           baseLeaderId: 'walker',
           commandLevel: 'brigade',
-          commandsId: 'wj', // accidental; should be ignored
+          commandsId: 'wj',
           commandValue: 0,
           moraleValue: 1,
         },
@@ -214,8 +256,8 @@ describe('buildDisplayTree — succession variants (#235)', () => {
     };
     const tree = buildDisplayTree(
       OOB_WITH_WJ_BRIGADE,
-      LEADERS_WITH_BRIGADE,
-      successionWithBadCommandsId,
+      leadersWithVariantInBrigades,
+      successionWithVariant,
       'confederate'
     );
     const brigade = tree[0].node.divisions[0].brigades[0];

@@ -474,6 +474,17 @@ describe('OobDetailPanel — leader node', () => {
     expect(commandsInput).toBeDefined();
   });
 
+  it('renders specialRules textarea as empty string when value is null (#510)', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: {
+        node: { ...LEADER_NODE, specialRules: null },
+        nodeType: 'leader',
+        nodePath: 'leaders.union.corps.0',
+      },
+    });
+    expect(wrapper.find('textarea').element.value).toBe('');
+  });
+
   it('renders specialRules textarea with plain string unchanged', () => {
     const wrapper = mount(OobDetailPanel, {
       props: {
@@ -532,6 +543,33 @@ describe('OobDetailPanel — leader node', () => {
       'free text note'
     );
   });
+
+  it.each([
+    ['number scalar', '42', '42'],
+    ['boolean scalar', 'true', 'true'],
+    ['null literal', 'null', 'null'],
+    ['string scalar', '"hello"', '"hello"'],
+    ['array', '[1,2,3]', '[1,2,3]'],
+  ])(
+    'stores %s as raw string rather than parsed value — guards type corruption (#508)',
+    async (_label, input, expected) => {
+      const store = setup();
+      store.updateField = vi.fn();
+      const wrapper = mount(OobDetailPanel, {
+        props: {
+          node: { ...LEADER_NODE, specialRules: null },
+          nodeType: 'leader',
+          nodePath: 'leaders.union.corps.0',
+        },
+      });
+      await wrapper.find('textarea').setValue(input);
+      await wrapper.find('textarea').trigger('change');
+      expect(store.updateField).toHaveBeenCalledWith(
+        'leaders.union.corps.0.specialRules',
+        expected
+      );
+    }
+  );
 
   it('renders counter widget in leader mode when nodePath present', () => {
     const wrapper = mount(OobDetailPanel, {
