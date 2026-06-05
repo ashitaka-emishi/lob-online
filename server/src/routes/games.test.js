@@ -786,4 +786,13 @@ describe('GET /api/v1/games/:id/actions (#495)', () => {
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}/actions`);
     expect(res.status).toBe(401);
   });
+
+  it('returns 401 when authenticated player for game A queries game B actions (#503)', async () => {
+    const OTHER_UUID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', token: 'tok' });
+    const app = await buildApp();
+    const res = await request(app).get(`/api/v1/games/${TEST_UUID}/actions`);
+    expect(res.status).toBe(401);
+    expect(getValidActions).not.toHaveBeenCalled();
+  });
 });
