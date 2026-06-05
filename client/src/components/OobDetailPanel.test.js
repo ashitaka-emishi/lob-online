@@ -474,6 +474,17 @@ describe('OobDetailPanel — leader node', () => {
     expect(commandsInput).toBeDefined();
   });
 
+  it('renders specialRules textarea as empty string when value is null (#510)', () => {
+    const wrapper = mount(OobDetailPanel, {
+      props: {
+        node: { ...LEADER_NODE, specialRules: null },
+        nodeType: 'leader',
+        nodePath: 'leaders.union.corps.0',
+      },
+    });
+    expect(wrapper.find('textarea').element.value).toBe('');
+  });
+
   it('renders specialRules textarea with plain string unchanged', () => {
     const wrapper = mount(OobDetailPanel, {
       props: {
@@ -532,6 +543,35 @@ describe('OobDetailPanel — leader node', () => {
       'free text note'
     );
   });
+
+  // All inputs below are stored verbatim (expected === input by design).
+  // JSON.parse scalars (number/bool/null) and arrays hit the isPlainObject guard.
+  // Empty/whitespace strings hit the catch fallback. Plain strings pass through unchanged.
+  it.each([
+    ['number scalar', '42'],
+    ['boolean scalar', 'true'],
+    ['null literal', 'null'],
+    ['quoted string scalar', '"hello"'],
+    ['array', '[1,2,3]'],
+    ['empty string', ''],
+    ['whitespace-only', '   '],
+  ])(
+    'stores %s as raw string rather than parsed value — guards type corruption (#508)',
+    async (_label, input) => {
+      const store = setup();
+      store.updateField = vi.fn();
+      const wrapper = mount(OobDetailPanel, {
+        props: {
+          node: { ...LEADER_NODE, specialRules: null },
+          nodeType: 'leader',
+          nodePath: 'leaders.union.corps.0',
+        },
+      });
+      await wrapper.find('textarea').setValue(input);
+      await wrapper.find('textarea').trigger('change');
+      expect(store.updateField).toHaveBeenCalledWith('leaders.union.corps.0.specialRules', input);
+    }
+  );
 
   it('renders counter widget in leader mode when nodePath present', () => {
     const wrapper = mount(OobDetailPanel, {
