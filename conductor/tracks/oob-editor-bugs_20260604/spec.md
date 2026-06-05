@@ -33,11 +33,12 @@ Walker's promoted variant (`walker-promoted`, `baseLeaderId: "walker"`) in `succ
 
 ## Acceptance Criteria
 
-- [ ] Supply and HQ nodes show both a front and back counter image slot in the OOB editor.
-- [ ] Clicking the AotP HQ node opens the counter image widget (no "path not resolvable" fallback).
-- [ ] "Col Joseph Walker (Promoted)" appears only as a child variant under Walker, not as a standalone top-level node.
-- [ ] Selecting a leader with a structured `specialRules` object displays it as pretty-printed JSON in the textarea, and saving parses it back to an object correctly.
-- [ ] All four fixes pass `npm run quality:strict` with no new warnings.
+- [x] Supply and HQ nodes show both a front and back counter image slot in the OOB editor.
+      (analysis confirmed: back slot always renders; no code change needed)
+- [x] Clicking the AotP HQ node opens the counter image widget (no "path not resolvable" fallback).
+- [x] "Col Joseph Walker (Promoted)" appears only as a child variant under Walker, not as a standalone top-level node.
+- [x] Selecting a leader with a structured `specialRules` object displays it as pretty-printed JSON in the textarea, and saving parses it back to an object correctly.
+- [x] All four fixes pass `npm run quality:strict` with no new warnings.
 
 ## Affected Files
 

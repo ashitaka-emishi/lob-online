@@ -351,6 +351,7 @@ function onSpecialRulesChange(e) {
           <label class="field-label">Special Rules</label>
           <textarea
             class="field-input field-textarea"
+            rows="6"
             :value="specialRulesDisplay(node.specialRules)"
             @change="onSpecialRulesChange($event)"
           />
