@@ -474,7 +474,7 @@ describe('OobDetailPanel — leader node', () => {
     expect(commandsInput).toBeDefined();
   });
 
-  it('renders specialRules textarea', () => {
+  it('renders specialRules textarea with plain string unchanged', () => {
     const wrapper = mount(OobDetailPanel, {
       props: {
         node: { ...LEADER_NODE, specialRules: 'Flanker' },
@@ -483,6 +483,54 @@ describe('OobDetailPanel — leader node', () => {
       },
     });
     expect(wrapper.find('textarea').element.value).toBe('Flanker');
+  });
+
+  it('renders specialRules textarea as pretty-printed JSON when value is an object (#506-4)', () => {
+    const rules = { arrivedOnMap: false, arrivalTime: '15:00' };
+    const wrapper = mount(OobDetailPanel, {
+      props: {
+        node: { ...LEADER_NODE, specialRules: rules },
+        nodeType: 'leader',
+        nodePath: 'leaders.union.corps.0',
+      },
+    });
+    expect(wrapper.find('textarea').element.value).toBe(JSON.stringify(rules, null, 2));
+    expect(wrapper.find('textarea').element.value).not.toContain('[object Object]');
+  });
+
+  it('parses specialRules back to JSON object on save (#506-4)', async () => {
+    const store = setup();
+    store.updateField = vi.fn();
+    const rules = { arrivedOnMap: false };
+    const wrapper = mount(OobDetailPanel, {
+      props: {
+        node: { ...LEADER_NODE, specialRules: rules },
+        nodeType: 'leader',
+        nodePath: 'leaders.union.corps.0',
+      },
+    });
+    const newRules = { arrivedOnMap: true };
+    await wrapper.find('textarea').setValue(JSON.stringify(newRules));
+    await wrapper.find('textarea').trigger('change');
+    expect(store.updateField).toHaveBeenCalledWith('leaders.union.corps.0.specialRules', newRules);
+  });
+
+  it('stores specialRules as plain string when textarea value is not valid JSON (#506-4)', async () => {
+    const store = setup();
+    store.updateField = vi.fn();
+    const wrapper = mount(OobDetailPanel, {
+      props: {
+        node: { ...LEADER_NODE, specialRules: null },
+        nodeType: 'leader',
+        nodePath: 'leaders.union.corps.0',
+      },
+    });
+    await wrapper.find('textarea').setValue('free text note');
+    await wrapper.find('textarea').trigger('change');
+    expect(store.updateField).toHaveBeenCalledWith(
+      'leaders.union.corps.0.specialRules',
+      'free text note'
+    );
   });
 
   it('renders counter widget in leader mode when nodePath present', () => {
