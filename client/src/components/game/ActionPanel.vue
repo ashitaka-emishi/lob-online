@@ -1,5 +1,7 @@
 <script setup>
-defineProps({
+import { computed } from 'vue';
+
+const props = defineProps({
   phase: { type: String, default: null },
   step: { type: String, default: null },
   turn: { type: Number, default: null },
@@ -7,9 +9,29 @@ defineProps({
   validActions: { type: Array, default: () => [] },
   pending: { type: Boolean, default: false },
   localPlayerSide: { type: String, default: null },
+  // Type string of the submitted action — used to target the spinner on the correct
+  // button rather than always targeting validActions[0]. (#500)
+  pendingActionType: { type: String, default: null },
 });
 
 const emit = defineEmits(['submit-action']);
+
+const SUMMARY_ID = 'action-panel-summary';
+
+// Screen reader live region — announces turn-handoff and submission state. (#497)
+// Pending state must be announced here because aria-busy suppresses descendant
+// announcements without itself being spoken aloud.
+const turnAnnouncement = computed(() => {
+  if (props.pending) {
+    const action = props.pendingActionType ? toTitleCase(props.pendingActionType) : 'action';
+    return `Submitting ${action}…`;
+  }
+  if (!props.phase) return '';
+  if (props.activePlayer !== props.localPlayerSide) {
+    return `Waiting for ${props.activePlayer}`;
+  }
+  return `Your turn — ${props.phase}`;
+});
 
 function toTitleCase(type) {
   return type
@@ -24,14 +46,26 @@ function handleClick(action) {
 </script>
 
 <template>
-  <div class="action-panel">
-    <div v-if="turn !== null && phase" class="summary">
+  <section class="action-panel" role="region" aria-label="Actions">
+    <!-- Screen reader live region: announces turn-handoff (#497) -->
+    <div class="sr-only" aria-live="polite" aria-atomic="true">{{ turnAnnouncement }}</div>
+
+    <div v-if="turn !== null && phase" :id="SUMMARY_ID" class="summary">
       Turn {{ turn }} — {{ phase }} ({{ step }})
     </div>
     <div v-if="activePlayer !== localPlayerSide" class="waiting">
       Waiting for {{ activePlayer }}…
     </div>
-    <div v-else class="actions">
+    <!-- aria-busy signals assistive tech that the action container is processing (#497) -->
+    <!-- aria-describedby links buttons to the turn summary for context (#498) -->
+    <div
+      v-else
+      class="actions"
+      role="group"
+      aria-label="Available actions"
+      :aria-busy="pending"
+      :aria-describedby="turn !== null && phase ? SUMMARY_ID : undefined"
+    >
       <button
         v-for="action in validActions"
         :key="action.type"
@@ -39,15 +73,21 @@ function handleClick(action) {
         :disabled="pending"
         @click="handleClick(action)"
       >
+        <!-- Spinner targets the action that was submitted, not always the first button (#500) -->
         <span
-          v-if="pending && validActions[0]?.type === action.type"
+          v-if="
+            pending &&
+            (pendingActionType
+              ? pendingActionType === action.type
+              : validActions[0]?.type === action.type)
+          "
           class="spinner"
           aria-hidden="true"
         />
         {{ toTitleCase(action.type) }}
       </button>
     </div>
-  </div>
+  </section>
 </template>
 
 <style scoped>
@@ -66,7 +106,7 @@ function handleClick(action) {
 
 .waiting {
   font-size: 0.85rem;
-  color: #6a7a8a;
+  color: #7a8a9a;
   font-style: italic;
 }
 
@@ -92,6 +132,11 @@ function handleClick(action) {
   border-color: #5a4a38;
 }
 
+.action-btn:focus-visible {
+  outline: 2px solid #c8b89a;
+  outline-offset: 2px;
+}
+
 .action-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -113,5 +158,23 @@ function handleClick(action) {
   to {
     transform: rotate(360deg);
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>

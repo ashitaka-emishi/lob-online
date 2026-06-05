@@ -184,6 +184,7 @@ async function mountGameView(
             'activePlayer',
             'validActions',
             'pending',
+            'pendingActionType',
             'localPlayerSide',
           ],
           emits: ['submit-action'],
@@ -495,6 +496,25 @@ describe('GameView — localPlayerSide and validActions (#474)', () => {
     expect(panel.props('localPlayerSide')).toBeNull();
   });
 
+  it('renders error banner when /games/me fetch fails (#496)', async () => {
+    const wrapper = await mountGameView({}, [['/api/v1/games/me', new Error('network failure')]]);
+    await flushPromises();
+    expect(wrapper.find('.error-banner').exists()).toBe(true);
+    expect(wrapper.find('.error-banner').text()).toMatch(/identity/i);
+  });
+
+  it('passes pendingActionType from store pendingAction to ActionPanel (#500)', async () => {
+    const wrapper = await mountGameView({ pendingAction: { type: 'END_PHASE', payload: null } });
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('pendingActionType')).toBe('END_PHASE');
+  });
+
+  it('passes pendingActionType=null to ActionPanel when pendingAction is null (#500)', async () => {
+    const wrapper = await mountGameView({ pendingAction: null });
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    expect(panel.props('pendingActionType')).toBeNull();
+  });
+
   it('passes empty validActions when activePlayer does not match localPlayerSide', async () => {
     const gameState = {
       units: {},
@@ -509,7 +529,7 @@ describe('GameView — localPlayerSide and validActions (#474)', () => {
     expect(panel.props('validActions')).toHaveLength(0);
   });
 
-  it('passes non-empty validActions when activePlayer matches localPlayerSide', async () => {
+  it('passes non-empty validActions when activePlayer matches localPlayerSide and server returns actions (#495)', async () => {
     const gameState = {
       units: {},
       phase: 'command',
@@ -517,7 +537,10 @@ describe('GameView — localPlayerSide and validActions (#474)', () => {
       turn: 1,
       activePlayer: 'union',
     };
-    const wrapper = await mountGameView({ gameState }, [['/api/v1/games/me', { side: 'union' }]]);
+    const wrapper = await mountGameView({ gameState }, [
+      ['/api/v1/games/game-1/actions', { validActions: [{ type: 'END_PHASE', payload: null }] }],
+      ['/api/v1/games/me', { side: 'union' }],
+    ]);
     await flushPromises();
     const panel = wrapper.findComponent({ name: 'ActionPanel' });
     expect(panel.props('validActions').length).toBeGreaterThan(0);

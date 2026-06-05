@@ -274,6 +274,46 @@ describe('UnitStatsPanel — select-unit emission contract (#481)', () => {
   });
 });
 
+// 3-unit paging: next→next→wrap, and prev from A wraps to C (#481)
+describe('UnitStatsPanel — 3-unit paging (#481)', () => {
+  const UNIT_A = FULL_UNIT;
+  const UNIT_B = { ...FULL_UNIT, id: 'unit-b', name: '2nd Brigade' };
+  const UNIT_C = { ...FULL_UNIT, id: 'unit-c', name: '3rd Brigade' };
+
+  it('next→next→next wraps back to A emitting [B, C, A] in order', async () => {
+    const wrapper = mount(UnitStatsPanel, {
+      props: { hexUnits: [UNIT_A, UNIT_B, UNIT_C] },
+    });
+    await wrapper.find('[data-testid="paging-next"]').trigger('click'); // → B
+    await wrapper.find('[data-testid="paging-next"]').trigger('click'); // → C
+    await wrapper.find('[data-testid="paging-next"]').trigger('click'); // → A (wrap)
+    const emitted = wrapper.emitted('select-unit');
+    expect(emitted[0]).toEqual(['unit-b']);
+    expect(emitted[1]).toEqual(['unit-c']);
+    expect(emitted[2]).toEqual(['unit-a']);
+  });
+
+  it('prev from A wraps to C (#481)', async () => {
+    const wrapper = mount(UnitStatsPanel, {
+      props: { hexUnits: [UNIT_A, UNIT_B, UNIT_C] },
+    });
+    await wrapper.find('[data-testid="paging-prev"]').trigger('click'); // wraps A → C
+    const emitted = wrapper.emitted('select-unit');
+    expect(emitted[0]).toEqual(['unit-c']);
+  });
+
+  it('displays correct page indicator across 3-unit traversal', async () => {
+    const wrapper = mount(UnitStatsPanel, {
+      props: { hexUnits: [UNIT_A, UNIT_B, UNIT_C] },
+    });
+    expect(wrapper.find('.paging-controls').text()).toMatch(/1\s*\/\s*3/);
+    await wrapper.find('[data-testid="paging-next"]').trigger('click');
+    expect(wrapper.find('.paging-controls').text()).toMatch(/2\s*\/\s*3/);
+    await wrapper.find('[data-testid="paging-next"]').trigger('click');
+    expect(wrapper.find('.paging-controls').text()).toMatch(/3\s*\/\s*3/);
+  });
+});
+
 describe('UnitStatsPanel — prop change reactivity', () => {
   it('updates when unit prop changes from null to a unit', async () => {
     const wrapper = mount(UnitStatsPanel, { props: { unit: null } });

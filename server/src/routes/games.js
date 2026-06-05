@@ -4,7 +4,7 @@ import express from 'express';
 
 import { requireSide } from '../auth/requireSide.js';
 import { getPlayerSession, setPlayerSession } from '../auth/session.js';
-import { dispatch, ActionError } from '../engine/actions/index.js';
+import { dispatch, getValidActions, ActionError } from '../engine/actions/index.js';
 import { initGameState } from '../engine/init.js';
 import { getScenario } from '../engine/scenario.js';
 import {
@@ -142,6 +142,22 @@ const ACTION_ERROR_STATUS = {
   INVALID_STATE: 500,
   DRAIN_LOOP: 500,
 };
+
+// GET /api/v1/games/:id/actions — return valid actions for the authenticated player. (#495)
+// Uses the same session-side sourcing as POST so clients never supply their own side.
+router.get('/:id/actions', requireSide, async (req, res) => {
+  try {
+    const { id } = req.params;
+    // 401/404/409/403 all handled by requireSide before we reach here.
+    const player = getPlayerSession(req);
+    const state = await loadGame(id);
+    const validActions = getValidActions(state, player.side);
+    res.json({ validActions });
+  } catch (err) {
+    console.error('[route] GET /games/:id/actions error:', err.message);
+    res.status(500).json({ error: 'Failed to load valid actions' });
+  }
+});
 
 // POST /api/v1/games/:id/actions — submit a game action through the pure phase reducer.
 // playerSide is sourced from the authenticated session, never from the request body. (#356 #387)

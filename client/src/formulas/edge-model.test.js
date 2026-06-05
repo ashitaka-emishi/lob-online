@@ -407,5 +407,27 @@ describe('formulas/edge-model', () => {
       stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
       expect(hexes[0].edges[1]).toEqual([{ type: 'road' }]);
     });
+
+    // ── Empty-edges starting variants (#467) ──────────────────────────────────
+    // Guard against crashes when a hex starts with edges:{} or edges:{0:[]} —
+    // the function must treat an empty array the same as an absent face entry.
+
+    it('is a no-op (no throws, no strip count) when hex has edges:{} (empty object)', () => {
+      const hexes = [{ hex: '05.05', playable: false, edges: {} }];
+      expect(() => stripNonPlayableBoundaryEdges(hexes, GRID_SPEC)).not.toThrow();
+      // No face entries exist, so the strip loop does nothing; the cleanup pass
+      // removes the now-empty edges object (same behaviour as post-strip cleanup).
+    });
+
+    it('is a no-op when hex has edges:{0:[]} (face present but empty array)', () => {
+      // The strip guard `hex.edges[fi].length === 0` skips empty arrays
+      const hexes = [
+        { hex: '05.05', edges: { 0: [] } },
+        { hex: '05.06', playable: false },
+      ];
+      stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
+      // Empty array is not stripped — the guard requires length > 0
+      expect(hexes[0].edges[0]).toEqual([]);
+    });
   });
 });
