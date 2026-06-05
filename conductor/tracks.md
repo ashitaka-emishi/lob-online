@@ -141,4 +141,4 @@
 | [x] | pre-m6-debt-score_20260604 | Pre-M6 Debt Score Sprint — Reduce Cumulative Score to < 15 | 2026-06-04 | 2026-06-04 |
 | [x] | oob-editor-bugs_20260604 | OOB Editor Display/Data Bugs (#506) — back-counter, AotP HQ, Walker phantom, specialRules | 2026-06-04 | 2026-06-04 |
 | [ ] | m5-closeout_20260605 | M5 Closeout — Checklist, Handoff Note, and Milestone Closure | 2026-06-05 | 2026-06-05 |
-| [~] | debt-sprint-to-10_20260605 | Debt Sprint — Score 32 → 10 (#508 #509 #502 #503 #504 #505 #510 #511 #512 #469 #385 #205 #204) | 2026-06-05 | 2026-06-05 |
+| [x] | debt-sprint-to-10_20260605 | Debt Sprint — Score 32 → 10 (#508 #509 #502 #503 #504 #505 #510 #511 #512 #469 #385 #205 #204) | 2026-06-05 | 2026-06-05 |
