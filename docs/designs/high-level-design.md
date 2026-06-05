@@ -23,7 +23,7 @@
 
 ---
 
-> **Implementation Status (as of 2026-06-04) — M5 Complete**
+> **Implementation Status (as of 2026-06-05) — M5 Sealed / M5.5 In Progress**
 >
 > **M1 — Scaffold (complete):** tech stack selection, server scaffold (Express + Socket.io),
 > data models (five JSON files: map, scenario, oob, leaders, succession), Zod validation schemas,
@@ -62,8 +62,10 @@
 > client-side `validActions` derivation from `gameState.phase` + `gameState.step`.
 > Leader counter images now assignable via OOB editor.
 >
-> **In progress:** M6 planning — combat resolution, morale checks, orders pipeline.
-> South Mountain scenario data digitization ongoing (map hexes, counter linkages).
+> **In progress:** M5 is sealed. M5.5 (turn-loop cleanup — action enumeration, E2E smoke test,
+> GameView polish) is active. M6 planning (combat resolution, morale checks, orders pipeline)
+> follows M5.5 completion. South Mountain scenario data digitization ongoing (map hexes, counter
+> linkages).
 >
 > Sections describing completed work are accurate to the implementation. Sections describing
 > planned work reflect design intent and may evolve.
@@ -202,16 +204,17 @@ A session that starts live on Saturday, continues asynchronously via Discord not
 
 ### Milestone Overview
 
-| Milestone | Status  | Goal                                                 |
-| --------- | ------- | ---------------------------------------------------- |
-| M1        | ✅ Done | Initial scaffold — tech stack, server, CI, schemas   |
-| M2        | ✅ Done | Dev tools — map editor, scenario editor, OOB editor  |
-| M3        | ✅ Done | Rules engine foundation + map testing tools          |
-| M4        | 🔜 Next | Game state model + initializer + initial setup phase |
-| M5        | Planned | Turn structure + orders + game map UI                |
-| M6        | Planned | Combat + morale                                      |
-| M7        | Planned | Special rules + victory conditions                   |
-| M8        | Planned | Production persistence + multiplayer                 |
+| Milestone | Status  | Goal                                                      |
+| --------- | ------- | --------------------------------------------------------- |
+| M1        | ✅ Done | Initial scaffold — tech stack, server, CI, schemas        |
+| M2        | ✅ Done | Dev tools — map editor, scenario editor, OOB editor       |
+| M3        | ✅ Done | Rules engine foundation + map testing tools               |
+| M4        | ✅ Done | Game state model + initializer + initial setup phase      |
+| M5        | ✅ Done | Turn structure + orders + game map UI                     |
+| M5.5      | 🔜 Next | Turn loop cleanup — action enumeration, E2E smoke, polish |
+| M6        | Planned | Combat + morale                                           |
+| M7        | Planned | Special rules + victory conditions                        |
+| M8        | Planned | Production persistence + multiplayer                      |
 
 M3–M8 together deliver the playable South Mountain MVP. M9+ covers Enhanced Experience
 (Discord DMs, replay viewer, mobile layout) and Extended Content (additional scenarios,
