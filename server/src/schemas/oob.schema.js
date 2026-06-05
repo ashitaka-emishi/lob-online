@@ -104,6 +104,7 @@ const CavalryDivision = z.object({
 
 const UnionOOB = z.object({
   army: EntityName,
+  hq: HqNode.optional(),
   supplyTrain: SupplyNode,
   corps: z.array(Corps),
   cavalryDivision: CavalryDivision,

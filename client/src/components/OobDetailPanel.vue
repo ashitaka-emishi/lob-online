@@ -73,6 +73,23 @@ function onNumberChange(fieldName, e) {
 function onSelectChange(fieldName, e) {
   updateField(fieldName, e.target.value);
 }
+
+// Bug #506-4: specialRules is stored as a JSON object in leaders.json.
+// Display it as pretty-printed JSON so the editor can read it; parse back on save.
+function specialRulesDisplay(value) {
+  if (value == null) return '';
+  if (typeof value === 'object') return JSON.stringify(value, null, 2);
+  return value;
+}
+
+function onSpecialRulesChange(e) {
+  const raw = e.target.value;
+  try {
+    updateField('specialRules', JSON.parse(raw));
+  } catch {
+    updateField('specialRules', raw); // invalid JSON — store raw text as fallback (#508)
+  }
+}
 </script>
 
 <template>
@@ -330,8 +347,8 @@ function onSelectChange(fieldName, e) {
           <label class="field-label">Special Rules</label>
           <textarea
             class="field-input field-textarea"
-            :value="node.specialRules ?? ''"
-            @change="onTextChange('specialRules', $event)"
+            :value="specialRulesDisplay(node.specialRules)"
+            @change="onSpecialRulesChange($event)"
           />
         </div>
 

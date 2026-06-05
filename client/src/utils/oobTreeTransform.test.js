@@ -58,6 +58,24 @@ describe('buildDisplayTree — union top-level', () => {
     const tree = buildDisplayTree(makeOob(), EMPTY_LEADERS, null, 'union');
     expect(tree[0].node._supply).toMatchObject({ id: 'usa-train', name: 'AotP Supply' });
   });
+
+  it('AotP HQ synthetic node carries _nodePath for path-forwarding (#506-2)', () => {
+    const tree = buildDisplayTree(makeOob(), EMPTY_LEADERS, null, 'union');
+    expect(tree[0].node._hq._nodePath).toBe('union.hq');
+  });
+
+  it('AotP HQ reads real hq entry from oob data when present (#506-2)', () => {
+    const oobWithHq = {
+      ...makeOob(),
+      union: {
+        ...makeOob().union,
+        hq: { id: 'usa-army-hq', name: 'AotP HQ', counterRef: null },
+      },
+    };
+    const tree = buildDisplayTree(oobWithHq, EMPTY_LEADERS, null, 'union');
+    expect(tree[0].node._hq.id).toBe('usa-army-hq');
+    expect(tree[0].node._hq._nodePath).toBe('union.hq');
+  });
 });
 
 // ── buildDisplayTree — corps supply (#234) ────────────────────────────────────
@@ -176,6 +194,37 @@ describe('buildDisplayTree — succession variants (#235)', () => {
     const tree = buildDisplayTree(OOB_WITH_WJ_BRIGADE, LEADERS_WITH_BRIGADE, null, 'confederate');
     const brigade = tree[0].node.divisions[0].brigades[0];
     expect(brigade._leader._variants).toBeUndefined();
+  });
+
+  it('variant with accidental commandsId is not indexed as a unit leader (#506-3)', () => {
+    // walker-promoted given commandsId 'wj' — must not shadow the real Walker leader
+    const successionWithBadCommandsId = {
+      union: [],
+      confederate: [
+        {
+          id: 'walker-promoted',
+          name: 'Col Joseph Walker (Promoted)',
+          baseLeaderId: 'walker',
+          commandLevel: 'brigade',
+          commandsId: 'wj', // accidental; should be ignored
+          commandValue: 0,
+          moraleValue: 1,
+        },
+      ],
+    };
+    const tree = buildDisplayTree(
+      OOB_WITH_WJ_BRIGADE,
+      LEADERS_WITH_BRIGADE,
+      successionWithBadCommandsId,
+      'confederate'
+    );
+    const brigade = tree[0].node.divisions[0].brigades[0];
+    // Real Walker leader must still be present
+    expect(brigade._leader).toBeDefined();
+    expect(brigade._leader.id).toBe('walker');
+    // Variant must still appear as a child of Walker, not replace him
+    expect(brigade._leader._variants).toHaveLength(1);
+    expect(brigade._leader._variants[0].id).toBe('walker-promoted');
   });
 });
 

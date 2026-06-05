@@ -6,6 +6,7 @@
     "moraleValue": "Right number on the promoted/variant counter. Usually 1 for an out-of-depth replacement.",
     "baseLeaderId": "ID of the base leader record in leaders.json that this variant is derived from."
   },
+  "_savedAt": 1780626943922,
   "union": [
     {
       "id": "burnside-9corps",
@@ -49,6 +50,5 @@
       "counterRef": null,
       "specialRules": null
     }
-  ],
-  "_savedAt": 1780331574629
+  ]
 }

@@ -13,9 +13,14 @@
     "ammoClass": "B=high-quality, C=standard, D=depot/reserve — affects shell/canister supply rates",
     "wreckThreshold": "Number of wrecked regiments at which brigade is considered wrecked (checkmark position on Brigade Loss Chart)"
   },
-  "_savedAt": 1780331574629,
+  "_savedAt": 1780626943922,
   "union": {
     "army": "Army of the Potomac",
+    "hq": {
+      "id": "usa-army-hq",
+      "name": "AotP HQ",
+      "counterRef": null
+    },
     "supplyTrain": {
       "id": "usa-train",
       "name": "AotP Supply",
@@ -46,7 +51,7 @@
           "id": "1c-supply",
           "name": "1 Corps Supply",
           "counterRef": {
-            "front": null,
+            "front": "CS1-Front_08.jpg",
             "frontConfidence": null,
             "back": null,
             "backConfidence": null
@@ -904,7 +909,7 @@
           "id": "9c-supply",
           "name": "9 Corps Supply",
           "counterRef": {
-            "front": null,
+            "front": "CS1-Front_73.jpg",
             "frontConfidence": null,
             "back": null,
             "backConfidence": null

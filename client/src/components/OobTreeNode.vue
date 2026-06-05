@@ -170,7 +170,8 @@ const rankAbbrev = computed(() =>
 const displayName = computed(() => props.node.name);
 
 function handleSelect() {
-  store.selectNode(props.node, props.nodeType);
+  // _nodePath on synthetic nodes (e.g. AotP HQ) bypasses findNodePathInTree (#506-2)
+  store.selectNode(props.node, props.nodeType, props.node._nodePath ?? null);
 }
 
 function toggleExpand(event) {

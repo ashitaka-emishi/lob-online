@@ -4,7 +4,9 @@
 
 // ── Leaders lookup ─────────────────────────────────────────────────────────────────────
 
-function buildLeadersMap(leaders, side) {
+// variantIds: Set of IDs that are succession variants — excluded so a variant
+// that accidentally gains a commandsId cannot shadow a real unit leader (#506-3).
+function buildLeadersMap(leaders, side, variantIds = new Set()) {
   const map = {};
   if (!leaders) return map;
   const sideLeaders = leaders[side];
@@ -12,7 +14,7 @@ function buildLeadersMap(leaders, side) {
   Object.values(sideLeaders).forEach((group) => {
     if (Array.isArray(group)) {
       group.forEach((l) => {
-        if (l.commandsId) map[l.commandsId] = l;
+        if (l.commandsId && !variantIds.has(l.id)) map[l.commandsId] = l;
       });
     }
   });
@@ -20,17 +22,27 @@ function buildLeadersMap(leaders, side) {
 }
 
 // Build a map of baseLeaderId → [variant, ...] from succession data.
+// Also returns a variantIds Set so callers can exclude variant entries from the
+// leadersMap — preventing a succession variant with a non-null commandsId from
+// masquerading as a unit leader (#506-3).
 function buildVariantsMap(succession, side) {
   const map = {};
-  if (!succession) return map;
+  const variantIds = new Set();
+  if (!succession) return { map, variantIds };
   const variants = succession[side];
-  if (!Array.isArray(variants)) return map;
+  if (!Array.isArray(variants)) return { map, variantIds };
   variants.forEach((v) => {
+    variantIds.add(v.id);
     if (!map[v.baseLeaderId]) map[v.baseLeaderId] = [];
     map[v.baseLeaderId].push(v);
   });
-  return map;
+  return { map, variantIds };
 }
+
+// Synthetic node path convention: nodes whose id is absent from the raw oob/leaders tree
+// carry an explicit _nodePath field so selectNode can skip findNodePathInTree. Only inject
+// _nodePath on nodes that would otherwise be unresolvable (e.g. usa-army-hq before union.hq
+// existed in oob.json). Nodes with a real id in the data tree resolve automatically.
 
 // _variants is attached to the leader object itself (node._leader._variants) rather than
 // as a flat sibling on the parent node alongside _supply/_hq/_leader. This is intentional:
@@ -210,8 +222,8 @@ export function buildDisplayTree(oob, leaders, succession, side) {
   const sideData = oob[side];
   if (!sideData) return [];
 
-  const leadersMap = buildLeadersMap(leaders, side);
-  const variantsMap = buildVariantsMap(succession, side);
+  const { map: variantsMap, variantIds } = buildVariantsMap(succession, side);
+  const leadersMap = buildLeadersMap(leaders, side, variantIds);
 
   if (side === 'union') {
     // Army leaders (McClellan, Burnside) — commandsId is null so not in leadersMap
@@ -221,7 +233,8 @@ export function buildDisplayTree(oob, leaders, succession, side) {
       id: 'usa-army',
       name: sideData.army ?? 'Army of the Potomac',
       _leaders: armyLeaders,
-      _hq: { id: 'usa-army-hq', name: 'AotP HQ' },
+      // _nodePath lets selectNode resolve this synthetic node without findNodePathInTree (#506-2)
+      _hq: { ...(sideData.hq ?? { id: 'usa-army-hq', name: 'AotP HQ' }), _nodePath: 'union.hq' },
       _supply: sideData.supplyTrain,
       corps: (sideData.corps ?? []).map((c) => processUSACorps(c, leadersMap, variantsMap)),
       cavalryDivision: sideData.cavalryDivision
