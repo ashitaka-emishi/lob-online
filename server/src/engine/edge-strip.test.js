@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import { stripNonPlayableBoundaryEdges } from './edge-strip.js';
+import { stripNonPlayableBoundaryEdges as clientStrip } from '../../../client/src/formulas/edge-model.js';
 
 // Minimal gridSpec for the south-mountain map (flat-top, EVEN_Q, 5-col offset).
 // All hex adjacency tests use column 5 (odd) as the primary hex.
@@ -140,5 +141,64 @@ describe('stripNonPlayableBoundaryEdges (engine/edge-strip.js) (#492)', () => {
     const hexes = [{ hex: '05.05', playable: false, edges: { 0: [{ type: 'road' }] } }];
     stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
     expect(Object.prototype.hasOwnProperty.call(hexes[0], 'edges')).toBe(false);
+  });
+});
+
+// ── Cross-implementation parity (#504) ────────────────────────────────────────
+// Server (engine/edge-strip.js) uses hexNeighborInDir with numeric face indices.
+// Client (formulas/edge-model.js) uses adjacentHexId with direction strings.
+// Both must produce identical hex-array mutations for all canonical faces (0–2).
+
+describe('stripNonPlayableBoundaryEdges — server/client parity (#504)', () => {
+  function makeFixture() {
+    return [
+      {
+        hex: '05.05',
+        edges: {
+          0: [{ type: 'road' }],
+          1: [{ type: 'stream' }],
+          2: [{ type: 'road' }],
+        },
+      },
+      { hex: '05.06', playable: false }, // N neighbor → face 0 stripped
+      { hex: '06.05' }, // NE neighbor (playable) → face 1 preserved
+      { hex: '06.04' }, // SE neighbor (playable) → face 2 preserved
+    ];
+  }
+
+  it('server and client produce identical mutations on a mixed fixture', () => {
+    const serverHexes = makeFixture();
+    const clientHexes = makeFixture();
+
+    stripNonPlayableBoundaryEdges(serverHexes, GRID_SPEC);
+    clientStrip(clientHexes, GRID_SPEC);
+
+    expect(serverHexes).toEqual(clientHexes);
+  });
+
+  it('both strip all faces when hex is non-playable', () => {
+    const serverHexes = [
+      { hex: '05.05', playable: false, edges: { 0: [{ type: 'road' }], 1: [{ type: 'stream' }] } },
+    ];
+    const clientHexes = [
+      { hex: '05.05', playable: false, edges: { 0: [{ type: 'road' }], 1: [{ type: 'stream' }] } },
+    ];
+
+    stripNonPlayableBoundaryEdges(serverHexes, GRID_SPEC);
+    clientStrip(clientHexes, GRID_SPEC);
+
+    expect(serverHexes).toEqual(clientHexes);
+    expect(serverHexes[0].edges).toBeUndefined();
+  });
+
+  it('both preserve edges between two playable hexes', () => {
+    const serverHexes = [{ hex: '05.05', edges: { 0: [{ type: 'road' }] } }, { hex: '05.06' }];
+    const clientHexes = [{ hex: '05.05', edges: { 0: [{ type: 'road' }] } }, { hex: '05.06' }];
+
+    stripNonPlayableBoundaryEdges(serverHexes, GRID_SPEC);
+    clientStrip(clientHexes, GRID_SPEC);
+
+    expect(serverHexes).toEqual(clientHexes);
+    expect(serverHexes[0].edges[0]).toEqual([{ type: 'road' }]);
   });
 });
