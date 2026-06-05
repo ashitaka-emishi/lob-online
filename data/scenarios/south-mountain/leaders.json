@@ -9,7 +9,7 @@
     "looseCannonImmunity": "SM 3.2: D.H. Hill is the ONLY leader who may ignore Loose Cannon initiative results. This immunity is revoked when Longstreet arrives at 5pm.",
     "artilleryReplenishFromAnyReserve": "SM override (LOBv2_GameSpecificUpdates.pdf): Pelham and Pleasonton artillery may replenish from any friendly ammo reserve."
   },
-  "_savedAt": 1780331574629,
+  "_savedAt": 1780626943923,
   "union": {
     "_note": "Army of the Potomac",
     "army": [
@@ -19,9 +19,18 @@
         "rank": "Major General",
         "commandLevel": "army",
         "commandsId": null,
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null,
+        "commandValue": 1,
+        "moraleValue": 1,
+        "counterRef": {
+          "front": "CS1-Front_01.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_01.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalTime": "15:00",
@@ -37,7 +46,16 @@
         "commandsId": null,
         "commandValue": null,
         "moraleValue": null,
-        "counterRef": null,
+        "counterRef": {
+          "front": "CS1-Front_02.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_02.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "supernumerary": true,
           "restrictions": "Burnside may NOT issue or receive orders and may NOT use initiative until: (a) McClellan becomes a casualty and Burnside assumes army command, or (b) Reno becomes a casualty and Burnside takes 9 Corps command (SM 2.1).",
@@ -52,9 +70,18 @@
         "rank": "Major General",
         "commandLevel": "corps",
         "commandsId": "1c",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null,
+        "commandValue": 4,
+        "moraleValue": 4,
+        "counterRef": {
+          "front": "CS1-Front_05.jpg",
+          "frontConfidence": null,
+          "back": null,
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "detachmentAllowed": "1 Corps may detach one Division; each 1 Corps Division may detach one Brigade (SM 2.3)."
         }
@@ -65,9 +92,18 @@
         "rank": "Major General",
         "commandLevel": "corps",
         "commandsId": "9c",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null,
+        "commandValue": 4,
+        "moraleValue": 4,
+        "counterRef": {
+          "front": "CS1-Front_71.jpg",
+          "frontConfidence": null,
+          "back": null,
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "detachmentAllowed": "9 Corps may detach a maximum of two Divisions; may NOT detach Brigades (SM 2.3).",
           "casualtyEffect": "If Reno becomes a casualty, Burnside assumes 9 Corps command (all Burnside restrictions lifted)."
@@ -106,9 +142,18 @@
         "rank": "Brigadier General",
         "commandLevel": "division",
         "commandsId": "1d-1c",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null
+        "commandValue": 2,
+        "moraleValue": 2,
+        "counterRef": {
+          "front": "CS1-Front_09.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_09.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        }
       },
       {
         "id": "ricketts",
@@ -204,18 +249,36 @@
         "name": "Walter Phelps Jr.",
         "commandLevel": "brigade",
         "commandsId": "1b-1d-1c",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null
+        "commandValue": 0,
+        "moraleValue": 1,
+        "counterRef": {
+          "front": "CS1-Front_14.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_14.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        }
       },
       {
         "id": "doubleday",
         "name": "Abner Doubleday",
         "commandLevel": "brigade",
         "commandsId": "2b-1d-1c",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null
+        "commandValue": 2,
+        "moraleValue": 3,
+        "counterRef": {
+          "front": "CS1-Front_20.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_20.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        }
       },
       {
         "id": "patrick",
@@ -428,11 +491,20 @@
         "id": "longstreet",
         "name": "James Longstreet",
         "rank": "Major General",
-        "commandLevel": "wing",
+        "commandLevel": "army",
         "commandsId": "csa-wing",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null,
+        "commandValue": 4,
+        "moraleValue": 4,
+        "counterRef": {
+          "front": "CS1-Front_177.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_177.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalTime": "17:00",
@@ -453,9 +525,18 @@
         "rank": "Major General",
         "commandLevel": "division",
         "commandsId": "dh-div",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null,
+        "commandValue": 4,
+        "moraleValue": 4,
+        "counterRef": {
+          "front": "CS1-Front_141.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_141.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "looseCannonImmunity": true,
           "looseCannonNote": "D.H. Hill is the ONLY leader in the game who may ignore Loose Cannon initiative results. This immunity is active until Longstreet arrives at 5pm, at which point it is revoked (SM 3.2).",
@@ -470,12 +551,12 @@
         "rank": "Brigadier General",
         "commandLevel": "division",
         "commandsId": "h-div",
-        "commandValue": null,
-        "moraleValue": null,
+        "commandValue": 4,
+        "moraleValue": 4,
         "counterRef": {
           "front": "CS1-Front_216.jpg",
           "frontConfidence": 1,
-          "back": null,
+          "back": "CS1-Back_216.jpg",
           "backConfidence": null,
           "promotedFront": null,
           "promotedFrontConfidence": null,
@@ -495,9 +576,18 @@
         "rank": "Brigadier General",
         "commandLevel": "division",
         "commandsId": "j-div",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null,
+        "commandValue": 2,
+        "moraleValue": 2,
+        "counterRef": {
+          "front": "CS1-Front_181.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_181.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "arrivedOnMap": false,
           "detachmentAllowed": "D.R. Jones division may detach up to three Brigades (SM 3.3).",
@@ -512,8 +602,8 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "adh",
-        "commandValue": null,
-        "moraleValue": null,
+        "commandValue": 1,
+        "moraleValue": 3,
         "counterRef": {
           "front": "CS1-Front_146.jpg",
           "frontConfidence": null,
@@ -531,9 +621,18 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "cdh",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null
+        "commandValue": 0,
+        "moraleValue": 1,
+        "counterRef": {
+          "front": "CS1-Front_151.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_151.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        }
       },
       {
         "id": "garland",
@@ -541,9 +640,18 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "gdh",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null,
+        "commandValue": 3,
+        "moraleValue": 4,
+        "counterRef": {
+          "front": "CS1-Front_157.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_157.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "detachedAtStart": true,
           "detachedNote": "Garland's brigade is DETACHED at scenario start to defend Fox's Gap (SM setup)."
@@ -555,9 +663,18 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "ridh",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null
+        "commandValue": 0,
+        "moraleValue": 0,
+        "counterRef": {
+          "front": "CS1-Front_163.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_163.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        }
       },
       {
         "id": "rodes",
@@ -565,9 +682,18 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "rodh",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null
+        "commandValue": 2,
+        "moraleValue": 4,
+        "counterRef": {
+          "front": "CS1-Front_167.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_167.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        }
       },
       {
         "id": "wofford",
@@ -575,9 +701,18 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "wh",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null,
+        "commandValue": 3,
+        "moraleValue": 4,
+        "counterRef": {
+          "front": "CS1-Front_220.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_220.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalTime": "17:00"
@@ -589,9 +724,18 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "lh",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null,
+        "commandValue": 3,
+        "moraleValue": 4,
+        "counterRef": {
+          "front": "CS1-Front_226.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_226.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalTime": "17:00"
@@ -603,9 +747,18 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "aj",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null,
+        "commandValue": 1,
+        "moraleValue": 3,
+        "counterRef": {
+          "front": "CS1-Front_184.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_184.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalNote": "Reinforces per scenario reinforcement schedule."
@@ -617,9 +770,18 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "dj",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null,
+        "commandValue": 1,
+        "moraleValue": 2,
+        "counterRef": {
+          "front": "CS1-Front_189.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_189.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalNote": "Reinforces per scenario reinforcement schedule."
@@ -631,9 +793,18 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "gj",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null,
+        "commandValue": 2,
+        "moraleValue": 4,
+        "counterRef": {
+          "front": "CS1-Front_194.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_194.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "detachedAtStart": true,
           "detachedNote": "Garnett's brigade is DETACHED at scenario start — reinforces Turner's Gap as Order 3 (SM setup)."
@@ -645,9 +816,18 @@
         "rank": "Brigadier General",
         "commandLevel": "brigade",
         "commandsId": "kj",
-        "commandValue": null,
-        "moraleValue": null,
-        "counterRef": null,
+        "commandValue": 1,
+        "moraleValue": 3,
+        "counterRef": {
+          "front": "CS1-Front_200.jpg",
+          "frontConfidence": null,
+          "back": "CS1-Back_200.jpg",
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalNote": "Reinforces per scenario reinforcement schedule."
@@ -661,7 +841,16 @@
         "commandsId": "wj",
         "commandValue": null,
         "moraleValue": null,
-        "counterRef": null,
+        "counterRef": {
+          "front": "CS1-Front_61.jpg",
+          "frontConfidence": null,
+          "back": null,
+          "backConfidence": null,
+          "promotedFront": null,
+          "promotedFrontConfidence": null,
+          "promotedBack": null,
+          "promotedBackConfidence": null
+        },
         "specialRules": {
           "arrivedOnMap": false,
           "arrivalNote": "Reinforces per scenario reinforcement schedule."
