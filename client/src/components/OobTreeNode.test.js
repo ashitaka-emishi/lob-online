@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import { useOobStore } from '../stores/useOobStore.js';
@@ -118,25 +118,21 @@ describe('OobTreeNode — selection', () => {
 
   it('forwards node._nodePath as explicit path when present (#508b)', async () => {
     const store = setup();
-    const wrapper = mount(OobTreeNode, {
-      props: {
-        node: { id: 'usa-army-hq', name: 'AotP HQ', _nodePath: 'union.hq' },
-        nodeType: 'hq',
-      },
-    });
+    const spy = vi.spyOn(store, 'selectNode');
+    const node = { id: 'usa-army-hq', name: 'AotP HQ', _nodePath: 'union.hq' };
+    const wrapper = mount(OobTreeNode, { props: { node, nodeType: 'hq' } });
     await wrapper.find('.node-row').trigger('click');
-    expect(store.selectedNodePath).toBe('union.hq');
+    expect(spy).toHaveBeenCalledWith(node, 'hq', 'union.hq');
   });
 
   it('passes null as path when node has no _nodePath (#508b)', async () => {
     const store = setup();
-    const wrapper = mount(OobTreeNode, {
-      props: { node: { id: '1c-hq', name: '1 Corps HQ' }, nodeType: 'hq' },
-    });
+    const spy = vi.spyOn(store, 'selectNode');
+    const node = { id: '1c-hq', name: '1 Corps HQ' };
+    const wrapper = mount(OobTreeNode, { props: { node, nodeType: 'hq' } });
     await wrapper.find('.node-row').trigger('click');
-    // No _nodePath — selectNode falls through to findNodePathInTree (returns null for fixture)
-    expect(store.selectedNode?.id).toBe('1c-hq');
-    expect(store.selectedNodePath).toBeNull();
+    // Component passes null when _nodePath is absent — pins handleSelect contract directly
+    expect(spy).toHaveBeenCalledWith(node, 'hq', null);
   });
 });
 

@@ -544,15 +544,20 @@ describe('OobDetailPanel — leader node', () => {
     );
   });
 
+  // All inputs below are stored verbatim (expected === input by design).
+  // JSON.parse scalars (number/bool/null) and arrays hit the isPlainObject guard.
+  // Empty/whitespace strings hit the catch fallback. Plain strings pass through unchanged.
   it.each([
-    ['number scalar', '42', '42'],
-    ['boolean scalar', 'true', 'true'],
-    ['null literal', 'null', 'null'],
-    ['string scalar', '"hello"', '"hello"'],
-    ['array', '[1,2,3]', '[1,2,3]'],
+    ['number scalar', '42'],
+    ['boolean scalar', 'true'],
+    ['null literal', 'null'],
+    ['quoted string scalar', '"hello"'],
+    ['array', '[1,2,3]'],
+    ['empty string', ''],
+    ['whitespace-only', '   '],
   ])(
     'stores %s as raw string rather than parsed value — guards type corruption (#508)',
-    async (_label, input, expected) => {
+    async (_label, input) => {
       const store = setup();
       store.updateField = vi.fn();
       const wrapper = mount(OobDetailPanel, {
@@ -564,10 +569,7 @@ describe('OobDetailPanel — leader node', () => {
       });
       await wrapper.find('textarea').setValue(input);
       await wrapper.find('textarea').trigger('change');
-      expect(store.updateField).toHaveBeenCalledWith(
-        'leaders.union.corps.0.specialRules',
-        expected
-      );
+      expect(store.updateField).toHaveBeenCalledWith('leaders.union.corps.0.specialRules', input);
     }
   );
 

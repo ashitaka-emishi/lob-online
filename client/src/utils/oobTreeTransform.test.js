@@ -91,12 +91,10 @@ describe('buildDisplayTree — union top-level', () => {
     };
     const tree = buildDisplayTree(oobWithHq, EMPTY_LEADERS, null, 'union');
     const nodePath = tree[0].node._hq._nodePath; // 'union.hq'
-    // Navigate the path segments against the raw data to prove they resolve
-    const segments = nodePath.split('.');
-    let node = oobWithHq;
-    for (const seg of segments) node = node?.[seg];
-    expect(node).toBeDefined();
-    expect(node.id).toBe('usa-army-hq');
+    // Navigate the literal path against the raw data — breaks if the schema key is renamed
+    const resolved = nodePath.split('.').reduce((o, k) => o?.[k], oobWithHq);
+    expect(resolved).toBeDefined();
+    expect(resolved.id).toBe('usa-army-hq');
   });
 });
 
