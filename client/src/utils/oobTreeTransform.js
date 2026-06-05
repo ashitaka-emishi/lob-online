@@ -39,6 +39,11 @@ function buildVariantsMap(succession, side) {
   return { map, variantIds };
 }
 
+// Synthetic node path convention: nodes whose id is absent from the raw oob/leaders tree
+// carry an explicit _nodePath field so selectNode can skip findNodePathInTree. Only inject
+// _nodePath on nodes that would otherwise be unresolvable (e.g. usa-army-hq before union.hq
+// existed in oob.json). Nodes with a real id in the data tree resolve automatically.
+
 // _variants is attached to the leader object itself (node._leader._variants) rather than
 // as a flat sibling on the parent node alongside _supply/_hq/_leader. This is intentional:
 // variants are properties of the leader — who can command the unit — not of the unit itself.

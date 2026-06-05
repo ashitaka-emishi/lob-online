@@ -87,7 +87,7 @@ function onSpecialRulesChange(e) {
   try {
     updateField('specialRules', JSON.parse(raw));
   } catch {
-    updateField('specialRules', raw);
+    updateField('specialRules', raw); // invalid JSON — store raw text as fallback (#508)
   }
 }
 </script>
