@@ -60,9 +60,11 @@ function makeGameStore(overrides = {}) {
     error: null,
     mapConfigError: null,
     pendingAction: null,
+    serverValidActions: [],
     loadGame: vi.fn(),
     submitAction: vi.fn(),
     refreshGame: vi.fn(),
+    refreshValidActions: vi.fn().mockResolvedValue(undefined),
     selectUnit: vi.fn(),
     deselectUnit: vi.fn(),
     ...overrides,
@@ -529,7 +531,7 @@ describe('GameView — localPlayerSide and validActions (#474)', () => {
     expect(panel.props('validActions')).toHaveLength(0);
   });
 
-  it('passes non-empty validActions when activePlayer matches localPlayerSide and server returns actions (#495)', async () => {
+  it('passes non-empty validActions when activePlayer matches localPlayerSide and store has actions (#495)', async () => {
     const gameState = {
       units: {},
       phase: 'command',
@@ -537,10 +539,10 @@ describe('GameView — localPlayerSide and validActions (#474)', () => {
       turn: 1,
       activePlayer: 'union',
     };
-    const wrapper = await mountGameView({ gameState }, [
-      ['/api/v1/games/game-1/actions', { validActions: [{ type: 'END_PHASE', payload: null }] }],
-      ['/api/v1/games/me', { side: 'union' }],
-    ]);
+    const wrapper = await mountGameView(
+      { gameState, serverValidActions: [{ type: 'END_PHASE', payload: null }] },
+      [['/api/v1/games/me', { side: 'union' }]]
+    );
     await flushPromises();
     const panel = wrapper.findComponent({ name: 'ActionPanel' });
     expect(panel.props('validActions').length).toBeGreaterThan(0);

@@ -19,6 +19,32 @@ export const useGameStore = defineStore('game', () => {
 
   const pendingAction = ref(null);
 
+  // Valid actions fetched from GET /api/v1/games/:id/actions. (#502)
+  // Stored here so GameView.vue doesn't need its own serverValidActions ref.
+  const serverValidActions = ref([]);
+
+  // Generation counter for refreshValidActions — ensures burst socket events only
+  // trigger one fetch: each call increments _actionsGeneration; the response is
+  // discarded if a newer call has already started. (#502)
+  let _actionsGeneration = 0;
+
+  async function refreshValidActions(gameId) {
+    const gen = ++_actionsGeneration;
+    try {
+      const r = await fetch(`/api/v1/games/${gameId}/actions`);
+      if (gen !== _actionsGeneration) return;
+      if (!r.ok) {
+        serverValidActions.value = [];
+        return;
+      }
+      const data = await r.json();
+      if (gen !== _actionsGeneration) return;
+      serverValidActions.value = data.validActions ?? [];
+    } catch {
+      if (gen === _actionsGeneration) serverValidActions.value = [];
+    }
+  }
+
   const selectedUnit = computed(() => {
     if (!gameState.value || !selectedUnitId.value) return null;
     return gameState.value.units[selectedUnitId.value] ?? null;
@@ -114,9 +140,11 @@ export const useGameStore = defineStore('game', () => {
     error,
     mapConfigError,
     pendingAction,
+    serverValidActions,
     loadGame,
     submitAction,
     refreshGame,
+    refreshValidActions,
     selectUnit,
     deselectUnit,
   };

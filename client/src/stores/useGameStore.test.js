@@ -634,3 +634,59 @@ describe('useGameStore — selectedUnit computed', () => {
     expect(store.selectedUnit).toBeNull();
   });
 });
+
+describe('useGameStore — refreshValidActions (#502)', () => {
+  it('populates serverValidActions on success', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ validActions: [{ type: 'END_PHASE', payload: null }] }),
+      })
+    );
+    const store = useGameStore();
+    await store.refreshValidActions('g1');
+    expect(store.serverValidActions).toEqual([{ type: 'END_PHASE', payload: null }]);
+  });
+
+  it('sets serverValidActions to [] when response is not ok', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 401, json: () => Promise.resolve({}) })
+    );
+    const store = useGameStore();
+    await store.refreshValidActions('g1');
+    expect(store.serverValidActions).toEqual([]);
+  });
+
+  it('sets serverValidActions to [] on fetch error', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')));
+    const store = useGameStore();
+    await store.refreshValidActions('g1');
+    expect(store.serverValidActions).toEqual([]);
+  });
+
+  it('rapid successive calls only apply the last fetch result (#502)', async () => {
+    let callCount = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(() => {
+        const n = ++callCount;
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ validActions: [{ type: `ACTION_${n}`, payload: null }] }),
+        });
+      })
+    );
+    const store = useGameStore();
+    // Fire three calls without awaiting — only the last should win
+    const p1 = store.refreshValidActions('g1');
+    const p2 = store.refreshValidActions('g1');
+    const p3 = store.refreshValidActions('g1');
+    await Promise.all([p1, p2, p3]);
+    // Generation 3 wins; earlier results are discarded
+    expect(store.serverValidActions).toEqual([{ type: 'ACTION_3', payload: null }]);
+  });
+});
