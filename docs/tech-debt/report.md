@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-05 after PR #517._
+_Last updated: 2026-06-06 after PR #517 (team-review)._
 
 ---
 
@@ -11,7 +11,7 @@ _Last updated: 2026-06-05 after PR #517._
 | Open debt items                  | 6                                                                     |
 | Cumulative debt score (net open) | 12                                                                    |
 | Highest-risk item                | Add Content-Security-Policy headers to Express server (#403, score 2) |
-| PRs tracked                      | 253                                                                   |
+| PRs tracked                      | 254                                                                   |
 
 ---
 
@@ -315,6 +315,7 @@ _Last updated: 2026-06-05 after PR #517._
 | 2026-06-05 | PR #517 (resolved #385)                                        | -1                   | —         | 447                      |
 | 2026-06-05 | PR #517 (resolved #205)                                        | -1                   | —         | 447                      |
 | 2026-06-05 | PR #517 (resolved #204)                                        | -1                   | —         | 447                      |
+| 2026-06-06 | PR #517 (team-review)                                          | 0                    | 0         | 447                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -324,7 +325,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 Moderate risk. Some deferred workarounds and sub-optimal patterns that will slow future phases if not addressed.
 
-PR #517 (debt-sprint-to-10) closed 14 pts across 10 items — #502 #503 #504 #505 (score 2 each) and #511 #512 #469 #385 #205 #204 (score 1 each) — bringing the net open score from 26 to 12 across 6 items. All remaining open items are M6/M8-blocked and cannot be addressed until those milestones. The 6 open items fall into two clusters: (1) **M6-blocked rules-engine stubs** — #383 #382 #381 #379 (score 2 each), safe stubs awaiting combat/morale data; (2) **M8-blocked security hardening** — #403 (CSP headers, score 2) and #350 (rate limiting, score 2), deferred to M8 auth hardening. No fixable debt remains pre-M6; the project enters M6 at the 10-pt floor.
+PR #517 (debt-sprint-to-10) closed 14 pts across 10 items, bringing the net open score from 26 to 12 across 6 items. The subsequent team-review of PR #517 produced 9 findings (3 HIGH, 4 MEDIUM, 2 LOW), all fixed in-place with zero deferred — second-pass review not required. All remaining open items are M6/M8-blocked. The 6 open items fall into two clusters: (1) **M6-blocked rules-engine stubs** — #383 #382 #381 #379 (score 2 each), safe stubs awaiting combat/morale data; (2) **M8-blocked security hardening** — #403 (CSP headers, score 2) and #350 (rate limiting, score 2), deferred to M8 auth hardening. No fixable debt remains pre-M6.
 
 ---
 
