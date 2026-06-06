@@ -1,17 +1,17 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-05 after PR #516._
+_Last updated: 2026-06-06 after PR #517 (team-review)._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                                             |
-| -------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Open debt items                  | 16                                                                                                |
-| Cumulative debt score (net open) | 26                                                                                                |
-| Highest-risk item                | fix(actionPanel): restore focus after pending clears; aria-disabled over disabled (#505, score 2) |
-| PRs tracked                      | 242                                                                                               |
+| Metric                           | Value                                                                 |
+| -------------------------------- | --------------------------------------------------------------------- |
+| Open debt items                  | 6                                                                     |
+| Cumulative debt score (net open) | 12                                                                    |
+| Highest-risk item                | Add Content-Security-Policy headers to Express server (#403, score 2) |
+| PRs tracked                      | 254                                                                   |
 
 ---
 
@@ -304,6 +304,18 @@ _Last updated: 2026-06-05 after PR #516._
 | 2026-06-05 | PR #516 (resolved #508)                                        | -3                   | —         | 447                      |
 | 2026-06-05 | PR #516 (resolved #509)                                        | -2                   | —         | 447                      |
 | 2026-06-05 | PR #516 (resolved #510)                                        | -1                   | —         | 447                      |
+| 2026-06-05 | PR #517                                                        | 0                    | -14       | 447                      |
+| 2026-06-05 | PR #517 (resolved #505)                                        | -2                   | —         | 447                      |
+| 2026-06-05 | PR #517 (resolved #504)                                        | -2                   | —         | 447                      |
+| 2026-06-05 | PR #517 (resolved #503)                                        | -2                   | —         | 447                      |
+| 2026-06-05 | PR #517 (resolved #502)                                        | -2                   | —         | 447                      |
+| 2026-06-05 | PR #517 (resolved #512)                                        | -1                   | —         | 447                      |
+| 2026-06-05 | PR #517 (resolved #511)                                        | -1                   | —         | 447                      |
+| 2026-06-05 | PR #517 (resolved #469)                                        | -1                   | —         | 447                      |
+| 2026-06-05 | PR #517 (resolved #385)                                        | -1                   | —         | 447                      |
+| 2026-06-05 | PR #517 (resolved #205)                                        | -1                   | —         | 447                      |
+| 2026-06-05 | PR #517 (resolved #204)                                        | -1                   | —         | 447                      |
+| 2026-06-06 | PR #517 (team-review)                                          | 0                    | 0         | 447                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -311,9 +323,9 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Elevated risk. Several significant deferred items that introduce coupling or architectural compromise. Recommend a debt reduction sprint before the next major phase.
+Moderate risk. Some deferred workarounds and sub-optimal patterns that will slow future phases if not addressed.
 
-The debt sprint Phase 1 (PR #516) closed #508 #509 #510 (−6 pts), bringing the net open score from 32 to 26 across 16 items. The 16 open items fall into four clusters: (1) **architecture/coupling** — #502 and #503 (score 2 each) are low-risk today but widen with M6 action expansion; (2) **accessibility/test** — #504 (score 2, edge-strip parity test) and #505 (score 2, ActionPanel focus restore + aria-disabled) are the remaining fixable score-2 items from the debt sprint; #512 (score 1, textarea label association) is a pre-existing panel-wide gap; (3) **M6/M8 blocked** — #383 #382 #381 #379 (rules-engine stubs awaiting M6 combat data, score 2 each), #403 #350 (auth/rate-limit hardening deferred to M8, score 2 each); (4) **process/trivial** — #511 (score 1, unchecked spec criteria) and score-1 nice-to-haves #469 #385 #205 #204. The 10-pt floor from the M6/M8-blocked items (#379 #381 #382 #383 #403 #350) cannot be addressed until those milestones; remaining fixable debt is 16 pts across 10 items and is the target of the ongoing debt-sprint-to-10 track.
+PR #517 (debt-sprint-to-10) closed 14 pts across 10 items, bringing the net open score from 26 to 12 across 6 items. The subsequent team-review of PR #517 produced 9 findings (3 HIGH, 4 MEDIUM, 2 LOW), all fixed in-place with zero deferred — second-pass review not required. All remaining open items are M6/M8-blocked. The 6 open items fall into two clusters: (1) **M6-blocked rules-engine stubs** — #383 #382 #381 #379 (score 2 each), safe stubs awaiting combat/morale data; (2) **M8-blocked security hardening** — #403 (CSP headers, score 2) and #350 (rate limiting, score 2), deferred to M8 auth hardening. No fixable debt remains pre-M6.
 
 ---
 
@@ -321,24 +333,14 @@ The debt sprint Phase 1 (PR #516) closed #508 #509 #510 (−6 pts), bringing the
 
 _Ordered by score descending (ties: newest first). Resolved items are removed._
 
-| Score | Issue | Title                                                                                      | PR Introduced | Assessment                                                                                                                                                                                                                                                 |
-| ----- | ----- | ------------------------------------------------------------------------------------------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2     | #505  | fix(actionPanel): restore focus after pending clears; consider aria-disabled over disabled | PR #501       | `disabled` removes buttons from the tab order mid-interaction, leaving keyboard/SR users with no focus anchor after action submission. Focus is not restored when pending clears. Low functional risk; a11y gap on keyboard-only path.                     |
-| 2     | #504  | test: add cross-implementation parity test for server/client stripNonPlayableBoundaryEdges | PR #501       | Two independent implementations share the same playability predicate with no parity test. A change to one would silently break the other. Closes naturally when #492 shared-module extraction completes.                                                   |
-| 2     | #503  | fix(games): verify session.gameId matches path :id in GET /:id/actions and sibling routes  | PR #501       | `requireSide` validates the token but not that `session.gameId === req.params.id`. A player for game A can call GET /games/B/actions and receive B's action-type list. No hidden state leaks; consistent with existing sibling routes.                     |
-| 2     | #502  | refactor(gameView): move refreshValidActions into useGameStore with generation guard       | PR #501       | `refreshValidActions` is a component-local fetch outside `useGameStore`'s `_loadGeneration` guard. On a burst of `game:state-updated` events, actions and state could briefly misalign. The `activePlayer` gate masks most staleness; acceptable to defer. |
-| 2     | #403  | Add Content-Security-Policy headers to Express server                                      | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                                                                        |
-| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)                         | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                                                                         |
-| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                                          | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                                                                        |
-| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                                        | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                                                                          |
-| 2     | #379  | getValidActions should enumerate all legal actions for current state                       | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                                                                              |
-| 2     | #350  | server: add rate limiting on POST /api/v1/games routes                                     | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing.                                                       |
-| 1     | #512  | a11y(oob-editor): OobDetailPanel textarea labels + specialRules rows attribute             | PR #507       | Pre-existing panel-wide gap: all inputs/textareas lack programmatic label association. The specialRules textarea also lacks a `rows` attribute, clipping multi-line JSON at ~3 lines — worse for keyboard users who cannot drag the resize handle.         |
-| 1     | #511  | chore(oob-editor): check off spec acceptance criteria for oob-editor-bugs_20260604 track   | PR #507       | All five acceptance criteria in spec.md remain unchecked despite the track being marked complete. Breaks the audit trail the SDLC Completion Contract relies on.                                                                                           |
-| 1     | #469  | chore: remove migrateUnknownTerrain once all checked-in maps are unknown-free              | PR #466       | Dead migration code that will never run once digitization is complete. Trivial to remove but blocked on map digitization milestone; premature removal would break any partially-digitized scenario files still in flight.                                  |
-| 1     | #385  | Add property-based / fuzz tests for dispatch round-trips                                   | PR #375       | Nice-to-have for a rules engine; not blocking. No correctness impact; no milestone assigned.                                                                                                                                                               |
-| 1     | #205  | useOobStore: consider lazy-loading bundled JSON fallbacks                                  | PR #200       | Static imports of oob.json and leaders.json are included in the store chunk even when the server fetch succeeds. Impact is minimal due to lazy-loaded route; noted for future bundle analysis.                                                             |
-| 1     | #204  | OobTreeNode expand/collapse: 200–300 per-instance watchers on shared signals               | PR #200       | Each of ~200 tree nodes installs two watch() calls on injected counter refs. Correct and fast at current scale; flagged for awareness if tree grows to 1000+ nodes.                                                                                        |
+| Score | Issue | Title                                                                | PR Introduced | Assessment                                                                                                                                                                                           |
+| ----- | ----- | -------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2     | #403  | Add Content-Security-Policy headers to Express server                | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                  |
+| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)   | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                   |
+| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                    | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                  |
+| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                  | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                    |
+| 2     | #379  | getValidActions should enumerate all legal actions for current state | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                        |
+| 2     | #350  | server: add rate limiting on POST /api/v1/games routes               | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing. |
 
 ---
 

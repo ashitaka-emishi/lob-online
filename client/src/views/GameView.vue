@@ -28,31 +28,12 @@ const { oobUnitMap, oobError, fetchOob } = useOobData();
 const imgNaturalWidth = ref(1400);
 const imgNaturalHeight = ref(900);
 
-// ── Valid actions (server-sourced) ────────────────────────────────────────────
-// Fetched from GET /api/v1/games/:id/actions after load and after each state update. (#495)
-// Falls back to [] while loading or when it is not the local player's turn.
-const serverValidActions = ref([]);
-
-async function refreshValidActions() {
-  try {
-    const r = await fetch(`/api/v1/games/${gameId}/actions`);
-    if (!r.ok) {
-      serverValidActions.value = [];
-      return;
-    }
-    const data = await r.json();
-    serverValidActions.value = data.validActions ?? [];
-  } catch {
-    serverValidActions.value = [];
-  }
-}
-
 let socket = null;
 const gameId = route.params.id;
 
 onMounted(async () => {
   await Promise.all([gameStore.loadGame(gameId), fetchOob()]);
-  await refreshValidActions();
+  await gameStore.refreshValidActions(gameId);
 
   // intentionally not awaited — identity is non-blocking for initial render
   fetch('/api/v1/games/me')
@@ -69,7 +50,7 @@ onMounted(async () => {
   socket.emit('game:join', { gameId });
   socket.on('game:state-updated', async () => {
     await gameStore.refreshGame(gameId);
-    await refreshValidActions();
+    await gameStore.refreshValidActions(gameId);
   });
 });
 
@@ -86,7 +67,7 @@ onUnmounted(() => {
 const validActions = computed(() => {
   const gs = gameStore.gameState;
   if (!gs || gs.activePlayer !== localPlayerSide.value) return [];
-  return serverValidActions.value;
+  return gameStore.serverValidActions;
 });
 
 // ── Derived display data ──────────────────────────────────────────────────────

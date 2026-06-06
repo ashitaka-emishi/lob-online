@@ -60,9 +60,11 @@ function makeGameStore(overrides = {}) {
     error: null,
     mapConfigError: null,
     pendingAction: null,
+    serverValidActions: [],
     loadGame: vi.fn(),
     submitAction: vi.fn(),
     refreshGame: vi.fn(),
+    refreshValidActions: vi.fn().mockResolvedValue(undefined),
     selectUnit: vi.fn(),
     deselectUnit: vi.fn(),
     ...overrides,
@@ -440,6 +442,23 @@ describe('GameView — socket setup (#474)', () => {
     expect(refreshGame).toHaveBeenCalledWith('game-1');
   });
 
+  it('calls gameStore.refreshValidActions on mount with the game id (#502)', async () => {
+    const refreshValidActions = vi.fn().mockResolvedValue(undefined);
+    await mountGameView({ refreshValidActions });
+    await flushPromises();
+    expect(refreshValidActions).toHaveBeenCalledWith('game-1');
+  });
+
+  it('calls gameStore.refreshValidActions when game:state-updated fires (#502)', async () => {
+    const refreshValidActions = vi.fn().mockResolvedValue(undefined);
+    await mountGameView({ refreshValidActions });
+    await flushPromises();
+    const [, listener] = mockSocket.on.mock.calls.find(([event]) => event === 'game:state-updated');
+    listener();
+    await flushPromises();
+    expect(refreshValidActions).toHaveBeenCalledTimes(2); // once on mount, once on socket event
+  });
+
   it('emits game:leave and disconnects socket on unmount', async () => {
     const wrapper = await mountGameView();
     await flushPromises();
@@ -529,7 +548,7 @@ describe('GameView — localPlayerSide and validActions (#474)', () => {
     expect(panel.props('validActions')).toHaveLength(0);
   });
 
-  it('passes non-empty validActions when activePlayer matches localPlayerSide and server returns actions (#495)', async () => {
+  it('passes non-empty validActions when activePlayer matches localPlayerSide and store has actions (#495)', async () => {
     const gameState = {
       units: {},
       phase: 'command',
@@ -537,10 +556,10 @@ describe('GameView — localPlayerSide and validActions (#474)', () => {
       turn: 1,
       activePlayer: 'union',
     };
-    const wrapper = await mountGameView({ gameState }, [
-      ['/api/v1/games/game-1/actions', { validActions: [{ type: 'END_PHASE', payload: null }] }],
-      ['/api/v1/games/me', { side: 'union' }],
-    ]);
+    const wrapper = await mountGameView(
+      { gameState, serverValidActions: [{ type: 'END_PHASE', payload: null }] },
+      [['/api/v1/games/me', { side: 'union' }]]
+    );
     await flushPromises();
     const panel = wrapper.findComponent({ name: 'ActionPanel' });
     expect(panel.props('validActions').length).toBeGreaterThan(0);
