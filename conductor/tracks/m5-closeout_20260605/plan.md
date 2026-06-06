@@ -23,8 +23,8 @@ no CI gates required beyond format:check on the markdown files.
 
 ## Quality Gates
 
-- [ ] `npm run format:check` (markdown files formatted by Prettier)
-- [ ] No unexpected warnings in test output
+- [x] `npm run format:check` (markdown files formatted by Prettier)
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -32,11 +32,11 @@ no CI gates required beyond format:check on the markdown files.
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Issues #514 and #515 closed
-- [ ] M5 GitHub milestone closed
-- [ ] Ready for `/team-review` (or waived — docs-only PR)
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Issues #514 and #515 closed
+- [x] M5 GitHub milestone closed
+- [x] Ready for `/team-review` (or waived — docs-only PR)
 
 ---
 
@@ -46,11 +46,11 @@ Write the two documents called out in #514 and #515.
 
 ### Tasks
 
-- [ ] Task 1.1: Create `docs/testing/m5-closeout-checklist.md` — manual verification checklist
+- [x] Task 1.1: Create `docs/testing/m5-closeout-checklist.md` — manual verification checklist
       covering: start server + client, create/join game, open GameView, confirm map renders, confirm
       unit counters render, select a unit, confirm UnitStatsPanel updates, confirm ActionPanel
       renders with turn/phase/step, submit END_PHASE if available, confirm state refresh.
-- [ ] Task 1.2: Create `docs/milestones/m5-closeout.md` — formal closeout note covering:
+- [x] Task 1.2: Create `docs/milestones/m5-closeout.md` — formal closeout note covering:
       (a) what M5 delivered (game shell, turn reducer, valid-actions stub, GameView, Socket.io
       plumbing, ActionPanel, useGameStore), (b) what is intentionally stubbed (getValidActions
       returns partial list; Rally/Fluke/Attack-Recovery phase handlers are stubs; no combat
@@ -59,8 +59,8 @@ Write the two documents called out in #514 and #515.
 
 ### Verification
 
-- [ ] Both files exist and render cleanly as markdown
-- [ ] `npm run format:check` passes on new files
+- [x] Both files exist and render cleanly as markdown
+- [x] `npm run format:check` passes on new files
 
 ---
 
@@ -70,17 +70,17 @@ Update `docs/designs/high-level-design.md` to reflect M5 complete and M5.5 in pr
 
 ### Tasks
 
-- [ ] Task 2.1: In the milestone table (M1–M8 rows), mark M5 as "Complete" and add M5.5 row
+- [x] Task 2.1: In the milestone table (M1–M8 rows), mark M5 as "Complete" and add M5.5 row
       ("Turn Loop Cleanup — action enumeration, E2E smoke, polish") as "In Progress".
-- [ ] Task 2.2: Update the "In progress" prose paragraph (currently "M6 planning — combat
+- [x] Task 2.2: Update the "In progress" prose paragraph (currently "M6 planning — combat
       resolution…") to say M5 is sealed, M5.5 is active, M6 planning follows M5.5 completion.
-- [ ] Task 2.3: Update the implementation status heading from "M5 Complete" to reflect M5 sealed /
+- [x] Task 2.3: Update the implementation status heading from "M5 Complete" to reflect M5 sealed /
       M5.5 in progress.
 
 ### Verification
 
-- [ ] HLD milestone table shows M5 Complete and M5.5 In Progress
-- [ ] `npm run format:check` passes
+- [x] HLD milestone table shows M5 Complete and M5.5 In Progress
+- [x] `npm run format:check` passes
 
 ---
 
@@ -90,26 +90,26 @@ Reassign deferred issues to correct milestones and close the M5 milestone.
 
 ### Tasks
 
-- [ ] Task 3.1: Reassign #379 #381 #382 #383 #385 from M5 → M6.
-- [ ] Task 3.2: Reassign #403 from M5 → M8.
-- [ ] Task 3.3: Close issues #514 and #515 with a merge-summary comment referencing this PR.
-- [ ] Task 3.4: Verify M5 milestone now has 0 open issues, then close it via GitHub API.
+- [x] Task 3.1: Reassign #379 #381 #382 #383 #385 from M5 → M6.
+- [x] Task 3.2: Reassign #403 from M5 → M8.
+- [x] Task 3.3: Close issues #514 and #515 with a merge-summary comment referencing this PR.
+- [x] Task 3.4: Verify M5 milestone now has 0 open issues, then close it via GitHub API.
 
 ### Verification
 
-- [ ] `gh api repos/ashitaka-emishi/lob-online/milestones/8 --jq '.open_issues'` returns 0
-- [ ] M5 milestone state is "closed"
+- [x] `gh api repos/ashitaka-emishi/lob-online/milestones/8 --jq '.open_issues'` returns 0
+- [x] M5 milestone state is "closed"
 
 ---
 
 ## Final Verification
 
-- [ ] `docs/testing/m5-closeout-checklist.md` exists
-- [ ] `docs/milestones/m5-closeout.md` exists
-- [ ] HLD updated (M5 Complete, M5.5 In Progress)
-- [ ] All 8 M5 issues reassigned or closed
-- [ ] M5 GitHub milestone closed
-- [ ] `npm run format:check` passes
+- [x] `docs/testing/m5-closeout-checklist.md` exists
+- [x] `docs/milestones/m5-closeout.md` exists
+- [x] HLD updated (M5 Complete, M5.5 In Progress)
+- [x] All 8 M5 issues reassigned or closed
+- [x] M5 GitHub milestone closed
+- [x] `npm run format:check` passes
 
 ---
 
