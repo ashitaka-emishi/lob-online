@@ -442,6 +442,23 @@ describe('GameView — socket setup (#474)', () => {
     expect(refreshGame).toHaveBeenCalledWith('game-1');
   });
 
+  it('calls gameStore.refreshValidActions on mount with the game id (#502)', async () => {
+    const refreshValidActions = vi.fn().mockResolvedValue(undefined);
+    await mountGameView({ refreshValidActions });
+    await flushPromises();
+    expect(refreshValidActions).toHaveBeenCalledWith('game-1');
+  });
+
+  it('calls gameStore.refreshValidActions when game:state-updated fires (#502)', async () => {
+    const refreshValidActions = vi.fn().mockResolvedValue(undefined);
+    await mountGameView({ refreshValidActions });
+    await flushPromises();
+    const [, listener] = mockSocket.on.mock.calls.find(([event]) => event === 'game:state-updated');
+    listener();
+    await flushPromises();
+    expect(refreshValidActions).toHaveBeenCalledTimes(2); // once on mount, once on socket event
+  });
+
   it('emits game:leave and disconnects socket on unmount', async () => {
     const wrapper = await mountGameView();
     await flushPromises();

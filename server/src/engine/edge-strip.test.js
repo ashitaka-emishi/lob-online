@@ -148,6 +148,9 @@ describe('stripNonPlayableBoundaryEdges (engine/edge-strip.js) (#492)', () => {
 // Server (engine/edge-strip.js) uses hexNeighborInDir with numeric face indices.
 // Client (formulas/edge-model.js) uses adjacentHexId with direction strings.
 // Both must produce identical hex-array mutations for all canonical faces (0–2).
+//
+// Return-value contract: the server returns a numeric stripped count; the client
+// returns undefined. These are intentionally different — parity is mutation-only.
 
 describe('stripNonPlayableBoundaryEdges — server/client parity (#504)', () => {
   function makeFixture() {
@@ -166,14 +169,17 @@ describe('stripNonPlayableBoundaryEdges — server/client parity (#504)', () => 
     ];
   }
 
-  it('server and client produce identical mutations on a mixed fixture', () => {
+  it('server and client produce identical mutations on a mixed fixture (odd column)', () => {
     const serverHexes = makeFixture();
     const clientHexes = makeFixture();
 
-    stripNonPlayableBoundaryEdges(serverHexes, GRID_SPEC);
-    clientStrip(clientHexes, GRID_SPEC);
+    const serverCount = stripNonPlayableBoundaryEdges(serverHexes, GRID_SPEC);
+    const clientReturn = clientStrip(clientHexes, GRID_SPEC);
 
     expect(serverHexes).toEqual(clientHexes);
+    // Return-value contracts differ by design: server=count, client=undefined
+    expect(serverCount).toBe(1);
+    expect(clientReturn).toBeUndefined();
   });
 
   it('both strip all faces when hex is non-playable', () => {
@@ -184,21 +190,86 @@ describe('stripNonPlayableBoundaryEdges — server/client parity (#504)', () => 
       { hex: '05.05', playable: false, edges: { 0: [{ type: 'road' }], 1: [{ type: 'stream' }] } },
     ];
 
-    stripNonPlayableBoundaryEdges(serverHexes, GRID_SPEC);
+    const serverCount = stripNonPlayableBoundaryEdges(serverHexes, GRID_SPEC);
     clientStrip(clientHexes, GRID_SPEC);
 
     expect(serverHexes).toEqual(clientHexes);
     expect(serverHexes[0].edges).toBeUndefined();
+    expect(serverCount).toBe(2);
   });
 
   it('both preserve edges between two playable hexes', () => {
     const serverHexes = [{ hex: '05.05', edges: { 0: [{ type: 'road' }] } }, { hex: '05.06' }];
     const clientHexes = [{ hex: '05.05', edges: { 0: [{ type: 'road' }] } }, { hex: '05.06' }];
 
-    stripNonPlayableBoundaryEdges(serverHexes, GRID_SPEC);
+    const serverCount = stripNonPlayableBoundaryEdges(serverHexes, GRID_SPEC);
     clientStrip(clientHexes, GRID_SPEC);
 
     expect(serverHexes).toEqual(clientHexes);
     expect(serverHexes[0].edges[0]).toEqual([{ type: 'road' }]);
+    expect(serverCount).toBe(0);
+  });
+
+  // Even-column tests: EVEN_Q offset shifts NE/SE neighbors differently for even columns.
+  // This is the exact divergence class the two neighbor functions could disagree on.
+  // NE neighbor of 06.05 (even col) is 07.06; SE neighbor is 07.05.
+
+  it('server and client produce identical mutations on even-column face-1 (NE) strip', () => {
+    // NE of 06.05 in EVEN_Q is 07.06
+    const serverHexes = [
+      { hex: '06.05', edges: { 1: [{ type: 'road' }] } },
+      { hex: '07.06', playable: false },
+    ];
+    const clientHexes = [
+      { hex: '06.05', edges: { 1: [{ type: 'road' }] } },
+      { hex: '07.06', playable: false },
+    ];
+
+    const serverCount = stripNonPlayableBoundaryEdges(serverHexes, GRID_SPEC);
+    clientStrip(clientHexes, GRID_SPEC);
+
+    expect(serverHexes).toEqual(clientHexes);
+    expect(serverHexes[0].edges).toBeUndefined();
+    expect(serverCount).toBe(1);
+  });
+
+  it('server and client produce identical mutations on even-column face-2 (SE) strip', () => {
+    // SE of 06.05 in EVEN_Q is 07.05
+    const serverHexes = [
+      { hex: '06.05', edges: { 2: [{ type: 'stream' }] } },
+      { hex: '07.05', playable: false },
+    ];
+    const clientHexes = [
+      { hex: '06.05', edges: { 2: [{ type: 'stream' }] } },
+      { hex: '07.05', playable: false },
+    ];
+
+    const serverCount = stripNonPlayableBoundaryEdges(serverHexes, GRID_SPEC);
+    clientStrip(clientHexes, GRID_SPEC);
+
+    expect(serverHexes).toEqual(clientHexes);
+    expect(serverHexes[0].edges).toBeUndefined();
+    expect(serverCount).toBe(1);
+  });
+
+  it('server and client both preserve even-column edges when neighbors are playable', () => {
+    const serverHexes = [
+      { hex: '06.05', edges: { 1: [{ type: 'road' }], 2: [{ type: 'stream' }] } },
+      { hex: '07.06' }, // NE — playable
+      { hex: '07.05' }, // SE — playable
+    ];
+    const clientHexes = [
+      { hex: '06.05', edges: { 1: [{ type: 'road' }], 2: [{ type: 'stream' }] } },
+      { hex: '07.06' },
+      { hex: '07.05' },
+    ];
+
+    const serverCount = stripNonPlayableBoundaryEdges(serverHexes, GRID_SPEC);
+    clientStrip(clientHexes, GRID_SPEC);
+
+    expect(serverHexes).toEqual(clientHexes);
+    expect(serverHexes[0].edges[1]).toEqual([{ type: 'road' }]);
+    expect(serverHexes[0].edges[2]).toEqual([{ type: 'stream' }]);
+    expect(serverCount).toBe(0);
   });
 });

@@ -241,6 +241,19 @@ describe('ActionPanel — action buttons', () => {
     expect(wrapper.emitted('submit-action')).toBeFalsy();
   });
 
+  it('emits submit-action when button is clicked while not pending (contrast for guard test)', async () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [{ type: 'END_PHASE', payload: null }],
+        pending: false,
+      },
+    });
+    await wrapper.find('button').trigger('click');
+    expect(wrapper.emitted('submit-action')).toBeTruthy();
+    expect(wrapper.emitted('submit-action')[0]).toEqual([{ type: 'END_PHASE', payload: null }]);
+  });
+
   it('shows spinner only on first button when pending is true and pendingActionType is null', () => {
     const wrapper = mount(ActionPanel, {
       props: {

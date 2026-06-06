@@ -20,28 +20,33 @@ export const useGameStore = defineStore('game', () => {
   const pendingAction = ref(null);
 
   // Valid actions fetched from GET /api/v1/games/:id/actions. (#502)
-  // Stored here so GameView.vue doesn't need its own serverValidActions ref.
+  // Owned by the store (not GameView) because valid-actions are part of the authoritative
+  // game snapshot and must be version-coupled to gameState.
   const serverValidActions = ref([]);
 
   // Generation counter for refreshValidActions — ensures burst socket events only
   // trigger one fetch: each call increments _actionsGeneration; the response is
   // discarded if a newer call has already started. (#502)
+  // Mirrors the _loadGeneration pattern used by loadGame.
   let _actionsGeneration = 0;
 
   async function refreshValidActions(gameId) {
     const gen = ++_actionsGeneration;
     try {
-      const r = await fetch(`/api/v1/games/${gameId}/actions`);
+      // Use res to match naming convention in submitAction/loadGame
+      const res = await fetch(`/api/v1/games/${gameId}/actions`);
       if (gen !== _actionsGeneration) return;
-      if (!r.ok) {
+      if (!res.ok) {
+        // Fail-soft: absent actions are non-fatal; degrade to empty list rather than
+        // error banner. Diverges from loadGame which sets error.value — intentional.
         serverValidActions.value = [];
         return;
       }
-      const data = await r.json();
+      const data = await res.json();
       if (gen !== _actionsGeneration) return;
       serverValidActions.value = data.validActions ?? [];
     } catch {
-      if (gen === _actionsGeneration) serverValidActions.value = [];
+      if (gen === _actionsGeneration) serverValidActions.value = []; // fail-soft
     }
   }
 

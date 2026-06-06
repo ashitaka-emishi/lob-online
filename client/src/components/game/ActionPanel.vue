@@ -41,6 +41,10 @@ function toTitleCase(type) {
 }
 
 // Track the last-clicked button element so focus can be restored when pending clears. (#505)
+// Uses aria-disabled (not native disabled) so the button stays in the tab order and
+// remains focusable — native disabled would remove it from the tab order, breaking restore.
+// Three-part protection while pending: aria-disabled (AT announcement), pointer-events:none
+// (mouse), and the JS guard below (keyboard Enter/Space — the authoritative block).
 const _lastClickedBtn = ref(null);
 
 // Restore focus to the button that triggered submission once the pending state clears. (#505)
@@ -57,7 +61,7 @@ watch(
 );
 
 function handleClick(action, event) {
-  if (props.pending) return;
+  if (props.pending) return; // sole keyboard guard — see comment above
   _lastClickedBtn.value = event.currentTarget;
   emit('submit-action', { type: action.type, payload: action.payload });
 }

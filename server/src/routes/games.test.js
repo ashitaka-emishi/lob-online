@@ -467,6 +467,17 @@ describe('POST /api/v1/games/:id/actions', () => {
     expect(res.status).toBe(401);
   });
 
+  it('returns 401 when authenticated player for game A posts action to game B (#503)', async () => {
+    const OTHER_UUID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', token: 'tok' });
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 0 });
+    expect(res.status).toBe(401);
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
   it('returns 400 when action type is missing (#356)', async () => {
     getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);

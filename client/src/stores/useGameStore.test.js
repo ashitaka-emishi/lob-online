@@ -667,12 +667,28 @@ describe('useGameStore — refreshValidActions (#502)', () => {
     expect(store.serverValidActions).toEqual([]);
   });
 
-  it('rapid successive calls only apply the last fetch result (#502)', async () => {
+  it('out-of-order responses: stale result from gen-1 arriving after gen-3 is discarded (#502)', async () => {
+    // gen-1 fetch is deferred and resolves LAST (simulates a slow response overtaken by two
+    // later calls). Without the _actionsGeneration guard, gen-1 would overwrite gen-3's result.
+    let resolveGen1;
+    const gen1Promise = new Promise((resolve) => {
+      resolveGen1 = resolve;
+    });
+
     let callCount = 0;
     vi.stubGlobal(
       'fetch',
       vi.fn().mockImplementation(() => {
         const n = ++callCount;
+        if (n === 1) {
+          // Return a deferred response for gen-1 — resolves after gen-2 and gen-3
+          return gen1Promise.then(() => ({
+            ok: true,
+            status: 200,
+            json: () =>
+              Promise.resolve({ validActions: [{ type: 'ACTION_STALE', payload: null }] }),
+          }));
+        }
         return Promise.resolve({
           ok: true,
           status: 200,
@@ -680,13 +696,17 @@ describe('useGameStore — refreshValidActions (#502)', () => {
         });
       })
     );
+
     const store = useGameStore();
-    // Fire three calls without awaiting — only the last should win
-    const p1 = store.refreshValidActions('g1');
-    const p2 = store.refreshValidActions('g1');
-    const p3 = store.refreshValidActions('g1');
-    await Promise.all([p1, p2, p3]);
-    // Generation 3 wins; earlier results are discarded
+    const p1 = store.refreshValidActions('g1'); // gen-1: slow, will arrive last
+    const p2 = store.refreshValidActions('g1'); // gen-2: resolves immediately
+    const p3 = store.refreshValidActions('g1'); // gen-3: resolves immediately — should win
+    await Promise.all([p2, p3]); // let gen-2 and gen-3 settle first
+    expect(store.serverValidActions).toEqual([{ type: 'ACTION_3', payload: null }]);
+
+    // Now deliver the stale gen-1 response — guard must discard it
+    resolveGen1();
+    await p1;
     expect(store.serverValidActions).toEqual([{ type: 'ACTION_3', payload: null }]);
   });
 });
