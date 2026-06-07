@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createRouter, createWebHistory } from 'vue-router';
 
@@ -11,48 +11,42 @@ const stubRouter = createRouter({
   ],
 });
 
-// Must import after vi.mock calls
 let HomeView;
 
 describe('HomeView', () => {
   beforeEach(async () => {
+    vi.stubEnv('VITE_MAP_EDITOR_ENABLED', 'true');
     vi.resetModules();
     HomeView = (await import('./HomeView.vue')).default;
   });
 
-  it('renders the game title', async () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('renders the game title', () => {
     const wrapper = mount(HomeView, { global: { plugins: [stubRouter] } });
     expect(wrapper.text()).toContain('Line of Battle');
   });
 
-  it('renders a Lobby menu button', async () => {
+  it('renders a Lobby menu button', () => {
     const wrapper = mount(HomeView, { global: { plugins: [stubRouter] } });
-    const lobbyLink = wrapper.find('a[href="/lobby"], [to="/lobby"]');
+    const lobbyLink = wrapper.find('a[href="/lobby"]');
     expect(lobbyLink.exists()).toBe(true);
   });
 
-  it('renders an Editor menu button', async () => {
-    const wrapper = mount(HomeView, { global: { plugins: [stubRouter] } });
-    expect(wrapper.text().toLowerCase()).toContain('editor');
-  });
-
-  it('editor button points to /tools/map-editor when editors enabled', async () => {
-    vi.stubEnv('VITE_MAP_EDITOR_ENABLED', 'true');
-    vi.resetModules();
-    HomeView = (await import('./HomeView.vue')).default;
+  it('editor button present and points to /tools/map-editor when editors enabled', () => {
     const wrapper = mount(HomeView, { global: { plugins: [stubRouter] } });
     const editorLink = wrapper.find('[data-testid="editor-link"]');
+    expect(editorLink.exists()).toBe(true);
     expect(editorLink.attributes('href') ?? editorLink.attributes('to')).toBe('/tools/map-editor');
-    vi.unstubAllEnvs();
   });
 
-  it('editor button points to /lobby when editors disabled', async () => {
+  it('editor button hidden when editors disabled', async () => {
     vi.stubEnv('VITE_MAP_EDITOR_ENABLED', 'false');
     vi.resetModules();
     HomeView = (await import('./HomeView.vue')).default;
     const wrapper = mount(HomeView, { global: { plugins: [stubRouter] } });
-    const editorLink = wrapper.find('[data-testid="editor-link"]');
-    expect(editorLink.attributes('href') ?? editorLink.attributes('to')).toBe('/lobby');
-    vi.unstubAllEnvs();
+    expect(wrapper.find('[data-testid="editor-link"]').exists()).toBe(false);
   });
 });

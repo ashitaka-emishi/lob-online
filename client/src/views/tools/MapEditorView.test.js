@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 
-// Stub EditorNav to avoid RouterLink injection errors in tests without a router
+// Stub EditorNav to avoid RouterLink injection errors in tests without a router.
+// EditorNav takes no props, so a bare stub without prop declarations is intentional.
 vi.mock('../../components/EditorNav.vue', () => ({
   default: { name: 'EditorNav', template: '<nav class="editor-nav-stub"></nav>' },
 }));

@@ -2,8 +2,9 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import { io } from 'socket.io-client';
+import { useEditorsEnabled } from '../composables/useEditorsEnabled.js';
 
-const devToolsEnabled = import.meta.env.VITE_MAP_EDITOR_ENABLED === 'true';
+const devToolsEnabled = useEditorsEnabled();
 
 const status = ref('connecting…');
 let socket;

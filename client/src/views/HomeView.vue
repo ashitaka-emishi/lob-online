@@ -1,8 +1,8 @@
 <script setup>
 import { RouterLink } from 'vue-router';
+import { useEditorsEnabled } from '../composables/useEditorsEnabled.js';
 
-const editorsEnabled = import.meta.env.VITE_MAP_EDITOR_ENABLED === 'true';
-const editorTarget = editorsEnabled ? '/tools/map-editor' : '/lobby';
+const editorsEnabled = useEditorsEnabled();
 </script>
 
 <template>
@@ -10,9 +10,14 @@ const editorTarget = editorsEnabled ? '/tools/map-editor' : '/lobby';
     <div class="menu-card">
       <h1>Line of Battle Online</h1>
       <p class="subtitle">South Mountain — RSS #4</p>
-      <nav class="menu">
+      <nav class="menu" aria-label="Main menu">
         <RouterLink to="/lobby" class="menu-btn">Lobby</RouterLink>
-        <RouterLink :to="editorTarget" data-testid="editor-link" class="menu-btn editor-btn">
+        <RouterLink
+          v-if="editorsEnabled"
+          to="/tools/map-editor"
+          data-testid="editor-link"
+          class="menu-btn editor-btn"
+        >
           Editor
         </RouterLink>
       </nav>
@@ -52,7 +57,7 @@ h1 {
 
 .subtitle {
   font-size: 0.9rem;
-  color: #8a7a60;
+  color: #a89a7a;
   letter-spacing: 0.08em;
   margin-top: -1rem;
 }

@@ -1,11 +1,12 @@
 <script setup>
 import { RouterLink } from 'vue-router';
+import { useEditorsEnabled } from '../composables/useEditorsEnabled.js';
 
-const editorsEnabled = import.meta.env.VITE_MAP_EDITOR_ENABLED === 'true';
+const editorsEnabled = useEditorsEnabled();
 </script>
 
 <template>
-  <nav class="editor-nav">
+  <nav class="editor-nav" aria-label="Editor tools">
     <template v-if="editorsEnabled">
       <RouterLink to="/tools/map-editor" data-testid="nav-map-editor" class="nav-link">
         Map Editor
@@ -37,7 +38,7 @@ const editorsEnabled = import.meta.env.VITE_MAP_EDITOR_ENABLED === 'true';
 }
 
 .nav-link {
-  color: #a09070;
+  color: #b8a888;
   text-decoration: none;
   padding: 0.2rem 0.5rem;
   border-radius: 3px;

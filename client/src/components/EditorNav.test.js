@@ -26,7 +26,9 @@ describe('EditorNav', () => {
     vi.resetModules();
     EditorNav = (await import('./EditorNav.vue')).default;
     const wrapper = mount(EditorNav, { global: { plugins: [stubRouter] } });
-    expect(wrapper.find('[data-testid="nav-home"]').exists()).toBe(true);
+    const homeLink = wrapper.find('[data-testid="nav-home"]');
+    expect(homeLink.exists()).toBe(true);
+    expect(homeLink.attributes('href') ?? homeLink.attributes('to')).toBe('/');
   });
 
   it('shows all four tool links when editors enabled', async () => {
@@ -60,6 +62,10 @@ describe('EditorNav', () => {
     const oobEditor = wrapper.find('[data-testid="nav-oob-editor"]');
     const mapTest = wrapper.find('[data-testid="nav-map-test"]');
     const tableTest = wrapper.find('[data-testid="nav-table-test"]');
+    expect(mapEditor.exists()).toBe(true);
+    expect(oobEditor.exists()).toBe(true);
+    expect(mapTest.exists()).toBe(true);
+    expect(tableTest.exists()).toBe(true);
     expect(mapEditor.attributes('href') ?? mapEditor.attributes('to')).toBe('/tools/map-editor');
     expect(oobEditor.attributes('href') ?? oobEditor.attributes('to')).toBe('/tools/oob-editor');
     expect(mapTest.attributes('href') ?? mapTest.attributes('to')).toBe('/tools/map-test');
