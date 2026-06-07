@@ -2,6 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 
+// Stub EditorNav to avoid RouterLink injection errors in tests without a router
+vi.mock('../../components/EditorNav.vue', () => ({
+  default: { name: 'EditorNav', template: '<nav class="editor-nav-stub"></nav>' },
+}));
+
 const MINIMAL_OOB = {
   _status: 'available',
   union: { army: 'Army of the Potomac', corps: [] },

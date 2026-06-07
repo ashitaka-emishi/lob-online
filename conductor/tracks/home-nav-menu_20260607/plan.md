@@ -76,20 +76,20 @@ Build the navigation strip that appears on all four editor/tool pages.
 
 ### Tasks
 
-- [ ] Task 2.1: Write tests for `EditorNav` (jsdom):
+- [x] Task 2.1: Write tests for `EditorNav` (jsdom):
   - All four tool links present when editors enabled.
   - Tool links hidden/disabled when editors disabled.
   - Home/Lobby escape hatch always visible.
-- [ ] Task 2.2: Create `client/src/components/EditorNav.vue` — links to Map Editor, OOB Editor,
+- [x] Task 2.2: Create `client/src/components/EditorNav.vue` — links to Map Editor, OOB Editor,
       Map Test, Table Test, and a Home escape hatch; respects editor-enabled flag.
-- [ ] Task 2.3: Add `<EditorNav>` to `MapEditorView.vue`.
-- [ ] Task 2.4: Add `<EditorNav>` to `OobEditorView.vue`.
-- [ ] Task 2.5: Add `<EditorNav>` to `MapTestView.vue`.
-- [ ] Task 2.6: Add `<EditorNav>` to `TableTestView.vue`.
+- [x] Task 2.3: Add `<EditorNav>` to `MapEditorView.vue`.
+- [x] Task 2.4: Add `<EditorNav>` to `OobEditorView.vue`.
+- [x] Task 2.5: Add `<EditorNav>` to `MapTestView.vue`.
+- [x] Task 2.6: Add `<EditorNav>` to `TableTestView.vue`.
 
 ### Verification
 
-- [ ] `EditorNav` tests pass; each tool page renders the nav strip in the browser.
+- [x] `EditorNav` tests pass; each tool page renders the nav strip in the browser.
 
 ---
 

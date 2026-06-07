@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import EditorNav from '../../components/EditorNav.vue';
 import HexMapOverlay from '../../components/HexMapOverlay.vue';
 import { useCalibration } from '../../composables/useCalibration.js';
 import MovementPathPanel from '../../components/tools/map-test/MovementPathPanel.vue';
@@ -79,6 +80,7 @@ const hexes = computed(() => mapData.value?.hexes ?? []);
 
 <template>
   <div class="map-test-view">
+    <EditorNav />
     <!-- Header -->
     <header class="editor-header">
       <span class="title">Map Test Tool</span>
