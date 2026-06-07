@@ -3,7 +3,7 @@
 **Track ID:** home-nav-menu_20260607
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-07
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -24,12 +24,12 @@ editor integration, (3) LobbyView background + test coverage closeout.
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -37,11 +37,11 @@ editor integration, (3) LobbyView background + test coverage closeout.
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated if any debt was accepted
-- [ ] Ready for `/team-review`
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated if any debt was accepted
+- [x] Ready for `/team-review`
 
 ---
 
@@ -99,26 +99,26 @@ Apply the shared background image to the lobby and ensure all existing tests pas
 
 ### Tasks
 
-- [ ] Task 3.1: Update `LobbyView.vue` to apply `menu-bg.png` as background (same CSS treatment
+- [x] Task 3.1: Update `LobbyView.vue` to apply `menu-bg.png` as background (same CSS treatment
       as `HomeView`).
-- [ ] Task 3.2: Update `LobbyView.test.js` if snapshot or style assertions need adjustment.
-- [ ] Task 3.3: Update existing editor view tests (`MapEditorView.test.js`,
+- [x] Task 3.2: Update `LobbyView.test.js` if snapshot or style assertions need adjustment.
+- [x] Task 3.3: Update existing editor view tests (`MapEditorView.test.js`,
       `OobEditorView.test.js`, `MapTestView.test.js`, `TableTestView.test.js`) to account for
       the new `EditorNav` mount without regressions.
-- [ ] Task 3.4: Run `npm run quality:strict` — fix any lint, format, or test failures.
+- [x] Task 3.4: Run `npm run quality:strict` — fix any lint, format, or test failures.
 
 ### Verification
 
-- [ ] `npm run quality:strict` passes clean with no unexpected warnings.
+- [x] `npm run quality:strict` passes clean with no unexpected warnings.
 
 ---
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met
-- [ ] Tests passing at ≥ 70% line coverage
-- [ ] No unexpected warnings in test output
-- [ ] Ready for `/team-review`
+- [x] All acceptance criteria in spec.md met
+- [x] Tests passing at ≥ 70% line coverage
+- [x] No unexpected warnings in test output
+- [x] Ready for `/team-review`
 
 ---
 

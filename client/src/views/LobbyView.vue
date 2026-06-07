@@ -1,57 +1,59 @@
 <template>
-  <div class="lobby">
-    <h1>Game Lobby</h1>
+  <div class="lobby-bg">
+    <div class="lobby">
+      <h1>Game Lobby</h1>
 
-    <div v-if="store.error" class="error" role="alert">{{ store.error }}</div>
+      <div v-if="store.error" class="error" role="alert">{{ store.error }}</div>
 
-    <table class="game-list" aria-label="Available games">
-      <thead>
-        <tr>
-          <th>Game ID</th>
-          <th class="col-center">Status</th>
-          <th class="col-center">Join</th>
-          <th class="col-center">
-            <button
-              data-testid="new-game-btn"
-              :disabled="store.loading"
-              @click="store.createGame()"
-            >
-              New
-            </button>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="game in store.games" :key="game.id" data-testid="game-row">
-          <td class="game-id">{{ game.id }}</td>
-          <td class="col-center">
-            <span :class="['status-badge', game.status]">{{ statusLabel(game.status) }}</span>
-          </td>
-          <td class="join-actions">
-            <button
-              data-testid="join-usa-btn"
-              :disabled="game.status !== 'open'"
-              @click="store.joinGame(game.id, 'union')"
-            >
-              USA
-            </button>
-            <button
-              data-testid="join-csa-btn"
-              :disabled="game.status !== 'open'"
-              @click="store.joinGame(game.id, 'confederate')"
-            >
-              CSA
-            </button>
-          </td>
-          <td class="col-center">
-            <button data-testid="delete-btn" @click="store.deleteGame(game.id)">Delete</button>
-          </td>
-        </tr>
-        <tr v-if="!store.loading && store.games.length === 0">
-          <td colspan="4" class="empty-state">No games yet.</td>
-        </tr>
-      </tbody>
-    </table>
+      <table class="game-list" aria-label="Available games">
+        <thead>
+          <tr>
+            <th>Game ID</th>
+            <th class="col-center">Status</th>
+            <th class="col-center">Join</th>
+            <th class="col-center">
+              <button
+                data-testid="new-game-btn"
+                :disabled="store.loading"
+                @click="store.createGame()"
+              >
+                New
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="game in store.games" :key="game.id" data-testid="game-row">
+            <td class="game-id">{{ game.id }}</td>
+            <td class="col-center">
+              <span :class="['status-badge', game.status]">{{ statusLabel(game.status) }}</span>
+            </td>
+            <td class="join-actions">
+              <button
+                data-testid="join-usa-btn"
+                :disabled="game.status !== 'open'"
+                @click="store.joinGame(game.id, 'union')"
+              >
+                USA
+              </button>
+              <button
+                data-testid="join-csa-btn"
+                :disabled="game.status !== 'open'"
+                @click="store.joinGame(game.id, 'confederate')"
+              >
+                CSA
+              </button>
+            </td>
+            <td class="col-center">
+              <button data-testid="delete-btn" @click="store.deleteGame(game.id)">Delete</button>
+            </td>
+          </tr>
+          <tr v-if="!store.loading && store.games.length === 0">
+            <td colspan="4" class="empty-state">No games yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
@@ -74,10 +76,22 @@ function statusLabel(status) {
 </script>
 
 <style scoped>
+.lobby-bg {
+  min-height: 100vh;
+  background-image: url('/menu-bg.png');
+  background-size: cover;
+  background-position: center;
+  padding: 2rem 1rem;
+}
+
 .lobby {
   max-width: 720px;
-  margin: 2rem auto;
+  margin: 0 auto;
   font-family: sans-serif;
+  background: rgba(10, 8, 5, 0.82);
+  border: 1px solid #2a2418;
+  border-radius: 6px;
+  padding: 1.5rem 2rem;
 }
 
 .error {
