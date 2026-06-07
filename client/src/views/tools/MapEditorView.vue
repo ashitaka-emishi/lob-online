@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import EditorNav from '../../components/EditorNav.vue';
 import HexMapOverlay from '../../components/HexMapOverlay.vue';
 import {
   STREAM_WALL_GROUPS,
@@ -585,6 +586,7 @@ onUnmounted(() => {
 
 <template>
   <div class="map-editor">
+    <EditorNav />
     <!-- Header -->
     <header class="editor-header">
       <span class="title">Map Editor</span>

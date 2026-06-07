@@ -1,5 +1,6 @@
 <script setup>
 import { computed, defineAsyncComponent, ref } from 'vue';
+import EditorNav from '../../components/EditorNav.vue';
 
 // ── Panel registry — #311 lazy-load each panel SFC ───────────────────────────
 
@@ -99,6 +100,7 @@ const activePanel = computed(
 
 <template>
   <div class="table-test-view">
+    <EditorNav />
     <!-- Header -->
     <header class="editor-header">
       <span class="title">Table Test Tool</span>

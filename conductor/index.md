@@ -14,6 +14,7 @@ Navigation hub for project context.
 
 | Track ID                                                                     | Title                                                      | Status   |
 | ---------------------------------------------------------------------------- | ---------------------------------------------------------- | -------- |
+| [home-nav-menu_20260607](./tracks/home-nav-menu_20260607/index.md)           | App Home Page and Editor Navigation Menu (#518)            | Complete |
 | [pre-m6-debt-sprint_20260601](./tracks/pre-m6-debt-sprint_20260601/index.md) | Pre-M6 Debt Sprint — Issues #476 #477 #478 #479 #480       | Pending  |
 | [m5-debt-cleanup_20260603](./tracks/m5-debt-cleanup_20260603/index.md)       | M5 Debt Cleanup Sprint                                     | Pending  |
 | [pre-m6-debt-score_20260604](./tracks/pre-m6-debt-score_20260604/index.md)   | Pre-M6 Debt Score Sprint — Reduce Cumulative Score to < 15 | Pending  |

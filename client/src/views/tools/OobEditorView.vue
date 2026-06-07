@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import EditorNav from '../../components/EditorNav.vue';
 import { useOobStore } from '../../stores/useOobStore.js';
 import OobHierarchyTree from '../../components/OobHierarchyTree.vue';
 import OobDetailPanel from '../../components/OobDetailPanel.vue';
@@ -23,6 +24,7 @@ function handlePush() {
 
 <template>
   <div class="oob-editor">
+    <EditorNav />
     <header class="toolbar">
       <span class="title">OOB Editor</span>
       <div class="side-toggle">
