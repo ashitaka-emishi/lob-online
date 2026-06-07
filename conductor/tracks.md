@@ -142,3 +142,4 @@
 | [x] | oob-editor-bugs_20260604 | OOB Editor Display/Data Bugs (#506) — back-counter, AotP HQ, Walker phantom, specialRules | 2026-06-04 | 2026-06-04 |
 | [x] | m5-closeout_20260605 | M5 Closeout — Checklist, Handoff Note, and Milestone Closure | 2026-06-05 | 2026-06-06 |
 | [x] | debt-sprint-to-10_20260605 | Debt Sprint — Score 32 → 10 (#508 #509 #502 #503 #504 #505 #510 #511 #512 #469 #385 #205 #204) | 2026-06-05 | 2026-06-05 |
+| [~] | home-nav-menu_20260607 | App Home Page and Editor Navigation Menu (#518) | 2026-06-07 | 2026-06-07 |

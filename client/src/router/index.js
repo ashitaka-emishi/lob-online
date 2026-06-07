@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import StatusView from '../views/StatusView.vue';
+import HomeView from '../views/HomeView.vue';
 
 export default createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', component: StatusView },
+    { path: '/', component: HomeView },
     { path: '/tools/map-editor', component: () => import('../views/tools/MapEditorView.vue') },
     {
       path: '/tools/scenario-editor',
