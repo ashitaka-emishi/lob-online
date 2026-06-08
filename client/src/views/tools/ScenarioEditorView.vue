@@ -249,7 +249,6 @@ onMounted(fetchScenarioData);
       <span v-if="saveStatus === 'saved'" class="save-flash">Saved</span>
       <span v-if="saveStatus === 'error'" class="save-error">Error</span>
       <span v-if="unsaved" class="unsaved-marker">* unsaved</span>
-      <a class="nav-link" href="/tools/map-editor">Map Editor</a>
       <button
         class="pull-btn"
         :disabled="saveStatus === 'saving' || isPulling"
@@ -514,16 +513,6 @@ onMounted(fetchScenarioData);
 .unsaved-marker {
   color: #c8a060;
   font-size: 0.85rem;
-}
-
-.nav-link {
-  color: #a09880;
-  font-size: 0.8rem;
-  text-decoration: none;
-}
-
-.nav-link:hover {
-  color: #e0d8c8;
 }
 
 .pull-btn,
