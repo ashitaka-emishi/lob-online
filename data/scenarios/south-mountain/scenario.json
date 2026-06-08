@@ -76,7 +76,6 @@
       "visibilityHexes": 2
     }
   ],
-  "nightVisibilityCap": 2,
   "flukeStoppageGracePeriodTurns": 8,
   "initiativeSystem": "RSS",
   "looseCannon": true,

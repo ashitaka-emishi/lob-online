@@ -453,11 +453,11 @@ describe('ScenarioEditorView', () => {
     });
   });
 
-  it('rules panel renders Night Visibility Cap input', async () => {
+  it('rules panel renders Fluke Stoppage Grace Period input', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
     const wrapper = mount(ScenarioEditorView, { attachTo: document.body });
     await flushPromises();
-    expect(wrapper.text()).toContain('Night Visibility Cap');
+    expect(wrapper.text()).toContain('Fluke Stoppage Grace Period');
     wrapper.unmount();
   });
 });

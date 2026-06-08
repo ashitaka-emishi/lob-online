@@ -56,12 +56,6 @@ describe('loadScenario — South Mountain scenario', () => {
     expect(scenario.lightingSchedule[0].condition).toBe('day');
   });
 
-  it('exposes nightVisibilityCap', () => {
-    const scenario = loadScenario();
-    // SM scenario — night visibility is capped at 2 hex range
-    expect(scenario.nightVisibilityCap).toBe(2);
-  });
-
   it('exposes turnStructure', () => {
     const scenario = loadScenario();
     expect(scenario.turnStructure).toBeDefined();

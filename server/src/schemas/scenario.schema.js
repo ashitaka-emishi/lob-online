@@ -82,7 +82,6 @@ export const ScenarioSchema = z.object({
   system: z.string(),
   publication: z.string(),
   lightingSchedule: z.array(LightingEntry).optional(),
-  nightVisibilityCap: z.number().int().positive().optional(),
   flukeStoppageGracePeriodTurns: z.number().int().nonnegative().optional(),
   initiativeSystem: z.enum(['RSS', 'LoB']).optional(),
   looseCannon: z.boolean().optional(),

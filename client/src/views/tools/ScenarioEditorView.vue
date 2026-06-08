@@ -426,12 +426,6 @@ onMounted(fetchScenarioData);
       <section class="panel">
         <h2 class="panel-title">Rules</h2>
         <div class="field-grid">
-          <label>Night Visibility Cap (hexes)</label>
-          <input
-            type="number"
-            :value="scenarioData.nightVisibilityCap ?? 2"
-            @change="updateField('nightVisibilityCap', Number($event.target.value))"
-          />
           <label>Fluke Stoppage Grace Period (turns)</label>
           <input
             type="number"

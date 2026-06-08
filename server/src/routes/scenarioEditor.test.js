@@ -92,7 +92,6 @@ describe('PUT /data', () => {
       .send({
         ...VALID_SCENARIO,
         lightingSchedule: [{ startTurn: 1, condition: 'day', visibilityHexes: 999 }],
-        nightVisibilityCap: 2,
         flukeStoppageGracePeriodTurns: 8,
         initiativeSystem: 'RSS',
         looseCannon: true,

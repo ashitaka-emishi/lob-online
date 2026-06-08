@@ -45,7 +45,6 @@ describe('ScenarioSchema — base document', () => {
         { startTurn: 28, condition: 'twilight', visibilityHexes: 4 },
         { startTurn: 31, condition: 'night', visibilityHexes: 2 },
       ],
-      nightVisibilityCap: 2,
       flukeStoppageGracePeriodTurns: 8,
       initiativeSystem: 'RSS',
       looseCannon: true,
@@ -132,20 +131,6 @@ describe('ScenarioSchema — lightingSchedule validation', () => {
       lightingSchedule: [{ startTurn: 31, condition: 'night', visibilityHexes: 2 }],
     });
     expect(result.success).toBe(true);
-  });
-});
-
-describe('ScenarioSchema — nightVisibilityCap validation', () => {
-  it('accepts positive integer', () => {
-    expect(ScenarioSchema.safeParse({ ...BASE, nightVisibilityCap: 2 }).success).toBe(true);
-  });
-
-  it('rejects zero', () => {
-    expect(ScenarioSchema.safeParse({ ...BASE, nightVisibilityCap: 0 }).success).toBe(false);
-  });
-
-  it('rejects negative', () => {
-    expect(ScenarioSchema.safeParse({ ...BASE, nightVisibilityCap: -1 }).success).toBe(false);
   });
 });
 
