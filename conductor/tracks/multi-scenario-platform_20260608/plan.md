@@ -104,25 +104,25 @@ Add `/api/v1/scenarios/:scenarioSlug/...` routes backed by `resolveScenarioPath`
 
 ### Tasks
 
-- [ ] Task 3.1: Create `server/src/routes/scenarioData.js` — handles
+- [x] Task 3.1: Create `server/src/routes/scenarioData.js` — handles
       `GET /api/v1/scenarios/:scenarioSlug/map`,
       `GET /api/v1/scenarios/:scenarioSlug/oob`,
       `GET /api/v1/scenarios/:scenarioSlug/scenario`,
       `GET /api/v1/scenarios/:scenarioSlug/leaders` using `resolveScenarioPath`.
       PUT/write variants for map, oob, scenario, leaders (matching the existing
       `mapEditor`, `oobEditor`, `scenarioEditor` save logic).
-- [ ] Task 3.2: Write route tests for `scenarioData.js` — valid slug returns correct data
+- [x] Task 3.2: Write route tests for `scenarioData.js` — valid slug returns correct data
       file, unknown slug returns 404, SM slug loads south-mountain data.
-- [ ] Task 3.3: Mount `scenarioData` router in `server/src/app.js` at
+- [x] Task 3.3: Mount `scenarioData` router in `server/src/app.js` at
       `/api/v1/scenarios`. Deprecate (or alias) old flat routes with a comment.
-- [ ] Task 3.4: Update all existing editor route handlers (`mapEditor.js`, `oobEditor.js`,
+- [x] Task 3.4: Update all existing editor route handlers (`mapEditor.js`, `oobEditor.js`,
       `leadersEditor.js`, `scenarioEditor.js` if present) to delegate to the new
       scenario-scoped path resolver rather than hardcoded `south-mountain` paths.
 
 ### Verification
 
-- [ ] `npm run test -- scenarioData` green
-- [ ] Existing editor route tests still green (no regressions)
+- [x] `npm run test -- scenarioData` green
+- [x] Existing editor route tests still green (no regressions)
 
 ---
 
