@@ -1,17 +1,17 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-06 after PR #517 (team-review)._
+_Last updated: 2026-06-08 after PR #530._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                 |
-| -------------------------------- | --------------------------------------------------------------------- |
-| Open debt items                  | 6                                                                     |
-| Cumulative debt score (net open) | 12                                                                    |
-| Highest-risk item                | Add Content-Security-Policy headers to Express server (#403, score 2) |
-| PRs tracked                      | 254                                                                   |
+| Metric                           | Value                                                                   |
+| -------------------------------- | ----------------------------------------------------------------------- |
+| Open debt items                  | 14                                                                      |
+| Cumulative debt score (net open) | 24                                                                      |
+| Highest-risk item                | Extract MINUTES_PER_CONDITION into shared engine module (#531, score 3) |
+| PRs tracked                      | 255                                                                     |
 
 ---
 
@@ -316,6 +316,7 @@ _Last updated: 2026-06-06 after PR #517 (team-review)._
 | 2026-06-05 | PR #517 (resolved #205)                                        | -1                   | —         | 447                      |
 | 2026-06-05 | PR #517 (resolved #204)                                        | -1                   | —         | 447                      |
 | 2026-06-06 | PR #517 (team-review)                                          | 0                    | 0         | 447                      |
+| 2026-06-08 | PR #530                                                        | 12                   | +12       | 459                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -323,9 +324,9 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Moderate risk. Some deferred workarounds and sub-optimal patterns that will slow future phases if not addressed.
+Elevated risk. Several significant deferred items that introduce coupling or architectural compromise. Recommend a debt reduction sprint before the next major phase.
 
-PR #517 (debt-sprint-to-10) closed 14 pts across 10 items, bringing the net open score from 26 to 12 across 6 items. The subsequent team-review of PR #517 produced 9 findings (3 HIGH, 4 MEDIUM, 2 LOW), all fixed in-place with zero deferred — second-pass review not required. All remaining open items are M6/M8-blocked. The 6 open items fall into two clusters: (1) **M6-blocked rules-engine stubs** — #383 #382 #381 #379 (score 2 each), safe stubs awaiting combat/morale data; (2) **M8-blocked security hardening** — #403 (CSP headers, score 2) and #350 (rate limiting, score 2), deferred to M8 auth hardening. No fixable debt remains pre-M6.
+PR #530 (editor polish, turn structure rework) added 12 pts across 8 new items, raising net open score from 12 to 24 across 14 items. The PR's team review produced 1 Critical, 2 High, and 9 Medium/Low findings; the Critical and both Highs were fixed in place; the second-pass review on the domain-critical `init.js` engine change produced zero additional deferred findings. The 14 open items fall into three clusters: (1) **PR #530 schema/model debt** — #531 (score 3, shared clock constant), #533 and #532 (score 2 each, totalTurns source-of-truth and startTurn uniqueness), plus 5 trivial test/naming items (#534–#538); (2) **M6-blocked rules-engine stubs** — #383 #382 #381 #379 (score 2 each), safe stubs awaiting combat/morale data; (3) **M8-blocked security hardening** — #403 (CSP headers) and #350 (rate limiting), score 2 each. The #531 shared-clock-module item is the highest-risk actionable item and should be addressed before the engine's turn-walk logic is extended in M6.
 
 ---
 
@@ -333,14 +334,22 @@ PR #517 (debt-sprint-to-10) closed 14 pts across 10 items, bringing the net open
 
 _Ordered by score descending (ties: newest first). Resolved items are removed._
 
-| Score | Issue | Title                                                                | PR Introduced | Assessment                                                                                                                                                                                           |
-| ----- | ----- | -------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2     | #403  | Add Content-Security-Policy headers to Express server                | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                  |
-| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)   | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                   |
-| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                    | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                  |
-| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                  | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                    |
-| 2     | #379  | getValidActions should enumerate all legal actions for current state | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                        |
-| 2     | #350  | server: add rate limiting on POST /api/v1/games routes               | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing. |
+| Score | Issue | Title                                                                | PR Introduced | Assessment                                                                                                                                                                                              |
+| ----- | ----- | -------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3     | #531  | Extract MINUTES_PER_CONDITION into shared engine module              | PR #530       | Constant lives only in `ScenarioEditorView.vue`; `init.js` hardcodes `15` with comment. If condition-aware turn math is needed in the engine, the constant needs a shared location to avoid divergence. |
+| 2     | #533  | Remove totalTurns from scenario.json (now derived)                   | PR #530       | `totalTurns` is now computed by the client but still stored in `scenario.json` and required by the schema; mixed source-of-truth creates confusion and can drift.                                       |
+| 2     | #532  | Enforce startTurn uniqueness in lighting schedule schema             | PR #530       | No Zod `.superRefine()` check on the array; duplicate `startTurn` values pass validation but produce undefined behavior in the turn-walk logic.                                                         |
+| 2     | #403  | Add Content-Security-Policy headers to Express server                | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                     |
+| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)   | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                      |
+| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                    | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                     |
+| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                  | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                       |
+| 2     | #379  | getValidActions should enumerate all legal actions for current state | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                           |
+| 2     | #350  | server: add rate limiting on POST /api/v1/games routes               | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing.    |
+| 1     | #538  | Improve contrast ratio for derived-value spans in scenario editor    | PR #530       | `.derived-value` CSS color may not meet WCAG AA contrast ratio (4.5:1) against the panel background for `totalTurns` and lighting-time displays.                                                        |
+| 1     | #537  | Introduce VISIBILITY_UNLIMITED constant for day sentinel value 999   | PR #530       | Magic number `999` appears in `VISIBILITY_DEFAULTS`, template display logic, and test fixtures; naming it `VISIBILITY_UNLIMITED` clarifies intent.                                                      |
+| 1     | #536  | Add upper bound to visibilityHexes validation                        | PR #530       | `visibilityHexes` validated as `z.number().int().positive()` with no upper bound; the `999` day sentinel is undocumented in the schema.                                                                 |
+| 1     | #535  | Add totalTurns edge case tests                                       | PR #530       | Guard conditions for empty schedule, `lastTurn` before `firstTurn`, and missing turn fields are untested.                                                                                               |
+| 1     | #534  | Add lightingStartTimes night-turn clock test                         | PR #530       | No test verifying that `lightingStartTimes` correctly accumulates 30-min night turns when computing clock times for entries after a night condition transition.                                         |
 
 ---
 
