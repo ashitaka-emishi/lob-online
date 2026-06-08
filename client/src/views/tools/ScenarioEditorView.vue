@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 
-const STORAGE_KEY = 'lob-scenario-editor-south-mountain-v2';
+const STORAGE_KEY = 'lob-scenario-editor-south-mountain-v3';
 const API_URL = '/api/tools/scenario-editor/data';
 
 // ── State ─────────────────────────────────────────────────────────────────────

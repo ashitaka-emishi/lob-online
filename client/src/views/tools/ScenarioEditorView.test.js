@@ -40,7 +40,7 @@ const SCENARIO_WITH_LIGHTING = {
   ],
 };
 
-const STORAGE_KEY = 'lob-scenario-editor-south-mountain-v2';
+const STORAGE_KEY = 'lob-scenario-editor-south-mountain-v3';
 
 function mockFetch(data, ok = true) {
   return vi.fn().mockImplementation(() =>
