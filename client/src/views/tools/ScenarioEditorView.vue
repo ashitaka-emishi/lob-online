@@ -71,6 +71,47 @@ const totalTurns = computed(() => {
   return turns;
 });
 
+// Returns a Map<startTurn, "HH:MM"> for every entry in the lighting schedule.
+// Uses the same turn-walk logic as totalTurns to account for mixed day/night durations.
+const lightingStartTimes = computed(() => {
+  const ts = scenarioData.value?.turnStructure;
+  const schedule = lightingSchedule.value;
+  const result = new Map();
+  if (!ts?.firstTurn || !schedule.length) return result;
+
+  const [fh, fm] = ts.firstTurn.split(':').map(Number);
+  const gameStartMin = fh * 60 + fm;
+  if (isNaN(gameStartMin)) return result;
+
+  const targets = new Set(schedule.map((r) => r.startTurn));
+  const sorted = [...schedule].sort((a, b) => a.startTurn - b.startTurn);
+  const defaultCondition = sorted[0]?.startTurn === 1 ? sorted[0].condition : 'day';
+
+  let turnStartMin = gameStartMin;
+  let turn = 1;
+  let condIdx = 0;
+
+  // Walk until all target turns have been mapped (or we've passed the last one)
+  const maxTarget = Math.max(...targets);
+  while (turn <= maxTarget) {
+    if (targets.has(turn)) {
+      const h = Math.floor(turnStartMin / 60);
+      const m = turnStartMin % 60;
+      result.set(turn, `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+    }
+    while (condIdx + 1 < sorted.length && sorted[condIdx + 1].startTurn <= turn) {
+      condIdx++;
+    }
+    const condition =
+      sorted.length && sorted[condIdx].startTurn <= turn
+        ? sorted[condIdx].condition
+        : defaultCondition;
+    turnStartMin += MINUTES_PER_CONDITION[condition] ?? 15;
+    turn++;
+  }
+  return result;
+});
+
 const gameDuration = computed(() => {
   const ts = scenarioData.value?.turnStructure;
   if (!ts) return '';
@@ -388,6 +429,7 @@ onMounted(fetchScenarioData);
           <thead>
             <tr>
               <th>Start Turn</th>
+              <th>Time</th>
               <th>Condition</th>
               <th>Visibility (hexes)</th>
               <th></th>
@@ -402,6 +444,11 @@ onMounted(fetchScenarioData);
                   :value="row.startTurn"
                   @change="updateLightingRow(i, 'startTurn', $event.target.value)"
                 />
+              </td>
+              <td>
+                <span class="derived-value" data-testid="lighting-time">{{
+                  lightingStartTimes.get(row.startTurn) ?? '—'
+                }}</span>
               </td>
               <td>
                 <select

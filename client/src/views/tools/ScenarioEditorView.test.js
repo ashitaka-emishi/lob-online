@@ -450,6 +450,25 @@ describe('ScenarioEditorView', () => {
       wrapper.unmount();
     });
 
+    it('renders Time column header', async () => {
+      vi.stubGlobal('fetch', mockFetch(SCENARIO_WITH_LIGHTING));
+      const wrapper = mount(ScenarioEditorView, { attachTo: document.body });
+      await flushPromises();
+      expect(wrapper.text()).toContain('Time');
+      wrapper.unmount();
+    });
+
+    it('shows calculated clock time for startTurn=1 with firstTurn=09:00', async () => {
+      vi.stubGlobal('fetch', mockFetch(SCENARIO_WITH_LIGHTING));
+      const wrapper = mount(ScenarioEditorView, { attachTo: document.body });
+      await flushPromises();
+      const timeCells = wrapper.findAll('[data-testid="lighting-time"]');
+      // Row 0: startTurn=1 → 09:00 (game start); row 1: startTurn=28 → 09:00 + 27×15min = 15:45
+      expect(timeCells[0].text()).toBe('09:00');
+      expect(timeCells[1].text()).toBe('15:45');
+      wrapper.unmount();
+    });
+
     it('condition select includes fog and rain options', async () => {
       vi.stubGlobal('fetch', mockFetch(SCENARIO_WITH_LIGHTING));
       const wrapper = mount(ScenarioEditorView, { attachTo: document.body });
