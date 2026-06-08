@@ -1,0 +1,34 @@
+{
+  "_status": "scaffold",
+  "_source": "NBH — not yet entered",
+  "_errata_applied": [],
+  "union": {
+    "army": "NBH Union Army",
+    "supplyTrain": {
+      "id": "nbh-union-supply",
+      "name": "Union Supply Train"
+    },
+    "corps": [],
+    "cavalryDivision": {
+      "id": "nbh-union-cav",
+      "name": "Union Cavalry Division",
+      "brigades": []
+    }
+  },
+  "confederate": {
+    "army": "NBH Confederate Army",
+    "wing": "NBH Confederate Wing",
+    "supplyWagon": {
+      "id": "nbh-csa-supply",
+      "name": "Confederate Supply Wagon"
+    },
+    "independent": {
+      "cavalry": [],
+      "artillery": []
+    },
+    "reserveArtillery": {
+      "batteries": []
+    },
+    "divisions": []
+  }
+}

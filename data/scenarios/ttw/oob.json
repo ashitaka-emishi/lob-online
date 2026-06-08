@@ -1,0 +1,34 @@
+{
+  "_status": "scaffold",
+  "_source": "TTW — not yet entered",
+  "_errata_applied": [],
+  "union": {
+    "army": "TTW Union Army",
+    "supplyTrain": {
+      "id": "ttw-union-supply",
+      "name": "Union Supply Train"
+    },
+    "corps": [],
+    "cavalryDivision": {
+      "id": "ttw-union-cav",
+      "name": "Union Cavalry Division",
+      "brigades": []
+    }
+  },
+  "confederate": {
+    "army": "TTW Confederate Army",
+    "wing": "TTW Confederate Wing",
+    "supplyWagon": {
+      "id": "ttw-csa-supply",
+      "name": "Confederate Supply Wagon"
+    },
+    "independent": {
+      "cavalry": [],
+      "artillery": []
+    },
+    "reserveArtillery": {
+      "batteries": []
+    },
+    "divisions": []
+  }
+}

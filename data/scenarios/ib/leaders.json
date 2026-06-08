@@ -1,0 +1,16 @@
+{
+  "_status": "scaffold",
+  "_source": "IB — not yet entered",
+  "union": {
+    "army": [],
+    "corps": [],
+    "cavalry": [],
+    "divisions": [],
+    "brigades": []
+  },
+  "confederate": {
+    "wing": [],
+    "divisions": [],
+    "brigades": []
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "_status": "scaffold",
+  "_source": "NTB — not yet entered",
+  "_errata_applied": [],
+  "union": {
+    "army": "NTB Union Army",
+    "supplyTrain": {
+      "id": "ntb-union-supply",
+      "name": "Union Supply Train"
+    },
+    "corps": [],
+    "cavalryDivision": {
+      "id": "ntb-union-cav",
+      "name": "Union Cavalry Division",
+      "brigades": []
+    }
+  },
+  "confederate": {
+    "army": "NTB Confederate Army",
+    "wing": "NTB Confederate Wing",
+    "supplyWagon": {
+      "id": "ntb-csa-supply",
+      "name": "Confederate Supply Wagon"
+    },
+    "independent": {
+      "cavalry": [],
+      "artillery": []
+    },
+    "reserveArtillery": {
+      "batteries": []
+    },
+    "divisions": []
+  }
+}
