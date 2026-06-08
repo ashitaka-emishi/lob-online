@@ -80,7 +80,10 @@ describe('ScenarioEditorView', () => {
 
   it('renders "Scenario Editor" title', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
     expect(wrapper.text()).toContain('Scenario Editor');
     wrapper.unmount();
@@ -88,7 +91,10 @@ describe('ScenarioEditorView', () => {
 
   it('renders Push to Server button', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
     const saveBtn = wrapper.find('button.save-btn');
     expect(saveBtn.exists()).toBe(true);
@@ -98,7 +104,10 @@ describe('ScenarioEditorView', () => {
 
   it('renders Pull from Server button', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
     expect(wrapper.find('button.pull-btn').exists()).toBe(true);
     wrapper.unmount();
@@ -106,7 +115,10 @@ describe('ScenarioEditorView', () => {
 
   it('shows fetch error when API fails and no draft exists', async () => {
     vi.stubGlobal('fetch', mockFetch({}, false));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
     expect(wrapper.text()).toContain('Failed to load');
     wrapper.unmount();
@@ -120,7 +132,10 @@ describe('ScenarioEditorView', () => {
       removeItem: vi.fn(),
     });
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
     expect(wrapper.find('.offline-banner').exists()).toBe(true);
     expect(wrapper.text()).toContain('Server unreachable');
@@ -129,7 +144,10 @@ describe('ScenarioEditorView', () => {
 
   it('shows fetch error when fetch throws and no draft exists', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
     expect(wrapper.find('.offline-banner').exists()).toBe(false);
     expect(wrapper.text()).toContain('Failed to load');
@@ -144,7 +162,10 @@ describe('ScenarioEditorView', () => {
       removeItem: vi.fn(),
     });
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
     const saveBtn = wrapper.find('button.save-btn');
     expect(saveBtn.text()).toBe('Offline');
@@ -161,7 +182,10 @@ describe('ScenarioEditorView', () => {
       removeItem: vi.fn(),
     });
     vi.stubGlobal('fetch', mockFetch(serverScenario));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
 
     await wrapper.find('button.save-btn').trigger('click');
@@ -192,7 +216,10 @@ describe('ScenarioEditorView', () => {
         json: () => Promise.resolve({ ok: true, _savedAt: Date.now() }),
       });
     vi.stubGlobal('fetch', fetchMock);
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
 
     await wrapper.find('button.save-btn').trigger('click');
@@ -216,7 +243,10 @@ describe('ScenarioEditorView', () => {
         json: () => Promise.resolve({ ok: true, _savedAt: Date.now() }),
       });
     vi.stubGlobal('fetch', fetchMock);
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
 
     await wrapper.find('button.save-btn').trigger('click');
@@ -236,7 +266,10 @@ describe('ScenarioEditorView', () => {
         json: () => Promise.resolve({ ok: true, _savedAt: Date.now() }),
       });
     vi.stubGlobal('fetch', fetchMock);
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
 
     await wrapper.find('button.save-btn').trigger('click');
@@ -248,7 +281,10 @@ describe('ScenarioEditorView', () => {
 
   it('pull when dirty shows confirm dialog', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
 
     // Trigger a turn structure change to mark dirty
@@ -267,7 +303,10 @@ describe('ScenarioEditorView', () => {
   it('pull when not dirty: no dialog, fetches directly', async () => {
     const fetchMock = mockFetch(VALID_SCENARIO);
     vi.stubGlobal('fetch', fetchMock);
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
 
     await wrapper.find('button.pull-btn').trigger('click');
@@ -280,7 +319,10 @@ describe('ScenarioEditorView', () => {
 
   it('gameDuration computed from firstTurn and lastTurn', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
     // 09:00 to 20:00 = 11h
     expect(wrapper.text()).toContain('11h');
@@ -289,7 +331,10 @@ describe('ScenarioEditorView', () => {
 
   it('totalTurns displays as read-only derived value', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
     const display = wrapper.find('[data-testid="total-turns-display"]');
     expect(display.exists()).toBe(true);
@@ -306,7 +351,10 @@ describe('ScenarioEditorView', () => {
       lightingSchedule: [{ startTurn: 1, condition: 'day', visibilityHexes: 999 }],
     };
     vi.stubGlobal('fetch', mockFetch(scenario));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
     const display = wrapper.find('[data-testid="total-turns-display"]');
     expect(display.text()).toBe('45');
@@ -325,7 +373,10 @@ describe('ScenarioEditorView', () => {
       ],
     };
     vi.stubGlobal('fetch', mockFetch(scenario));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
     const display = wrapper.find('[data-testid="total-turns-display"]');
     expect(display.text()).toBe('3');
@@ -334,7 +385,10 @@ describe('ScenarioEditorView', () => {
 
   it('turn structure edit marks unsaved', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
 
     expect(wrapper.find('.unsaved-marker').exists()).toBe(false);
@@ -350,7 +404,10 @@ describe('ScenarioEditorView', () => {
 
   it('turn structure edit calls localStorage.setItem', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
 
     const firstTurnInput = wrapper.find('input[type="text"]');
@@ -365,7 +422,10 @@ describe('ScenarioEditorView', () => {
   describe('Lighting schedule', () => {
     it('renders existing lighting rows', async () => {
       vi.stubGlobal('fetch', mockFetch(SCENARIO_WITH_LIGHTING));
-      const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+      const wrapper = mount(ScenarioEditorView, {
+        attachTo: document.body,
+        global: { plugins: [stubRouter] },
+      });
       await flushPromises();
       expect(wrapper.findAll('.lighting-row').length).toBe(2);
       wrapper.unmount();
@@ -373,7 +433,10 @@ describe('ScenarioEditorView', () => {
 
     it('deletes a lighting row on × click', async () => {
       vi.stubGlobal('fetch', mockFetch(SCENARIO_WITH_LIGHTING));
-      const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+      const wrapper = mount(ScenarioEditorView, {
+        attachTo: document.body,
+        global: { plugins: [stubRouter] },
+      });
       await flushPromises();
 
       await wrapper.find('.delete-btn').trigger('click');
@@ -385,7 +448,10 @@ describe('ScenarioEditorView', () => {
 
     it('adds a new lighting row when startTurn > 0', async () => {
       vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
-      const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+      const wrapper = mount(ScenarioEditorView, {
+        attachTo: document.body,
+        global: { plugins: [stubRouter] },
+      });
       await flushPromises();
 
       expect(wrapper.findAll('.lighting-row').length).toBe(0);
@@ -403,7 +469,10 @@ describe('ScenarioEditorView', () => {
 
     it('does not add row when startTurn is 0', async () => {
       vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
-      const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+      const wrapper = mount(ScenarioEditorView, {
+        attachTo: document.body,
+        global: { plugins: [stubRouter] },
+      });
       await flushPromises();
 
       const turnInput = wrapper.find('.add-row .turn-input');
@@ -419,7 +488,10 @@ describe('ScenarioEditorView', () => {
 
     it('adding a row marks dirty', async () => {
       vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
-      const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+      const wrapper = mount(ScenarioEditorView, {
+        attachTo: document.body,
+        global: { plugins: [stubRouter] },
+      });
       await flushPromises();
 
       const turnInput = wrapper.find('.add-row .turn-input');
@@ -434,7 +506,10 @@ describe('ScenarioEditorView', () => {
 
     it('deleting a row marks dirty', async () => {
       vi.stubGlobal('fetch', mockFetch(SCENARIO_WITH_LIGHTING));
-      const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+      const wrapper = mount(ScenarioEditorView, {
+        attachTo: document.body,
+        global: { plugins: [stubRouter] },
+      });
       await flushPromises();
 
       await wrapper.find('.delete-btn').trigger('click');
@@ -446,7 +521,10 @@ describe('ScenarioEditorView', () => {
 
     it('renders visibility column header', async () => {
       vi.stubGlobal('fetch', mockFetch(SCENARIO_WITH_LIGHTING));
-      const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+      const wrapper = mount(ScenarioEditorView, {
+        attachTo: document.body,
+        global: { plugins: [stubRouter] },
+      });
       await flushPromises();
       expect(wrapper.text()).toContain('Visibility');
       wrapper.unmount();
@@ -454,7 +532,10 @@ describe('ScenarioEditorView', () => {
 
     it('renders visibilityHexes input for each existing row', async () => {
       vi.stubGlobal('fetch', mockFetch(SCENARIO_WITH_LIGHTING));
-      const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+      const wrapper = mount(ScenarioEditorView, {
+        attachTo: document.body,
+        global: { plugins: [stubRouter] },
+      });
       await flushPromises();
       const visInputs = wrapper.findAll('[data-testid="visibility-input"]');
       expect(visInputs.length).toBe(2);
@@ -465,7 +546,10 @@ describe('ScenarioEditorView', () => {
 
     it('renders Time column header', async () => {
       vi.stubGlobal('fetch', mockFetch(SCENARIO_WITH_LIGHTING));
-      const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+      const wrapper = mount(ScenarioEditorView, {
+        attachTo: document.body,
+        global: { plugins: [stubRouter] },
+      });
       await flushPromises();
       expect(wrapper.text()).toContain('Time');
       wrapper.unmount();
@@ -473,7 +557,10 @@ describe('ScenarioEditorView', () => {
 
     it('shows calculated clock time for startTurn=1 with firstTurn=09:00', async () => {
       vi.stubGlobal('fetch', mockFetch(SCENARIO_WITH_LIGHTING));
-      const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+      const wrapper = mount(ScenarioEditorView, {
+        attachTo: document.body,
+        global: { plugins: [stubRouter] },
+      });
       await flushPromises();
       const timeCells = wrapper.findAll('[data-testid="lighting-time"]');
       // Row 0: startTurn=1 → 09:00 (game start); row 1: startTurn=28 → 09:00 + 27×15min = 15:45
@@ -484,7 +571,10 @@ describe('ScenarioEditorView', () => {
 
     it('condition select includes fog and rain options', async () => {
       vi.stubGlobal('fetch', mockFetch(SCENARIO_WITH_LIGHTING));
-      const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+      const wrapper = mount(ScenarioEditorView, {
+        attachTo: document.body,
+        global: { plugins: [stubRouter] },
+      });
       await flushPromises();
       const firstSelect = wrapper.find('.lighting-row select');
       const optionValues = [...firstSelect.element.options].map((o) => o.value);
@@ -495,7 +585,10 @@ describe('ScenarioEditorView', () => {
 
     it('new-row defaults to visibilityHexes 999 (day)', async () => {
       vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
-      const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+      const wrapper = mount(ScenarioEditorView, {
+        attachTo: document.body,
+        global: { plugins: [stubRouter] },
+      });
       await flushPromises();
       const newVisInput = wrapper.find('[data-testid="new-row-visibility"]');
       expect(newVisInput.element.value).toBe('999');
@@ -504,7 +597,10 @@ describe('ScenarioEditorView', () => {
 
     it('changing new-row condition to night sets visibility default to 2', async () => {
       vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
-      const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+      const wrapper = mount(ScenarioEditorView, {
+        attachTo: document.body,
+        global: { plugins: [stubRouter] },
+      });
       await flushPromises();
       const condSelect = wrapper.find('.add-row select');
       await condSelect.setValue('night');
@@ -517,7 +613,10 @@ describe('ScenarioEditorView', () => {
 
     it('changing new-row condition to fog sets visibility default to 4', async () => {
       vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
-      const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+      const wrapper = mount(ScenarioEditorView, {
+        attachTo: document.body,
+        global: { plugins: [stubRouter] },
+      });
       await flushPromises();
       const condSelect = wrapper.find('.add-row select');
       await condSelect.setValue('fog');
@@ -531,7 +630,10 @@ describe('ScenarioEditorView', () => {
 
   it('rules panel renders Fluke Stoppage Grace Period input', async () => {
     vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
-    const wrapper = mount(ScenarioEditorView, { attachTo: document.body, global: { plugins: [stubRouter] } });
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
     await flushPromises();
     expect(wrapper.text()).toContain('Fluke Stoppage Grace Period');
     wrapper.unmount();
