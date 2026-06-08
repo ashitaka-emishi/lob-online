@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
+import EditorNav from '../../components/EditorNav.vue';
 
 const STORAGE_KEY = 'lob-scenario-editor-south-mountain-v3';
 const API_URL = '/api/tools/scenario-editor/data';
@@ -343,6 +344,7 @@ onMounted(fetchScenarioData);
 
 <template>
   <div class="scenario-editor">
+    <EditorNav />
     <!-- Header -->
     <header class="editor-header">
       <span class="title">Scenario Editor</span>
