@@ -85,7 +85,6 @@ const hexes = computed(() => mapData.value?.hexes ?? []);
     <header class="editor-header">
       <span class="title">Map Test Tool</span>
       <span class="spacer" />
-      <a class="nav-link" href="/tools/map-editor">Map Editor</a>
     </header>
 
     <div v-if="fetchError" class="fetch-error">{{ fetchError }}</div>
@@ -176,16 +175,6 @@ const hexes = computed(() => mapData.value?.hexes ?? []);
 
 .spacer {
   flex: 1;
-}
-
-.nav-link {
-  color: #a09880;
-  font-size: 0.8rem;
-  text-decoration: none;
-}
-
-.nav-link:hover {
-  color: #e0d8c8;
 }
 
 .fetch-error {

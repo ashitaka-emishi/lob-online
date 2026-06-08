@@ -1,8 +1,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
+import EditorNav from '../../components/EditorNav.vue';
 
-const STORAGE_KEY = 'lob-scenario-editor-south-mountain-v2';
+const STORAGE_KEY = 'lob-scenario-editor-south-mountain-v3';
 const API_URL = '/api/tools/scenario-editor/data';
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -19,12 +20,98 @@ const pullError = ref('');
 const showPushConfirm = ref(false);
 const showPullConfirm = ref(false);
 
+// Default visibility in hexes per condition (day=unlimited, night=2, others=4)
+const VISIBILITY_DEFAULTS = { day: 999, twilight: 4, night: 2, fog: 4, rain: 4 };
+
 // Lighting schedule row being added
-const newRow = ref({ startTurn: '', condition: 'day' });
+const newRow = ref({ startTurn: '', condition: 'day', visibilityHexes: 999 });
 
 // ── Computed ──────────────────────────────────────────────────────────────────
 
 const lightingSchedule = computed(() => scenarioData.value?.lightingSchedule ?? []);
+
+// LOB §1.1 — day/twilight turns are 15 minutes, night turns are 30 minutes
+const MINUTES_PER_CONDITION = { day: 15, twilight: 15, night: 30, fog: 15, rain: 15 };
+
+// LOB §1.1 — totalTurns derived from firstTurn/lastTurn + lighting schedule turn durations.
+// Walk turn-by-turn: each turn advances the clock by its condition's minutes/turn.
+// The condition in effect for turn N is the last lighting entry with startTurn <= N.
+const totalTurns = computed(() => {
+  const ts = scenarioData.value?.turnStructure;
+  const schedule = lightingSchedule.value;
+  if (!ts?.firstTurn || !ts?.lastTurn) return null;
+
+  const [fh, fm] = ts.firstTurn.split(':').map(Number);
+  const [lh, lm] = ts.lastTurn.split(':').map(Number);
+  const gameStartMin = fh * 60 + fm;
+  const gameEndMin = lh * 60 + lm;
+  if (isNaN(gameStartMin) || isNaN(gameEndMin) || gameEndMin <= gameStartMin) return null;
+
+  const sorted = [...schedule].sort((a, b) => a.startTurn - b.startTurn);
+  // Default condition if no schedule or first entry starts after turn 1
+  const defaultCondition = sorted[0]?.startTurn === 1 ? sorted[0].condition : 'day';
+
+  // turnStartMin tracks when the current turn begins. lastTurn is the START of the final turn,
+  // so include turns starting at or before gameEndMin (the last-turn start time).
+  let turnStartMin = gameStartMin;
+  let turns = 0;
+  let condIdx = 0;
+
+  while (turnStartMin <= gameEndMin) {
+    turns++;
+    // Advance condIdx to the last lighting entry whose startTurn <= turns
+    while (condIdx + 1 < sorted.length && sorted[condIdx + 1].startTurn <= turns) {
+      condIdx++;
+    }
+    const condition =
+      sorted.length && sorted[condIdx].startTurn <= turns
+        ? sorted[condIdx].condition
+        : defaultCondition;
+    turnStartMin += MINUTES_PER_CONDITION[condition] ?? 15;
+  }
+  return turns;
+});
+
+// Returns a Map<startTurn, "HH:MM"> for every entry in the lighting schedule.
+// Uses the same turn-walk logic as totalTurns to account for mixed day/night durations.
+const lightingStartTimes = computed(() => {
+  const ts = scenarioData.value?.turnStructure;
+  const schedule = lightingSchedule.value;
+  const result = new Map();
+  if (!ts?.firstTurn || !schedule.length) return result;
+
+  const [fh, fm] = ts.firstTurn.split(':').map(Number);
+  const gameStartMin = fh * 60 + fm;
+  if (isNaN(gameStartMin)) return result;
+
+  const targets = new Set(schedule.map((r) => r.startTurn));
+  const sorted = [...schedule].sort((a, b) => a.startTurn - b.startTurn);
+  const defaultCondition = sorted[0]?.startTurn === 1 ? sorted[0].condition : 'day';
+
+  let turnStartMin = gameStartMin;
+  let turn = 1;
+  let condIdx = 0;
+
+  // Walk until all target turns have been mapped (or we've passed the last one)
+  const maxTarget = Math.max(...targets);
+  while (turn <= maxTarget) {
+    if (targets.has(turn)) {
+      const h = Math.floor(turnStartMin / 60);
+      const m = turnStartMin % 60;
+      result.set(turn, `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+    }
+    while (condIdx + 1 < sorted.length && sorted[condIdx + 1].startTurn <= turn) {
+      condIdx++;
+    }
+    const condition =
+      sorted.length && sorted[condIdx].startTurn <= turn
+        ? sorted[condIdx].condition
+        : defaultCondition;
+    turnStartMin += MINUTES_PER_CONDITION[condition] ?? 15;
+    turn++;
+  }
+  return result;
+});
 
 const gameDuration = computed(() => {
   const ts = scenarioData.value?.turnStructure;
@@ -199,9 +286,13 @@ function addLightingRow() {
   ensureLightingSchedule();
   scenarioData.value.lightingSchedule = [
     ...scenarioData.value.lightingSchedule,
-    { startTurn: turn, condition: newRow.value.condition },
+    {
+      startTurn: turn,
+      condition: newRow.value.condition,
+      visibilityHexes: newRow.value.visibilityHexes,
+    },
   ].sort((a, b) => a.startTurn - b.startTurn);
-  newRow.value = { startTurn: '', condition: 'day' };
+  newRow.value = { startTurn: '', condition: 'day', visibilityHexes: 999 };
   markDirty();
 }
 
@@ -215,9 +306,20 @@ function deleteLightingRow(index) {
 function updateLightingRow(index, field, value) {
   ensureLightingSchedule();
   const updated = [...scenarioData.value.lightingSchedule];
-  updated[index] = { ...updated[index], [field]: field === 'startTurn' ? Number(value) : value };
+  const coerced = field === 'startTurn' || field === 'visibilityHexes' ? Number(value) : value;
+  const patch = { [field]: coerced };
+  // Auto-apply visibility default when condition changes
+  if (field === 'condition') {
+    patch.visibilityHexes = VISIBILITY_DEFAULTS[value];
+  }
+  updated[index] = { ...updated[index], ...patch };
   scenarioData.value.lightingSchedule = updated.sort((a, b) => a.startTurn - b.startTurn);
   markDirty();
+}
+
+function updateNewRowCondition(condition) {
+  newRow.value.condition = condition;
+  newRow.value.visibilityHexes = VISIBILITY_DEFAULTS[condition];
 }
 
 // ── Rules edits ───────────────────────────────────────────────────────────────
@@ -242,6 +344,7 @@ onMounted(fetchScenarioData);
 
 <template>
   <div class="scenario-editor">
+    <EditorNav />
     <!-- Header -->
     <header class="editor-header">
       <span class="title">Scenario Editor</span>
@@ -249,7 +352,6 @@ onMounted(fetchScenarioData);
       <span v-if="saveStatus === 'saved'" class="save-flash">Saved</span>
       <span v-if="saveStatus === 'error'" class="save-error">Error</span>
       <span v-if="unsaved" class="unsaved-marker">* unsaved</span>
-      <a class="nav-link" href="/tools/map-editor">Map Editor</a>
       <button
         class="pull-btn"
         :disabled="saveStatus === 'saving' || isPulling"
@@ -299,18 +401,10 @@ onMounted(fetchScenarioData);
             :value="scenarioData.turnStructure.lastTurn"
             @change="updateTurnStructure('lastTurn', $event.target.value)"
           />
-          <label>Minutes per Turn</label>
-          <input
-            type="number"
-            :value="scenarioData.turnStructure.minutesPerTurn"
-            @change="updateTurnStructure('minutesPerTurn', Number($event.target.value))"
-          />
-          <label>Total Turns</label>
-          <input
-            type="number"
-            :value="scenarioData.turnStructure.totalTurns"
-            @change="updateTurnStructure('totalTurns', Number($event.target.value))"
-          />
+          <label class="derived-label">Total Turns</label>
+          <span class="derived-value" data-testid="total-turns-display">{{
+            totalTurns ?? '—'
+          }}</span>
           <label>First Player</label>
           <select
             :value="scenarioData.turnStructure.firstPlayer"
@@ -336,9 +430,11 @@ onMounted(fetchScenarioData);
         <table class="lighting-table">
           <thead>
             <tr>
-              <th>Start Turn</th>
-              <th>Condition</th>
-              <th></th>
+              <th scope="col">Start Turn</th>
+              <th scope="col">Time</th>
+              <th scope="col">Condition</th>
+              <th scope="col">Visibility (hexes)</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
@@ -348,21 +444,47 @@ onMounted(fetchScenarioData);
                   type="number"
                   class="turn-input"
                   :value="row.startTurn"
+                  :aria-label="`Row ${i + 1} start turn`"
                   @change="updateLightingRow(i, 'startTurn', $event.target.value)"
                 />
               </td>
               <td>
+                <span class="derived-value" data-testid="lighting-time" role="status">{{
+                  lightingStartTimes.get(row.startTurn) ?? '—'
+                }}</span>
+              </td>
+              <td>
                 <select
                   :value="row.condition"
+                  :aria-label="`Row ${i + 1} condition`"
                   @change="updateLightingRow(i, 'condition', $event.target.value)"
                 >
                   <option value="day">Day</option>
                   <option value="twilight">Twilight</option>
                   <option value="night">Night</option>
+                  <option value="fog">Fog</option>
+                  <option value="rain">Rain</option>
                 </select>
               </td>
               <td>
-                <button class="delete-btn" @click="deleteLightingRow(i)">×</button>
+                <input
+                  type="number"
+                  class="turn-input"
+                  :value="row.visibilityHexes"
+                  min="1"
+                  data-testid="visibility-input"
+                  :aria-label="`Row ${i + 1} visibility hexes`"
+                  @change="updateLightingRow(i, 'visibilityHexes', $event.target.value)"
+                />
+              </td>
+              <td>
+                <button
+                  class="delete-btn"
+                  :aria-label="`Delete row ${i + 1}`"
+                  @click="deleteLightingRow(i)"
+                >
+                  ×
+                </button>
               </td>
             </tr>
           </tbody>
@@ -374,11 +496,20 @@ onMounted(fetchScenarioData);
             class="turn-input"
             placeholder="Turn"
           />
-          <select v-model="newRow.condition">
+          <select :value="newRow.condition" @change="updateNewRowCondition($event.target.value)">
             <option value="day">Day</option>
             <option value="twilight">Twilight</option>
             <option value="night">Night</option>
+            <option value="fog">Fog</option>
+            <option value="rain">Rain</option>
           </select>
+          <input
+            v-model.number="newRow.visibilityHexes"
+            type="number"
+            class="turn-input"
+            min="1"
+            data-testid="new-row-visibility"
+          />
           <button class="add-btn" @click="addLightingRow">Add</button>
         </div>
       </section>
@@ -387,12 +518,6 @@ onMounted(fetchScenarioData);
       <section class="panel">
         <h2 class="panel-title">Rules</h2>
         <div class="field-grid">
-          <label>Night Visibility Cap (hexes)</label>
-          <input
-            type="number"
-            :value="scenarioData.nightVisibilityCap ?? 2"
-            @change="updateField('nightVisibilityCap', Number($event.target.value))"
-          />
           <label>Fluke Stoppage Grace Period (turns)</label>
           <input
             type="number"
@@ -514,16 +639,6 @@ onMounted(fetchScenarioData);
 .unsaved-marker {
   color: #c8a060;
   font-size: 0.85rem;
-}
-
-.nav-link {
-  color: #a09880;
-  font-size: 0.8rem;
-  text-decoration: none;
-}
-
-.nav-link:hover {
-  color: #e0d8c8;
 }
 
 .pull-btn,
@@ -659,6 +774,18 @@ onMounted(fetchScenarioData);
   color: #e0d8c8;
   font-size: 0.82rem;
   padding: 0.2rem 0.3rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .delete-btn {

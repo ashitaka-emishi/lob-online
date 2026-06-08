@@ -58,11 +58,12 @@ const RandomEventEntry = z.object({
   _reroll: z.boolean().optional(),
 });
 
-const LightingCondition = z.enum(['day', 'twilight', 'night']);
+const LightingCondition = z.enum(['day', 'twilight', 'night', 'fog', 'rain']);
 
 const LightingEntry = z.object({
   startTurn: z.number().int().positive(),
   condition: LightingCondition,
+  visibilityHexes: z.number().int().positive(),
   _note: z.string().optional(),
 });
 
@@ -81,7 +82,6 @@ export const ScenarioSchema = z.object({
   system: z.string(),
   publication: z.string(),
   lightingSchedule: z.array(LightingEntry).optional(),
-  nightVisibilityCap: z.number().int().positive().optional(),
   flukeStoppageGracePeriodTurns: z.number().int().nonnegative().optional(),
   initiativeSystem: z.enum(['RSS', 'LoB']).optional(),
   looseCannon: z.boolean().optional(),
@@ -92,7 +92,6 @@ export const ScenarioSchema = z.object({
     firstTurn: TimeStr,
     lastTurn: TimeStr,
     totalTurns: z.number().int().positive(),
-    minutesPerTurn: z.number().int().positive(),
     firstPlayer: z.enum(['union', 'confederate']),
     date: z.string(),
   }),

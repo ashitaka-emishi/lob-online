@@ -1,0 +1,23 @@
+{
+  "id": "editor-polish-526-527_20260608",
+  "title": "Editor Polish — Issues #526 and #527",
+  "type": "bug",
+  "status": "complete",
+  "created": "2026-06-08T00:00:00Z",
+  "updated": "2026-06-08T00:00:00Z",
+  "current_phase": 2,
+  "current_task": "2.6",
+  "phases": {
+    "total": 2,
+    "completed": 2
+  },
+  "tasks": {
+    "total": 10,
+    "completed": 10
+  },
+  "commits": [
+    "9728a02: fix(editor): remove redundant cross-editor nav links beside primary actions (#526)",
+    "a2d2ab1: fix(editor): remove remaining inline nav links from MapTest and TableTest views (#526)",
+    "ef797cf: feat(scenario): add visibilityHexes and fog/rain conditions to lighting schedule (#527)"
+  ]
+}

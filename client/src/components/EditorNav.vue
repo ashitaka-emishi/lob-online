@@ -8,6 +8,9 @@ const editorsEnabled = useEditorsEnabled();
 <template>
   <nav class="editor-nav" aria-label="Editor tools">
     <template v-if="editorsEnabled">
+      <RouterLink to="/tools/scenario-editor" data-testid="nav-scenario-editor" class="nav-link">
+        Scenario Editor
+      </RouterLink>
       <RouterLink to="/tools/map-editor" data-testid="nav-map-editor" class="nav-link">
         Map Editor
       </RouterLink>

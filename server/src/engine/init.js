@@ -12,11 +12,16 @@ function mapOrder(rawOrder) {
 }
 
 // Convert "HH:MM" time string to turn number relative to scenario firstTurn
-function timeToTurn(timeStr, firstTurnTime, minutesPerTurn) {
+// LOB §1.1 — day and twilight turns are 15 minutes; night turns are 30 minutes.
+// SM's latest reinforcement arrival is 17:00 (turn 33), well before the turn-45 night
+// transition (~20:00). Using 15 min/turn is correct for all current SM data. If a future
+// scenario schedules reinforcements during night turns, this function must be updated to
+// walk the lighting schedule instead of using a flat divisor.
+function timeToTurn(timeStr, firstTurnTime) {
   const [h, m] = timeStr.split(':').map(Number);
   const [fh, fm] = firstTurnTime.split(':').map(Number);
   const minutesSinceStart = h * 60 + m - (fh * 60 + fm);
-  return Math.floor(minutesSinceStart / minutesPerTurn) + 1;
+  return Math.floor(minutesSinceStart / 15) + 1;
 }
 
 function defaultUnit({ id, hex, orderRaw, isOnBoard, entryTurn, isDetached = false }) {
@@ -106,7 +111,7 @@ function processSetupSide(entries, defaultOrder) {
 
 // Process one reinforcement group, returning array of { unitId, turn, entryHex } entries
 // and a map of unitId -> UnitState (off-board)
-function processReinforcementGroup(group, firstTurnTime, minutesPerTurn) {
+function processReinforcementGroup(group, firstTurnTime) {
   const queueEntries = [];
   const units = {};
 
@@ -123,7 +128,7 @@ function processReinforcementGroup(group, firstTurnTime, minutesPerTurn) {
     entryHex = group.entryHex;
   }
 
-  const turn = timeToTurn(timeStr, firstTurnTime, minutesPerTurn);
+  const turn = timeToTurn(timeStr, firstTurnTime);
 
   // LOB §10.6 — reinforcements carry their historical order already accepted; setup orders bypass
   // the delivery pipeline (#360). SM §2.3, §3.3 — reinforcement groups may be pre-detached in
@@ -158,7 +163,7 @@ function processReinforcementGroup(group, firstTurnTime, minutesPerTurn) {
  * @returns {object} GameState validated against GameStateSchema
  */
 export function initGameState(scenario, gameId) {
-  const { firstTurn, minutesPerTurn } = scenario.turnStructure;
+  const { firstTurn } = scenario.turnStructure;
 
   const units = {};
   const reinforcementQueue = [];
@@ -172,11 +177,7 @@ export function initGameState(scenario, gameId) {
   for (const side of ['union', 'confederate']) {
     const groups = scenario.reinforcements?.[side] ?? [];
     for (const group of groups) {
-      const { queueEntries, units: rfUnits } = processReinforcementGroup(
-        group,
-        firstTurn,
-        minutesPerTurn
-      );
+      const { queueEntries, units: rfUnits } = processReinforcementGroup(group, firstTurn);
       reinforcementQueue.push(...queueEntries);
       Object.assign(units, rfUnits);
     }

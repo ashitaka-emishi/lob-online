@@ -5,11 +5,65 @@
   "name": "South Mountain",
   "system": "Line of Battle v2.0",
   "publication": "RSS #4",
+  "lightingSchedule": [
+    {
+      "startTurn": 1,
+      "condition": "day",
+      "visibilityHexes": 999,
+      "_note": "Sep 14 1862 — sunrise well before 09:00 game start"
+    },
+    {
+      "startTurn": 39,
+      "condition": "twilight",
+      "visibilityHexes": 10,
+      "_note": "Approx 18:30 local time (turn 39 = 09:00 + 38×15min). Estimate — physical SM Hour Track not available; based on Sep 14 1862 civil twilight ~18:30 at 39.5°N."
+    },
+    {
+      "startTurn": 40,
+      "condition": "twilight",
+      "visibilityHexes": 8
+    },
+    {
+      "startTurn": 41,
+      "condition": "twilight",
+      "visibilityHexes": 6,
+      "_note": "Approx 19:00 local time (turn 41 = 09:00 + 40×15min). Estimate — physical SM Hour Track not available; based on Sep 14 1862 astronomical twilight ~19:00 at 39.5°N."
+    },
+    {
+      "startTurn": 42,
+      "condition": "twilight",
+      "visibilityHexes": 4
+    },
+    {
+      "startTurn": 43,
+      "condition": "twilight",
+      "visibilityHexes": 2
+    },
+    {
+      "startTurn": 44,
+      "condition": "twilight",
+      "visibilityHexes": 2
+    },
+    {
+      "startTurn": 45,
+      "condition": "night",
+      "visibilityHexes": 2
+    }
+  ],
+  "flukeStoppageGracePeriodTurns": 8,
+  "initiativeSystem": "RSS",
+  "looseCannon": true,
+  "lossRecovery": {
+    "enabled": false,
+    "triggerTime": null,
+    "_note": "SM ends at 20:00; midnight never arrives (LOB_RULES 9.3)"
+  },
+  "randomEventsEnabled": true,
+  "randomEventsTiming": "commandPhaseAfterOrderAcceptance",
   "turnStructure": {
     "firstTurn": "09:00",
     "lastTurn": "20:00",
     "totalTurns": 45,
-    "minutesPerTurn": 20,
     "firstPlayer": "union",
     "date": "1862-09-14"
   },
@@ -56,34 +110,6 @@
     "flukeStoppageReserveExclusions": ["g1me", "6ny-cav", "3ohio-cav"],
     "_flukeNote": "9 Corps cavalry units may NOT fulfill reserve requirement for Fluke Stoppage (SM rule)"
   },
-  "lightingSchedule": [
-    {
-      "startTurn": 1,
-      "condition": "day",
-      "_note": "Sep 14 1862 — sunrise well before 09:00 game start"
-    },
-    {
-      "startTurn": 28,
-      "condition": "twilight",
-      "_note": "Approx 18:20 local time (turn 28 = 09:00 + 27×20min = 18:00)"
-    },
-    {
-      "startTurn": 31,
-      "condition": "night",
-      "_note": "Full night begins turn 31 (approx 19:00 local time)"
-    }
-  ],
-  "nightVisibilityCap": 2,
-  "flukeStoppageGracePeriodTurns": 8,
-  "initiativeSystem": "RSS",
-  "looseCannon": true,
-  "lossRecovery": {
-    "enabled": false,
-    "triggerTime": null,
-    "_note": "SM ends at 20:00; midnight never arrives (LOB_RULES 9.3)"
-  },
-  "randomEventsEnabled": true,
-  "randomEventsTiming": "commandPhaseAfterOrderAcceptance",
   "movementCosts": {
     "_source": "SM_Rules.pdf — SM Special Terrain Effects on Movement chart",
     "_notes": {
@@ -520,7 +546,6 @@
         "entryHex": "32.01",
         "orderRef": "usa-order-2",
         "orderType": "move",
-        "_note": "1/1 Division less 4/1/1 and B 4 US",
         "units": [
           "hatch",
           "phelps",
@@ -534,7 +559,8 @@
           "d1ri-lt",
           "f1penn-lt",
           "g-penn-lt"
-        ]
+        ],
+        "_note": "1/1 Division less 4/1/1 and B 4 US"
       },
       {
         "time": "17:00",
@@ -579,31 +605,6 @@
         ]
       },
       {
-        "_id": "force-a",
-        "_note": "Jones Division (less three brigades) — VARIABLE arrival time. Roll 1d6: 1=14:30@39.35, 2-3=15:00@20.34, 4-5=15:30@39.35, 6=16:00@39.35",
-        "variable": true,
-        "variableTable": [
-          {
-            "roll": 1,
-            "time": "14:30",
-            "entryHex": "39.35"
-          },
-          {
-            "roll": "2-3",
-            "time": "15:00",
-            "entryHex": "20.34"
-          },
-          {
-            "roll": "4-5",
-            "time": "15:30",
-            "entryHex": "39.35"
-          },
-          {
-            "roll": 6,
-            "time": "16:00",
-            "entryHex": "39.35"
-          }
-        ],
         "orderRef": "csa-order-2",
         "orderType": "move",
         "orderDescription": "Jones Division (less three brigades) defend Fox's Gap",
@@ -622,12 +623,7 @@
           "15sc",
           "phillips-lgn",
           "brown"
-        ]
-      },
-      {
-        "_id": "force-b",
-        "_note": "Detached Jones brigades (Garnett, Kemper, Walker) — same variable timing as Force A (roll separately)",
-        "isDetached": true,
+        ],
         "variable": true,
         "variableTable": [
           {
@@ -651,6 +647,10 @@
             "entryHex": "39.35"
           }
         ],
+        "_id": "force-a",
+        "_note": "Jones Division (less three brigades) — VARIABLE arrival time. Roll 1d6: 1=14:30@39.35, 2-3=15:00@20.34, 4-5=15:30@39.35, 6=16:00@39.35"
+      },
+      {
         "orderRef": "csa-order-3",
         "orderType": "move",
         "orderDescription": "Garnett, Kemper, Walker each detached to defend Turner's Gap (each is a separate detachment)",
@@ -677,7 +677,32 @@
           "6sc",
           "4sc-bn",
           "palmetto"
-        ]
+        ],
+        "variable": true,
+        "variableTable": [
+          {
+            "roll": 1,
+            "time": "14:30",
+            "entryHex": "39.35"
+          },
+          {
+            "roll": "2-3",
+            "time": "15:00",
+            "entryHex": "20.34"
+          },
+          {
+            "roll": "4-5",
+            "time": "15:30",
+            "entryHex": "39.35"
+          },
+          {
+            "roll": 6,
+            "time": "16:00",
+            "entryHex": "39.35"
+          }
+        ],
+        "_id": "force-b",
+        "_note": "Detached Jones brigades (Garnett, Kemper, Walker) — same variable timing as Force A (roll separately)"
       },
       {
         "time": "16:30",
@@ -772,7 +797,6 @@
       }
     ],
     "wreck": {
-      "_note": "VPs awarded to the OPPONENT for wrecking formations or eliminating artillery.",
       "confederate": {
         "_earnedBy": "union",
         "_note": "Union earns these VPs by wrecking Confederate units",
@@ -960,5 +984,6 @@
         }
       ]
     }
-  }
+  },
+  "_savedAt": 1780933912351
 }

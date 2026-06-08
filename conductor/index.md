@@ -12,15 +12,16 @@ Navigation hub for project context.
 
 ## Active Tracks
 
-| Track ID                                                                     | Title                                                      | Status   |
-| ---------------------------------------------------------------------------- | ---------------------------------------------------------- | -------- |
-| [home-nav-menu_20260607](./tracks/home-nav-menu_20260607/index.md)           | App Home Page and Editor Navigation Menu (#518)            | Complete |
-| [pre-m6-debt-sprint_20260601](./tracks/pre-m6-debt-sprint_20260601/index.md) | Pre-M6 Debt Sprint — Issues #476 #477 #478 #479 #480       | Pending  |
-| [m5-debt-cleanup_20260603](./tracks/m5-debt-cleanup_20260603/index.md)       | M5 Debt Cleanup Sprint                                     | Pending  |
-| [pre-m6-debt-score_20260604](./tracks/pre-m6-debt-score_20260604/index.md)   | Pre-M6 Debt Score Sprint — Reduce Cumulative Score to < 15 | Pending  |
-| [oob-editor-bugs_20260604](./tracks/oob-editor-bugs_20260604/index.md)       | OOB Editor Display/Data Bugs (#506)                        | Complete |
-| [m5-closeout_20260605](./tracks/m5-closeout_20260605/index.md)               | M5 Closeout — Checklist, Handoff Note, Milestone Closure   | Pending  |
-| [debt-sprint-to-10_20260605](./tracks/debt-sprint-to-10_20260605/index.md)   | Debt Sprint — Score 32 → 10                                | Pending  |
+| Track ID                                                                           | Title                                                      | Status   |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------- | -------- |
+| [editor-polish-526-527_20260608](./tracks/editor-polish-526-527_20260608/index.md) | Editor Polish — Issues #526 and #527                       | Pending  |
+| [home-nav-menu_20260607](./tracks/home-nav-menu_20260607/index.md)                 | App Home Page and Editor Navigation Menu (#518)            | Complete |
+| [pre-m6-debt-sprint_20260601](./tracks/pre-m6-debt-sprint_20260601/index.md)       | Pre-M6 Debt Sprint — Issues #476 #477 #478 #479 #480       | Pending  |
+| [m5-debt-cleanup_20260603](./tracks/m5-debt-cleanup_20260603/index.md)             | M5 Debt Cleanup Sprint                                     | Pending  |
+| [pre-m6-debt-score_20260604](./tracks/pre-m6-debt-score_20260604/index.md)         | Pre-M6 Debt Score Sprint — Reduce Cumulative Score to < 15 | Pending  |
+| [oob-editor-bugs_20260604](./tracks/oob-editor-bugs_20260604/index.md)             | OOB Editor Display/Data Bugs (#506)                        | Complete |
+| [m5-closeout_20260605](./tracks/m5-closeout_20260605/index.md)                     | M5 Closeout — Checklist, Handoff Note, Milestone Closure   | Pending  |
+| [debt-sprint-to-10_20260605](./tracks/debt-sprint-to-10_20260605/index.md)         | Debt Sprint — Score 32 → 10                                | Pending  |
 
 ## All Tracks
 

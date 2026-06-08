@@ -29,7 +29,6 @@ const VALID_SCENARIO = {
     firstTurn: '09:00',
     lastTurn: '20:00',
     totalTurns: 45,
-    minutesPerTurn: 20,
     firstPlayer: 'union',
     date: '1862-09-14',
   },
@@ -91,8 +90,7 @@ describe('PUT /data', () => {
       .put('/data')
       .send({
         ...VALID_SCENARIO,
-        lightingSchedule: [{ startTurn: 1, condition: 'day' }],
-        nightVisibilityCap: 2,
+        lightingSchedule: [{ startTurn: 1, condition: 'day', visibilityHexes: 999 }],
         flukeStoppageGracePeriodTurns: 8,
         initiativeSystem: 'RSS',
         looseCannon: true,
