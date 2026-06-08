@@ -14,7 +14,7 @@
     "date": "1862-09-14"
   },
   "rules": {
-    "_note": "SM-specific overrides — see LOBv2_GameSpecificUpdates.pdf and SM_Rules.pdf",
+    "_note": "SM-specific overrides \u2014 see LOBv2_GameSpecificUpdates.pdf and SM_Rules.pdf",
     "treeLosHeight": 1,
     "terrainLosHeights": {
       "woods": 1,
@@ -60,17 +60,20 @@
     {
       "startTurn": 1,
       "condition": "day",
-      "_note": "Sep 14 1862 — sunrise well before 09:00 game start"
+      "_note": "Sep 14 1862 \u2014 sunrise well before 09:00 game start",
+      "visibilityHexes": 999
     },
     {
       "startTurn": 28,
       "condition": "twilight",
-      "_note": "Approx 18:20 local time (turn 28 = 09:00 + 27×20min = 18:00)"
+      "_note": "Approx 18:20 local time (turn 28 = 09:00 + 27\u00d720min = 18:00)",
+      "visibilityHexes": 4
     },
     {
       "startTurn": 31,
       "condition": "night",
-      "_note": "Full night begins turn 31 (approx 19:00 local time)"
+      "_note": "Full night begins turn 31 (approx 19:00 local time)",
+      "visibilityHexes": 2
     }
   ],
   "nightVisibilityCap": 2,
@@ -85,9 +88,9 @@
   "randomEventsEnabled": true,
   "randomEventsTiming": "commandPhaseAfterOrderAcceptance",
   "movementCosts": {
-    "_source": "SM_Rules.pdf — SM Special Terrain Effects on Movement chart",
+    "_source": "SM_Rules.pdf \u2014 SM Special Terrain Effects on Movement chart",
     "_notes": {
-      "P": "Prohibited — unit type may not enter or cross",
+      "P": "Prohibited \u2014 unit type may not enter or cross",
       "ne": "No effect",
       "ot": "Cost equals other terrain in hex (road/pike/trail overlays)",
       "0.5": "Half the unit's full movement allowance (round up)",
@@ -232,7 +235,7 @@
         "limbered": null,
         "wagon": null,
         "leader": null,
-        "_note": "SM Special: 50-ft contour interval — Vertical slopes are IMPASSABLE to all units"
+        "_note": "SM Special: 50-ft contour interval \u2014 Vertical slopes are IMPASSABLE to all units"
       }
     },
     "noEffectTerrain": ["run", "stoneWall"],
@@ -276,7 +279,7 @@
     "_note": "At-start hex coordinates use col.row format. Setup constraints use setupZone/referenceHex notation.",
     "union": [
       {
-        "_groupNote": "Cavalry Division — all units set up within 5 hexes of 18.05",
+        "_groupNote": "Cavalry Division \u2014 all units set up within 5 hexes of 18.05",
         "setupZone": "within5Of",
         "referenceHex": "18.05",
         "order": "none",
@@ -293,13 +296,13 @@
         "unitId": "pelham-a",
         "hex": "22.23",
         "order": null,
-        "_note": "Independent — no order needed"
+        "_note": "Independent \u2014 no order needed"
       },
       {
         "unitId": "pelham-b",
         "hex": "20.23",
         "order": null,
-        "_note": "Independent — no order needed"
+        "_note": "Independent \u2014 no order needed"
       },
       {
         "unitId": "csa-wagon",
@@ -310,10 +313,10 @@
         "unitId": "dh-hill",
         "hex": "36.26",
         "order": "move",
-        "_note": "Hill moves division to defend Turner's Gap (Complex Defense → Move per SM rule)"
+        "_note": "Hill moves division to defend Turner's Gap (Complex Defense \u2192 Move per SM rule)"
       },
       {
-        "_groupNote": "Colquitt Brigade (C/dH) — deployed at Turner's Gap",
+        "_groupNote": "Colquitt Brigade (C/dH) \u2014 deployed at Turner's Gap",
         "order": "move",
         "units": [
           {
@@ -343,7 +346,7 @@
         ]
       },
       {
-        "_groupNote": "Anderson Brigade (A/dH) — within 2 hexes of 38.31",
+        "_groupNote": "Anderson Brigade (A/dH) \u2014 within 2 hexes of 38.31",
         "setupZone": "within2Of",
         "referenceHex": "38.31",
         "order": "move",
@@ -356,20 +359,20 @@
         "order": null
       },
       {
-        "_groupNote": "Lane (Arty Res) — Army Reserve Artillery",
+        "_groupNote": "Lane (Arty Res) \u2014 Army Reserve Artillery",
         "unitId": "lane",
         "hex": "34.17",
         "order": null
       },
       {
-        "_groupNote": "Reserve Artillery batteries — within 3 hexes of 36.27",
+        "_groupNote": "Reserve Artillery batteries \u2014 within 3 hexes of 36.27",
         "setupZone": "within3Of",
         "referenceHex": "36.27",
         "order": null,
         "units": ["lloyd", "blackshears", "ross", "patterson"]
       },
       {
-        "_groupNote": "Garland Brigade (G/dH) — DETACHED, defending Fox's Gap",
+        "_groupNote": "Garland Brigade (G/dH) \u2014 DETACHED, defending Fox's Gap",
         "isDetached": true,
         "order": "move",
         "units": [
@@ -412,14 +415,14 @@
         "type": "move",
         "originalType": "complexDefense",
         "assignedTo": "dh-div",
-        "description": "D.H. Hill's division moving to defend Turner's Gap and Frosttown Road (Complex Defense → Move per SM rule)"
+        "description": "D.H. Hill's division moving to defend Turner's Gap and Frosttown Road (Complex Defense \u2192 Move per SM rule)"
       },
       {
         "id": "csa-order-2",
         "type": "move",
         "originalType": "complexDefense",
         "assignedTo": "gdh",
-        "description": "Garland's brigade DETACHED to defend Fox's Gap (Complex Defense → Move per SM rule)"
+        "description": "Garland's brigade DETACHED to defend Fox's Gap (Complex Defense \u2192 Move per SM rule)"
       }
     ]
   },
@@ -580,7 +583,7 @@
       },
       {
         "_id": "force-a",
-        "_note": "Jones Division (less three brigades) — VARIABLE arrival time. Roll 1d6: 1=14:30@39.35, 2-3=15:00@20.34, 4-5=15:30@39.35, 6=16:00@39.35",
+        "_note": "Jones Division (less three brigades) \u2014 VARIABLE arrival time. Roll 1d6: 1=14:30@39.35, 2-3=15:00@20.34, 4-5=15:30@39.35, 6=16:00@39.35",
         "variable": true,
         "variableTable": [
           {
@@ -626,7 +629,7 @@
       },
       {
         "_id": "force-b",
-        "_note": "Detached Jones brigades (Garnett, Kemper, Walker) — same variable timing as Force A (roll separately)",
+        "_note": "Detached Jones brigades (Garnett, Kemper, Walker) \u2014 same variable timing as Force A (roll separately)",
         "isDetached": true,
         "variable": true,
         "variableTable": [
@@ -842,7 +845,7 @@
   "randomEvents": {
     "_note": "Roll 2d6 at the start of the Confederate or Union player turn (as applicable). Special re-roll triggers noted per table.",
     "confederate": {
-      "_rerollOn": "11 or 12 — roll again",
+      "_rerollOn": "11 or 12 \u2014 roll again",
       "table": [
         {
           "roll": 2,
@@ -882,7 +885,7 @@
         {
           "roll": 9,
           "event": "Friendly Fire",
-          "text": "Union player freely chooses one Confederate infantry or dismounted cavalry unit within 3 hexes of a Union infantry or dismounted cavalry unit. Immediately resolve Fire Combat against it using the 4–6 column on the Fire Combat Table (no other modifiers). Ignore Low Ammo markings; apply Flank modifier to any Straggler/Morale Checks."
+          "text": "Union player freely chooses one Confederate infantry or dismounted cavalry unit within 3 hexes of a Union infantry or dismounted cavalry unit. Immediately resolve Fire Combat against it using the 4\u20136 column on the Fire Combat Table (no other modifiers). Ignore Low Ammo markings; apply Flank modifier to any Straggler/Morale Checks."
         },
         {
           "roll": 10,
@@ -902,7 +905,7 @@
       ]
     },
     "union": {
-      "_rerollOn": "10, 11, or 12 — roll again",
+      "_rerollOn": "10, 11, or 12 \u2014 roll again",
       "table": [
         {
           "roll": 2,
@@ -943,7 +946,7 @@
         {
           "roll": 10,
           "event": "Friendly Fire",
-          "text": "Confederate player freely chooses one Union infantry or dismounted cavalry unit within 3 hexes of a Confederate infantry or dismounted cavalry unit. Immediately resolve Fire Combat against it using the 4–6 column on the Fire Combat Table (no other modifiers). Apply Flank modifier to any Straggler/Morale Checks.",
+          "text": "Confederate player freely chooses one Union infantry or dismounted cavalry unit within 3 hexes of a Confederate infantry or dismounted cavalry unit. Immediately resolve Fire Combat against it using the 4\u20136 column on the Fire Combat Table (no other modifiers). Apply Flank modifier to any Straggler/Morale Checks.",
           "_reroll": true
         },
         {

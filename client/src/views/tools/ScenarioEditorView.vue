@@ -19,8 +19,11 @@ const pullError = ref('');
 const showPushConfirm = ref(false);
 const showPullConfirm = ref(false);
 
+// Default visibility in hexes per condition (day=unlimited, night=2, others=4)
+const VISIBILITY_DEFAULTS = { day: 999, twilight: 4, night: 2, fog: 4, rain: 4 };
+
 // Lighting schedule row being added
-const newRow = ref({ startTurn: '', condition: 'day' });
+const newRow = ref({ startTurn: '', condition: 'day', visibilityHexes: 999 });
 
 // ── Computed ──────────────────────────────────────────────────────────────────
 
@@ -199,9 +202,13 @@ function addLightingRow() {
   ensureLightingSchedule();
   scenarioData.value.lightingSchedule = [
     ...scenarioData.value.lightingSchedule,
-    { startTurn: turn, condition: newRow.value.condition },
+    {
+      startTurn: turn,
+      condition: newRow.value.condition,
+      visibilityHexes: newRow.value.visibilityHexes,
+    },
   ].sort((a, b) => a.startTurn - b.startTurn);
-  newRow.value = { startTurn: '', condition: 'day' };
+  newRow.value = { startTurn: '', condition: 'day', visibilityHexes: 999 };
   markDirty();
 }
 
@@ -215,9 +222,20 @@ function deleteLightingRow(index) {
 function updateLightingRow(index, field, value) {
   ensureLightingSchedule();
   const updated = [...scenarioData.value.lightingSchedule];
-  updated[index] = { ...updated[index], [field]: field === 'startTurn' ? Number(value) : value };
+  const coerced = field === 'startTurn' || field === 'visibilityHexes' ? Number(value) : value;
+  const patch = { [field]: coerced };
+  // Auto-apply visibility default when condition changes
+  if (field === 'condition') {
+    patch.visibilityHexes = VISIBILITY_DEFAULTS[value];
+  }
+  updated[index] = { ...updated[index], ...patch };
   scenarioData.value.lightingSchedule = updated.sort((a, b) => a.startTurn - b.startTurn);
   markDirty();
+}
+
+function updateNewRowCondition(condition) {
+  newRow.value.condition = condition;
+  newRow.value.visibilityHexes = VISIBILITY_DEFAULTS[condition];
 }
 
 // ── Rules edits ───────────────────────────────────────────────────────────────
@@ -337,6 +355,7 @@ onMounted(fetchScenarioData);
             <tr>
               <th>Start Turn</th>
               <th>Condition</th>
+              <th>Visibility (hexes)</th>
               <th></th>
             </tr>
           </thead>
@@ -358,7 +377,19 @@ onMounted(fetchScenarioData);
                   <option value="day">Day</option>
                   <option value="twilight">Twilight</option>
                   <option value="night">Night</option>
+                  <option value="fog">Fog</option>
+                  <option value="rain">Rain</option>
                 </select>
+              </td>
+              <td>
+                <input
+                  type="number"
+                  class="turn-input"
+                  :value="row.visibilityHexes"
+                  min="1"
+                  data-testid="visibility-input"
+                  @change="updateLightingRow(i, 'visibilityHexes', $event.target.value)"
+                />
               </td>
               <td>
                 <button class="delete-btn" @click="deleteLightingRow(i)">×</button>
@@ -373,11 +404,20 @@ onMounted(fetchScenarioData);
             class="turn-input"
             placeholder="Turn"
           />
-          <select v-model="newRow.condition">
+          <select :value="newRow.condition" @change="updateNewRowCondition($event.target.value)">
             <option value="day">Day</option>
             <option value="twilight">Twilight</option>
             <option value="night">Night</option>
+            <option value="fog">Fog</option>
+            <option value="rain">Rain</option>
           </select>
+          <input
+            v-model.number="newRow.visibilityHexes"
+            type="number"
+            class="turn-input"
+            min="1"
+            data-testid="new-row-visibility"
+          />
           <button class="add-btn" @click="addLightingRow">Add</button>
         </div>
       </section>

@@ -36,8 +36,8 @@ const VALID_SCENARIO = {
 const SCENARIO_WITH_LIGHTING = {
   ...VALID_SCENARIO,
   lightingSchedule: [
-    { startTurn: 1, condition: 'day' },
-    { startTurn: 28, condition: 'twilight' },
+    { startTurn: 1, condition: 'day', visibilityHexes: 999 },
+    { startTurn: 28, condition: 'twilight', visibilityHexes: 4 },
   ],
 };
 
@@ -384,6 +384,71 @@ describe('ScenarioEditorView', () => {
       await flushPromises();
 
       expect(wrapper.find('.unsaved-marker').exists()).toBe(true);
+      wrapper.unmount();
+    });
+
+    it('renders visibility column header', async () => {
+      vi.stubGlobal('fetch', mockFetch(SCENARIO_WITH_LIGHTING));
+      const wrapper = mount(ScenarioEditorView, { attachTo: document.body });
+      await flushPromises();
+      expect(wrapper.text()).toContain('Visibility');
+      wrapper.unmount();
+    });
+
+    it('renders visibilityHexes input for each existing row', async () => {
+      vi.stubGlobal('fetch', mockFetch(SCENARIO_WITH_LIGHTING));
+      const wrapper = mount(ScenarioEditorView, { attachTo: document.body });
+      await flushPromises();
+      const visInputs = wrapper.findAll('[data-testid="visibility-input"]');
+      expect(visInputs.length).toBe(2);
+      expect(visInputs[0].element.value).toBe('999');
+      expect(visInputs[1].element.value).toBe('4');
+      wrapper.unmount();
+    });
+
+    it('condition select includes fog and rain options', async () => {
+      vi.stubGlobal('fetch', mockFetch(SCENARIO_WITH_LIGHTING));
+      const wrapper = mount(ScenarioEditorView, { attachTo: document.body });
+      await flushPromises();
+      const firstSelect = wrapper.find('.lighting-row select');
+      const optionValues = [...firstSelect.element.options].map((o) => o.value);
+      expect(optionValues).toContain('fog');
+      expect(optionValues).toContain('rain');
+      wrapper.unmount();
+    });
+
+    it('new-row defaults to visibilityHexes 999 (day)', async () => {
+      vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
+      const wrapper = mount(ScenarioEditorView, { attachTo: document.body });
+      await flushPromises();
+      const newVisInput = wrapper.find('[data-testid="new-row-visibility"]');
+      expect(newVisInput.element.value).toBe('999');
+      wrapper.unmount();
+    });
+
+    it('changing new-row condition to night sets visibility default to 2', async () => {
+      vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
+      const wrapper = mount(ScenarioEditorView, { attachTo: document.body });
+      await flushPromises();
+      const condSelect = wrapper.find('.add-row select');
+      await condSelect.setValue('night');
+      await condSelect.trigger('change');
+      await wrapper.vm.$nextTick();
+      const newVisInput = wrapper.find('[data-testid="new-row-visibility"]');
+      expect(newVisInput.element.value).toBe('2');
+      wrapper.unmount();
+    });
+
+    it('changing new-row condition to fog sets visibility default to 4', async () => {
+      vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
+      const wrapper = mount(ScenarioEditorView, { attachTo: document.body });
+      await flushPromises();
+      const condSelect = wrapper.find('.add-row select');
+      await condSelect.setValue('fog');
+      await condSelect.trigger('change');
+      await wrapper.vm.$nextTick();
+      const newVisInput = wrapper.find('[data-testid="new-row-visibility"]');
+      expect(newVisInput.element.value).toBe('4');
       wrapper.unmount();
     });
   });

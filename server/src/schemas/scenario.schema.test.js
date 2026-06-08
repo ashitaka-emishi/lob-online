@@ -41,9 +41,9 @@ describe('ScenarioSchema — base document', () => {
     const full = {
       ...BASE,
       lightingSchedule: [
-        { startTurn: 1, condition: 'day' },
-        { startTurn: 28, condition: 'twilight' },
-        { startTurn: 31, condition: 'night' },
+        { startTurn: 1, condition: 'day', visibilityHexes: 999 },
+        { startTurn: 28, condition: 'twilight', visibilityHexes: 4 },
+        { startTurn: 31, condition: 'night', visibilityHexes: 2 },
       ],
       nightVisibilityCap: 2,
       flukeStoppageGracePeriodTurns: 8,
@@ -70,20 +70,26 @@ describe('ScenarioSchema — backward compatibility', () => {
 });
 
 describe('ScenarioSchema — lightingSchedule validation', () => {
-  it('accepts valid condition values', () => {
-    for (const condition of ['day', 'twilight', 'night']) {
+  it('accepts valid condition values including fog and rain', () => {
+    for (const [condition, visibilityHexes] of [
+      ['day', 999],
+      ['twilight', 4],
+      ['night', 2],
+      ['fog', 4],
+      ['rain', 4],
+    ]) {
       const result = ScenarioSchema.safeParse({
         ...BASE,
-        lightingSchedule: [{ startTurn: 1, condition }],
+        lightingSchedule: [{ startTurn: 1, condition, visibilityHexes }],
       });
-      expect(result.success).toBe(true);
+      expect(result.success, `condition=${condition}`).toBe(true);
     }
   });
 
   it('rejects invalid condition value', () => {
     const result = ScenarioSchema.safeParse({
       ...BASE,
-      lightingSchedule: [{ startTurn: 1, condition: 'dusk' }],
+      lightingSchedule: [{ startTurn: 1, condition: 'dusk', visibilityHexes: 4 }],
     });
     expect(result.success).toBe(false);
   });
@@ -91,9 +97,41 @@ describe('ScenarioSchema — lightingSchedule validation', () => {
   it('rejects non-positive startTurn', () => {
     const result = ScenarioSchema.safeParse({
       ...BASE,
-      lightingSchedule: [{ startTurn: 0, condition: 'day' }],
+      lightingSchedule: [{ startTurn: 0, condition: 'day', visibilityHexes: 999 }],
     });
     expect(result.success).toBe(false);
+  });
+
+  it('rejects missing visibilityHexes', () => {
+    const result = ScenarioSchema.safeParse({
+      ...BASE,
+      lightingSchedule: [{ startTurn: 1, condition: 'night' }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects zero visibilityHexes', () => {
+    const result = ScenarioSchema.safeParse({
+      ...BASE,
+      lightingSchedule: [{ startTurn: 1, condition: 'day', visibilityHexes: 0 }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts day with unlimited visibility (999)', () => {
+    const result = ScenarioSchema.safeParse({
+      ...BASE,
+      lightingSchedule: [{ startTurn: 1, condition: 'day', visibilityHexes: 999 }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts night with 2-hex cap', () => {
+    const result = ScenarioSchema.safeParse({
+      ...BASE,
+      lightingSchedule: [{ startTurn: 31, condition: 'night', visibilityHexes: 2 }],
+    });
+    expect(result.success).toBe(true);
   });
 });
 

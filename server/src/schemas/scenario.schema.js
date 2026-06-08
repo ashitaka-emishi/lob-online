@@ -58,11 +58,12 @@ const RandomEventEntry = z.object({
   _reroll: z.boolean().optional(),
 });
 
-const LightingCondition = z.enum(['day', 'twilight', 'night']);
+const LightingCondition = z.enum(['day', 'twilight', 'night', 'fog', 'rain']);
 
 const LightingEntry = z.object({
   startTurn: z.number().int().positive(),
   condition: LightingCondition,
+  visibilityHexes: z.number().int().positive(),
   _note: z.string().optional(),
 });
 
