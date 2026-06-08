@@ -9,8 +9,10 @@ const SCENARIO = {
   id: 'south-mountain',
   turnStructure: {
     firstTurn: '09:00',
-    minutesPerTurn: 20,
+    lastTurn: '20:00',
+    totalTurns: 45,
     firstPlayer: 'union',
+    date: '1862-09-14',
   },
   setup: {
     union: [
@@ -256,7 +258,7 @@ describe('initGameState — default unit fields', () => {
 describe('initGameState — reinforcement pre-queuing', () => {
   it('queues reinforcement units with correct turn numbers', () => {
     const { reinforcementQueue } = initGameState(SCENARIO, 'g1');
-    // 09:00 → turn 1; 11:30 → turn 8
+    // LOB §1.1 — 15 min/turn: 09:00 → turn 1; 11:30 → (150/15)+1 = turn 11
     const coxEntry = reinforcementQueue.find((e) => e.unitId === 'cox');
     expect(coxEntry).toBeDefined();
     expect(coxEntry.turn).toBe(1);
@@ -264,7 +266,7 @@ describe('initGameState — reinforcement pre-queuing', () => {
 
     const willcoxEntry = reinforcementQueue.find((e) => e.unitId === 'willcox');
     expect(willcoxEntry).toBeDefined();
-    expect(willcoxEntry.turn).toBe(8);
+    expect(willcoxEntry.turn).toBe(11);
     expect(willcoxEntry.entryHex).toBe('15.01');
   });
 
@@ -272,7 +274,7 @@ describe('initGameState — reinforcement pre-queuing', () => {
     const { reinforcementQueue } = initGameState(SCENARIO, 'g1');
     const ripleyEntry = reinforcementQueue.find((e) => e.unitId === 'ripley');
     expect(ripleyEntry).toBeDefined();
-    expect(ripleyEntry.turn).toBe(8);
+    expect(ripleyEntry.turn).toBe(11);
     expect(ripleyEntry.entryHex).toBe('39.35');
   });
 
@@ -280,8 +282,8 @@ describe('initGameState — reinforcement pre-queuing', () => {
     const { reinforcementQueue } = initGameState(SCENARIO, 'g1');
     const jonesEntry = reinforcementQueue.find((e) => e.unitId === 'dr-jones');
     expect(jonesEntry).toBeDefined();
-    // 14:30 → (14*60+30 - 9*60) / 20 = (870-540)/20 = 330/20 = 16.5 → floor 16 → turn 17
-    expect(jonesEntry.turn).toBe(17);
+    // LOB §1.1 — 15 min/turn: 14:30 → (330/15)+1 = 22+1 = turn 23
+    expect(jonesEntry.turn).toBe(23);
     expect(jonesEntry.entryHex).toBe('39.35');
   });
 
@@ -296,8 +298,8 @@ describe('initGameState — reinforcement pre-queuing', () => {
   it('reinforcement units have their scheduled entry turn in entryTurn field', () => {
     const { units } = initGameState(SCENARIO, 'g1');
     expect(units['cox'].entryTurn).toBe(1);
-    expect(units['willcox'].entryTurn).toBe(8);
-    expect(units['ripley'].entryTurn).toBe(8);
+    expect(units['willcox'].entryTurn).toBe(11);
+    expect(units['ripley'].entryTurn).toBe(11);
   });
 });
 

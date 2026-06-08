@@ -430,11 +430,11 @@ onMounted(fetchScenarioData);
         <table class="lighting-table">
           <thead>
             <tr>
-              <th>Start Turn</th>
-              <th>Time</th>
-              <th>Condition</th>
-              <th>Visibility (hexes)</th>
-              <th></th>
+              <th scope="col">Start Turn</th>
+              <th scope="col">Time</th>
+              <th scope="col">Condition</th>
+              <th scope="col">Visibility (hexes)</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
@@ -444,17 +444,19 @@ onMounted(fetchScenarioData);
                   type="number"
                   class="turn-input"
                   :value="row.startTurn"
+                  :aria-label="`Row ${i + 1} start turn`"
                   @change="updateLightingRow(i, 'startTurn', $event.target.value)"
                 />
               </td>
               <td>
-                <span class="derived-value" data-testid="lighting-time">{{
+                <span class="derived-value" data-testid="lighting-time" role="status">{{
                   lightingStartTimes.get(row.startTurn) ?? '—'
                 }}</span>
               </td>
               <td>
                 <select
                   :value="row.condition"
+                  :aria-label="`Row ${i + 1} condition`"
                   @change="updateLightingRow(i, 'condition', $event.target.value)"
                 >
                   <option value="day">Day</option>
@@ -471,11 +473,18 @@ onMounted(fetchScenarioData);
                   :value="row.visibilityHexes"
                   min="1"
                   data-testid="visibility-input"
+                  :aria-label="`Row ${i + 1} visibility hexes`"
                   @change="updateLightingRow(i, 'visibilityHexes', $event.target.value)"
                 />
               </td>
               <td>
-                <button class="delete-btn" @click="deleteLightingRow(i)">×</button>
+                <button
+                  class="delete-btn"
+                  :aria-label="`Delete row ${i + 1}`"
+                  @click="deleteLightingRow(i)"
+                >
+                  ×
+                </button>
               </td>
             </tr>
           </tbody>
@@ -765,6 +774,18 @@ onMounted(fetchScenarioData);
   color: #e0d8c8;
   font-size: 0.82rem;
   padding: 0.2rem 0.3rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .delete-btn {

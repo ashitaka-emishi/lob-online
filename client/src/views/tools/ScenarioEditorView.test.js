@@ -626,6 +626,24 @@ describe('ScenarioEditorView', () => {
       expect(newVisInput.element.value).toBe('4');
       wrapper.unmount();
     });
+
+    it('changing existing-row condition auto-updates visibility to the condition default', async () => {
+      vi.stubGlobal('fetch', mockFetch(SCENARIO_WITH_LIGHTING));
+      const wrapper = mount(ScenarioEditorView, {
+        attachTo: document.body,
+        global: { plugins: [stubRouter] },
+      });
+      await flushPromises();
+      // SCENARIO_WITH_LIGHTING has two rows: turn 1 day (999) and turn 28 twilight (4)
+      const selects = wrapper.findAll('.lighting-row select');
+      // Change first row (day) to night — should auto-set visibility to 2
+      await selects[0].setValue('night');
+      await selects[0].trigger('change');
+      await wrapper.vm.$nextTick();
+      const visInputs = wrapper.findAll('[data-testid="visibility-input"]');
+      expect(visInputs[0].element.value).toBe('2');
+      wrapper.unmount();
+    });
   });
 
   it('rules panel renders Fluke Stoppage Grace Period input', async () => {
