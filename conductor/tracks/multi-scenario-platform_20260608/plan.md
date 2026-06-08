@@ -81,20 +81,20 @@ Add client-side scenario persistence and a selector dropdown on the home page.
 
 ### Tasks
 
-- [ ] Task 2.1: Create `client/src/stores/useScenarioStore.js` — Pinia store with
+- [x] Task 2.1: Create `client/src/stores/useScenarioStore.js` — Pinia store with
       `selectedSlug` (default `'THG'`), `setScenario(slug)`, and `localStorage` hydration
       on init. Export the `SCENARIOS` array (slug + display name) for use in the dropdown.
-- [ ] Task 2.2: Write tests for `useScenarioStore` — default value, persistence across
+- [x] Task 2.2: Write tests for `useScenarioStore` — default value, persistence across
       store re-init, `setScenario` updates both state and localStorage.
-- [ ] Task 2.3: Update `HomeView.vue` — add a scenario selector `<select>` dropdown above
+- [x] Task 2.3: Update `HomeView.vue` — add a scenario selector `<select>` dropdown above
       the navigation buttons, wired to `useScenarioStore`. Navigation links use the selected
       slug to build `/scenarios/:slug/lobby` etc.
-- [ ] Task 2.4: Write/update `HomeView` tests — renders dropdown, default selection is THG,
+- [x] Task 2.4: Write/update `HomeView` tests — renders dropdown, default selection is THG,
       nav links include the slug, localStorage key is set on change.
 
 ### Verification
 
-- [ ] `npm run test` green for store and HomeView tests
+- [x] `npm run test` green for store and HomeView tests
 
 ---
 
