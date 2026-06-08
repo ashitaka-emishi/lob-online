@@ -12,7 +12,11 @@ function mapOrder(rawOrder) {
 }
 
 // Convert "HH:MM" time string to turn number relative to scenario firstTurn
-// LOB §1.1 — day/twilight turns are 15 minutes; all SM reinforcements arrive in daylight
+// LOB §1.1 — day and twilight turns are 15 minutes; night turns are 30 minutes.
+// SM's latest reinforcement arrival is 17:00 (turn 33), well before the turn-45 night
+// transition (~20:00). Using 15 min/turn is correct for all current SM data. If a future
+// scenario schedules reinforcements during night turns, this function must be updated to
+// walk the lighting schedule instead of using a flat divisor.
 function timeToTurn(timeStr, firstTurnTime) {
   const [h, m] = timeStr.split(':').map(Number);
   const [fh, fm] = firstTurnTime.split(':').map(Number);

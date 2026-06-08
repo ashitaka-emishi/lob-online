@@ -301,6 +301,23 @@ describe('initGameState — reinforcement pre-queuing', () => {
     expect(units['willcox'].entryTurn).toBe(11);
     expect(units['ripley'].entryTurn).toBe(11);
   });
+
+  it('timeToTurn boundary: 17:00 arrival maps to turn 33 (latest real SM reinforcement)', () => {
+    // LOB §1.1 — 15 min/turn: 17:00 → (480/15)+1 = 32+1 = 33
+    // SM's latest reinforcement in the real scenario.json is 17:00; this locks the daylight
+    // range boundary. Night turns (30 min) begin at turn 45 (~20:00 in SM).
+    const scenarioWith1700 = {
+      ...SCENARIO,
+      reinforcements: {
+        union: [{ time: '17:00', entryHex: '01.01', orderType: 'move', units: ['late-unit'] }],
+        confederate: [],
+      },
+    };
+    const { reinforcementQueue } = initGameState(scenarioWith1700, 'g-boundary');
+    const entry = reinforcementQueue.find((e) => e.unitId === 'late-unit');
+    expect(entry).toBeDefined();
+    expect(entry.turn).toBe(33);
+  });
 });
 
 // #361 — scenario-start detached brigades must be flagged isDetached:true
