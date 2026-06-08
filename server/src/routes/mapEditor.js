@@ -1,15 +1,13 @@
-import { join } from 'path';
-import { fileURLToPath } from 'url';
-
 import { Router } from 'express';
 
 import { stripNonPlayableBoundaryEdges } from '../engine/edge-strip.js';
 import { MapSchema } from '../schemas/map.schema.js';
+import { resolveScenarioPath } from '../utils/scenarioFolders.js';
 import { createEditorLimiter, createEditorRoute } from './editorRouteFactory.js';
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const MAP_PATH = join(__dirname, '../../../data/scenarios/south-mountain/map.json');
-const BACKUP_DIR = join(__dirname, '../../../data/scenarios/south-mountain/backups');
+// #529 — paths now resolved via scenarioFolders so SM slug maps identically to south-mountain
+const MAP_PATH = resolveScenarioPath('SM', 'map.json');
+const BACKUP_DIR = resolveScenarioPath('SM', 'backups');
 
 const router = Router();
 router.use(createEditorLimiter());

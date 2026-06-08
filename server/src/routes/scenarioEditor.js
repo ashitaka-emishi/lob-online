@@ -1,15 +1,13 @@
-import { join } from 'path';
-import { fileURLToPath } from 'url';
-
 import { Router } from 'express';
 
 import { ScenarioSchema } from '../schemas/scenario.schema.js';
+import { resolveScenarioPath } from '../utils/scenarioFolders.js';
 import { createEditorLimiter, createEditorRoute } from './editorRouteFactory.js';
 import { clearScenarioCache } from '../engine/scenario.js';
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const SCENARIO_PATH = join(__dirname, '../../../data/scenarios/south-mountain/scenario.json');
-const BACKUP_DIR = join(__dirname, '../../../data/scenarios/south-mountain/backups');
+// #529 — paths now resolved via scenarioFolders so SM slug maps identically to south-mountain
+const SCENARIO_PATH = resolveScenarioPath('SM', 'scenario.json');
+const BACKUP_DIR = resolveScenarioPath('SM', 'backups');
 
 const router = Router();
 router.use(createEditorLimiter());

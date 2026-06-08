@@ -1,14 +1,12 @@
-import { join } from 'path';
-import { fileURLToPath } from 'url';
-
 import { Router } from 'express';
 
 import { SuccessionSchema } from '../schemas/succession.schema.js';
+import { resolveScenarioPath } from '../utils/scenarioFolders.js';
 import { createEditorLimiter, createEditorRoute } from './editorRouteFactory.js';
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const SUCCESSION_PATH = join(__dirname, '../../../data/scenarios/south-mountain/succession.json');
-const BACKUP_DIR = join(__dirname, '../../../data/scenarios/south-mountain/backups');
+// #529 — paths now resolved via scenarioFolders so SM slug maps identically to south-mountain
+const SUCCESSION_PATH = resolveScenarioPath('SM', 'succession.json');
+const BACKUP_DIR = resolveScenarioPath('SM', 'backups');
 
 const router = Router();
 router.use(createEditorLimiter());

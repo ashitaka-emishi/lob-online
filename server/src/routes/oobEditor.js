@@ -1,14 +1,12 @@
-import { join } from 'path';
-import { fileURLToPath } from 'url';
-
 import { Router } from 'express';
 
 import { OOBSchema } from '../schemas/oob.schema.js';
+import { resolveScenarioPath } from '../utils/scenarioFolders.js';
 import { createEditorLimiter, createEditorRoute } from './editorRouteFactory.js';
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const OOB_PATH = join(__dirname, '../../../data/scenarios/south-mountain/oob.json');
-const BACKUP_DIR = join(__dirname, '../../../data/scenarios/south-mountain/backups');
+// #529 — paths now resolved via scenarioFolders so SM slug maps identically to south-mountain
+const OOB_PATH = resolveScenarioPath('SM', 'oob.json');
+const BACKUP_DIR = resolveScenarioPath('SM', 'backups');
 
 const router = Router();
 router.use(createEditorLimiter());
