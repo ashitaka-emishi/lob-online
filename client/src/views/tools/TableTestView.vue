@@ -105,7 +105,6 @@ const activePanel = computed(
     <header class="editor-header">
       <span class="title">Table Test Tool</span>
       <span class="spacer" />
-      <a class="nav-link" href="/tools/map-test">Map Test</a>
     </header>
 
     <!-- Body: tab bar top, panel content below -->
@@ -162,16 +161,6 @@ const activePanel = computed(
 
 .spacer {
   flex: 1;
-}
-
-.nav-link {
-  color: #a09880;
-  font-size: 0.8rem;
-  text-decoration: none;
-}
-
-.nav-link:hover {
-  color: #e0d8c8;
 }
 
 .editor-body {
