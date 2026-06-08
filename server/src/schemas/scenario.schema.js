@@ -92,7 +92,6 @@ export const ScenarioSchema = z.object({
     firstTurn: TimeStr,
     lastTurn: TimeStr,
     totalTurns: z.number().int().positive(),
-    minutesPerTurn: z.number().int().positive(),
     firstPlayer: z.enum(['union', 'confederate']),
     date: z.string(),
   }),

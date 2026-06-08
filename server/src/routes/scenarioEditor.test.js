@@ -29,7 +29,6 @@ const VALID_SCENARIO = {
     firstTurn: '09:00',
     lastTurn: '20:00',
     totalTurns: 45,
-    minutesPerTurn: 20,
     firstPlayer: 'union',
     date: '1862-09-14',
   },

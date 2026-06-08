@@ -9,7 +9,6 @@
     "firstTurn": "09:00",
     "lastTurn": "20:00",
     "totalTurns": 45,
-    "minutesPerTurn": 20,
     "firstPlayer": "union",
     "date": "1862-09-14"
   },
@@ -64,15 +63,15 @@
       "visibilityHexes": 999
     },
     {
-      "startTurn": 28,
+      "startTurn": 39,
       "condition": "twilight",
-      "_note": "Approx 18:20 local time (turn 28 = 09:00 + 27\u00d720min = 18:00)",
+      "_note": "Approx 18:30 local time (turn 39 = 09:00 + 38\u00d715min). Estimate \u2014 physical SM Hour Track not available; based on Sep 14 1862 civil twilight ~18:30 at 39.5\u00b0N.",
       "visibilityHexes": 4
     },
     {
-      "startTurn": 31,
+      "startTurn": 41,
       "condition": "night",
-      "_note": "Full night begins turn 31 (approx 19:00 local time)",
+      "_note": "Approx 19:00 local time (turn 41 = 09:00 + 40\u00d715min). Estimate \u2014 physical SM Hour Track not available; based on Sep 14 1862 astronomical twilight ~19:00 at 39.5\u00b0N.",
       "visibilityHexes": 2
     }
   ],

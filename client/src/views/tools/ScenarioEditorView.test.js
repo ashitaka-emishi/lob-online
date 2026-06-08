@@ -14,7 +14,6 @@ const VALID_SCENARIO = {
     firstTurn: '09:00',
     lastTurn: '20:00',
     totalTurns: 45,
-    minutesPerTurn: 20,
     firstPlayer: 'union',
     date: '1862-09-14',
   },
@@ -272,6 +271,51 @@ describe('ScenarioEditorView', () => {
     await flushPromises();
     // 09:00 to 20:00 = 11h
     expect(wrapper.text()).toContain('11h');
+    wrapper.unmount();
+  });
+
+  it('totalTurns displays as read-only derived value', async () => {
+    vi.stubGlobal('fetch', mockFetch(VALID_SCENARIO));
+    const wrapper = mount(ScenarioEditorView, { attachTo: document.body });
+    await flushPromises();
+    const display = wrapper.find('[data-testid="total-turns-display"]');
+    expect(display.exists()).toBe(true);
+    // No input for totalTurns
+    expect(wrapper.find('input[type="number"]').element).not.toBe(
+      wrapper.find('[data-testid="total-turns-display"]').element
+    );
+    wrapper.unmount();
+  });
+
+  it('totalTurns is 45 for all-day SM schedule (09:00–20:00, 660 min / 15 min per turn)', async () => {
+    const scenario = {
+      ...VALID_SCENARIO,
+      lightingSchedule: [{ startTurn: 1, condition: 'day', visibilityHexes: 999 }],
+    };
+    vi.stubGlobal('fetch', mockFetch(scenario));
+    const wrapper = mount(ScenarioEditorView, { attachTo: document.body });
+    await flushPromises();
+    const display = wrapper.find('[data-testid="total-turns-display"]');
+    expect(display.text()).toBe('45');
+    wrapper.unmount();
+  });
+
+  it('totalTurns accounts for night turns (30 min each) in lighting schedule', async () => {
+    // Turns 1–2 are day (15 min each, 9:00–9:15, 9:15–9:30); turn 3 is night (30 min, 9:30–10:00).
+    // lastTurn = '09:30' = start of the 3rd (last) turn → total 3 turns.
+    const scenario = {
+      ...VALID_SCENARIO,
+      turnStructure: { ...VALID_SCENARIO.turnStructure, firstTurn: '09:00', lastTurn: '09:30' },
+      lightingSchedule: [
+        { startTurn: 1, condition: 'day', visibilityHexes: 999 },
+        { startTurn: 3, condition: 'night', visibilityHexes: 2 },
+      ],
+    };
+    vi.stubGlobal('fetch', mockFetch(scenario));
+    const wrapper = mount(ScenarioEditorView, { attachTo: document.body });
+    await flushPromises();
+    const display = wrapper.find('[data-testid="total-turns-display"]');
+    expect(display.text()).toBe('3');
     wrapper.unmount();
   });
 

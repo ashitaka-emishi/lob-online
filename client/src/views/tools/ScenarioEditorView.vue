@@ -29,6 +29,48 @@ const newRow = ref({ startTurn: '', condition: 'day', visibilityHexes: 999 });
 
 const lightingSchedule = computed(() => scenarioData.value?.lightingSchedule ?? []);
 
+// LOB §1.1 — day/twilight turns are 15 minutes, night turns are 30 minutes
+const MINUTES_PER_CONDITION = { day: 15, twilight: 15, night: 30, fog: 15, rain: 15 };
+
+// LOB §1.1 — totalTurns derived from firstTurn/lastTurn + lighting schedule turn durations.
+// Walk turn-by-turn: each turn advances the clock by its condition's minutes/turn.
+// The condition in effect for turn N is the last lighting entry with startTurn <= N.
+const totalTurns = computed(() => {
+  const ts = scenarioData.value?.turnStructure;
+  const schedule = lightingSchedule.value;
+  if (!ts?.firstTurn || !ts?.lastTurn) return null;
+
+  const [fh, fm] = ts.firstTurn.split(':').map(Number);
+  const [lh, lm] = ts.lastTurn.split(':').map(Number);
+  const gameStartMin = fh * 60 + fm;
+  const gameEndMin = lh * 60 + lm;
+  if (isNaN(gameStartMin) || isNaN(gameEndMin) || gameEndMin <= gameStartMin) return null;
+
+  const sorted = [...schedule].sort((a, b) => a.startTurn - b.startTurn);
+  // Default condition if no schedule or first entry starts after turn 1
+  const defaultCondition = sorted[0]?.startTurn === 1 ? sorted[0].condition : 'day';
+
+  // turnStartMin tracks when the current turn begins. lastTurn is the START of the final turn,
+  // so include turns starting at or before gameEndMin (the last-turn start time).
+  let turnStartMin = gameStartMin;
+  let turns = 0;
+  let condIdx = 0;
+
+  while (turnStartMin <= gameEndMin) {
+    turns++;
+    // Advance condIdx to the last lighting entry whose startTurn <= turns
+    while (condIdx + 1 < sorted.length && sorted[condIdx + 1].startTurn <= turns) {
+      condIdx++;
+    }
+    const condition =
+      sorted.length && sorted[condIdx].startTurn <= turns
+        ? sorted[condIdx].condition
+        : defaultCondition;
+    turnStartMin += MINUTES_PER_CONDITION[condition] ?? 15;
+  }
+  return turns;
+});
+
 const gameDuration = computed(() => {
   const ts = scenarioData.value?.turnStructure;
   if (!ts) return '';
@@ -316,18 +358,10 @@ onMounted(fetchScenarioData);
             :value="scenarioData.turnStructure.lastTurn"
             @change="updateTurnStructure('lastTurn', $event.target.value)"
           />
-          <label>Minutes per Turn</label>
-          <input
-            type="number"
-            :value="scenarioData.turnStructure.minutesPerTurn"
-            @change="updateTurnStructure('minutesPerTurn', Number($event.target.value))"
-          />
-          <label>Total Turns</label>
-          <input
-            type="number"
-            :value="scenarioData.turnStructure.totalTurns"
-            @change="updateTurnStructure('totalTurns', Number($event.target.value))"
-          />
+          <label class="derived-label">Total Turns</label>
+          <span class="derived-value" data-testid="total-turns-display">{{
+            totalTurns ?? '—'
+          }}</span>
           <label>First Player</label>
           <select
             :value="scenarioData.turnStructure.firstPlayer"
