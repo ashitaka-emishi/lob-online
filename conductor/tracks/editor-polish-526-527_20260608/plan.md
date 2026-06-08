@@ -3,7 +3,7 @@
 **Track ID:** editor-polish-526-527_20260608
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-08
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -25,12 +25,12 @@ Phase 1 is low-risk template cleanup.
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -38,11 +38,11 @@ Phase 1 is low-risk template cleanup.
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated if any debt was accepted
-- [ ] Ready for `/team-review`
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated if any debt was accepted
+- [x] Ready for `/team-review`
 
 ---
 
@@ -54,15 +54,15 @@ redundant and visually compete with primary actions.
 
 ### Tasks
 
-- [ ] Task 1.1: Remove the `<a class="nav-link" href="/tools/scenario-editor">Scenario Editor</a>`
+- [x] Task 1.1: Remove the `<a class="nav-link" href="/tools/scenario-editor">Scenario Editor</a>`
       element from `MapEditorView.vue` (beside Export button). Remove associated `.nav-link`
       CSS rules if they become dead code after removal.
-- [ ] Task 1.2: Remove the `<a class="nav-link" href="/tools/map-editor">Map Editor</a>`
+- [x] Task 1.2: Remove the `<a class="nav-link" href="/tools/map-editor">Map Editor</a>`
       element from `ScenarioEditorView.vue` (beside Pull from Server button). Remove
       associated `.nav-link` CSS if dead.
-- [ ] Task 1.3: Update `MapEditorView.test.js` — remove or replace any assertions that check
+- [x] Task 1.3: Update `MapEditorView.test.js` — remove or replace any assertions that check
       for the removed nav links. Confirm Export button tests still pass.
-- [ ] Task 1.4: Update `ScenarioEditorView.test.js` — remove or replace any assertions that
+- [x] Task 1.4: Update `ScenarioEditorView.test.js` — remove or replace any assertions that
       check for the removed Map Editor link. Confirm Pull from Server tests still pass.
 
 ### Verification
@@ -78,21 +78,21 @@ Extend the lighting schedule schema and UI with `visibilityHexes` and `fog`/`rai
 
 ### Tasks
 
-- [ ] Task 2.1: Update `server/src/schemas/scenario.schema.js` — extend `LightingCondition`
+- [x] Task 2.1: Update `server/src/schemas/scenario.schema.js` — extend `LightingCondition`
       to `z.enum(['day', 'twilight', 'night', 'fog', 'rain'])`. Add
       `visibilityHexes: z.number().int().positive()` as a required field on `LightingEntry`.
-- [ ] Task 2.2: Update `data/scenarios/south-mountain/scenario.json` — add `visibilityHexes`
+- [x] Task 2.2: Update `data/scenarios/south-mountain/scenario.json` — add `visibilityHexes`
       to each existing lighting entry: day→999, twilight→4, night→2.
-- [ ] Task 2.3: Update `ScenarioEditorView.vue` — add `visibilityHexes` column to the
+- [x] Task 2.3: Update `ScenarioEditorView.vue` — add `visibilityHexes` column to the
       lighting table (numeric input, min=1). Update `updateLightingRow` to handle the new
       field. Extend the condition `<select>` to include `fog` and `rain` options.
-- [ ] Task 2.4: Update `ScenarioEditorView.vue` — set new-row default to
+- [x] Task 2.4: Update `ScenarioEditorView.vue` — set new-row default to
       `{ startTurn: '', condition: 'day', visibilityHexes: 999 }`. Apply per-condition
       defaults when condition changes (day→999, night→2, twilight/fog/rain→4).
-- [ ] Task 2.5: Update `server/src/schemas/scenario.schema.test.js` — add tests for:
+- [x] Task 2.5: Update `server/src/schemas/scenario.schema.test.js` — add tests for:
       fog/rain conditions accepted, `visibilityHexes` required, day=999 valid, night=2 valid,
       missing `visibilityHexes` rejected.
-- [ ] Task 2.6: Update `ScenarioEditorView.test.js` — add tests for: visibility column
+- [x] Task 2.6: Update `ScenarioEditorView.test.js` — add tests for: visibility column
       renders, fog/rain options present in condition select, new-row defaults to 999,
       changing condition to `night` applies default of 2.
 
@@ -106,11 +106,11 @@ Extend the lighting schedule schema and UI with `visibilityHexes` and `fog`/`rai
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met
-- [ ] `npm run quality:strict` passes (validate-data, lint, format:check, test, build)
-- [ ] No unexpected warnings in test output
-- [ ] Issues #526 and #527 ready to close
-- [ ] Ready for `/team-review`
+- [x] All acceptance criteria in spec.md met
+- [x] `npm run quality:strict` passes (validate-data, lint, format:check, test, build)
+- [x] No unexpected warnings in test output
+- [x] Issues #526 and #527 ready to close
+- [x] Ready for `/team-review`
 
 ---
 
