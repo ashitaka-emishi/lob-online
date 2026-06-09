@@ -17,7 +17,7 @@ import { ScenarioSchema } from '../server/src/schemas/scenario.schema.js';
 import { MapSchema } from '../server/src/schemas/map.schema.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = join(__dirname, '../data/scenarios/south-mountain');
+const DATA_DIR = join(__dirname, '../data/modules/south-mountain');
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -49,6 +49,10 @@ function loadJSON(filename) {
     fail(`Could not load ${filename}: ${e.message}`);
     return null;
   }
+}
+
+function loadScenarioJSON() {
+  return loadJSON('scenarios/full-battle/scenario.json');
 }
 
 function validate(schema, data, label) {
@@ -317,7 +321,7 @@ console.log('=================================');
 section('1. Loading JSON files');
 const rawOOB = loadJSON('oob.json');
 const rawLeaders = loadJSON('leaders.json');
-const rawScenario = loadJSON('scenario.json');
+const rawScenario = loadScenarioJSON();
 const rawMap = loadJSON('map.json');
 
 if (!rawOOB || !rawLeaders || !rawScenario || !rawMap) {
@@ -329,7 +333,7 @@ pass('All four JSON files loaded');
 section('2. Schema validation');
 const oob = validate(OOBSchema, rawOOB, 'oob.json');
 const leaders = validate(LeadersSchema, rawLeaders, 'leaders.json');
-const scenario = validate(ScenarioSchema, rawScenario, 'scenario.json');
+const scenario = validate(ScenarioSchema, rawScenario, 'scenarios/full-battle/scenario.json');
 const map = validate(MapSchema, rawMap, 'map.json');
 
 section('3. Cross-reference checks');

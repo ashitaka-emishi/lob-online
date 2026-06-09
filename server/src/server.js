@@ -16,7 +16,7 @@ import gamesRouter from './routes/games.js';
 import oobRouter from './routes/oob.js';
 import leadersRouter from './routes/leaders.js';
 import scenariosRouter from './routes/scenarios.js';
-import scenarioDataRouter from './routes/scenarioData.js';
+import moduleDataRouter from './routes/moduleData.js';
 import { registerGameSocket } from './socket/gameSocket.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -100,9 +100,9 @@ export async function startServer() {
   app.use('/api/v1/scenarios', scenariosRouter);
   console.log('[server] scenarios API enabled at /api/v1/scenarios');
 
-  // Scenario-scoped data API — map, oob, scenario, leaders per slug (#529)
-  app.use('/api/v1/scenarios', scenarioDataRouter);
-  console.log('[server] scenario data API enabled at /api/v1/scenarios/:slug/*');
+  // Module-scoped data API — map, oob, module metadata, and scenario starts (#529)
+  app.use('/api/v1/modules', moduleDataRouter);
+  console.log('[server] module data API enabled at /api/v1/modules/:slug/*');
 
   // E2E coverage endpoint — returns Istanbul coverage collected via esm-loader-hook
   if (process.env.CYPRESS_COVERAGE === 'true') {

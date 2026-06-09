@@ -21,7 +21,7 @@ const stubRouter = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', component: { template: '<div/>' } },
-    { path: '/scenarios/:scenarioSlug/tools/oob-editor', component: { template: '<div/>' } },
+    { path: '/modules/:moduleSlug/tools/oob-editor', component: { template: '<div/>' } },
   ],
 });
 

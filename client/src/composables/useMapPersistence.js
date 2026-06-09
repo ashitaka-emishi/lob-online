@@ -64,7 +64,7 @@ export function useMapPersistence({
   draftKeyV1,
   onCalibrationLoaded,
   beforeSave,
-  scenarioSlug,
+  moduleSlug,
 }) {
   // L4: guard against accidental empty/missing key args
   if (!storageKey || !draftKey) {
@@ -160,10 +160,8 @@ export function useMapPersistence({
     draftBannerVisible.value = false;
   }
 
-  // #529 — prefer scenario-scoped API when a slug is provided
-  const mapApiUrl = scenarioSlug
-    ? `/api/v1/scenarios/${scenarioSlug}/map`
-    : '/api/tools/map-editor/data';
+  // #529 — prefer module-scoped API when a slug is provided
+  const mapApiUrl = moduleSlug ? `/api/v1/modules/${moduleSlug}/map` : '/api/tools/map-editor/data';
 
   async function fetchServerData() {
     const res = await fetch(mapApiUrl);

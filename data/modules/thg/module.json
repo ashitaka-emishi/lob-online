@@ -1,0 +1,14 @@
+{
+  "slug": "THG",
+  "name": "This Hallowed Ground",
+  "battle": "Gettysburg",
+  "system": "Line of Battle v2.0",
+  "publication": "RSS/CWR",
+  "defaultScenarioSlug": "full-battle",
+  "scenarios": [
+    {
+      "slug": "full-battle",
+      "name": "Full Battle"
+    }
+  ]
+}

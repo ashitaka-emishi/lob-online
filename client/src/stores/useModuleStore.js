@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
 
-export const SCENARIOS = [
+export const MODULES = [
   { slug: 'THG', displayName: 'This Hallowed Ground' },
   { slug: 'TTS', displayName: 'This Terrible Sound' },
   { slug: 'AFS', displayName: 'A Fearful Slaughter' },
@@ -13,8 +13,8 @@ export const SCENARIOS = [
   { slug: 'IB', displayName: 'Inferno in the Bluegrass' },
 ];
 
-const VALID_SLUGS = new Set(SCENARIOS.map((s) => s.slug));
-const LS_KEY = 'lob-selected-scenario';
+const VALID_SLUGS = new Set(MODULES.map((s) => s.slug));
+const LS_KEY = 'lob-selected-module';
 const DEFAULT_SLUG = 'THG';
 
 function loadFromStorage() {
@@ -27,10 +27,10 @@ function loadFromStorage() {
   return DEFAULT_SLUG;
 }
 
-export const useScenarioStore = defineStore('scenario', () => {
+export const useModuleStore = defineStore('module', () => {
   const selectedSlug = ref(loadFromStorage());
 
-  function setScenario(slug) {
+  function setModule(slug) {
     if (!VALID_SLUGS.has(slug)) return;
     selectedSlug.value = slug;
     try {
@@ -40,10 +40,15 @@ export const useScenarioStore = defineStore('scenario', () => {
     }
   }
 
-  function scenarioPath(suffix) {
+  function modulePath(suffix) {
     const clean = suffix.startsWith('/') ? suffix.slice(1) : suffix;
-    return `/scenarios/${selectedSlug.value}/${clean}`;
+    return `/modules/${selectedSlug.value}/${clean}`;
   }
 
-  return { selectedSlug, setScenario, scenarioPath };
+  function defaultScenarioPath(suffix) {
+    const clean = suffix.startsWith('/') ? suffix.slice(1) : suffix;
+    return modulePath(`/scenarios/full-battle/${clean}`);
+  }
+
+  return { selectedSlug, setModule, modulePath, defaultScenarioPath };
 });

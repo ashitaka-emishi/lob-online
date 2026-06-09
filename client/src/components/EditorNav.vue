@@ -6,15 +6,17 @@ import { useEditorsEnabled } from '../composables/useEditorsEnabled.js';
 const editorsEnabled = useEditorsEnabled();
 const route = useRoute();
 
-const slug = computed(() => route.params.scenarioSlug ?? 'THG');
-const base = computed(() => `/scenarios/${slug.value}`);
+const slug = computed(() => route.params.moduleSlug ?? 'THG');
+const base = computed(() => `/modules/${slug.value}`);
+const scenarioSlug = computed(() => route.params.scenarioSlug ?? 'full-battle');
+const scenarioBase = computed(() => `${base.value}/scenarios/${scenarioSlug.value}`);
 </script>
 
 <template>
   <nav class="editor-nav" aria-label="Editor tools">
     <template v-if="editorsEnabled">
       <RouterLink
-        :to="`${base}/tools/scenario-editor`"
+        :to="`${scenarioBase}/tools/scenario-editor`"
         data-testid="nav-scenario-editor"
         class="nav-link"
       >

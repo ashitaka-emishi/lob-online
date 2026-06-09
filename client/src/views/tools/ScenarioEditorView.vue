@@ -5,12 +5,13 @@ import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import EditorNav from '../../components/EditorNav.vue';
 
 const _route = useRoute();
-const _scenarioSlug = _route.params.scenarioSlug ?? null;
+const _moduleSlug = _route.params.moduleSlug ?? null;
+const _scenarioSlug = _route.params.scenarioSlug ?? 'full-battle';
 
 const STORAGE_KEY = 'lob-scenario-editor-south-mountain-v3';
-// #529 — prefer scenario-scoped API when slug is present in route
-const API_URL = _scenarioSlug
-  ? `/api/v1/scenarios/${_scenarioSlug}/scenario`
+// #529 — prefer module/scenario-scoped API when route params are present
+const API_URL = _moduleSlug
+  ? `/api/v1/modules/${_moduleSlug}/scenarios/${_scenarioSlug}/scenario`
   : '/api/tools/scenario-editor/data';
 
 // ── State ─────────────────────────────────────────────────────────────────────

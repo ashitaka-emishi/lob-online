@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 
-import { useScenarioStore, SCENARIOS } from './useScenarioStore.js';
+import { useModuleStore, MODULES } from './useModuleStore.js';
 
-const LS_KEY = 'lob-selected-scenario';
+const LS_KEY = 'lob-selected-module';
 
 beforeEach(() => {
   setActivePinia(createPinia());
@@ -14,74 +14,80 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe('SCENARIOS catalog', () => {
+describe('MODULES catalog', () => {
   it('contains nine entries', () => {
-    expect(SCENARIOS).toHaveLength(9);
+    expect(MODULES).toHaveLength(9);
   });
 
   it('has slug and displayName on every entry', () => {
-    for (const s of SCENARIOS) {
+    for (const s of MODULES) {
       expect(s.slug).toBeTruthy();
       expect(s.displayName).toBeTruthy();
     }
   });
 
   it('includes SM and THG', () => {
-    const slugs = SCENARIOS.map((s) => s.slug);
+    const slugs = MODULES.map((s) => s.slug);
     expect(slugs).toContain('SM');
     expect(slugs).toContain('THG');
   });
 });
 
-describe('useScenarioStore — defaults', () => {
+describe('useModuleStore — defaults', () => {
   it('defaults to THG when localStorage is empty', () => {
-    const store = useScenarioStore();
+    const store = useModuleStore();
     expect(store.selectedSlug).toBe('THG');
   });
 
   it('hydrates from localStorage on init', () => {
     localStorage.setItem(LS_KEY, 'SM');
-    const store = useScenarioStore();
+    const store = useModuleStore();
     expect(store.selectedSlug).toBe('SM');
   });
 
   it('ignores unknown slug in localStorage and falls back to THG', () => {
     localStorage.setItem(LS_KEY, 'BOGUS');
-    const store = useScenarioStore();
+    const store = useModuleStore();
     expect(store.selectedSlug).toBe('THG');
   });
 });
 
-describe('useScenarioStore — setScenario', () => {
+describe('useModuleStore — setModule', () => {
   it('updates selectedSlug', () => {
-    const store = useScenarioStore();
-    store.setScenario('SM');
+    const store = useModuleStore();
+    store.setModule('SM');
     expect(store.selectedSlug).toBe('SM');
   });
 
   it('persists to localStorage', () => {
-    const store = useScenarioStore();
-    store.setScenario('TTS');
+    const store = useModuleStore();
+    store.setModule('TTS');
     expect(localStorage.getItem(LS_KEY)).toBe('TTS');
   });
 
   it('ignores unknown slug and keeps current value', () => {
-    const store = useScenarioStore();
-    store.setScenario('SM');
-    store.setScenario('BOGUS');
+    const store = useModuleStore();
+    store.setModule('SM');
+    store.setModule('BOGUS');
     expect(store.selectedSlug).toBe('SM');
   });
 });
 
-describe('useScenarioStore — scenarioPath helper', () => {
+describe('useModuleStore — modulePath helper', () => {
   it('returns slug-prefixed path', () => {
-    const store = useScenarioStore();
-    store.setScenario('SM');
-    expect(store.scenarioPath('/lobby')).toBe('/scenarios/SM/lobby');
+    const store = useModuleStore();
+    store.setModule('SM');
+    expect(store.modulePath('/tools/map-editor')).toBe('/modules/SM/tools/map-editor');
   });
 
   it('strips leading slash from suffix', () => {
-    const store = useScenarioStore();
-    expect(store.scenarioPath('/tools/map-editor')).toBe('/scenarios/THG/tools/map-editor');
+    const store = useModuleStore();
+    expect(store.modulePath('/tools/map-editor')).toBe('/modules/THG/tools/map-editor');
+  });
+
+  it('returns default full-battle scenario path', () => {
+    const store = useModuleStore();
+    store.setModule('SM');
+    expect(store.defaultScenarioPath('/lobby')).toBe('/modules/SM/scenarios/full-battle/lobby');
   });
 });

@@ -9,8 +9,8 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 // Single-scenario hardcode: path is relative to this file's location (server/src/engine/).
 // When multi-scenario support lands, replace with an ACTIVE_SCENARIO env var or paths.js util.
-const DEFAULT_OOB_PATH = join(__dirname, '../../../data/scenarios/south-mountain/oob.json');
-const DEFAULT_LEADERS_PATH = join(__dirname, '../../../data/scenarios/south-mountain/leaders.json');
+const DEFAULT_OOB_PATH = join(__dirname, '../../../data/modules/south-mountain/oob.json');
+const DEFAULT_LEADERS_PATH = join(__dirname, '../../../data/modules/south-mountain/leaders.json');
 
 /**
  * Load and validate oob.json. Reads and parses the file synchronously on each call.

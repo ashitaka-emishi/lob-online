@@ -8,7 +8,8 @@ import { MapSchema } from '../schemas/map.schema.js';
 import { OOBSchema } from '../schemas/oob.schema.js';
 import { ScenarioSchema } from '../schemas/scenario.schema.js';
 import { LeadersSchema } from '../schemas/leaders.schema.js';
-import { resolveScenarioPath, ScenarioNotFoundError } from '../utils/scenarioFolders.js';
+import { SuccessionSchema } from '../schemas/succession.schema.js';
+import { resolveModulePath, ModuleNotFoundError } from '../utils/moduleFolders.js';
 import { stripNonPlayableBoundaryEdges } from '../engine/edge-strip.js';
 import { clearScenarioCache } from '../engine/scenario.js';
 
@@ -27,15 +28,23 @@ const MAX_BACKUPS = 20;
 // ── shared helpers ────────────────────────────────────────────────────────────
 
 function slugFromReq(req) {
-  return (req.params.scenarioSlug ?? '').toUpperCase();
+  return (req.params.moduleSlug ?? '').toUpperCase();
+}
+
+function scenarioSlugFromReq(req) {
+  return req.params.scenarioSlug ?? 'full-battle';
+}
+
+function isValidScenarioSlug(slug) {
+  return /^[a-z0-9-]+$/i.test(slug);
 }
 
 async function readJson(slug, file, res) {
   let filePath;
   try {
-    filePath = resolveScenarioPath(slug, file);
+    filePath = resolveModulePath(slug, file);
   } catch (err) {
-    if (err instanceof ScenarioNotFoundError) return res.status(404).json({ error: err.message });
+    if (err instanceof ModuleNotFoundError) return res.status(404).json({ error: err.message });
     throw err;
   }
   try {
@@ -49,9 +58,9 @@ async function readJson(slug, file, res) {
 async function writeJson(slug, file, filePrefix, schema, body, res, opts = {}) {
   let filePath;
   try {
-    filePath = resolveScenarioPath(slug, file);
+    filePath = resolveModulePath(slug, file);
   } catch (err) {
-    if (err instanceof ScenarioNotFoundError) return res.status(404).json({ error: err.message });
+    if (err instanceof ModuleNotFoundError) return res.status(404).json({ error: err.message });
     throw err;
   }
 
@@ -59,7 +68,7 @@ async function writeJson(slug, file, filePrefix, schema, body, res, opts = {}) {
   if (!result.success) return res.status(400).json({ ok: false, issues: result.error.issues });
 
   const validated = opts.transform ? opts.transform(result.data) : result.data;
-  const backupDir = resolveScenarioPath(slug, 'backups');
+  const backupDir = resolveModulePath(slug, 'backups');
 
   await mkdir(backupDir, { recursive: true });
 
@@ -110,7 +119,7 @@ async function writeJson(slug, file, filePrefix, schema, body, res, opts = {}) {
   try {
     opts.afterSave?.();
   } catch (err) {
-    console.error('[scenarioData] afterSave hook threw:', err.message);
+    console.error('[moduleData] afterSave hook threw:', err.message);
   }
 
   return res.json({ ok: true, _savedAt: savedAt });
@@ -118,9 +127,9 @@ async function writeJson(slug, file, filePrefix, schema, body, res, opts = {}) {
 
 // ── map ───────────────────────────────────────────────────────────────────────
 
-router.get('/:scenarioSlug/map', (req, res) => readJson(slugFromReq(req), 'map.json', res));
+router.get('/:moduleSlug/map', (req, res) => readJson(slugFromReq(req), 'map.json', res));
 
-router.put('/:scenarioSlug/map', (req, res) =>
+router.put('/:moduleSlug/map', (req, res) =>
   writeJson(slugFromReq(req), 'map.json', 'map', MapSchema, req.body, res, {
     transform: (data) => {
       if (data.hexes && data.gridSpec) stripNonPlayableBoundaryEdges(data.hexes, data.gridSpec);
@@ -131,30 +140,74 @@ router.put('/:scenarioSlug/map', (req, res) =>
 
 // ── oob ───────────────────────────────────────────────────────────────────────
 
-router.get('/:scenarioSlug/oob', (req, res) => readJson(slugFromReq(req), 'oob.json', res));
+router.get('/:moduleSlug/oob', (req, res) => readJson(slugFromReq(req), 'oob.json', res));
 
-router.put('/:scenarioSlug/oob', (req, res) =>
+router.put('/:moduleSlug/oob', (req, res) =>
   writeJson(slugFromReq(req), 'oob.json', 'oob', OOBSchema, req.body, res)
 );
 
-// ── scenario ──────────────────────────────────────────────────────────────────
+// ── module metadata ───────────────────────────────────────────────────────────
 
-router.get('/:scenarioSlug/scenario', (req, res) =>
-  readJson(slugFromReq(req), 'scenario.json', res)
+router.get('/:moduleSlug/module', (req, res) => readJson(slugFromReq(req), 'module.json', res));
+
+// ── scenario start states ─────────────────────────────────────────────────────
+
+router.get('/:moduleSlug/scenarios/:scenarioSlug/scenario', (req, res) =>
+  isValidScenarioSlug(scenarioSlugFromReq(req))
+    ? readJson(slugFromReq(req), join('scenarios', scenarioSlugFromReq(req), 'scenario.json'), res)
+    : res.status(404).json({ error: 'Unknown scenario slug' })
 );
 
-router.put('/:scenarioSlug/scenario', (req, res) =>
-  writeJson(slugFromReq(req), 'scenario.json', 'scenario', ScenarioSchema, req.body, res, {
-    afterSave: clearScenarioCache,
-  })
+router.put('/:moduleSlug/scenarios/:scenarioSlug/scenario', (req, res) =>
+  isValidScenarioSlug(scenarioSlugFromReq(req))
+    ? writeJson(
+        slugFromReq(req),
+        join('scenarios', scenarioSlugFromReq(req), 'scenario.json'),
+        'scenario',
+        ScenarioSchema,
+        req.body,
+        res,
+        {
+          afterSave: clearScenarioCache,
+        }
+      )
+    : res.status(404).json({ error: 'Unknown scenario slug' })
+);
+
+router.get('/:moduleSlug/scenario', (req, res) =>
+  readJson(slugFromReq(req), 'scenarios/full-battle/scenario.json', res)
+);
+
+router.put('/:moduleSlug/scenario', (req, res) =>
+  writeJson(
+    slugFromReq(req),
+    'scenarios/full-battle/scenario.json',
+    'scenario',
+    ScenarioSchema,
+    req.body,
+    res,
+    {
+      afterSave: clearScenarioCache,
+    }
+  )
 );
 
 // ── leaders ───────────────────────────────────────────────────────────────────
 
-router.get('/:scenarioSlug/leaders', (req, res) => readJson(slugFromReq(req), 'leaders.json', res));
+router.get('/:moduleSlug/leaders', (req, res) => readJson(slugFromReq(req), 'leaders.json', res));
 
-router.put('/:scenarioSlug/leaders', (req, res) =>
+router.put('/:moduleSlug/leaders', (req, res) =>
   writeJson(slugFromReq(req), 'leaders.json', 'leaders', LeadersSchema, req.body, res)
+);
+
+// ── succession ────────────────────────────────────────────────────────────────
+
+router.get('/:moduleSlug/succession', (req, res) =>
+  readJson(slugFromReq(req), 'succession.json', res)
+);
+
+router.put('/:moduleSlug/succession', (req, res) =>
+  writeJson(slugFromReq(req), 'succession.json', 'succession', SuccessionSchema, req.body, res)
 );
 
 export default router;

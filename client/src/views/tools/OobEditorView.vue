@@ -12,8 +12,8 @@ const activeSide = ref('union');
 const route = useRoute();
 
 onMounted(() => {
-  const slug = route.params.scenarioSlug;
-  if (slug) store.loadDataForScenario(slug);
+  const slug = route.params.moduleSlug;
+  if (slug) store.loadDataForModule(slug);
   else store.loadData();
 });
 

@@ -8,46 +8,63 @@ export default createRouter({
   routes: [
     { path: '/', component: HomeView },
 
-    // Scenario-scoped routes (#529)
+    // Module-scoped routes (#529): modules are published LoB/RSS games like THG, SM, NBH.
     {
-      path: '/scenarios/:scenarioSlug/lobby',
+      path: '/modules/:moduleSlug/scenarios/:scenarioSlug/lobby',
       component: () => import('../views/LobbyView.vue'),
     },
     {
-      path: '/scenarios/:scenarioSlug/games/:id',
+      path: '/modules/:moduleSlug/lobby',
+      redirect: (to) => `/modules/${to.params.moduleSlug}/scenarios/full-battle/lobby`,
+    },
+    {
+      path: '/modules/:moduleSlug/scenarios/:scenarioSlug/games/:id',
       component: () => import('../views/GameView.vue'),
     },
     {
-      path: '/scenarios/:scenarioSlug/tools/map-editor',
+      path: '/modules/:moduleSlug/games/:id',
+      redirect: (to) =>
+        `/modules/${to.params.moduleSlug}/scenarios/full-battle/games/${to.params.id}`,
+    },
+    {
+      path: '/modules/:moduleSlug/tools/map-editor',
       component: () => import('../views/tools/MapEditorView.vue'),
     },
     {
-      path: '/scenarios/:scenarioSlug/tools/scenario-editor',
+      path: '/modules/:moduleSlug/scenarios/:scenarioSlug/tools/scenario-editor',
       component: () => import('../views/tools/ScenarioEditorView.vue'),
     },
     {
-      path: '/scenarios/:scenarioSlug/tools/oob-editor',
+      path: '/modules/:moduleSlug/tools/scenario-editor',
+      redirect: (to) =>
+        `/modules/${to.params.moduleSlug}/scenarios/full-battle/tools/scenario-editor`,
+    },
+    {
+      path: '/modules/:moduleSlug/tools/oob-editor',
       component: () => import('../views/tools/OobEditorView.vue'),
     },
     {
-      path: '/scenarios/:scenarioSlug/tools/map-test',
+      path: '/modules/:moduleSlug/tools/map-test',
       component: () => import('../views/tools/MapTestView.vue'),
     },
     {
-      path: '/scenarios/:scenarioSlug/tools/table-test',
+      path: '/modules/:moduleSlug/tools/table-test',
       component: () => import('../views/tools/TableTestView.vue'),
     },
 
-    // Legacy redirects — send bare paths to the default scenario slug (#529)
-    { path: '/lobby', redirect: `/scenarios/${DEFAULT_SLUG}/lobby` },
-    { path: '/games/:id', redirect: (to) => `/scenarios/${DEFAULT_SLUG}/games/${to.params.id}` },
-    { path: '/tools/map-editor', redirect: `/scenarios/${DEFAULT_SLUG}/tools/map-editor` },
+    // Legacy redirects — send bare paths to the default module + full-battle scenario (#529)
+    { path: '/lobby', redirect: `/modules/${DEFAULT_SLUG}/scenarios/full-battle/lobby` },
+    {
+      path: '/games/:id',
+      redirect: (to) => `/modules/${DEFAULT_SLUG}/scenarios/full-battle/games/${to.params.id}`,
+    },
+    { path: '/tools/map-editor', redirect: `/modules/${DEFAULT_SLUG}/tools/map-editor` },
     {
       path: '/tools/scenario-editor',
-      redirect: `/scenarios/${DEFAULT_SLUG}/tools/scenario-editor`,
+      redirect: `/modules/${DEFAULT_SLUG}/scenarios/full-battle/tools/scenario-editor`,
     },
-    { path: '/tools/oob-editor', redirect: `/scenarios/${DEFAULT_SLUG}/tools/oob-editor` },
-    { path: '/tools/map-test', redirect: `/scenarios/${DEFAULT_SLUG}/tools/map-test` },
-    { path: '/tools/table-test', redirect: `/scenarios/${DEFAULT_SLUG}/tools/table-test` },
+    { path: '/tools/oob-editor', redirect: `/modules/${DEFAULT_SLUG}/tools/oob-editor` },
+    { path: '/tools/map-test', redirect: `/modules/${DEFAULT_SLUG}/tools/map-test` },
+    { path: '/tools/table-test', redirect: `/modules/${DEFAULT_SLUG}/tools/table-test` },
   ],
 });

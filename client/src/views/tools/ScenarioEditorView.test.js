@@ -13,6 +13,14 @@ const stubRouter = createRouter({
     { path: '/tools/oob-editor', component: { template: '<div/>' } },
     { path: '/tools/map-test', component: { template: '<div/>' } },
     { path: '/tools/table-test', component: { template: '<div/>' } },
+    {
+      path: '/modules/:moduleSlug/scenarios/:scenarioSlug/tools/scenario-editor',
+      component: { template: '<div/>' },
+    },
+    { path: '/modules/:moduleSlug/tools/map-editor', component: { template: '<div/>' } },
+    { path: '/modules/:moduleSlug/tools/oob-editor', component: { template: '<div/>' } },
+    { path: '/modules/:moduleSlug/tools/map-test', component: { template: '<div/>' } },
+    { path: '/modules/:moduleSlug/tools/table-test', component: { template: '<div/>' } },
   ],
 });
 

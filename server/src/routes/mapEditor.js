@@ -2,12 +2,12 @@ import { Router } from 'express';
 
 import { stripNonPlayableBoundaryEdges } from '../engine/edge-strip.js';
 import { MapSchema } from '../schemas/map.schema.js';
-import { resolveScenarioPath } from '../utils/scenarioFolders.js';
+import { resolveModulePath } from '../utils/moduleFolders.js';
 import { createEditorLimiter, createEditorRoute } from './editorRouteFactory.js';
 
-// #529 — paths now resolved via scenarioFolders so SM slug maps identically to south-mountain
-const MAP_PATH = resolveScenarioPath('SM', 'map.json');
-const BACKUP_DIR = resolveScenarioPath('SM', 'backups');
+// #529 — paths now resolved via moduleFolders so SM slug maps identically to south-mountain
+const MAP_PATH = resolveModulePath('SM', 'map.json');
+const BACKUP_DIR = resolveModulePath('SM', 'backups');
 
 const router = Router();
 router.use(createEditorLimiter());

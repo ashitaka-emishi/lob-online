@@ -76,9 +76,15 @@ const VALID_LEADERS = {
   union: { army: [], corps: [], cavalry: [], divisions: [], brigades: [] },
   confederate: { wing: [], divisions: [], brigades: [] },
 };
+const VALID_SUCCESSION = {
+  _status: 'scaffold',
+  _source: 'test',
+  union: [],
+  confederate: [],
+};
 
 async function buildApp() {
-  const { default: router } = await import('./scenarioData.js');
+  const { default: router } = await import('./moduleData.js');
   const app = express();
   app.use(express.json());
   app.use('/', router);
@@ -87,7 +93,7 @@ async function buildApp() {
 
 // ── map ───────────────────────────────────────────────────────────────────────
 
-describe('GET /:scenarioSlug/map', () => {
+describe('GET /:moduleSlug/map', () => {
   it('returns map data for a valid slug', async () => {
     readFile.mockResolvedValue(JSON.stringify(VALID_MAP));
     const app = await buildApp();
@@ -117,7 +123,7 @@ describe('GET /:scenarioSlug/map', () => {
   });
 });
 
-describe('PUT /:scenarioSlug/map', () => {
+describe('PUT /:moduleSlug/map', () => {
   it('accepts valid map body and returns ok', async () => {
     readFile.mockResolvedValue(JSON.stringify(VALID_MAP));
     const app = await buildApp();
@@ -141,7 +147,7 @@ describe('PUT /:scenarioSlug/map', () => {
 
 // ── oob ───────────────────────────────────────────────────────────────────────
 
-describe('GET /:scenarioSlug/oob', () => {
+describe('GET /:moduleSlug/oob', () => {
   it('returns oob data for a valid slug', async () => {
     readFile.mockResolvedValue(JSON.stringify(VALID_OOB));
     const app = await buildApp();
@@ -156,7 +162,7 @@ describe('GET /:scenarioSlug/oob', () => {
   });
 });
 
-describe('PUT /:scenarioSlug/oob', () => {
+describe('PUT /:moduleSlug/oob', () => {
   it('accepts valid oob body', async () => {
     readFile.mockResolvedValue(JSON.stringify(VALID_OOB));
     const app = await buildApp();
@@ -168,24 +174,45 @@ describe('PUT /:scenarioSlug/oob', () => {
 
 // ── scenario ──────────────────────────────────────────────────────────────────
 
-describe('GET /:scenarioSlug/scenario', () => {
-  it('returns scenario data for a valid slug', async () => {
+describe('GET /:moduleSlug/scenarios/:scenarioSlug/scenario', () => {
+  it('returns scenario data for a valid module and scenario slug', async () => {
+    readFile.mockResolvedValue(JSON.stringify(VALID_SCENARIO));
+    const app = await buildApp();
+    const res = await request(app).get('/SM/scenarios/full-battle/scenario');
+    expect(res.status).toBe(200);
+  });
+
+  it('reads scenario data from the nested module scenario folder', async () => {
+    readFile.mockResolvedValue(JSON.stringify(VALID_SCENARIO));
+    const app = await buildApp();
+    await request(app).get('/SM/scenarios/full-battle/scenario');
+    expect(readFile.mock.calls[0][0]).toMatch(
+      /south-mountain[/\\]scenarios[/\\]full-battle[/\\]scenario\.json$/
+    );
+  });
+
+  it('returns 404 for unknown module slug', async () => {
+    const app = await buildApp();
+    const res = await request(app).get('/UNKNOWN/scenarios/full-battle/scenario');
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('GET /:moduleSlug/scenario', () => {
+  it('keeps compatibility by reading the default full-battle scenario', async () => {
     readFile.mockResolvedValue(JSON.stringify(VALID_SCENARIO));
     const app = await buildApp();
     const res = await request(app).get('/SM/scenario');
     expect(res.status).toBe(200);
-  });
-
-  it('returns 404 for unknown slug', async () => {
-    const app = await buildApp();
-    const res = await request(app).get('/UNKNOWN/scenario');
-    expect(res.status).toBe(404);
+    expect(readFile.mock.calls[0][0]).toMatch(
+      /south-mountain[/\\]scenarios[/\\]full-battle[/\\]scenario\.json$/
+    );
   });
 });
 
 // ── leaders ───────────────────────────────────────────────────────────────────
 
-describe('GET /:scenarioSlug/leaders', () => {
+describe('GET /:moduleSlug/leaders', () => {
   it('returns leaders data for a valid slug', async () => {
     readFile.mockResolvedValue(JSON.stringify(VALID_LEADERS));
     const app = await buildApp();
@@ -200,11 +227,32 @@ describe('GET /:scenarioSlug/leaders', () => {
   });
 });
 
-describe('PUT /:scenarioSlug/leaders', () => {
+describe('PUT /:moduleSlug/leaders', () => {
   it('accepts valid leaders body', async () => {
     readFile.mockResolvedValue(JSON.stringify(VALID_LEADERS));
     const app = await buildApp();
     const res = await request(app).put('/SM/leaders').send(VALID_LEADERS);
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+  });
+});
+
+// ── succession ────────────────────────────────────────────────────────────────
+
+describe('GET /:moduleSlug/succession', () => {
+  it('returns succession data for a valid slug', async () => {
+    readFile.mockResolvedValue(JSON.stringify(VALID_SUCCESSION));
+    const app = await buildApp();
+    const res = await request(app).get('/SM/succession');
+    expect(res.status).toBe(200);
+  });
+});
+
+describe('PUT /:moduleSlug/succession', () => {
+  it('accepts valid succession body', async () => {
+    readFile.mockResolvedValue(JSON.stringify(VALID_SUCCESSION));
+    const app = await buildApp();
+    const res = await request(app).put('/SM/succession').send(VALID_SUCCESSION);
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
   });

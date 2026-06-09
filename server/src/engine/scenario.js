@@ -21,7 +21,7 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 /** Default path to scenario.json, relative to this file. */
 const DEFAULT_SCENARIO_PATH = join(
   __dirname,
-  '../../../data/scenarios/south-mountain/scenario.json'
+  '../../../data/modules/south-mountain/scenarios/full-battle/scenario.json'
 );
 
 // #293 — startup-only guard: warn if loadScenario() is called more than once per path.
@@ -34,25 +34,25 @@ const _loadedScenarioPaths = new Set();
  * startup; use `getScenario()` for cached access from route handlers.
  * Each call to this function reads from disk — no caching here.
  *
- * @param {string} [scenarioPath] - Override the default path (for tests).
+ * @param {string} [modulePath] - Override the default path (for tests).
  * @returns {import('zod').infer<typeof ScenarioSchema>} Validated, frozen scenario data.
  * @throws {Error} If the file is missing, unreadable, or fails Zod validation.
  */
-export function loadScenario(scenarioPath = DEFAULT_SCENARIO_PATH) {
+export function loadScenario(modulePath = DEFAULT_SCENARIO_PATH) {
   // LOB §startup — call once at server init; per-request calls are a misuse pattern (#293)
-  if (_loadedScenarioPaths.has(scenarioPath)) {
+  if (_loadedScenarioPaths.has(modulePath)) {
     console.warn(
-      `[scenario.js] loadScenario() called more than once for path "${scenarioPath}". ` +
+      `[scenario.js] loadScenario() called more than once for path "${modulePath}". ` +
         'Call once at startup and pass the result to engine functions.'
     );
   }
-  _loadedScenarioPaths.add(scenarioPath);
+  _loadedScenarioPaths.add(modulePath);
   // Security (#284) — containment guard: resolve and verify before any file I/O
-  assertContainedPath(scenarioPath, 'scenario.js');
+  assertContainedPath(modulePath, 'scenario.js');
 
   let raw;
   try {
-    raw = readFileSync(scenarioPath, 'utf8');
+    raw = readFileSync(modulePath, 'utf8');
   } catch (err) {
     throw new Error(`scenario.js: failed to read scenario file: ${err.message}`);
   }

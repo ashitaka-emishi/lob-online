@@ -1,33 +1,33 @@
 <script setup>
 import { RouterLink } from 'vue-router';
 import { useEditorsEnabled } from '../composables/useEditorsEnabled.js';
-import { useScenarioStore, SCENARIOS } from '../stores/useScenarioStore.js';
+import { useModuleStore, MODULES } from '../stores/useModuleStore.js';
 
 const editorsEnabled = useEditorsEnabled();
-const scenarioStore = useScenarioStore();
+const moduleStore = useModuleStore();
 </script>
 
 <template>
   <div class="home">
     <div class="menu-card">
       <h1>Line of Battle Online</h1>
-      <div class="scenario-selector">
-        <label for="scenario-select" class="scenario-label">Scenario</label>
+      <div class="module-selector">
+        <label for="module-select" class="module-label">Game</label>
         <select
-          id="scenario-select"
-          class="scenario-select"
-          data-testid="scenario-select"
-          :value="scenarioStore.selectedSlug"
-          @change="scenarioStore.setScenario($event.target.value)"
+          id="module-select"
+          class="module-select"
+          data-testid="module-select"
+          :value="moduleStore.selectedSlug"
+          @change="moduleStore.setModule($event.target.value)"
         >
-          <option v-for="s in SCENARIOS" :key="s.slug" :value="s.slug">
+          <option v-for="s in MODULES" :key="s.slug" :value="s.slug">
             {{ s.displayName }}
           </option>
         </select>
       </div>
       <nav class="menu" aria-label="Main menu">
         <RouterLink
-          :to="scenarioStore.scenarioPath('/lobby')"
+          :to="moduleStore.defaultScenarioPath('/lobby')"
           data-testid="lobby-link"
           class="menu-btn"
         >
@@ -35,7 +35,7 @@ const scenarioStore = useScenarioStore();
         </RouterLink>
         <RouterLink
           v-if="editorsEnabled"
-          :to="scenarioStore.scenarioPath('/tools/map-editor')"
+          :to="moduleStore.modulePath('/tools/map-editor')"
           data-testid="editor-link"
           class="menu-btn editor-btn"
         >
@@ -76,7 +76,7 @@ h1 {
   text-align: center;
 }
 
-.scenario-selector {
+.module-selector {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -84,14 +84,14 @@ h1 {
   width: 100%;
 }
 
-.scenario-label {
+.module-label {
   font-size: 0.75rem;
   color: #a89a7a;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.scenario-select {
+.module-select {
   width: 100%;
   padding: 0.45rem 0.75rem;
   background: rgba(20, 15, 8, 0.85);
@@ -105,7 +105,7 @@ h1 {
   text-align: center;
 }
 
-.scenario-select:focus {
+.module-select:focus {
   outline: none;
   border-color: #8a7a50;
 }

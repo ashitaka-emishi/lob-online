@@ -1,0 +1,14 @@
+{
+  "slug": "TTW",
+  "name": "To Take Washington",
+  "battle": "Monocacy / Fort Stevens",
+  "system": "Line of Battle v2.0",
+  "publication": "RSS/CWR",
+  "defaultScenarioSlug": "full-battle",
+  "scenarios": [
+    {
+      "slug": "full-battle",
+      "name": "Full Battle"
+    }
+  ]
+}

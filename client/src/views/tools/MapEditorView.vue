@@ -43,7 +43,7 @@ const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
 const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
 
 const _route = useRoute();
-const _scenarioSlug = _route.params.scenarioSlug ?? 'SM';
+const _moduleSlug = _route.params.moduleSlug ?? 'SM';
 
 // ── Calibration (composable) ───────────────────────────────────────────────────
 
@@ -83,7 +83,7 @@ const {
   draftKey: MAP_DRAFT_KEY,
   draftKeyV1: MAP_DRAFT_KEY_V1,
   onCalibrationLoaded,
-  scenarioSlug: _scenarioSlug,
+  moduleSlug: _moduleSlug,
   // Strip edges on non-playable boundaries before every push — covers both the
   // direct save() path and the confirmSave() overwrite path (M-1 review fix).
   beforeSave: () => {

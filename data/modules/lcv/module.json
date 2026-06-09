@@ -1,0 +1,14 @@
+{
+  "slug": "LCV",
+  "name": "Last Chance for Victory",
+  "battle": "Gettysburg",
+  "system": "Line of Battle v2.0",
+  "publication": "RSS/CWR",
+  "defaultScenarioSlug": "full-battle",
+  "scenarios": [
+    {
+      "slug": "full-battle",
+      "name": "Full Battle"
+    }
+  ]
+}

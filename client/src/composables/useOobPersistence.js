@@ -7,13 +7,13 @@ const LEADERS_STORAGE_KEY = 'lob-leaders-editor-v1';
 const SUCCESSION_STORAGE_KEY = 'lob-succession-editor-v1';
 const DEBOUNCE_MS = 500;
 
-// #529 — build scenario-scoped URLs when a slug is supplied; fall back to legacy tool endpoints
-function buildUrls(scenarioSlug) {
-  if (scenarioSlug) {
+// #529 — build module-scoped URLs when a slug is supplied; fall back to legacy tool endpoints
+function buildUrls(moduleSlug) {
+  if (moduleSlug) {
     return {
-      oob: `/api/v1/scenarios/${scenarioSlug}/oob`,
-      leaders: `/api/v1/scenarios/${scenarioSlug}/leaders`,
-      succession: `/api/v1/scenarios/${scenarioSlug}/succession`,
+      oob: `/api/v1/modules/${moduleSlug}/oob`,
+      leaders: `/api/v1/modules/${moduleSlug}/leaders`,
+      succession: `/api/v1/modules/${moduleSlug}/succession`,
     };
   }
   return {
@@ -35,14 +35,10 @@ function buildUrls(scenarioSlug) {
  * @param {import('vue').Ref} args.leaders    - leaders data ref (written on load/pull)
  * @param {import('vue').Ref} args.succession - succession data ref (written on load/pull)
  * @param {import('vue').Ref} args.dirty      - dirty flag ref (written on push/pull/load)
- * @param {string}            [args.scenarioSlug] - scenario slug for scenario-scoped API (#529)
+ * @param {string}            [args.moduleSlug] - module slug for module-scoped API (#529)
  */
-export function useOobPersistence({ oob, leaders, succession, dirty, scenarioSlug }) {
-  const {
-    oob: OOB_API_URL,
-    leaders: LEADERS_API_URL,
-    succession: SUCCESSION_API_URL,
-  } = buildUrls(scenarioSlug);
+export function useOobPersistence({ oob, leaders, succession, dirty, moduleSlug }) {
+  let activeUrls = buildUrls(moduleSlug);
   const isSyncing = ref(false);
   const syncError = ref(null);
   const isOffline = ref(false);
@@ -133,14 +129,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty, scenarioSlu
   async function loadData() {
     // L1: try server
     try {
-      if (
-        await _loadFromServer({
-          oob: OOB_API_URL,
-          leaders: LEADERS_API_URL,
-          succession: SUCCESSION_API_URL,
-        })
-      )
-        return;
+      if (await _loadFromServer(activeUrls)) return;
     } catch {
       /* fall through */
     }
@@ -158,9 +147,9 @@ export function useOobPersistence({ oob, leaders, succession, dirty, scenarioSlu
       { default: leadersFallback },
       { default: successionFallback },
     ] = await Promise.all([
-      import('../../../data/scenarios/south-mountain/oob.json'),
-      import('../../../data/scenarios/south-mountain/leaders.json'),
-      import('../../../data/scenarios/south-mountain/succession.json'),
+      import('../../../data/modules/south-mountain/oob.json'),
+      import('../../../data/modules/south-mountain/leaders.json'),
+      import('../../../data/modules/south-mountain/succession.json'),
     ]);
     oob.value = oobFallback;
     leaders.value = leadersFallback;
@@ -168,9 +157,10 @@ export function useOobPersistence({ oob, leaders, succession, dirty, scenarioSlu
     dirty.value = false;
   }
 
-  // #529 — scenario-scoped load: fetch from /api/v1/scenarios/:slug/* directly
-  async function loadDataForScenario(slug) {
+  // #529 — module-scoped load: fetch from /api/v1/modules/:slug/* directly
+  async function loadDataForModule(slug) {
     const urls = buildUrls(slug);
+    activeUrls = urls;
     try {
       if (await _loadFromServer(urls)) return;
     } catch {
@@ -191,12 +181,12 @@ export function useOobPersistence({ oob, leaders, succession, dirty, scenarioSlu
     syncError.value = null;
     try {
       const fetches = [
-        fetch(OOB_API_URL, {
+        fetch(activeUrls.oob, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(oob.value),
         }),
-        fetch(LEADERS_API_URL, {
+        fetch(activeUrls.leaders, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(leaders.value),
@@ -204,7 +194,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty, scenarioSlu
       ];
       if (succession.value) {
         fetches.push(
-          fetch(SUCCESSION_API_URL, {
+          fetch(activeUrls.succession, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(succession.value),
@@ -251,9 +241,9 @@ export function useOobPersistence({ oob, leaders, succession, dirty, scenarioSlu
     syncError.value = null;
     try {
       const [oobRes, leadersRes, successionRes] = await Promise.all([
-        fetch(OOB_API_URL),
-        fetch(LEADERS_API_URL),
-        fetch(SUCCESSION_API_URL),
+        fetch(activeUrls.oob),
+        fetch(activeUrls.leaders),
+        fetch(activeUrls.succession),
       ]);
       if (oobRes.ok && leadersRes.ok) {
         const assigned = await _applyServerResponses(oobRes, leadersRes, successionRes);
@@ -301,7 +291,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty, scenarioSlu
     showPushConfirm,
     showPullConfirm,
     loadData,
-    loadDataForScenario,
+    loadDataForModule,
     scheduleSave: _scheduleSave,
     requestPush,
     confirmPush,

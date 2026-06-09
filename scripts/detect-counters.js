@@ -41,8 +41,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 
 const COUNTERS_DIR = join(ROOT, 'client/public/counters');
-const OOB_PATH = join(ROOT, 'data/scenarios/south-mountain/oob.json');
-const LEADERS_PATH = join(ROOT, 'data/scenarios/south-mountain/leaders.json');
+const OOB_PATH = join(ROOT, 'data/modules/south-mountain/oob.json');
+const LEADERS_PATH = join(ROOT, 'data/modules/south-mountain/leaders.json');
 const CONFIDENCE_THRESHOLD = 0.0; // write all matches; OOB editor used for manual correction
 const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp']);
 const MIME_MAP = {

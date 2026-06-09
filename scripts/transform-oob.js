@@ -16,7 +16,7 @@ import { fileURLToPath } from 'url';
 import { join } from 'path';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const OOB_PATH = join(__dirname, '../data/scenarios/south-mountain/oob.json');
+const OOB_PATH = join(__dirname, '../data/modules/south-mountain/oob.json');
 
 const oob = JSON.parse(readFileSync(OOB_PATH, 'utf8'));
 

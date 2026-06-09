@@ -9,33 +9,33 @@ describe('router — home', () => {
   });
 });
 
-describe('router — scenario-scoped routes', () => {
-  it('has lobby route with scenario slug param', () => {
-    expect(paths).toContain('/scenarios/:scenarioSlug/lobby');
+describe('router — module-scoped routes', () => {
+  it('has lobby route with module and scenario slug params', () => {
+    expect(paths).toContain('/modules/:moduleSlug/scenarios/:scenarioSlug/lobby');
   });
 
-  it('has game route with scenario slug param', () => {
-    expect(paths).toContain('/scenarios/:scenarioSlug/games/:id');
+  it('has game route with module and scenario slug params', () => {
+    expect(paths).toContain('/modules/:moduleSlug/scenarios/:scenarioSlug/games/:id');
   });
 
-  it('has map-editor route with scenario slug param', () => {
-    expect(paths).toContain('/scenarios/:scenarioSlug/tools/map-editor');
+  it('has map-editor route with module slug param', () => {
+    expect(paths).toContain('/modules/:moduleSlug/tools/map-editor');
   });
 
-  it('has scenario-editor route with scenario slug param', () => {
-    expect(paths).toContain('/scenarios/:scenarioSlug/tools/scenario-editor');
+  it('has scenario-editor route with module and scenario slug params', () => {
+    expect(paths).toContain('/modules/:moduleSlug/scenarios/:scenarioSlug/tools/scenario-editor');
   });
 
-  it('has oob-editor route with scenario slug param', () => {
-    expect(paths).toContain('/scenarios/:scenarioSlug/tools/oob-editor');
+  it('has oob-editor route with module slug param', () => {
+    expect(paths).toContain('/modules/:moduleSlug/tools/oob-editor');
   });
 
-  it('has map-test route with scenario slug param', () => {
-    expect(paths).toContain('/scenarios/:scenarioSlug/tools/map-test');
+  it('has map-test route with module slug param', () => {
+    expect(paths).toContain('/modules/:moduleSlug/tools/map-test');
   });
 
-  it('has table-test route with scenario slug param', () => {
-    expect(paths).toContain('/scenarios/:scenarioSlug/tools/table-test');
+  it('has table-test route with module slug param', () => {
+    expect(paths).toContain('/modules/:moduleSlug/tools/table-test');
   });
 });
 

@@ -7,12 +7,18 @@ function makeRouter() {
     history: createWebHistory(),
     routes: [
       { path: '/', component: { template: '<div/>' } },
-      { path: '/scenarios/:scenarioSlug/lobby', component: { template: '<div/>' } },
-      { path: '/scenarios/:scenarioSlug/tools/scenario-editor', component: { template: '<div/>' } },
-      { path: '/scenarios/:scenarioSlug/tools/map-editor', component: { template: '<div/>' } },
-      { path: '/scenarios/:scenarioSlug/tools/oob-editor', component: { template: '<div/>' } },
-      { path: '/scenarios/:scenarioSlug/tools/map-test', component: { template: '<div/>' } },
-      { path: '/scenarios/:scenarioSlug/tools/table-test', component: { template: '<div/>' } },
+      {
+        path: '/modules/:moduleSlug/scenarios/:scenarioSlug/lobby',
+        component: { template: '<div/>' },
+      },
+      {
+        path: '/modules/:moduleSlug/scenarios/:scenarioSlug/tools/scenario-editor',
+        component: { template: '<div/>' },
+      },
+      { path: '/modules/:moduleSlug/tools/map-editor', component: { template: '<div/>' } },
+      { path: '/modules/:moduleSlug/tools/oob-editor', component: { template: '<div/>' } },
+      { path: '/modules/:moduleSlug/tools/map-test', component: { template: '<div/>' } },
+      { path: '/modules/:moduleSlug/tools/table-test', component: { template: '<div/>' } },
     ],
   });
 }
@@ -59,28 +65,28 @@ describe('EditorNav', () => {
     expect(wrapper.find('[data-testid="nav-table-test"]').exists()).toBe(false);
   });
 
-  it('tool links include scenario slug from route param', async () => {
+  it('tool links include module slug from route param', async () => {
     vi.stubEnv('VITE_MAP_EDITOR_ENABLED', 'true');
     vi.resetModules();
     EditorNav = (await import('./EditorNav.vue')).default;
     const router = makeRouter();
-    await router.push('/scenarios/SM/tools/map-editor');
+    await router.push('/modules/SM/tools/map-editor');
     await router.isReady();
     const wrapper = mount(EditorNav, { global: { plugins: [router] } });
     expect(wrapper.find('[data-testid="nav-map-editor"]').attributes('href')).toBe(
-      '/scenarios/SM/tools/map-editor'
+      '/modules/SM/tools/map-editor'
     );
     expect(wrapper.find('[data-testid="nav-scenario-editor"]').attributes('href')).toBe(
-      '/scenarios/SM/tools/scenario-editor'
+      '/modules/SM/scenarios/full-battle/tools/scenario-editor'
     );
     expect(wrapper.find('[data-testid="nav-oob-editor"]').attributes('href')).toBe(
-      '/scenarios/SM/tools/oob-editor'
+      '/modules/SM/tools/oob-editor'
     );
     expect(wrapper.find('[data-testid="nav-map-test"]').attributes('href')).toBe(
-      '/scenarios/SM/tools/map-test'
+      '/modules/SM/tools/map-test'
     );
     expect(wrapper.find('[data-testid="nav-table-test"]').attributes('href')).toBe(
-      '/scenarios/SM/tools/table-test'
+      '/modules/SM/tools/table-test'
     );
   });
 
@@ -93,7 +99,10 @@ describe('EditorNav', () => {
     await router.isReady();
     const wrapper = mount(EditorNav, { global: { plugins: [router] } });
     expect(wrapper.find('[data-testid="nav-map-editor"]').attributes('href')).toBe(
-      '/scenarios/THG/tools/map-editor'
+      '/modules/THG/tools/map-editor'
+    );
+    expect(wrapper.find('[data-testid="nav-scenario-editor"]').attributes('href')).toBe(
+      '/modules/THG/scenarios/full-battle/tools/scenario-editor'
     );
   });
 });

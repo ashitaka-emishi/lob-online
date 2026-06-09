@@ -7,8 +7,11 @@ const stubRouter = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', component: { template: '<div/>' } },
-    { path: '/scenarios/:scenarioSlug/lobby', component: { template: '<div/>' } },
-    { path: '/scenarios/:scenarioSlug/tools/map-editor', component: { template: '<div/>' } },
+    {
+      path: '/modules/:moduleSlug/scenarios/:scenarioSlug/lobby',
+      component: { template: '<div/>' },
+    },
+    { path: '/modules/:moduleSlug/tools/map-editor', component: { template: '<div/>' } },
   ],
 });
 
@@ -38,60 +41,60 @@ describe('HomeView', () => {
     expect(wrapper.text()).toContain('Line of Battle');
   });
 
-  it('renders a scenario dropdown', () => {
+  it('renders a module dropdown', () => {
     const wrapper = makeWrapper();
-    expect(wrapper.find('[data-testid="scenario-select"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="module-select"]').exists()).toBe(true);
   });
 
-  it('defaults to THG in the scenario dropdown', () => {
+  it('defaults to THG in the module dropdown', () => {
     const wrapper = makeWrapper();
-    const select = wrapper.find('[data-testid="scenario-select"]');
+    const select = wrapper.find('[data-testid="module-select"]');
     expect(select.element.value).toBe('THG');
   });
 
-  it('renders all nine scenario options', () => {
+  it('renders all nine module options', () => {
     const wrapper = makeWrapper();
-    const options = wrapper.findAll('[data-testid="scenario-select"] option');
+    const options = wrapper.findAll('[data-testid="module-select"] option');
     expect(options).toHaveLength(9);
   });
 
-  it('lobby link uses selected scenario slug in URL', () => {
+  it('lobby link uses selected module slug in URL', () => {
     const wrapper = makeWrapper();
     const lobbyLink = wrapper.find('[data-testid="lobby-link"]');
-    expect(lobbyLink.attributes('href')).toBe('/scenarios/THG/lobby');
+    expect(lobbyLink.attributes('href')).toBe('/modules/THG/scenarios/full-battle/lobby');
   });
 
-  it('editor link uses selected scenario slug in URL', () => {
+  it('editor link uses selected module slug in URL', () => {
     const wrapper = makeWrapper();
     const editorLink = wrapper.find('[data-testid="editor-link"]');
-    expect(editorLink.attributes('href')).toBe('/scenarios/THG/tools/map-editor');
+    expect(editorLink.attributes('href')).toBe('/modules/THG/tools/map-editor');
   });
 
   it('hydrates selected slug from localStorage', async () => {
-    localStorage.setItem('lob-selected-scenario', 'SM');
+    localStorage.setItem('lob-selected-module', 'SM');
     vi.resetModules();
     HomeView = (await import('./HomeView.vue')).default;
     const wrapper = makeWrapper();
-    const select = wrapper.find('[data-testid="scenario-select"]');
+    const select = wrapper.find('[data-testid="module-select"]');
     expect(select.element.value).toBe('SM');
   });
 
   it('updates slug and persists to localStorage when dropdown changes', async () => {
     const wrapper = makeWrapper();
-    const select = wrapper.find('[data-testid="scenario-select"]');
+    const select = wrapper.find('[data-testid="module-select"]');
     await select.setValue('SM');
     await select.trigger('change');
-    expect(localStorage.getItem('lob-selected-scenario')).toBe('SM');
+    expect(localStorage.getItem('lob-selected-module')).toBe('SM');
   });
 
-  it('lobby link updates after scenario change', async () => {
+  it('lobby link updates after module change', async () => {
     const wrapper = makeWrapper();
-    const select = wrapper.find('[data-testid="scenario-select"]');
+    const select = wrapper.find('[data-testid="module-select"]');
     await select.setValue('SM');
     await select.trigger('change');
     await wrapper.vm.$nextTick();
     const lobbyLink = wrapper.find('[data-testid="lobby-link"]');
-    expect(lobbyLink.attributes('href')).toBe('/scenarios/SM/lobby');
+    expect(lobbyLink.attributes('href')).toBe('/modules/SM/scenarios/full-battle/lobby');
   });
 
   it('editor button hidden when editors disabled', async () => {

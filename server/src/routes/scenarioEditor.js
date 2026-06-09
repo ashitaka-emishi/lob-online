@@ -1,13 +1,13 @@
 import { Router } from 'express';
 
 import { ScenarioSchema } from '../schemas/scenario.schema.js';
-import { resolveScenarioPath } from '../utils/scenarioFolders.js';
+import { resolveModulePath } from '../utils/moduleFolders.js';
 import { createEditorLimiter, createEditorRoute } from './editorRouteFactory.js';
 import { clearScenarioCache } from '../engine/scenario.js';
 
-// #529 — paths now resolved via scenarioFolders so SM slug maps identically to south-mountain
-const SCENARIO_PATH = resolveScenarioPath('SM', 'scenario.json');
-const BACKUP_DIR = resolveScenarioPath('SM', 'backups');
+// #529 — legacy flat editor endpoint edits SM's default scenario start state.
+const SCENARIO_PATH = resolveModulePath('SM', 'scenarios/full-battle/scenario.json');
+const BACKUP_DIR = resolveModulePath('SM', 'backups');
 
 const router = Router();
 router.use(createEditorLimiter());

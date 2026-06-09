@@ -73,7 +73,7 @@ const stubRouter = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', component: { template: '<div/>' } },
-    { path: '/scenarios/:scenarioSlug/tools/map-editor', component: { template: '<div/>' } },
+    { path: '/modules/:moduleSlug/tools/map-editor', component: { template: '<div/>' } },
   ],
 });
 
