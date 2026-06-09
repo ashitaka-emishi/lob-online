@@ -37,6 +37,7 @@ export default defineConfig({
         ]
       : []),
   ],
+  envDir: '..', // read .env from monorepo root
   server: {
     proxy: {
       '/api': 'http://localhost:3000',
