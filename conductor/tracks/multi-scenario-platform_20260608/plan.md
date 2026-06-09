@@ -132,17 +132,17 @@ Update Vue Router to use `/scenarios/:scenarioSlug/...` paths and add legacy red
 
 ### Tasks
 
-- [ ] Task 4.1: Update `client/src/router/index.js` — add scenario-prefixed routes for
+- [x] Task 4.1: Update `client/src/router/index.js` — add scenario-prefixed routes for
       lobby, game view, and all five tool pages. Add legacy redirect rules from the old
       bare paths to `/scenarios/THG/...` (or the stored slug where accessible).
-- [ ] Task 4.2: Update all `<RouterLink>` and `router.push()` calls in editor/tool views
+- [x] Task 4.2: Update all `<RouterLink>` and `router.push()` calls in editor/tool views
       to include the scenario slug (read from route params or store).
-- [ ] Task 4.3: Write/update router tests — scenario routes resolve to correct components,
+- [x] Task 4.3: Write/update router tests — scenario routes resolve to correct components,
       legacy routes redirect, scenario param is accessible in each view.
 
 ### Verification
 
-- [ ] `npm run test` green for router and view tests
+- [x] `npm run test` green for router and view tests
 
 ---
 
