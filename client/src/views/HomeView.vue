@@ -15,10 +15,10 @@ const scenarioStore = useScenarioStore();
         <label for="scenario-select" class="scenario-label">Scenario</label>
         <select
           id="scenario-select"
+          class="scenario-select"
           data-testid="scenario-select"
           :value="scenarioStore.selectedSlug"
           @change="scenarioStore.setScenario($event.target.value)"
-          class="scenario-select"
         >
           <option v-for="s in SCENARIOS" :key="s.slug" :value="s.slug">
             {{ s.displayName }}

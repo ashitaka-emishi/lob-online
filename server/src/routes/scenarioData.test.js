@@ -12,7 +12,7 @@ vi.mock('fs/promises', () => ({
 }));
 
 // eslint-disable-next-line import/order
-import { readFile, writeFile } from 'fs/promises';
+import { readFile, writeFile as _writeFile } from 'fs/promises';
 
 beforeEach(() => vi.clearAllMocks());
 

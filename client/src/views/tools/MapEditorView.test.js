@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mount, flushPromises } from '@vue/test-utils';
+import { mount, flushPromises, config } from '@vue/test-utils';
+import { createRouter, createWebHistory } from 'vue-router';
 
 // Stub EditorNav to avoid RouterLink injection errors in tests without a router.
 // EditorNav takes no props, so a bare stub without prop declarations is intentional.
@@ -67,6 +68,15 @@ function makeElevationMap() {
   };
 }
 
+// #529 — MapEditorView now calls useRoute(); provide a stub router so injection resolves.
+const stubRouter = createRouter({
+  history: createWebHistory(),
+  routes: [
+    { path: '/', component: { template: '<div/>' } },
+    { path: '/scenarios/:scenarioSlug/tools/map-editor', component: { template: '<div/>' } },
+  ],
+});
+
 const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
 const DEBOUNCE_MS = 1000;
 
@@ -95,9 +105,12 @@ describe('MapEditorView', () => {
       setItem: vi.fn(),
       removeItem: vi.fn(),
     });
+    // #529 — provide router globally so useRoute() resolves in all mount() calls
+    config.global.plugins = [stubRouter];
   });
 
   afterEach(() => {
+    config.global.plugins = [];
     vi.restoreAllMocks();
   });
 

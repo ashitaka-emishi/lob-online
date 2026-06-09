@@ -1,0 +1,18 @@
+{
+  "id": "multi-scenario-platform_20260608",
+  "title": "Multi-Scenario Platform — Scenario-Scoped Routes and Data Folders",
+  "type": "feature",
+  "status": "pending",
+  "created": "2026-06-08T00:00:00.000Z",
+  "updated": "2026-06-08T00:00:00.000Z",
+  "githubIssue": 529,
+  "milestone": "M5.5 — Turn Loop Cleanup",
+  "phases": {
+    "total": 5,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 19,
+    "completed": 0
+  }
+}

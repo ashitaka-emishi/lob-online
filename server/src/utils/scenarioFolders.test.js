@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
+
+import { describe, it, expect } from 'vitest';
 
 import { SCENARIO_FOLDERS, resolveScenarioPath, ScenarioNotFoundError } from './scenarioFolders.js';
 
