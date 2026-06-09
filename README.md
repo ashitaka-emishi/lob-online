@@ -37,10 +37,14 @@ client/src/          Vue 3 SPA
   views/             Page-level components
   components/        Reusable UI components
   router/            Vue Router config
-data/scenarios/      Game data JSON files
+data/modules/      Module/game data JSON files
 docs/                Rules PDFs, HLD, reference library
 scripts/             Dev utility scripts
 ```
+
+`data/modules/` is organized by published game/module (for example `south-mountain`, `thg`,
+`nbh`). Module-level files hold shared map/OOB data; playable scenario starts live under each
+module's `scenarios/` folder.
 
 ## Development
 
@@ -75,7 +79,7 @@ npm run dev:map-editor
 
 ### Map Editor
 
-A dev-only tool for digitizing `docs/reference/sm-map.jpg` into `data/scenarios/south-mountain/map.json`.
+A dev-only tool for digitizing `docs/reference/sm-map.jpg` into `data/modules/south-mountain/map.json`.
 
 Open `http://localhost:5173/tools/map-editor`. The editor supports:
 
@@ -88,7 +92,7 @@ Open `http://localhost:5173/tools/map-editor`. The editor supports:
 
 ### Scenario Editor
 
-A dev-only tool for editing `data/scenarios/south-mountain/scenario.json` — turn structure, lighting schedule, and rules fields.
+A dev-only tool for editing a module scenario start state, such as `data/modules/south-mountain/scenarios/full-battle/scenario.json` — turn structure, lighting schedule, and rules fields.
 
 Open `http://localhost:5173/tools/scenario-editor`. The editor supports:
 
