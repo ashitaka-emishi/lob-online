@@ -8,8 +8,9 @@ import { handleEndActivation } from './endActivation.js';
 
 export { ActionError };
 
-// LOB §2.1 — returns the legal action types for playerSide in the current state.
-// payload is null for all returned entries; handlers validate specific payloads.
+// LOB §2.1 — returns the legal action candidates for playerSide in the current state.
+// Each candidate is { type, payload } where payload is concrete when derivable from state,
+// or null when the client must supply it at submission time. (#550)
 export function getValidActions(state, playerSide) {
   if (state.status !== 'active') return [];
   if (state.activePlayer !== playerSide) return [];
@@ -19,15 +20,34 @@ export function getValidActions(state, playerSide) {
 
   // Command phase — Orders step
   if (phase === PHASES.COMMAND && step === STEPS.ORDERS) {
-    // LOB §10.6 — after a successful initiative roll, only order issuance is valid
-    if (state.ordersPhase?.pendingOrderIssuance !== null) {
-      return [{ type: 'ISSUE_ORDER', payload: null }];
+    // LOB §10.6 — after a successful initiative roll, only order issuance is valid.
+    // Return one candidate per order type so the client can present both choices. (#550)
+    const pending = state.ordersPhase?.pendingOrderIssuance;
+    if (pending !== null) {
+      return [
+        { type: 'ISSUE_ORDER', payload: { unitId: pending.unitId, orderType: 'attack' } },
+        { type: 'ISSUE_ORDER', payload: { unitId: pending.unitId, orderType: 'move' } },
+      ];
     }
-    // LOB §10.3 — player may roll initiative for a leader or end the step
-    return [
-      { type: 'ROLL_INITIATIVE', payload: null },
-      { type: 'END_PHASE', payload: null },
-    ];
+    // LOB §10.3 — player may roll initiative for a leader or end the step.
+    // Build one ROLL_INITIATIVE candidate per eligible (on-board, not-yet-rolled) leader. (#550)
+    // Falls back to a single null-payload candidate when leaderState is empty (M5 steel-thread).
+    const leaderRollUsed = state.ordersPhase?.leaderRollUsed ?? {};
+    const leaderEntries = Object.entries(state.leaderState ?? {});
+    const eligibleLeaders = leaderEntries.filter(([id, ls]) => !leaderRollUsed[id] && ls.isOnBoard);
+    const rollCandidates =
+      eligibleLeaders.length > 0
+        ? eligibleLeaders.flatMap(([leaderId]) => {
+            // Pair each leader with each order-holding unit as potential initiative target.
+            // M5 simplification: any on-board unit is a valid target; M6 will narrow by command range.
+            const unitIds = Object.keys(state.units).filter((uid) => state.units[uid].isOnBoard);
+            return unitIds.map((unitId) => ({
+              type: 'ROLL_INITIATIVE',
+              payload: { leaderId, unitId },
+            }));
+          })
+        : [{ type: 'ROLL_INITIATIVE', payload: null }];
+    return [...rollCandidates, { type: 'END_PHASE', payload: null }];
   }
 
   // Activity phase — Activation step
@@ -36,10 +56,19 @@ export function getValidActions(state, playerSide) {
     if (state.activityPhase?.currentActivation !== null) {
       return [{ type: 'END_ACTIVATION', payload: null }];
     }
-    return [
-      { type: 'ACTIVATE_STACK', payload: null },
-      { type: 'END_PHASE', payload: null },
-    ];
+    // Build one ACTIVATE_STACK candidate per occupied, un-activated hex. (#550)
+    // Deduplicate by hex so stacked units produce a single candidate per hex.
+    const activatedSet = new Set(state.activityPhase?.activatedUnits ?? []);
+    const occupiedHexes = new Set(
+      Object.values(state.units)
+        .filter((u) => u.isOnBoard && u.hex && !activatedSet.has(u.hex))
+        .map((u) => u.hex)
+    );
+    const activateCandidates = [...occupiedHexes].map((hex) => ({
+      type: 'ACTIVATE_STACK',
+      payload: { hex },
+    }));
+    return [...activateCandidates, { type: 'END_PHASE', payload: null }];
   }
 
   // Generic escape for any other interactive step

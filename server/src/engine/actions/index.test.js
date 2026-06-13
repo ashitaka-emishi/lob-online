@@ -82,6 +82,64 @@ describe('getValidActions', () => {
     expect(actions.map((a) => a.type)).toEqual(['ROLL_INITIATIVE', 'END_PHASE']);
   });
 
+  // Task 1.1: ROLL_INITIATIVE candidates include { leaderId, unitId } payloads (#550)
+  it('ROLL_INITIATIVE candidate carries { leaderId, unitId } payload for each eligible leader-unit pair', () => {
+    const state = {
+      ...COMMAND_ORDERS_STATE,
+      units: {
+        colquitt: {
+          ...BASE_UNIT,
+          id: 'colquitt',
+          orders: { type: 'move', status: 'accepted', deliveryTurnDue: null },
+        },
+        rodes: {
+          ...BASE_UNIT,
+          id: 'rodes',
+          orders: { type: 'attack', status: 'accepted', deliveryTurnDue: null },
+        },
+      },
+      leaderState: { cox: { hex: '29.22', isOnBoard: true } },
+      ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+    };
+    const actions = getValidActions(state, 'union');
+    const rollAction = actions.find((a) => a.type === 'ROLL_INITIATIVE');
+    expect(rollAction).toBeDefined();
+    // payload must include leaderId and unitId — engine-side candidates for the M5 steel-thread
+    expect(rollAction.payload).toMatchObject({
+      leaderId: expect.any(String),
+      unitId: expect.any(String),
+    });
+  });
+
+  it('ROLL_INITIATIVE candidate is null-payload when no leaders are available (base case #550)', () => {
+    // When state has no leaderState entries, fall back to null payload (existing behavior)
+    const actions = getValidActions(COMMAND_ORDERS_STATE, 'union');
+    const rollAction = actions.find((a) => a.type === 'ROLL_INITIATIVE');
+    expect(rollAction).toBeDefined();
+    expect(rollAction.payload).toBeNull();
+  });
+
+  it('ROLL_INITIATIVE excludes leaders that have already rolled this turn (#550)', () => {
+    const state = {
+      ...COMMAND_ORDERS_STATE,
+      leaderState: {
+        cox: { hex: '29.22', isOnBoard: true },
+        jones: { hex: '30.22', isOnBoard: true },
+      },
+      ordersPhase: { leaderRollUsed: { cox: true }, pendingOrderIssuance: null },
+      units: {
+        colquitt: { ...BASE_UNIT, id: 'colquitt' },
+        rodes: { ...BASE_UNIT, id: 'rodes' },
+      },
+    };
+    const actions = getValidActions(state, 'union');
+    const rollActions = actions.filter((a) => a.type === 'ROLL_INITIATIVE');
+    // cox already rolled — should only get candidates for jones
+    const leaderIds = rollActions.map((a) => a.payload?.leaderId).filter(Boolean);
+    expect(leaderIds).not.toContain('cox');
+  });
+
+  // Task 1.2: ISSUE_ORDER candidates include { unitId, orderType } payloads (#550)
   it('returns only ISSUE_ORDER after a successful initiative roll', () => {
     const state = {
       ...COMMAND_ORDERS_STATE,
@@ -91,14 +149,84 @@ describe('getValidActions', () => {
       },
     };
     const actions = getValidActions(state, 'union');
-    expect(actions.map((a) => a.type)).toEqual(['ISSUE_ORDER']);
+    // Two ISSUE_ORDER candidates — one per order type (attack + move) (#550)
+    expect(actions.map((a) => a.type)).toEqual(['ISSUE_ORDER', 'ISSUE_ORDER']);
   });
 
+  it('ISSUE_ORDER candidates carry { unitId, orderType } payloads for attack and move (#550)', () => {
+    const state = {
+      ...COMMAND_ORDERS_STATE,
+      ordersPhase: {
+        leaderRollUsed: { cox: true },
+        pendingOrderIssuance: { leaderId: 'cox', unitId: 'colquitt' },
+      },
+    };
+    const actions = getValidActions(state, 'union');
+    const orderTypes = actions
+      .filter((a) => a.type === 'ISSUE_ORDER')
+      .map((a) => a.payload?.orderType);
+    // Must offer both attack and move as concrete candidates
+    expect(orderTypes).toContain('attack');
+    expect(orderTypes).toContain('move');
+    // All ISSUE_ORDER candidates must have the correct unitId
+    const unitIds = actions.filter((a) => a.type === 'ISSUE_ORDER').map((a) => a.payload?.unitId);
+    expect(unitIds.every((id) => id === 'colquitt')).toBe(true);
+  });
+
+  // Task 1.3: ACTIVATE_STACK candidates include { hex } payloads (#550)
   it('returns ACTIVATE_STACK and END_PHASE during activity/activation (no current activation)', () => {
     const actions = getValidActions(ACTIVITY_STATE, 'union');
     expect(actions.map((a) => a.type)).toEqual(['ACTIVATE_STACK', 'END_PHASE']);
   });
 
+  it('ACTIVATE_STACK candidates carry { hex } payloads for each occupied, un-activated hex (#550)', () => {
+    const state = {
+      ...ACTIVITY_STATE,
+      units: {
+        colquitt: { ...BASE_UNIT, id: 'colquitt', hex: '29.22', isOnBoard: true },
+        rodes: { ...BASE_UNIT, id: 'rodes', hex: '30.22', isOnBoard: true },
+      },
+      activityPhase: { activatedUnits: [], currentActivation: null },
+    };
+    const actions = getValidActions(state, 'union');
+    const activateActions = actions.filter((a) => a.type === 'ACTIVATE_STACK');
+    const hexes = activateActions.map((a) => a.payload?.hex);
+    expect(hexes).toContain('29.22');
+    expect(hexes).toContain('30.22');
+  });
+
+  // Task 1.3: already-activated stacks excluded from ACTIVATE_STACK candidates (#550)
+  it('ACTIVATE_STACK excludes already-activated hexes (#550)', () => {
+    const state = {
+      ...ACTIVITY_STATE,
+      units: {
+        colquitt: { ...BASE_UNIT, id: 'colquitt', hex: '29.22', isOnBoard: true },
+        rodes: { ...BASE_UNIT, id: 'rodes', hex: '30.22', isOnBoard: true },
+      },
+      activityPhase: { activatedUnits: ['29.22'], currentActivation: null },
+    };
+    const actions = getValidActions(state, 'union');
+    const hexes = actions.filter((a) => a.type === 'ACTIVATE_STACK').map((a) => a.payload?.hex);
+    expect(hexes).not.toContain('29.22');
+    expect(hexes).toContain('30.22');
+  });
+
+  it('ACTIVATE_STACK excludes off-board units (#550)', () => {
+    const state = {
+      ...ACTIVITY_STATE,
+      units: {
+        colquitt: { ...BASE_UNIT, id: 'colquitt', hex: '29.22', isOnBoard: true },
+        offboard: { ...BASE_UNIT, id: 'offboard', hex: null, isOnBoard: false },
+      },
+      activityPhase: { activatedUnits: [], currentActivation: null },
+    };
+    const actions = getValidActions(state, 'union');
+    const hexes = actions.filter((a) => a.type === 'ACTIVATE_STACK').map((a) => a.payload?.hex);
+    expect(hexes).toContain('29.22');
+    expect(hexes).not.toContain(null);
+  });
+
+  // Task 1.4: END_ACTIVATION only when currentActivation is set (#550)
   it('returns only END_ACTIVATION when a stack is mid-activation', () => {
     const state = {
       ...ACTIVITY_STATE,
@@ -106,6 +234,58 @@ describe('getValidActions', () => {
     };
     const actions = getValidActions(state, 'union');
     expect(actions.map((a) => a.type)).toEqual(['END_ACTIVATION']);
+  });
+
+  it('END_ACTIVATION has null payload (#550)', () => {
+    const state = {
+      ...ACTIVITY_STATE,
+      activityPhase: { activatedUnits: [], currentActivation: '29.22' },
+    };
+    const actions = getValidActions(state, 'union');
+    expect(actions[0].payload).toBeNull();
+  });
+
+  it('does not return END_ACTIVATION when no stack is mid-activation (#550)', () => {
+    const actions = getValidActions(ACTIVITY_STATE, 'union');
+    expect(actions.map((a) => a.type)).not.toContain('END_ACTIVATION');
+  });
+
+  // Task 1.5: END_PHASE, wrong-side, pending-resolution guards (#550)
+  it('END_PHASE has null payload (#550)', () => {
+    const actions = getValidActions(COMMAND_ORDERS_STATE, 'union');
+    const endPhase = actions.find((a) => a.type === 'END_PHASE');
+    expect(endPhase?.payload).toBeNull();
+  });
+
+  it('returns [] for wrong playerSide (no payloads leak to wrong side) (#550)', () => {
+    const state = {
+      ...ACTIVITY_STATE,
+      units: {
+        colquitt: { ...BASE_UNIT, id: 'colquitt', hex: '29.22', isOnBoard: true },
+      },
+    };
+    expect(getValidActions(state, 'confederate')).toEqual([]);
+  });
+
+  it('returns [] when pendingResolution blocks all actions (#550)', () => {
+    const state = {
+      ...ACTIVITY_STATE,
+      pendingResolution: { type: 'looseCannonRoll', context: {} },
+    };
+    expect(getValidActions(state, 'union')).toEqual([]);
+  });
+
+  it('ACTIVATE_STACK is not included when all on-board hexes already activated (#550)', () => {
+    const state = {
+      ...ACTIVITY_STATE,
+      units: {
+        colquitt: { ...BASE_UNIT, id: 'colquitt', hex: '29.22', isOnBoard: true },
+      },
+      activityPhase: { activatedUnits: ['29.22'], currentActivation: null },
+    };
+    const actions = getValidActions(state, 'union');
+    expect(actions.map((a) => a.type)).not.toContain('ACTIVATE_STACK');
+    expect(actions.map((a) => a.type)).toContain('END_PHASE');
   });
 });
 
