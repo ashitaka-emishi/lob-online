@@ -3,11 +3,8 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import EditorNav from '../../components/EditorNav.vue';
-import {
-  MINUTES_PER_CONDITION,
-  MINUTES_PER_CONDITION_DEFAULT,
-  VISIBILITY_UNLIMITED,
-} from '../../config/turnTime.js';
+import { MINUTES_PER_CONDITION, MINUTES_PER_CONDITION_DEFAULT } from '../../config/turnTime.js';
+import { VISIBILITY_UNLIMITED } from '../../config/visibility.js';
 
 const _route = useRoute();
 const _moduleSlug = _route.params.moduleSlug ?? null;

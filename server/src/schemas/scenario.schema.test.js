@@ -185,7 +185,7 @@ describe('ScenarioSchema — startTurn uniqueness in lightingSchedule (#532)', (
       ],
     });
     expect(result.success).toBe(false);
-    expect(result.error.issues[0].message).toContain('Duplicate startTurn 1');
+    expect(result.error.issues.some((i) => i.message.includes('Duplicate startTurn 1'))).toBe(true);
   });
 });
 

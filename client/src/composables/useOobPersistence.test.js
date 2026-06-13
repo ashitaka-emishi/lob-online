@@ -303,7 +303,7 @@ describe('pullFromServer', () => {
 // ── URL construction (#543) ────────────────────────────────────────────────────
 
 describe('useOobPersistence — URL construction', () => {
-  it('uses legacy tool URLs when moduleSlug is absent', async () => {
+  it('uses legacy tool URLs when moduleSlug is absent and emits the fallback warning', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(VALID_OOB),
@@ -316,9 +316,11 @@ describe('useOobPersistence — URL construction', () => {
     expect(calledUrls).toContain('/api/tools/oob-editor/data');
     expect(calledUrls).toContain('/api/tools/leaders-editor/data');
     expect(calledUrls).toContain('/api/tools/succession-editor/data');
+    // #541 — warn must fire so missing-slug writes are not silent
+    expect(console.warn).toHaveBeenCalled();
   });
 
-  it('uses module-scoped URLs when moduleSlug is provided', async () => {
+  it('uses module-scoped URLs when moduleSlug is provided (no fallback warning)', async () => {
     const slug = 'SM';
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -332,5 +334,6 @@ describe('useOobPersistence — URL construction', () => {
     expect(calledUrls).toContain(`/api/v1/modules/${slug}/oob`);
     expect(calledUrls).toContain(`/api/v1/modules/${slug}/leaders`);
     expect(calledUrls).toContain(`/api/v1/modules/${slug}/succession`);
+    expect(console.warn).not.toHaveBeenCalled();
   });
 });

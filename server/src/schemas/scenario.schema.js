@@ -61,18 +61,20 @@ const RandomEventEntry = z.object({
 const LightingCondition = z.enum(['day', 'twilight', 'night', 'fog', 'rain']);
 
 // LOB §6.1 — 999 is the sentinel for unlimited (day) visibility; normal range is 1–20.
+// Sister definition: client/src/config/visibility.js — keep both in sync.
 const VISIBILITY_UNLIMITED = 999;
+const VISIBILITY_MAX = 20;
 
 const LightingEntry = z.object({
   startTurn: z.number().int().positive(),
   condition: LightingCondition,
-  // Accepts 1–20 (normal hex range) or 999 (unlimited day sentinel)
+  // Accepts 1–VISIBILITY_MAX (normal hex range) or VISIBILITY_UNLIMITED (day sentinel)
   visibilityHexes: z
     .number()
     .int()
     .positive()
-    .refine((v) => v <= 20 || v === VISIBILITY_UNLIMITED, {
-      message: 'visibilityHexes must be 1–20 or 999 (unlimited)',
+    .refine((v) => v <= VISIBILITY_MAX || v === VISIBILITY_UNLIMITED, {
+      message: `visibilityHexes must be 1–${VISIBILITY_MAX} or ${VISIBILITY_UNLIMITED} (unlimited)`,
     }),
   _note: z.string().optional(),
 });
