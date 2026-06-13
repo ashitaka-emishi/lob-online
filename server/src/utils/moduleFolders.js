@@ -1,8 +1,8 @@
-import { join } from 'path';
+import { join, normalize, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const DATA_ROOT = join(__dirname, '../../../data/modules');
+export const DATA_ROOT = resolve(join(__dirname, '../../../data/modules'));
 
 export const MODULE_FOLDERS = {
   THG: 'thg',
@@ -26,13 +26,19 @@ export class ModuleNotFoundError extends Error {
 
 /**
  * Returns the absolute path to a file within the given module's data folder.
- * Slug comparison is case-insensitive.
+ * Slug must be a known MODULE_FOLDERS key (case-insensitive). The resolved path
+ * is verified to remain within DATA_ROOT to prevent path traversal.
  * @throws {ModuleNotFoundError} for unrecognised slugs
+ * @throws {Error} if the resolved path escapes the data root
  */
 export function resolveModulePath(slug, file) {
   const folder = MODULE_FOLDERS[slug.toUpperCase()];
   if (!folder) throw new ModuleNotFoundError(slug);
-  return join(DATA_ROOT, folder, file);
+  const resolved = normalize(resolve(DATA_ROOT, folder, file));
+  if (!resolved.startsWith(DATA_ROOT + '/') && resolved !== DATA_ROOT) {
+    throw new Error(`Path traversal detected for slug=${slug} file=${file}`);
+  }
+  return resolved;
 }
 
 export function resolveModuleScenarioPath(moduleSlug, scenarioSlug, file) {
