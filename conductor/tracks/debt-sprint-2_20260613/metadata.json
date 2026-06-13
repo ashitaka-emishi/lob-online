@@ -2,15 +2,22 @@
   "id": "debt-sprint-2_20260613",
   "title": "Pre-M6 Debt Sprint #2 — Debt, Doc Sync, Stubs",
   "type": "chore",
-  "status": "pending",
+  "status": "in_progress",
   "created": "2026-06-13T00:00:00Z",
-  "updated": "2026-06-13T00:00:00Z",
+  "updated": "2026-06-13T10:20:00Z",
+  "current_phase": 2,
+  "current_task": "2.1",
   "phases": {
     "total": 4,
-    "completed": 0
+    "completed": 1
   },
   "tasks": {
     "total": 16,
-    "completed": 0
-  }
+    "completed": 6
+  },
+  "commits": [
+    "e087211: fix(editor): make moduleSlug reactive in all editor views (#542)",
+    "408519d: fix(server): register ModuleNotFoundError in global error handler (#545, #546)",
+    "568dfbe: fix(schema): deprecate totalTurns in ScenarioSchema; remove from SM data file (#533)"
+  ]
 }

@@ -52,29 +52,29 @@ Close #542, #545, #546, and #533. Schema change (#533) requires validate-data to
 
 ### Tasks
 
-- [ ] Task 1.1 (#542): Audit all editor views (`ScenarioEditorView`, `MapEditorView`,
+- [x] Task 1.1 (#542): Audit all editor views (`ScenarioEditorView`, `MapEditorView`,
       `OobEditorView`) for non-reactive moduleSlug capture at setup time; replace with
       `computed(() => route.params.moduleSlug)` and add `onBeforeRouteUpdate` guard if needed.
-- [ ] Task 1.2 (#545): Create or extend `ModuleNotFoundError` class with an identifiable
+- [x] Task 1.2 (#545): Create or extend `ModuleNotFoundError` class with an identifiable
       property; register it in the central Express error-handler middleware (`server/src/app.js`
       or equivalent) to return `404 { error: 'Not found' }` without needing inline catches;
       update existing inline catches to re-throw or remove them.
-- [ ] Task 1.3 (#545): Add a unit test for the error-handler middleware confirming
+- [x] Task 1.3 (#545): Add a unit test for the error-handler middleware confirming
       `ModuleNotFoundError` → 404 JSON response; non-matching errors → 500.
-- [ ] Task 1.4 (#546): Add `moduleData` route tests: unknown slug → 404, valid slug + nested
+- [x] Task 1.4 (#546): Add `moduleData` route tests: unknown slug → 404, valid slug + nested
       scenario sub-route → 200, invalid scenarioSlug → 400/404.
-- [ ] Task 1.5 (#533): Remove `totalTurns` from `ScenarioSchema` (or make it `.strip()`-ignored
+- [x] Task 1.5 (#533): Remove `totalTurns` from `ScenarioSchema` (or make it `.strip()`-ignored
       optional with a deprecation note); update `server/src/engine/init.js` to derive total
       turns from `firstTurn`/`lastTurn`/turn duration using `MINUTES_PER_CONDITION`.
-- [ ] Task 1.6 (#533): Remove `totalTurns` field from
+- [x] Task 1.6 (#533): Remove `totalTurns` field from
       `data/modules/south-mountain/scenarios/full-battle/scenario.json`; verify all 8 scaffold
       `scenario.json` files still pass `npm run validate-data` after schema change.
 
 ### Verification
 
-- [ ] `npm run validate-data` passes for all 9 modules
-- [ ] `npm run test` passes with no unexpected warnings
-- [ ] New tests for #545 and #546 are green
+- [x] `npm run validate-data` passes for all 9 modules
+- [x] `npm run test` passes with no unexpected warnings
+- [x] New tests for #545 and #546 are green
 
 ---
 
