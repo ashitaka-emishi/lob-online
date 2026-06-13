@@ -122,28 +122,28 @@
         "dataModels": [
           {
             "id": "SM_OOB",
-            "filename": "data/scenarios/south-mountain/oob.json",
+            "filename": "data/modules/south-mountain/oob.json",
             "description": "Order of Battle JSON — 219 unit IDs with full LoB stats",
             "status": "available",
             "unitCount": 219
           },
           {
             "id": "SM_LEADERS",
-            "filename": "data/scenarios/south-mountain/leaders.json",
+            "filename": "data/modules/south-mountain/leaders.json",
             "description": "Leader data JSON — 48 leaders with special rule flags",
             "status": "available",
             "leaderCount": 48
           },
           {
             "id": "SM_MAP_DATA",
-            "filename": "data/scenarios/south-mountain/map.json",
+            "filename": "data/modules/south-mountain/map.json",
             "description": "Hex map data — scaffold with known hexes, full digitization pending",
             "status": "partial",
             "hexCount": 31
           },
           {
             "id": "SM_SCENARIO",
-            "filename": "data/scenarios/south-mountain/scenario.json",
+            "filename": "data/modules/south-mountain/scenarios/full-battle/scenario.json",
             "description": "Scenario JSON — turn structure, at-start positions, reinforcements, VP, random events",
             "status": "available"
           }

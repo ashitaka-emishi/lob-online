@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 
-const DEFAULT_SLUG = 'THG';
+import { DEFAULT_SLUG } from '../stores/useModuleStore.js';
 
 export default createRouter({
   history: createWebHistory(),

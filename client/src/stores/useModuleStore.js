@@ -15,7 +15,7 @@ export const MODULES = [
 
 const VALID_SLUGS = new Set(MODULES.map((s) => s.slug));
 const LS_KEY = 'lob-selected-module';
-const DEFAULT_SLUG = 'THG';
+export const DEFAULT_SLUG = 'THG';
 
 function loadFromStorage() {
   try {
