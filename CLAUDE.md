@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **lob-online** is an online game implementation of the _Line of Battle v2.0_ wargame system (Multi-Man Publishing). The first game being implemented is _South Mountain_ (RSS #4), chosen because it is a smaller, more tractable battle.
 
-**Current state:** M5 complete. Rules engine foundation, all LOB v2.0 game tables, and four dev tools (Map Test, Table Test, Map Editor, OOB Editor) delivered in M1–M3. M4 added: `GameStateSchema` + `UnitStateSchema` Zod schemas, `initGameState()` engine, `gameFile`/`gameSqlite` persistence stores, games API routes with express-session, and `LobbyView` + `useLobbyStore`. M5 delivered: `UnitOrderState` schema with cross-field refinements, turn reducer + valid-actions engine (`engine/phase.js`), `POST /api/v1/games/:id/actions` endpoint with Socket.io room events, `GameView` with `UnitCounterLayer` + `UnitStatsPanel`, and `useGameStore`. Leader counter images are now assignable via the OOB editor (`selectNode` correctly paths into `leaders.json`; all four counter slots use manifest cycling). Starting M6 — combat, morale, and orders resolution. See `docs/designs/high-level-design.md` §2 for the M6–M8 milestone plan.
+**Current state:** M5.5 complete. Rules engine foundation, all LOB v2.0 game tables, and four dev tools (Map Test, Table Test, Map Editor, OOB Editor) delivered in M1–M3. M4 added: `GameStateSchema` + `UnitStateSchema` Zod schemas, `initGameState()` engine, `gameFile`/`gameSqlite` persistence stores, games API routes with express-session, and `LobbyView` + `useLobbyStore`. M5 delivered: `UnitOrderState` schema with cross-field refinements, turn reducer + valid-actions engine (`engine/phase.js`), `POST /api/v1/games/:id/actions` endpoint with Socket.io room events, `GameView` with `UnitCounterLayer` + `UnitStatsPanel`, and `useGameStore`. M5.5 delivered: app `HomeView` with module/game selector, shared `EditorNav`, scenario-editor enhancements (lighting schedule, fog/rain, derived turn count), and the multi-module platform (#529) — `resolveModulePath` utility, 9-slug module layout under `data/modules`, `/api/v1/modules/:slug/*` routes, Vue Router module-prefixed paths, `useModuleStore`, module-level map/OOB data, and scenario start states under `scenarios/full-battle/`. Starting M6 — combat, morale, and orders resolution. See `docs/designs/high-level-design.md` §2 for the M6–M8 milestone plan.
 
 ## Reference Library
 
@@ -22,7 +22,7 @@ For the full source-document inventory and data-file manifest, see
 
 Four dev-only tools, all guarded by `MAP_EDITOR_ENABLED=true` in `.env`.
 
-**Map editor** (`/tools/map-editor`) — digitize `docs/reference/sm-map.jpg` into `map.json` terrain data. Launch with `npm run dev:map-editor`.
+**Map editor** (`/tools/map-editor`) — digitize `docs/reference/south-mountain/sm-map.jpg` into `map.json` terrain data. Launch with `npm run dev:map-editor`.
 
 **Scenario editor** (`/tools/scenario-editor`) — edit `scenario.json` fields: turn structure, lighting schedule (day/twilight/night by start turn), and rules fields (night visibility cap, fluke stoppage grace period, initiative system, loose cannon, loss recovery, random events). See `docs/designs/scenario-editor-design.md` for the full spec. Launch with `npm run dev:map-editor`.
 

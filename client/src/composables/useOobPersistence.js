@@ -5,10 +5,23 @@ import { isValidSidedObjectShape, isValidSuccessionShape } from './oobValidators
 const OOB_STORAGE_KEY = 'lob-oob-editor-v1';
 const LEADERS_STORAGE_KEY = 'lob-leaders-editor-v1';
 const SUCCESSION_STORAGE_KEY = 'lob-succession-editor-v1';
-const OOB_API_URL = '/api/tools/oob-editor/data';
-const LEADERS_API_URL = '/api/tools/leaders-editor/data';
-const SUCCESSION_API_URL = '/api/tools/succession-editor/data';
 const DEBOUNCE_MS = 500;
+
+// #529 — build module-scoped URLs when a slug is supplied; fall back to legacy tool endpoints
+function buildUrls(moduleSlug) {
+  if (moduleSlug) {
+    return {
+      oob: `/api/v1/modules/${moduleSlug}/oob`,
+      leaders: `/api/v1/modules/${moduleSlug}/leaders`,
+      succession: `/api/v1/modules/${moduleSlug}/succession`,
+    };
+  }
+  return {
+    oob: '/api/tools/oob-editor/data',
+    leaders: '/api/tools/leaders-editor/data',
+    succession: '/api/tools/succession-editor/data',
+  };
+}
 
 /**
  * OOB/leaders data fetch, save, draft, push, and pull state + logic.
@@ -22,8 +35,10 @@ const DEBOUNCE_MS = 500;
  * @param {import('vue').Ref} args.leaders    - leaders data ref (written on load/pull)
  * @param {import('vue').Ref} args.succession - succession data ref (written on load/pull)
  * @param {import('vue').Ref} args.dirty      - dirty flag ref (written on push/pull/load)
+ * @param {string}            [args.moduleSlug] - module slug for module-scoped API (#529)
  */
-export function useOobPersistence({ oob, leaders, succession, dirty }) {
+export function useOobPersistence({ oob, leaders, succession, dirty, moduleSlug }) {
+  let activeUrls = buildUrls(moduleSlug);
   const isSyncing = ref(false);
   const syncError = ref(null);
   const isOffline = ref(false);
@@ -98,18 +113,23 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
     return true;
   }
 
+  async function _loadFromServer(urls) {
+    const [oobRes, leadersRes, successionRes] = await Promise.all([
+      fetch(urls.oob),
+      fetch(urls.leaders),
+      fetch(urls.succession),
+    ]);
+    if (oobRes.ok && leadersRes.ok) {
+      await _applyServerResponses(oobRes, leadersRes, successionRes);
+      return true;
+    }
+    return false;
+  }
+
   async function loadData() {
     // L1: try server
     try {
-      const [oobRes, leadersRes, successionRes] = await Promise.all([
-        fetch(OOB_API_URL),
-        fetch(LEADERS_API_URL),
-        fetch(SUCCESSION_API_URL),
-      ]);
-      if (oobRes.ok && leadersRes.ok) {
-        await _applyServerResponses(oobRes, leadersRes, successionRes);
-        return;
-      }
+      if (await _loadFromServer(activeUrls)) return;
     } catch {
       /* fall through */
     }
@@ -127,14 +147,29 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
       { default: leadersFallback },
       { default: successionFallback },
     ] = await Promise.all([
-      import('../../../data/scenarios/south-mountain/oob.json'),
-      import('../../../data/scenarios/south-mountain/leaders.json'),
-      import('../../../data/scenarios/south-mountain/succession.json'),
+      import('../../../data/modules/south-mountain/oob.json'),
+      import('../../../data/modules/south-mountain/leaders.json'),
+      import('../../../data/modules/south-mountain/succession.json'),
     ]);
     oob.value = oobFallback;
     leaders.value = leadersFallback;
     succession.value = successionFallback;
     dirty.value = false;
+  }
+
+  // #529 — module-scoped load: fetch from /api/v1/modules/:slug/* directly
+  async function loadDataForModule(slug) {
+    const urls = buildUrls(slug);
+    activeUrls = urls;
+    try {
+      if (await _loadFromServer(urls)) return;
+    } catch {
+      /* fall through to localStorage */
+    }
+    if (_loadFromStorage()) {
+      dirty.value = false;
+      isOffline.value = true;
+    }
   }
 
   // ── Sync ──────────────────────────────────────────────────────────────────
@@ -146,12 +181,12 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
     syncError.value = null;
     try {
       const fetches = [
-        fetch(OOB_API_URL, {
+        fetch(activeUrls.oob, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(oob.value),
         }),
-        fetch(LEADERS_API_URL, {
+        fetch(activeUrls.leaders, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(leaders.value),
@@ -159,7 +194,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
       ];
       if (succession.value) {
         fetches.push(
-          fetch(SUCCESSION_API_URL, {
+          fetch(activeUrls.succession, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(succession.value),
@@ -206,9 +241,9 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
     syncError.value = null;
     try {
       const [oobRes, leadersRes, successionRes] = await Promise.all([
-        fetch(OOB_API_URL),
-        fetch(LEADERS_API_URL),
-        fetch(SUCCESSION_API_URL),
+        fetch(activeUrls.oob),
+        fetch(activeUrls.leaders),
+        fetch(activeUrls.succession),
       ]);
       if (oobRes.ok && leadersRes.ok) {
         const assigned = await _applyServerResponses(oobRes, leadersRes, successionRes);
@@ -256,6 +291,7 @@ export function useOobPersistence({ oob, leaders, succession, dirty }) {
     showPushConfirm,
     showPullConfirm,
     loadData,
+    loadDataForModule,
     scheduleSave: _scheduleSave,
     requestPush,
     confirmPush,

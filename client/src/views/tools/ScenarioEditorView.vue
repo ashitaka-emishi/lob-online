@@ -1,10 +1,18 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import EditorNav from '../../components/EditorNav.vue';
 
+const _route = useRoute();
+const _moduleSlug = _route.params.moduleSlug ?? null;
+const _scenarioSlug = _route.params.scenarioSlug ?? 'full-battle';
+
 const STORAGE_KEY = 'lob-scenario-editor-south-mountain-v3';
-const API_URL = '/api/tools/scenario-editor/data';
+// #529 — prefer module/scenario-scoped API when route params are present
+const API_URL = _moduleSlug
+  ? `/api/v1/modules/${_moduleSlug}/scenarios/${_scenarioSlug}/scenario`
+  : '/api/tools/scenario-editor/data';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 

@@ -1,14 +1,12 @@
-import { join } from 'path';
-import { fileURLToPath } from 'url';
-
 import { Router } from 'express';
 
 import { LeadersSchema } from '../schemas/leaders.schema.js';
+import { resolveModulePath } from '../utils/moduleFolders.js';
 import { createEditorLimiter, createEditorRoute } from './editorRouteFactory.js';
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const LEADERS_PATH = join(__dirname, '../../../data/scenarios/south-mountain/leaders.json');
-const BACKUP_DIR = join(__dirname, '../../../data/scenarios/south-mountain/backups');
+// #529 — paths now resolved via moduleFolders so SM slug maps identically to south-mountain
+const LEADERS_PATH = resolveModulePath('SM', 'leaders.json');
+const BACKUP_DIR = resolveModulePath('SM', 'backups');
 
 const router = Router();
 router.use(createEditorLimiter());

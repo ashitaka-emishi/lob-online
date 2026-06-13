@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import EditorNav from '../../components/EditorNav.vue';
 import { useOobStore } from '../../stores/useOobStore.js';
 import OobHierarchyTree from '../../components/OobHierarchyTree.vue';
@@ -8,9 +9,12 @@ import ConfirmDialog from '../../components/ConfirmDialog.vue';
 
 const store = useOobStore();
 const activeSide = ref('union');
+const route = useRoute();
 
 onMounted(() => {
-  store.loadData();
+  const slug = route.params.moduleSlug;
+  if (slug) store.loadDataForModule(slug);
+  else store.loadData();
 });
 
 function handlePull() {

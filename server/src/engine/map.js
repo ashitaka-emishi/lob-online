@@ -16,7 +16,7 @@ import { assertContainedPath } from '../utils/pathGuard.js';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 /** Default path to map.json, relative to this file. */
-const DEFAULT_MAP_PATH = join(__dirname, '../../../data/scenarios/south-mountain/map.json');
+const DEFAULT_MAP_PATH = join(__dirname, '../../../data/modules/south-mountain/map.json');
 
 // ─── Map loader ────────────────────────────────────────────────────────────────
 

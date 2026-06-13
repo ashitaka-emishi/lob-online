@@ -1083,7 +1083,7 @@ Each step maps to one or more action types accepted by `POST /games/:id/actions`
 
 - **Pure functions only.** The engine has zero I/O dependencies. It takes `(gameState, action, scenarioRules)` and returns `{ newState, result, events }`. Persistence, HTTP, and Socket.io are the caller's responsibility.
 - **Immutable state.** The engine never mutates `gameState` in place. It uses structured clone + spread to produce `newState`. This enables history replay by re-running actions against snapshots.
-- **Scenario-driven overrides.** All SM-specific rule variations are read from `scenario.rules` (loaded from `data/scenarios/south-mountain/scenario.json`), not hardcoded in engine modules.
+- **Scenario-driven overrides.** All SM-specific rule variations are read from `scenario.rules` (loaded from `data/modules/south-mountain/scenarios/full-battle/scenario.json`), not hardcoded in engine modules.
 
 ### Module Map
 
@@ -1178,7 +1178,7 @@ HTTP mapping: `RulesError` → `422 Unprocessable Entity` with body `{ error: { 
 
 ### Scenario Override Integration
 
-`data/scenarios/south-mountain/scenario.json` contains a `rules` block:
+`data/modules/south-mountain/scenarios/full-battle/scenario.json` contains a `rules` block:
 
 ```json
 {
@@ -1474,7 +1474,7 @@ Full action log, oldest first.
 
 #### `GET /api/v1/map/south-mountain`
 
-Returns the hex grid data needed by the client to render the SVG map. Served from the static `data/scenarios/south-mountain/map.json` file; does not require authentication.
+Returns the hex grid data needed by the client to render the SVG map. Served from the static `data/modules/south-mountain/map.json` file; does not require authentication.
 
 **Response `200`:**
 
@@ -1515,7 +1515,7 @@ These endpoints are **only mounted when `MAP_EDITOR_ENABLED=true`**. They are ne
 
 #### `GET /api/tools/map-editor/data`
 
-Returns the current contents of `data/scenarios/south-mountain/map.json`.
+Returns the current contents of `data/modules/south-mountain/map.json`.
 
 **Response `200`:** the full map JSON object (same shape as `map.json`).
 
@@ -1671,9 +1671,9 @@ and are never active in production.
 
 ### Map Editor
 
-The map editor is a dev-only tool for digitizing `docs/reference/sm-map.jpg` into structured hex terrain data in `data/scenarios/south-mountain/map.json`. It is not part of the game itself and is never active in production.
+The map editor is a dev-only tool for digitizing `docs/reference/south-mountain/sm-map.jpg` into structured hex terrain data in `data/modules/south-mountain/map.json`. It is not part of the game itself and is never active in production.
 
-**Purpose:** Digitize `docs/reference/sm-map.jpg` into `map.json` hex data using a set of
+**Purpose:** Digitize `docs/reference/south-mountain/sm-map.jpg` into `map.json` hex data using a set of
 focused single-pass tools — one full map pass per data type (elevation, terrain, roads, etc.).
 
 **Toggle:** set `MAP_EDITOR_ENABLED=true` in `.env`. The guard in `server.js` uses a dynamic import:
@@ -1745,7 +1745,7 @@ See `docs/designs/map-editor-design.md` for the full specification:
 
 ### Scenario Editor
 
-The scenario editor is a dev-only tool for editing `data/scenarios/south-mountain/scenario.json`
+The scenario editor is a dev-only tool for editing `data/modules/south-mountain/scenarios/full-battle/scenario.json`
 — the companion to the map editor. It covers fields that cannot be derived from the physical map:
 turn structure, lighting schedule (day/twilight/night turn ranges), visibility settings, and
 scenario-level rules flags (Fluke Stoppage grace period, initiative system, loss recovery,

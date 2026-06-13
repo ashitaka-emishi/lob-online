@@ -1,0 +1,34 @@
+{
+  "_status": "scaffold",
+  "_source": "IB — not yet entered",
+  "_errata_applied": [],
+  "union": {
+    "army": "IB Union Army",
+    "supplyTrain": {
+      "id": "ib-union-supply",
+      "name": "Union Supply Train"
+    },
+    "corps": [],
+    "cavalryDivision": {
+      "id": "ib-union-cav",
+      "name": "Union Cavalry Division",
+      "brigades": []
+    }
+  },
+  "confederate": {
+    "army": "IB Confederate Army",
+    "wing": "IB Confederate Wing",
+    "supplyWagon": {
+      "id": "ib-csa-supply",
+      "name": "Confederate Supply Wagon"
+    },
+    "independent": {
+      "cavalry": [],
+      "artillery": []
+    },
+    "reserveArtillery": {
+      "batteries": []
+    },
+    "divisions": []
+  }
+}

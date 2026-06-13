@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest';
 
 import { OOBSchema } from './oob.schema.js';
 
-const OOB_PATH = resolve('data/scenarios/south-mountain/oob.json');
+const OOB_PATH = resolve('data/modules/south-mountain/oob.json');
 
 const MINIMAL_UNIT = {
   id: 'test-unit',

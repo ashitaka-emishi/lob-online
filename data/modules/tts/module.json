@@ -1,0 +1,14 @@
+{
+  "slug": "TTS",
+  "name": "This Terrible Sound",
+  "battle": "Chickamauga",
+  "system": "Line of Battle v2.0",
+  "publication": "RSS/CWR",
+  "defaultScenarioSlug": "full-battle",
+  "scenarios": [
+    {
+      "slug": "full-battle",
+      "name": "Full Battle"
+    }
+  ]
+}

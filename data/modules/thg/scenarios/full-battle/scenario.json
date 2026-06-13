@@ -1,0 +1,52 @@
+{
+  "_status": "scaffold",
+  "_source": "THG — not yet entered",
+  "id": "thg",
+  "name": "THG (placeholder)",
+  "system": "Line of Battle v2.0",
+  "publication": "THG",
+  "turnStructure": {
+    "firstTurn": "09:00",
+    "lastTurn": "18:00",
+    "totalTurns": 36,
+    "firstPlayer": "union",
+    "date": "TBD"
+  },
+  "rules": {},
+  "movementCosts": {
+    "movementAllowances": {},
+    "terrainCosts": {},
+    "hexsideCosts": {},
+    "noEffectTerrain": []
+  },
+  "ammoReserves": {
+    "confederate": {},
+    "union": {}
+  },
+  "setup": {
+    "union": [],
+    "confederate": []
+  },
+  "reinforcements": {
+    "union": [],
+    "confederate": []
+  },
+  "victoryPoints": {
+    "terrain": [],
+    "wreck": {
+      "confederate": {},
+      "union": {}
+    }
+  },
+  "victoryConditions": {
+    "results": []
+  },
+  "randomEvents": {
+    "confederate": {
+      "table": []
+    },
+    "union": {
+      "table": []
+    }
+  }
+}

@@ -10,9 +10,9 @@ import { AutoDetectConfigSchema } from '../schemas/map-autodetect-config.schema.
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const CONFIG_PATH = join(
   __dirname,
-  '../../../data/scenarios/south-mountain/map-autodetect-config.json'
+  '../../../data/modules/south-mountain/map-autodetect-config.json'
 );
-const BACKUP_DIR = join(__dirname, '../../../data/scenarios/south-mountain/backups/autodetect');
+const BACKUP_DIR = join(__dirname, '../../../data/modules/south-mountain/backups/autodetect');
 const MAX_BACKUPS = 20;
 
 const router = Router();

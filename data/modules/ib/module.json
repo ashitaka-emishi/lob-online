@@ -1,0 +1,14 @@
+{
+  "slug": "IB",
+  "name": "Inferno in the Bluegrass",
+  "battle": "Perryville",
+  "system": "Line of Battle v2.0",
+  "publication": "Line of Battle",
+  "defaultScenarioSlug": "full-battle",
+  "scenarios": [
+    {
+      "slug": "full-battle",
+      "name": "Full Battle"
+    }
+  ]
+}

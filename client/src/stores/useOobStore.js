@@ -154,6 +154,7 @@ export const useOobStore = defineStore('oob', () => {
     showPushConfirm: persistence.showPushConfirm,
     showPullConfirm: persistence.showPullConfirm,
     loadData: persistence.loadData,
+    loadDataForModule: persistence.loadDataForModule,
     selectNode,
     updateField,
     updateCounterRef,

@@ -1,0 +1,14 @@
+{
+  "slug": "SM",
+  "name": "South Mountain",
+  "battle": "South Mountain",
+  "system": "Line of Battle v2.0",
+  "publication": "RSS #4",
+  "defaultScenarioSlug": "full-battle",
+  "scenarios": [
+    {
+      "slug": "full-battle",
+      "name": "South Mountain"
+    }
+  ]
+}

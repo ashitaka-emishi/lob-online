@@ -1,26 +1,37 @@
 <script setup>
-import { RouterLink } from 'vue-router';
+import { computed } from 'vue';
+import { RouterLink, useRoute } from 'vue-router';
 import { useEditorsEnabled } from '../composables/useEditorsEnabled.js';
 
 const editorsEnabled = useEditorsEnabled();
+const route = useRoute();
+
+const slug = computed(() => route.params.moduleSlug ?? 'THG');
+const base = computed(() => `/modules/${slug.value}`);
+const scenarioSlug = computed(() => route.params.scenarioSlug ?? 'full-battle');
+const scenarioBase = computed(() => `${base.value}/scenarios/${scenarioSlug.value}`);
 </script>
 
 <template>
   <nav class="editor-nav" aria-label="Editor tools">
     <template v-if="editorsEnabled">
-      <RouterLink to="/tools/scenario-editor" data-testid="nav-scenario-editor" class="nav-link">
+      <RouterLink
+        :to="`${scenarioBase}/tools/scenario-editor`"
+        data-testid="nav-scenario-editor"
+        class="nav-link"
+      >
         Scenario Editor
       </RouterLink>
-      <RouterLink to="/tools/map-editor" data-testid="nav-map-editor" class="nav-link">
+      <RouterLink :to="`${base}/tools/map-editor`" data-testid="nav-map-editor" class="nav-link">
         Map Editor
       </RouterLink>
-      <RouterLink to="/tools/oob-editor" data-testid="nav-oob-editor" class="nav-link">
+      <RouterLink :to="`${base}/tools/oob-editor`" data-testid="nav-oob-editor" class="nav-link">
         OOB Editor
       </RouterLink>
-      <RouterLink to="/tools/map-test" data-testid="nav-map-test" class="nav-link">
+      <RouterLink :to="`${base}/tools/map-test`" data-testid="nav-map-test" class="nav-link">
         Map Test
       </RouterLink>
-      <RouterLink to="/tools/table-test" data-testid="nav-table-test" class="nav-link">
+      <RouterLink :to="`${base}/tools/table-test`" data-testid="nav-table-test" class="nav-link">
         Table Test
       </RouterLink>
       <span class="nav-sep" />

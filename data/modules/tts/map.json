@@ -1,0 +1,8 @@
+{
+  "_status": "scaffold",
+  "_description": "Placeholder map for TTS — not yet digitized",
+  "scenario": "tts",
+  "layout": "pointy-top",
+  "vpHexes": [],
+  "hexes": []
+}

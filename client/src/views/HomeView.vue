@@ -1,20 +1,41 @@
 <script setup>
 import { RouterLink } from 'vue-router';
 import { useEditorsEnabled } from '../composables/useEditorsEnabled.js';
+import { useModuleStore, MODULES } from '../stores/useModuleStore.js';
 
 const editorsEnabled = useEditorsEnabled();
+const moduleStore = useModuleStore();
 </script>
 
 <template>
   <div class="home">
     <div class="menu-card">
       <h1>Line of Battle Online</h1>
-      <p class="subtitle">South Mountain — RSS #4</p>
+      <div class="module-selector">
+        <label for="module-select" class="module-label">Game</label>
+        <select
+          id="module-select"
+          class="module-select"
+          data-testid="module-select"
+          :value="moduleStore.selectedSlug"
+          @change="moduleStore.setModule($event.target.value)"
+        >
+          <option v-for="s in MODULES" :key="s.slug" :value="s.slug">
+            {{ s.displayName }}
+          </option>
+        </select>
+      </div>
       <nav class="menu" aria-label="Main menu">
-        <RouterLink to="/lobby" class="menu-btn">Lobby</RouterLink>
+        <RouterLink
+          :to="moduleStore.defaultScenarioPath('/lobby')"
+          data-testid="lobby-link"
+          class="menu-btn"
+        >
+          Lobby
+        </RouterLink>
         <RouterLink
           v-if="editorsEnabled"
-          to="/tools/map-editor"
+          :to="moduleStore.modulePath('/tools/map-editor')"
           data-testid="editor-link"
           class="menu-btn editor-btn"
         >
@@ -55,11 +76,38 @@ h1 {
   text-align: center;
 }
 
-.subtitle {
-  font-size: 0.9rem;
+.module-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.module-label {
+  font-size: 0.75rem;
   color: #a89a7a;
-  letter-spacing: 0.08em;
-  margin-top: -1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.module-select {
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  background: rgba(20, 15, 8, 0.85);
+  border: 1px solid #5a4a30;
+  border-radius: 4px;
+  color: #c8b890;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  appearance: none;
+  text-align: center;
+}
+
+.module-select:focus {
+  outline: none;
+  border-color: #8a7a50;
 }
 
 .menu {

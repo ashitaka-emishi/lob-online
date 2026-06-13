@@ -1,0 +1,34 @@
+{
+  "_status": "scaffold",
+  "_source": "THG — not yet entered",
+  "_errata_applied": [],
+  "union": {
+    "army": "THG Union Army",
+    "supplyTrain": {
+      "id": "thg-union-supply",
+      "name": "Union Supply Train"
+    },
+    "corps": [],
+    "cavalryDivision": {
+      "id": "thg-union-cav",
+      "name": "Union Cavalry Division",
+      "brigades": []
+    }
+  },
+  "confederate": {
+    "army": "THG Confederate Army",
+    "wing": "THG Confederate Wing",
+    "supplyWagon": {
+      "id": "thg-csa-supply",
+      "name": "Confederate Supply Wagon"
+    },
+    "independent": {
+      "cavalry": [],
+      "artillery": []
+    },
+    "reserveArtillery": {
+      "batteries": []
+    },
+    "divisions": []
+  }
+}

@@ -64,6 +64,7 @@ export function useMapPersistence({
   draftKeyV1,
   onCalibrationLoaded,
   beforeSave,
+  moduleSlug,
 }) {
   // L4: guard against accidental empty/missing key args
   if (!storageKey || !draftKey) {
@@ -159,8 +160,11 @@ export function useMapPersistence({
     draftBannerVisible.value = false;
   }
 
+  // #529 — prefer module-scoped API when a slug is provided
+  const mapApiUrl = moduleSlug ? `/api/v1/modules/${moduleSlug}/map` : '/api/tools/map-editor/data';
+
   async function fetchServerData() {
-    const res = await fetch('/api/tools/map-editor/data');
+    const res = await fetch(mapApiUrl);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   }
@@ -295,7 +299,7 @@ export function useMapPersistence({
     try {
       // L3: PUT to same-origin dev-only endpoint (MAP_EDITOR_ENABLED guard on server).
       // Content-Type: application/json triggers CORS preflight for cross-origin requests.
-      const res = await fetch('/api/tools/map-editor/data', {
+      const res = await fetch(mapApiUrl, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(mapData.value),

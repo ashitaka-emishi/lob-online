@@ -27,7 +27,7 @@ import { LeadersSchema } from './leaders.schema.js';
 import { SuccessionSchema } from './succession.schema.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const DATA_DIR = join(__dirname, '../../../data/scenarios/south-mountain');
+const DATA_DIR = join(__dirname, '../../../data/modules/south-mountain');
 
 function loadJson(filename) {
   return JSON.parse(readFileSync(join(DATA_DIR, filename), 'utf8'));

@@ -12,7 +12,7 @@ Add a 12-position `northOffset` field to `gridSpec` (covering all 6 hex edges an
 
 ## Context
 
-The map editor digitizes `docs/reference/sm-map.jpg` into `map.json` terrain data. South Mountain's geographic north aligns with the right vertex of each flat-top hex (northOffset = 3), but the schema has no way to declare this. Without it, any future directional game mechanic (reinforcement entry sides, wind, line-of-sight) cannot correctly translate hex-edge indices to compass directions.
+The map editor digitizes `docs/reference/south-mountain/sm-map.jpg` into `map.json` terrain data. South Mountain's geographic north aligns with the right vertex of each flat-top hex (northOffset = 3), but the schema has no way to declare this. Without it, any future directional game mechanic (reinforcement entry sides, wind, line-of-sight) cannot correctly translate hex-edge indices to compass directions.
 
 ## User Story
 

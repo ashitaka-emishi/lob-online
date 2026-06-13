@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mount, flushPromises } from '@vue/test-utils';
+import { mount, flushPromises, config } from '@vue/test-utils';
+import { createRouter, createWebHistory } from 'vue-router';
 import { setActivePinia, createPinia } from 'pinia';
 
 // Stub EditorNav to avoid RouterLink injection errors in tests without a router.
@@ -14,6 +15,15 @@ const MINIMAL_OOB = {
   confederate: { army: 'Army of Northern Virginia', corps: [] },
 };
 const MINIMAL_LEADERS = { _status: 'available', union: { army: [] }, confederate: { army: [] } };
+
+// #529 — OobEditorView now calls useRoute(); provide a stub router so injection resolves.
+const stubRouter = createRouter({
+  history: createWebHistory(),
+  routes: [
+    { path: '/', component: { template: '<div/>' } },
+    { path: '/modules/:moduleSlug/tools/oob-editor', component: { template: '<div/>' } },
+  ],
+});
 
 function mockFetch(oobData, leadersData, ok = true) {
   let call = 0;
@@ -35,9 +45,12 @@ describe('OobEditorView', () => {
       setItem: vi.fn(),
       removeItem: vi.fn(),
     });
+    // #529 — provide router globally so useRoute() resolves in all mount() calls
+    config.global.plugins = [stubRouter];
   });
 
   afterEach(() => {
+    config.global.plugins = [];
     vi.restoreAllMocks();
   });
 

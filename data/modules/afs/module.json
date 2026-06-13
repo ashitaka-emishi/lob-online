@@ -1,0 +1,14 @@
+{
+  "slug": "AFS",
+  "name": "A Fearful Slaughter",
+  "battle": "Shiloh",
+  "system": "Line of Battle v2.0",
+  "publication": "RSS/CWR",
+  "defaultScenarioSlug": "full-battle",
+  "scenarios": [
+    {
+      "slug": "full-battle",
+      "name": "Full Battle"
+    }
+  ]
+}

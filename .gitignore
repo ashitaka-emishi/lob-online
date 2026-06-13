@@ -43,8 +43,8 @@ test-results/
 # Runtime game state written by the dev server
 data/games/
 
-# Scenario editor backup files
-data/scenarios/*/backups/
+# Editor backup files
+data/modules/*/backups/
 
 # Claude Code internal worktree scratch directories
 .claude/worktrees/

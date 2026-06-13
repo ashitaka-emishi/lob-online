@@ -16,7 +16,7 @@ and its 6 neighbors (~42 checks instead of 13,440).
 
 ## Context
 
-The map editor is a dev tool used to digitize `docs/reference/sm-map.jpg` into `map.json` terrain
+The map editor is a dev tool used to digitize `docs/reference/south-mountain/sm-map.jpg` into `map.json` terrain
 data. Long digitization sessions are the primary use case, making interactive smoothness important.
 The issue was flagged during a team-review of PR #86.
 

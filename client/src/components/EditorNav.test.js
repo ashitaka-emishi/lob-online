@@ -2,18 +2,26 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createRouter, createWebHistory } from 'vue-router';
 
-const stubRouter = createRouter({
-  history: createWebHistory(),
-  routes: [
-    { path: '/', component: { template: '<div/>' } },
-    { path: '/lobby', component: { template: '<div/>' } },
-    { path: '/tools/scenario-editor', component: { template: '<div/>' } },
-    { path: '/tools/map-editor', component: { template: '<div/>' } },
-    { path: '/tools/oob-editor', component: { template: '<div/>' } },
-    { path: '/tools/map-test', component: { template: '<div/>' } },
-    { path: '/tools/table-test', component: { template: '<div/>' } },
-  ],
-});
+function makeRouter() {
+  return createRouter({
+    history: createWebHistory(),
+    routes: [
+      { path: '/', component: { template: '<div/>' } },
+      {
+        path: '/modules/:moduleSlug/scenarios/:scenarioSlug/lobby',
+        component: { template: '<div/>' },
+      },
+      {
+        path: '/modules/:moduleSlug/scenarios/:scenarioSlug/tools/scenario-editor',
+        component: { template: '<div/>' },
+      },
+      { path: '/modules/:moduleSlug/tools/map-editor', component: { template: '<div/>' } },
+      { path: '/modules/:moduleSlug/tools/oob-editor', component: { template: '<div/>' } },
+      { path: '/modules/:moduleSlug/tools/map-test', component: { template: '<div/>' } },
+      { path: '/modules/:moduleSlug/tools/table-test', component: { template: '<div/>' } },
+    ],
+  });
+}
 
 let EditorNav;
 
@@ -22,11 +30,12 @@ describe('EditorNav', () => {
     vi.unstubAllEnvs();
   });
 
-  it('always shows a home/lobby escape hatch', async () => {
+  it('always shows a home escape hatch pointing to /', async () => {
     vi.stubEnv('VITE_MAP_EDITOR_ENABLED', 'false');
     vi.resetModules();
     EditorNav = (await import('./EditorNav.vue')).default;
-    const wrapper = mount(EditorNav, { global: { plugins: [stubRouter] } });
+    const router = makeRouter('SM');
+    const wrapper = mount(EditorNav, { global: { plugins: [router] } });
     const homeLink = wrapper.find('[data-testid="nav-home"]');
     expect(homeLink.exists()).toBe(true);
     expect(homeLink.attributes('href') ?? homeLink.attributes('to')).toBe('/');
@@ -36,7 +45,7 @@ describe('EditorNav', () => {
     vi.stubEnv('VITE_MAP_EDITOR_ENABLED', 'true');
     vi.resetModules();
     EditorNav = (await import('./EditorNav.vue')).default;
-    const wrapper = mount(EditorNav, { global: { plugins: [stubRouter] } });
+    const wrapper = mount(EditorNav, { global: { plugins: [makeRouter()] } });
     expect(wrapper.find('[data-testid="nav-scenario-editor"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="nav-map-editor"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="nav-oob-editor"]').exists()).toBe(true);
@@ -48,7 +57,7 @@ describe('EditorNav', () => {
     vi.stubEnv('VITE_MAP_EDITOR_ENABLED', 'false');
     vi.resetModules();
     EditorNav = (await import('./EditorNav.vue')).default;
-    const wrapper = mount(EditorNav, { global: { plugins: [stubRouter] } });
+    const wrapper = mount(EditorNav, { global: { plugins: [makeRouter()] } });
     expect(wrapper.find('[data-testid="nav-scenario-editor"]').exists()).toBe(false);
     expect(wrapper.find('[data-testid="nav-map-editor"]').exists()).toBe(false);
     expect(wrapper.find('[data-testid="nav-oob-editor"]').exists()).toBe(false);
@@ -56,27 +65,44 @@ describe('EditorNav', () => {
     expect(wrapper.find('[data-testid="nav-table-test"]').exists()).toBe(false);
   });
 
-  it('tool links point to correct routes when enabled', async () => {
+  it('tool links include module slug from route param', async () => {
     vi.stubEnv('VITE_MAP_EDITOR_ENABLED', 'true');
     vi.resetModules();
     EditorNav = (await import('./EditorNav.vue')).default;
-    const wrapper = mount(EditorNav, { global: { plugins: [stubRouter] } });
-    const scenarioEditor = wrapper.find('[data-testid="nav-scenario-editor"]');
-    const mapEditor = wrapper.find('[data-testid="nav-map-editor"]');
-    const oobEditor = wrapper.find('[data-testid="nav-oob-editor"]');
-    const mapTest = wrapper.find('[data-testid="nav-map-test"]');
-    const tableTest = wrapper.find('[data-testid="nav-table-test"]');
-    expect(scenarioEditor.exists()).toBe(true);
-    expect(mapEditor.exists()).toBe(true);
-    expect(oobEditor.exists()).toBe(true);
-    expect(mapTest.exists()).toBe(true);
-    expect(tableTest.exists()).toBe(true);
-    expect(scenarioEditor.attributes('href') ?? scenarioEditor.attributes('to')).toBe(
-      '/tools/scenario-editor'
+    const router = makeRouter();
+    await router.push('/modules/SM/tools/map-editor');
+    await router.isReady();
+    const wrapper = mount(EditorNav, { global: { plugins: [router] } });
+    expect(wrapper.find('[data-testid="nav-map-editor"]').attributes('href')).toBe(
+      '/modules/SM/tools/map-editor'
     );
-    expect(mapEditor.attributes('href') ?? mapEditor.attributes('to')).toBe('/tools/map-editor');
-    expect(oobEditor.attributes('href') ?? oobEditor.attributes('to')).toBe('/tools/oob-editor');
-    expect(mapTest.attributes('href') ?? mapTest.attributes('to')).toBe('/tools/map-test');
-    expect(tableTest.attributes('href') ?? tableTest.attributes('to')).toBe('/tools/table-test');
+    expect(wrapper.find('[data-testid="nav-scenario-editor"]').attributes('href')).toBe(
+      '/modules/SM/scenarios/full-battle/tools/scenario-editor'
+    );
+    expect(wrapper.find('[data-testid="nav-oob-editor"]').attributes('href')).toBe(
+      '/modules/SM/tools/oob-editor'
+    );
+    expect(wrapper.find('[data-testid="nav-map-test"]').attributes('href')).toBe(
+      '/modules/SM/tools/map-test'
+    );
+    expect(wrapper.find('[data-testid="nav-table-test"]').attributes('href')).toBe(
+      '/modules/SM/tools/table-test'
+    );
+  });
+
+  it('defaults slug to THG when no route param is present', async () => {
+    vi.stubEnv('VITE_MAP_EDITOR_ENABLED', 'true');
+    vi.resetModules();
+    EditorNav = (await import('./EditorNav.vue')).default;
+    const router = makeRouter();
+    await router.push('/');
+    await router.isReady();
+    const wrapper = mount(EditorNav, { global: { plugins: [router] } });
+    expect(wrapper.find('[data-testid="nav-map-editor"]').attributes('href')).toBe(
+      '/modules/THG/tools/map-editor'
+    );
+    expect(wrapper.find('[data-testid="nav-scenario-editor"]').attributes('href')).toBe(
+      '/modules/THG/scenarios/full-battle/tools/scenario-editor'
+    );
   });
 });

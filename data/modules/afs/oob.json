@@ -1,0 +1,34 @@
+{
+  "_status": "scaffold",
+  "_source": "AFS — not yet entered",
+  "_errata_applied": [],
+  "union": {
+    "army": "AFS Union Army",
+    "supplyTrain": {
+      "id": "afs-union-supply",
+      "name": "Union Supply Train"
+    },
+    "corps": [],
+    "cavalryDivision": {
+      "id": "afs-union-cav",
+      "name": "Union Cavalry Division",
+      "brigades": []
+    }
+  },
+  "confederate": {
+    "army": "AFS Confederate Army",
+    "wing": "AFS Confederate Wing",
+    "supplyWagon": {
+      "id": "afs-csa-supply",
+      "name": "Confederate Supply Wagon"
+    },
+    "independent": {
+      "cavalry": [],
+      "artillery": []
+    },
+    "reserveArtillery": {
+      "batteries": []
+    },
+    "divisions": []
+  }
+}

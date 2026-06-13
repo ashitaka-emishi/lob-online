@@ -1,0 +1,8 @@
+{
+  "_status": "scaffold",
+  "_description": "Placeholder map for LCV — not yet digitized",
+  "scenario": "lcv",
+  "layout": "pointy-top",
+  "vpHexes": [],
+  "hexes": []
+}
