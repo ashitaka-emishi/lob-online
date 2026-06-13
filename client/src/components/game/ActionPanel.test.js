@@ -327,6 +327,128 @@ describe('ActionPanel — waiting state', () => {
   });
 });
 
+describe('ActionPanel — payload-bearing actions (#551)', () => {
+  it('END_PHASE emits { type: END_PHASE, payload: null } on click (no regression)', async () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [{ type: 'END_PHASE', payload: null }],
+      },
+    });
+    await wrapper.find('button').trigger('click');
+    expect(wrapper.emitted('submit-action')[0]).toEqual([{ type: 'END_PHASE', payload: null }]);
+  });
+
+  it('ACTIVATE_STACK emits the concrete { hex } payload from candidate on click', async () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [{ type: 'ACTIVATE_STACK', payload: { hex: '29.22' } }],
+      },
+    });
+    await wrapper.find('button').trigger('click');
+    expect(wrapper.emitted('submit-action')[0]).toEqual([
+      { type: 'ACTIVATE_STACK', payload: { hex: '29.22' } },
+    ]);
+  });
+
+  it('ROLL_INITIATIVE emits the concrete { leaderId, unitId } payload from candidate on click', async () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [
+          { type: 'ROLL_INITIATIVE', payload: { leaderId: 'cox', unitId: 'colquitt' } },
+        ],
+      },
+    });
+    await wrapper.find('button').trigger('click');
+    expect(wrapper.emitted('submit-action')[0]).toEqual([
+      { type: 'ROLL_INITIATIVE', payload: { leaderId: 'cox', unitId: 'colquitt' } },
+    ]);
+  });
+
+  it('two ISSUE_ORDER candidates render distinct labels for attack and move (#551)', () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [
+          { type: 'ISSUE_ORDER', payload: { unitId: 'colquitt', orderType: 'attack' } },
+          { type: 'ISSUE_ORDER', payload: { unitId: 'colquitt', orderType: 'move' } },
+        ],
+      },
+    });
+    const labels = wrapper.findAll('button').map((b) => b.text());
+    expect(labels).toHaveLength(2);
+    // Labels must be distinguishable — cannot both be "Issue Order"
+    expect(labels[0]).not.toBe(labels[1]);
+    // Each must reflect its order type
+    expect(labels[0].toLowerCase()).toMatch(/attack/);
+    expect(labels[1].toLowerCase()).toMatch(/move/);
+  });
+
+  it('clicking attack ISSUE_ORDER emits the attack payload', async () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [
+          { type: 'ISSUE_ORDER', payload: { unitId: 'colquitt', orderType: 'attack' } },
+          { type: 'ISSUE_ORDER', payload: { unitId: 'colquitt', orderType: 'move' } },
+        ],
+      },
+    });
+    const buttons = wrapper.findAll('button');
+    await buttons[0].trigger('click');
+    expect(wrapper.emitted('submit-action')[0]).toEqual([
+      { type: 'ISSUE_ORDER', payload: { unitId: 'colquitt', orderType: 'attack' } },
+    ]);
+  });
+
+  it('clicking move ISSUE_ORDER emits the move payload', async () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [
+          { type: 'ISSUE_ORDER', payload: { unitId: 'colquitt', orderType: 'attack' } },
+          { type: 'ISSUE_ORDER', payload: { unitId: 'colquitt', orderType: 'move' } },
+        ],
+      },
+    });
+    const buttons = wrapper.findAll('button');
+    await buttons[1].trigger('click');
+    expect(wrapper.emitted('submit-action')[0]).toEqual([
+      { type: 'ISSUE_ORDER', payload: { unitId: 'colquitt', orderType: 'move' } },
+    ]);
+  });
+
+  it('null payload guard: ROLL_INITIATIVE with null payload emits null payload (fallback steel-thread)', async () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [{ type: 'ROLL_INITIATIVE', payload: null }],
+      },
+    });
+    await wrapper.find('button').trigger('click');
+    expect(wrapper.emitted('submit-action')[0]).toEqual([
+      { type: 'ROLL_INITIATIVE', payload: null },
+    ]);
+  });
+
+  it('multiple ACTIVATE_STACK candidates render one button per hex', () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [
+          { type: 'ACTIVATE_STACK', payload: { hex: '29.22' } },
+          { type: 'ACTIVATE_STACK', payload: { hex: '30.23' } },
+          { type: 'END_PHASE', payload: null },
+        ],
+      },
+    });
+    const buttons = wrapper.findAll('button');
+    expect(buttons).toHaveLength(3);
+  });
+});
+
 describe('ActionPanel — null-state summary', () => {
   it('does not render summary line when turn and phase are null', () => {
     const wrapper = mount(ActionPanel, {

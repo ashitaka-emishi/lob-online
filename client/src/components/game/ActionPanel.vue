@@ -40,6 +40,17 @@ function toTitleCase(type) {
     .join(' ');
 }
 
+// Returns a human-readable label for an action candidate.
+// When multiple candidates share the same type but differ by payload (e.g. two ISSUE_ORDER
+// candidates for attack vs. move), append the distinguishing payload field so the buttons
+// are not identically labelled. (#551)
+function actionLabel(action) {
+  if (action.type === 'ISSUE_ORDER' && action.payload?.orderType) {
+    return `Issue Order — ${action.payload.orderType.charAt(0).toUpperCase() + action.payload.orderType.slice(1)}`;
+  }
+  return toTitleCase(action.type);
+}
+
 // Track the last-clicked button element so focus can be restored when pending clears. (#505)
 // Uses aria-disabled (not native disabled) so the button stays in the tab order and
 // remains focusable — native disabled would remove it from the tab order, breaking restore.
@@ -106,7 +117,7 @@ function handleClick(action, event) {
           class="spinner"
           aria-hidden="true"
         />
-        {{ toTitleCase(action.type) }}
+        {{ actionLabel(action) }}
       </button>
     </div>
   </section>
