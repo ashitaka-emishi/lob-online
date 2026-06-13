@@ -85,14 +85,14 @@ Update the 8 scaffold scenario.json files with real game names and known battle 
 
 ### Tasks
 
-- [ ] Task 2.1: For each of afs, ib, lcv, nbh, ntb, thg, tts, ttw — update `scenario.json`: - `name` → real game name from `module.json` (e.g. `"A Fearful Slaughter"`) - `id` → lowercase slug (e.g. `"afs"`) - Add `_battle` field with battle name from `module.json` - Add `_publication` field from `module.json` - Keep `_status: "scaffold"` and all existing structure intact
-- [ ] Task 2.2: Run `npm run validate-data` and fix any schema rejections from the stub
+- [x] Task 2.1: For each of afs, ib, lcv, nbh, ntb, thg, tts, ttw — update `scenario.json`: - `name` → real game name from `module.json` (e.g. `"A Fearful Slaughter"`) - `id` → lowercase slug (e.g. `"afs"`) - Add `_battle` field with battle name from `module.json` - Add `_publication` field from `module.json` - Keep `_status: "scaffold"` and all existing structure intact
+- [x] Task 2.2: Run `npm run validate-data` and fix any schema rejections from the stub
       updates.
 
 ### Verification
 
-- [ ] `npm run validate-data` passes for all 9 modules
-- [ ] All 8 updated scenario.json files have real names; `_status` remains `"scaffold"`
+- [x] `npm run validate-data` passes for all 9 modules
+- [x] All 8 updated scenario.json files have real names; `_status` remains `"scaffold"`
 
 ---
 
