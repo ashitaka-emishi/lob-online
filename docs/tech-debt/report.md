@@ -1,17 +1,17 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-08 after PR #530._
+_Last updated: 2026-06-13 after PR #539._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                   |
-| -------------------------------- | ----------------------------------------------------------------------- |
-| Open debt items                  | 14                                                                      |
-| Cumulative debt score (net open) | 24                                                                      |
-| Highest-risk item                | Extract MINUTES_PER_CONDITION into shared engine module (#531, score 3) |
-| PRs tracked                      | 255                                                                     |
+| Metric                           | Value                                                                |
+| -------------------------------- | -------------------------------------------------------------------- |
+| Open debt items                  | 22                                                                   |
+| Cumulative debt score (net open) | 41                                                                   |
+| Highest-risk item                | Gate moduleData PUT routes behind MAP_EDITOR_ENABLED (#540, score 4) |
+| PRs tracked                      | 264                                                                  |
 
 ---
 
@@ -317,6 +317,15 @@ _Last updated: 2026-06-08 after PR #530._
 | 2026-06-05 | PR #517 (resolved #204)                                        | -1                   | —         | 447                      |
 | 2026-06-06 | PR #517 (team-review)                                          | 0                    | 0         | 447                      |
 | 2026-06-08 | PR #530                                                        | 12                   | +12       | 459                      |
+| 2026-06-13 | PR #539                                                        | 17                   | +17       | 476                      |
+| 2026-06-13 | PR #539 (added #540)                                           | +4                   | —         | 476                      |
+| 2026-06-13 | PR #539 (added #541)                                           | +3                   | —         | 476                      |
+| 2026-06-13 | PR #539 (added #542)                                           | +2                   | —         | 476                      |
+| 2026-06-13 | PR #539 (added #543)                                           | +2                   | —         | 476                      |
+| 2026-06-13 | PR #539 (added #544)                                           | +1                   | —         | 476                      |
+| 2026-06-13 | PR #539 (added #545)                                           | +2                   | —         | 476                      |
+| 2026-06-13 | PR #539 (added #546)                                           | +2                   | —         | 476                      |
+| 2026-06-13 | PR #539 (added #547)                                           | +1                   | —         | 476                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -326,7 +335,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 Elevated risk. Several significant deferred items that introduce coupling or architectural compromise. Recommend a debt reduction sprint before the next major phase.
 
-PR #530 (editor polish, turn structure rework) added 12 pts across 8 new items, raising net open score from 12 to 24 across 14 items. The PR's team review produced 1 Critical, 2 High, and 9 Medium/Low findings; the Critical and both Highs were fixed in place; the second-pass review on the domain-critical `init.js` engine change produced zero additional deferred findings. The 14 open items fall into three clusters: (1) **PR #530 schema/model debt** — #531 (score 3, shared clock constant), #533 and #532 (score 2 each, totalTurns source-of-truth and startTurn uniqueness), plus 5 trivial test/naming items (#534–#538); (2) **M6-blocked rules-engine stubs** — #383 #382 #381 #379 (score 2 each), safe stubs awaiting combat/morale data; (3) **M8-blocked security hardening** — #403 (CSP headers) and #350 (rate limiting), score 2 each. The #531 shared-clock-module item is the highest-risk actionable item and should be addressed before the engine's turn-walk logic is extended in M6.
+PR #539 (multi-module platform) added 17 pts across 8 new items, raising net open score from 24 to 41 across 22 items. The PR's team review fixed 6 findings in place (DEFAULT_SLUG consolidation, library path corrections, two non-findings confirmed closed). Second-pass review was not required — fixes were limited to a constant export and doc corrections. The 22 open items fall into four clusters: (1) **PR #539 multi-module debt** — #540 (score 4, PUT routes not gated by MAP_EDITOR_ENABLED — highest-risk actionable item), #541 (score 3, OOB persistence dual-mode divergence), #542–#547 (scores 1–2, editor reactivity, composable test gaps, error handler registration, route test coverage); (2) **PR #530 schema/model debt** — #531 (score 3, shared clock constant), #533 and #532 (score 2 each), plus 5 trivial test/naming items (#534–#538); (3) **M6-blocked rules-engine stubs** — #383 #382 #381 #379 (score 2 each); (4) **M8-blocked security hardening** — #403 (CSP headers) and #350 (rate limiting), score 2 each. Address #540 before enabling the module data API in any non-local environment, and #541 before adding a second actively-edited module.
 
 ---
 
@@ -336,6 +345,8 @@ _Ordered by score descending (ties: newest first). Resolved items are removed._
 
 | Score | Issue | Title                                                                | PR Introduced | Assessment                                                                                                                                                                                              |
 | ----- | ----- | -------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 4     | #540  | Gate moduleData PUT routes behind MAP_EDITOR_ENABLED                 | PR #539       | Write routes mounted unconditionally; any origin passing the CSRF check can overwrite data files. Intended as dev-only but lacks the guard used by all other editor routes.                             |
+| 3     | #541  | Resolve OOB persistence dual-mode divergence in useOobPersistence    | PR #539       | Composable silently falls back to legacy URL when moduleSlug is omitted; misdirected writes are invisible to callers and create a correctness hazard with multiple active modules.                      |
 | 3     | #531  | Extract MINUTES_PER_CONDITION into shared engine module              | PR #530       | Constant lives only in `ScenarioEditorView.vue`; `init.js` hardcodes `15` with comment. If condition-aware turn math is needed in the engine, the constant needs a shared location to avoid divergence. |
 | 2     | #533  | Remove totalTurns from scenario.json (now derived)                   | PR #530       | `totalTurns` is now computed by the client but still stored in `scenario.json` and required by the schema; mixed source-of-truth creates confusion and can drift.                                       |
 | 2     | #532  | Enforce startTurn uniqueness in lighting schedule schema             | PR #530       | No Zod `.superRefine()` check on the array; duplicate `startTurn` values pass validation but produce undefined behavior in the turn-walk logic.                                                         |
@@ -350,6 +361,12 @@ _Ordered by score descending (ties: newest first). Resolved items are removed._
 | 1     | #536  | Add upper bound to visibilityHexes validation                        | PR #530       | `visibilityHexes` validated as `z.number().int().positive()` with no upper bound; the `999` day sentinel is undocumented in the schema.                                                                 |
 | 1     | #535  | Add totalTurns edge case tests                                       | PR #530       | Guard conditions for empty schedule, `lastTurn` before `firstTurn`, and missing turn fields are untested.                                                                                               |
 | 1     | #534  | Add lightingStartTimes night-turn clock test                         | PR #530       | No test verifying that `lightingStartTimes` correctly accumulates 30-min night turns when computing clock times for entries after a night condition transition.                                         |
+| 2     | #542  | Make editor views reactive to moduleSlug route param changes         | PR #539       | Slug captured non-reactively at setup; current routing guarantees remount on slug change so no active breakage, but fragile against future in-page navigation that changes slug without full remount.   |
+| 2     | #543  | Add direct unit tests for useMapPersistence and useOobPersistence    | PR #539       | Composables only tested indirectly through view mount tests; composable-level URL construction bugs are not caught until the full view renders.                                                         |
+| 2     | #545  | Register ModuleNotFoundError in Express error handler middleware     | PR #539       | Error caught inline in helpers; a future route that forgets the inline catch will surface an unhandled 500 instead of a clean 404 JSON response.                                                        |
+| 2     | #546  | Expand moduleData route tests — unknown slug 404 and scenario paths  | PR #539       | Missing coverage for unknown-slug 404, nested scenario sub-routes, and invalid scenarioSlug rejection.                                                                                                  |
+| 1     | #544  | Add useModuleStore modulePath/defaultScenarioPath helper tests       | PR #539       | Helpers build all client API and router URLs but have no direct assertions; simple string operations, low breakage risk.                                                                                |
+| 1     | #547  | Add router test coverage for legacy redirect destinations            | PR #539       | Legacy redirect targets are string constants baked at module load time; a typo would not be caught by the current test suite.                                                                           |
 
 ---
 
