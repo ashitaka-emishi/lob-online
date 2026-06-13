@@ -41,14 +41,27 @@ function toTitleCase(type) {
 }
 
 // Returns a human-readable label for an action candidate.
-// When multiple candidates share the same type but differ by payload (e.g. two ISSUE_ORDER
-// candidates for attack vs. move), append the distinguishing payload field so the buttons
-// are not identically labelled. (#551)
+// When multiple candidates share the same type but differ by payload, append a
+// distinguishing suffix so buttons are not identically labelled. (#551, #559 review H1/H2)
 function actionLabel(action) {
   if (action.type === 'ISSUE_ORDER' && action.payload?.orderType) {
-    return `Issue Order — ${action.payload.orderType.charAt(0).toUpperCase() + action.payload.orderType.slice(1)}`;
+    return `Issue Order — ${toTitleCase(action.payload.orderType)}`;
+  }
+  if (action.type === 'ACTIVATE_STACK' && action.payload?.hex) {
+    return `Activate Stack — ${action.payload.hex}`;
+  }
+  if (action.type === 'ROLL_INITIATIVE' && action.payload?.leaderId) {
+    return `Roll Initiative — ${action.payload.leaderId}`;
   }
   return toTitleCase(action.type);
+}
+
+// Stable unique key for a candidate — type alone is not sufficient when multiple candidates
+// share the same type but differ by payload (e.g. two ISSUE_ORDER, N ACTIVATE_STACK). (#559 H1)
+function candidateKey(action) {
+  const p = action.payload;
+  if (!p) return action.type;
+  return `${action.type}:${p.orderType ?? p.hex ?? p.unitId ?? ''}`;
 }
 
 // Track the last-clicked button element so focus can be restored when pending clears. (#505)
@@ -101,7 +114,7 @@ function handleClick(action, event) {
     >
       <button
         v-for="action in validActions"
-        :key="action.type"
+        :key="candidateKey(action)"
         class="action-btn"
         :aria-disabled="pending"
         @click="handleClick(action, $event)"

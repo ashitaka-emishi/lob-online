@@ -35,17 +35,20 @@ export function getValidActions(state, playerSide) {
     const leaderRollUsed = state.ordersPhase?.leaderRollUsed ?? {};
     const leaderEntries = Object.entries(state.leaderState ?? {});
     const eligibleLeaders = leaderEntries.filter(([id, ls]) => !leaderRollUsed[id] && ls.isOnBoard);
+    // Hoisted outside flatMap — invariant across all eligible leaders.
+    // LOB §10.3 — only friendly units can be targeted for initiative. UnitStateSchema does not
+    // carry a side field (unit affiliation is OOB data, not game state), so side-filtering is
+    // deferred to M6 when OOB data is co-located with the engine. In M5 all units in state are
+    // the active player's units; cross-side mixing is not yet possible. (#559 issue filed)
+    const onBoardUnitIds = Object.keys(state.units).filter((uid) => state.units[uid].isOnBoard);
     const rollCandidates =
       eligibleLeaders.length > 0
-        ? eligibleLeaders.flatMap(([leaderId]) => {
-            // Pair each leader with each order-holding unit as potential initiative target.
-            // M5 simplification: any on-board unit is a valid target; M6 will narrow by command range.
-            const unitIds = Object.keys(state.units).filter((uid) => state.units[uid].isOnBoard);
-            return unitIds.map((unitId) => ({
+        ? eligibleLeaders.flatMap(([leaderId]) =>
+            onBoardUnitIds.map((unitId) => ({
               type: 'ROLL_INITIATIVE',
               payload: { leaderId, unitId },
-            }));
-          })
+            }))
+          )
         : [{ type: 'ROLL_INITIATIVE', payload: null }];
     return [...rollCandidates, { type: 'END_PHASE', payload: null }];
   }
@@ -189,6 +192,9 @@ export function dispatch(state, action) {
   }
 
   const validActions = getValidActions(state, playerSide);
+  // Type-only gate — payload is NOT validated here. The candidate list in getValidActions is
+  // informational for the UI (which concrete moves are available); each handler re-validates
+  // its own payload against state independently. (#550 review M1)
   if (!validActions.some((a) => a.type === type)) {
     throw new ActionError('INVALID_ACTION', `Action '${type}' is not valid in the current state`);
   }

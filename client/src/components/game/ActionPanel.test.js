@@ -447,6 +447,38 @@ describe('ActionPanel — payload-bearing actions (#551)', () => {
     const buttons = wrapper.findAll('button');
     expect(buttons).toHaveLength(3);
   });
+
+  it('multiple ACTIVATE_STACK candidates render distinct labels with hex (#559 review H2)', () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [
+          { type: 'ACTIVATE_STACK', payload: { hex: '29.22' } },
+          { type: 'ACTIVATE_STACK', payload: { hex: '30.23' } },
+        ],
+      },
+    });
+    const labels = wrapper.findAll('button').map((b) => b.text());
+    expect(labels[0]).toMatch(/29\.22/);
+    expect(labels[1]).toMatch(/30\.23/);
+    expect(labels[0]).not.toBe(labels[1]);
+  });
+
+  it('multiple ROLL_INITIATIVE candidates render distinct labels with leaderId (#559 review H2)', () => {
+    const wrapper = mount(ActionPanel, {
+      props: {
+        ...DEFAULT_PROPS,
+        validActions: [
+          { type: 'ROLL_INITIATIVE', payload: { leaderId: 'cox', unitId: 'colquitt' } },
+          { type: 'ROLL_INITIATIVE', payload: { leaderId: 'jones', unitId: 'colquitt' } },
+        ],
+      },
+    });
+    const labels = wrapper.findAll('button').map((b) => b.text());
+    expect(labels[0]).toMatch(/cox/i);
+    expect(labels[1]).toMatch(/jones/i);
+    expect(labels[0]).not.toBe(labels[1]);
+  });
 });
 
 describe('ActionPanel — null-state summary', () => {

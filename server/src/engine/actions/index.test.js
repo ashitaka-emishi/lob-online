@@ -287,6 +287,69 @@ describe('getValidActions', () => {
     expect(actions.map((a) => a.type)).not.toContain('ACTIVATE_STACK');
     expect(actions.map((a) => a.type)).toContain('END_PHASE');
   });
+
+  // Review H3 deferred: LOB §10.3 requires ROLL_INITIATIVE to target only friendly units.
+  // UnitStateSchema has no side field (affiliation is OOB data); side-filtering is deferred
+  // to M6. In M5, all units in game state are assumed to be from the same scenario OOB.
+  // This test documents the current behaviour and pins that all on-board units appear as candidates.
+  it('ROLL_INITIATIVE candidates include all on-board units (M5 — side-filter deferred to M6 LOB §10.3)', () => {
+    const state = {
+      ...COMMAND_ORDERS_STATE,
+      units: {
+        colquitt: { ...BASE_UNIT, id: 'colquitt', isOnBoard: true },
+        rodes: { ...BASE_UNIT, id: 'rodes', isOnBoard: true },
+      },
+      leaderState: { cox: { hex: '29.22', isOnBoard: true } },
+      ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+    };
+    const actions = getValidActions(state, 'union');
+    const rollActions = actions.filter((a) => a.type === 'ROLL_INITIATIVE');
+    const unitIds = rollActions.map((a) => a.payload?.unitId).filter(Boolean);
+    expect(unitIds).toContain('colquitt');
+    expect(unitIds).toContain('rodes');
+  });
+
+  // Review L3: ROLL_INITIATIVE cartesian expansion cardinality (leaders × units)
+  it('ROLL_INITIATIVE produces L×U candidates for L leaders and U on-board units (#559 review L3)', () => {
+    const state = {
+      ...COMMAND_ORDERS_STATE,
+      units: {
+        unit1: { ...BASE_UNIT, id: 'unit1', isOnBoard: true },
+        unit2: { ...BASE_UNIT, id: 'unit2', isOnBoard: true },
+      },
+      leaderState: {
+        cox: { hex: '29.22', isOnBoard: true },
+        jones: { hex: '30.22', isOnBoard: true },
+      },
+      ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+    };
+    const actions = getValidActions(state, 'union');
+    const rollActions = actions.filter((a) => a.type === 'ROLL_INITIATIVE');
+    // 2 leaders × 2 units = 4 candidates
+    expect(rollActions).toHaveLength(4);
+    const pairs = rollActions.map((a) => `${a.payload.leaderId}:${a.payload.unitId}`);
+    expect(pairs).toContain('cox:unit1');
+    expect(pairs).toContain('cox:unit2');
+    expect(pairs).toContain('jones:unit1');
+    expect(pairs).toContain('jones:unit2');
+  });
+
+  // Review L4: ACTIVATE_STACK same-hex deduplication
+  it('ACTIVATE_STACK deduplicates stacked units at the same hex (#559 review L4)', () => {
+    const state = {
+      ...ACTIVITY_STATE,
+      units: {
+        unit1: { ...BASE_UNIT, id: 'unit1', hex: '29.22', isOnBoard: true },
+        unit2: { ...BASE_UNIT, id: 'unit2', hex: '29.22', isOnBoard: true },
+      },
+      activityPhase: { activatedUnits: [], currentActivation: null },
+    };
+    const actions = getValidActions(state, 'union');
+    const activateActions = actions.filter((a) => a.type === 'ACTIVATE_STACK');
+    // Both units at same hex — only one ACTIVATE_STACK candidate expected
+    expect(activateActions).toHaveLength(1);
+    expect(activateActions[0].payload.hex).toBe('29.22');
+  });
 });
 
 // ── drainAutoSteps ───────────────────────────────────────────────────────────
