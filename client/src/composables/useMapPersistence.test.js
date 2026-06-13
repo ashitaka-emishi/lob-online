@@ -652,4 +652,30 @@ describe('useMapPersistence', () => {
       expect(saveStatus.value).toBe('saved');
     });
   });
+
+  // ── URL construction (#543) ────────────────────────────────────────────────
+
+  describe('URL construction', () => {
+    it('uses legacy tool URL when moduleSlug is absent', async () => {
+      const fn = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ hexes: [], _status: 'scaffold' }),
+      });
+      vi.stubGlobal('fetch', fn);
+      const { actions } = useMapPersistence(makeArgs());
+      await actions.fetchMapData();
+      expect(fn.mock.calls[0][0]).toBe('/api/tools/map-editor/data');
+    });
+
+    it('uses module-scoped URL when moduleSlug is provided', async () => {
+      const fn = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ hexes: [], _status: 'scaffold' }),
+      });
+      vi.stubGlobal('fetch', fn);
+      const { actions } = useMapPersistence(makeArgs({ moduleSlug: 'SM' }));
+      await actions.fetchMapData();
+      expect(fn.mock.calls[0][0]).toBe('/api/v1/modules/SM/map');
+    });
+  });
 });

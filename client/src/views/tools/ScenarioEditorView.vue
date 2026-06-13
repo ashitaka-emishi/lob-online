@@ -3,7 +3,11 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import EditorNav from '../../components/EditorNav.vue';
-import { MINUTES_PER_CONDITION, MINUTES_PER_CONDITION_DEFAULT } from '../../config/turnTime.js';
+import {
+  MINUTES_PER_CONDITION,
+  MINUTES_PER_CONDITION_DEFAULT,
+  VISIBILITY_UNLIMITED,
+} from '../../config/turnTime.js';
 
 const _route = useRoute();
 const _moduleSlug = _route.params.moduleSlug ?? null;
@@ -30,10 +34,10 @@ const showPushConfirm = ref(false);
 const showPullConfirm = ref(false);
 
 // Default visibility in hexes per condition (day=unlimited, night=2, others=4)
-const VISIBILITY_DEFAULTS = { day: 999, twilight: 4, night: 2, fog: 4, rain: 4 };
+const VISIBILITY_DEFAULTS = { day: VISIBILITY_UNLIMITED, twilight: 4, night: 2, fog: 4, rain: 4 };
 
 // Lighting schedule row being added
-const newRow = ref({ startTurn: '', condition: 'day', visibilityHexes: 999 });
+const newRow = ref({ startTurn: '', condition: 'day', visibilityHexes: VISIBILITY_UNLIMITED });
 
 // ── Computed ──────────────────────────────────────────────────────────────────
 
@@ -298,7 +302,7 @@ function addLightingRow() {
       visibilityHexes: newRow.value.visibilityHexes,
     },
   ].sort((a, b) => a.startTurn - b.startTurn);
-  newRow.value = { startTurn: '', condition: 'day', visibilityHexes: 999 };
+  newRow.value = { startTurn: '', condition: 'day', visibilityHexes: VISIBILITY_UNLIMITED };
   markDirty();
 }
 

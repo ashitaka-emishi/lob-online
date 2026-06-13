@@ -299,3 +299,38 @@ describe('pullFromServer', () => {
     expect(refs.succession.value).toEqual(VALID_SUCCESSION);
   });
 });
+
+// ── URL construction (#543) ────────────────────────────────────────────────────
+
+describe('useOobPersistence — URL construction', () => {
+  it('uses legacy tool URLs when moduleSlug is absent', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(VALID_OOB),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const refs = makeRefs();
+    const { loadData } = useOobPersistence(refs);
+    await loadData();
+    const calledUrls = fetchMock.mock.calls.map((c) => c[0]);
+    expect(calledUrls).toContain('/api/tools/oob-editor/data');
+    expect(calledUrls).toContain('/api/tools/leaders-editor/data');
+    expect(calledUrls).toContain('/api/tools/succession-editor/data');
+  });
+
+  it('uses module-scoped URLs when moduleSlug is provided', async () => {
+    const slug = 'SM';
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(VALID_OOB),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const refs = makeRefs();
+    const { loadData } = useOobPersistence({ ...refs, moduleSlug: slug });
+    await loadData();
+    const calledUrls = fetchMock.mock.calls.map((c) => c[0]);
+    expect(calledUrls).toContain(`/api/v1/modules/${slug}/oob`);
+    expect(calledUrls).toContain(`/api/v1/modules/${slug}/leaders`);
+    expect(calledUrls).toContain(`/api/v1/modules/${slug}/succession`);
+  });
+});

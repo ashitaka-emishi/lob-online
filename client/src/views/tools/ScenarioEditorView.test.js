@@ -664,4 +664,78 @@ describe('ScenarioEditorView', () => {
     expect(wrapper.text()).toContain('Fluke Stoppage Grace Period');
     wrapper.unmount();
   });
+
+  // ── totalTurns edge cases (#535) ───────────────────────────────────────────
+
+  it('totalTurns returns — when lightingSchedule is empty', async () => {
+    const scenario = { ...VALID_SCENARIO, lightingSchedule: [] };
+    vi.stubGlobal('fetch', mockFetch(scenario));
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
+    await flushPromises();
+    // Empty schedule: no entries, defaults to day (15 min/turn). 09:00–20:00 = 660 min = 45 turns.
+    expect(wrapper.find('[data-testid="total-turns-display"]').text()).toBe('45');
+    wrapper.unmount();
+  });
+
+  it('totalTurns returns null display (—) when lastTurn is before firstTurn', async () => {
+    const scenario = {
+      ...VALID_SCENARIO,
+      lightingSchedule: [{ startTurn: 1, condition: 'day', visibilityHexes: 999 }],
+      turnStructure: { ...VALID_SCENARIO.turnStructure, firstTurn: '20:00', lastTurn: '09:00' },
+    };
+    vi.stubGlobal('fetch', mockFetch(scenario));
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
+    await flushPromises();
+    expect(wrapper.find('[data-testid="total-turns-display"]').text()).toBe('—');
+    wrapper.unmount();
+  });
+
+  it('totalTurns returns null display (—) when firstTurn is missing', async () => {
+    const scenario = {
+      ...VALID_SCENARIO,
+      turnStructure: { ...VALID_SCENARIO.turnStructure, firstTurn: '' },
+    };
+    vi.stubGlobal('fetch', mockFetch(scenario));
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
+    await flushPromises();
+    expect(wrapper.find('[data-testid="total-turns-display"]').text()).toBe('—');
+    wrapper.unmount();
+  });
+
+  // ── lightingStartTimes night-turn clock accumulation (#534) ───────────────
+
+  it('lightingStartTimes correctly accumulates 30-min night turns for entries after night transition', async () => {
+    // 09:00 start. Turn 1 = day (15 min). Turn 2 = night (30 min).
+    // Turn 1 starts at 09:00, turn 2 starts at 09:15.
+    // Turn 3 (first after night entry) starts at 09:15 + 30 = 09:45.
+    const scenario = {
+      ...VALID_SCENARIO,
+      turnStructure: { ...VALID_SCENARIO.turnStructure, firstTurn: '09:00', lastTurn: '10:00' },
+      lightingSchedule: [
+        { startTurn: 1, condition: 'day', visibilityHexes: 999 },
+        { startTurn: 2, condition: 'night', visibilityHexes: 2 },
+        { startTurn: 3, condition: 'day', visibilityHexes: 999 },
+      ],
+    };
+    vi.stubGlobal('fetch', mockFetch(scenario));
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
+    await flushPromises();
+    // Turn 1 (day) starts at 09:00. Turn 2 (night) starts at 09:15. Turn 3 (day) starts at 09:45.
+    // lightingStartTimes cells are rendered with data-testid="lighting-time", one per schedule row.
+    const timeCells = wrapper.findAll('[data-testid="lighting-time"]');
+    expect(timeCells[2]?.text()).toBe('09:45');
+    wrapper.unmount();
+  });
 });
