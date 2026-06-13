@@ -38,15 +38,15 @@ All PDFs live in `docs/reference/`:
 
 ### Data Files
 
-Data files consulted for model reviews live in `data/scenarios/south-mountain/`:
+Data files consulted for model reviews live in `data/modules/south-mountain/`:
 
-| ID                | File                         | Contents                                                                                                                                                                |
-| ----------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SM_MAP_DATA       | `map.json`                   | Hex terrain, gridSpec calibration, VP/entry hexes, type registries (hexsideTypes, hexFeatureTypes, edgeFeatureTypes) — partial, digitization in progress via map editor |
-| GS_OOB            | `oob.json`                   | 219 units, brigade/division hierarchy, wreck thresholds                                                                                                                 |
-| GS_LEADERS        | `leaders.json`               | 48 leaders, ratings, special rule flags                                                                                                                                 |
-| SM_SCENARIO_DATA  | `scenario.json`              | Turn structure, reinforcements, VP conditions, movement costs, random events                                                                                            |
-| SM_AUTODETECT_CFG | `map-autodetect-config.json` | Auto-detect configuration: elevation color palette, confidence threshold, seed hex list (confirmed hexes used as few-shot examples for Vision API classification)       |
+| ID                | File                                  | Contents                                                                                                                                                                |
+| ----------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SM_MAP_DATA       | `map.json`                            | Hex terrain, gridSpec calibration, VP/entry hexes, type registries (hexsideTypes, hexFeatureTypes, edgeFeatureTypes) — partial, digitization in progress via map editor |
+| GS_OOB            | `oob.json`                            | 219 units, brigade/division hierarchy, wreck thresholds                                                                                                                 |
+| GS_LEADERS        | `leaders.json`                        | 48 leaders, ratings, special rule flags                                                                                                                                 |
+| SM_SCENARIO_DATA  | `scenarios/full-battle/scenario.json` | Turn structure, reinforcements, VP conditions, movement costs, random events                                                                                            |
+| SM_AUTODETECT_CFG | `map-autodetect-config.json`          | Auto-detect configuration: elevation color palette, confidence threshold, seed hex list (confirmed hexes used as few-shot examples for Vision API classification)       |
 
 ### Priority Hierarchy
 
@@ -82,6 +82,33 @@ When sources disagree, apply this order (highest priority first):
 | 5th Va Cavalry Brigade Loss Chart | Morale rating → **C** (not B)       |
 
 If a data file query returns a value inconsistent with the above, flag it as a data error.
+
+### Implemented Rule References (M5–M5.5)
+
+These rules are already reflected in engine code. When advising on future work that touches
+these areas, verify the implementation matches before recommending changes.
+
+| Rule Reference      | Topic                                                                                                                                          | Implementation Location                                                                                   |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| LOB §6.1            | Visibility is unlimited during day — sentinel value `999` used in schema and display logic                                                     | `client/src/config/visibility.js` (`VISIBILITY_UNLIMITED = 999`); `server/src/schemas/scenario.schema.js` |
+| LOB §6.1            | Normal visibility range 1–20 hexes                                                                                                             | `client/src/config/visibility.js` (`VISIBILITY_MAX = 20`)                                                 |
+| LOB §1.1 (inferred) | Fog/rain conditions inherit the base 15-minute turn duration — no separate LOB clause for alternate duration                                   | `server/src/engine/turnTime.js` + `client/src/config/turnTime.js` (`MINUTES_PER_CONDITION`)               |
+| LOB §10.6a          | Turn time derived from `firstTurn`/`lastTurn` + `MINUTES_PER_CONDITION`; `totalTurns` is not stored in `scenario.json` — it is a derived value | `server/src/engine/turnTime.js`; `data/modules/south-mountain/scenarios/full-battle/scenario.json`        |
+| LOB §2              | `lightingSchedule` in `scenario.json`: array of `{ startTurn, condition }` entries; `startTurn` values must be unique (schema-enforced)        | `server/src/schemas/scenario.schema.js`                                                                   |
+
+### Sister-Module Constants (M5.5)
+
+Some constants are defined identically in both server and client code. When advising on
+turn-time or visibility changes, both locations must be updated together:
+
+| Constant                        | Server                                  | Client                            |
+| ------------------------------- | --------------------------------------- | --------------------------------- |
+| `MINUTES_PER_CONDITION`         | `server/src/engine/turnTime.js`         | `client/src/config/turnTime.js`   |
+| `MINUTES_PER_CONDITION_DEFAULT` | `server/src/engine/turnTime.js`         | `client/src/config/turnTime.js`   |
+| `VISIBILITY_UNLIMITED`          | `server/src/schemas/scenario.schema.js` | `client/src/config/visibility.js` |
+
+A sync test (`server/src/engine/turnTime.test.js`) verifies the `turnTime` sister values match
+at test time. If either file is edited, the other must be updated in the same commit.
 
 ---
 
@@ -138,7 +165,8 @@ tools: Read, Glob, Grep
 - `docs/reference/lob-game-specific-updates.pdf` — RSS-to-LoB conversions and SM overrides
 - `docs/reference/south-mountain/sm-rules.pdf` — South Mountain scenario rules
 - `docs/reference/south-mountain/sm-errata.pdf` — official corrections
-- `data/scenarios/south-mountain/` — all four data files
+- `data/modules/south-mountain/` — map, oob, leaders data files
+- `data/modules/south-mountain/scenarios/full-battle/scenario.json` — scenario data file
 - `docs/agents/domain-expert/design.md` — full design spec for this agent
 
 ---
