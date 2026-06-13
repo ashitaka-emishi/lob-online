@@ -1671,9 +1671,9 @@ and are never active in production.
 
 ### Map Editor
 
-The map editor is a dev-only tool for digitizing `docs/reference/sm-map.jpg` into structured hex terrain data in `data/modules/south-mountain/map.json`. It is not part of the game itself and is never active in production.
+The map editor is a dev-only tool for digitizing `docs/reference/south-mountain/sm-map.jpg` into structured hex terrain data in `data/modules/south-mountain/map.json`. It is not part of the game itself and is never active in production.
 
-**Purpose:** Digitize `docs/reference/sm-map.jpg` into `map.json` hex data using a set of
+**Purpose:** Digitize `docs/reference/south-mountain/sm-map.jpg` into `map.json` hex data using a set of
 focused single-pass tools — one full map pass per data type (elevation, terrain, roads, etc.).
 
 **Toggle:** set `MAP_EDITOR_ENABLED=true` in `.env`. The guard in `server.js` uses a dynamic import:

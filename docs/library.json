@@ -1,10 +1,11 @@
 {
-  "project": "Line of Battle - South Mountain (RSS #4)",
-  "system": "Line of Battle v2.0 (Multi-Man Publishing)",
-  "lastUpdated": "2026-02-20",
+  "project": "Line of Battle (Multi-Man Publishing) — lob-online implementation",
+  "system": "Line of Battle v2.0",
+  "lastUpdated": "2026-06-09",
   "fileLibrary": {
     "seriesRules": {
       "label": "Series Rules & Charts",
+      "path": "docs/reference/",
       "files": [
         {
           "id": "LOB_RULES",
@@ -64,178 +65,369 @@
         }
       ]
     },
-    "gameSpecific": {
-      "label": "South Mountain Game Files",
-      "files": [
-        {
-          "id": "SM_RULES",
-          "filename": "sm-rules.pdf",
-          "description": "South Mountain game rules, scenario, victory conditions, reinforcements, random events",
-          "status": "available",
-          "pages": 28,
-          "covers": [
-            "Terrain rules: slopes, vertical slopes, sloping ground, runs, orchards",
-            "Union special rules: Burnside/McClellan command restrictions, detachments",
-            "Confederate special rules: DH Hill initiative, Longstreet arrival, detachments",
-            "Confederate independent units: 5th Va Cav and Pelham batteries",
-            "Reserve artillery command rules",
-            "EZOC withdrawal morale check (rule 4.2)",
-            "Random events (Confederate and Union tables)",
-            "Scenario setup: start positions, orders, artillery ammo",
-            "Reinforcement schedule with entry hexes and orders",
-            "Victory points: terrain hexes, wrecked formations",
-            "Victory level thresholds",
-            "Brigade and regimental loss charts",
-            "Terrain Effects on Movement chart (SM-specific)",
-            "Historical notes and OOB notes"
-          ]
-        },
-        {
-          "id": "SM_ROSTER",
-          "filename": "sm-regimental-roster.pdf",
-          "description": "Complete unit roster for both sides: infantry, cavalry, artillery stats",
-          "status": "available",
-          "pages": 5,
-          "covers": [
-            "Union infantry: morale, weapon type, strength — all regiments",
-            "Confederate infantry: morale, weapon type, strength — all regiments",
-            "Union artillery batteries: ratings, strength, shell/canister ammo",
-            "Confederate artillery batteries: ratings, strength, shell/canister ammo",
-            "Brigade and division loss chart data (wreck points, straggler boxes)",
-            "Army train ammo entries"
-          ]
-        },
-        {
-          "id": "SM_ERRATA",
-          "filename": "sm-errata.pdf",
-          "description": "Official errata for South Mountain (dated 20 May 08)",
-          "status": "available",
-          "pages": 1,
-          "covers": [
-            "Chicago Dragoons counter error: belongs to 2/K/9 not 1/K/9",
-            "E/2 US Artillery should be HvR not R",
-            "AFS cav replacement counter morale corrections",
-            "28 Ohio regimental loss chart: 15 boxes not 14",
-            "5 Va Cavalry brigade loss chart morale: C not B"
-          ]
-        },
-        {
-          "id": "SM_COVER",
-          "filename": "sm-cover.jpg",
-          "description": "South Mountain game box cover art",
-          "status": "available",
-          "covers": ["Game box cover art"]
-        },
-        {
-          "id": "SM_MAP",
-          "filename": "sm-map.jpg",
-          "description": "South Mountain hex map with terrain, elevation, roads, VP hexes",
-          "status": "available",
-          "covers": [
-            "Hex grid with coordinates",
-            "Terrain types per hex",
-            "Elevation contours and slope hexsides",
-            "Vertical slope hexsides (impassable)",
-            "Roads, Pike (National Road), Trails",
-            "Victory Point hex locations",
-            "Entry area hexes for reinforcements"
-          ]
-        },
-        {
-          "id": "SM_SCENARIO_DATA",
-          "filename": "data/modules/south-mountain/scenarios/full-battle/scenario.json",
-          "description": "Structured scenario data (JSON) — built from sm-rules.pdf and lob-game-specific-updates.pdf",
-          "status": "available",
-          "covers": [
-            "Turn structure (45 turns, 09:00–20:00, 20 min/turn)",
-            "At-start unit positions by hex (exact hexes + zone constraints)",
-            "At-start orders per formation (Complex Defense → Move per SM rule)",
-            "Full Union reinforcement schedule (12 groups, 09:00–17:00)",
-            "Full Confederate reinforcement schedule with variable arrival dice rolls",
-            "Artillery ammo reserves (CSA Wing shell:30/can:18; Union 1C shell:24/can:12; 9C shell:24/can:12)",
-            "Victory Point terrain hexes (10 hexes) with Union/Confederate values",
-            "VP for wrecked formations (brigade, division, artillery)",
-            "Victory level thresholds (Massive through Draw through Massive)",
-            "SM terrain movement chart — all terrain types and unit classes",
-            "Confederate random event table (12 entries)",
-            "Union random event table (12 entries)",
-            "SM-specific rules (movement costs, detachment limits, fluke stoppage exclusions)"
-          ]
-        }
-      ]
-    },
-    "gameState": {
-      "label": "Game State Models",
-      "files": [
-        {
-          "id": "GS_OOB",
-          "filename": "data/modules/south-mountain/oob.json",
-          "description": "Order of Battle JSON — all units with full LoB stats for South Mountain",
-          "status": "available",
-          "unitCount": 219,
-          "covers": [
-            "219 unit IDs indexed (infantry, cavalry, artillery batteries)",
-            "Morale rating, weapon type, strength points, straggler boxes",
-            "Brigade wreckThreshold and wreckTrackTotal from Brigade Loss Charts",
-            "Division stragglerBoxes and divisionWreckThreshold",
-            "Hierarchy: army > corps > division > brigade > regiment",
-            "Confederate: independentBrigades (Evans), independent cavalry/artillery, reserve artillery",
-            "All 4 errata corrections applied with _errata notes on affected records"
-          ]
-        },
-        {
-          "id": "GS_LEADERS",
-          "filename": "data/modules/south-mountain/leaders.json",
-          "description": "Leader data JSON — all Union and Confederate leaders with special rule flags",
-          "status": "available",
-          "leaderCount": 48,
-          "covers": [
-            "48 leader IDs across army, corps, division, brigade levels",
-            "commandsId links each leader to their OOB unit/formation",
-            "initiativeRating: null (physical counter value — not in source PDFs)",
-            "Longstreet: armyCommander, no initiative needed, dhHillException",
-            "D.H. Hill: looseCannonImmunity until Longstreet arrives",
-            "Burnside: supernumerary restrictions, canTake9Corps on Reno casualty",
-            "McClellan: arrivalTime 15:00, pre-arrival order restriction",
-            "Pleasonton: artilleryReplenishFromAnyReserve",
-            "Gibbon: ironBrigade flag, randomEvent9 reference",
-            "Garland and Garnett: detachedAtStart flags"
-          ]
-        },
-        {
-          "id": "SM_MAP_DATA",
-          "filename": "data/modules/south-mountain/map.json",
-          "description": "Hex map data — scaffold with known hexes, full digitization pending",
-          "status": "partial",
-          "hexCount": 31,
-          "covers": [
-            "31 known hexes (VP hexes, setup hexes, entry hexes) from scenario data",
-            "VP hexes with Union/Confederate values",
-            "Union entry hexes: 01.09, 15.01, 32.01",
-            "Confederate entry hexes: 20.34, 39.35",
-            "Elevation system: 50-ft contour interval, vertical slopes impassable",
-            "All hexes currently terrain=unknown — requires sm-map.jpg digitization"
-          ]
-        },
-        {
-          "id": "GS_TURN",
-          "filename": null,
-          "description": "Turn and game state JSON — to be built when game engine is implemented",
-          "status": "todo",
-          "covers": [
-            "Current turn time and number",
-            "Active orders queue with delivery timers",
-            "Fluke stoppage tracking per formation",
-            "Attack recovery status",
-            "Artillery depletion states",
-            "VP totals per side",
-            "Random event log"
-          ]
-        }
-      ]
+    "games": {
+      "south-mountain": {
+        "label": "South Mountain (SM)",
+        "slug": "SM",
+        "rss": 4,
+        "status": "active",
+        "path": "docs/reference/south-mountain/",
+        "files": [
+          {
+            "id": "SM_RULES",
+            "filename": "sm-rules.pdf",
+            "description": "South Mountain game rules, scenario, victory conditions, reinforcements, random events",
+            "status": "available",
+            "pages": 28
+          },
+          {
+            "id": "SM_ERRATA",
+            "filename": "sm-errata.pdf",
+            "description": "Official errata for South Mountain (dated 20 May 08)",
+            "status": "available",
+            "pages": 1
+          },
+          {
+            "id": "SM_ROSTER",
+            "filename": "sm-regimental-roster.pdf",
+            "description": "Complete unit roster for both sides: infantry, cavalry, artillery stats",
+            "status": "available",
+            "pages": 5
+          },
+          {
+            "id": "SM_COUNTERS",
+            "filename": "sm-counters.pdf",
+            "description": "Extra counter sheet",
+            "status": "available"
+          },
+          {
+            "id": "SM_COUNTERS_LG",
+            "filename": "sm-counters-large.pdf",
+            "description": "Extra counter sheet (large format)",
+            "status": "available"
+          },
+          {
+            "id": "SM_COVER",
+            "filename": "sm-cover.jpg",
+            "description": "South Mountain game box cover art",
+            "status": "available"
+          },
+          {
+            "id": "SM_MAP",
+            "filename": "sm-map.jpg",
+            "description": "South Mountain hex map with terrain, elevation, roads, VP hexes",
+            "status": "available"
+          }
+        ],
+        "dataModels": [
+          {
+            "id": "SM_OOB",
+            "filename": "data/scenarios/south-mountain/oob.json",
+            "description": "Order of Battle JSON — 219 unit IDs with full LoB stats",
+            "status": "available",
+            "unitCount": 219
+          },
+          {
+            "id": "SM_LEADERS",
+            "filename": "data/scenarios/south-mountain/leaders.json",
+            "description": "Leader data JSON — 48 leaders with special rule flags",
+            "status": "available",
+            "leaderCount": 48
+          },
+          {
+            "id": "SM_MAP_DATA",
+            "filename": "data/scenarios/south-mountain/map.json",
+            "description": "Hex map data — scaffold with known hexes, full digitization pending",
+            "status": "partial",
+            "hexCount": 31
+          },
+          {
+            "id": "SM_SCENARIO",
+            "filename": "data/scenarios/south-mountain/scenario.json",
+            "description": "Scenario JSON — turn structure, at-start positions, reinforcements, VP, random events",
+            "status": "available"
+          }
+        ],
+        "knownErrataApplied": [
+          "Chicago Dragoons assigned to 2/K/9",
+          "E/2 US Artillery rated HvR",
+          "28 Ohio loss chart corrected to 15 boxes",
+          "5 Va Cavalry brigade morale corrected to C"
+        ],
+        "lobOverrides": [
+          "Trees add +1 (not +3) to LOS",
+          "All army commanders rated Normal",
+          "No breastworks allowed",
+          "Longstreet acts as army commander (no initiative required)",
+          "Complex defense orders replaced by Move orders",
+          "Pelham and Pleasonton artillery replenish from any friendly reserve",
+          "Ignore LoB rules 4.2 and 4.3 (use SM game-specific versions)",
+          "Use SM Terrain Effects on Movement chart (not standard LoB)",
+          "Use RSS Trail movement costs",
+          "Use Special Slope rule (SM 1.1)"
+        ]
+      },
+      "this-hallowed-ground": {
+        "label": "This Hallowed Ground (THG)",
+        "slug": "THG",
+        "status": "scaffold",
+        "path": "docs/reference/this-hallowed-ground/",
+        "files": [
+          {
+            "id": "THG_RULES",
+            "filename": "thg-rules.pdf",
+            "description": "Game-specific rules",
+            "status": "available"
+          },
+          {
+            "id": "THG_ERRATA",
+            "filename": "thg-errata.pdf",
+            "description": "Official errata",
+            "status": "available"
+          },
+          {
+            "id": "THG_LOSS_CHARTS",
+            "filename": "thg-brigade-loss-charts.pdf",
+            "description": "Brigade loss charts",
+            "status": "available"
+          },
+          {
+            "id": "THG_ROSTER",
+            "filename": "thg-regimental-roster.pdf",
+            "description": "Regimental roster",
+            "status": "available"
+          },
+          {
+            "id": "THG_ARTY",
+            "filename": "thg-artillery-logs.pdf",
+            "description": "Artillery logs",
+            "status": "available"
+          },
+          {
+            "id": "THG_MAP_FIX",
+            "filename": "thg-map-correction.pdf",
+            "description": "Map corrections",
+            "status": "available"
+          }
+        ]
+      },
+      "this-terrible-sound": {
+        "label": "This Terrible Sound (TTS)",
+        "slug": "TTS",
+        "status": "scaffold",
+        "path": "docs/reference/this-terrible-sound/",
+        "files": [
+          {
+            "id": "TTS_RULES",
+            "filename": "tts-rules.pdf",
+            "description": "Game-specific rules",
+            "status": "available"
+          },
+          {
+            "id": "TTS_ERRATA",
+            "filename": "tts-errata.pdf",
+            "description": "Official errata",
+            "status": "available"
+          },
+          {
+            "id": "TTS_LOSS_CHARTS",
+            "filename": "tts-loss-charts.pdf",
+            "description": "Loss charts",
+            "status": "available"
+          },
+          {
+            "id": "TTS_ROSTER",
+            "filename": "tts-regimental-roster.pdf",
+            "description": "Regimental roster",
+            "status": "available"
+          },
+          {
+            "id": "TTS_ARTY",
+            "filename": "tts-artillery-logs.pdf",
+            "description": "Artillery logs",
+            "status": "available"
+          }
+        ]
+      },
+      "a-fearful-slaughter": {
+        "label": "A Fearful Slaughter (AFS)",
+        "slug": "AFS",
+        "status": "scaffold",
+        "path": "docs/reference/a-fearful-slaughter/",
+        "files": [
+          {
+            "id": "AFS_RULES",
+            "filename": "afs-rules.pdf",
+            "description": "Game-specific rules",
+            "status": "available"
+          },
+          {
+            "id": "AFS_ERRATA",
+            "filename": "afs-errata.pdf",
+            "description": "Official errata",
+            "status": "available"
+          },
+          {
+            "id": "AFS_LOSS_CHARTS",
+            "filename": "afs-brigade-loss-charts.pdf",
+            "description": "Brigade loss charts",
+            "status": "available"
+          },
+          {
+            "id": "AFS_ROSTER",
+            "filename": "afs-regimental-roster.pdf",
+            "description": "Regimental roster",
+            "status": "available"
+          },
+          {
+            "id": "AFS_ARTY",
+            "filename": "afs-artillery.pdf",
+            "description": "Artillery sheets",
+            "status": "available"
+          },
+          {
+            "id": "AFS_REINFORCEMENTS",
+            "filename": "afs-reinforcement-list.pdf",
+            "description": "Reinforcement charts",
+            "status": "available"
+          }
+        ]
+      },
+      "last-chance-for-victory": {
+        "label": "Last Chance for Victory (LCV)",
+        "slug": "LCV",
+        "status": "scaffold",
+        "path": "docs/reference/last-chance-for-victory/",
+        "files": [
+          {
+            "id": "LCV_RULES",
+            "filename": "lcv-rules.pdf",
+            "description": "Game-specific rules",
+            "status": "available"
+          },
+          {
+            "id": "LCV_SCENARIOS",
+            "filename": "lcv-scenarios.pdf",
+            "description": "Scenarios booklet",
+            "status": "available"
+          },
+          {
+            "id": "LCV_ERRATA",
+            "filename": "lcv-errata.pdf",
+            "description": "Official errata",
+            "status": "available"
+          },
+          {
+            "id": "LCV_CLARIFICATIONS",
+            "filename": "lcv-clarifications-errata.pdf",
+            "description": "Compiled CSW clarifications",
+            "status": "available"
+          },
+          {
+            "id": "LCV_OOA_REB",
+            "filename": "lcv-rebel-ooa.pdf",
+            "description": "Rebel order of appearance",
+            "status": "available"
+          },
+          {
+            "id": "LCV_OOA_UNION",
+            "filename": "lcv-union-ooa.pdf",
+            "description": "Union order of appearance",
+            "status": "available"
+          },
+          {
+            "id": "LCV_LOSS_CHARTS",
+            "filename": "lcv-regimental-loss-charts.pdf",
+            "description": "Regimental loss charts",
+            "status": "available"
+          },
+          {
+            "id": "LCV_MAP_C",
+            "filename": "lcv-map-c-stoney-hill-cut.pdf",
+            "description": "Map C — Stoney Hill Cut",
+            "status": "available"
+          },
+          {
+            "id": "LCV_SCENARIO_7_5",
+            "filename": "lcv-scenario-7-5.pdf",
+            "description": "Original scenario 7.5 + map",
+            "status": "available"
+          },
+          {
+            "id": "LCV_BONUS",
+            "filename": "lcv-cold-steel-scenario.jpg",
+            "description": "Bonus Cold Steel scenario",
+            "status": "available"
+          }
+        ]
+      },
+      "none-but-heroes": {
+        "label": "None But Heroes (NBH)",
+        "slug": "NBH",
+        "status": "scaffold",
+        "path": "docs/reference/none-but-heroes/",
+        "files": [
+          {
+            "id": "NBH_RULES",
+            "filename": "nbh-rules.pdf",
+            "description": "Game-specific rules",
+            "status": "available"
+          },
+          {
+            "id": "NBH_ERRATA",
+            "filename": "nbh-errata.pdf",
+            "description": "Official errata",
+            "status": "available"
+          },
+          {
+            "id": "NBH_LOSS_BRIG",
+            "filename": "nbh-brigade-loss-charts.pdf",
+            "description": "Brigade loss charts",
+            "status": "available"
+          },
+          {
+            "id": "NBH_LOSS_REG",
+            "filename": "nbh-regimental-loss-charts.pdf",
+            "description": "Regimental loss charts",
+            "status": "available"
+          }
+        ]
+      },
+      "to-take-washington": {
+        "label": "To Take Washington (TTW)",
+        "slug": "TTW",
+        "status": "scaffold",
+        "path": "docs/reference/to-take-washington/",
+        "files": [
+          {
+            "id": "TTW_RULES",
+            "filename": "ttw-rules.pdf",
+            "description": "Game-specific rules",
+            "status": "available"
+          },
+          {
+            "id": "TTW_ERRATA",
+            "filename": "ttw-errata.pdf",
+            "description": "Official errata",
+            "status": "available"
+          },
+          {
+            "id": "TTW_ROSTER_C",
+            "filename": "ttw-roster-cissel.pdf",
+            "description": "Regimental roster (Cissel)",
+            "status": "available"
+          },
+          {
+            "id": "TTW_ROSTER_R",
+            "filename": "ttw-roster-roser.pdf",
+            "description": "Regimental roster (Roser)",
+            "status": "available"
+          }
+        ]
+      }
     },
     "schemas": {
-      "label": "Zod Schemas & Tooling (M0)",
+      "label": "Zod Schemas & Tooling",
       "files": [
         {
           "id": "SCHEMA_OOB",
@@ -265,23 +457,5 @@
         }
       ]
     }
-  },
-  "knownErrataApplied": [
-    "Chicago Dragoons assigned to 2/K/9",
-    "E/2 US Artillery rated HvR",
-    "28 Ohio loss chart corrected to 15 boxes",
-    "5 Va Cavalry brigade morale corrected to C"
-  ],
-  "lobOverridesForSM": [
-    "Trees add +1 (not +3) to LOS",
-    "All army commanders rated Normal",
-    "No breastworks allowed",
-    "Longstreet acts as army commander (no initiative required)",
-    "Complex defense orders replaced by Move orders",
-    "Pelham and Pleasonton artillery replenish from any friendly reserve",
-    "Ignore LoB rules 4.2 and 4.3 (use SM game-specific versions)",
-    "Use SM Terrain Effects on Movement chart (not standard LoB)",
-    "Use RSS Trail movement costs",
-    "Use Special Slope rule (SM 1.1)"
-  ]
+  }
 }

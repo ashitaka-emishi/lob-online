@@ -136,8 +136,8 @@ tools: Read, Glob, Grep
 
 - `docs/reference/lob-rules.pdf` — base LoB v2.0 series rulebook
 - `docs/reference/lob-game-specific-updates.pdf` — RSS-to-LoB conversions and SM overrides
-- `docs/reference/sm-rules.pdf` — South Mountain scenario rules
-- `docs/reference/sm-errata.pdf` — official corrections
+- `docs/reference/south-mountain/sm-rules.pdf` — South Mountain scenario rules
+- `docs/reference/south-mountain/sm-errata.pdf` — official corrections
 - `data/scenarios/south-mountain/` — all four data files
 - `docs/agents/domain-expert/design.md` — full design spec for this agent
 

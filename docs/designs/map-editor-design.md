@@ -28,7 +28,7 @@
 
 ## 1. Overview
 
-The map editor is a dev-only tool for digitizing `docs/reference/sm-map.jpg` into structured hex
+The map editor is a dev-only tool for digitizing `docs/reference/south-mountain/sm-map.jpg` into structured hex
 terrain data in `data/scenarios/south-mountain/map.json`. It is guarded by `MAP_EDITOR_ENABLED=true`
 and never active in production.
 

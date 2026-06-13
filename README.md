@@ -79,7 +79,7 @@ npm run dev:map-editor
 
 ### Map Editor
 
-A dev-only tool for digitizing `docs/reference/sm-map.jpg` into `data/modules/south-mountain/map.json`.
+A dev-only tool for digitizing `docs/reference/south-mountain/sm-map.jpg` into `data/modules/south-mountain/map.json`.
 
 Open `http://localhost:5173/tools/map-editor`. The editor supports:
 

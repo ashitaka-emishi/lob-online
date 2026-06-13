@@ -22,7 +22,7 @@ For the full source-document inventory and data-file manifest, see
 
 Four dev-only tools, all guarded by `MAP_EDITOR_ENABLED=true` in `.env`.
 
-**Map editor** (`/tools/map-editor`) — digitize `docs/reference/sm-map.jpg` into `map.json` terrain data. Launch with `npm run dev:map-editor`.
+**Map editor** (`/tools/map-editor`) — digitize `docs/reference/south-mountain/sm-map.jpg` into `map.json` terrain data. Launch with `npm run dev:map-editor`.
 
 **Scenario editor** (`/tools/scenario-editor`) — edit `scenario.json` fields: turn structure, lighting schedule (day/twilight/night by start turn), and rules fields (night visibility cap, fluke stoppage grace period, initiative system, loose cannon, loss recovery, random events). See `docs/designs/scenario-editor-design.md` for the full spec. Launch with `npm run dev:map-editor`.
 
