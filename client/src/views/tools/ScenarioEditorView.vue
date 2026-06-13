@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import EditorNav from '../../components/EditorNav.vue';
+import { MINUTES_PER_CONDITION, MINUTES_PER_CONDITION_DEFAULT } from '../../config/turnTime.js';
 
 const _route = useRoute();
 const _moduleSlug = _route.params.moduleSlug ?? null;
@@ -38,9 +39,6 @@ const newRow = ref({ startTurn: '', condition: 'day', visibilityHexes: 999 });
 
 const lightingSchedule = computed(() => scenarioData.value?.lightingSchedule ?? []);
 
-// LOB §1.1 — day/twilight turns are 15 minutes, night turns are 30 minutes
-const MINUTES_PER_CONDITION = { day: 15, twilight: 15, night: 30, fog: 15, rain: 15 };
-
 // LOB §1.1 — totalTurns derived from firstTurn/lastTurn + lighting schedule turn durations.
 // Walk turn-by-turn: each turn advances the clock by its condition's minutes/turn.
 // The condition in effect for turn N is the last lighting entry with startTurn <= N.
@@ -75,7 +73,7 @@ const totalTurns = computed(() => {
       sorted.length && sorted[condIdx].startTurn <= turns
         ? sorted[condIdx].condition
         : defaultCondition;
-    turnStartMin += MINUTES_PER_CONDITION[condition] ?? 15;
+    turnStartMin += MINUTES_PER_CONDITION[condition] ?? MINUTES_PER_CONDITION_DEFAULT;
   }
   return turns;
 });
@@ -115,7 +113,7 @@ const lightingStartTimes = computed(() => {
       sorted.length && sorted[condIdx].startTurn <= turn
         ? sorted[condIdx].condition
         : defaultCondition;
-    turnStartMin += MINUTES_PER_CONDITION[condition] ?? 15;
+    turnStartMin += MINUTES_PER_CONDITION[condition] ?? MINUTES_PER_CONDITION_DEFAULT;
     turn++;
   }
   return result;
