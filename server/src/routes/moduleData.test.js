@@ -61,7 +61,6 @@ const VALID_SCENARIO = {
   turnStructure: {
     firstTurn: '09:00',
     lastTurn: '18:00',
-    totalTurns: 36,
     firstPlayer: 'union',
     date: 'TBD',
   },
@@ -283,5 +282,31 @@ describe('PUT /:moduleSlug/succession', () => {
     const res = await request(app).put('/SM/succession').send(VALID_SUCCESSION);
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
+  });
+});
+
+// ── scenario sub-routes — coverage gaps (#546) ────────────────────────────────
+
+describe('GET /:moduleSlug/scenarios/:scenarioSlug/scenario — extra coverage (#546)', () => {
+  it('returns 404 for unknown module slug on nested scenario route', async () => {
+    const app = await buildApp();
+    const res = await request(app).get('/UNKNOWN/scenarios/full-battle/scenario');
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 404 for unrecognised scenarioSlug', async () => {
+    const app = await buildApp();
+    const res = await request(app).get('/SM/scenarios/nonexistent-battle/scenario');
+    expect(res.status).toBe(404);
+  });
+
+  it('reads from correct nested path for valid module + scenarioSlug', async () => {
+    readFile.mockResolvedValue(JSON.stringify(VALID_SCENARIO));
+    const app = await buildApp();
+    const res = await request(app).get('/SM/scenarios/full-battle/scenario');
+    expect(res.status).toBe(200);
+    expect(readFile.mock.calls[0][0]).toMatch(
+      /south-mountain[/\\]scenarios[/\\]full-battle[/\\]scenario\.json$/
+    );
   });
 });

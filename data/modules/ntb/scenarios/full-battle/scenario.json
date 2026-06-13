@@ -1,10 +1,11 @@
 {
   "_status": "scaffold",
   "_source": "NTB — not yet entered",
+  "_battle": "Wilderness",
   "id": "ntb",
-  "name": "NTB (placeholder)",
+  "name": "No Turning Back",
   "system": "Line of Battle v2.0",
-  "publication": "NTB",
+  "publication": "Line of Battle",
   "turnStructure": {
     "firstTurn": "09:00",
     "lastTurn": "18:00",

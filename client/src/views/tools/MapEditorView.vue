@@ -43,7 +43,8 @@ const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
 const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
 
 const _route = useRoute();
-const _moduleSlug = _route.params.moduleSlug ?? 'SM';
+// #542 — reactive; watch below re-fetches on slug change
+const moduleSlug = computed(() => _route.params.moduleSlug ?? 'SM');
 
 // ── Calibration (composable) ───────────────────────────────────────────────────
 
@@ -83,7 +84,7 @@ const {
   draftKey: MAP_DRAFT_KEY,
   draftKeyV1: MAP_DRAFT_KEY_V1,
   onCalibrationLoaded,
-  moduleSlug: _moduleSlug,
+  moduleSlug,
   // Strip edges on non-playable boundaries before every push — covers both the
   // direct save() path and the confirmSave() overwrite path (M-1 review fix).
   beforeSave: () => {
@@ -581,6 +582,7 @@ onMounted(() => {
   window.addEventListener('keydown', onKeyDown);
   fetchMapData();
 });
+watch(moduleSlug, fetchMapData);
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeyDown);

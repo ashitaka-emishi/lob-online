@@ -59,7 +59,9 @@ describe('loadScenario — South Mountain scenario', () => {
   it('exposes turnStructure', () => {
     const scenario = loadScenario();
     expect(scenario.turnStructure).toBeDefined();
-    expect(scenario.turnStructure.totalTurns).toBeGreaterThan(0);
+    // totalTurns removed from data file (#533 — now derived from firstTurn/lastTurn on client)
+    expect(scenario.turnStructure.firstTurn).toMatch(/^\d{2}:\d{2}$/);
+    expect(scenario.turnStructure.lastTurn).toMatch(/^\d{2}:\d{2}$/);
     expect(scenario.turnStructure.firstPlayer).toMatch(/^(union|confederate)$/);
   });
 

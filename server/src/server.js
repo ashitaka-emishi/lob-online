@@ -12,6 +12,7 @@ import SqliteStore from 'better-sqlite3-session-store';
 import { Server } from 'socket.io';
 
 import { initDb, getDb } from './store/gameSqlite.js';
+import { errorHandler } from './middleware/errorHandler.js';
 import gamesRouter from './routes/games.js';
 import oobRouter from './routes/oob.js';
 import leadersRouter from './routes/leaders.js';
@@ -159,11 +160,8 @@ export async function startServer() {
     console.log('[server] table test tool enabled at /tools/table-test');
   }
 
-  // Global error handler — must be registered after all routes
-  app.use((err, _req, res, _next) => {
-    console.error('[server] unhandled error:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  });
+  // Global error handler — must be registered after all routes (#545)
+  app.use(errorHandler);
 
   // Socket.io — game room membership and state-change notifications (#356)
   io.on('connection', (socket) => {

@@ -1,20 +1,23 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import EditorNav from '../../components/EditorNav.vue';
 import { MINUTES_PER_CONDITION, MINUTES_PER_CONDITION_DEFAULT } from '../../config/turnTime.js';
 import { VISIBILITY_UNLIMITED } from '../../config/visibility.js';
 
-const _route = useRoute();
-const _moduleSlug = _route.params.moduleSlug ?? null;
-const _scenarioSlug = _route.params.scenarioSlug ?? 'full-battle';
+const route = useRoute();
+// #542 — reactive; watch below re-fetches on slug change
+const moduleSlug = computed(() => route.params.moduleSlug ?? null);
+const scenarioSlug = computed(() => route.params.scenarioSlug ?? 'full-battle');
 
 const STORAGE_KEY = 'lob-scenario-editor-south-mountain-v3';
 // #529 — prefer module/scenario-scoped API when route params are present
-const API_URL = _moduleSlug
-  ? `/api/v1/modules/${_moduleSlug}/scenarios/${_scenarioSlug}/scenario`
-  : '/api/tools/scenario-editor/data';
+const API_URL = computed(() =>
+  moduleSlug.value
+    ? `/api/v1/modules/${encodeURIComponent(moduleSlug.value)}/scenarios/${encodeURIComponent(scenarioSlug.value)}/scenario`
+    : '/api/tools/scenario-editor/data'
+);
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -152,7 +155,7 @@ function markDirty() {
 // ── Fetch / load ──────────────────────────────────────────────────────────────
 
 async function fetchServerData() {
-  const res = await fetch(API_URL);
+  const res = await fetch(API_URL.value);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
@@ -199,7 +202,7 @@ async function executePush() {
   saveStatus.value = 'saving';
   saveError.value = '';
   try {
-    const res = await fetch(API_URL, {
+    const res = await fetch(API_URL.value, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(scenarioData.value),
@@ -347,6 +350,7 @@ function updateField(path, value) {
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 onMounted(fetchScenarioData);
+watch([moduleSlug, scenarioSlug], fetchScenarioData);
 </script>
 
 <template>

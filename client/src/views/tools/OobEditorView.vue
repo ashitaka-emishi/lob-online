@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import EditorNav from '../../components/EditorNav.vue';
 import { useOobStore } from '../../stores/useOobStore.js';
@@ -10,12 +10,16 @@ import ConfirmDialog from '../../components/ConfirmDialog.vue';
 const store = useOobStore();
 const activeSide = ref('union');
 const route = useRoute();
+// #542 — reactive; watch below re-fetches on slug change
+const moduleSlug = computed(() => route.params.moduleSlug ?? null);
 
-onMounted(() => {
-  const slug = route.params.moduleSlug;
+function loadForSlug(slug) {
   if (slug) store.loadDataForModule(slug);
   else store.loadData();
-});
+}
+
+onMounted(() => loadForSlug(moduleSlug.value));
+watch(moduleSlug, (slug) => loadForSlug(slug));
 
 function handlePull() {
   store.requestPull();

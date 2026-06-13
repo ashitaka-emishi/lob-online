@@ -1,10 +1,11 @@
 {
   "_status": "scaffold",
   "_source": "LCV — not yet entered",
+  "_battle": "Gettysburg",
   "id": "lcv",
-  "name": "LCV (placeholder)",
+  "name": "Last Chance for Victory",
   "system": "Line of Battle v2.0",
-  "publication": "LCV",
+  "publication": "RSS/CWR",
   "turnStructure": {
     "firstTurn": "09:00",
     "lastTurn": "18:00",
