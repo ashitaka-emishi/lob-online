@@ -1,17 +1,17 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-13 after PR #539._
+_Last updated: 2026-06-13 after PR #548._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                |
-| -------------------------------- | -------------------------------------------------------------------- |
-| Open debt items                  | 22                                                                   |
-| Cumulative debt score (net open) | 41                                                                   |
-| Highest-risk item                | Gate moduleData PUT routes behind MAP_EDITOR_ENABLED (#540, score 4) |
-| PRs tracked                      | 264                                                                  |
+| Metric                           | Value                                                                        |
+| -------------------------------- | ---------------------------------------------------------------------------- |
+| Open debt items                  | 13                                                                           |
+| Cumulative debt score (net open) | 23                                                                           |
+| Highest-risk item                | Make editor views reactive to moduleSlug route param changes (#542, score 2) |
+| PRs tracked                      | 273                                                                          |
 
 ---
 
@@ -326,6 +326,16 @@ _Last updated: 2026-06-13 after PR #539._
 | 2026-06-13 | PR #539 (added #545)                                           | +2                   | —         | 476                      |
 | 2026-06-13 | PR #539 (added #546)                                           | +2                   | —         | 476                      |
 | 2026-06-13 | PR #539 (added #547)                                           | +1                   | —         | 476                      |
+| 2026-06-13 | PR #548                                                        | 0                    | -18       | 476                      |
+| 2026-06-13 | PR #548 (resolved #540)                                        | -4                   | —         | 476                      |
+| 2026-06-13 | PR #548 (resolved #541)                                        | -3                   | —         | 476                      |
+| 2026-06-13 | PR #548 (resolved #531)                                        | -3                   | —         | 476                      |
+| 2026-06-13 | PR #548 (resolved #543)                                        | -2                   | —         | 476                      |
+| 2026-06-13 | PR #548 (resolved #532)                                        | -2                   | —         | 476                      |
+| 2026-06-13 | PR #548 (resolved #537)                                        | -1                   | —         | 476                      |
+| 2026-06-13 | PR #548 (resolved #536)                                        | -1                   | —         | 476                      |
+| 2026-06-13 | PR #548 (resolved #535)                                        | -1                   | —         | 476                      |
+| 2026-06-13 | PR #548 (resolved #534)                                        | -1                   | —         | 476                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -333,9 +343,9 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Elevated risk. Several significant deferred items that introduce coupling or architectural compromise. Recommend a debt reduction sprint before the next major phase.
+Moderate risk. Some deferred workarounds and sub-optimal patterns that will slow future phases if not addressed.
 
-PR #539 (multi-module platform) added 17 pts across 8 new items, raising net open score from 24 to 41 across 22 items. The PR's team review fixed 6 findings in place (DEFAULT_SLUG consolidation, library path corrections, two non-findings confirmed closed). Second-pass review was not required — fixes were limited to a constant export and doc corrections. The 22 open items fall into four clusters: (1) **PR #539 multi-module debt** — #540 (score 4, PUT routes not gated by MAP_EDITOR_ENABLED — highest-risk actionable item), #541 (score 3, OOB persistence dual-mode divergence), #542–#547 (scores 1–2, editor reactivity, composable test gaps, error handler registration, route test coverage); (2) **PR #530 schema/model debt** — #531 (score 3, shared clock constant), #533 and #532 (score 2 each), plus 5 trivial test/naming items (#534–#538); (3) **M6-blocked rules-engine stubs** — #383 #382 #381 #379 (score 2 each); (4) **M8-blocked security hardening** — #403 (CSP headers) and #350 (rate limiting), score 2 each. Address #540 before enabling the module data API in any non-local environment, and #541 before adding a second actively-edited module.
+PR #548 (pre-M6 debt sprint) closed 9 items totalling 18 pts — including the two highest-risk items (#540 score 4, #541 score 3) and #531 (score 3) — dropping net open score from 41 to 23 across 13 items. The 13 remaining items fall into three clusters: (1) **PR #539 multi-module residual** — #542, #545, #546 (score 2 each, editor reactivity, error handler registration, route test coverage), plus #544 and #547 (score 1 each, helper and router test gaps); (2) **PR #530 schema/model debt** — #533 (score 2, totalTurns still in scenario.json), plus #538 (score 1, contrast ratio); (3) **Deferred to later milestones** — #383, #382, #381, #379 (score 2 each, M6-blocked rules-engine stubs), #403 (score 2, CSP headers, M8), and #350 (score 2, rate limiting on game routes, M8). No items are actively blocking M6 start.
 
 ---
 
@@ -343,30 +353,21 @@ PR #539 (multi-module platform) added 17 pts across 8 new items, raising net ope
 
 _Ordered by score descending (ties: newest first). Resolved items are removed._
 
-| Score | Issue | Title                                                                | PR Introduced | Assessment                                                                                                                                                                                              |
-| ----- | ----- | -------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 4     | #540  | Gate moduleData PUT routes behind MAP_EDITOR_ENABLED                 | PR #539       | Write routes mounted unconditionally; any origin passing the CSRF check can overwrite data files. Intended as dev-only but lacks the guard used by all other editor routes.                             |
-| 3     | #541  | Resolve OOB persistence dual-mode divergence in useOobPersistence    | PR #539       | Composable silently falls back to legacy URL when moduleSlug is omitted; misdirected writes are invisible to callers and create a correctness hazard with multiple active modules.                      |
-| 3     | #531  | Extract MINUTES_PER_CONDITION into shared engine module              | PR #530       | Constant lives only in `ScenarioEditorView.vue`; `init.js` hardcodes `15` with comment. If condition-aware turn math is needed in the engine, the constant needs a shared location to avoid divergence. |
-| 2     | #533  | Remove totalTurns from scenario.json (now derived)                   | PR #530       | `totalTurns` is now computed by the client but still stored in `scenario.json` and required by the schema; mixed source-of-truth creates confusion and can drift.                                       |
-| 2     | #532  | Enforce startTurn uniqueness in lighting schedule schema             | PR #530       | No Zod `.superRefine()` check on the array; duplicate `startTurn` values pass validation but produce undefined behavior in the turn-walk logic.                                                         |
-| 2     | #403  | Add Content-Security-Policy headers to Express server                | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                     |
-| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)   | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                      |
-| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                    | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                     |
-| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                  | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                       |
-| 2     | #379  | getValidActions should enumerate all legal actions for current state | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                           |
-| 2     | #350  | server: add rate limiting on POST /api/v1/games routes               | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing.    |
-| 1     | #538  | Improve contrast ratio for derived-value spans in scenario editor    | PR #530       | `.derived-value` CSS color may not meet WCAG AA contrast ratio (4.5:1) against the panel background for `totalTurns` and lighting-time displays.                                                        |
-| 1     | #537  | Introduce VISIBILITY_UNLIMITED constant for day sentinel value 999   | PR #530       | Magic number `999` appears in `VISIBILITY_DEFAULTS`, template display logic, and test fixtures; naming it `VISIBILITY_UNLIMITED` clarifies intent.                                                      |
-| 1     | #536  | Add upper bound to visibilityHexes validation                        | PR #530       | `visibilityHexes` validated as `z.number().int().positive()` with no upper bound; the `999` day sentinel is undocumented in the schema.                                                                 |
-| 1     | #535  | Add totalTurns edge case tests                                       | PR #530       | Guard conditions for empty schedule, `lastTurn` before `firstTurn`, and missing turn fields are untested.                                                                                               |
-| 1     | #534  | Add lightingStartTimes night-turn clock test                         | PR #530       | No test verifying that `lightingStartTimes` correctly accumulates 30-min night turns when computing clock times for entries after a night condition transition.                                         |
-| 2     | #542  | Make editor views reactive to moduleSlug route param changes         | PR #539       | Slug captured non-reactively at setup; current routing guarantees remount on slug change so no active breakage, but fragile against future in-page navigation that changes slug without full remount.   |
-| 2     | #543  | Add direct unit tests for useMapPersistence and useOobPersistence    | PR #539       | Composables only tested indirectly through view mount tests; composable-level URL construction bugs are not caught until the full view renders.                                                         |
-| 2     | #545  | Register ModuleNotFoundError in Express error handler middleware     | PR #539       | Error caught inline in helpers; a future route that forgets the inline catch will surface an unhandled 500 instead of a clean 404 JSON response.                                                        |
-| 2     | #546  | Expand moduleData route tests — unknown slug 404 and scenario paths  | PR #539       | Missing coverage for unknown-slug 404, nested scenario sub-routes, and invalid scenarioSlug rejection.                                                                                                  |
-| 1     | #544  | Add useModuleStore modulePath/defaultScenarioPath helper tests       | PR #539       | Helpers build all client API and router URLs but have no direct assertions; simple string operations, low breakage risk.                                                                                |
-| 1     | #547  | Add router test coverage for legacy redirect destinations            | PR #539       | Legacy redirect targets are string constants baked at module load time; a typo would not be caught by the current test suite.                                                                           |
+| Score | Issue | Title                                                                | PR Introduced | Assessment                                                                                                                                                                                            |
+| ----- | ----- | -------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2     | #546  | Expand moduleData route tests — unknown slug 404 and scenario paths  | PR #539       | Missing coverage for unknown-slug 404, nested scenario sub-routes, and invalid scenarioSlug rejection.                                                                                                |
+| 2     | #545  | Register ModuleNotFoundError in Express error handler middleware     | PR #539       | Error caught inline in helpers; a future route that forgets the inline catch will surface an unhandled 500 instead of a clean 404 JSON response.                                                      |
+| 2     | #542  | Make editor views reactive to moduleSlug route param changes         | PR #539       | Slug captured non-reactively at setup; current routing guarantees remount on slug change so no active breakage, but fragile against future in-page navigation that changes slug without full remount. |
+| 2     | #533  | Remove totalTurns from scenario.json (now derived)                   | PR #530       | `totalTurns` is now computed by the client but still stored in `scenario.json` and required by the schema; mixed source-of-truth creates confusion and can drift.                                     |
+| 2     | #403  | Add Content-Security-Policy headers to Express server                | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                   |
+| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)   | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                    |
+| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                    | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                   |
+| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                  | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                     |
+| 2     | #379  | getValidActions should enumerate all legal actions for current state | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                         |
+| 2     | #350  | server: add rate limiting on POST /api/v1/games routes               | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing.  |
+| 1     | #547  | Add router test coverage for legacy redirect destinations            | PR #539       | Legacy redirect targets are string constants baked at module load time; a typo would not be caught by the current test suite.                                                                         |
+| 1     | #544  | Add useModuleStore modulePath/defaultScenarioPath helper tests       | PR #539       | Helpers build all client API and router URLs but have no direct assertions; simple string operations, low breakage risk.                                                                              |
+| 1     | #538  | Improve contrast ratio for derived-value spans in scenario editor    | PR #530       | `.derived-value` CSS color may not meet WCAG AA contrast ratio (4.5:1) against the panel background for `totalTurns` and lighting-time displays.                                                      |
 
 ---
 

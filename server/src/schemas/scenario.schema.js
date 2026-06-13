@@ -60,10 +60,22 @@ const RandomEventEntry = z.object({
 
 const LightingCondition = z.enum(['day', 'twilight', 'night', 'fog', 'rain']);
 
+// LOB §6.1 — 999 is the sentinel for unlimited (day) visibility; normal range is 1–20.
+// Sister definition: client/src/config/visibility.js — keep both in sync.
+const VISIBILITY_UNLIMITED = 999;
+const VISIBILITY_MAX = 20;
+
 const LightingEntry = z.object({
   startTurn: z.number().int().positive(),
   condition: LightingCondition,
-  visibilityHexes: z.number().int().positive(),
+  // Accepts 1–VISIBILITY_MAX (normal hex range) or VISIBILITY_UNLIMITED (day sentinel)
+  visibilityHexes: z
+    .number()
+    .int()
+    .positive()
+    .refine((v) => v <= VISIBILITY_MAX || v === VISIBILITY_UNLIMITED, {
+      message: `visibilityHexes must be 1–${VISIBILITY_MAX} or ${VISIBILITY_UNLIMITED} (unlimited)`,
+    }),
   _note: z.string().optional(),
 });
 
@@ -81,7 +93,22 @@ export const ScenarioSchema = z.object({
   name: z.string(),
   system: z.string(),
   publication: z.string(),
-  lightingSchedule: z.array(LightingEntry).optional(),
+  lightingSchedule: z
+    .array(LightingEntry)
+    .superRefine((entries, ctx) => {
+      const seen = new Set();
+      entries.forEach((e, i) => {
+        if (seen.has(e.startTurn)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Duplicate startTurn ${e.startTurn} in lightingSchedule`,
+            path: [i, 'startTurn'],
+          });
+        }
+        seen.add(e.startTurn);
+      });
+    })
+    .optional(),
   flukeStoppageGracePeriodTurns: z.number().int().nonnegative().optional(),
   initiativeSystem: z.enum(['RSS', 'LoB']).optional(),
   looseCannon: z.boolean().optional(),

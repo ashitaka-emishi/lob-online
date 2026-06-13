@@ -25,7 +25,16 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+// Rate limiter runs first so write probes are throttled even when the editor is disabled (#540)
 router.use(limiter);
+
+// Allow GET (reads) for all; gate every non-GET method behind MAP_EDITOR_ENABLED (#540)
+router.use((req, res, next) => {
+  if (req.method !== 'GET' && process.env.MAP_EDITOR_ENABLED !== 'true') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  return next();
+});
 
 const MAX_BACKUPS = 20;
 

@@ -31,6 +31,8 @@ function mockFetch(data, { ok = true, status = 200 } = {}) {
 beforeEach(() => {
   localStorage.clear();
   vi.useFakeTimers();
+  // Suppress expected console.error output from error-path tests (warning-free policy).
+  vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -650,6 +652,48 @@ describe('useMapPersistence', () => {
       mapData.value = { hexes: [] };
       await save();
       expect(saveStatus.value).toBe('saved');
+    });
+  });
+
+  // ── URL construction (#543) ────────────────────────────────────────────────
+
+  describe('URL construction', () => {
+    it('uses legacy tool URL when moduleSlug is absent', async () => {
+      const fn = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ hexes: [], _status: 'scaffold' }),
+      });
+      vi.stubGlobal('fetch', fn);
+      const { actions } = useMapPersistence(makeArgs());
+      await actions.fetchMapData();
+      expect(fn.mock.calls[0][0]).toBe('/api/tools/map-editor/data');
+    });
+
+    it('uses module-scoped URL when moduleSlug is provided', async () => {
+      const fn = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ hexes: [], _status: 'scaffold' }),
+      });
+      vi.stubGlobal('fetch', fn);
+      const { actions } = useMapPersistence(makeArgs({ moduleSlug: 'SM' }));
+      await actions.fetchMapData();
+      expect(fn.mock.calls[0][0]).toBe('/api/v1/modules/SM/map');
+    });
+
+    it('PUT (save) uses module-scoped URL when moduleSlug is provided', async () => {
+      const fn = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ _savedAt: 1 }),
+      });
+      vi.stubGlobal('fetch', fn);
+      const {
+        state: { mapData },
+        actions,
+      } = useMapPersistence(makeArgs({ moduleSlug: 'SM' }));
+      mapData.value = { hexes: [] };
+      await actions.save();
+      const putCall = fn.mock.calls.find((c) => c[1]?.method === 'PUT');
+      expect(putCall?.[0]).toBe('/api/v1/modules/SM/map');
     });
   });
 });

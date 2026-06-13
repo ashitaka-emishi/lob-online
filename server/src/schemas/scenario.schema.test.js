@@ -133,6 +133,62 @@ describe('ScenarioSchema — lightingSchedule validation', () => {
   });
 });
 
+describe('ScenarioSchema — visibilityHexes upper bound (#536)', () => {
+  it('accepts values in normal range 1–20', () => {
+    for (const v of [1, 2, 4, 10, 20]) {
+      const result = ScenarioSchema.safeParse({
+        ...BASE,
+        lightingSchedule: [{ startTurn: 1, condition: 'twilight', visibilityHexes: v }],
+      });
+      expect(result.success, `visibilityHexes=${v}`).toBe(true);
+    }
+  });
+
+  it('accepts 999 (unlimited day sentinel)', () => {
+    const result = ScenarioSchema.safeParse({
+      ...BASE,
+      lightingSchedule: [{ startTurn: 1, condition: 'day', visibilityHexes: 999 }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects values above 20 that are not 999', () => {
+    for (const v of [21, 50, 100, 998]) {
+      const result = ScenarioSchema.safeParse({
+        ...BASE,
+        lightingSchedule: [{ startTurn: 1, condition: 'day', visibilityHexes: v }],
+      });
+      expect(result.success, `visibilityHexes=${v} should be rejected`).toBe(false);
+    }
+  });
+});
+
+describe('ScenarioSchema — startTurn uniqueness in lightingSchedule (#532)', () => {
+  it('accepts a schedule with unique startTurn values', () => {
+    const result = ScenarioSchema.safeParse({
+      ...BASE,
+      lightingSchedule: [
+        { startTurn: 1, condition: 'day', visibilityHexes: 999 },
+        { startTurn: 28, condition: 'twilight', visibilityHexes: 4 },
+        { startTurn: 31, condition: 'night', visibilityHexes: 2 },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a schedule with duplicate startTurn values', () => {
+    const result = ScenarioSchema.safeParse({
+      ...BASE,
+      lightingSchedule: [
+        { startTurn: 1, condition: 'day', visibilityHexes: 999 },
+        { startTurn: 1, condition: 'twilight', visibilityHexes: 4 },
+      ],
+    });
+    expect(result.success).toBe(false);
+    expect(result.error.issues.some((i) => i.message.includes('Duplicate startTurn 1'))).toBe(true);
+  });
+});
+
 describe('ScenarioSchema — initiativeSystem validation', () => {
   it('accepts RSS', () => {
     expect(ScenarioSchema.safeParse({ ...BASE, initiativeSystem: 'RSS' }).success).toBe(true);

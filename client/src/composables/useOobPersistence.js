@@ -8,6 +8,7 @@ const SUCCESSION_STORAGE_KEY = 'lob-succession-editor-v1';
 const DEBOUNCE_MS = 500;
 
 // #529 — build module-scoped URLs when a slug is supplied; fall back to legacy tool endpoints
+// #541 — warn when no slug is given so misdirected writes are not silent
 function buildUrls(moduleSlug) {
   if (moduleSlug) {
     return {
@@ -16,6 +17,10 @@ function buildUrls(moduleSlug) {
       succession: `/api/v1/modules/${moduleSlug}/succession`,
     };
   }
+  console.warn(
+    '[useOobPersistence] No moduleSlug provided — falling back to legacy tool endpoints. ' +
+      'Push/pull will target /api/tools/* routes. Pass moduleSlug to use module-scoped API.'
+  );
   return {
     oob: '/api/tools/oob-editor/data',
     leaders: '/api/tools/leaders-editor/data',

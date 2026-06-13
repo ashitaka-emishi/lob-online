@@ -41,6 +41,8 @@ function makeRefs() {
 beforeEach(() => {
   localStorage.clear();
   vi.useFakeTimers();
+  // Suppress the no-moduleSlug warning emitted by buildUrls (#541) in legacy-URL tests.
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -295,5 +297,43 @@ describe('pullFromServer', () => {
     // succession stays untouched; no crash
     expect(refs.oob.value).toEqual(VALID_OOB);
     expect(refs.succession.value).toEqual(VALID_SUCCESSION);
+  });
+});
+
+// ── URL construction (#543) ────────────────────────────────────────────────────
+
+describe('useOobPersistence — URL construction', () => {
+  it('uses legacy tool URLs when moduleSlug is absent and emits the fallback warning', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(VALID_OOB),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const refs = makeRefs();
+    const { loadData } = useOobPersistence(refs);
+    await loadData();
+    const calledUrls = fetchMock.mock.calls.map((c) => c[0]);
+    expect(calledUrls).toContain('/api/tools/oob-editor/data');
+    expect(calledUrls).toContain('/api/tools/leaders-editor/data');
+    expect(calledUrls).toContain('/api/tools/succession-editor/data');
+    // #541 — warn must fire so missing-slug writes are not silent
+    expect(console.warn).toHaveBeenCalled();
+  });
+
+  it('uses module-scoped URLs when moduleSlug is provided (no fallback warning)', async () => {
+    const slug = 'SM';
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(VALID_OOB),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const refs = makeRefs();
+    const { loadData } = useOobPersistence({ ...refs, moduleSlug: slug });
+    await loadData();
+    const calledUrls = fetchMock.mock.calls.map((c) => c[0]);
+    expect(calledUrls).toContain(`/api/v1/modules/${slug}/oob`);
+    expect(calledUrls).toContain(`/api/v1/modules/${slug}/leaders`);
+    expect(calledUrls).toContain(`/api/v1/modules/${slug}/succession`);
+    expect(console.warn).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,6 @@
 import { STATE_SCHEMA_VERSION } from '../constants/schemaVersion.js';
 import { GameStateSchema } from '../schemas/gameState.schema.js';
+import { MINUTES_PER_CONDITION_DEFAULT } from './turnTime.js';
 
 // LOB §10.3 — artillery and non-order-holding units have null orders; effective behavior is §10.8a
 // LOB §10.6 — scenario setup orders are treated as already accepted at turn 1; they represent
@@ -14,14 +15,14 @@ function mapOrder(rawOrder) {
 // Convert "HH:MM" time string to turn number relative to scenario firstTurn
 // LOB §1.1 — day and twilight turns are 15 minutes; night turns are 30 minutes.
 // SM's latest reinforcement arrival is 17:00 (turn 33), well before the turn-45 night
-// transition (~20:00). Using 15 min/turn is correct for all current SM data. If a future
-// scenario schedules reinforcements during night turns, this function must be updated to
-// walk the lighting schedule instead of using a flat divisor.
+// transition (~20:00). Using MINUTES_PER_CONDITION_DEFAULT (15) min/turn is correct for all
+// current SM data. If a future scenario schedules reinforcements during night turns, this
+// function must be updated to walk the lighting schedule instead of using a flat divisor.
 function timeToTurn(timeStr, firstTurnTime) {
   const [h, m] = timeStr.split(':').map(Number);
   const [fh, fm] = firstTurnTime.split(':').map(Number);
   const minutesSinceStart = h * 60 + m - (fh * 60 + fm);
-  return Math.floor(minutesSinceStart / 15) + 1;
+  return Math.floor(minutesSinceStart / MINUTES_PER_CONDITION_DEFAULT) + 1;
 }
 
 function defaultUnit({ id, hex, orderRaw, isOnBoard, entryTurn, isDetached = false }) {

@@ -3,6 +3,8 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import EditorNav from '../../components/EditorNav.vue';
+import { MINUTES_PER_CONDITION, MINUTES_PER_CONDITION_DEFAULT } from '../../config/turnTime.js';
+import { VISIBILITY_UNLIMITED } from '../../config/visibility.js';
 
 const _route = useRoute();
 const _moduleSlug = _route.params.moduleSlug ?? null;
@@ -29,17 +31,14 @@ const showPushConfirm = ref(false);
 const showPullConfirm = ref(false);
 
 // Default visibility in hexes per condition (day=unlimited, night=2, others=4)
-const VISIBILITY_DEFAULTS = { day: 999, twilight: 4, night: 2, fog: 4, rain: 4 };
+const VISIBILITY_DEFAULTS = { day: VISIBILITY_UNLIMITED, twilight: 4, night: 2, fog: 4, rain: 4 };
 
 // Lighting schedule row being added
-const newRow = ref({ startTurn: '', condition: 'day', visibilityHexes: 999 });
+const newRow = ref({ startTurn: '', condition: 'day', visibilityHexes: VISIBILITY_UNLIMITED });
 
 // ── Computed ──────────────────────────────────────────────────────────────────
 
 const lightingSchedule = computed(() => scenarioData.value?.lightingSchedule ?? []);
-
-// LOB §1.1 — day/twilight turns are 15 minutes, night turns are 30 minutes
-const MINUTES_PER_CONDITION = { day: 15, twilight: 15, night: 30, fog: 15, rain: 15 };
 
 // LOB §1.1 — totalTurns derived from firstTurn/lastTurn + lighting schedule turn durations.
 // Walk turn-by-turn: each turn advances the clock by its condition's minutes/turn.
@@ -75,7 +74,7 @@ const totalTurns = computed(() => {
       sorted.length && sorted[condIdx].startTurn <= turns
         ? sorted[condIdx].condition
         : defaultCondition;
-    turnStartMin += MINUTES_PER_CONDITION[condition] ?? 15;
+    turnStartMin += MINUTES_PER_CONDITION[condition] ?? MINUTES_PER_CONDITION_DEFAULT;
   }
   return turns;
 });
@@ -115,7 +114,7 @@ const lightingStartTimes = computed(() => {
       sorted.length && sorted[condIdx].startTurn <= turn
         ? sorted[condIdx].condition
         : defaultCondition;
-    turnStartMin += MINUTES_PER_CONDITION[condition] ?? 15;
+    turnStartMin += MINUTES_PER_CONDITION[condition] ?? MINUTES_PER_CONDITION_DEFAULT;
     turn++;
   }
   return result;
@@ -300,7 +299,7 @@ function addLightingRow() {
       visibilityHexes: newRow.value.visibilityHexes,
     },
   ].sort((a, b) => a.startTurn - b.startTurn);
-  newRow.value = { startTurn: '', condition: 'day', visibilityHexes: 999 };
+  newRow.value = { startTurn: '', condition: 'day', visibilityHexes: VISIBILITY_UNLIMITED };
   markDirty();
 }
 

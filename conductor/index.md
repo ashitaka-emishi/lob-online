@@ -23,6 +23,7 @@ Navigation hub for project context.
 | [oob-editor-bugs_20260604](./tracks/oob-editor-bugs_20260604/index.md)                 | OOB Editor Display/Data Bugs (#506)                                      | Complete |
 | [m5-closeout_20260605](./tracks/m5-closeout_20260605/index.md)                         | M5 Closeout — Checklist, Handoff Note, Milestone Closure                 | Pending  |
 | [debt-sprint-to-10_20260605](./tracks/debt-sprint-to-10_20260605/index.md)             | Debt Sprint — Score 32 → 10                                              | Pending  |
+| [pre-m6-debt-sprint_20260613](./tracks/pre-m6-debt-sprint_20260613/index.md)           | Pre-M6 Debt Sprint — Score 3+ and Low-Hanging Fruit                      | Pending  |
 
 ## All Tracks
 
