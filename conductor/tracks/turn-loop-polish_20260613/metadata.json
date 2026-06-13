@@ -1,0 +1,17 @@
+{
+  "id": "turn-loop-polish_20260613",
+  "title": "Turn Loop Polish — E2E Smoke Test, A11y Focus, and Action Contract Docs",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-06-13T00:00:00.000Z",
+  "updated": "2026-06-13T00:00:00.000Z",
+  "issues": [554, 555, 556],
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 21,
+    "completed": 0
+  }
+}

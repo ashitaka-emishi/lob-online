@@ -147,3 +147,6 @@
 | [x] | multi-scenario-platform_20260608 | Multi-Scenario Platform — Scenario-Scoped Routes and Data Folders (#529) | 2026-06-08 | 2026-06-09 |
 | [x] | pre-m6-debt-sprint_20260613 | Pre-M6 Debt Sprint — Score 3+ and Low-Hanging Fruit | 2026-06-13 | 2026-06-13 |
 | [x] | debt-sprint-2_20260613 | Pre-M6 Debt Sprint #2 — Debt, Doc Sync, Stubs | 2026-06-13 | 2026-06-13 |
+| [x] | turn-loop-core_20260613 | Turn Loop Core — Engine, Store, and ActionPanel Payload Wiring (#550 #551 #552) | 2026-06-13 | 2026-06-13 |
+| [ ] | lobby-auth-cleanup_20260613 | Lobby and Auth Cleanup — Side Entry Flow and Session Guard (#549 #553) | 2026-06-13 | 2026-06-13 |
+| [ ] | turn-loop-polish_20260613 | Turn Loop Polish — E2E Smoke Test, A11y Focus, and Action Contract Docs (#554 #555 #556) | 2026-06-13 | 2026-06-13 |
