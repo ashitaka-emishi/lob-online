@@ -145,3 +145,4 @@
 | [x] | home-nav-menu_20260607 | App Home Page and Editor Navigation Menu (#518) | 2026-06-07 | 2026-06-07 |
 | [x] | editor-polish-526-527_20260608 | Editor Polish — Issues #526 and #527 | 2026-06-08 | 2026-06-08 |
 | [x] | multi-scenario-platform_20260608 | Multi-Scenario Platform — Scenario-Scoped Routes and Data Folders (#529) | 2026-06-08 | 2026-06-09 |
+| [x] | pre-m6-debt-sprint_20260613 | Pre-M6 Debt Sprint — Score 3+ and Low-Hanging Fruit | 2026-06-13 | 2026-06-13 |
