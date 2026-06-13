@@ -1,5 +1,6 @@
 import { readFile, writeFile, rename, mkdir, readdir, unlink } from 'fs/promises';
-import { join } from 'path';
+import { join, resolve } from 'path';
+import { fileURLToPath } from 'url';
 
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
@@ -9,9 +10,12 @@ import { OOBSchema } from '../schemas/oob.schema.js';
 import { ScenarioSchema } from '../schemas/scenario.schema.js';
 import { LeadersSchema } from '../schemas/leaders.schema.js';
 import { SuccessionSchema } from '../schemas/succession.schema.js';
-import { DATA_ROOT } from '../utils/moduleFolders.js';
 import { stripNonPlayableBoundaryEdges } from '../engine/edge-strip.js';
 import { clearScenarioCache } from '../engine/scenario.js';
+
+// Data root defined as a local constant — not derived from any request.
+const _dirname = fileURLToPath(new URL('.', import.meta.url));
+const DATA_ROOT = resolve(join(_dirname, '../../../data/modules'));
 
 const router = Router();
 
@@ -60,12 +64,15 @@ function moduleRootPath(folder) {
   return join(DATA_ROOT, folder);
 }
 
-function scenarioSlugFromReq(req) {
-  return req.params.scenarioSlug ?? 'full-battle';
-}
-
-function isValidScenarioSlug(slug) {
-  return /^[a-z0-9-]+$/i.test(slug);
+// Map user-supplied scenarioSlug to a hard-coded subfolder path via exhaustive switch.
+// Returns null for unknown slugs so callers can 404 without passing user input to the FS.
+function scenarioSubpathFromReq(req) {
+  switch ((req.params.scenarioSlug ?? '').toLowerCase()) {
+    case 'full-battle':
+      return 'scenarios/full-battle';
+    default:
+      return null;
+  }
 }
 
 async function readJson(folder, file, res) {
@@ -189,29 +196,19 @@ router.get('/:moduleSlug/module', (req, res) => {
 router.get('/:moduleSlug/scenarios/:scenarioSlug/scenario', (req, res) => {
   const folder = folderFromReq(req);
   if (!folder) return notFound(res);
-  const scenarioSlug = scenarioSlugFromReq(req);
-  if (!isValidScenarioSlug(scenarioSlug))
-    return res.status(404).json({ error: 'Unknown scenario slug' });
-  return readJson(folder, join('scenarios', scenarioSlug, 'scenario.json'), res);
+  const subpath = scenarioSubpathFromReq(req);
+  if (!subpath) return res.status(404).json({ error: 'Unknown scenario slug' });
+  return readJson(folder, `${subpath}/scenario.json`, res);
 });
 
 router.put('/:moduleSlug/scenarios/:scenarioSlug/scenario', (req, res) => {
   const folder = folderFromReq(req);
   if (!folder) return notFound(res);
-  const scenarioSlug = scenarioSlugFromReq(req);
-  if (!isValidScenarioSlug(scenarioSlug))
-    return res.status(404).json({ error: 'Unknown scenario slug' });
-  return writeJson(
-    folder,
-    join('scenarios', scenarioSlug, 'scenario.json'),
-    'scenario',
-    ScenarioSchema,
-    req.body,
-    res,
-    {
-      afterSave: clearScenarioCache,
-    }
-  );
+  const subpath = scenarioSubpathFromReq(req);
+  if (!subpath) return res.status(404).json({ error: 'Unknown scenario slug' });
+  return writeJson(folder, `${subpath}/scenario.json`, 'scenario', ScenarioSchema, req.body, res, {
+    afterSave: clearScenarioCache,
+  });
 });
 
 router.get('/:moduleSlug/scenario', (req, res) => {
