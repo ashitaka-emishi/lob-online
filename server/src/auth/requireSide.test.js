@@ -67,7 +67,7 @@ describe('requireSide', () => {
     expect(getGame).not.toHaveBeenCalled();
   });
 
-  it('returns 401 when session gameId does not match the route :id — does not hit the DB', () => {
+  it('returns 403 when session gameId does not match the route :id — does not hit the DB (#553)', () => {
     const req = {
       params: { id: 'game-abc' },
       session: { gameId: 'other-game', side: 'union', sideToken: 'tok-a' },
@@ -76,7 +76,7 @@ describe('requireSide', () => {
     const next = vi.fn();
     requireSide(req, res, next);
     expect(next).not.toHaveBeenCalled();
-    expect(res._status).toBe(401);
+    expect(res._status).toBe(403);
     expect(getGame).not.toHaveBeenCalled();
   });
 

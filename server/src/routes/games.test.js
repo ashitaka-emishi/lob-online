@@ -383,11 +383,11 @@ describe('GET /api/v1/games/:id', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 401 when session gameId does not match the route :id (#330)', async () => {
+  it('returns 403 when session gameId does not match the route :id (#553)', async () => {
     getPlayerSession.mockReturnValue({ gameId: 'other-game', side: 'union', token: 'tok-1' });
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('returns 404 for unknown game id (authenticated player) (#330)', async () => {
@@ -458,23 +458,23 @@ describe('POST /api/v1/games/:id/actions', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 401 when session gameId does not match route :id (#356)', async () => {
+  it('returns 403 when session gameId does not match route :id (#553)', async () => {
     getPlayerSession.mockReturnValue({ gameId: 'other-game', side: 'union', token: 'tok' });
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/actions`)
       .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
-  it('returns 401 when authenticated player for game A posts action to game B (#503)', async () => {
+  it('returns 403 when authenticated player for game A posts action to game B (#553)', async () => {
     const OTHER_UUID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
     getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', token: 'tok' });
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/actions`)
       .send({ type: 'END_PHASE', payload: null, expectedVersion: 0 });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
     expect(dispatch).not.toHaveBeenCalled();
   });
 
@@ -803,7 +803,98 @@ describe('GET /api/v1/games/:id/actions (#495)', () => {
     getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', token: 'tok' });
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}/actions`);
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
     expect(getValidActions).not.toHaveBeenCalled();
+  });
+});
+
+// ─── Session guard — requireSameGame (#553) ───────────────────────────────────
+// Tests that each guarded route (GET /:id, GET /:id/actions, POST /:id/actions)
+// returns the correct status for same-game, different-game, and missing-session cases.
+
+describe('Session guard — requireSameGame (#553)', () => {
+  const OTHER_UUID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+
+  // ── GET /api/v1/games/:id ────────────────────────────────────────────────────
+
+  it('GET /:id — succeeds (200) for same-game session (#553)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(MINIMAL_STATE);
+    const app = await buildApp();
+    const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
+    expect(res.status).toBe(200);
+  });
+
+  it('GET /:id — returns 403 for different-game session (#553)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', token: 'tok' });
+    const app = await buildApp();
+    const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
+    expect(res.status).toBe(403);
+  });
+
+  it('GET /:id — returns 401 for missing session (#553)', async () => {
+    getPlayerSession.mockReturnValue(null);
+    const app = await buildApp();
+    const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
+    expect(res.status).toBe(401);
+  });
+
+  // ── GET /api/v1/games/:id/actions ────────────────────────────────────────────
+
+  it('GET /:id/actions — succeeds (200) for same-game session (#553)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(MINIMAL_STATE);
+    getValidActions.mockReturnValue([]);
+    const app = await buildApp();
+    const res = await request(app).get(`/api/v1/games/${TEST_UUID}/actions`);
+    expect(res.status).toBe(200);
+  });
+
+  it('GET /:id/actions — returns 403 for different-game session (#553)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', token: 'tok' });
+    const app = await buildApp();
+    const res = await request(app).get(`/api/v1/games/${TEST_UUID}/actions`);
+    expect(res.status).toBe(403);
+    expect(getValidActions).not.toHaveBeenCalled();
+  });
+
+  it('GET /:id/actions — returns 401 for missing session (#553)', async () => {
+    getPlayerSession.mockReturnValue(null);
+    const app = await buildApp();
+    const res = await request(app).get(`/api/v1/games/${TEST_UUID}/actions`);
+    expect(res.status).toBe(401);
+  });
+
+  // ── POST /api/v1/games/:id/actions ───────────────────────────────────────────
+
+  it('POST /:id/actions — succeeds (200) for same-game session when action is legal (#553)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockReturnValue(NEXT_STATE);
+    saveGame.mockResolvedValue(NEXT_STATE);
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(res.status).toBe(200);
+  });
+
+  it('POST /:id/actions — returns 403 for different-game session (#553)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', token: 'tok' });
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 0 });
+    expect(res.status).toBe(403);
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it('POST /:id/actions — returns 401 for missing session (#553)', async () => {
+    getPlayerSession.mockReturnValue(null);
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 0 });
+    expect(res.status).toBe(401);
   });
 });

@@ -21,8 +21,14 @@ import { getPlayerSession } from './session.js';
  */
 export function requireSide(req, res, next) {
   const player = getPlayerSession(req);
-  if (!player || player.gameId !== req.params.id) {
+  // No session at all → 401 (unauthenticated). Session exists but for a different game → 403
+  // (#553). These two cases must be distinct: 401 means "prove who you are"; 403 means "you
+  // proved who you are, but you don't own this game."
+  if (!player) {
     return res.status(401).json({ error: 'Unauthorized' });
+  }
+  if (player.gameId !== req.params.id) {
+    return res.status(403).json({ error: 'Forbidden' });
   }
 
   // Verify the sideToken is still valid against the DB record (#477).
