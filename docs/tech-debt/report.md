@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-13 after PR #548._
+_Last updated: 2026-06-13 after PR #557._
 
 ---
 
@@ -8,10 +8,10 @@ _Last updated: 2026-06-13 after PR #548._
 
 | Metric                           | Value                                                                        |
 | -------------------------------- | ---------------------------------------------------------------------------- |
-| Open debt items                  | 13                                                                           |
-| Cumulative debt score (net open) | 23                                                                           |
-| Highest-risk item                | Make editor views reactive to moduleSlug route param changes (#542, score 2) |
-| PRs tracked                      | 273                                                                          |
+| Open debt items                  | 10                                                                           |
+| Cumulative debt score (net open) | 17                                                                           |
+| Highest-risk item                | Add component test for moduleSlug reactivity in editor views (#558, score 2) |
+| PRs tracked                      | 279                                                                          |
 
 ---
 
@@ -336,6 +336,11 @@ _Last updated: 2026-06-13 after PR #548._
 | 2026-06-13 | PR #548 (resolved #536)                                        | -1                   | —         | 476                      |
 | 2026-06-13 | PR #548 (resolved #535)                                        | -1                   | —         | 476                      |
 | 2026-06-13 | PR #548 (resolved #534)                                        | -1                   | —         | 476                      |
+| 2026-06-13 | PR #557                                                        | 2                    | -6        | 478                      |
+| 2026-06-13 | PR #557 (resolved #546)                                        | -2                   | —         | 478                      |
+| 2026-06-13 | PR #557 (resolved #545)                                        | -2                   | —         | 478                      |
+| 2026-06-13 | PR #557 (resolved #542)                                        | -2                   | —         | 478                      |
+| 2026-06-13 | PR #557 (resolved #533)                                        | -2                   | —         | 478                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -345,7 +350,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 Moderate risk. Some deferred workarounds and sub-optimal patterns that will slow future phases if not addressed.
 
-PR #548 (pre-M6 debt sprint) closed 9 items totalling 18 pts — including the two highest-risk items (#540 score 4, #541 score 3) and #531 (score 3) — dropping net open score from 41 to 23 across 13 items. The 13 remaining items fall into three clusters: (1) **PR #539 multi-module residual** — #542, #545, #546 (score 2 each, editor reactivity, error handler registration, route test coverage), plus #544 and #547 (score 1 each, helper and router test gaps); (2) **PR #530 schema/model debt** — #533 (score 2, totalTurns still in scenario.json), plus #538 (score 1, contrast ratio); (3) **Deferred to later milestones** — #383, #382, #381, #379 (score 2 each, M6-blocked rules-engine stubs), #403 (score 2, CSP headers, M8), and #350 (score 2, rate limiting on game routes, M8). No items are actively blocking M6 start.
+PR #557 (pre-M6 debt sprint #2) closed 4 items totalling 8 pts (#542, #545, #546, #533) and added 1 new item (#558, score 2), dropping net open score from 23 to 17 across 10 items. The 10 remaining items fall into three clusters: (1) **Test coverage gaps** — #558 (score 2, no automated reactivity test for editor moduleSlug watch), #544 and #547 (score 1 each, helper and router test gaps), and #538 (score 1, contrast ratio); (2) **Deferred to later milestones** — #383, #382, #381, #379 (score 2 each, M6-blocked rules-engine stubs), #403 (score 2, CSP headers, M8), and #350 (score 2, rate limiting on game routes, M8). No items are actively blocking M6 start.
 
 ---
 
@@ -353,21 +358,18 @@ PR #548 (pre-M6 debt sprint) closed 9 items totalling 18 pts — including the t
 
 _Ordered by score descending (ties: newest first). Resolved items are removed._
 
-| Score | Issue | Title                                                                | PR Introduced | Assessment                                                                                                                                                                                            |
-| ----- | ----- | -------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2     | #546  | Expand moduleData route tests — unknown slug 404 and scenario paths  | PR #539       | Missing coverage for unknown-slug 404, nested scenario sub-routes, and invalid scenarioSlug rejection.                                                                                                |
-| 2     | #545  | Register ModuleNotFoundError in Express error handler middleware     | PR #539       | Error caught inline in helpers; a future route that forgets the inline catch will surface an unhandled 500 instead of a clean 404 JSON response.                                                      |
-| 2     | #542  | Make editor views reactive to moduleSlug route param changes         | PR #539       | Slug captured non-reactively at setup; current routing guarantees remount on slug change so no active breakage, but fragile against future in-page navigation that changes slug without full remount. |
-| 2     | #533  | Remove totalTurns from scenario.json (now derived)                   | PR #530       | `totalTurns` is now computed by the client but still stored in `scenario.json` and required by the schema; mixed source-of-truth creates confusion and can drift.                                     |
-| 2     | #403  | Add Content-Security-Policy headers to Express server                | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                   |
-| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)   | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                    |
-| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                    | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                   |
-| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                  | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                     |
-| 2     | #379  | getValidActions should enumerate all legal actions for current state | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                         |
-| 2     | #350  | server: add rate limiting on POST /api/v1/games routes               | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing.  |
-| 1     | #547  | Add router test coverage for legacy redirect destinations            | PR #539       | Legacy redirect targets are string constants baked at module load time; a typo would not be caught by the current test suite.                                                                         |
-| 1     | #544  | Add useModuleStore modulePath/defaultScenarioPath helper tests       | PR #539       | Helpers build all client API and router URLs but have no direct assertions; simple string operations, low breakage risk.                                                                              |
-| 1     | #538  | Improve contrast ratio for derived-value spans in scenario editor    | PR #530       | `.derived-value` CSS color may not meet WCAG AA contrast ratio (4.5:1) against the panel background for `totalTurns` and lighting-time displays.                                                      |
+| Score | Issue | Title                                                                | PR Introduced | Assessment                                                                                                                                                                                                                                               |
+| ----- | ----- | -------------------------------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2     | #558  | Add component test for moduleSlug reactivity in editor views         | PR #557       | No automated test asserts that changing `route.params.moduleSlug` triggers a re-fetch in the editor views. The `watch()` behavior is simple and verified by inspection, but a future refactor could silently drop it without CI catching the regression. |
+| 2     | #403  | Add Content-Security-Policy headers to Express server                | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                                                                      |
+| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)   | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                                                                       |
+| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                    | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                                                                      |
+| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                  | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                                                                        |
+| 2     | #379  | getValidActions should enumerate all legal actions for current state | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                                                                            |
+| 2     | #350  | server: add rate limiting on POST /api/v1/games routes               | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing.                                                     |
+| 1     | #547  | Add router test coverage for legacy redirect destinations            | PR #539       | Legacy redirect targets are string constants baked at module load time; a typo would not be caught by the current test suite.                                                                                                                            |
+| 1     | #544  | Add useModuleStore modulePath/defaultScenarioPath helper tests       | PR #539       | Helpers build all client API and router URLs but have no direct assertions; simple string operations, low breakage risk.                                                                                                                                 |
+| 1     | #538  | Improve contrast ratio for derived-value spans in scenario editor    | PR #530       | `.derived-value` CSS color may not meet WCAG AA contrast ratio (4.5:1) against the panel background for `totalTurns` and lighting-time displays.                                                                                                         |
 
 ---
 
