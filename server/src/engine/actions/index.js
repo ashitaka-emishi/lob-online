@@ -38,8 +38,8 @@ export function getValidActions(state, playerSide) {
     // Hoisted outside flatMap — invariant across all eligible leaders.
     // LOB §10.3 — only friendly units can be targeted for initiative. UnitStateSchema does not
     // carry a side field (unit affiliation is OOB data, not game state), so side-filtering is
-    // deferred to M6 when OOB data is co-located with the engine. In M5 all units in state are
-    // the active player's units; cross-side mixing is not yet possible. (#559 issue filed)
+    // deferred to M6 when OOB data is co-located with the engine. In M5 the scenario seeds only
+    // one side's units; cross-side mixing is not yet possible. See #560 for M6 tracking.
     const onBoardUnitIds = Object.keys(state.units).filter((uid) => state.units[uid].isOnBoard);
     const rollCandidates =
       eligibleLeaders.length > 0

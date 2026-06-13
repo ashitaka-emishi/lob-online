@@ -288,10 +288,9 @@ describe('getValidActions', () => {
     expect(actions.map((a) => a.type)).toContain('END_PHASE');
   });
 
-  // Review H3 deferred: LOB §10.3 requires ROLL_INITIATIVE to target only friendly units.
-  // UnitStateSchema has no side field (affiliation is OOB data); side-filtering is deferred
-  // to M6. In M5, all units in game state are assumed to be from the same scenario OOB.
-  // This test documents the current behaviour and pins that all on-board units appear as candidates.
+  // LOB §10.3 — only friendly units may be targeted for initiative (see #560 for M6 tracking).
+  // UnitStateSchema has no side field; side-filtering deferred to M6. In M5, scenario seeds only
+  // one side's units. This test pins current behavior: all on-board units are candidates.
   it('ROLL_INITIATIVE candidates include all on-board units (M5 — side-filter deferred to M6 LOB §10.3)', () => {
     const state = {
       ...COMMAND_ORDERS_STATE,

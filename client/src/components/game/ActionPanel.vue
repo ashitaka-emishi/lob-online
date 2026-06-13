@@ -57,10 +57,13 @@ function actionLabel(action) {
 }
 
 // Stable unique key for a candidate — type alone is not sufficient when multiple candidates
-// share the same type but differ by payload (e.g. two ISSUE_ORDER, N ACTIVATE_STACK). (#559 H1)
+// share the same type but differ by payload. (#559 H1)
+// ROLL_INITIATIVE requires leaderId+unitId: keying on unitId alone collides when multiple
+// leaders each target the same unit.
 function candidateKey(action) {
   const p = action.payload;
   if (!p) return action.type;
+  if (p.leaderId != null && p.unitId != null) return `${action.type}:${p.leaderId}:${p.unitId}`;
   return `${action.type}:${p.orderType ?? p.hex ?? p.unitId ?? ''}`;
 }
 
