@@ -41,6 +41,8 @@ function makeRefs() {
 beforeEach(() => {
   localStorage.clear();
   vi.useFakeTimers();
+  // Suppress the no-moduleSlug warning emitted by buildUrls (#541) in legacy-URL tests.
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
 afterEach(() => {
