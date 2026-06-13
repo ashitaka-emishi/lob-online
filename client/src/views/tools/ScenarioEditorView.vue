@@ -7,14 +7,17 @@ import { MINUTES_PER_CONDITION, MINUTES_PER_CONDITION_DEFAULT } from '../../conf
 import { VISIBILITY_UNLIMITED } from '../../config/visibility.js';
 
 const _route = useRoute();
-const _moduleSlug = _route.params.moduleSlug ?? null;
-const _scenarioSlug = _route.params.scenarioSlug ?? 'full-battle';
+// #542 — reactive so in-page slug changes (future nav) don't stale the URL
+const _moduleSlug = computed(() => _route.params.moduleSlug ?? null);
+const _scenarioSlug = computed(() => _route.params.scenarioSlug ?? 'full-battle');
 
 const STORAGE_KEY = 'lob-scenario-editor-south-mountain-v3';
 // #529 — prefer module/scenario-scoped API when route params are present
-const API_URL = _moduleSlug
-  ? `/api/v1/modules/${_moduleSlug}/scenarios/${_scenarioSlug}/scenario`
-  : '/api/tools/scenario-editor/data';
+const API_URL = computed(() =>
+  _moduleSlug.value
+    ? `/api/v1/modules/${_moduleSlug.value}/scenarios/${_scenarioSlug.value}/scenario`
+    : '/api/tools/scenario-editor/data'
+);
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -152,7 +155,7 @@ function markDirty() {
 // ── Fetch / load ──────────────────────────────────────────────────────────────
 
 async function fetchServerData() {
-  const res = await fetch(API_URL);
+  const res = await fetch(API_URL.value);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
@@ -199,7 +202,7 @@ async function executePush() {
   saveStatus.value = 'saving';
   saveError.value = '';
   try {
-    const res = await fetch(API_URL, {
+    const res = await fetch(API_URL.value, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(scenarioData.value),
