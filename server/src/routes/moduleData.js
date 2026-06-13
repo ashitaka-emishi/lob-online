@@ -9,7 +9,7 @@ import { OOBSchema } from '../schemas/oob.schema.js';
 import { ScenarioSchema } from '../schemas/scenario.schema.js';
 import { LeadersSchema } from '../schemas/leaders.schema.js';
 import { SuccessionSchema } from '../schemas/succession.schema.js';
-import { MODULE_FOLDERS, DATA_ROOT } from '../utils/moduleFolders.js';
+import { DATA_ROOT } from '../utils/moduleFolders.js';
 import { stripNonPlayableBoundaryEdges } from '../engine/edge-strip.js';
 import { clearScenarioCache } from '../engine/scenario.js';
 
@@ -27,13 +27,32 @@ const MAX_BACKUPS = 20;
 
 // ── shared helpers ────────────────────────────────────────────────────────────
 
-// Resolve the user-supplied moduleSlug to a trusted folder name from the
-// allowlist. Returns null for unknown slugs — callers must check.
-// This explicitly breaks the taint chain: only MODULE_FOLDERS values
-// (compile-time constants) ever reach path construction.
+// Map user-supplied moduleSlug to a hard-coded folder name via exhaustive switch.
+// The switch branches return only string literals — no user input reaches the
+// return value, which breaks the CodeQL taint chain for js/path-injection.
 function folderFromReq(req) {
-  const slug = (req.params.moduleSlug ?? '').toUpperCase();
-  return MODULE_FOLDERS[slug] ?? null;
+  switch ((req.params.moduleSlug ?? '').toUpperCase()) {
+    case 'THG':
+      return 'thg';
+    case 'TTS':
+      return 'tts';
+    case 'AFS':
+      return 'afs';
+    case 'SM':
+      return 'south-mountain';
+    case 'LCV':
+      return 'lcv';
+    case 'NBH':
+      return 'nbh';
+    case 'TTW':
+      return 'ttw';
+    case 'NTB':
+      return 'ntb';
+    case 'IB':
+      return 'ib';
+    default:
+      return null;
+  }
 }
 
 // Build an absolute path using only the trusted folder value (not user input).
