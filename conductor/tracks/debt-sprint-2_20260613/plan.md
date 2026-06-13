@@ -102,11 +102,11 @@ Update CLAUDE.md and high-level-design.md to reflect M5.5-complete state.
 
 ### Tasks
 
-- [ ] Task 3.1: Update CLAUDE.md "Current state" paragraph: M5.5 ✅ complete, starting M6
+- [x] Task 3.1: Update CLAUDE.md "Current state" paragraph: M5.5 ✅ complete, starting M6
       (combat, morale, orders resolution); remove any "Starting M5.5" language.
-- [ ] Task 3.2: Update `docs/designs/high-level-design.md` milestone table: M5.5 → ✅ Done,
+- [x] Task 3.2: Update `docs/designs/high-level-design.md` milestone table: M5.5 → ✅ Done,
       M6 → 🔜 Next; update Rule Section Coverage table if any sections were covered in M5.5.
-- [ ] Task 3.3: Run Prettier on both files: `npx prettier --write CLAUDE.md
+- [x] Task 3.3: Run Prettier on both files: `npx prettier --write CLAUDE.md
 docs/designs/high-level-design.md`.
 
 ### Verification

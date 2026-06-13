@@ -4,21 +4,22 @@
   "type": "chore",
   "status": "in_progress",
   "created": "2026-06-13T00:00:00Z",
-  "updated": "2026-06-13T10:40:00Z",
-  "current_phase": 3,
-  "current_task": "3.1",
+  "updated": "2026-06-13T11:00:00Z",
+  "current_phase": 4,
+  "current_task": "4.1",
   "phases": {
     "total": 4,
-    "completed": 2
+    "completed": 3
   },
   "tasks": {
     "total": 16,
-    "completed": 8
+    "completed": 11
   },
   "commits": [
     "e087211: fix(editor): make moduleSlug reactive in all editor views (#542)",
     "408519d: fix(server): register ModuleNotFoundError in global error handler (#545, #546)",
     "568dfbe: fix(schema): deprecate totalTurns in ScenarioSchema; remove from SM data file (#533)",
-    "18485dc: chore(data): update 8 non-SM scaffold scenario.json files with real game names"
+    "18485dc: chore(data): update 8 non-SM scaffold scenario.json files with real game names",
+    "4e2bc98: docs: sync high-level-design.md to M5.5-complete / M6-starting state"
   ]
 }
