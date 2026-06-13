@@ -1,0 +1,17 @@
+{
+  "id": "lobby-auth-cleanup_20260613",
+  "title": "Lobby and Auth Cleanup — Side Entry Flow and Session Guard",
+  "type": "feature",
+  "status": "pending",
+  "created": "2026-06-13T00:00:00.000Z",
+  "updated": "2026-06-13T00:00:00.000Z",
+  "issues": [549, 553],
+  "phases": {
+    "total": 2,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 15,
+    "completed": 0
+  }
+}

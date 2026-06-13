@@ -1,0 +1,17 @@
+{
+  "id": "turn-loop-core_20260613",
+  "title": "Turn Loop Core — Engine, Store, and ActionPanel Payload Wiring",
+  "type": "feature",
+  "status": "pending",
+  "created": "2026-06-13T00:00:00.000Z",
+  "updated": "2026-06-13T00:00:00.000Z",
+  "issues": [550, 551, 552],
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 21,
+    "completed": 0
+  }
+}
