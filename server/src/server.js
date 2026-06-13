@@ -12,6 +12,7 @@ import SqliteStore from 'better-sqlite3-session-store';
 import { Server } from 'socket.io';
 
 import { initDb, getDb } from './store/gameSqlite.js';
+import { ModuleNotFoundError } from './utils/moduleFolders.js';
 import gamesRouter from './routes/games.js';
 import oobRouter from './routes/oob.js';
 import leadersRouter from './routes/leaders.js';
@@ -159,8 +160,11 @@ export async function startServer() {
     console.log('[server] table test tool enabled at /tools/table-test');
   }
 
-  // Global error handler — must be registered after all routes
+  // Global error handler — must be registered after all routes (#545)
   app.use((err, _req, res, _next) => {
+    if (err instanceof ModuleNotFoundError) {
+      return res.status(404).json({ error: 'Not found' });
+    }
     console.error('[server] unhandled error:', err);
     res.status(500).json({ error: 'Internal server error' });
   });
