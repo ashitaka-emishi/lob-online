@@ -63,7 +63,6 @@
   "turnStructure": {
     "firstTurn": "09:00",
     "lastTurn": "20:00",
-    "totalTurns": 45,
     "firstPlayer": "union",
     "date": "1862-09-14"
   },

@@ -118,7 +118,9 @@ export const ScenarioSchema = z.object({
   turnStructure: z.object({
     firstTurn: TimeStr,
     lastTurn: TimeStr,
-    totalTurns: z.number().int().positive(),
+    // #533 — totalTurns is now derived from firstTurn/lastTurn on the client; deprecated here.
+    // Accepted as optional so scaffold files that still carry it pass validation.
+    totalTurns: z.number().int().positive().optional(),
     firstPlayer: z.enum(['union', 'confederate']),
     date: z.string(),
   }),

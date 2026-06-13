@@ -12,7 +12,6 @@ const BASE = {
   turnStructure: {
     firstTurn: '09:00',
     lastTurn: '20:00',
-    totalTurns: 45,
     firstPlayer: 'union',
     date: '1862-09-14',
   },
@@ -64,6 +63,19 @@ describe('ScenarioSchema — backward compatibility', () => {
 
   it('accepts document with _savedAt injected by server', () => {
     expect(ScenarioSchema.safeParse({ ...BASE, _savedAt: Date.now() }).success).toBe(true);
+  });
+
+  it('accepts document without totalTurns (now derived, field deprecated #533)', () => {
+    const result = ScenarioSchema.safeParse(BASE);
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts document with totalTurns present (backward compat for scaffold files #533)', () => {
+    const result = ScenarioSchema.safeParse({
+      ...BASE,
+      turnStructure: { ...BASE.turnStructure, totalTurns: 45 },
+    });
+    expect(result.success).toBe(true);
   });
 });
 
