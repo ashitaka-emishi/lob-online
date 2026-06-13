@@ -88,23 +88,23 @@ describe('useLobbyStore — fetchGames', () => {
 });
 
 describe('useLobbyStore — createGame', () => {
-  it('sets myGameId and mySide on success', async () => {
-    vi.stubGlobal('fetch', mockFetch({ id: 'game-new', side: 'confederate' }));
+  it('sets myGameId to union side on success — creator is always union (#549)', async () => {
+    vi.stubGlobal('fetch', mockFetch({ id: 'game-new', side: 'union' }));
     const store = useLobbyStore();
     await store.createGame();
     expect(store.myGameId).toBe('game-new');
-    expect(store.mySide).toBe('confederate');
+    expect(store.mySide).toBe('union');
   });
 
   it('navigates to /games/:id after success (#407)', async () => {
-    vi.stubGlobal('fetch', mockFetch({ id: 'game-new', side: 'confederate' }));
+    vi.stubGlobal('fetch', mockFetch({ id: 'game-new', side: 'union' }));
     const store = useLobbyStore();
     await store.createGame();
     expect(mockPush).toHaveBeenCalledWith('/games/game-new');
   });
 
   it('calls POST /api/v1/games', async () => {
-    const fetchMock = mockFetch({ id: 'g1', side: 'confederate' });
+    const fetchMock = mockFetch({ id: 'g1', side: 'union' });
     vi.stubGlobal('fetch', fetchMock);
     const store = useLobbyStore();
     await store.createGame();

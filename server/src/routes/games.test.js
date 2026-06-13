@@ -136,13 +136,13 @@ beforeEach(() => {
 });
 
 describe('POST /api/v1/games', () => {
-  it('returns 201 with id and confederate side (#407)', async () => {
+  it('returns 201 with id and union side for creator (#549)', async () => {
     const app = await buildApp();
     const res = await request(app).post('/api/v1/games').send({});
     expect(res.status).toBe(201);
     expect(typeof res.body.id).toBe('string');
     expect(res.body.id.length).toBeGreaterThan(0);
-    expect(res.body.side).toBe('confederate');
+    expect(res.body.side).toBe('union');
   });
 
   it('calls createGame before saveGame (#ARCH-H4)', async () => {
@@ -162,12 +162,12 @@ describe('POST /api/v1/games', () => {
     expect(createGame).toHaveBeenCalledOnce();
   });
 
-  it('sets player session with confederate side for creator (#335 #407)', async () => {
+  it('sets player session with union side for creator (#549)', async () => {
     const app = await buildApp();
     await request(app).post('/api/v1/games').send({});
     expect(setPlayerSession).toHaveBeenCalledOnce();
     const [, , side] = setPlayerSession.mock.calls[0];
-    expect(side).toBe('confederate');
+    expect(side).toBe('union');
   });
 });
 

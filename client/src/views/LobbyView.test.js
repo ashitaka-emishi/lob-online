@@ -101,12 +101,20 @@ describe('LobbyView', () => {
     expect(joinGame).toHaveBeenCalledWith('g1', 'confederate');
   });
 
-  it('join buttons are disabled for active (full) games (#407)', () => {
+  it('USA and CSA buttons are enabled for active games — side-entry is always available (#549)', () => {
     const wrapper = mountLobby({
       games: [{ id: 'g2', status: 'active' }],
     });
-    expect(wrapper.find('[data-testid="join-usa-btn"]').attributes('disabled')).toBeDefined();
-    expect(wrapper.find('[data-testid="join-csa-btn"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.find('[data-testid="join-usa-btn"]').attributes('disabled')).toBeUndefined();
+    expect(wrapper.find('[data-testid="join-csa-btn"]').attributes('disabled')).toBeUndefined();
+  });
+
+  it('USA and CSA buttons are enabled for open games (#549)', () => {
+    const wrapper = mountLobby({
+      games: [{ id: 'g1', status: 'open' }],
+    });
+    expect(wrapper.find('[data-testid="join-usa-btn"]').attributes('disabled')).toBeUndefined();
+    expect(wrapper.find('[data-testid="join-csa-btn"]').attributes('disabled')).toBeUndefined();
   });
 
   it('shows "Waiting for player" for open games and "In progress" for active (#407)', () => {
