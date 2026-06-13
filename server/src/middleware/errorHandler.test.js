@@ -1,9 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 
 import { ModuleNotFoundError } from '../utils/moduleFolders.js';
 import { errorHandler } from './errorHandler.js';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 function buildApp(throwFn) {
   const app = express();
@@ -28,12 +32,15 @@ describe('global error handler (#545)', () => {
     expect(res.body).toEqual({ error: 'Not found' });
   });
 
-  it('returns 500 JSON for generic errors', async () => {
+  it('returns 500 JSON for generic errors and logs the error', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const err = new Error('something broke');
     const app = buildApp(() => {
-      throw new Error('something broke');
+      throw err;
     });
     const res = await request(app).get('/test');
     expect(res.status).toBe(500);
     expect(res.body).toEqual({ error: 'Internal server error' });
+    expect(consoleSpy).toHaveBeenCalledWith('[server] unhandled error:', err);
   });
 });

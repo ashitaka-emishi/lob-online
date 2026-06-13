@@ -350,7 +350,7 @@ function updateField(path, value) {
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 onMounted(fetchScenarioData);
-watch(moduleSlug, fetchScenarioData);
+watch([moduleSlug, scenarioSlug], fetchScenarioData);
 </script>
 
 <template>
