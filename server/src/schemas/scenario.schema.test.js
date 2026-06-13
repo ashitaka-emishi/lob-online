@@ -77,6 +77,14 @@ describe('ScenarioSchema — backward compatibility', () => {
     });
     expect(result.success).toBe(true);
   });
+
+  it('rejects totalTurns: -1 (constraint still enforced when field is present #533)', () => {
+    const result = ScenarioSchema.safeParse({
+      ...BASE,
+      turnStructure: { ...BASE.turnStructure, totalTurns: -1 },
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('ScenarioSchema — lightingSchedule validation', () => {

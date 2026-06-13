@@ -163,7 +163,7 @@ export function useMapPersistence({
   // #529 — prefer module-scoped API when a slug is provided; unref supports computed refs (#542)
   const mapApiUrl = computed(() => {
     const slug = unref(moduleSlug);
-    return slug ? `/api/v1/modules/${slug}/map` : '/api/tools/map-editor/data';
+    return slug ? `/api/v1/modules/${encodeURIComponent(slug)}/map` : '/api/tools/map-editor/data';
   });
 
   async function fetchServerData() {

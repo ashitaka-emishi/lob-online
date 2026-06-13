@@ -10,16 +10,16 @@ import ConfirmDialog from '../../components/ConfirmDialog.vue';
 const store = useOobStore();
 const activeSide = ref('union');
 const route = useRoute();
-// #542 — reactive so in-page slug changes (future nav) trigger a fresh data load
-const _moduleSlug = computed(() => route.params.moduleSlug ?? null);
+// #542 — reactive; watch below re-fetches on slug change
+const moduleSlug = computed(() => route.params.moduleSlug ?? null);
 
 function loadForSlug(slug) {
   if (slug) store.loadDataForModule(slug);
   else store.loadData();
 }
 
-onMounted(() => loadForSlug(_moduleSlug.value));
-watch(_moduleSlug, (slug) => loadForSlug(slug));
+onMounted(() => loadForSlug(moduleSlug.value));
+watch(moduleSlug, (slug) => loadForSlug(slug));
 
 function handlePull() {
   store.requestPull();

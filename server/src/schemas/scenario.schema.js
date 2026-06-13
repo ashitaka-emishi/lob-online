@@ -120,6 +120,7 @@ export const ScenarioSchema = z.object({
     lastTurn: TimeStr,
     // #533 — totalTurns is now derived from firstTurn/lastTurn on the client; deprecated here.
     // Accepted as optional so scaffold files that still carry it pass validation.
+    // Remove once all scaffold scenario.json files drop the field.
     totalTurns: z.number().int().positive().optional(),
     firstPlayer: z.enum(['union', 'confederate']),
     date: z.string(),

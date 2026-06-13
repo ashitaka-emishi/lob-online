@@ -1,21 +1,21 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import EditorNav from '../../components/EditorNav.vue';
 import { MINUTES_PER_CONDITION, MINUTES_PER_CONDITION_DEFAULT } from '../../config/turnTime.js';
 import { VISIBILITY_UNLIMITED } from '../../config/visibility.js';
 
-const _route = useRoute();
-// #542 — reactive so in-page slug changes (future nav) don't stale the URL
-const _moduleSlug = computed(() => _route.params.moduleSlug ?? null);
-const _scenarioSlug = computed(() => _route.params.scenarioSlug ?? 'full-battle');
+const route = useRoute();
+// #542 — reactive; watch below re-fetches on slug change
+const moduleSlug = computed(() => route.params.moduleSlug ?? null);
+const scenarioSlug = computed(() => route.params.scenarioSlug ?? 'full-battle');
 
 const STORAGE_KEY = 'lob-scenario-editor-south-mountain-v3';
 // #529 — prefer module/scenario-scoped API when route params are present
 const API_URL = computed(() =>
-  _moduleSlug.value
-    ? `/api/v1/modules/${_moduleSlug.value}/scenarios/${_scenarioSlug.value}/scenario`
+  moduleSlug.value
+    ? `/api/v1/modules/${encodeURIComponent(moduleSlug.value)}/scenarios/${encodeURIComponent(scenarioSlug.value)}/scenario`
     : '/api/tools/scenario-editor/data'
 );
 
@@ -350,6 +350,7 @@ function updateField(path, value) {
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 onMounted(fetchScenarioData);
+watch(moduleSlug, fetchScenarioData);
 </script>
 
 <template>

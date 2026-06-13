@@ -3,15 +3,7 @@ import express from 'express';
 import request from 'supertest';
 
 import { ModuleNotFoundError } from '../utils/moduleFolders.js';
-
-// Mirrors the global error handler registered in server.js (#545).
-// Tested here in isolation so changes to the handler are caught without a full integration boot.
-function errorHandler(err, _req, res, _next) {
-  if (err instanceof ModuleNotFoundError) {
-    return res.status(404).json({ error: 'Not found' });
-  }
-  res.status(500).json({ error: 'Internal server error' });
-}
+import { errorHandler } from './errorHandler.js';
 
 function buildApp(throwFn) {
   const app = express();

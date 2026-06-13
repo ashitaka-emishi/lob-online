@@ -61,7 +61,6 @@ const VALID_SCENARIO = {
   turnStructure: {
     firstTurn: '09:00',
     lastTurn: '18:00',
-    totalTurns: 36,
     firstPlayer: 'union',
     date: 'TBD',
   },
