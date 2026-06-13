@@ -14,7 +14,16 @@ vi.mock('fs/promises', () => ({
 // eslint-disable-next-line import/order
 import { readFile, writeFile as _writeFile } from 'fs/promises';
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  // Most tests exercise write routes — set the editor flag by default.
+  // The guard test suite overrides this per-test.
+  process.env.MAP_EDITOR_ENABLED = 'true';
+});
+
+afterEach(() => {
+  delete process.env.MAP_EDITOR_ENABLED;
+});
 
 const VALID_MAP = {
   _status: 'scaffold',
@@ -90,6 +99,25 @@ async function buildApp() {
   app.use('/', router);
   return app;
 }
+
+// ── editor-guard ──────────────────────────────────────────────────────────────
+
+describe('write routes require MAP_EDITOR_ENABLED', () => {
+  it('returns 404 on PUT when MAP_EDITOR_ENABLED is not set', async () => {
+    delete process.env.MAP_EDITOR_ENABLED;
+    const app = await buildApp();
+    const res = await request(app).put('/SM/map').send(VALID_MAP);
+    expect(res.status).toBe(404);
+  });
+
+  it('allows PUT when MAP_EDITOR_ENABLED=true', async () => {
+    // MAP_EDITOR_ENABLED already set to 'true' by beforeEach
+    readFile.mockResolvedValue(JSON.stringify(VALID_MAP));
+    const app = await buildApp();
+    const res = await request(app).put('/SM/map').send(VALID_MAP);
+    expect(res.status).toBe(200);
+  });
+});
 
 // ── map ───────────────────────────────────────────────────────────────────────
 

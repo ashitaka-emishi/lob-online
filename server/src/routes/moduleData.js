@@ -19,6 +19,14 @@ const DATA_ROOT = resolve(join(_dirname, '../../../data/modules'));
 
 const router = Router();
 
+// Guard write routes behind MAP_EDITOR_ENABLED — same pattern as other editor routes (#540)
+router.use((req, res, next) => {
+  if (req.method !== 'GET' && process.env.MAP_EDITOR_ENABLED !== 'true') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  return next();
+});
+
 const limiter = rateLimit({
   windowMs: 60_000,
   max: 60,
