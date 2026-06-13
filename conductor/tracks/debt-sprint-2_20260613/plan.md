@@ -123,21 +123,21 @@ patterns added in M5–M5.5 that the agent should be aware of when advising on f
 
 ### Tasks
 
-- [ ] Task 4.1: Add to the Known South Mountain Rule Overrides table (or a new "Implemented
+- [x] Task 4.1: Add to the Known South Mountain Rule Overrides table (or a new "Implemented
       Rule References" section): fog/rain condition turn durations (LOB §1.1 — inherits base
       15-min duration, no separate clause), VISIBILITY_UNLIMITED sentinel 999 (LOB §6.1),
       lightingSchedule schema with startTurn uniqueness enforcement.
-- [ ] Task 4.2: Add a note on the sister-module pattern (server `engine/turnTime.js` +
+- [x] Task 4.2: Add a note on the sister-module pattern (server `engine/turnTime.js` +
       client `config/turnTime.js`, `config/visibility.js`) so future agents know where to
       look when advising on turn-time or visibility constant changes.
-- [ ] Task 4.3: Review the Data Files table — update paths if any moved to `data/modules/`
+- [x] Task 4.3: Review the Data Files table — update paths if any moved to `data/modules/`
       structure (previously pointed at `data/scenarios/south-mountain/`).
-- [ ] Task 4.4: Run Prettier: `npx prettier --write docs/agents/domain-expert/design.md`.
+- [x] Task 4.4: Run Prettier: `npx prettier --write docs/agents/domain-expert/design.md`.
 
 ### Verification
 
-- [ ] `npm run format:check` passes
-- [ ] Domain-expert design doc accurately reflects current data file paths and rule additions
+- [x] `npm run format:check` passes
+- [x] Domain-expert design doc accurately reflects current data file paths and rule additions
 
 ---
 
