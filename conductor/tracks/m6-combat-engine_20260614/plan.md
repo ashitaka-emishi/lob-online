@@ -94,7 +94,7 @@ Implement `FIRE_COMBAT` action — the primary combat mechanism (LOB §5).
 
 ### Tasks
 
-- [ ] Task 2.1: Create `server/src/engine/actions/fireCombat.js`.
+- [x] Task 2.1: Create `server/src/engine/actions/fireCombat.js`.
   - Payload schema: `{ attackerHex: HexId, defenderHex: HexId, weaponType: string }`.
   - Validate LOS from `engine/los.js` between attacker and defender hexes.
   - Validate range: compute hex distance, check against weapon max range from `engine/tables/weapons.js`.
@@ -108,12 +108,12 @@ Implement `FIRE_COMBAT` action — the primary combat mechanism (LOB §5).
   - Update attacker `ammo` if depletion triggered (LOB §5.8).
   - Set attacker `depletionMarker: true` on depletion trigger.
   - Add rule-reference comments for every shift and table call.
-- [ ] Task 2.2: Wire OOB side-affiliation into `getValidActions` and `fireCombat.js`.
+- [x] Task 2.2: Wire OOB side-affiliation into `getValidActions` and `fireCombat.js`.
   - Load OOB data via `engine/oob.js` to resolve unit → side mapping.
   - Remove the `TODO(M6)` comment in `getValidActions` (issue #560).
   - `FIRE_COMBAT` candidates: enumerate enemy units in LOS and range of the active stack.
   - Guard attacker-is-friendly / defender-is-enemy in `fireCombat.js` handler.
-- [ ] Task 2.3: Implement Opening Volley trigger.
+- [x] Task 2.3: Implement Opening Volley trigger.
   - Opening Volley fires automatically when: (a) an enemy unit advances into contact with the
     active stack, or (b) the active stack fires immediately after a Move action this activation
     (LOB §5.4).
@@ -123,7 +123,7 @@ Implement `FIRE_COMBAT` action — the primary combat mechanism (LOB §5).
   - If Opening Volley conditions met, call `tables/combat.js` `resolveOpeningVolley()` and
     apply result before the main fire combat resolution.
   - Add `openingVolley: z.boolean()` to `activityPhase.currentActivation` schema shape.
-- [ ] Task 2.4: Write Vitest tests for `fireCombat.js`.
+- [x] Task 2.4: Write Vitest tests for `fireCombat.js`.
   - Happy path: valid LOS, valid range, correct column shifts, correct depletion behavior.
   - Error paths: no LOS, out of range, friendly fire attempt, wrong activation.
   - Opening Volley trigger: move-then-fire vs. fire-only.
@@ -131,8 +131,8 @@ Implement `FIRE_COMBAT` action — the primary combat mechanism (LOB §5).
 
 ### Verification
 
-- [ ] `npm run test` green with fire combat coverage
-- [ ] `npm run lint` zero warnings
+- [x] `npm run test` green with fire combat coverage
+- [x] `npm run lint` zero warnings
 
 ---
 
