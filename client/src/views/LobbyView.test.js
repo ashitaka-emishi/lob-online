@@ -213,4 +213,32 @@ describe('LobbyView', () => {
     expect(csaBtn.attributes('aria-label')).toContain('CSA');
     expect(csaBtn.attributes('aria-label')).toContain('Waiting for player');
   });
+
+  // #525 — disabled buttons get aria-describedby pointing to a reason span
+  it('disabled join buttons have aria-describedby referencing a reason span', () => {
+    const wrapper = mountLobby({
+      games: [{ id: 'g1', status: 'active' }],
+      canJoin: () => false,
+    });
+    const reasonId = 'join-disabled-reason-g1';
+    expect(wrapper.find(`#${reasonId}`).exists()).toBe(true);
+    expect(wrapper.find('[data-testid="join-usa-btn"]').attributes('aria-describedby')).toBe(
+      reasonId
+    );
+    expect(wrapper.find('[data-testid="join-csa-btn"]').attributes('aria-describedby')).toBe(
+      reasonId
+    );
+  });
+
+  it('enabled join buttons have no aria-describedby', () => {
+    const wrapper = mountLobby({
+      games: [{ id: 'g1', status: 'open' }],
+    });
+    expect(
+      wrapper.find('[data-testid="join-usa-btn"]').attributes('aria-describedby')
+    ).toBeUndefined();
+    expect(
+      wrapper.find('[data-testid="join-csa-btn"]').attributes('aria-describedby')
+    ).toBeUndefined();
+  });
 });
