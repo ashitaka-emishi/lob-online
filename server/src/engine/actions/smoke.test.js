@@ -22,7 +22,7 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { PHASES, STEPS } from '../../constants/phases.js';
-import { dispatch, getValidActions } from './index.js';
+import { dispatch, getValidActions, ActionError } from './index.js';
 import { saveGame, loadGame } from '../../store/gameFile.js';
 
 // ── Deterministic fixture ────────────────────────────────────────────────────
@@ -235,16 +235,21 @@ describe('Turn-loop steel-thread smoke (#554)', () => {
     const state = await loadGame(GAME_ID, dataDir);
     expect(() =>
       dispatch(state, { type: 'END_PHASE', payload: null, playerSide: 'confederate' })
-    ).toThrow();
+    ).toThrow(ActionError);
+    expect(() =>
+      dispatch(state, { type: 'END_PHASE', payload: null, playerSide: 'confederate' })
+    ).toThrow(/turn/);
   });
 
   it('dispatch throws INVALID_ACTION for an action type not valid in current state', async () => {
     const state = await loadGame(GAME_ID, dataDir);
-    // ACTIVATE_STACK is only valid in ACTIVITY/ACTIVATION, not ACTIVITY/ACTIVATION reached yet
-    // Use END_ACTIVATION which is only valid when currentActivation is non-null
+    // END_ACTIVATION is only legal when currentActivation is non-null; it is null in this state.
     expect(() =>
       dispatch(state, { type: 'END_ACTIVATION', payload: null, playerSide: 'union' })
-    ).toThrow();
+    ).toThrow(ActionError);
+    expect(() =>
+      dispatch(state, { type: 'END_ACTIVATION', payload: null, playerSide: 'union' })
+    ).toThrow(/not valid in the current state/);
   });
 
   it('saveGame throws on stale version conflict (optimistic-concurrency contract)', async () => {
