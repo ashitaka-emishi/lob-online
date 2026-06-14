@@ -5,6 +5,7 @@ import { handleEndPhase } from './endPhase.js';
 import { handleRollInitiative, handleIssueOrder } from './issueOrder.js';
 import { handleActivateStack } from './activateStack.js';
 import { handleEndActivation } from './endActivation.js';
+import { handleFireCombat } from './fireCombat.js';
 
 export { ActionError };
 
@@ -87,6 +88,7 @@ export const ACTION_HANDLERS = new Map([
   ['ISSUE_ORDER', handleIssueOrder],
   ['ACTIVATE_STACK', handleActivateStack],
   ['END_ACTIVATION', handleEndActivation],
+  ['FIRE_COMBAT', handleFireCombat],
 ]);
 
 // Current auto-advance steps: attackRecovery, flukeStoppage, rally (3 steps, 8 gives headroom for M6+)
