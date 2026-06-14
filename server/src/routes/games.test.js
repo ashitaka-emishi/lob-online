@@ -383,11 +383,21 @@ describe('GET /api/v1/games/:id', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 403 when session gameId does not match the route :id (#553)', async () => {
+  it('returns 403 when session gameId does not match the route :id — does not hit the DB (#553)', async () => {
     getPlayerSession.mockReturnValue({ gameId: 'other-game', side: 'union', token: 'tok-1' });
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
     expect(res.status).toBe(403);
+    expect(getGame).not.toHaveBeenCalled();
+    expect(loadGame).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when same-game session has invalid sideToken (#553)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'stale-token' });
+    const app = await buildApp();
+    const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
+    expect(res.status).toBe(403);
+    expect(loadGame).not.toHaveBeenCalled();
   });
 
   it('returns 404 for unknown game id (authenticated player) (#330)', async () => {
@@ -458,13 +468,26 @@ describe('POST /api/v1/games/:id/actions', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 403 when session gameId does not match route :id (#553)', async () => {
+  it('returns 403 when session gameId does not match route :id — does not hit DB (#553)', async () => {
     getPlayerSession.mockReturnValue({ gameId: 'other-game', side: 'union', token: 'tok' });
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/actions`)
       .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
     expect(res.status).toBe(403);
+    expect(getGame).not.toHaveBeenCalled();
+    expect(loadGame).not.toHaveBeenCalled();
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when same-game session has invalid sideToken (#553)', async () => {
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'stale-token' });
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 0 });
+    expect(res.status).toBe(403);
+    expect(dispatch).not.toHaveBeenCalled();
   });
 
   it('returns 403 when authenticated player for game A posts action to game B (#553)', async () => {

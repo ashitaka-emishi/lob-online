@@ -117,6 +117,26 @@ describe('LobbyView', () => {
     expect(wrapper.find('[data-testid="join-csa-btn"]').attributes('disabled')).toBeUndefined();
   });
 
+  it('"USA" button fires joinGame on an active game — side-entry always available (#549)', async () => {
+    const joinGame = vi.fn();
+    const wrapper = mountLobby({
+      games: [{ id: 'g2', status: 'active' }],
+      joinGame,
+    });
+    await wrapper.find('[data-testid="join-usa-btn"]').trigger('click');
+    expect(joinGame).toHaveBeenCalledWith('g2', 'union');
+  });
+
+  it('"CSA" button fires joinGame on an active game (#549)', async () => {
+    const joinGame = vi.fn();
+    const wrapper = mountLobby({
+      games: [{ id: 'g2', status: 'active' }],
+      joinGame,
+    });
+    await wrapper.find('[data-testid="join-csa-btn"]').trigger('click');
+    expect(joinGame).toHaveBeenCalledWith('g2', 'confederate');
+  });
+
   it('shows "Waiting for player" for open games and "In progress" for active (#407)', () => {
     const wrapper = mountLobby({
       games: [
