@@ -20,7 +20,7 @@ export function handleActivateStack(state, action) {
   if (activity.currentActivation !== null) {
     throw new ActionError(
       'INVALID_ACTION',
-      `Stack at '${activity.currentActivation}' is already mid-activation (LOB §3.0d)`
+      `Stack at '${activity.currentActivation.hex}' is already mid-activation (LOB §3.0d)`
     );
   }
 
@@ -31,12 +31,20 @@ export function handleActivateStack(state, action) {
     );
   }
 
-  // M5 stub: record the activation in progress; movement/combat resolved in M6
+  // LOB §3.0d — record the activation context; fire/move state tracked here through the activation
   return {
     ...state,
     activityPhase: {
       ...activity,
-      currentActivation: hex,
+      currentActivation: {
+        hex,
+        // LOB §5.4 — tracks whether this activation included a Move action (Opening Volley trigger)
+        movedThisActivation: false,
+        // LOB §5.4 — set to true when Opening Volley fires this activation
+        openingVolley: false,
+        // LOB §9.1e — set to true when Zero Rule MA roll produces a zero result
+        zeroRuleFired: false,
+      },
     },
   };
 }

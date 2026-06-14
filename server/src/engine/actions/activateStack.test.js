@@ -24,10 +24,15 @@ const ACTIVITY_STATE = {
 };
 
 describe('handleActivateStack', () => {
-  it('sets currentActivation to the given hex', () => {
+  it('sets currentActivation to an object with the hex and default flags', () => {
     const action = { type: 'ACTIVATE_STACK', payload: { hex: '29.22' } };
     const result = handleActivateStack(ACTIVITY_STATE, action);
-    expect(result.activityPhase.currentActivation).toBe('29.22');
+    expect(result.activityPhase.currentActivation).toEqual({
+      hex: '29.22',
+      movedThisActivation: false,
+      openingVolley: false,
+      zeroRuleFired: false,
+    });
   });
 
   it('does not add the hex to activatedUnits yet (activation not complete)', () => {
@@ -39,7 +44,15 @@ describe('handleActivateStack', () => {
   it('throws INVALID_ACTION when another stack is mid-activation (LOB §3.0d)', () => {
     const state = {
       ...ACTIVITY_STATE,
-      activityPhase: { activatedUnits: [], currentActivation: '10.10' },
+      activityPhase: {
+        activatedUnits: [],
+        currentActivation: {
+          hex: '10.10',
+          movedThisActivation: false,
+          openingVolley: false,
+          zeroRuleFired: false,
+        },
+      },
     };
     const action = { type: 'ACTIVATE_STACK', payload: { hex: '29.22' } };
     expect(() => handleActivateStack(state, action)).toThrow(ActionError);

@@ -233,7 +233,15 @@ describe('getValidActions', () => {
   it('returns only END_ACTIVATION when a stack is mid-activation', () => {
     const state = {
       ...ACTIVITY_STATE,
-      activityPhase: { activatedUnits: [], currentActivation: '29.22' },
+      activityPhase: {
+        activatedUnits: [],
+        currentActivation: {
+          hex: '29.22',
+          movedThisActivation: false,
+          openingVolley: false,
+          zeroRuleFired: false,
+        },
+      },
     };
     const actions = getValidActions(state, 'union');
     expect(actions.map((a) => a.type)).toEqual(['END_ACTIVATION']);
@@ -242,7 +250,15 @@ describe('getValidActions', () => {
   it('END_ACTIVATION has null payload (#550)', () => {
     const state = {
       ...ACTIVITY_STATE,
-      activityPhase: { activatedUnits: [], currentActivation: '29.22' },
+      activityPhase: {
+        activatedUnits: [],
+        currentActivation: {
+          hex: '29.22',
+          movedThisActivation: false,
+          openingVolley: false,
+          zeroRuleFired: false,
+        },
+      },
     };
     const actions = getValidActions(state, 'union');
     expect(actions[0].payload).toBeNull();
@@ -600,7 +616,7 @@ describe('dispatch', () => {
       payload: { hex: '29.22' },
       playerSide: 'union',
     });
-    expect(state.activityPhase.currentActivation).toBe('29.22');
+    expect(state.activityPhase.currentActivation.hex).toBe('29.22');
 
     state = dispatch(state, { type: 'END_ACTIVATION', payload: null, playerSide: 'union' });
     expect(state.activityPhase.activatedUnits).toContain('29.22');

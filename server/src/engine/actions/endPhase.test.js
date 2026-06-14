@@ -72,7 +72,15 @@ describe('handleEndPhase — Activity phase, first player done', () => {
   it('throws INVALID_ACTION when a stack is mid-activation (LOB §3.0d)', () => {
     const state = {
       ...ACTIVITY_FIRST,
-      activityPhase: { activatedUnits: [], currentActivation: '29.22' },
+      activityPhase: {
+        activatedUnits: [],
+        currentActivation: {
+          hex: '29.22',
+          movedThisActivation: false,
+          openingVolley: false,
+          zeroRuleFired: false,
+        },
+      },
     };
     expect(() => handleEndPhase(state, { type: 'END_PHASE', payload: null })).toThrow(ActionError);
     try {

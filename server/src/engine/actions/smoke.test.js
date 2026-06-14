@@ -214,7 +214,7 @@ describe('Turn-loop steel-thread smoke (#554)', () => {
       payload: activateCandidate.payload,
       playerSide: 'union',
     });
-    expect(afterActivate.activityPhase.currentActivation).toBe(activateCandidate.payload.hex);
+    expect(afterActivate.activityPhase.currentActivation.hex).toBe(activateCandidate.payload.hex);
 
     // Only END_ACTIVATION should be valid mid-activation
     const midActions = getValidActions(afterActivate, 'union');
