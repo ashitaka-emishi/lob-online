@@ -75,39 +75,39 @@ Add missing tests for #544, #547, #558, #566, #567, and verify #379 as already r
 
 ### Tasks
 
-- [ ] Task 2.1: **#379 — close as resolved.** Confirm `getValidActions` returns concrete
+- [x] Task 2.1: **#379 — close as resolved.** Confirm `getValidActions` returns concrete
       candidates for all current phases (already verified in smoke test). Close the GitHub issue
       with a comment citing the M5.5 implementation. No code change needed.
 
-- [ ] Task 2.2: **#544 — `useModuleStore` helper tests.** In
+- [x] Task 2.2: **#544 — `useModuleStore` helper tests.** In
       `client/src/stores/useModuleStore.test.js` (create if not exists), add unit tests asserting
       that `modulePath(slug)` and `defaultScenarioPath(slug)` return the expected URL strings for
       known slug values.
 
-- [ ] Task 2.3: **#547 — router legacy redirect tests.** In
+- [x] Task 2.3: **#547 — router legacy redirect tests.** In
       `client/src/router/index.test.js` (create if not exists), add tests asserting that the
       legacy redirect routes (`/map-editor` → `/modules/south-mountain/map-editor`, etc.) resolve
       to the correct destinations.
 
-- [ ] Task 2.4: **#558 — moduleSlug reactivity tests.** Add a focused component test for each
+- [x] Task 2.4: **#558 — moduleSlug reactivity tests.** Add a focused component test for each
       affected editor view (`MapEditorView`, `ScenarioEditorView`, `OobEditorView`) asserting that
       changing `route.params.moduleSlug` triggers a re-fetch with the new module URL. Mock
       `useRoute` with a reactive ref; stub the fetch/loader.
 
-- [ ] Task 2.5: **#566 — smoke test error-path coverage.** In
+- [x] Task 2.5: **#566 — smoke test error-path coverage.** In
       `server/src/engine/actions/smoke.test.js`, add three tests:
   - Wrong-side dispatch returns `ActionError` (WRONG_TURN).
   - Invalid action type dispatch returns `ActionError` (INVALID_ACTION / UNKNOWN_ACTION).
   - `saveGame` with stale `expectedVersion` throws a version-conflict error (simulate via
     direct `saveGame` + dispatch with incremented version).
 
-- [ ] Task 2.6: **#567 — smoke test round-trip assertion.** In
+- [x] Task 2.6: **#567 — smoke test round-trip assertion.** In
       `server/src/engine/actions/smoke.test.js`, add a `toMatchObject` assertion after
       `loadGame` in the file-store test verifying that all top-level fields of the loaded state
       match the fixture (id, scenarioId, schemaVersion, phase, step, activePlayer, sides, units).
 
-- [ ] Task 2.7: Run `npm run test` — all new tests must pass with no unexpected warnings.
-- [ ] Task 2.8: Close GitHub issues #379, #544, #547, #558, #566, #567 with comments.
+- [x] Task 2.7: Run `npm run test` — all new tests must pass with no unexpected warnings.
+- [x] Task 2.8: Close GitHub issues #379, #544, #547, #558, #566, #567 with comments.
 
 ### Verification
 
@@ -123,20 +123,20 @@ Fix #538 (contrast ratio) and #564 (lobby button a11y).
 
 ### Tasks
 
-- [ ] Task 3.1: **#538 — `.derived-value` contrast.** Locate the `.derived-value` CSS rule
+- [x] Task 3.1: **#538 — `.derived-value` contrast.** Locate the `.derived-value` CSS rule
       (likely in a scoped SFC style block in `ScenarioEditorView.vue` or a shared stylesheet).
       Measure the current color against its background; if below WCAG AA (4.5:1), darken the
       foreground color until compliant. Add a comment citing the target ratio.
 
-- [ ] Task 3.2: **#564 — lobby join-button a11y.** In `LobbyView.vue`, restore
+- [x] Task 3.2: **#564 — lobby join-button a11y.** In `LobbyView.vue`, restore
       `aria-disabled` (and optionally `disabled`) on USA/CSA buttons when joining would fail (e.g.,
       the game is full or the session already holds a side). Add an `aria-describedby` or
       `aria-label` that references the status badge. Add/update component tests covering:
   - Button has `aria-disabled="true"` when disabled condition applies.
   - Button has `aria-disabled="false"` (or attribute absent) when joinable.
 
-- [ ] Task 3.3: Run `npm run quality:strict` — all gates must pass.
-- [ ] Task 3.4: Close GitHub issues #538 and #564 with comments.
+- [x] Task 3.3: Run `npm run quality:strict` — all gates must pass.
+- [x] Task 3.4: Close GitHub issues #538 and #564 with comments.
 
 ### Verification
 

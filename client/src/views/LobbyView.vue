@@ -29,10 +29,20 @@
               <span :class="['status-badge', game.status]">{{ statusLabel(game.status) }}</span>
             </td>
             <td class="join-actions">
-              <button data-testid="join-usa-btn" @click="store.joinGame(game.id, 'union')">
+              <button
+                data-testid="join-usa-btn"
+                :aria-disabled="joinDisabled(game)"
+                :aria-label="`Join game ${game.id} as USA — ${statusLabel(game.status)}`"
+                @click="store.joinGame(game.id, 'union')"
+              >
                 USA
               </button>
-              <button data-testid="join-csa-btn" @click="store.joinGame(game.id, 'confederate')">
+              <button
+                data-testid="join-csa-btn"
+                :aria-disabled="joinDisabled(game)"
+                :aria-label="`Join game ${game.id} as CSA — ${statusLabel(game.status)}`"
+                @click="store.joinGame(game.id, 'confederate')"
+              >
                 CSA
               </button>
             </td>
@@ -64,6 +74,14 @@ function statusLabel(status) {
   if (status === 'open') return 'Waiting for player';
   if (status === 'active') return 'In progress';
   return status;
+}
+
+// Returns true when joining this game would fail (game full or session already committed elsewhere).
+// Used for aria-disabled — buttons remain clickable for the single-tester dev flow.
+function joinDisabled(game) {
+  if (game.status !== 'open') return true;
+  if (store.myGameId !== null && store.myGameId !== game.id) return true;
+  return false;
 }
 </script>
 

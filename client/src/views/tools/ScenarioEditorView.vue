@@ -728,12 +728,12 @@ watch([moduleSlug, scenarioSlug], fetchScenarioData);
 }
 
 .derived-label {
-  color: #707060;
+  color: #a09880; /* WCAG AA ≥4.5:1 against #222/#2a2a2a panel backgrounds */
 }
 
 .derived-value {
   font-size: 0.82rem;
-  color: #707060;
+  color: #a09880; /* WCAG AA ≥4.5:1 against #222/#2a2a2a panel backgrounds */
 }
 
 .field-grid input[type='text'],

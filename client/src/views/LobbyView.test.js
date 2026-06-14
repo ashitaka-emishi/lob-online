@@ -163,4 +163,43 @@ describe('LobbyView', () => {
     const wrapper = mountLobby({ error: 'Failed to create game: 500' });
     expect(wrapper.text()).toContain('Failed to create game');
   });
+
+  // #564 — aria-disabled: programmatic disabled state for screen readers
+  it('USA/CSA buttons have aria-disabled="true" for active (full) games', () => {
+    const wrapper = mountLobby({
+      games: [{ id: 'g2', status: 'active' }],
+    });
+    expect(wrapper.find('[data-testid="join-usa-btn"]').attributes('aria-disabled')).toBe('true');
+    expect(wrapper.find('[data-testid="join-csa-btn"]').attributes('aria-disabled')).toBe('true');
+  });
+
+  it('USA/CSA buttons have aria-disabled="false" for open games with no session', () => {
+    const wrapper = mountLobby({
+      games: [{ id: 'g1', status: 'open' }],
+      myGameId: null,
+    });
+    expect(wrapper.find('[data-testid="join-usa-btn"]').attributes('aria-disabled')).toBe('false');
+    expect(wrapper.find('[data-testid="join-csa-btn"]').attributes('aria-disabled')).toBe('false');
+  });
+
+  it('USA/CSA buttons have aria-disabled="true" when session is committed to a different game', () => {
+    const wrapper = mountLobby({
+      games: [{ id: 'g1', status: 'open' }],
+      myGameId: 'other-game',
+    });
+    expect(wrapper.find('[data-testid="join-usa-btn"]').attributes('aria-disabled')).toBe('true');
+    expect(wrapper.find('[data-testid="join-csa-btn"]').attributes('aria-disabled')).toBe('true');
+  });
+
+  it('USA/CSA buttons include game id and status in aria-label', () => {
+    const wrapper = mountLobby({
+      games: [{ id: 'g1', status: 'open' }],
+    });
+    const usaBtn = wrapper.find('[data-testid="join-usa-btn"]');
+    const csaBtn = wrapper.find('[data-testid="join-csa-btn"]');
+    expect(usaBtn.attributes('aria-label')).toContain('g1');
+    expect(usaBtn.attributes('aria-label')).toContain('USA');
+    expect(csaBtn.attributes('aria-label')).toContain('g1');
+    expect(csaBtn.attributes('aria-label')).toContain('CSA');
+  });
 });
