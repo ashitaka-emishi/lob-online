@@ -25,6 +25,7 @@ Navigation hub for project context.
 | [debt-sprint-to-10_20260605](./tracks/debt-sprint-to-10_20260605/index.md)             | Debt Sprint — Score 32 → 10                                              | Pending  |
 | [pre-m6-debt-sprint_20260613](./tracks/pre-m6-debt-sprint_20260613/index.md)           | Pre-M6 Debt Sprint — Score 3+ and Low-Hanging Fruit                      | Complete |
 | [debt-sprint-2_20260613](./tracks/debt-sprint-2_20260613/index.md)                     | Pre-M6 Debt Sprint #2 — Debt, Doc Sync, Stubs                            | Pending  |
+| [m6-combat-engine_20260614](./tracks/m6-combat-engine_20260614/index.md)               | M6 Combat Engine — Fire, Melee, Morale, Rally                            | Pending  |
 
 ## All Tracks
 
