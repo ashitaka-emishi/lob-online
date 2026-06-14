@@ -1,0 +1,16 @@
+{
+  "id": "closeout-debt-sprint_20260614",
+  "title": "Conductor Closeout + Debt Sprint — Score 33 → 21",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-06-14T14:50:29Z",
+  "updated": "2026-06-14T14:50:29Z",
+  "phases": {
+    "total": 4,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 20,
+    "completed": 0
+  }
+}
