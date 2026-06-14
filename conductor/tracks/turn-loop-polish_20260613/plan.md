@@ -3,7 +3,7 @@
 **Track ID:** turn-loop-polish_20260613
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-13
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -21,12 +21,12 @@ Three independent tasks that seal M5.5: an E2E smoke test (#554) exercising the 
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -34,11 +34,11 @@ Three independent tasks that seal M5.5: an E2E smoke test (#554) exercising the 
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated if any debt was accepted
-- [ ] Ready for `/team-review`
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated if any debt was accepted
+- [x] Ready for `/team-review`
 
 ---
 
@@ -48,14 +48,14 @@ Write `docs/designs/action-contract.md` covering the full engine → API → sto
 
 ### Tasks
 
-- [ ] Task 1.1: Read `engine/phase.js`, `server/src/routes/games.js`, `useGameStore`, `ActionPanel.vue` to gather current facts
-- [ ] Task 1.2: Write `docs/designs/action-contract.md` with: valid action shape, payload expectations per action type, server-authoritative boundary, client vs. engine responsibility, socket refresh behavior, version/concurrency expectations, M5.5 limitations, M6 handoff
-- [ ] Task 1.3: Verify doc is accurate against code (no stale facts)
+- [x] Task 1.1: Read `engine/phase.js`, `server/src/routes/games.js`, `useGameStore`, `ActionPanel.vue` to gather current facts
+- [x] Task 1.2: Write `docs/designs/action-contract.md` with: valid action shape, payload expectations per action type, server-authoritative boundary, client vs. engine responsibility, socket refresh behavior, version/concurrency expectations, M5.5 limitations, M6 handoff
+- [x] Task 1.3: Verify doc is accurate against code (no stale facts)
 
 ### Verification
 
-- [ ] `docs/designs/action-contract.md` exists and covers all spec criteria
-- [ ] Doc reviewed against current code for accuracy
+- [x] `docs/designs/action-contract.md` exists and covers all spec criteria
+- [x] Doc reviewed against current code for accuracy
 
 ---
 
@@ -65,19 +65,19 @@ Replace `disabled` with `aria-disabled` + click guard on ActionPanel submission 
 
 ### Tasks
 
-- [ ] Task 2.1: Write failing tests for focus preservation when pending-action state activates
-- [ ] Task 2.2: Write failing tests for `aria-live` announcement of pending and complete states
-- [ ] Task 2.3: Replace `disabled` button attribute with `aria-disabled="true"` + click guard in `ActionPanel.vue`
-- [ ] Task 2.4: Add `aria-live="polite"` region for pending/complete status announcements
-- [ ] Task 2.5: Verify reduced-motion CSS is not affected
-- [ ] Task 2.6: Run `npm run test` — all ActionPanel tests pass
+- [x] Task 2.1: Write failing tests for focus preservation when pending-action state activates
+- [x] Task 2.2: Write failing tests for `aria-live` announcement of pending and complete states
+- [x] Task 2.3: Replace `disabled` button attribute with `aria-disabled="true"` + click guard in `ActionPanel.vue`
+- [x] Task 2.4: Add `aria-live="polite"` region for pending/complete status announcements
+- [x] Task 2.5: Verify reduced-motion CSS is not affected
+- [x] Task 2.6: Run `npm run test` — all ActionPanel tests pass
 
 ### Verification
 
-- [ ] Focus tests pass
-- [ ] aria-live announcement tests pass
-- [ ] Reduced-motion behavior unchanged
-- [ ] No ActionPanel regression
+- [x] Focus tests pass
+- [x] aria-live announcement tests pass
+- [x] Reduced-motion behavior unchanged
+- [x] No ActionPanel regression
 
 ---
 
@@ -87,31 +87,31 @@ Add a server-side integration test (Vitest, real in-memory game) that exercises 
 
 ### Tasks
 
-- [ ] Task 3.1: Create deterministic test fixture (fixed seed game state covering at least one full phase)
-- [ ] Task 3.2: Write smoke test: create game, verify initial state, verify counters data
-- [ ] Task 3.3: Extend smoke test: select a unit, verify unit detail fields
-- [ ] Task 3.4: Extend smoke test: verify `ActionPanel` action list populated
-- [ ] Task 3.5: Extend smoke test: submit a payload-bearing action, verify state version increments, verify valid actions refresh
-- [ ] Task 3.6: Extend smoke test with second-client socket verification if practical (mock socket or second session)
-- [ ] Task 3.7: Add `npm run test:smoke` script or document the exact `vitest --reporter verbose` command
-- [ ] Task 3.8: Run `npm run quality:strict` — all gates must pass
+- [x] Task 3.1: Create deterministic test fixture (fixed seed game state covering at least one full phase)
+- [x] Task 3.2: Write smoke test: create game, verify initial state, verify counters data
+- [x] Task 3.3: Extend smoke test: select a unit, verify unit detail fields
+- [x] Task 3.4: Extend smoke test: verify `ActionPanel` action list populated
+- [x] Task 3.5: Extend smoke test: submit a payload-bearing action, verify state version increments, verify valid actions refresh
+- [x] Task 3.6: Extend smoke test with second-client socket verification if practical — skipped (socket events are a server-process concern; in-memory dispatch loop covers the contract fully; see action-contract.md §6)
+- [x] Task 3.7: Add `npm run test:smoke` script or document the exact `vitest --reporter verbose` command
+- [x] Task 3.8: Run `npm run quality:strict` — all gates must pass
 
 ### Verification
 
-- [ ] Smoke test runs deterministically
-- [ ] All smoke test acceptance criteria pass
-- [ ] Run command is documented
-- [ ] `npm run quality:strict` clean
+- [x] Smoke test runs deterministically
+- [x] All smoke test acceptance criteria pass
+- [x] Run command is documented
+- [x] `npm run quality:strict` clean
 
 ---
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met
-- [ ] `npm run quality:strict` passes
-- [ ] No unexpected test warnings
-- [ ] M5.5 sealed — ready for M6
-- [ ] Ready for `/team-review`
+- [x] All acceptance criteria in spec.md met
+- [x] `npm run quality:strict` passes
+- [x] No unexpected test warnings
+- [x] M5.5 sealed — ready for M6
+- [x] Ready for `/team-review`
 
 ---
 
