@@ -95,7 +95,7 @@ const MOCK_OOB = {
 const BASE_STATE = {
   id: 'g1',
   scenarioId: 'south-mountain',
-  schemaVersion: 2,
+  schemaVersion: 3,
   version: 1,
   turn: 1,
   phase: 'activity',

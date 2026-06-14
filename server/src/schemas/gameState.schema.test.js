@@ -29,7 +29,7 @@ const BASE_UNIT = {
 const BASE_GAME_STATE = {
   id: 'game-abc123',
   scenarioId: 'south-mountain',
-  schemaVersion: 2,
+  schemaVersion: 3,
   version: 0,
   turn: 1,
   phase: null,
@@ -174,7 +174,7 @@ describe('UnitStateSchema', () => {
 });
 
 describe('MoraleState enum exhaustiveness', () => {
-  const validStates = ['normal', 'bloodLust', 'shaken', 'DG', 'routed'];
+  const validStates = ['normal', 'bloodlust', 'shaken', 'disorganized', 'routed'];
   for (const state of validStates) {
     it(`accepts moraleState: '${state}'`, () => {
       expect(MoraleState.safeParse(state).success).toBe(true);

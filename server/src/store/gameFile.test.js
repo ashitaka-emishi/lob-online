@@ -13,7 +13,7 @@ import { loadGame, saveGame } from './gameFile.js';
 const BASE_VERSIONED_STATE = {
   id: 'vtest',
   scenarioId: 'south-mountain',
-  schemaVersion: 2,
+  schemaVersion: 3,
   version: 0,
   turn: 1,
   phase: null,
@@ -104,7 +104,7 @@ describe('loadGame', () => {
     const state = {
       id: 'game2',
       scenarioId: 'south-mountain',
-      schemaVersion: 2,
+      schemaVersion: 3,
       version: 0,
       turn: 3,
       phase: 'command',
@@ -132,7 +132,7 @@ describe('loadGame', () => {
     const state = {
       id: 'rt1',
       scenarioId: 'south-mountain',
-      schemaVersion: 2,
+      schemaVersion: 3,
       version: 0,
       turn: 1,
       phase: null,
@@ -186,7 +186,7 @@ describe('loadGame — schemaVersion guard (#363)', () => {
   it('throws a descriptive error when saved file has wrong schemaVersion', async () => {
     const { writeFileSync, mkdirSync } = await import('node:fs');
     mkdirSync(join(tmpDir, 'stale-wrong'), { recursive: true });
-    const staleSave = { ...BASE_VERSIONED_STATE, schemaVersion: 3 };
+    const staleSave = { ...BASE_VERSIONED_STATE, schemaVersion: 4 };
     writeFileSync(join(tmpDir, 'stale-wrong', 'state.json'), JSON.stringify(staleSave));
     await expect(loadGame('stale-wrong', tmpDir)).rejects.toThrow(/schemaVersion/i);
   });
@@ -200,7 +200,7 @@ describe('loadGame — schemaVersion guard (#363)', () => {
   });
 
   it('loads successfully when schemaVersion matches', async () => {
-    await saveGame('sv-ok', { ...BASE_VERSIONED_STATE, schemaVersion: 2 }, tmpDir);
+    await saveGame('sv-ok', { ...BASE_VERSIONED_STATE, schemaVersion: 3 }, tmpDir);
     await expect(loadGame('sv-ok', tmpDir)).resolves.toMatchObject({ id: 'vtest' });
   });
 

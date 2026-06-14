@@ -46,7 +46,14 @@ const VALID_LEADER_SITUATIONS = new Set(['other', 'capture', 'defender', 'attack
 const VALID_ARMY_CO_TYPES = new Set(Object.keys(AWARENESS_TURNS));
 const VALID_DISTANCE_CATEGORIES = new Set(Object.keys(DISTANCE_TURNS));
 const VALID_DIVISION_STATUSES = new Set(['clean', 'wrecked', 'dead']);
-const VALID_INCOMING_RESULTS = new Set(['bl', 'normal', 'shaken', 'dg', 'rout', 'townHex']);
+const VALID_INCOMING_RESULTS = new Set([
+  'bloodlust',
+  'normal',
+  'shaken',
+  'disorganized',
+  'routed',
+  'townHex',
+]);
 
 // ─── Validation helpers ───────────────────────────────────────────────────────
 

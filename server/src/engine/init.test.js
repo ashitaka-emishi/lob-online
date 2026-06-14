@@ -400,9 +400,9 @@ describe('initGameState — reinforcement orderType propagation (#360)', () => {
 
 // #363 — schemaVersion must be present in initGameState output
 describe('initGameState — schemaVersion (#363)', () => {
-  it('output includes schemaVersion: 2', () => {
+  it('output includes schemaVersion: 3', () => {
     const state = initGameState(SCENARIO, 'g1');
-    expect(state.schemaVersion).toBe(2);
+    expect(state.schemaVersion).toBe(3);
   });
 });
 

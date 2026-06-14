@@ -49,7 +49,7 @@ const BASE_UNIT = {
 const ACTIVE_STATE = {
   id: GAME_ID,
   scenarioId: 'south-mountain',
-  schemaVersion: 2,
+  schemaVersion: 3,
   version: 1,
   turn: 1,
   phase: PHASES.COMMAND,
@@ -275,7 +275,7 @@ describe('Turn-loop steel-thread smoke (#554)', () => {
       expect(loaded).toMatchObject({
         id: GAME_ID,
         scenarioId: 'south-mountain',
-        schemaVersion: 2,
+        schemaVersion: 3,
         phase: expect.any(String),
         step: expect.any(String),
         activePlayer: expect.any(String),

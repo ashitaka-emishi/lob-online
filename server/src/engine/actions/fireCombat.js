@@ -158,7 +158,7 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
     if (!oobUnit) continue;
     const printedSPs = oobUnit.strengthPoints;
     // LOB §5.3 — DG state halves SP contribution (round down)
-    effectiveSPs += du.moraleState === 'DG' ? Math.floor(printedSPs / 2) : printedSPs;
+    effectiveSPs += du.moraleState === 'disorganized' ? Math.floor(printedSPs / 2) : printedSPs;
   }
 
   // LOB §5.6 — column shifts
@@ -181,7 +181,7 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
   }
 
   // LOB §5.6 — target-state shifts
-  const defenderIsDG = defenderUnits.some((u) => u.moraleState === 'DG');
+  const defenderIsDG = defenderUnits.some((u) => u.moraleState === 'disorganized');
   // TODO(M7): isRear, hasProtectiveTerrain, isOpenOrderCapable require terrain/facing queries
   netColumnShifts += targetStateShift({
     isRear: false,

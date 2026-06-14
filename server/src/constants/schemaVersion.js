@@ -5,4 +5,6 @@
 // v2 (M6): added depletionMarker (LOB §5.8) and cbfMarker (LOB §8.1) to UnitStateSchema;
 //          added moraleCheck, closingRoll, combatResult to PendingResolutionSchema type enum;
 //          added rallyPhase envelope to GameStateSchema.
-export const STATE_SCHEMA_VERSION = 2;
+// v3 (M6): MoraleState renamed to full words — 'bloodLust'→'bloodlust', 'DG'→'disorganized';
+//          morale table internal codes aligned to match schema vocabulary.
+export const STATE_SCHEMA_VERSION = 3;

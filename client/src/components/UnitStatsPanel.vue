@@ -21,9 +21,9 @@ const emit = defineEmits(['select-unit']);
 
 const MORALE_LABELS = {
   normal: 'Normal',
-  bloodLust: 'Blood Lust',
+  bloodlust: 'Blood Lust',
   shaken: 'Shaken',
-  DG: 'Disorganized',
+  disorganized: 'Disorganized',
   routed: 'Routed',
 };
 

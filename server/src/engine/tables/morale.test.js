@@ -25,9 +25,9 @@ describe('MORALE_TABLE — complete cell verification (LOB_CHARTS p.5)', () => {
 
   describe('roll 2', () => {
     it('A, B, C → BL', () => {
-      expect(cell(2, 'A').type).toBe('bl');
-      expect(cell(2, 'B').type).toBe('bl');
-      expect(cell(2, 'C').type).toBe('bl');
+      expect(cell(2, 'A').type).toBe('bloodlust');
+      expect(cell(2, 'B').type).toBe('bloodlust');
+      expect(cell(2, 'C').type).toBe('bloodlust');
     });
     it('D, E, F → no effect', () => {
       expect(cell(2, 'D')).toBeNull();
@@ -38,8 +38,8 @@ describe('MORALE_TABLE — complete cell verification (LOB_CHARTS p.5)', () => {
 
   describe('roll 3', () => {
     it('A, B → BL; C, D, E, F → no effect', () => {
-      expect(cell(3, 'A').type).toBe('bl');
-      expect(cell(3, 'B').type).toBe('bl');
+      expect(cell(3, 'A').type).toBe('bloodlust');
+      expect(cell(3, 'B').type).toBe('bloodlust');
       expect(cell(3, 'C')).toBeNull();
       expect(cell(3, 'F')).toBeNull();
     });
@@ -47,7 +47,7 @@ describe('MORALE_TABLE — complete cell verification (LOB_CHARTS p.5)', () => {
 
   describe('roll 4', () => {
     it('A → BL; B, C, D, E → no effect; F → Sh b1', () => {
-      expect(cell(4, 'A').type).toBe('bl');
+      expect(cell(4, 'A').type).toBe('bloodlust');
       expect(cell(4, 'B')).toBeNull();
       expect(cell(4, 'E')).toBeNull();
       const f = cell(4, 'F');
@@ -74,7 +74,7 @@ describe('MORALE_TABLE — complete cell verification (LOB_CHARTS p.5)', () => {
       expect(cell(6, 'C')).toBeNull();
       expect(cell(6, 'D')).toMatchObject({ type: 'shaken', retreatHexes: 1, spLoss: 0 });
       expect(cell(6, 'E')).toMatchObject({ type: 'shaken', retreatHexes: 2, spLoss: 0 });
-      expect(cell(6, 'F')).toMatchObject({ type: 'dg', retreatHexes: 3, spLoss: 1 });
+      expect(cell(6, 'F')).toMatchObject({ type: 'disorganized', retreatHexes: 3, spLoss: 1 });
     });
   });
 
@@ -82,8 +82,8 @@ describe('MORALE_TABLE — complete cell verification (LOB_CHARTS p.5)', () => {
     it('A, B, C → no effect; D → Sh b2; E → DG b3 L1; F → DG b4 L1', () => {
       expect(cell(7, 'C')).toBeNull();
       expect(cell(7, 'D')).toMatchObject({ type: 'shaken', retreatHexes: 2, spLoss: 0 });
-      expect(cell(7, 'E')).toMatchObject({ type: 'dg', retreatHexes: 3, spLoss: 1 });
-      expect(cell(7, 'F')).toMatchObject({ type: 'dg', retreatHexes: 4, spLoss: 1 });
+      expect(cell(7, 'E')).toMatchObject({ type: 'disorganized', retreatHexes: 3, spLoss: 1 });
+      expect(cell(7, 'F')).toMatchObject({ type: 'disorganized', retreatHexes: 4, spLoss: 1 });
     });
   });
 
@@ -91,9 +91,9 @@ describe('MORALE_TABLE — complete cell verification (LOB_CHARTS p.5)', () => {
     it('A, B → no effect; C → Sh b1; D → DG b3 L1; E → DG b3 L1; F → DG b4 L2', () => {
       expect(cell(8, 'B')).toBeNull();
       expect(cell(8, 'C')).toMatchObject({ type: 'shaken', retreatHexes: 1, spLoss: 0 });
-      expect(cell(8, 'D')).toMatchObject({ type: 'dg', retreatHexes: 3, spLoss: 1 });
-      expect(cell(8, 'E')).toMatchObject({ type: 'dg', retreatHexes: 3, spLoss: 1 });
-      expect(cell(8, 'F')).toMatchObject({ type: 'dg', retreatHexes: 4, spLoss: 2 });
+      expect(cell(8, 'D')).toMatchObject({ type: 'disorganized', retreatHexes: 3, spLoss: 1 });
+      expect(cell(8, 'E')).toMatchObject({ type: 'disorganized', retreatHexes: 3, spLoss: 1 });
+      expect(cell(8, 'F')).toMatchObject({ type: 'disorganized', retreatHexes: 4, spLoss: 2 });
     });
   });
 
@@ -102,9 +102,9 @@ describe('MORALE_TABLE — complete cell verification (LOB_CHARTS p.5)', () => {
       expect(cell(9, 'A')).toBeNull();
       expect(cell(9, 'B')).toMatchObject({ type: 'shaken', retreatHexes: 1, spLoss: 0 });
       expect(cell(9, 'C')).toMatchObject({ type: 'shaken', retreatHexes: 2, spLoss: 1 });
-      expect(cell(9, 'D')).toMatchObject({ type: 'dg', retreatHexes: 3, spLoss: 1 });
-      expect(cell(9, 'E')).toMatchObject({ type: 'dg', retreatHexes: 4, spLoss: 2 });
-      expect(cell(9, 'F')).toMatchObject({ type: 'dg', retreatHexes: 4, spLoss: 2 });
+      expect(cell(9, 'D')).toMatchObject({ type: 'disorganized', retreatHexes: 3, spLoss: 1 });
+      expect(cell(9, 'E')).toMatchObject({ type: 'disorganized', retreatHexes: 4, spLoss: 2 });
+      expect(cell(9, 'F')).toMatchObject({ type: 'disorganized', retreatHexes: 4, spLoss: 2 });
     });
   });
 
@@ -112,54 +112,54 @@ describe('MORALE_TABLE — complete cell verification (LOB_CHARTS p.5)', () => {
     it('A → Sh b1; B → Sh b1 L1; C → DG b3 L1; D → DG b4 L2; E → DG b4 L2; F → R b6 L2', () => {
       expect(cell(10, 'A')).toMatchObject({ type: 'shaken', retreatHexes: 1, spLoss: 0 });
       expect(cell(10, 'B')).toMatchObject({ type: 'shaken', retreatHexes: 1, spLoss: 1 });
-      expect(cell(10, 'C')).toMatchObject({ type: 'dg', retreatHexes: 3, spLoss: 1 });
-      expect(cell(10, 'D')).toMatchObject({ type: 'dg', retreatHexes: 4, spLoss: 2 });
-      expect(cell(10, 'E')).toMatchObject({ type: 'dg', retreatHexes: 4, spLoss: 2 });
-      expect(cell(10, 'F')).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 2 });
+      expect(cell(10, 'C')).toMatchObject({ type: 'disorganized', retreatHexes: 3, spLoss: 1 });
+      expect(cell(10, 'D')).toMatchObject({ type: 'disorganized', retreatHexes: 4, spLoss: 2 });
+      expect(cell(10, 'E')).toMatchObject({ type: 'disorganized', retreatHexes: 4, spLoss: 2 });
+      expect(cell(10, 'F')).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 2 });
     });
   });
 
   describe('roll 11', () => {
     it('A → Sh b2 L1; B → DG b3 L1; C → DG b4 L1; D → DG b4 L2; E → R b6 L2; F → R b6 L3', () => {
       expect(cell(11, 'A')).toMatchObject({ type: 'shaken', retreatHexes: 2, spLoss: 1 });
-      expect(cell(11, 'B')).toMatchObject({ type: 'dg', retreatHexes: 3, spLoss: 1 });
-      expect(cell(11, 'C')).toMatchObject({ type: 'dg', retreatHexes: 4, spLoss: 1 });
-      expect(cell(11, 'D')).toMatchObject({ type: 'dg', retreatHexes: 4, spLoss: 2 });
-      expect(cell(11, 'E')).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 2 });
-      expect(cell(11, 'F')).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 3 });
+      expect(cell(11, 'B')).toMatchObject({ type: 'disorganized', retreatHexes: 3, spLoss: 1 });
+      expect(cell(11, 'C')).toMatchObject({ type: 'disorganized', retreatHexes: 4, spLoss: 1 });
+      expect(cell(11, 'D')).toMatchObject({ type: 'disorganized', retreatHexes: 4, spLoss: 2 });
+      expect(cell(11, 'E')).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 2 });
+      expect(cell(11, 'F')).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 3 });
     });
   });
 
   describe('roll 12', () => {
     it('A → DG b3 L1; B → DG b4 L1; C → DG b4 L2; D → R b6 L2; E → R b6 L3; F → R b6 L4', () => {
-      expect(cell(12, 'A')).toMatchObject({ type: 'dg', retreatHexes: 3, spLoss: 1 });
-      expect(cell(12, 'B')).toMatchObject({ type: 'dg', retreatHexes: 4, spLoss: 1 });
-      expect(cell(12, 'C')).toMatchObject({ type: 'dg', retreatHexes: 4, spLoss: 2 });
-      expect(cell(12, 'D')).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 2 });
-      expect(cell(12, 'E')).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 3 });
-      expect(cell(12, 'F')).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 4 });
+      expect(cell(12, 'A')).toMatchObject({ type: 'disorganized', retreatHexes: 3, spLoss: 1 });
+      expect(cell(12, 'B')).toMatchObject({ type: 'disorganized', retreatHexes: 4, spLoss: 1 });
+      expect(cell(12, 'C')).toMatchObject({ type: 'disorganized', retreatHexes: 4, spLoss: 2 });
+      expect(cell(12, 'D')).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 2 });
+      expect(cell(12, 'E')).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 3 });
+      expect(cell(12, 'F')).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 4 });
     });
   });
 
   describe('roll 13', () => {
     it('A → DG b3 L1; B → DG b4 L2; C → R b6 L2; D → R b6 L3; E → R b6 L4; F → R b6 L4', () => {
-      expect(cell(13, 'A')).toMatchObject({ type: 'dg', retreatHexes: 3, spLoss: 1 });
-      expect(cell(13, 'B')).toMatchObject({ type: 'dg', retreatHexes: 4, spLoss: 2 });
-      expect(cell(13, 'C')).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 2 });
-      expect(cell(13, 'D')).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 3 });
-      expect(cell(13, 'E')).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 4 });
-      expect(cell(13, 'F')).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 4 });
+      expect(cell(13, 'A')).toMatchObject({ type: 'disorganized', retreatHexes: 3, spLoss: 1 });
+      expect(cell(13, 'B')).toMatchObject({ type: 'disorganized', retreatHexes: 4, spLoss: 2 });
+      expect(cell(13, 'C')).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 2 });
+      expect(cell(13, 'D')).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 3 });
+      expect(cell(13, 'E')).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 4 });
+      expect(cell(13, 'F')).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 4 });
     });
   });
 
   describe('roll 14', () => {
     it('A → DG b3 L2; B → R b6 L2; C → R b6 L3; D,E,F → R b6 L4', () => {
-      expect(cell(14, 'A')).toMatchObject({ type: 'dg', retreatHexes: 3, spLoss: 2 });
-      expect(cell(14, 'B')).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 2 });
-      expect(cell(14, 'C')).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 3 });
-      expect(cell(14, 'D')).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 4 });
-      expect(cell(14, 'E')).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 4 });
-      expect(cell(14, 'F')).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 4 });
+      expect(cell(14, 'A')).toMatchObject({ type: 'disorganized', retreatHexes: 3, spLoss: 2 });
+      expect(cell(14, 'B')).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 2 });
+      expect(cell(14, 'C')).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 3 });
+      expect(cell(14, 'D')).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 4 });
+      expect(cell(14, 'E')).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 4 });
+      expect(cell(14, 'F')).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 4 });
     });
   });
 });
@@ -178,13 +178,13 @@ describe('moraleTableResult — lookup and clamping', () => {
 
   it('clamps roll below 2 to row 2', () => {
     // Roll 1 is below table minimum — treated as roll 2
-    expect(moraleTableResult('A', 1)?.type).toBe('bl');
+    expect(moraleTableResult('A', 1)?.type).toBe('bloodlust');
   });
 
   it('clamps roll above 14 to row 14', () => {
     // Roll 15 is above table maximum — treated as roll 14
     const r = moraleTableResult('F', 15);
-    expect(r).toMatchObject({ type: 'rout', retreatHexes: 6, spLoss: 4 });
+    expect(r).toMatchObject({ type: 'routed', retreatHexes: 6, spLoss: 4 });
   });
 
   it('returns null for unknown rating', () => {
@@ -278,7 +278,7 @@ describe('moraleResult — full check result', () => {
   it('returns correct type and stats when table cell has SP loss', () => {
     // Rating C, roll 10 → DG b3 L1
     const r = moraleResult('C', {}, 10);
-    expect(r.type).toBe('dg');
+    expect(r.type).toBe('disorganized');
     expect(r.retreatHexes).toBe(3);
     expect(r.spLoss).toBe(1);
     expect(r.leaderLossCheck).toBe(true); // SP loss triggers leader check
@@ -296,7 +296,7 @@ describe('moraleResult — full check result', () => {
     // Rating A, raw roll 9 with Wrecked +3 → effective 12 → DG b3 L1
     const r = moraleResult('A', { isWrecked: true }, 9);
     expect(r.effectiveRoll).toBe(12);
-    expect(r.type).toBe('dg');
+    expect(r.type).toBe('disorganized');
     expect(r.retreatHexes).toBe(3);
     expect(r.spLoss).toBe(1);
   });
@@ -310,22 +310,34 @@ describe('ADDITIVE_MORALE_EFFECTS / moraleTransition — complete cell verificat
 
   describe('BL current state', () => {
     it('BL/bl → BL (no suppress)', () =>
-      expect(t('bl', 'bl')).toMatchObject({ newState: 'bl', suppressRetreatsAndLosses: false }));
-    it('BL/normal → BL', () => expect(t('bl', 'normal')).toMatchObject({ newState: 'bl' }));
+      expect(t('bloodlust', 'bloodlust')).toMatchObject({
+        newState: 'bloodlust',
+        suppressRetreatsAndLosses: false,
+      }));
+    it('BL/normal → BL', () =>
+      expect(t('bloodlust', 'normal')).toMatchObject({ newState: 'bloodlust' }));
     it('BL/shaken → Sh (suppress *)', () =>
-      expect(t('bl', 'shaken')).toMatchObject({
+      expect(t('bloodlust', 'shaken')).toMatchObject({
         newState: 'shaken',
         suppressRetreatsAndLosses: true,
       }));
     it('BL/dg → DG (suppress *)', () =>
-      expect(t('bl', 'dg')).toMatchObject({ newState: 'dg', suppressRetreatsAndLosses: true }));
+      expect(t('bloodlust', 'disorganized')).toMatchObject({
+        newState: 'disorganized',
+        suppressRetreatsAndLosses: true,
+      }));
     it('BL/rout → R (suppress *)', () =>
-      expect(t('bl', 'rout')).toMatchObject({ newState: 'rout', suppressRetreatsAndLosses: true }));
-    it('BL/townHex → DG', () => expect(t('bl', 'townHex')).toMatchObject({ newState: 'dg' }));
+      expect(t('bloodlust', 'routed')).toMatchObject({
+        newState: 'routed',
+        suppressRetreatsAndLosses: true,
+      }));
+    it('BL/townHex → DG', () =>
+      expect(t('bloodlust', 'townHex')).toMatchObject({ newState: 'disorganized' }));
   });
 
   describe('Normal current state', () => {
-    it('Normal/bl → BL', () => expect(t('normal', 'bl')).toMatchObject({ newState: 'bl' }));
+    it('Normal/bl → BL', () =>
+      expect(t('normal', 'bloodlust')).toMatchObject({ newState: 'bloodlust' }));
     it('Normal/normal → Normal', () =>
       expect(t('normal', 'normal')).toMatchObject({
         newState: 'normal',
@@ -336,43 +348,51 @@ describe('ADDITIVE_MORALE_EFFECTS / moraleTransition — complete cell verificat
         newState: 'shaken',
         suppressRetreatsAndLosses: false,
       }));
-    it('Normal/dg → DG', () => expect(t('normal', 'dg')).toMatchObject({ newState: 'dg' }));
-    it('Normal/rout → R', () => expect(t('normal', 'rout')).toMatchObject({ newState: 'rout' }));
+    it('Normal/dg → DG', () =>
+      expect(t('normal', 'disorganized')).toMatchObject({ newState: 'disorganized' }));
+    it('Normal/rout → R', () =>
+      expect(t('normal', 'routed')).toMatchObject({ newState: 'routed' }));
     it('Normal/townHex → DG', () =>
-      expect(t('normal', 'townHex')).toMatchObject({ newState: 'dg' }));
+      expect(t('normal', 'townHex')).toMatchObject({ newState: 'disorganized' }));
   });
 
   describe('Shaken current state', () => {
-    it('Sh/bl → BL', () => expect(t('shaken', 'bl')).toMatchObject({ newState: 'bl' }));
+    it('Sh/bl → BL', () =>
+      expect(t('shaken', 'bloodlust')).toMatchObject({ newState: 'bloodlust' }));
     it('Sh/normal → Sh (stays shaken)', () =>
       expect(t('shaken', 'normal')).toMatchObject({ newState: 'shaken' }));
     it('Sh/shaken → Sh', () => expect(t('shaken', 'shaken')).toMatchObject({ newState: 'shaken' }));
-    it('Sh/dg → DG', () => expect(t('shaken', 'dg')).toMatchObject({ newState: 'dg' }));
-    it('Sh/rout → R', () => expect(t('shaken', 'rout')).toMatchObject({ newState: 'rout' }));
-    it('Sh/townHex → DG', () => expect(t('shaken', 'townHex')).toMatchObject({ newState: 'dg' }));
+    it('Sh/dg → DG', () =>
+      expect(t('shaken', 'disorganized')).toMatchObject({ newState: 'disorganized' }));
+    it('Sh/rout → R', () => expect(t('shaken', 'routed')).toMatchObject({ newState: 'routed' }));
+    it('Sh/townHex → DG', () =>
+      expect(t('shaken', 'townHex')).toMatchObject({ newState: 'disorganized' }));
   });
 
   describe('DG current state', () => {
     it('DG/bl → Normal (BL recovers DG)', () =>
-      expect(t('dg', 'bl')).toMatchObject({ newState: 'normal' }));
+      expect(t('disorganized', 'bloodlust')).toMatchObject({ newState: 'normal' }));
     it('DG/normal → DG (stays DG)', () =>
-      expect(t('dg', 'normal')).toMatchObject({ newState: 'dg' }));
-    it('DG/shaken → DG', () => expect(t('dg', 'shaken')).toMatchObject({ newState: 'dg' }));
+      expect(t('disorganized', 'normal')).toMatchObject({ newState: 'disorganized' }));
+    it('DG/shaken → DG', () =>
+      expect(t('disorganized', 'shaken')).toMatchObject({ newState: 'disorganized' }));
     it('DG/dg → R (double DG = rout)', () =>
-      expect(t('dg', 'dg')).toMatchObject({ newState: 'rout' }));
-    it('DG/rout → R', () => expect(t('dg', 'rout')).toMatchObject({ newState: 'rout' }));
-    it('DG/townHex → DG', () => expect(t('dg', 'townHex')).toMatchObject({ newState: 'dg' }));
+      expect(t('disorganized', 'disorganized')).toMatchObject({ newState: 'routed' }));
+    it('DG/rout → R', () =>
+      expect(t('disorganized', 'routed')).toMatchObject({ newState: 'routed' }));
+    it('DG/townHex → DG', () =>
+      expect(t('disorganized', 'townHex')).toMatchObject({ newState: 'disorganized' }));
   });
 
   describe('Rout current state', () => {
     it('R/bl → Sh (BL partially recovers rout)', () =>
-      expect(t('rout', 'bl')).toMatchObject({ newState: 'shaken' }));
+      expect(t('routed', 'bloodlust')).toMatchObject({ newState: 'shaken' }));
     it('R/normal → R (stays routed)', () =>
-      expect(t('rout', 'normal')).toMatchObject({ newState: 'rout' }));
-    it('R/shaken → R', () => expect(t('rout', 'shaken')).toMatchObject({ newState: 'rout' }));
-    it('R/dg → R', () => expect(t('rout', 'dg')).toMatchObject({ newState: 'rout' }));
-    it('R/rout → R', () => expect(t('rout', 'rout')).toMatchObject({ newState: 'rout' }));
-    it('R/townHex → R', () => expect(t('rout', 'townHex')).toMatchObject({ newState: 'rout' }));
+      expect(t('routed', 'normal')).toMatchObject({ newState: 'routed' }));
+    it('R/shaken → R', () => expect(t('routed', 'shaken')).toMatchObject({ newState: 'routed' }));
+    it('R/dg → R', () => expect(t('routed', 'disorganized')).toMatchObject({ newState: 'routed' }));
+    it('R/rout → R', () => expect(t('routed', 'routed')).toMatchObject({ newState: 'routed' }));
+    it('R/townHex → R', () => expect(t('routed', 'townHex')).toMatchObject({ newState: 'routed' }));
   });
 
   it('returns null for unknown combination', () => {
@@ -387,6 +407,10 @@ describe('ADDITIVE_MORALE_EFFECTS — only BL→bad results are suppressed', () 
     const suppressed = Object.entries(ADDITIVE_MORALE_EFFECTS)
       .filter(([, v]) => v.suppressRetreatsAndLosses)
       .map(([k]) => k);
-    expect(suppressed.sort()).toEqual(['bl/dg', 'bl/rout', 'bl/shaken']);
+    expect(suppressed.sort()).toEqual([
+      'bloodlust/disorganized',
+      'bloodlust/routed',
+      'bloodlust/shaken',
+    ]);
   });
 });
