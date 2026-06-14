@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-13 after PR #561._
+_Last updated: 2026-06-14 after PR #565._
 
 ---
 
@@ -8,10 +8,10 @@ _Last updated: 2026-06-13 after PR #561._
 
 | Metric                           | Value                                                                                             |
 | -------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Open debt items                  | 14                                                                                                |
-| Cumulative debt score (net open) | 28                                                                                                |
+| Open debt items                  | 17                                                                                                |
+| Cumulative debt score (net open) | 33                                                                                                |
 | Highest-risk item                | Security: bind side tokens to factions in DB; derive player.side from token match (#562, score 4) |
-| PRs tracked                      | 281                                                                                               |
+| PRs tracked                      | 285                                                                                               |
 
 ---
 
@@ -343,6 +343,10 @@ _Last updated: 2026-06-13 after PR #561._
 | 2026-06-13 | PR #557 (resolved #533)                                        | -2                   | —         | 478                      |
 | 2026-06-13 | PR #559                                                        | 2                    | +2        | 480                      |
 | 2026-06-13 | PR #561                                                        | 9                    | +9        | 489                      |
+| 2026-06-14 | PR #565                                                        | 5                    | +5        | 494                      |
+| 2026-06-14 | PR #565 (added #566)                                           | +2                   | —         | 494                      |
+| 2026-06-14 | PR #565 (added #567)                                           | +1                   | —         | 494                      |
+| 2026-06-14 | PR #565 (added #568)                                           | +2                   | —         | 494                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -350,9 +354,9 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Elevated risk. Several significant deferred items that introduce coupling or architectural compromise. Recommend a debt reduction sprint before the next major phase.
+High risk. Critical or significant deferred items pose a threat to production stability or block future work. Immediate attention recommended.
 
-PR #561 (lobby/auth cleanup) added 3 new items (#562, #563, #564), bringing the net open score to 28 across 14 items. The 14 items fall into three clusters: (1) **Auth/security scaffolding** — #562 (score 4, token/faction binding, M8 prerequisite), #563 (score 3, re-join side-switching enforcement, M8), #403 (score 2, CSP headers, M8), and #350 (score 2, rate limiting, M8) — all intentional single-user testing scaffolding deferred to M8 auth hardening; (2) **Test coverage gaps** — #564 (score 2, lobby button accessibility), #558 (score 2, moduleSlug reactivity test), #544 and #547 (score 1 each, helper and router test gaps), and #538 (score 1, contrast ratio); (3) **Deferred rules-engine stubs** — #383, #382, #381, #379 (score 2 each, M6-blocked), and #560 (score 2, ROLL_INITIATIVE friendly-unit filter, M6). The score-4 auth item (#562) is the highest-priority pre-M8 work and is a hard prerequisite for multiplayer.
+PR #565 (turn-loop polish) added 3 new items (#566, #567, #568), bringing the net open score to 33 across 17 items. The 17 items fall into four clusters: (1) **Auth/security scaffolding** — #562 (score 4, token/faction binding, M8 prerequisite), #563 (score 3, re-join side-switching enforcement, M8), #403 (score 2, CSP headers, M8), and #350 (score 2, rate limiting, M8) — all intentional single-user testing scaffolding deferred to M8 auth hardening; (2) **Test coverage gaps** — #564 (score 2, lobby button accessibility), #566 (score 2, smoke test error-path coverage), #558 (score 2, moduleSlug reactivity test), #567 (score 1, smoke test round-trip assertion), #544 and #547 (score 1 each, helper and router test gaps), and #538 (score 1, contrast ratio); (3) **Deferred rules-engine stubs** — #383, #382, #381, #379 (score 2 each, M6-blocked), and #560 (score 2, ROLL_INITIATIVE friendly-unit filter, M6); (4) **Documentation rot risk** — #568 (score 2, action-contract.md socket snippet and M5 sections, M6 kickoff). The score-4 auth item (#562) remains the highest-priority pre-M8 work and is a hard prerequisite for multiplayer.
 
 ---
 
@@ -373,6 +377,9 @@ _Ordered by score descending (ties: newest first). Resolved items are removed._
 | 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                                  | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                                                                                                                                                                 |
 | 2     | #379  | getValidActions should enumerate all legal actions for current state                 | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                                                                                                                                                                     |
 | 2     | #350  | server: add rate limiting on POST /api/v1/games routes                               | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing.                                                                                                                                              |
+| 2     | #566  | smoke test: add error-path coverage (wrong side, invalid type, stale version)        | PR #565       | Happy-path steel thread is covered; error-path tests for wrong-side dispatch, invalid action type, and stale-version 409 are missing. Engine and route error behaviour is correct but CI won't catch regressions on these paths as M6 adds new error cases. Low coupling risk now.                                                                |
+| 2     | #568  | action-contract.md: inline socket snippet and M5-specific sections will rot in M6    | PR #565       | Socket snippet in §6 is copied from GameView.vue — divergence leaves the doc silently wrong. M5-specific TODO anchors in §4 and §8 become stale once the concrete-candidate path is implemented in M6. No functional risk; documentation rot only. Fix at M6 kickoff.                                                                             |
+| 1     | #567  | smoke test: add structural round-trip assertion on persisted state                   | PR #565       | Tests verify key identity fields after save/load; full structural assertion is absent. `GameStateSchema.parse()` runs on loadGame so schema violations surface, but field-value regressions in non-schema-validated fields won't be caught. Trivial gap.                                                                                          |
 | 1     | #547  | Add router test coverage for legacy redirect destinations                            | PR #539       | Legacy redirect targets are string constants baked at module load time; a typo would not be caught by the current test suite.                                                                                                                                                                                                                     |
 | 1     | #544  | Add useModuleStore modulePath/defaultScenarioPath helper tests                       | PR #539       | Helpers build all client API and router URLs but have no direct assertions; simple string operations, low breakage risk.                                                                                                                                                                                                                          |
 | 1     | #538  | Improve contrast ratio for derived-value spans in scenario editor                    | PR #530       | `.derived-value` CSS color may not meet WCAG AA contrast ratio (4.5:1) against the panel background for `totalTurns` and lighting-time displays.                                                                                                                                                                                                  |
