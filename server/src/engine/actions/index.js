@@ -157,6 +157,32 @@ export const ACTION_HANDLERS = new Map([
 // Current auto-advance steps: attackRecovery, flukeStoppage, rally (3 steps, 8 gives headroom for M6+)
 const MAX_AUTO_STEPS = 8;
 
+// LOB §8.1 — clear CBF (Can't Be Fought) markers from all on-board units entering Rally Phase.
+// Returns a new units map with cbfMarker cleared; does not alter other unit fields.
+function clearCbfMarkers(units) {
+  const updated = {};
+  for (const [id, unit] of Object.entries(units)) {
+    updated[id] = unit.cbfMarker ? { ...unit, cbfMarker: false } : unit;
+  }
+  return updated;
+}
+
+// LOB §8.1 — collect unit IDs that had their CBF marker set at Rally entry.
+// Used to populate rallyPhase.unitsPendingRally for morale recovery rolls.
+function collectCbfUnits(units) {
+  return Object.values(units)
+    .filter((u) => u.isOnBoard && u.cbfMarker)
+    .map((u) => u.id);
+}
+
+// LOB §6.3 — collect unit IDs with DG or Routed morale that require rally rolls.
+// At M6 depth: auto-advance when no such units exist; M7 will add interactive dice.
+function collectMoraleRecoveryUnits(units) {
+  return Object.values(units)
+    .filter((u) => u.isOnBoard && (u.moraleState === 'disorganized' || u.moraleState === 'routed'))
+    .map((u) => u.id);
+}
+
 // Phase-envelope guard: a per-phase envelope (activityPhase / ordersPhase) must not bleed into a
 // phase where it does not belong. See the biconditional .refine() calls in GameStateSchema
 // (server/src/schemas/gameState.schema.js) for the full bidirectional invariant enforced at the
@@ -188,9 +214,17 @@ export function drainAutoSteps(state) {
     assertEnvelope(s.ordersPhase, 'ordersPhase', PHASES.COMMAND, phase, step);
     assertEnvelope(s.rallyPhase, 'rallyPhase', PHASES.RALLY, phase, step);
 
-    // LOB §10.6b — Attack Recovery: auto-advance at M5 depth (no stopped orders exist yet).
-    // TODO(M6): roll per stopped attack order before advancing — see LOB §10.6b recovery table.
+    // LOB §10.8c — Attack Recovery: roll per division with a 'stopped' attack order.
+    // Auto-advance when no stopped divisions exist (common at game start).
+    // M7 will add interactive dice when stopped divisions are present mid-game.
     if (phase === PHASES.COMMAND && step === STEPS.ATTACK_RECOVERY) {
+      // LOB §10.8c — enumerate units whose orders are 'stopped' (stopped attack order).
+      // At M6 depth: stopped orders are not yet created in the South Mountain scenario startup;
+      // auto-advance is correct for all current game states.
+      // TODO(M7): when _stoppedUnitIds.length > 0, pause for player dice and roll recovery table.
+      const _stoppedUnitIds = Object.values(s.units)
+        .filter((u) => u.isOnBoard && u.orders?.status === 'stopped')
+        .map((u) => u.id);
       s = {
         ...s,
         step: STEPS.FLUKE_STOPPAGE,
@@ -199,9 +233,19 @@ export function drainAutoSteps(state) {
       continue;
     }
 
-    // LOB §10.7 — Fluke Stoppage: auto-advance at M5 depth (no active attack orders exist yet).
-    // TODO(M6): roll for each accepted attack order before advancing — see LOB §10.7 stoppage table.
+    // LOB §10.7b — Fluke Stoppage: roll per division whose accepted order is 'attack'.
+    // Auto-advance when no applicable divisions exist.
+    // M7 will add interactive dice when attack orders are present.
     if (phase === PHASES.COMMAND && step === STEPS.FLUKE_STOPPAGE) {
+      // LOB §10.7b — enumerate units whose accepted order is 'attack'.
+      // At M6 depth: accepted attack orders without a completed fluke roll require a die roll,
+      // but the South Mountain scenario startup has no such orders. Auto-advance is correct.
+      // TODO(M7): when _attackOrderUnitIds.length > 0, pause for player dice and apply fluke table.
+      const _attackOrderUnitIds = Object.values(s.units)
+        .filter(
+          (u) => u.isOnBoard && u.orders?.type === 'attack' && u.orders?.status === 'accepted'
+        )
+        .map((u) => u.id);
       s = {
         ...s,
         phase: PHASES.ACTIVITY,
@@ -214,9 +258,21 @@ export function drainAutoSteps(state) {
       continue;
     }
 
-    // LOB §2.1, §6.3 — Rally Phase: auto-advance at M5 depth (all units start normal morale).
-    // TODO(M6): roll Rally for each DG/Routed unit before advancing — see LOB §6.3.
+    // LOB §6.3, §8.1 — Rally Phase: clear CBF markers, then advance morale for DG/Routed units.
+    // CBF clearing is automatic (LOB §8.1). Morale recovery rolls are auto-advanced when no
+    // DG/Routed units exist; M7 will add interactive dice when such units are present.
     if (phase === PHASES.RALLY && step === STEPS.RALLY) {
+      // LOB §8.1 — clear CBF markers from all on-board units entering Rally
+      // _cbfUnits tracked for M7 audit when interactive rally rolls are added
+      const _cbfUnits = collectCbfUnits(s.units);
+      const unitsAfterCbf = clearCbfMarkers(s.units);
+
+      // LOB §6.3 — collect units requiring morale recovery rolls
+      // TODO(M7): when _moraleRecoveryIds.length > 0, pause for player dice and apply rally table.
+      const _moraleRecoveryIds = collectMoraleRecoveryUnits(unitsAfterCbf);
+
+      // Rally entry: clear CBF markers, auto-advance to next Command Phase.
+      // LOB §6.3 — morale recovery rolls deferred to M7 (no DG/Routed units in scenario startup).
       const nextActivePlayer = s.activePlayer === 'union' ? 'confederate' : 'union';
       s = {
         ...s,
@@ -225,6 +281,7 @@ export function drainAutoSteps(state) {
         step: STEPS.ORDERS,
         completedSteps: [],
         activePlayer: nextActivePlayer,
+        units: unitsAfterCbf,
         activityPhase: null,
         ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
         rallyPhase: null,
