@@ -3,7 +3,7 @@
 **Track ID:** turn-loop-polish_20260613
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-13
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -21,12 +21,12 @@ Three independent tasks that seal M5.5: an E2E smoke test (#554) exercising the 
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -34,11 +34,11 @@ Three independent tasks that seal M5.5: an E2E smoke test (#554) exercising the 
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated if any debt was accepted
-- [ ] Ready for `/team-review`
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated if any debt was accepted
+- [x] Ready for `/team-review`
 
 ---
 
@@ -94,24 +94,24 @@ Add a server-side integration test (Vitest, real in-memory game) that exercises 
 - [x] Task 3.5: Extend smoke test: submit a payload-bearing action, verify state version increments, verify valid actions refresh
 - [x] Task 3.6: Extend smoke test with second-client socket verification if practical — skipped (socket events are a server-process concern; in-memory dispatch loop covers the contract fully; see action-contract.md §6)
 - [x] Task 3.7: Add `npm run test:smoke` script or document the exact `vitest --reporter verbose` command
-- [ ] Task 3.8: Run `npm run quality:strict` — all gates must pass
+- [x] Task 3.8: Run `npm run quality:strict` — all gates must pass
 
 ### Verification
 
 - [x] Smoke test runs deterministically
 - [x] All smoke test acceptance criteria pass
 - [x] Run command is documented
-- [ ] `npm run quality:strict` clean
+- [x] `npm run quality:strict` clean
 
 ---
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met
-- [ ] `npm run quality:strict` passes
-- [ ] No unexpected test warnings
-- [ ] M5.5 sealed — ready for M6
-- [ ] Ready for `/team-review`
+- [x] All acceptance criteria in spec.md met
+- [x] `npm run quality:strict` passes
+- [x] No unexpected test warnings
+- [x] M5.5 sealed — ready for M6
+- [x] Ready for `/team-review`
 
 ---
 
