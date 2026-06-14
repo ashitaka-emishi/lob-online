@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount, flushPromises, config } from '@vue/test-utils';
 import { createRouter, createWebHistory } from 'vue-router';
 import { setActivePinia, createPinia } from 'pinia';
+import { useOobStore } from '../../stores/useOobStore.js';
 
 // Stub EditorNav to avoid RouterLink injection errors in tests without a router.
 // EditorNav takes no props, so a bare stub without prop declarations is intentional.
@@ -127,6 +128,42 @@ describe('OobEditorView', () => {
     await buttons[1].trigger('click');
     expect(buttons[1].classes()).toContain('active');
     expect(buttons[0].classes()).not.toContain('active');
+    wrapper.unmount();
+  });
+});
+
+// #558 — moduleSlug reactivity: changing route.params.moduleSlug triggers re-fetch via store
+describe('OobEditorView — moduleSlug reactivity (#558)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+    config.global.plugins = [stubRouter];
+  });
+
+  afterEach(() => {
+    config.global.plugins = [];
+    vi.restoreAllMocks();
+  });
+
+  it('calls store.loadDataForModule with new slug when moduleSlug route param changes', async () => {
+    vi.stubGlobal('fetch', mockFetch(MINIMAL_OOB, MINIMAL_LEADERS));
+    const { default: OobEditorView } = await import('./OobEditorView.vue');
+
+    await stubRouter.push('/modules/SM/tools/oob-editor');
+    const wrapper = mount(OobEditorView);
+    await flushPromises();
+
+    const store = useOobStore();
+    const spy = vi.spyOn(store, 'loadDataForModule').mockImplementation(() => {});
+
+    await stubRouter.push('/modules/THG/tools/oob-editor');
+    await flushPromises();
+
+    expect(spy).toHaveBeenCalledWith('THG');
     wrapper.unmount();
   });
 });

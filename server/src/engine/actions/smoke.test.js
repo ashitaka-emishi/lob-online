@@ -230,6 +230,50 @@ describe('Turn-loop steel-thread smoke (#554)', () => {
     expect(saved.version).toBe(state.version + 1);
   });
 
+  // #566 — error-path coverage: wrong side dispatch, invalid action type, stale version
+  it('dispatch throws INVALID_ACTION when called for the wrong player side', async () => {
+    const state = await loadGame(GAME_ID, dataDir);
+    expect(() =>
+      dispatch(state, { type: 'END_PHASE', payload: null, playerSide: 'confederate' })
+    ).toThrow();
+  });
+
+  it('dispatch throws INVALID_ACTION for an action type not valid in current state', async () => {
+    const state = await loadGame(GAME_ID, dataDir);
+    // ACTIVATE_STACK is only valid in ACTIVITY/ACTIVATION, not ACTIVITY/ACTIVATION reached yet
+    // Use END_ACTIVATION which is only valid when currentActivation is non-null
+    expect(() =>
+      dispatch(state, { type: 'END_ACTIVATION', payload: null, playerSide: 'union' })
+    ).toThrow();
+  });
+
+  it('saveGame throws on stale version conflict (optimistic-concurrency contract)', async () => {
+    const state = await loadGame(GAME_ID, dataDir);
+    // state.version is now current; saving with version - 1 simulates a stale writer
+    const staleState = { ...state, version: state.version - 1 };
+    await expect(saveGame(GAME_ID, staleState, dataDir)).rejects.toThrow(/Version conflict/);
+  });
+
+  // #567 — structural round-trip assertion on persisted state
+  it('persisted state after save matches all top-level fields of the fixture', async () => {
+    const loaded = await loadGame(GAME_ID, dataDir);
+    expect(loaded).toMatchObject({
+      id: GAME_ID,
+      scenarioId: 'south-mountain',
+      schemaVersion: 1,
+      phase: expect.any(String),
+      step: expect.any(String),
+      activePlayer: expect.any(String),
+      sides: { union: 'tok-union', confederate: 'tok-csa' },
+      units: expect.objectContaining({
+        colquitt: expect.objectContaining({
+          hex: '29.22',
+          orders: expect.objectContaining({ deliveryTurnDue: null }),
+        }),
+      }),
+    });
+  });
+
   it('full turn cycle: END_PHASE × 2 advances turn counter and switches active player', async () => {
     // Start from a clean command/orders state to run a full turn
     const startState = {

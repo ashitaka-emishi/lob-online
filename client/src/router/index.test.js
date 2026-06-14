@@ -70,3 +70,31 @@ describe('router — legacy redirects', () => {
     expect(route.redirect).toBeTruthy();
   });
 });
+
+// #547 — Assert redirect destinations, not just existence (#547)
+describe('router — legacy redirect destinations', () => {
+  it('/lobby redirects to /modules/THG/scenarios/full-battle/lobby', () => {
+    const route = router.getRoutes().find((r) => r.path === '/lobby');
+    expect(route.redirect).toBe('/modules/THG/scenarios/full-battle/lobby');
+  });
+
+  it('/tools/map-editor redirects to /modules/THG/tools/map-editor', () => {
+    const route = router.getRoutes().find((r) => r.path === '/tools/map-editor');
+    expect(route.redirect).toBe('/modules/THG/tools/map-editor');
+  });
+
+  it('/tools/oob-editor redirects to /modules/THG/tools/oob-editor', () => {
+    const route = router.getRoutes().find((r) => r.path === '/tools/oob-editor');
+    expect(route.redirect).toBe('/modules/THG/tools/oob-editor');
+  });
+
+  it('/tools/map-test redirects to /modules/THG/tools/map-test', () => {
+    const route = router.getRoutes().find((r) => r.path === '/tools/map-test');
+    expect(route.redirect).toBe('/modules/THG/tools/map-test');
+  });
+
+  it('/tools/table-test redirects to /modules/THG/tools/table-test', () => {
+    const route = router.getRoutes().find((r) => r.path === '/tools/table-test');
+    expect(route.redirect).toBe('/modules/THG/tools/table-test');
+  });
+});

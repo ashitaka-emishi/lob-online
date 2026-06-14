@@ -849,3 +849,45 @@ describe('MapEditorView', () => {
     wrapper.unmount();
   });
 });
+
+// #558 — moduleSlug reactivity: changing route.params.moduleSlug triggers re-fetch
+describe('MapEditorView — moduleSlug reactivity (#558)', () => {
+  beforeEach(() => {
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+    config.global.plugins = [stubRouter];
+  });
+
+  afterEach(() => {
+    config.global.plugins = [];
+    vi.restoreAllMocks();
+  });
+
+  it('re-fetches with new module URL when moduleSlug route param changes', async () => {
+    const fetchMock = mockFetch(VALID_MAP);
+    vi.stubGlobal('fetch', fetchMock);
+
+    // Start at SM module
+    await stubRouter.push('/modules/SM/tools/map-editor');
+    const wrapper = mount(MapEditorView, { attachTo: document.body });
+    await flushPromises();
+
+    const callsAfterMount = fetchMock.mock.calls.length;
+    expect(callsAfterMount).toBeGreaterThan(0);
+    // The first fetch URL should contain /SM/
+    expect(fetchMock.mock.calls[0][0]).toContain('/SM/');
+
+    // Navigate to a different module slug
+    await stubRouter.push('/modules/THG/tools/map-editor');
+    await flushPromises();
+
+    // fetch must have been called again with the new slug
+    expect(fetchMock.mock.calls.length).toBeGreaterThan(callsAfterMount);
+    const lastUrl = fetchMock.mock.calls[fetchMock.mock.calls.length - 1][0];
+    expect(lastUrl).toContain('/THG/');
+    wrapper.unmount();
+  });
+});
