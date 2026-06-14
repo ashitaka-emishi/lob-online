@@ -3,7 +3,7 @@
 **Track ID:** pre-m6-debt-final_20260614
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-14
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -40,11 +40,11 @@ Medium is appropriate for the combination.
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated (all resolved issues removed, score recalculated)
-- [ ] Ready for `/team-review`
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated (all resolved issues removed, score recalculated)
+- [x] Ready for `/team-review`
 
 ---
 
@@ -190,13 +190,13 @@ Update `docs/tech-debt/report.md` to reflect all resolutions from Phase 3.
 
 ### Tasks
 
-- [ ] Task 4.1: For each closed issue from Phase 3, append a resolution row to Debt Over Time
+- [x] Task 4.1: For each closed issue from Phase 3, append a resolution row to Debt Over Time
       in `report.md` with the closing PR number (or track ID if pre-PR).
-- [ ] Task 4.2: Remove resolved issues from the Open Debt Items table.
-- [ ] Task 4.3: Recalculate Executive Summary: open count, net score, current-milestone score,
+- [x] Task 4.2: Remove resolved issues from the Open Debt Items table.
+- [x] Task 4.3: Recalculate Executive Summary: open count, net score, current-milestone score,
       highest-risk item.
-- [ ] Task 4.4: Update Risk Assessment prose.
-- [ ] Task 4.5: Update "Last updated" line.
+- [x] Task 4.4: Update Risk Assessment prose.
+- [x] Task 4.5: Update "Last updated" line.
 
 ### Verification
 
