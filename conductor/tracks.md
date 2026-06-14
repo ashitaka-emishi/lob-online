@@ -9,49 +9,27 @@
 | [x]    | pr91-review-fixes_20260317        | Address PR #91 Team-Review Findings                             | 2026-03-17 | 2026-03-17 |
 
 | [x] | tech-debt-tracking_20260318 | Technical Debt Tracking System | 2026-03-18 | 2026-03-18 |
-
 | [x] | elevation-system-ui_20260318 | Elevation System UI — baseElevation + elevationLevels Inputs | 2026-03-18 | 2026-03-18 |
-
 | [x] | hex-perf-arch_20260318 | Hex Index Perf + Architecture Cleanup (PR #91 Deferred Findings) | 2026-03-18 | 2026-03-18 |
-
 | [x] | trace-highlight-perf_20260318 | Trace Highlight Layer — O(traceEdges) Render | 2026-03-18 | 2026-03-18 |
-
 | [x] | elevation-controls-extract_20260318 | Extract ElevationSystemControls Component | 2026-03-18 | 2026-03-18 |
-
 | [x] | test-hygiene-bundle_20260318 | Test Hygiene Bundle (#101 #102 #103 #104 #105 #106) | 2026-03-18 | 2026-03-18 |
-
 | [x] | los-offset-fix_20260318 | LOS Display Off-by-One — Hex Column Offset | 2026-03-18 | 2026-03-18 |
-
 | [x] | hex-to-game-id_20260318 | Extract hexToGameId Helper (Tech Debt #118 + #119) | 2026-03-18 | 2026-03-18 |
-
 | [x] | click-paint-modes_20260318 | Click / Paint Modes for Terrain & Elevation Editor (#115) | 2026-03-18 | 2026-03-18 |
-
 | [x] | minor-debt-bundle_20260318 | Minor Debt Bundle — Issues #119 #123 #127 #128 #129 #130 | 2026-03-18 | 2026-03-18 |
-
 | [x] | map-schema-foundation_20260319 | Map Schema Foundation — Data Model + Compass Label Fix (#135, #143) | 2026-03-19 | 2026-03-19 |
-
 | [x] | tool-panel-framework_20260319 | Tool Panel Framework — Shared Architecture (#136) | 2026-03-19 | 2026-03-19 |
-
 | [x] | edge-tools-bundle_20260319 | Edge Tool Panels Bundle — Road, Stream/Stone Wall, Contour Line, Ford & Bridge | 2026-03-19 | 2026-03-22 |
-
 | [x] | hex-overlay-perf_20260322 | HexMapOverlay Performance Quick Wins Bundle | 2026-03-22 | 2026-03-22 |
-
 | [x] | overlay-arch-refactor_20260322 | Rendering Architecture — overlayConfig Ownership Cleanup | 2026-03-22 | 2026-03-22 |
-
 | [x] | minor-debt-bundle_20260322 | Minor Debt Bundle — Issues #111 #112 #154 #162 #165 #166 #170 | 2026-03-22 | 2026-03-22 |
-
 | [x] | map-editor-extraction_20260323 | MapEditorView Extraction Debt Bundle | 2026-03-23 | 2026-03-23 |
-
 | [x] | map-editor-tool-closeout_20260323 | Map Editor Tool Closeout — Issues #137 #138 #139 #140 #141 #142 | 2026-03-23 | 2026-03-23 |
-
 | [x] | tech-debt-closeout_20260323 | Tech Debt Closeout — All Open Items | 2026-03-23 | 2026-03-23 |
-
 | [x] | map-editor-ui-refactor_20260323 | Map Editor UI Refactor — Tool Panel Cleanup & Feature Improvements | 2026-03-23 | 2026-03-29 |
-
 | [x] | counter-detect_20260325 | Counter Auto-Detection Script | 2026-03-25 | 2026-03-25 |
-
 | [x] | oob-editor-foundation_20260325 | OOB Editor Foundation — Launch Script, Store & Hierarchy Tree | 2026-03-25 | 2026-03-25 |
-
 | [x] | oob-detail-panel_20260325 | OOB Editor — Detail Panel & Counter Image Widget | 2026-03-25 | 2026-03-25 |
 
 | [x] | oob-debt-sprint_20260329 | OOB Editor Debt Sprint — Issues #207 #209 #210 #211 | 2026-03-29 | 2026-03-29 |
@@ -148,5 +126,6 @@
 | [x] | pre-m6-debt-sprint_20260613 | Pre-M6 Debt Sprint — Score 3+ and Low-Hanging Fruit | 2026-06-13 | 2026-06-13 |
 | [x] | debt-sprint-2_20260613 | Pre-M6 Debt Sprint #2 — Debt, Doc Sync, Stubs | 2026-06-13 | 2026-06-13 |
 | [x] | turn-loop-core_20260613 | Turn Loop Core — Engine, Store, and ActionPanel Payload Wiring (#550 #551 #552) | 2026-06-13 | 2026-06-13 |
-| [ ] | lobby-auth-cleanup_20260613 | Lobby and Auth Cleanup — Side Entry Flow and Session Guard (#549 #553) | 2026-06-13 | 2026-06-13 |
+| [x] | lobby-auth-cleanup_20260613 | Lobby and Auth Cleanup — Side Entry Flow and Session Guard (#549 #553) | 2026-06-13 | 2026-06-13 |
 | [x] | turn-loop-polish_20260613 | Turn Loop Polish — E2E Smoke Test, A11y Focus, and Action Contract Docs (#554 #555 #556) | 2026-06-13 | 2026-06-13 |
+| [ ] | closeout-debt-sprint_20260614 | Conductor Closeout + Debt Sprint — Score 33 → 21 | 2026-06-14 | 2026-06-14 |
