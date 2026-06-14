@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-14 after pre-m6-debt-final_20260614 (Phase 2 — register backfill)._
+_Last updated: 2026-06-14 after pre-m6-debt-final_20260614._
 
 ---
 
@@ -8,11 +8,11 @@ _Last updated: 2026-06-14 after pre-m6-debt-final_20260614 (Phase 2 — register
 
 | Metric                           | Value                                                                                             |
 | -------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Open debt items                  | 14                                                                                                |
-| Cumulative debt score (net open) | 29                                                                                                |
-| Current-milestone open debt      | 6 items, score 10 (M5.5 — Turn Loop Cleanup)                                                      |
+| Open debt items                  | 8                                                                                                 |
+| Cumulative debt score (net open) | 19                                                                                                |
+| Current-milestone open debt      | 0 items, score 0 (M5.5 — Turn Loop Cleanup; all resolved)                                         |
 | Highest-risk item                | Security: bind side tokens to factions in DB; derive player.side from token match (#562, score 4) |
-| PRs tracked                      | 287                                                                                               |
+| PRs tracked                      | 288                                                                                               |
 
 ---
 
@@ -364,6 +364,13 @@ _Last updated: 2026-06-14 after pre-m6-debt-final_20260614 (Phase 2 — register
 | 2026-06-14 | closeout-debt-sprint_20260614 (resolved #566)                  | -2                   | —         | 502                      |
 | 2026-06-14 | closeout-debt-sprint_20260614 (resolved #567)                  | -1                   | —         | 502                      |
 | 2026-06-14 | PR #569                                                        | 0                    | 0         | 502                      |
+| 2026-06-14 | pre-m6-debt-final_20260614                                     | 0                    | -10       | 502                      |
+| 2026-06-14 | pre-m6-debt-final_20260614 (resolved #568)                     | -2                   | —         | 502                      |
+| 2026-06-14 | pre-m6-debt-final_20260614 (resolved #525)                     | -2                   | —         | 502                      |
+| 2026-06-14 | pre-m6-debt-final_20260614 (resolved #523)                     | -2                   | —         | 502                      |
+| 2026-06-14 | pre-m6-debt-final_20260614 (resolved #522)                     | -2                   | —         | 502                      |
+| 2026-06-14 | pre-m6-debt-final_20260614 (resolved #524)                     | -1                   | —         | 502                      |
+| 2026-06-14 | pre-m6-debt-final_20260614 (resolved #521)                     | -1                   | —         | 502                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -373,7 +380,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 Elevated risk. Significant deferred items require monitoring; none are immediately blocking M6 engine work.
 
-The register now tracks 14 open items (net score 29) across four clusters: (1) **Auth/security scaffolding** — #562 (score 4, token/faction binding, M8 prerequisite), #563 (score 3, re-join side-switching enforcement, M8), #403 (score 2, CSP headers, M8), and #350 (score 2, rate limiting, M8) — all intentional single-user testing scaffolding deferred to M8 auth hardening; (2) **Deferred rules-engine stubs** — #383, #382, #381 (score 2 each, M6-blocked), and #560 (score 2, ROLL_INITIATIVE friendly-unit filter, M6); (3) **M5.5 UI/a11y cleanup** — #568 (score 2, action-contract.md rot), #525 (score 2, aria-disabled on lobby buttons), #523 (score 2, DRY menu layout), #522 (score 2, app-shell &lt;main&gt; landmark), #524 (score 1, delete StatusView.vue), and #521 (score 1, scenario-editor EditorNav link) — all targeted for resolution in this sprint; (4) The score-4 auth item (#562) remains the highest-priority pre-M8 work and is a hard prerequisite for multiplayer. Current-milestone (M5.5) debt stands at 6 items, score 10 — all actionable in Phase 3 of this track.
+pre-m6-debt-final_20260614 resolved all 6 open M5.5 items (#521 #522 #523 #524 #525 #568), reducing the net open score from 29 to 19 across 8 items. The 8 remaining items fall into two clusters: (1) **Auth/security scaffolding** — #562 (score 4, token/faction binding, M8 prerequisite), #563 (score 3, re-join side-switching enforcement, M8), #403 (score 2, CSP headers, M8), and #350 (score 2, rate limiting, M8) — all intentional single-user testing scaffolding deferred to M8 auth hardening; (2) **Deferred rules-engine stubs** — #383, #382, #381 (score 2 each, M6-blocked), and #560 (score 2, ROLL_INITIATIVE friendly-unit filter, M6). Current-milestone (M5.5) debt is fully cleared. The score-4 auth item (#562) remains the highest-priority pre-M8 work and is a hard prerequisite for multiplayer.
 
 ---
 
@@ -385,18 +392,12 @@ _Ordered by score descending (ties: current milestone first, then newest first).
 | ----- | --------- | ----- | ------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 4     | M8        | #562  | Security: bind side tokens to factions in DB; derive player.side from token match    | PR #561       | DB stores two opaque tokens with no faction binding; `requireSide` validates token matches either slot but never checks which side it belongs to. A player can claim either faction. Intentional single-user testing scaffolding; hard prerequisite for M8 multiplayer — requires DB migration, session rewrite, and engine authorization update. |
 | 3     | M8        | #563  | Security: enforce side binding on re-join — reject side-switch to opponent's faction | PR #561       | Re-join path accepts any `side` from request body while reusing existing token, allowing side impersonation between turns. Acknowledged scaffolding (#349); depends on #562 (token/faction binding) to derive correct side. Deferred to M8 alongside full auth hardening.                                                                         |
-| 2     | M5.5      | #568  | action-contract.md: inline socket snippet and M5-specific sections will rot in M6    | PR #565       | Socket snippet in §6 is copied from GameView.vue — divergence leaves the doc silently wrong. M5-specific TODO anchors in §4 and §8 become stale once the concrete-candidate path is implemented in M6. No functional risk; documentation rot only. Fix at M6 kickoff.                                                                             |
-| 2     | M5.5      | #525  | a11y(LobbyView): add aria-disabled + reason to disabled join buttons                 | PR #520       | Disabled join buttons in LobbyView have no `aria-disabled` attribute or associated description explaining why they are disabled. Screen reader users cannot determine button state or reason. Low coupling; isolated a11y addition.                                                                                                               |
-| 2     | M5.5      | #523  | refactor: extract shared menu-background layout component (DRY HomeView/LobbyView)   | PR #520       | HomeView and LobbyView share an identical full-viewport gradient background pattern implemented inline in each component. Duplication will diverge on future reskin. Extract to a shared `MenuLayout.vue` or CSS custom property tokens.                                                                                                          |
-| 2     | M5.5      | #522  | a11y: add &lt;main&gt; landmark and skip-navigation link to app shell                | PR #520       | App shell has no `<main id="main-content">` landmark and no visually-hidden skip-nav link. Keyboard and screen-reader users cannot bypass the nav strip. Isolated app-shell addition; no component coupling.                                                                                                                                      |
 | 2     | M6        | #560  | LOB §10.3 — ROLL_INITIATIVE should filter candidates to friendly units only          | PR #559       | No functional bug in M5 because the scenario seeds only one side's units. Becomes a correctness issue in M6 when opposing units enter shared game state. Fix requires `side` field on `UnitStateSchema` or OOB-data integration as prerequisite.                                                                                                  |
 | 2     | M6        | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)                   | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                                                                                                                                                                |
 | 2     | M6        | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                                    | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                                                                                                                                                               |
 | 2     | M6        | #381  | Implement Attack Recovery step handler (LOB §10.6b)                                  | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                                                                                                                                                                 |
 | 2     | M8        | #403  | Add Content-Security-Policy headers to Express server                                | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                                                                                                                                                               |
 | 2     | M8        | #350  | server: add rate limiting on POST /api/v1/games routes                               | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing.                                                                                                                                              |
-| 1     | M5.5      | #524  | chore: delete StatusView.vue — no longer routed after HomeView added                 | PR #520       | StatusView.vue is an orphaned component left from pre-HomeView scaffold — no router entry references it. Dead code; delete with its test file.                                                                                                                                                                                                    |
-| 1     | M5.5      | #521  | feat(EditorNav): add scenario-editor link to EditorNav nav strip                     | PR #520       | EditorNav renders Map Editor and OOB Editor links but omits Scenario Editor. Navigating to the scenario editor requires knowing the direct URL. Trivial nav addition; isolated to EditorNav.vue.                                                                                                                                                  |
 
 ---
 
