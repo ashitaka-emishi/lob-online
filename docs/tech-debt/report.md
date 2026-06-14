@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-13 after PR #561._
+_Last updated: 2026-06-14 after PR #569._
 
 ---
 
@@ -8,10 +8,10 @@ _Last updated: 2026-06-13 after PR #561._
 
 | Metric                           | Value                                                                                             |
 | -------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Open debt items                  | 14                                                                                                |
-| Cumulative debt score (net open) | 28                                                                                                |
+| Open debt items                  | 9                                                                                                 |
+| Cumulative debt score (net open) | 21                                                                                                |
 | Highest-risk item                | Security: bind side tokens to factions in DB; derive player.side from token match (#562, score 4) |
-| PRs tracked                      | 281                                                                                               |
+| PRs tracked                      | 286                                                                                               |
 
 ---
 
@@ -343,6 +343,20 @@ _Last updated: 2026-06-13 after PR #561._
 | 2026-06-13 | PR #557 (resolved #533)                                        | -2                   | —         | 478                      |
 | 2026-06-13 | PR #559                                                        | 2                    | +2        | 480                      |
 | 2026-06-13 | PR #561                                                        | 9                    | +9        | 489                      |
+| 2026-06-14 | PR #565                                                        | 5                    | +5        | 494                      |
+| 2026-06-14 | PR #565 (added #566)                                           | +2                   | —         | 494                      |
+| 2026-06-14 | PR #565 (added #567)                                           | +1                   | —         | 494                      |
+| 2026-06-14 | PR #565 (added #568)                                           | +2                   | —         | 494                      |
+| 2026-06-14 | closeout-debt-sprint_20260614                                  | 0                    | -12       | 494                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #379)                  | -2                   | —         | 494                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #538)                  | -1                   | —         | 494                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #544)                  | -1                   | —         | 494                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #547)                  | -1                   | —         | 494                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #558)                  | -2                   | —         | 494                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #564)                  | -2                   | —         | 494                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #566)                  | -2                   | —         | 494                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #567)                  | -1                   | —         | 494                      |
+| 2026-06-14 | PR #569                                                        | 0                    | 0         | 494                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -350,9 +364,9 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Elevated risk. Several significant deferred items that introduce coupling or architectural compromise. Recommend a debt reduction sprint before the next major phase.
+Elevated risk. Significant deferred items require monitoring; none are immediately blocking M6 engine work.
 
-PR #561 (lobby/auth cleanup) added 3 new items (#562, #563, #564), bringing the net open score to 28 across 14 items. The 14 items fall into three clusters: (1) **Auth/security scaffolding** — #562 (score 4, token/faction binding, M8 prerequisite), #563 (score 3, re-join side-switching enforcement, M8), #403 (score 2, CSP headers, M8), and #350 (score 2, rate limiting, M8) — all intentional single-user testing scaffolding deferred to M8 auth hardening; (2) **Test coverage gaps** — #564 (score 2, lobby button accessibility), #558 (score 2, moduleSlug reactivity test), #544 and #547 (score 1 each, helper and router test gaps), and #538 (score 1, contrast ratio); (3) **Deferred rules-engine stubs** — #383, #382, #381, #379 (score 2 each, M6-blocked), and #560 (score 2, ROLL_INITIATIVE friendly-unit filter, M6). The score-4 auth item (#562) is the highest-priority pre-M8 work and is a hard prerequisite for multiplayer.
+closeout-debt-sprint_20260614 closed 8 items (#379, #538, #544, #547, #558, #564, #566, #567), reducing the net open score from 33 to 21 across 9 items. The 9 remaining items fall into three clusters: (1) **Auth/security scaffolding** — #562 (score 4, token/faction binding, M8 prerequisite), #563 (score 3, re-join side-switching enforcement, M8), #403 (score 2, CSP headers, M8), and #350 (score 2, rate limiting, M8) — all intentional single-user testing scaffolding deferred to M8 auth hardening; (2) **Deferred rules-engine stubs** — #383, #382, #381 (score 2 each, M6-blocked), and #560 (score 2, ROLL_INITIATIVE friendly-unit filter, M6); (3) **Documentation rot risk** — #568 (score 2, action-contract.md socket snippet and M5 sections, M6 kickoff). The score-4 auth item (#562) remains the highest-priority pre-M8 work and is a hard prerequisite for multiplayer.
 
 ---
 
@@ -364,18 +378,13 @@ _Ordered by score descending (ties: newest first). Resolved items are removed._
 | ----- | ----- | ------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 4     | #562  | Security: bind side tokens to factions in DB; derive player.side from token match    | PR #561       | DB stores two opaque tokens with no faction binding; `requireSide` validates token matches either slot but never checks which side it belongs to. A player can claim either faction. Intentional single-user testing scaffolding; hard prerequisite for M8 multiplayer — requires DB migration, session rewrite, and engine authorization update. |
 | 3     | #563  | Security: enforce side binding on re-join — reject side-switch to opponent's faction | PR #561       | Re-join path accepts any `side` from request body while reusing existing token, allowing side impersonation between turns. Acknowledged scaffolding (#349); depends on #562 (token/faction binding) to derive correct side. Deferred to M8 alongside full auth hardening.                                                                         |
-| 2     | #564  | Lobby: restore join-button disabled state and accessible labels for production UX    | PR #561       | USA/CSA buttons always enabled post-PR; screen readers get no programmatic signal that joining an active game will fail. Status badge in sibling cell is not associated with the buttons. Low functional risk; `role="alert"` error banner exists. Fix at M8 lobby UX pass.                                                                       |
 | 2     | #560  | LOB §10.3 — ROLL_INITIATIVE should filter candidates to friendly units only          | PR #559       | No functional bug in M5 because the scenario seeds only one side's units. Becomes a correctness issue in M6 when opposing units enter shared game state. Fix requires `side` field on `UnitStateSchema` or OOB-data integration as prerequisite.                                                                                                  |
-| 2     | #558  | Add component test for moduleSlug reactivity in editor views                         | PR #557       | No automated test asserts that changing `route.params.moduleSlug` triggers a re-fetch in the editor views. The `watch()` behavior is simple and verified by inspection, but a future refactor could silently drop it without CI catching the regression.                                                                                          |
 | 2     | #403  | Add Content-Security-Policy headers to Express server                                | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                                                                                                                                                               |
 | 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)                   | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                                                                                                                                                                |
 | 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                                    | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                                                                                                                                                               |
 | 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                                  | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                                                                                                                                                                 |
-| 2     | #379  | getValidActions should enumerate all legal actions for current state                 | PR #375       | Returns stubs by design at M5 depth; full enumeration requires unit/leader position data from the game map UI. Deferred to M6 game map track.                                                                                                                                                                                                     |
 | 2     | #350  | server: add rate limiting on POST /api/v1/games routes                               | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing.                                                                                                                                              |
-| 1     | #547  | Add router test coverage for legacy redirect destinations                            | PR #539       | Legacy redirect targets are string constants baked at module load time; a typo would not be caught by the current test suite.                                                                                                                                                                                                                     |
-| 1     | #544  | Add useModuleStore modulePath/defaultScenarioPath helper tests                       | PR #539       | Helpers build all client API and router URLs but have no direct assertions; simple string operations, low breakage risk.                                                                                                                                                                                                                          |
-| 1     | #538  | Improve contrast ratio for derived-value spans in scenario editor                    | PR #530       | `.derived-value` CSS color may not meet WCAG AA contrast ratio (4.5:1) against the panel background for `totalTurns` and lighting-time displays.                                                                                                                                                                                                  |
+| 2     | #568  | action-contract.md: inline socket snippet and M5-specific sections will rot in M6    | PR #565       | Socket snippet in §6 is copied from GameView.vue — divergence leaves the doc silently wrong. M5-specific TODO anchors in §4 and §8 become stale once the concrete-candidate path is implemented in M6. No functional risk; documentation rot only. Fix at M6 kickoff.                                                                             |
 
 ---
 

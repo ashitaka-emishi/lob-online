@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import router from './index.js';
+import { DEFAULT_SLUG } from '../stores/useModuleStore.js';
 
 const paths = router.getRoutes().map((r) => r.path);
 
@@ -68,5 +69,33 @@ describe('router — legacy redirects', () => {
     const route = router.getRoutes().find((r) => r.path === '/tools/table-test');
     expect(route).toBeTruthy();
     expect(route.redirect).toBeTruthy();
+  });
+});
+
+// #547 — Assert redirect destinations, not just existence (#547)
+describe('router — legacy redirect destinations', () => {
+  it('/lobby redirects to the default module lobby', () => {
+    const route = router.getRoutes().find((r) => r.path === '/lobby');
+    expect(route.redirect).toBe(`/modules/${DEFAULT_SLUG}/scenarios/full-battle/lobby`);
+  });
+
+  it('/tools/map-editor redirects to the default module map-editor', () => {
+    const route = router.getRoutes().find((r) => r.path === '/tools/map-editor');
+    expect(route.redirect).toBe(`/modules/${DEFAULT_SLUG}/tools/map-editor`);
+  });
+
+  it('/tools/oob-editor redirects to the default module oob-editor', () => {
+    const route = router.getRoutes().find((r) => r.path === '/tools/oob-editor');
+    expect(route.redirect).toBe(`/modules/${DEFAULT_SLUG}/tools/oob-editor`);
+  });
+
+  it('/tools/map-test redirects to the default module map-test', () => {
+    const route = router.getRoutes().find((r) => r.path === '/tools/map-test');
+    expect(route.redirect).toBe(`/modules/${DEFAULT_SLUG}/tools/map-test`);
+  });
+
+  it('/tools/table-test redirects to the default module table-test', () => {
+    const route = router.getRoutes().find((r) => r.path === '/tools/table-test');
+    expect(route.redirect).toBe(`/modules/${DEFAULT_SLUG}/tools/table-test`);
   });
 });

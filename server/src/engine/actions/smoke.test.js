@@ -22,7 +22,7 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { PHASES, STEPS } from '../../constants/phases.js';
-import { dispatch, getValidActions } from './index.js';
+import { dispatch, getValidActions, ActionError } from './index.js';
 import { saveGame, loadGame } from '../../store/gameFile.js';
 
 // ── Deterministic fixture ────────────────────────────────────────────────────
@@ -228,6 +228,65 @@ describe('Turn-loop steel-thread smoke (#554)', () => {
 
     const saved = await saveGame(GAME_ID, afterEnd, dataDir);
     expect(saved.version).toBe(state.version + 1);
+  });
+
+  // #566 — error-path coverage: wrong side dispatch, invalid action type, stale version
+  it('dispatch throws INVALID_ACTION when called for the wrong player side', async () => {
+    const state = await loadGame(GAME_ID, dataDir);
+    expect(() =>
+      dispatch(state, { type: 'END_PHASE', payload: null, playerSide: 'confederate' })
+    ).toThrow(ActionError);
+    expect(() =>
+      dispatch(state, { type: 'END_PHASE', payload: null, playerSide: 'confederate' })
+    ).toThrow(/turn/);
+  });
+
+  it('dispatch throws INVALID_ACTION for an action type not valid in current state', async () => {
+    const state = await loadGame(GAME_ID, dataDir);
+    // END_ACTIVATION is only legal when currentActivation is non-null; it is null in this state.
+    expect(() =>
+      dispatch(state, { type: 'END_ACTIVATION', payload: null, playerSide: 'union' })
+    ).toThrow(ActionError);
+    expect(() =>
+      dispatch(state, { type: 'END_ACTIVATION', payload: null, playerSide: 'union' })
+    ).toThrow(/not valid in the current state/);
+  });
+
+  it('saveGame throws on stale version conflict (optimistic-concurrency contract)', async () => {
+    const state = await loadGame(GAME_ID, dataDir);
+    const versionOnDisk = state.version;
+    // Saving with version - 1 simulates a stale writer
+    const staleState = { ...state, version: state.version - 1 };
+    await expect(saveGame(GAME_ID, staleState, dataDir)).rejects.toThrow(/Version conflict/);
+    // Rejection must leave disk state unchanged
+    const afterReject = await loadGame(GAME_ID, dataDir);
+    expect(afterReject.version).toBe(versionOnDisk);
+  });
+
+  // #567 — structural round-trip assertion on persisted state (save → load in isolated dir)
+  it('persisted state after save matches all top-level fields of the fixture', async () => {
+    const roundTripDir = await mkdtemp(join(tmpdir(), 'lob-smoke-rt-'));
+    try {
+      await saveGame(GAME_ID, ACTIVE_STATE, roundTripDir);
+      const loaded = await loadGame(GAME_ID, roundTripDir);
+      expect(loaded).toMatchObject({
+        id: GAME_ID,
+        scenarioId: 'south-mountain',
+        schemaVersion: 1,
+        phase: expect.any(String),
+        step: expect.any(String),
+        activePlayer: expect.any(String),
+        sides: { union: 'tok-union', confederate: 'tok-csa' },
+        units: expect.objectContaining({
+          colquitt: expect.objectContaining({
+            hex: '29.22',
+            orders: expect.objectContaining({ deliveryTurnDue: null }),
+          }),
+        }),
+      });
+    } finally {
+      await rm(roundTripDir, { recursive: true, force: true });
+    }
   });
 
   it('full turn cycle: END_PHASE × 2 advances turn counter and switches active player', async () => {

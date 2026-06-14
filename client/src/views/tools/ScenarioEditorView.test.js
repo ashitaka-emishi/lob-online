@@ -739,3 +739,49 @@ describe('ScenarioEditorView', () => {
     wrapper.unmount();
   });
 });
+
+// #558 — moduleSlug reactivity: changing route.params.moduleSlug triggers re-fetch
+describe('ScenarioEditorView — moduleSlug reactivity (#558)', () => {
+  beforeEach(() => {
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('re-fetches with new module URL when moduleSlug route param changes', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(JSON.parse(JSON.stringify(VALID_SCENARIO))),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    // Start at SM module
+    await stubRouter.push('/modules/SM/scenarios/full-battle/tools/scenario-editor');
+    const wrapper = mount(ScenarioEditorView, {
+      attachTo: document.body,
+      global: { plugins: [stubRouter] },
+    });
+    await flushPromises();
+
+    const callsAfterMount = fetchMock.mock.calls.length;
+    expect(callsAfterMount).toBeGreaterThan(0);
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/modules/SM/scenarios/full-battle/scenario');
+
+    // Navigate to a different module slug
+    await stubRouter.push('/modules/THG/scenarios/full-battle/tools/scenario-editor');
+    await flushPromises();
+
+    // fetch must have been called again with the new slug
+    expect(fetchMock.mock.calls.length).toBeGreaterThan(callsAfterMount);
+    const lastUrl = fetchMock.mock.calls[fetchMock.mock.calls.length - 1][0];
+    expect(lastUrl).toBe('/api/v1/modules/THG/scenarios/full-battle/scenario');
+    wrapper.unmount();
+  });
+});

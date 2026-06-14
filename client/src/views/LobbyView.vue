@@ -29,10 +29,20 @@
               <span :class="['status-badge', game.status]">{{ statusLabel(game.status) }}</span>
             </td>
             <td class="join-actions">
-              <button data-testid="join-usa-btn" @click="store.joinGame(game.id, 'union')">
+              <button
+                data-testid="join-usa-btn"
+                :aria-disabled="!store.canJoin(game)"
+                :aria-label="`Join game ${game.id} as USA, status: ${statusLabel(game.status)}`"
+                @click="store.canJoin(game) && store.joinGame(game.id, 'union')"
+              >
                 USA
               </button>
-              <button data-testid="join-csa-btn" @click="store.joinGame(game.id, 'confederate')">
+              <button
+                data-testid="join-csa-btn"
+                :aria-disabled="!store.canJoin(game)"
+                :aria-label="`Join game ${game.id} as CSA, status: ${statusLabel(game.status)}`"
+                @click="store.canJoin(game) && store.joinGame(game.id, 'confederate')"
+              >
                 CSA
               </button>
             </td>
@@ -140,5 +150,10 @@ function statusLabel(status) {
 .join-actions {
   display: flex;
   gap: 0.5rem;
+}
+
+.join-actions button[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>
