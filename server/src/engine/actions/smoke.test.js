@@ -216,10 +216,10 @@ describe('Turn-loop steel-thread smoke (#554)', () => {
     });
     expect(afterActivate.activityPhase.currentActivation.hex).toBe(activateCandidate.payload.hex);
 
-    // Only END_ACTIVATION should be valid mid-activation
+    // END_ACTIVATION always present mid-activation; FIRE_COMBAT also offered (LOB §5.5)
     const midActions = getValidActions(afterActivate, 'union');
-    expect(midActions).toHaveLength(1);
-    expect(midActions[0].type).toBe('END_ACTIVATION');
+    expect(midActions.map((a) => a.type)).toContain('END_ACTIVATION');
+    expect(midActions.map((a) => a.type)).toContain('FIRE_COMBAT');
 
     const afterEnd = dispatch(afterActivate, {
       type: 'END_ACTIVATION',

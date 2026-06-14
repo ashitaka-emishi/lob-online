@@ -1,11 +1,13 @@
 import { GameStateSchema } from '../../schemas/gameState.schema.js';
 import { PHASES, STEPS } from '../../constants/phases.js';
 import { ActionError } from './actionError.js';
+import { loadOob, buildUnitSideMap } from '../oob.js';
 import { handleEndPhase } from './endPhase.js';
 import { handleRollInitiative, handleIssueOrder } from './issueOrder.js';
 import { handleActivateStack } from './activateStack.js';
 import { handleEndActivation } from './endActivation.js';
 import { handleFireCombat } from './fireCombat.js';
+import { handleCloseCombat } from './closeCombat.js';
 
 export { ActionError };
 
@@ -56,9 +58,67 @@ export function getValidActions(state, playerSide) {
 
   // Activity phase — Activation step
   if (phase === PHASES.ACTIVITY && step === STEPS.ACTIVATION) {
-    // LOB §3.0d — if a stack is mid-activation, only END_ACTIVATION is valid
+    // LOB §3.0d — if a stack is mid-activation, offer combat actions plus END_ACTIVATION
     if (state.activityPhase?.currentActivation !== null) {
-      return [{ type: 'END_ACTIVATION', payload: null }];
+      const activation = state.activityPhase.currentActivation;
+      const activeHex = activation.hex;
+
+      // LOB §5.5 / §7.0 — build unit → side map to filter friendly vs. enemy targets.
+      // loadOob() reads from disk; this is acceptable for the candidate-generation path
+      // since getValidActions is informational (handlers re-validate independently).
+      let unitSideMap;
+      try {
+        unitSideMap = buildUnitSideMap(loadOob());
+      } catch {
+        // If OOB is unavailable, degrade gracefully to END_ACTIVATION only
+        return [{ type: 'END_ACTIVATION', payload: null }];
+      }
+
+      // Determine attacker side from the first on-board unit in the active hex
+      const activeUnits = Object.values(state.units).filter(
+        (u) => u.isOnBoard && u.hex === activeHex
+      );
+      const attackerSide =
+        activeUnits.length > 0 ? (unitSideMap.get(activeUnits[0].id)?.side ?? null) : null;
+
+      // LOB §5.5 — FIRE_COMBAT: enumerate enemy hexes in range; candidates use null payload
+      // (client supplies dice at submission time; exact LOS/range gating deferred to handler).
+      // TODO(M7): enumerate concrete (attackerHex, defenderHex) pairs when map data is available.
+      const enemyHexesOnBoard = new Set(
+        Object.values(state.units)
+          .filter((u) => {
+            if (!u.isOnBoard || !u.hex) return false;
+            const info = unitSideMap.get(u.id);
+            return info && attackerSide && info.side !== attackerSide;
+          })
+          .map((u) => u.hex)
+      );
+
+      // LOB §7.0 — CLOSE_COMBAT: enumerate enemy-occupied adjacent hexes.
+      // Adjacency requires gridSpec from mapData; without it produce no candidates.
+      // Candidates use null payload (client supplies dice at submission time).
+      const closeCombatCandidates = [...enemyHexesOnBoard]
+        .filter((hex) => {
+          // Simple Manhattan adjacency as fallback (single col or row step).
+          // Full cube-distance adjacency requires gridSpec; this approximation is safe
+          // for candidate generation since handler re-validates with exact distance.
+          const ac = parseInt(activeHex.split('.')[0]);
+          const ar = parseInt(activeHex.split('.')[1]);
+          const dc = parseInt(hex.split('.')[0]);
+          const dr = parseInt(hex.split('.')[1]);
+          return Math.abs(ac - dc) <= 1 && Math.abs(ar - dr) <= 1 && hex !== activeHex;
+        })
+        .map((defenderHex) => ({
+          type: 'CLOSE_COMBAT',
+          payload: { attackerHex: activeHex, defenderHex },
+        }));
+
+      return [
+        { type: 'END_ACTIVATION', payload: null },
+        ...closeCombatCandidates,
+        // LOB §5.5 — generic FIRE_COMBAT candidate; client supplies full payload
+        { type: 'FIRE_COMBAT', payload: null },
+      ];
     }
     // Build one ACTIVATE_STACK candidate per occupied, un-activated hex. (#550)
     // Deduplicate by hex so stacked units produce a single candidate per hex.
@@ -89,6 +149,7 @@ export const ACTION_HANDLERS = new Map([
   ['ACTIVATE_STACK', handleActivateStack],
   ['END_ACTIVATION', handleEndActivation],
   ['FIRE_COMBAT', handleFireCombat],
+  ['CLOSE_COMBAT', handleCloseCombat],
 ]);
 
 // Current auto-advance steps: attackRecovery, flukeStoppage, rally (3 steps, 8 gives headroom for M6+)
