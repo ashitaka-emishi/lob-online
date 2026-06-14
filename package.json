@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "test:smoke": "vitest run server/src/engine/actions/smoke.test.js",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "dev:server": "npm run dev -w server",
@@ -23,7 +24,6 @@
     "build": "npm run build -w client",
     "validate-data": "node scripts/validate-data.js",
     "quality:strict": "npm run validate-data && npm run lint && npm run format:check && npm run test && npm run build",
-    "test:smoke": "vitest run server/src/engine/actions/smoke.test.js",
     "test:e2e": "cypress run",
     "test:e2e:coverage": "cross-env CYPRESS_COVERAGE=true cypress run && node scripts/check-e2e-coverage.js"
   },

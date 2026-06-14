@@ -6,6 +6,14 @@
  * No HTTP layer, no mocks — this is a pure integration test of the engine pipeline.
  *
  * Run: npx vitest run server/src/engine/actions/smoke.test.js
+ *   or: npm run test:smoke
+ *
+ * ⚠ Test ordering: tests 2–8 share `dataDir` and run in source order. The persisted
+ * game-file version increments across them (test 2 saves v2, test 6 saves v3, test 8
+ * saves v4). Do NOT reorder these tests, insert new tests between them, or enable
+ * sequence.shuffle for this file — doing so will break version-number assertions with
+ * ENOENT or stale-version errors. Test 9 (full turn cycle) is fully isolated via its
+ * own `cycleDir` and can run in any order.
  */
 import { rm, mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -249,8 +257,9 @@ describe('Turn-loop steel-thread smoke (#554)', () => {
       expect(s.turn).toBe(2);
       expect(s.phase).toBe(PHASES.COMMAND);
       expect(s.step).toBe(STEPS.ORDERS);
-      // endPhase sets activePlayer=union when confederate ends activation (otherSide),
-      // then drainAutoSteps Rally flips union → confederate for the next command phase.
+      // Net result: turn 2 command phase belongs to confederate.
+      // Two-step flip: endPhase sets activePlayer=union (otherSide of the confederate
+      // who just ended), then drainAutoSteps Rally flips union→confederate (index.js:153).
       expect(s.activePlayer).toBe('confederate');
     } finally {
       await rm(cycleDir, { recursive: true, force: true });
