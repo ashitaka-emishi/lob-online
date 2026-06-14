@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-14 after PR #569._
+_Last updated: 2026-06-14 after pre-m6-debt-final_20260614 (Phase 2 — register backfill)._
 
 ---
 
@@ -8,10 +8,11 @@ _Last updated: 2026-06-14 after PR #569._
 
 | Metric                           | Value                                                                                             |
 | -------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Open debt items                  | 9                                                                                                 |
-| Cumulative debt score (net open) | 21                                                                                                |
+| Open debt items                  | 14                                                                                                |
+| Cumulative debt score (net open) | 29                                                                                                |
+| Current-milestone open debt      | 6 items, score 10 (M5.5 — Turn Loop Cleanup)                                                      |
 | Highest-risk item                | Security: bind side tokens to factions in DB; derive player.side from token match (#562, score 4) |
-| PRs tracked                      | 286                                                                                               |
+| PRs tracked                      | 287                                                                                               |
 
 ---
 
@@ -316,47 +317,53 @@ _Last updated: 2026-06-14 after PR #569._
 | 2026-06-05 | PR #517 (resolved #205)                                        | -1                   | —         | 447                      |
 | 2026-06-05 | PR #517 (resolved #204)                                        | -1                   | —         | 447                      |
 | 2026-06-06 | PR #517 (team-review)                                          | 0                    | 0         | 447                      |
-| 2026-06-08 | PR #530                                                        | 12                   | +12       | 459                      |
-| 2026-06-13 | PR #539                                                        | 17                   | +17       | 476                      |
-| 2026-06-13 | PR #539 (added #540)                                           | +4                   | —         | 476                      |
-| 2026-06-13 | PR #539 (added #541)                                           | +3                   | —         | 476                      |
-| 2026-06-13 | PR #539 (added #542)                                           | +2                   | —         | 476                      |
-| 2026-06-13 | PR #539 (added #543)                                           | +2                   | —         | 476                      |
-| 2026-06-13 | PR #539 (added #544)                                           | +1                   | —         | 476                      |
-| 2026-06-13 | PR #539 (added #545)                                           | +2                   | —         | 476                      |
-| 2026-06-13 | PR #539 (added #546)                                           | +2                   | —         | 476                      |
-| 2026-06-13 | PR #539 (added #547)                                           | +1                   | —         | 476                      |
-| 2026-06-13 | PR #548                                                        | 0                    | -18       | 476                      |
-| 2026-06-13 | PR #548 (resolved #540)                                        | -4                   | —         | 476                      |
-| 2026-06-13 | PR #548 (resolved #541)                                        | -3                   | —         | 476                      |
-| 2026-06-13 | PR #548 (resolved #531)                                        | -3                   | —         | 476                      |
-| 2026-06-13 | PR #548 (resolved #543)                                        | -2                   | —         | 476                      |
-| 2026-06-13 | PR #548 (resolved #532)                                        | -2                   | —         | 476                      |
-| 2026-06-13 | PR #548 (resolved #537)                                        | -1                   | —         | 476                      |
-| 2026-06-13 | PR #548 (resolved #536)                                        | -1                   | —         | 476                      |
-| 2026-06-13 | PR #548 (resolved #535)                                        | -1                   | —         | 476                      |
-| 2026-06-13 | PR #548 (resolved #534)                                        | -1                   | —         | 476                      |
-| 2026-06-13 | PR #557                                                        | 2                    | -6        | 478                      |
-| 2026-06-13 | PR #557 (resolved #546)                                        | -2                   | —         | 478                      |
-| 2026-06-13 | PR #557 (resolved #545)                                        | -2                   | —         | 478                      |
-| 2026-06-13 | PR #557 (resolved #542)                                        | -2                   | —         | 478                      |
-| 2026-06-13 | PR #557 (resolved #533)                                        | -2                   | —         | 478                      |
-| 2026-06-13 | PR #559                                                        | 2                    | +2        | 480                      |
-| 2026-06-13 | PR #561                                                        | 9                    | +9        | 489                      |
-| 2026-06-14 | PR #565                                                        | 5                    | +5        | 494                      |
-| 2026-06-14 | PR #565 (added #566)                                           | +2                   | —         | 494                      |
-| 2026-06-14 | PR #565 (added #567)                                           | +1                   | —         | 494                      |
-| 2026-06-14 | PR #565 (added #568)                                           | +2                   | —         | 494                      |
-| 2026-06-14 | closeout-debt-sprint_20260614                                  | 0                    | -12       | 494                      |
-| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #379)                  | -2                   | —         | 494                      |
-| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #538)                  | -1                   | —         | 494                      |
-| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #544)                  | -1                   | —         | 494                      |
-| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #547)                  | -1                   | —         | 494                      |
-| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #558)                  | -2                   | —         | 494                      |
-| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #564)                  | -2                   | —         | 494                      |
-| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #566)                  | -2                   | —         | 494                      |
-| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #567)                  | -1                   | —         | 494                      |
-| 2026-06-14 | PR #569                                                        | 0                    | 0         | 494                      |
+| 2026-06-07 | PR #520                                                        | 8                    | +8        | 455                      |
+| 2026-06-07 | PR #520 (added #521)                                           | +1                   | —         | 455                      |
+| 2026-06-07 | PR #520 (added #522)                                           | +2                   | —         | 455                      |
+| 2026-06-07 | PR #520 (added #523)                                           | +2                   | —         | 455                      |
+| 2026-06-07 | PR #520 (added #524)                                           | +1                   | —         | 455                      |
+| 2026-06-07 | PR #520 (added #525)                                           | +2                   | —         | 455                      |
+| 2026-06-08 | PR #530                                                        | 12                   | +12       | 467                      |
+| 2026-06-13 | PR #539                                                        | 17                   | +17       | 484                      |
+| 2026-06-13 | PR #539 (added #540)                                           | +4                   | —         | 484                      |
+| 2026-06-13 | PR #539 (added #541)                                           | +3                   | —         | 484                      |
+| 2026-06-13 | PR #539 (added #542)                                           | +2                   | —         | 484                      |
+| 2026-06-13 | PR #539 (added #543)                                           | +2                   | —         | 484                      |
+| 2026-06-13 | PR #539 (added #544)                                           | +1                   | —         | 484                      |
+| 2026-06-13 | PR #539 (added #545)                                           | +2                   | —         | 484                      |
+| 2026-06-13 | PR #539 (added #546)                                           | +2                   | —         | 484                      |
+| 2026-06-13 | PR #539 (added #547)                                           | +1                   | —         | 484                      |
+| 2026-06-13 | PR #548                                                        | 0                    | -18       | 484                      |
+| 2026-06-13 | PR #548 (resolved #540)                                        | -4                   | —         | 484                      |
+| 2026-06-13 | PR #548 (resolved #541)                                        | -3                   | —         | 484                      |
+| 2026-06-13 | PR #548 (resolved #531)                                        | -3                   | —         | 484                      |
+| 2026-06-13 | PR #548 (resolved #543)                                        | -2                   | —         | 484                      |
+| 2026-06-13 | PR #548 (resolved #532)                                        | -2                   | —         | 484                      |
+| 2026-06-13 | PR #548 (resolved #537)                                        | -1                   | —         | 484                      |
+| 2026-06-13 | PR #548 (resolved #536)                                        | -1                   | —         | 484                      |
+| 2026-06-13 | PR #548 (resolved #535)                                        | -1                   | —         | 484                      |
+| 2026-06-13 | PR #548 (resolved #534)                                        | -1                   | —         | 484                      |
+| 2026-06-13 | PR #557                                                        | 2                    | -6        | 486                      |
+| 2026-06-13 | PR #557 (resolved #546)                                        | -2                   | —         | 486                      |
+| 2026-06-13 | PR #557 (resolved #545)                                        | -2                   | —         | 486                      |
+| 2026-06-13 | PR #557 (resolved #542)                                        | -2                   | —         | 486                      |
+| 2026-06-13 | PR #557 (resolved #533)                                        | -2                   | —         | 486                      |
+| 2026-06-13 | PR #559                                                        | 2                    | +2        | 488                      |
+| 2026-06-13 | PR #561                                                        | 9                    | +9        | 497                      |
+| 2026-06-14 | PR #565                                                        | 5                    | +5        | 502                      |
+| 2026-06-14 | PR #565 (added #566)                                           | +2                   | —         | 502                      |
+| 2026-06-14 | PR #565 (added #567)                                           | +1                   | —         | 502                      |
+| 2026-06-14 | PR #565 (added #568)                                           | +2                   | —         | 502                      |
+| 2026-06-14 | closeout-debt-sprint_20260614                                  | 0                    | -12       | 502                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #379)                  | -2                   | —         | 502                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #538)                  | -1                   | —         | 502                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #544)                  | -1                   | —         | 502                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #547)                  | -1                   | —         | 502                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #558)                  | -2                   | —         | 502                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #564)                  | -2                   | —         | 502                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #566)                  | -2                   | —         | 502                      |
+| 2026-06-14 | closeout-debt-sprint_20260614 (resolved #567)                  | -1                   | —         | 502                      |
+| 2026-06-14 | PR #569                                                        | 0                    | 0         | 502                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -366,25 +373,30 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 Elevated risk. Significant deferred items require monitoring; none are immediately blocking M6 engine work.
 
-closeout-debt-sprint_20260614 closed 8 items (#379, #538, #544, #547, #558, #564, #566, #567), reducing the net open score from 33 to 21 across 9 items. The 9 remaining items fall into three clusters: (1) **Auth/security scaffolding** — #562 (score 4, token/faction binding, M8 prerequisite), #563 (score 3, re-join side-switching enforcement, M8), #403 (score 2, CSP headers, M8), and #350 (score 2, rate limiting, M8) — all intentional single-user testing scaffolding deferred to M8 auth hardening; (2) **Deferred rules-engine stubs** — #383, #382, #381 (score 2 each, M6-blocked), and #560 (score 2, ROLL_INITIATIVE friendly-unit filter, M6); (3) **Documentation rot risk** — #568 (score 2, action-contract.md socket snippet and M5 sections, M6 kickoff). The score-4 auth item (#562) remains the highest-priority pre-M8 work and is a hard prerequisite for multiplayer.
+The register now tracks 14 open items (net score 29) across four clusters: (1) **Auth/security scaffolding** — #562 (score 4, token/faction binding, M8 prerequisite), #563 (score 3, re-join side-switching enforcement, M8), #403 (score 2, CSP headers, M8), and #350 (score 2, rate limiting, M8) — all intentional single-user testing scaffolding deferred to M8 auth hardening; (2) **Deferred rules-engine stubs** — #383, #382, #381 (score 2 each, M6-blocked), and #560 (score 2, ROLL_INITIATIVE friendly-unit filter, M6); (3) **M5.5 UI/a11y cleanup** — #568 (score 2, action-contract.md rot), #525 (score 2, aria-disabled on lobby buttons), #523 (score 2, DRY menu layout), #522 (score 2, app-shell &lt;main&gt; landmark), #524 (score 1, delete StatusView.vue), and #521 (score 1, scenario-editor EditorNav link) — all targeted for resolution in this sprint; (4) The score-4 auth item (#562) remains the highest-priority pre-M8 work and is a hard prerequisite for multiplayer. Current-milestone (M5.5) debt stands at 6 items, score 10 — all actionable in Phase 3 of this track.
 
 ---
 
 ## Open Debt Items
 
-_Ordered by score descending (ties: newest first). Resolved items are removed._
+_Ordered by score descending (ties: current milestone first, then newest first). Resolved items are removed._
 
-| Score | Issue | Title                                                                                | PR Introduced | Assessment                                                                                                                                                                                                                                                                                                                                        |
-| ----- | ----- | ------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 4     | #562  | Security: bind side tokens to factions in DB; derive player.side from token match    | PR #561       | DB stores two opaque tokens with no faction binding; `requireSide` validates token matches either slot but never checks which side it belongs to. A player can claim either faction. Intentional single-user testing scaffolding; hard prerequisite for M8 multiplayer — requires DB migration, session rewrite, and engine authorization update. |
-| 3     | #563  | Security: enforce side binding on re-join — reject side-switch to opponent's faction | PR #561       | Re-join path accepts any `side` from request body while reusing existing token, allowing side impersonation between turns. Acknowledged scaffolding (#349); depends on #562 (token/faction binding) to derive correct side. Deferred to M8 alongside full auth hardening.                                                                         |
-| 2     | #560  | LOB §10.3 — ROLL_INITIATIVE should filter candidates to friendly units only          | PR #559       | No functional bug in M5 because the scenario seeds only one side's units. Becomes a correctness issue in M6 when opposing units enter shared game state. Fix requires `side` field on `UnitStateSchema` or OOB-data integration as prerequisite.                                                                                                  |
-| 2     | #403  | Add Content-Security-Policy headers to Express server                                | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                                                                                                                                                               |
-| 2     | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)                   | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                                                                                                                                                                |
-| 2     | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                                    | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                                                                                                                                                               |
-| 2     | #381  | Implement Attack Recovery step handler (LOB §10.6b)                                  | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                                                                                                                                                                 |
-| 2     | #350  | server: add rate limiting on POST /api/v1/games routes                               | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing.                                                                                                                                              |
-| 2     | #568  | action-contract.md: inline socket snippet and M5-specific sections will rot in M6    | PR #565       | Socket snippet in §6 is copied from GameView.vue — divergence leaves the doc silently wrong. M5-specific TODO anchors in §4 and §8 become stale once the concrete-candidate path is implemented in M6. No functional risk; documentation rot only. Fix at M6 kickoff.                                                                             |
+| Score | Milestone | Issue | Title                                                                                | PR Introduced | Assessment                                                                                                                                                                                                                                                                                                                                        |
+| ----- | --------- | ----- | ------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 4     | M8        | #562  | Security: bind side tokens to factions in DB; derive player.side from token match    | PR #561       | DB stores two opaque tokens with no faction binding; `requireSide` validates token matches either slot but never checks which side it belongs to. A player can claim either faction. Intentional single-user testing scaffolding; hard prerequisite for M8 multiplayer — requires DB migration, session rewrite, and engine authorization update. |
+| 3     | M8        | #563  | Security: enforce side binding on re-join — reject side-switch to opponent's faction | PR #561       | Re-join path accepts any `side` from request body while reusing existing token, allowing side impersonation between turns. Acknowledged scaffolding (#349); depends on #562 (token/faction binding) to derive correct side. Deferred to M8 alongside full auth hardening.                                                                         |
+| 2     | M5.5      | #568  | action-contract.md: inline socket snippet and M5-specific sections will rot in M6    | PR #565       | Socket snippet in §6 is copied from GameView.vue — divergence leaves the doc silently wrong. M5-specific TODO anchors in §4 and §8 become stale once the concrete-candidate path is implemented in M6. No functional risk; documentation rot only. Fix at M6 kickoff.                                                                             |
+| 2     | M5.5      | #525  | a11y(LobbyView): add aria-disabled + reason to disabled join buttons                 | PR #520       | Disabled join buttons in LobbyView have no `aria-disabled` attribute or associated description explaining why they are disabled. Screen reader users cannot determine button state or reason. Low coupling; isolated a11y addition.                                                                                                               |
+| 2     | M5.5      | #523  | refactor: extract shared menu-background layout component (DRY HomeView/LobbyView)   | PR #520       | HomeView and LobbyView share an identical full-viewport gradient background pattern implemented inline in each component. Duplication will diverge on future reskin. Extract to a shared `MenuLayout.vue` or CSS custom property tokens.                                                                                                          |
+| 2     | M5.5      | #522  | a11y: add &lt;main&gt; landmark and skip-navigation link to app shell                | PR #520       | App shell has no `<main id="main-content">` landmark and no visually-hidden skip-nav link. Keyboard and screen-reader users cannot bypass the nav strip. Isolated app-shell addition; no component coupling.                                                                                                                                      |
+| 2     | M6        | #560  | LOB §10.3 — ROLL_INITIATIVE should filter candidates to friendly units only          | PR #559       | No functional bug in M5 because the scenario seeds only one side's units. Becomes a correctness issue in M6 when opposing units enter shared game state. Fix requires `side` field on `UnitStateSchema` or OOB-data integration as prerequisite.                                                                                                  |
+| 2     | M6        | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)                   | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                                                                                                                                                                |
+| 2     | M6        | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                                    | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                                                                                                                                                               |
+| 2     | M6        | #381  | Implement Attack Recovery step handler (LOB §10.6b)                                  | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                                                                                                                                                                 |
+| 2     | M8        | #403  | Add Content-Security-Policy headers to Express server                                | PR #400       | No CSP on the Express server. Low risk in dev-only deployment; becomes meaningful when M8 ships public upload routes. Address with `helmet()` at M8 auth hardening.                                                                                                                                                                               |
+| 2     | M8        | #350  | server: add rate limiting on POST /api/v1/games routes                               | PR #348       | POST /api/v1/games and POST /:id/join have no per-IP rate limit. UUID unguessability mitigates enumeration risk pre-M8. Deferred to M8 auth hardening alongside OAuth; not blocking for dev/testing.                                                                                                                                              |
+| 1     | M5.5      | #524  | chore: delete StatusView.vue — no longer routed after HomeView added                 | PR #520       | StatusView.vue is an orphaned component left from pre-HomeView scaffold — no router entry references it. Dead code; delete with its test file.                                                                                                                                                                                                    |
+| 1     | M5.5      | #521  | feat(EditorNav): add scenario-editor link to EditorNav nav strip                     | PR #520       | EditorNav renders Map Editor and OOB Editor links but omits Scenario Editor. Navigating to the scenario editor requires knowing the direct URL. Trivial nav addition; isolated to EditorNav.vue.                                                                                                                                                  |
 
 ---
 
