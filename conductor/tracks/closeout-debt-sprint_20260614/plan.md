@@ -153,15 +153,15 @@ Update `docs/tech-debt/report.md` to reflect the 8 closed items.
 
 ### Tasks
 
-- [ ] Task 4.1: Remove closed items (#379, #538, #544, #547, #558, #564, #566, #567) from
+- [x] Task 4.1: Remove closed items (#379, #538, #544, #547, #558, #564, #566, #567) from
       the Open Debt Items table.
-- [ ] Task 4.2: Append resolution rows to the Debt Over Time table for each closed item.
-- [ ] Task 4.3: Update Executive Summary — open items: 9, cumulative net score: 21,
+- [x] Task 4.2: Append resolution rows to the Debt Over Time table for each closed item.
+- [x] Task 4.3: Update Executive Summary — open items: 9, cumulative net score: 21,
       highest-risk item unchanged (#562, score 4).
-- [ ] Task 4.4: Update Risk Assessment prose to reflect score 21 (elevated risk threshold:
+- [x] Task 4.4: Update Risk Assessment prose to reflect score 21 (elevated risk threshold:
       16–30).
-- [ ] Task 4.5: Update `_Last updated_` line.
-- [ ] Task 4.6: Commit debt register changes separately:
+- [x] Task 4.5: Update `_Last updated_` line.
+- [x] Task 4.6: Commit debt register changes separately:
       `docs(tech-debt): resolve debt items #379 #538 #544 #547 #558 #564 #566 #567`.
 
 ### Verification
