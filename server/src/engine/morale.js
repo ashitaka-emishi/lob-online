@@ -153,11 +153,13 @@ export function cascadeMorale(state, targetHex) {
 // ─── RESOLVE_MORALE handler helper ────────────────────────────────────────────
 
 /**
- * Resolve a pending 'combatResult' or 'closingRoll' by applying morale checks
- * and clearing pendingResolution.
+ * Resolve a pending 'combatResult' by applying morale checks and clearing pendingResolution.
  *
  * LOB §6.1 — called by the RESOLVE_MORALE action handler after the player
  * supplies the morale dice roll(s) for the affected units.
+ *
+ * NOTE: only handles 'combatResult' pending type. 'closingRoll' and 'moraleCheck' cascade
+ * resolution are deferred to M7 — see GitHub issues #571 (soft-lock) and #577 (cascade scope).
  *
  * @param {object} state - GameState with pendingResolution set
  * @param {number} diceRoll - raw 2d6 result for the morale check

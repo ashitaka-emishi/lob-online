@@ -1,5 +1,5 @@
 import { ActionError } from './actionError.js';
-import { loadOob, buildUnitSideMap } from '../oob.js';
+import { loadOob } from '../oob.js';
 import { resolvePendingMorale } from '../morale.js';
 
 /**
@@ -40,8 +40,6 @@ export function handleResolveMorale(state, action, { oob } = {}) {
 
   // LOB §6.1 — build unit → morale rating map from OOB for the morale check
   const loadedOob = oob ?? loadOob();
-  const unitSideMap = buildUnitSideMap(loadedOob);
-  void unitSideMap; // side map loaded; rating lookup uses findOobUnit below
 
   // Build a getRating function that walks the OOB for each unit's morale rating
   const getRating = (unitId) => {

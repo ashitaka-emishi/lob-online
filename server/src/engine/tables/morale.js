@@ -43,7 +43,7 @@ const ro = (b, l = 0) => Object.freeze({ type: 'routed', retreatHexes: b, spLoss
  * null  = No effect
  * BL    = Blood Lust
  * sh(b, l) = Shaken, retreat b hexes, lose l SPs
- * dg(b, l) = Defensive Ground (Disorganized), retreat b hexes, lose l SPs
+ * dg(b, l) = Disorganized (DG), retreat b hexes, lose l SPs
  * ro(b, l) = Rout, retreat b hexes, lose l SPs
  *
  * SP losses are taken AFTER retreat (LOB §6.1 footnote).
