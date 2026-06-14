@@ -236,13 +236,13 @@ status. "Engine" = pure-JS module implemented and unit-tested (testable via dev 
 | LOB §2            | Sequence of Play — turn phases, Command/Activity/Rally               | —        | M5    | Planned   |
 | LOB §3            | Movement — terrain costs, formations, road movement, ZOC             | M3       | M5    | Engine ✅ |
 | LOB §4            | Line of Sight — Slope Table, height modifiers                        | M3       | M3    | Engine ✅ |
-| LOB §5            | Fire Combat — Combat Table, Opening Volley, column shifts, depletion | M3       | M6    | Engine ✅ |
-| LOB §6            | Morale — Morale Table, state transitions, cascade                    | M3       | M6    | Engine ✅ |
-| LOB §7            | Close Combat — Closing Roll, charge sequence, charge modifiers       | M3       | M6    | Engine ✅ |
-| LOB §8            | Rally Phase — CBF removal, morale recovery                           | —        | M6    | Planned   |
+| LOB §5            | Fire Combat — Combat Table, Opening Volley, column shifts, depletion | M3       | M6    | Loop ✅   |
+| LOB §6            | Morale — Morale Table, state transitions, cascade                    | M3       | M6    | Loop ✅   |
+| LOB §7            | Close Combat — Closing Roll, charge sequence, charge modifiers       | M3       | M6    | Loop ✅   |
+| LOB §8            | Rally Phase — CBF removal, morale recovery                           | —        | M6    | Loop ✅   |
 | LOB §9.1          | Artillery — limbering, supply, depletion, artillery leaders          | M3 (ref) | M7    | Engine ✅ |
-| LOB §9.1a         | Leader Loss Table                                                    | M3       | M6    | Engine ✅ |
-| LOB §9.1e         | Zero Rule (attack MA roll)                                           | M3       | M6    | Engine ✅ |
+| LOB §9.1a         | Leader Loss Table                                                    | M3       | M6    | Loop ✅   |
+| LOB §9.1e         | Zero Rule (attack MA roll)                                           | M3       | M6    | Loop ✅   |
 | LOB §9.3          | Loss Recovery (midnight 25% rule)                                    | —        | M7    | Planned   |
 | LOB §9.4          | Open Order — movement/combat/ZOC effects                             | M3 (ref) | M5/M6 | Engine ✅ |
 | LOB §10.6         | Command Roll + Order Acceptance                                      | M3       | M5    | Engine ✅ |
