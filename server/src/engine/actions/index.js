@@ -9,6 +9,7 @@ import { handleEndActivation } from './endActivation.js';
 import { handleFireCombat } from './fireCombat.js';
 import { handleCloseCombat } from './closeCombat.js';
 import { handleResolveMorale } from './resolveMorale.js';
+import { handleResolveLeaderCasualty } from './resolveLeaderCasualty.js';
 
 export { ActionError };
 
@@ -18,6 +19,13 @@ export { ActionError };
 export function getValidActions(state, playerSide) {
   if (state.status !== 'active') return [];
   if (state.activePlayer !== playerSide) return [];
+
+  // LOB §9.1a — when a leader casualty check is pending, only RESOLVE_LEADER_CASUALTY is valid.
+  // Player must supply leaderId, roll, and situation before the game can continue.
+  if (state.pendingResolution?.type === 'leaderCasualty') {
+    return [{ type: 'RESOLVE_LEADER_CASUALTY', payload: null }];
+  }
+
   if (state.pendingResolution !== null) return [];
 
   const { phase, step } = state;
@@ -152,6 +160,7 @@ export const ACTION_HANDLERS = new Map([
   ['FIRE_COMBAT', handleFireCombat],
   ['CLOSE_COMBAT', handleCloseCombat],
   ['RESOLVE_MORALE', handleResolveMorale],
+  ['RESOLVE_LEADER_CASUALTY', handleResolveLeaderCasualty],
 ]);
 
 // Current auto-advance steps: attackRecovery, flukeStoppage, rally (3 steps, 8 gives headroom for M6+)
