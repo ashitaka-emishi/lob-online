@@ -3,7 +3,7 @@
 **Track ID:** closeout-debt-sprint_20260614
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-14
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -25,12 +25,12 @@ changes; Phase 3 makes small isolated CSS and Vue fixes with tests.
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -38,11 +38,11 @@ changes; Phase 3 makes small isolated CSS and Vue fixes with tests.
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated (8 items closed, score 33 → 21)
-- [ ] Ready for `/team-review`
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated (8 items closed, score 33 → 21)
+- [x] Ready for `/team-review`
 
 ---
 
@@ -174,12 +174,12 @@ Update `docs/tech-debt/report.md` to reflect the 8 closed items.
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met.
-- [ ] `npm run quality:strict` passes.
-- [ ] No unexpected test warnings.
-- [ ] 8 GitHub issues closed.
-- [ ] Debt register at score 21 / 9 items.
-- [ ] Ready for `/team-review`.
+- [x] All acceptance criteria in spec.md met.
+- [x] `npm run quality:strict` passes.
+- [x] No unexpected test warnings.
+- [x] 8 GitHub issues closed.
+- [x] Debt register at score 21 / 9 items.
+- [x] Ready for `/team-review`.
 
 ---
 

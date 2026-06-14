@@ -128,4 +128,4 @@
 | [x] | turn-loop-core_20260613 | Turn Loop Core — Engine, Store, and ActionPanel Payload Wiring (#550 #551 #552) | 2026-06-13 | 2026-06-13 |
 | [x] | lobby-auth-cleanup_20260613 | Lobby and Auth Cleanup — Side Entry Flow and Session Guard (#549 #553) | 2026-06-13 | 2026-06-13 |
 | [x] | turn-loop-polish_20260613 | Turn Loop Polish — E2E Smoke Test, A11y Focus, and Action Contract Docs (#554 #555 #556) | 2026-06-13 | 2026-06-13 |
-| [ ] | closeout-debt-sprint_20260614 | Conductor Closeout + Debt Sprint — Score 33 → 21 | 2026-06-14 | 2026-06-14 |
+| [x] | closeout-debt-sprint_20260614 | Conductor Closeout + Debt Sprint — Score 33 → 21 | 2026-06-14 | 2026-06-14 |
