@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-14 after pre-m6-debt-final_20260614._
+_Last updated: 2026-06-14 after PR #570._
 
 ---
 
@@ -12,7 +12,7 @@ _Last updated: 2026-06-14 after pre-m6-debt-final_20260614._
 | Cumulative debt score (net open) | 19                                                                                                |
 | Current-milestone open debt      | 0 items, score 0 (M5.5 — Turn Loop Cleanup; all resolved)                                         |
 | Highest-risk item                | Security: bind side tokens to factions in DB; derive player.side from token match (#562, score 4) |
-| PRs tracked                      | 288                                                                                               |
+| PRs tracked                      | 289                                                                                               |
 
 ---
 
@@ -371,6 +371,7 @@ _Last updated: 2026-06-14 after pre-m6-debt-final_20260614._
 | 2026-06-14 | pre-m6-debt-final_20260614 (resolved #522)                     | -2                   | —         | 502                      |
 | 2026-06-14 | pre-m6-debt-final_20260614 (resolved #524)                     | -1                   | —         | 502                      |
 | 2026-06-14 | pre-m6-debt-final_20260614 (resolved #521)                     | -1                   | —         | 502                      |
+| 2026-06-14 | PR #570 (team-review)                                          | 0                    | 0         | 502                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
