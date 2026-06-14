@@ -11,6 +11,8 @@ const BASE_UNIT = {
   wrecked: false,
   orders: null,
   ammo: 'full',
+  depletionMarker: false,
+  cbfMarker: false,
   isOnBoard: true,
   entryTurn: null,
   isDetached: false,
@@ -34,6 +36,7 @@ const COMMAND_ORDERS = {
   pendingResolution: null,
   activityPhase: null,
   ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+  rallyPhase: null,
 };
 
 describe('handleRollInitiative', () => {

@@ -39,6 +39,8 @@ const BASE_UNIT = {
   wrecked: false,
   orders: { type: 'move', status: 'accepted', deliveryTurnDue: null },
   ammo: 'full',
+  depletionMarker: false,
+  cbfMarker: false,
   isOnBoard: true,
   entryTurn: null,
   isDetached: false,
@@ -47,7 +49,7 @@ const BASE_UNIT = {
 const ACTIVE_STATE = {
   id: GAME_ID,
   scenarioId: 'south-mountain',
-  schemaVersion: 1,
+  schemaVersion: 2,
   version: 1,
   turn: 1,
   phase: PHASES.COMMAND,
@@ -68,6 +70,7 @@ const ACTIVE_STATE = {
   pendingResolution: null,
   activityPhase: null,
   ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+  rallyPhase: null,
 };
 
 // ── Setup / teardown ─────────────────────────────────────────────────────────
@@ -272,7 +275,7 @@ describe('Turn-loop steel-thread smoke (#554)', () => {
       expect(loaded).toMatchObject({
         id: GAME_ID,
         scenarioId: 'south-mountain',
-        schemaVersion: 1,
+        schemaVersion: 2,
         phase: expect.any(String),
         step: expect.any(String),
         activePlayer: expect.any(String),

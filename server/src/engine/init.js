@@ -39,6 +39,10 @@ function defaultUnit({ id, hex, orderRaw, isOnBoard, entryTurn, isDetached = fal
     orders: mapOrder(orderRaw),
     // LOB §8.2b — Ammo: full at start
     ammo: 'full',
+    // LOB §5.8 — Depletion marker: not triggered at game start
+    depletionMarker: false,
+    // LOB §8.1 — CBF marker: not placed at game start
+    cbfMarker: false,
     isOnBoard,
     entryTurn: entryTurn ?? null,
     // SM §2.3, §3.3 — false at init; set true by dispatch when a brigade is detached
@@ -204,6 +208,8 @@ export function initGameState(scenario, gameId) {
     pendingResolution: null,
     activityPhase: null,
     ordersPhase: null,
+    // LOB §8.1 — null until Rally Phase begins
+    rallyPhase: null,
   };
 
   return GameStateSchema.parse(state);

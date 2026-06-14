@@ -121,6 +121,7 @@ export function drainAutoSteps(state) {
 
     assertEnvelope(s.activityPhase, 'activityPhase', PHASES.ACTIVITY, phase, step);
     assertEnvelope(s.ordersPhase, 'ordersPhase', PHASES.COMMAND, phase, step);
+    assertEnvelope(s.rallyPhase, 'rallyPhase', PHASES.RALLY, phase, step);
 
     // LOB §10.6b — Attack Recovery: auto-advance at M5 depth (no stopped orders exist yet).
     // TODO(M6): roll per stopped attack order before advancing — see LOB §10.6b recovery table.
@@ -143,6 +144,7 @@ export function drainAutoSteps(state) {
         completedSteps: [],
         activityPhase: { activatedUnits: [], currentActivation: null },
         ordersPhase: null,
+        rallyPhase: null,
       };
       continue;
     }
@@ -160,6 +162,7 @@ export function drainAutoSteps(state) {
         activePlayer: nextActivePlayer,
         activityPhase: null,
         ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+        rallyPhase: null,
       };
       continue;
     }

@@ -12,6 +12,8 @@ const BASE_UNIT = {
   wrecked: false,
   orders: { type: 'move', status: 'accepted', deliveryTurnDue: null },
   ammo: 'full',
+  depletionMarker: false,
+  cbfMarker: false,
   isOnBoard: true,
   entryTurn: null,
   isDetached: false,
@@ -20,7 +22,7 @@ const BASE_UNIT = {
 const SETUP_STATE = {
   id: 'game-1',
   scenarioId: 'south-mountain',
-  schemaVersion: 1,
+  schemaVersion: 2,
   version: 1,
   turn: 1,
   phase: null,
@@ -36,6 +38,7 @@ const SETUP_STATE = {
   pendingResolution: null,
   activityPhase: null,
   ordersPhase: null,
+  rallyPhase: null,
 };
 
 const COMMAND_ORDERS_STATE = {
@@ -385,6 +388,7 @@ describe('drainAutoSteps', () => {
       turn: 1,
       activePlayer: 'union',
       completedSteps: [],
+      rallyPhase: { unitsPendingRally: [] },
     };
     const result = drainAutoSteps(state);
     expect(result.phase).toBe('command');

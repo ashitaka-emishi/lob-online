@@ -21,6 +21,7 @@ const MID_ACTIVATION_STATE = {
   pendingResolution: null,
   ordersPhase: null,
   activityPhase: { activatedUnits: [], currentActivation: '29.22' },
+  rallyPhase: null,
 };
 
 describe('handleEndActivation', () => {

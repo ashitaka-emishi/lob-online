@@ -68,6 +68,10 @@ export const UnitStateSchema = z
     // the order-holding level.
     orders: UnitOrderState.nullable(),
     ammo: AmmoState,
+    // LOB §5.8 — Shell/Canister Depletion marker: placed on unit when depletion roll triggers during fire
+    depletionMarker: z.boolean(),
+    // LOB §8.1 — Can't Be Fought (CBF) marker: placed after a unit takes a combat loss; cleared at Rally Phase
+    cbfMarker: z.boolean(),
     isOnBoard: z.boolean(),
     entryTurn: z.number().int().positive().nullable(),
     // SM §2.3, §3.3 — true when a brigade is operating independently of its parent division.
@@ -106,7 +110,18 @@ export const LeaderStateSchema = z
 // Pending interrupt requiring a dice roll or player decision before the current step completes
 export const PendingResolutionSchema = z
   .object({
-    type: z.enum(['looseCannonRoll', 'variableReinforcement', 'leaderCasualty']),
+    type: z.enum([
+      'looseCannonRoll',
+      'variableReinforcement',
+      // LOB §6.0 — morale check triggered by m/m+ combat result; context: { unitId, roll, modifier }
+      'moraleCheck',
+      // LOB §9.1a — leader casualty check triggered by m+ result or close combat; context: { leaderId }
+      'leaderCasualty',
+      // LOB §7.0b — closing roll triggered at start of charge sequence; context: { attackerId, defenderId }
+      'closingRoll',
+      // LOB §5.6 — fire combat result awaiting morale cascade to resolve; context: { attackerHex, defenderHex, result }
+      'combatResult',
+    ]),
     context: z.record(z.string(), z.unknown()),
   })
   .strict();
@@ -160,6 +175,13 @@ export const GameStateSchema = z
       })
       .strict()
       .nullable(),
+    // LOB §8.1 — non-null only during Rally Phase; tracks units with CBF markers pending rally
+    rallyPhase: z
+      .object({
+        unitsPendingRally: z.array(z.string()),
+      })
+      .strict()
+      .nullable(),
   })
   .strict()
   .refine((data) => (data.status === 'setup') === (data.phase === null), {
@@ -187,4 +209,9 @@ export const GameStateSchema = z
   .refine((data) => data.phase !== PHASES.RALLY || data.ordersPhase === null, {
     message: "ordersPhase must be null during 'rally' phase",
     path: ['ordersPhase'],
+  })
+  // LOB §8.1 — rallyPhase envelope biconditional: non-null iff phase is 'rally'
+  .refine((data) => (data.phase === PHASES.RALLY) === (data.rallyPhase !== null), {
+    message: "rallyPhase must be non-null iff phase is 'rally'",
+    path: ['rallyPhase'],
   });

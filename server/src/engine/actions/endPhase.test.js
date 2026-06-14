@@ -25,6 +25,7 @@ const COMMAND_ORDERS = {
   completedSteps: [],
   ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
   activityPhase: null,
+  rallyPhase: null,
 };
 
 const ACTIVITY_FIRST = {
@@ -35,6 +36,7 @@ const ACTIVITY_FIRST = {
   completedSteps: [],
   ordersPhase: null,
   activityPhase: { activatedUnits: [], currentActivation: null },
+  rallyPhase: null,
 };
 
 describe('handleEndPhase — Command phase → attackRecovery', () => {
@@ -94,6 +96,8 @@ describe('handleEndPhase — Activity phase, second player done → Rally', () =
     expect(result.step).toBe('rally');
     expect(result.activityPhase).toBeNull();
     expect(result.completedSteps).toEqual([]);
+    // LOB §8.1 — rallyPhase envelope must be set on entry to Rally Phase
+    expect(result.rallyPhase).toEqual({ unitsPendingRally: [] });
   });
 
   it('sets activePlayer to the turn first player before drainAutoSteps flips it', () => {

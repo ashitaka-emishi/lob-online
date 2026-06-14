@@ -26,6 +26,7 @@ const COMMAND_ORDERS_STATE = {
   pendingResolution: null,
   activityPhase: null,
   ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+  rallyPhase: null,
 };
 
 describe('dispatch — INVALID_STATE path', () => {
