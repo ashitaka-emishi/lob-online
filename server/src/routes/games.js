@@ -39,7 +39,7 @@ router.param('id', (req, res, next, id) => {
   next();
 });
 
-// POST /api/v1/games — create a new game, assign creator as confederate (CSA)
+// POST /api/v1/games — create a new game, assign creator as union (USA) (#549)
 router.post('/', async (req, res) => {
   try {
     const id = randomUUID();
@@ -53,9 +53,9 @@ router.post('/', async (req, res) => {
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
     await regenerateSession(req);
-    setPlayerSession(req, id, SIDES.CONFEDERATE, sideToken);
+    setPlayerSession(req, id, SIDES.UNION, sideToken);
 
-    res.status(201).json({ id, side: SIDES.CONFEDERATE });
+    res.status(201).json({ id, side: SIDES.UNION });
   } catch (err) {
     console.error('[route] POST /games error:', err.message);
     res.status(500).json({ error: 'Failed to create game' });

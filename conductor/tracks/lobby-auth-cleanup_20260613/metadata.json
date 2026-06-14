@@ -2,16 +2,20 @@
   "id": "lobby-auth-cleanup_20260613",
   "title": "Lobby and Auth Cleanup — Side Entry Flow and Session Guard",
   "type": "feature",
-  "status": "pending",
+  "status": "complete",
   "created": "2026-06-13T00:00:00.000Z",
-  "updated": "2026-06-13T00:00:00.000Z",
+  "updated": "2026-06-13T16:05:00.000Z",
   "issues": [549, 553],
   "phases": {
     "total": 2,
-    "completed": 0
+    "completed": 2
   },
   "tasks": {
     "total": 15,
-    "completed": 0
-  }
+    "completed": 15
+  },
+  "commits": [
+    "410a908: feat(auth): return 403 (not 401) when session is for a different game (#553)",
+    "2283b78: feat(lobby): assign creator as union, enable side buttons for all games (#549)"
+  ]
 }

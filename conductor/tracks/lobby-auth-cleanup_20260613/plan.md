@@ -3,7 +3,7 @@
 **Track ID:** lobby-auth-cleanup_20260613
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-13
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -21,12 +21,12 @@ Two independent but small changes: fix the lobby side-entry flow so New Game →
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -34,11 +34,11 @@ Two independent but small changes: fix the lobby side-entry flow so New Game →
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated if any debt was accepted
-- [ ] Ready for `/team-review`
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated if any debt was accepted
+- [x] Ready for `/team-review`
 
 ---
 
@@ -48,18 +48,18 @@ Add a `requireSameGame` middleware and apply it to `GET /api/v1/games/:id`, `GET
 
 ### Tasks
 
-- [ ] Task 1.1: Write failing tests — same-game session succeeds on all three routes
-- [ ] Task 1.2: Write failing tests — different-game session returns 403 on all three routes
-- [ ] Task 1.3: Write failing tests — missing session returns 401 on all three routes
-- [ ] Task 1.4: Implement `requireSameGame` middleware in `server/src/routes/games.js` (or a shared middleware file)
-- [ ] Task 1.5: Apply middleware to the three listed routes; verify existing tests still pass
-- [ ] Task 1.6: Checkpoint — human review before proceeding to lobby changes
+- [x] Task 1.1: Write failing tests — same-game session succeeds on all three routes
+- [x] Task 1.2: Write failing tests — different-game session returns 403 on all three routes
+- [x] Task 1.3: Write failing tests — missing session returns 401 on all three routes
+- [x] Task 1.4: Implement `requireSameGame` middleware in `server/src/routes/games.js` (or a shared middleware file)
+- [x] Task 1.5: Apply middleware to the three listed routes; verify existing tests still pass
+- [x] Task 1.6: Checkpoint — human review before proceeding to lobby changes
 
 ### Verification
 
-- [ ] All session guard tests pass
-- [ ] No existing game route tests regress
-- [ ] Checkpoint approved
+- [x] All session guard tests pass
+- [x] No existing game route tests regress
+- [x] Checkpoint approved
 
 ---
 
@@ -69,29 +69,29 @@ Fix creator side assignment in `POST /api/v1/games` and update `LobbyView` so si
 
 ### Tasks
 
-- [ ] Task 2.1: Write failing tests — new-game creator session reports `side: "union"`
-- [ ] Task 2.2: Write failing tests — USA button routes to game and sets session to `side: "union"` for existing game
-- [ ] Task 2.3: Write failing tests — CSA button routes to game and sets session to `side: "confederate"` for existing game
-- [ ] Task 2.4: Write failing tests — USA and CSA buttons are not disabled when a game already exists
-- [ ] Task 2.5: Fix `POST /api/v1/games` to assign creator as `side: "union"`; update comment and any fixture data
-- [ ] Task 2.6: Update `LobbyView.vue` — side buttons available for existing games; update copy/labels as needed
-- [ ] Task 2.7: Update `useLobbyStore` `joinGame` flow if needed to support side-entry for existing games
-- [ ] Task 2.8: Run `npm run quality:strict` — all gates must pass
+- [x] Task 2.1: Write failing tests — new-game creator session reports `side: "union"`
+- [x] Task 2.2: Write failing tests — USA button routes to game and sets session to `side: "union"` for existing game
+- [x] Task 2.3: Write failing tests — CSA button routes to game and sets session to `side: "confederate"` for existing game
+- [x] Task 2.4: Write failing tests — USA and CSA buttons are not disabled when a game already exists
+- [x] Task 2.5: Fix `POST /api/v1/games` to assign creator as `side: "union"`; update comment and any fixture data
+- [x] Task 2.6: Update `LobbyView.vue` — side buttons available for existing games; update copy/labels as needed
+- [x] Task 2.7: Update `useLobbyStore` `joinGame` flow if needed to support side-entry for existing games
+- [x] Task 2.8: Run `npm run quality:strict` — all gates must pass
 
 ### Verification
 
-- [ ] All lobby flow tests pass
-- [ ] Existing lobby and join tests pass
-- [ ] `npm run quality:strict` clean
+- [x] All lobby flow tests pass
+- [x] Existing lobby and join tests pass
+- [x] `npm run quality:strict` clean
 
 ---
 
 ## Final Verification
 
-- [ ] All acceptance criteria in spec.md met
-- [ ] `npm run quality:strict` passes
-- [ ] No unexpected test warnings
-- [ ] Ready for `/team-review`
+- [x] All acceptance criteria in spec.md met
+- [x] `npm run quality:strict` passes
+- [x] No unexpected test warnings
+- [x] Ready for `/team-review`
 
 ---
 

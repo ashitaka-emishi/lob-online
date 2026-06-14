@@ -10,19 +10,26 @@ import { getPlayerSession } from './session.js';
  * Express middleware that authorises a request as a player with an active game side.
  *
  * Response code matrix:
- *   401 — no valid player session, or session.gameId ≠ req.params.id
+ *   401 — no valid player session (unauthenticated)
+ *   403 — session exists but session.gameId ≠ req.params.id (authenticated for a different game)
  *   404 — game row no longer exists in the DB (game was deleted)
  *   409 — game exists but is not in 'active' status
  *         Note: 409 is returned before the token check, so a holder of a stale session
- *         for this game learns its lifecycle state. This is intentional: the 401 gate
+ *         for this game learns its lifecycle state. This is intentional: the 403 gate
  *         already scopes the caller to a specific game they previously joined.
  *   403 — game exists and is active, but session.sideToken does not match either side
  *   next — all checks pass; caller is an authorised active-side player
  */
 export function requireSide(req, res, next) {
   const player = getPlayerSession(req);
-  if (!player || player.gameId !== req.params.id) {
+  // No session at all → 401 (unauthenticated). Session exists but for a different game → 403
+  // (#553). These two cases must be distinct: 401 means "prove who you are"; 403 means "you
+  // proved who you are, but you don't own this game."
+  if (!player) {
     return res.status(401).json({ error: 'Unauthorized' });
+  }
+  if (player.gameId !== req.params.id) {
+    return res.status(403).json({ error: 'Forbidden' });
   }
 
   // Verify the sideToken is still valid against the DB record (#477).

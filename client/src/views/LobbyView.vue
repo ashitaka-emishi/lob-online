@@ -29,18 +29,10 @@
               <span :class="['status-badge', game.status]">{{ statusLabel(game.status) }}</span>
             </td>
             <td class="join-actions">
-              <button
-                data-testid="join-usa-btn"
-                :disabled="game.status !== 'open'"
-                @click="store.joinGame(game.id, 'union')"
-              >
+              <button data-testid="join-usa-btn" @click="store.joinGame(game.id, 'union')">
                 USA
               </button>
-              <button
-                data-testid="join-csa-btn"
-                :disabled="game.status !== 'open'"
-                @click="store.joinGame(game.id, 'confederate')"
-              >
+              <button data-testid="join-csa-btn" @click="store.joinGame(game.id, 'confederate')">
                 CSA
               </button>
             </td>
