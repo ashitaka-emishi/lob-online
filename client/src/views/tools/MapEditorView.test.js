@@ -877,8 +877,7 @@ describe('MapEditorView — moduleSlug reactivity (#558)', () => {
 
     const callsAfterMount = fetchMock.mock.calls.length;
     expect(callsAfterMount).toBeGreaterThan(0);
-    // The first fetch URL should contain /SM/
-    expect(fetchMock.mock.calls[0][0]).toContain('/SM/');
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/modules/SM/map');
 
     // Navigate to a different module slug
     await stubRouter.push('/modules/THG/tools/map-editor');
@@ -887,7 +886,7 @@ describe('MapEditorView — moduleSlug reactivity (#558)', () => {
     // fetch must have been called again with the new slug
     expect(fetchMock.mock.calls.length).toBeGreaterThan(callsAfterMount);
     const lastUrl = fetchMock.mock.calls[fetchMock.mock.calls.length - 1][0];
-    expect(lastUrl).toContain('/THG/');
+    expect(lastUrl).toBe('/api/v1/modules/THG/map');
     wrapper.unmount();
   });
 });

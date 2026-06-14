@@ -254,29 +254,39 @@ describe('Turn-loop steel-thread smoke (#554)', () => {
 
   it('saveGame throws on stale version conflict (optimistic-concurrency contract)', async () => {
     const state = await loadGame(GAME_ID, dataDir);
-    // state.version is now current; saving with version - 1 simulates a stale writer
+    const versionOnDisk = state.version;
+    // Saving with version - 1 simulates a stale writer
     const staleState = { ...state, version: state.version - 1 };
     await expect(saveGame(GAME_ID, staleState, dataDir)).rejects.toThrow(/Version conflict/);
+    // Rejection must leave disk state unchanged
+    const afterReject = await loadGame(GAME_ID, dataDir);
+    expect(afterReject.version).toBe(versionOnDisk);
   });
 
-  // #567 — structural round-trip assertion on persisted state
+  // #567 — structural round-trip assertion on persisted state (save → load in isolated dir)
   it('persisted state after save matches all top-level fields of the fixture', async () => {
-    const loaded = await loadGame(GAME_ID, dataDir);
-    expect(loaded).toMatchObject({
-      id: GAME_ID,
-      scenarioId: 'south-mountain',
-      schemaVersion: 1,
-      phase: expect.any(String),
-      step: expect.any(String),
-      activePlayer: expect.any(String),
-      sides: { union: 'tok-union', confederate: 'tok-csa' },
-      units: expect.objectContaining({
-        colquitt: expect.objectContaining({
-          hex: '29.22',
-          orders: expect.objectContaining({ deliveryTurnDue: null }),
+    const roundTripDir = await mkdtemp(join(tmpdir(), 'lob-smoke-rt-'));
+    try {
+      await saveGame(GAME_ID, ACTIVE_STATE, roundTripDir);
+      const loaded = await loadGame(GAME_ID, roundTripDir);
+      expect(loaded).toMatchObject({
+        id: GAME_ID,
+        scenarioId: 'south-mountain',
+        schemaVersion: 1,
+        phase: expect.any(String),
+        step: expect.any(String),
+        activePlayer: expect.any(String),
+        sides: { union: 'tok-union', confederate: 'tok-csa' },
+        units: expect.objectContaining({
+          colquitt: expect.objectContaining({
+            hex: '29.22',
+            orders: expect.objectContaining({ deliveryTurnDue: null }),
+          }),
         }),
-      }),
-    });
+      });
+    } finally {
+      await rm(roundTripDir, { recursive: true, force: true });
+    }
   });
 
   it('full turn cycle: END_PHASE × 2 advances turn counter and switches active player', async () => {

@@ -31,17 +31,17 @@
             <td class="join-actions">
               <button
                 data-testid="join-usa-btn"
-                :aria-disabled="joinDisabled(game)"
-                :aria-label="`Join game ${game.id} as USA — ${statusLabel(game.status)}`"
-                @click="store.joinGame(game.id, 'union')"
+                :aria-disabled="!store.canJoin(game)"
+                :aria-label="`Join game ${game.id} as USA, status: ${statusLabel(game.status)}`"
+                @click="store.canJoin(game) && store.joinGame(game.id, 'union')"
               >
                 USA
               </button>
               <button
                 data-testid="join-csa-btn"
-                :aria-disabled="joinDisabled(game)"
-                :aria-label="`Join game ${game.id} as CSA — ${statusLabel(game.status)}`"
-                @click="store.joinGame(game.id, 'confederate')"
+                :aria-disabled="!store.canJoin(game)"
+                :aria-label="`Join game ${game.id} as CSA, status: ${statusLabel(game.status)}`"
+                @click="store.canJoin(game) && store.joinGame(game.id, 'confederate')"
               >
                 CSA
               </button>
@@ -74,14 +74,6 @@ function statusLabel(status) {
   if (status === 'open') return 'Waiting for player';
   if (status === 'active') return 'In progress';
   return status;
-}
-
-// Returns true when joining this game would fail (game full or session already committed elsewhere).
-// Used for aria-disabled — buttons remain clickable for the single-tester dev flow.
-function joinDisabled(game) {
-  if (game.status !== 'open') return true;
-  if (store.myGameId !== null && store.myGameId !== game.id) return true;
-  return false;
 }
 </script>
 
@@ -158,5 +150,10 @@ function joinDisabled(game) {
 .join-actions {
   display: flex;
   gap: 0.5rem;
+}
+
+.join-actions button[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

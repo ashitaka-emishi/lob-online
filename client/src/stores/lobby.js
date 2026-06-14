@@ -88,5 +88,22 @@ export const useLobbyStore = defineStore('lobby', () => {
     }
   }
 
-  return { games, myGameId, mySide, loading, error, fetchGames, createGame, deleteGame, joinGame };
+  function canJoin(game) {
+    if (game.status !== 'open') return false;
+    if (myGameId.value !== null && myGameId.value !== game.id) return false;
+    return true;
+  }
+
+  return {
+    games,
+    myGameId,
+    mySide,
+    loading,
+    error,
+    fetchGames,
+    createGame,
+    deleteGame,
+    joinGame,
+    canJoin,
+  };
 });

@@ -153,12 +153,15 @@ describe('OobEditorView — moduleSlug reactivity (#558)', () => {
     vi.stubGlobal('fetch', mockFetch(MINIMAL_OOB, MINIMAL_LEADERS));
     const { default: OobEditorView } = await import('./OobEditorView.vue');
 
+    // Instantiate store and spy BEFORE mounting so we observe the initial SM call too.
+    const store = useOobStore();
+    const spy = vi.spyOn(store, 'loadDataForModule').mockImplementation(() => {});
+
     await stubRouter.push('/modules/SM/tools/oob-editor');
     const wrapper = mount(OobEditorView);
     await flushPromises();
 
-    const store = useOobStore();
-    const spy = vi.spyOn(store, 'loadDataForModule').mockImplementation(() => {});
+    expect(spy).toHaveBeenCalledWith('SM');
 
     await stubRouter.push('/modules/THG/tools/oob-editor');
     await flushPromises();

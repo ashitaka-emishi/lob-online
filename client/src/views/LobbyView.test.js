@@ -20,7 +20,7 @@ const stubRouter = createRouter({
 });
 
 function makeStore(overrides = {}) {
-  return {
+  const base = {
     games: [],
     myGameId: null,
     mySide: null,
@@ -32,6 +32,15 @@ function makeStore(overrides = {}) {
     joinGame: vi.fn(),
     ...overrides,
   };
+  // Default canJoin: mirrors real store eligibility unless caller provides one.
+  if (!base.canJoin) {
+    base.canJoin = (game) => {
+      if (game.status !== 'open') return false;
+      if (base.myGameId !== null && base.myGameId !== game.id) return false;
+      return true;
+    };
+  }
+  return base;
 }
 
 function mountLobby(storeOverrides = {}) {
@@ -117,24 +126,24 @@ describe('LobbyView', () => {
     expect(wrapper.find('[data-testid="join-csa-btn"]').attributes('disabled')).toBeUndefined();
   });
 
-  it('"USA" button fires joinGame on an active game — side-entry always available (#549)', async () => {
+  it('"USA" button does not fire joinGame for an active (full) game (#564)', async () => {
     const joinGame = vi.fn();
     const wrapper = mountLobby({
       games: [{ id: 'g2', status: 'active' }],
       joinGame,
     });
     await wrapper.find('[data-testid="join-usa-btn"]').trigger('click');
-    expect(joinGame).toHaveBeenCalledWith('g2', 'union');
+    expect(joinGame).not.toHaveBeenCalled();
   });
 
-  it('"CSA" button fires joinGame on an active game (#549)', async () => {
+  it('"CSA" button does not fire joinGame for an active (full) game (#564)', async () => {
     const joinGame = vi.fn();
     const wrapper = mountLobby({
       games: [{ id: 'g2', status: 'active' }],
       joinGame,
     });
     await wrapper.find('[data-testid="join-csa-btn"]').trigger('click');
-    expect(joinGame).toHaveBeenCalledWith('g2', 'confederate');
+    expect(joinGame).not.toHaveBeenCalled();
   });
 
   it('shows "Waiting for player" for open games and "In progress" for active (#407)', () => {
@@ -191,7 +200,7 @@ describe('LobbyView', () => {
     expect(wrapper.find('[data-testid="join-csa-btn"]').attributes('aria-disabled')).toBe('true');
   });
 
-  it('USA/CSA buttons include game id and status in aria-label', () => {
+  it('USA/CSA buttons include game id, side, and status in aria-label', () => {
     const wrapper = mountLobby({
       games: [{ id: 'g1', status: 'open' }],
     });
@@ -199,7 +208,9 @@ describe('LobbyView', () => {
     const csaBtn = wrapper.find('[data-testid="join-csa-btn"]');
     expect(usaBtn.attributes('aria-label')).toContain('g1');
     expect(usaBtn.attributes('aria-label')).toContain('USA');
+    expect(usaBtn.attributes('aria-label')).toContain('Waiting for player');
     expect(csaBtn.attributes('aria-label')).toContain('g1');
     expect(csaBtn.attributes('aria-label')).toContain('CSA');
+    expect(csaBtn.attributes('aria-label')).toContain('Waiting for player');
   });
 });
