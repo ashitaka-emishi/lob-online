@@ -1,67 +1,83 @@
 <template>
-  <div class="lobby-bg">
-    <div class="lobby">
-      <h1>Game Lobby</h1>
+  <MenuLayout>
+    <div class="lobby-bg">
+      <div class="lobby">
+        <h1>Game Lobby</h1>
 
-      <div v-if="store.error" class="error" role="alert">{{ store.error }}</div>
+        <div v-if="store.error" class="error" role="alert">{{ store.error }}</div>
 
-      <table class="game-list" aria-label="Available games">
-        <thead>
-          <tr>
-            <th>Game ID</th>
-            <th class="col-center">Status</th>
-            <th class="col-center">Join</th>
-            <th class="col-center">
-              <button
-                data-testid="new-game-btn"
-                :disabled="store.loading"
-                @click="store.createGame()"
-              >
-                New
-              </button>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="game in store.games" :key="game.id" data-testid="game-row">
-            <td class="game-id">{{ game.id }}</td>
-            <td class="col-center">
-              <span :class="['status-badge', game.status]">{{ statusLabel(game.status) }}</span>
-            </td>
-            <td class="join-actions">
-              <button
-                data-testid="join-usa-btn"
-                :aria-disabled="!store.canJoin(game)"
-                :aria-label="`Join game ${game.id} as USA, status: ${statusLabel(game.status)}`"
-                @click="store.canJoin(game) && store.joinGame(game.id, 'union')"
-              >
-                USA
-              </button>
-              <button
-                data-testid="join-csa-btn"
-                :aria-disabled="!store.canJoin(game)"
-                :aria-label="`Join game ${game.id} as CSA, status: ${statusLabel(game.status)}`"
-                @click="store.canJoin(game) && store.joinGame(game.id, 'confederate')"
-              >
-                CSA
-              </button>
-            </td>
-            <td class="col-center">
-              <button data-testid="delete-btn" @click="store.deleteGame(game.id)">Delete</button>
-            </td>
-          </tr>
-          <tr v-if="!store.loading && store.games.length === 0">
-            <td colspan="4" class="empty-state">No games yet.</td>
-          </tr>
-        </tbody>
-      </table>
+        <table class="game-list" aria-label="Available games">
+          <thead>
+            <tr>
+              <th>Game ID</th>
+              <th class="col-center">Status</th>
+              <th class="col-center">Join</th>
+              <th class="col-center">
+                <button
+                  data-testid="new-game-btn"
+                  :disabled="store.loading"
+                  @click="store.createGame()"
+                >
+                  New
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="game in store.games" :key="game.id" data-testid="game-row">
+              <td class="game-id">{{ game.id }}</td>
+              <td class="col-center">
+                <span :class="['status-badge', game.status]">{{ statusLabel(game.status) }}</span>
+              </td>
+              <td class="join-actions">
+                <span
+                  v-if="!store.canJoin(game)"
+                  :id="`join-disabled-reason-${game.id}`"
+                  class="sr-only"
+                >
+                  Cannot join: game is {{ statusLabel(game.status) }}
+                </span>
+                <button
+                  data-testid="join-usa-btn"
+                  :aria-disabled="!store.canJoin(game)"
+                  :aria-describedby="
+                    !store.canJoin(game) ? `join-disabled-reason-${game.id}` : undefined
+                  "
+                  :aria-label="`Join game ${game.id} as USA, status: ${statusLabel(game.status)}`"
+                  @click="store.canJoin(game) && store.joinGame(game.id, 'union')"
+                >
+                  USA
+                </button>
+                <button
+                  data-testid="join-csa-btn"
+                  :aria-disabled="!store.canJoin(game)"
+                  :aria-describedby="
+                    !store.canJoin(game) ? `join-disabled-reason-${game.id}` : undefined
+                  "
+                  :aria-label="`Join game ${game.id} as CSA, status: ${statusLabel(game.status)}`"
+                  @click="store.canJoin(game) && store.joinGame(game.id, 'confederate')"
+                >
+                  CSA
+                </button>
+              </td>
+              <td class="col-center">
+                <button data-testid="delete-btn" @click="store.deleteGame(game.id)">Delete</button>
+              </td>
+            </tr>
+            <tr v-if="!store.loading && store.games.length === 0">
+              <td colspan="4" class="empty-state">No games yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
+  </MenuLayout>
 </template>
 
 <script setup>
 import { onMounted } from 'vue';
 
+import MenuLayout from '../components/MenuLayout.vue';
 import { useLobbyStore } from '../stores/lobby.js';
 
 const store = useLobbyStore();
@@ -79,10 +95,6 @@ function statusLabel(status) {
 
 <style scoped>
 .lobby-bg {
-  min-height: 100vh;
-  background-image: url('/menu-bg.png');
-  background-size: cover;
-  background-position: center;
   padding: 2rem 1rem;
 }
 

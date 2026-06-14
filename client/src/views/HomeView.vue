@@ -2,56 +2,55 @@
 import { RouterLink } from 'vue-router';
 import { useEditorsEnabled } from '../composables/useEditorsEnabled.js';
 import { useModuleStore, MODULES } from '../stores/useModuleStore.js';
+import MenuLayout from '../components/MenuLayout.vue';
 
 const editorsEnabled = useEditorsEnabled();
 const moduleStore = useModuleStore();
 </script>
 
 <template>
-  <div class="home">
-    <div class="menu-card">
-      <h1>Line of Battle Online</h1>
-      <div class="module-selector">
-        <label for="module-select" class="module-label">Game</label>
-        <select
-          id="module-select"
-          class="module-select"
-          data-testid="module-select"
-          :value="moduleStore.selectedSlug"
-          @change="moduleStore.setModule($event.target.value)"
-        >
-          <option v-for="s in MODULES" :key="s.slug" :value="s.slug">
-            {{ s.displayName }}
-          </option>
-        </select>
+  <MenuLayout>
+    <div class="home">
+      <div class="menu-card">
+        <h1>Line of Battle Online</h1>
+        <div class="module-selector">
+          <label for="module-select" class="module-label">Game</label>
+          <select
+            id="module-select"
+            class="module-select"
+            data-testid="module-select"
+            :value="moduleStore.selectedSlug"
+            @change="moduleStore.setModule($event.target.value)"
+          >
+            <option v-for="s in MODULES" :key="s.slug" :value="s.slug">
+              {{ s.displayName }}
+            </option>
+          </select>
+        </div>
+        <nav class="menu" aria-label="Main menu">
+          <RouterLink
+            :to="moduleStore.defaultScenarioPath('/lobby')"
+            data-testid="lobby-link"
+            class="menu-btn"
+          >
+            Lobby
+          </RouterLink>
+          <RouterLink
+            v-if="editorsEnabled"
+            :to="moduleStore.modulePath('/tools/map-editor')"
+            data-testid="editor-link"
+            class="menu-btn editor-btn"
+          >
+            Editor
+          </RouterLink>
+        </nav>
       </div>
-      <nav class="menu" aria-label="Main menu">
-        <RouterLink
-          :to="moduleStore.defaultScenarioPath('/lobby')"
-          data-testid="lobby-link"
-          class="menu-btn"
-        >
-          Lobby
-        </RouterLink>
-        <RouterLink
-          v-if="editorsEnabled"
-          :to="moduleStore.modulePath('/tools/map-editor')"
-          data-testid="editor-link"
-          class="menu-btn editor-btn"
-        >
-          Editor
-        </RouterLink>
-      </nav>
     </div>
-  </div>
+  </MenuLayout>
 </template>
 
 <style scoped>
 .home {
-  min-height: 100vh;
-  background-image: url('/menu-bg.png');
-  background-size: cover;
-  background-position: center;
   display: flex;
   align-items: center;
   justify-content: center;

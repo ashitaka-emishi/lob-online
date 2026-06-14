@@ -129,3 +129,4 @@
 | [x] | lobby-auth-cleanup_20260613 | Lobby and Auth Cleanup — Side Entry Flow and Session Guard (#549 #553) | 2026-06-13 | 2026-06-13 |
 | [x] | turn-loop-polish_20260613 | Turn Loop Polish — E2E Smoke Test, A11y Focus, and Action Contract Docs (#554 #555 #556) | 2026-06-13 | 2026-06-13 |
 | [x] | closeout-debt-sprint_20260614 | Conductor Closeout + Debt Sprint — Score 33 → 21 | 2026-06-14 | 2026-06-14 |
+| [x] | pre-m6-debt-final_20260614 | Pre-M6 Final Debt Sprint + Debt Report Improvements | 2026-06-14 | 2026-06-14 |

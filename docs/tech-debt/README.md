@@ -20,6 +20,11 @@ After completing PR review resolution (following `/team-review`), run `/tech-deb
 2. Generate a per-PR report in `docs/tech-debt/reports/`.
 3. Update the aggregated `docs/tech-debt/report.md`.
 
+When filing a deferred debt issue, assign it to the GitHub milestone in which it is expected to
+be resolved before closing the issue. This is a required step — `/tech-debt-report` will prompt
+for it if omitted. Use `gh api --method PATCH repos/{owner}/{repo}/issues/{number} -f milestone={id}`
+or the GitHub UI to set the milestone.
+
 All review findings must be either **fixed in place** (resolved in the PR) or **deferred** (filed as a GitHub issue). Deferred items require a debt score and written assessment before the workflow completes.
 
 ### Targeted Second-Pass Review

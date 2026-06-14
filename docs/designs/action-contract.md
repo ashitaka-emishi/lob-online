@@ -138,6 +138,9 @@ current schema. Seeding `leaderState` entries does not produce concrete candidat
 `LeaderStateSchema` gains `isOnBoard` (see §9 item 0 and #560). See §8 for the null-payload
 fallback behaviour.
 
+<!-- TODO(M6): update this paragraph when LeaderStateSchema gains isOnBoard and the concrete-
+     candidate path becomes live. Remove the dead-code warning. Ref: §9 item 0, #560. -->
+
 Handler validates: `leaderId` and `unitId` are both present; leader has not already rolled
 this turn.
 
@@ -224,19 +227,15 @@ After every successful `POST /api/v1/games/:id/actions`, the server emits:
 io.to(gameId).emit('game:state-updated', { version: saved.version });
 ```
 
-`GameView.vue` listens:
-
-```js
-socket.on('game:state-updated', async () => {
-  await gameStore.loadGame(gameId);
-  await gameStore.refreshValidActions(gameId);
-});
-```
-
-Both fetches use generation counters (`_loadGeneration`, `_actionsGeneration`) to discard
-stale responses from burst events. The submitting client also reads the full game state
-from the POST response body — it does not wait for the socket event to update its own
+`GameView.vue` listens for `'game:state-updated'` — see
+[`client/src/views/GameView.vue`](../../client/src/views/GameView.vue) for the current
+implementation. Both fetches use generation counters (`_loadGeneration`, `_actionsGeneration`)
+to discard stale responses from burst events. The submitting client also reads the full game
+state from the POST response body — it does not wait for the socket event to update its own
 `gameState`. The socket event primarily refreshes the **opposing player's** view.
+
+<!-- TODO(M6): update this section when the socket contract changes (e.g. side-scoped events,
+     partial-state diffs, or FIRE/MELEE action types are added). -->
 
 If `io` is unavailable (e.g., during server-side integration tests), the route logs a
 warning and skips the emit — no error is returned.
@@ -310,3 +309,6 @@ The following surfaces must be extended or replaced in M6:
 8. **Remove null-payload ROLL_INITIATIVE fallback** once item 0 and item 3 are done. Also
    update `smoke.test.js` fixture to seed a valid `leaderState` entry and assert concrete
    candidates.
+
+<!-- TODO(M6): update §8 item list when new action types (FIRE, MELEE, ROUT_CHECK,
+     LEADER_LOSS) are registered. Remove items 0-3 as they are implemented. -->

@@ -82,6 +82,19 @@ Please file the issue and provide the issue number.
 
 After confirming the issue number, apply the `tech-debt` label: `gh issue edit {number} --add-label "tech-debt"`
 
+Then assign the issue to a GitHub milestone — this is a **required step**:
+
+```
+Which milestone should #{number} be resolved in?
+(Run: gh api repos/{owner}/{repo}/milestones --jq '.[] | {number, title}' to list milestones)
+
+Assign with: gh api --method PATCH repos/{owner}/{repo}/issues/{number} -f milestone={id}
+```
+
+If the user cannot identify a milestone, flag the issue as **incomplete** and do not proceed
+to Step 3 until a milestone is assigned. Any deferred debt issue with no milestone will be
+flagged by future runs of this skill.
+
 Also confirm the second-pass trigger decision for fixes made after the primary review:
 
 ```
