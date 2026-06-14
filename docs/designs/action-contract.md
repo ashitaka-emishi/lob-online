@@ -227,8 +227,8 @@ After every successful `POST /api/v1/games/:id/actions`, the server emits:
 io.to(gameId).emit('game:state-updated', { version: saved.version });
 ```
 
-`GameView.vue` listens — see
-[`client/src/views/GameView.vue:51`](../../client/src/views/GameView.vue) for the current
+`GameView.vue` listens for `'game:state-updated'` — see
+[`client/src/views/GameView.vue`](../../client/src/views/GameView.vue) for the current
 implementation. Both fetches use generation counters (`_loadGeneration`, `_actionsGeneration`)
 to discard stale responses from burst events. The submitting client also reads the full game
 state from the POST response body — it does not wait for the socket event to update its own

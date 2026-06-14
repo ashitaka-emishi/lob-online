@@ -218,7 +218,6 @@ describe('LobbyView', () => {
   it('disabled join buttons have aria-describedby referencing a reason span', () => {
     const wrapper = mountLobby({
       games: [{ id: 'g1', status: 'active' }],
-      canJoin: () => false,
     });
     const reasonId = 'join-disabled-reason-g1';
     expect(wrapper.find(`#${reasonId}`).exists()).toBe(true);
@@ -234,6 +233,7 @@ describe('LobbyView', () => {
     const wrapper = mountLobby({
       games: [{ id: 'g1', status: 'open' }],
     });
+    expect(wrapper.find('[data-testid="join-usa-btn"]').attributes('aria-disabled')).toBe('false');
     expect(
       wrapper.find('[data-testid="join-usa-btn"]').attributes('aria-describedby')
     ).toBeUndefined();

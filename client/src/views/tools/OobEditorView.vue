@@ -63,7 +63,7 @@ function handlePush() {
       <aside class="sidebar">
         <OobHierarchyTree :side="activeSide" />
       </aside>
-      <main class="detail-panel">
+      <section class="detail-panel" aria-label="Unit details">
         <p v-if="!store.selectedNode" class="placeholder">Select a unit</p>
         <OobDetailPanel
           v-else
@@ -71,7 +71,7 @@ function handlePush() {
           :node-type="store.selectedNodeType"
           :node-path="store.selectedNodePath"
         />
-      </main>
+      </section>
     </div>
 
     <ConfirmDialog
