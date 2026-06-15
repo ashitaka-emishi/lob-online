@@ -7,6 +7,8 @@ import { requireSide } from '../auth/requireSide.js';
 import { getPlayerSession, setPlayerSession } from '../auth/session.js';
 import { dispatch, getValidActions, ActionError } from '../engine/actions/index.js';
 import { initGameState } from '../engine/init.js';
+import { loadMap, buildHexIndex } from '../engine/map.js';
+import { loadOob } from '../engine/oob.js';
 import { getScenario } from '../engine/scenario.js';
 import {
   createGame,
@@ -188,7 +190,16 @@ router.post('/:id/actions', requireSide, async (req, res) => {
         .json({ error: `Version conflict: expected ${expectedVersion}, current ${state.version}` });
     }
 
-    const nextState = dispatch(state, { type, payload, playerSide });
+    // Build DI context so combat handlers use real LOS/hex-distance rather than fallbacks (#572)
+    const oob = loadOob();
+    const scenario = getScenario();
+    const mapData = loadMap();
+    const hexIndex = buildHexIndex(mapData);
+    const nextState = dispatch(
+      state,
+      { type, payload, playerSide },
+      { oob, scenario, mapData, hexIndex }
+    );
     const saved = await saveGame(id, nextState);
 
     // Notify connected players; they fetch the authoritative state via GET /:id (#356)
