@@ -1,7 +1,7 @@
 <template>
-  <div class="menu-bg">
+  <main id="main-content" class="menu-bg">
     <slot />
-  </div>
+  </main>
 </template>
 
 <style scoped>

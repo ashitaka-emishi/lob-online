@@ -8,4 +8,9 @@ describe('MenuLayout', () => {
     expect(wrapper.find('[data-testid="child"]').exists()).toBe(true);
     expect(wrapper.find('.menu-bg').exists()).toBe(true);
   });
+
+  it('renders a <main> element with id="main-content" for WCAG 1.3.1 (#584)', () => {
+    const wrapper = mount(MenuLayout, { slots: { default: '<p>content</p>' } });
+    expect(wrapper.find('main#main-content').exists()).toBe(true);
+  });
 });

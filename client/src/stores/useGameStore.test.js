@@ -327,6 +327,41 @@ describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
   });
 });
 
+describe('useGameStore — loadGame scenario fetch (#583)', () => {
+  it('populates scenario when moduleSlug is provided', async () => {
+    const gs = makeGameState('g-scen');
+    const scenarioData = { turns: 10, lighting: [] };
+    vi.stubGlobal(
+      'fetch',
+      makeMultiFetch([
+        ['/api/v1/modules/south-mountain/scenarios/full-battle/scenario', scenarioData],
+        ['/api/v1/scenarios/south-mountain/map-config', { gridSpec: null, hexes: null }],
+        ['/api/v1/games/g-scen', gs],
+      ])
+    );
+    const store = useGameStore();
+    await store.loadGame('g-scen', { moduleSlug: 'south-mountain', scenarioSlug: 'full-battle' });
+    // Scenario fetch is fire-and-forget; flush microtasks before asserting
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(store.scenario).toEqual(scenarioData);
+  });
+
+  it('leaves scenario null when moduleSlug is omitted', async () => {
+    const gs = makeGameState('g-no-scen');
+    vi.stubGlobal(
+      'fetch',
+      makeMultiFetch([
+        ['/api/v1/scenarios/south-mountain/map-config', { gridSpec: null, hexes: null }],
+        ['/api/v1/games/g-no-scen', gs],
+      ])
+    );
+    const store = useGameStore();
+    await store.loadGame('g-no-scen');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(store.scenario).toBeNull();
+  });
+});
+
 describe('useGameStore — loadGame double-call guard (#441)', () => {
   it('second call supersedes first: state from first call is not written after second completes (#441)', async () => {
     const gs1 = makeGameState('game-1');

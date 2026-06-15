@@ -36,8 +36,21 @@ export async function startServer() {
   // Expose io to route handlers via app.locals so POST /actions can emit after dispatch (#356)
   app.locals.io = io;
 
-  // Middleware
-  app.use(helmet());
+  // Security: CSP headers via helmet (#403)
+  // In development, allow Vite dev server connections so HMR and API calls are not blocked.
+  app.use(
+    helmet({
+      contentSecurityPolicy:
+        process.env.NODE_ENV === 'production'
+          ? undefined
+          : {
+              directives: {
+                ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+                'connect-src': ["'self'", 'http://localhost:5173', 'ws://localhost:5173'],
+              },
+            },
+    })
+  );
   app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
   app.use(morgan('dev'));
   app.use(express.json({ limit: '5mb' }));

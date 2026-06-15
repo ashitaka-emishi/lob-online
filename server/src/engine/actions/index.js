@@ -48,11 +48,22 @@ export function getValidActions(state, playerSide) {
     const leaderEntries = Object.entries(state.leaderState ?? {});
     const eligibleLeaders = leaderEntries.filter(([id, ls]) => !leaderRollUsed[id] && ls.isOnBoard);
     // Hoisted outside flatMap — invariant across all eligible leaders.
-    // LOB §10.3 — only friendly units can be targeted for initiative. UnitStateSchema does not
-    // carry a side field (unit affiliation is OOB data, not game state), so side-filtering is
-    // deferred to M6 when OOB data is co-located with the engine. In M5 the scenario seeds only
-    // one side's units; cross-side mixing is not yet possible. See #560 for M6 tracking.
-    const onBoardUnitIds = Object.keys(state.units).filter((uid) => state.units[uid].isOnBoard);
+    // LOB §10.3 — initiative candidates limited to active side's units
+    // Side is looked up via OOB data; units whose side cannot be determined are excluded
+    // as a safe fallback. If OOB is unavailable, all on-board units are included (degraded mode).
+    let unitSideMapForOrders;
+    try {
+      unitSideMapForOrders = buildUnitSideMap(loadOob());
+    } catch {
+      unitSideMapForOrders = null;
+    }
+    const onBoardUnitIds = Object.keys(state.units).filter((uid) => {
+      if (!state.units[uid].isOnBoard) return false;
+      if (!unitSideMapForOrders) return true; // OOB unavailable — include all (degraded mode)
+      const info = unitSideMapForOrders.get(uid);
+      // LOB §10.3 — initiative candidates limited to active side's units
+      return info ? info.side === playerSide : false;
+    });
     const rollCandidates =
       eligibleLeaders.length > 0
         ? eligibleLeaders.flatMap(([leaderId]) =>
