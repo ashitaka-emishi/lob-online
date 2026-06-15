@@ -17,8 +17,6 @@ const route = useRoute();
 const gameStore = useGameStore();
 const localPlayerSide = ref(null);
 const identityError = ref(null);
-const scenarioWarning = ref(null);
-
 // sanitizeCalibration fills missing fields from DEFAULT_CALIBRATION; the store
 // already calls it at the API boundary, so gridSpec is always a full calibration
 // object or null. Passing gridSpec ?? {} handles the null case. (#438)
@@ -189,17 +187,6 @@ function onImageLoad(event) {
         <span aria-hidden="true">⚠</span>
         <span class="sr-only">Warning: </span>
         {{ gameStore.mapConfigError }} — map hexes unavailable
-      </div>
-      <div
-        v-show="scenarioWarning"
-        class="map-config-warning"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        <span aria-hidden="true">⚠</span>
-        <span class="sr-only">Warning: </span>
-        {{ scenarioWarning }}
       </div>
     </div>
     <div class="game-body">

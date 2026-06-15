@@ -310,14 +310,11 @@ describe('handleResolveMorale — shaken result (LOB §6.1, §6.2a)', () => {
 
   it('pendingResolution is cleared when shaken result has no SP loss (no leader loss check)', () => {
     // LOB §6.1 — sh without SP loss does not trigger leaderLossCheck → pending = null
-    // morale B, roll 9 → sh(1) no SP loss → no leader loss
+    // morale B, roll 9 → sh(1) no SP loss → no leader loss; roll is deterministic
     const state = makeCombatResultState({ moraleState: 'normal' });
     const result = handleResolveMorale(state, moraleAction([4, 5]), { oob: MOCK_OOB });
-    // roll 9 for B → sh(1, 0) — no sp loss
-    // pending should be null since no leader loss check
-    if (result.units.c1.moraleState === 'shaken') {
-      expect(result.pendingResolution).toBeNull();
-    }
+    expect(result.units.c1.moraleState).toBe('shaken');
+    expect(result.pendingResolution).toBeNull();
   });
 
   it('shaken/shaken stays shaken (Additive Morale Effects Chart LOB §6.2a)', () => {
@@ -342,31 +339,24 @@ describe('handleResolveMorale — disorganized result (LOB §6.1, §6.2a)', () =
   });
 
   it('normal/disorganized additive transition resolves to disorganized (LOB §6.2a)', () => {
-    // LOB §6.2a: normal current state + disorganized incoming = disorganized new state
+    // LOB §6.2a: normal + disorganized incoming = disorganized; roll 12/B → dg(4,1) is deterministic
     const state = makeCombatResultState({ moraleState: 'normal' });
     const result = handleResolveMorale(state, moraleAction([6, 6]), { oob: MOCK_OOB });
-    // If table returned DG, unit must be DG
-    if (result.units.c1.moraleState !== 'normal') {
-      expect(['disorganized', 'routed']).toContain(result.units.c1.moraleState);
-    }
+    expect(result.units.c1.moraleState).toBe('disorganized');
   });
 
   it('disorganized/disorganized transitions to routed (Additive Morale Effects Chart LOB §6.2a)', () => {
-    // LOB §6.2a — disorganized + incoming disorganized → routed
+    // LOB §6.2a — disorganized + incoming disorganized → routed; roll 11/B → dg(3,1) is deterministic
     const state = makeCombatResultState({ moraleState: 'disorganized' });
-    // roll 11 for B → dg(3,1) — if current is DG and incoming is DG → RT
     const result = handleResolveMorale(state, moraleAction([5, 6]), { oob: MOCK_OOB });
-    // roll 11 for B → dg result; disorganized/disorganized → routed
-    if (result.units.c1.moraleState !== 'disorganized') {
-      expect(result.units.c1.moraleState).toBe('routed');
-    }
+    expect(result.units.c1.moraleState).toBe('routed');
   });
 });
 
 // ─── Task 1.5: routed result + cascade pending ────────────────────────────────
 
 describe('handleResolveMorale — routed result + cascade (LOB §6.1, §6.3)', () => {
-  it('unit transitions to routed when morale B roll 12 from shaken (shaken/dg → dg then roll escalation)', () => {
+  it('disorganized unit + disorganized incoming (roll 12/B) → routed (LOB §6.2a additive chart)', () => {
     // LOB §6.2a — disorganized + disorganized → routed
     const state = makeCombatResultState({ moraleState: 'disorganized' });
     // morale B, roll 12 → dg(4,1); disorganized/disorganized → routed
@@ -390,28 +380,17 @@ describe('handleResolveMorale — routed result + cascade (LOB §6.1, §6.3)', (
     expect(result.pendingResolution.type).toBe('leaderCasualty');
   });
 
-  it('cascade moraleCheck is created when unit routs with no SP loss (LOB §6.3)', () => {
+  it('on combatResult path, leaderCasualty wins over cascade (LOB §6.3 cascade deferred to M7 #571 #577)', () => {
     // LOB §6.3 — cascadeMorale fires only when pendingResolution is null on entry.
-    // We can test this by using a dice roll that produces a routed result WITHOUT SP loss.
-    // However the morale table for rating B has no rout result without SP loss.
-    // Use rating D (col 3): roll 12 → ro(6,2) has SP loss, roll 10 → dg(4,2) has SP loss.
-    // Rating A, roll 12 → dg(3,1): SP loss=1, not routed. No suitable test case in the
-    // B/D range produces routed-without-SP-loss from the table.
-    //
-    // Verify instead that cascade context would have the correct hex for a routed unit.
-    // This test documents the design: cascade fires only outside combatResult pending.
+    // On the combatResult path the pending slot is already occupied, so cascade cannot
+    // set a moraleCheck pending — leaderCasualty from SP loss wins instead.
+    // Direct unit test of cascadeMorale() with pendingResolution=null is deferred (#571, #577).
     const state = makeCombatResultState({ moraleState: 'disorganized' });
     const result = handleResolveMorale(state, moraleAction([6, 6]), { oob: MOCK_OOB });
-    // After routed result from combatResult path: leaderCasualty wins over cascade
-    // because cascadeMorale guard (pendingResolution === null) is false mid-resolution.
-    // LOB §6.3 cascade is deferred to M7 for independent morale checks. (#571, #577)
-    if (result.units.c1.moraleState === 'routed') {
-      // pending is leaderCasualty (SP loss), not cascade moraleCheck
-      const pending = result.pendingResolution;
-      if (pending !== null) {
-        expect(pending.type).toBe('leaderCasualty');
-      }
-    }
+    // roll 12/B → dg(4,1) spLoss=1; disorganized+disorganized→routed; leaderCasualty pending wins
+    expect(result.units.c1.moraleState).toBe('routed');
+    expect(result.pendingResolution).not.toBeNull();
+    expect(result.pendingResolution.type).toBe('leaderCasualty');
   });
 });
 
@@ -550,24 +529,22 @@ describe('handleResolveMorale — leaderCasualty pending (LOB §9.1a)', () => {
   it('sets pendingResolution to leaderCasualty when morale result has SP loss (LOB §9.1a)', () => {
     // LOB §6.1 — moraleResult.leaderLossCheck = true when spLoss > 0
     // LOB §9.1a — a leaderCasualty pending is created when leaderLossCheck triggers
-    // morale B, roll 10 → sh(1, 1): spLoss=1 → leaderLossCheck=true
+    // morale B, roll 10 → sh(1,1): spLoss=1 → leaderLossCheck=true; roll is deterministic
     const state = makeCombatResultState({ moraleState: 'normal' });
     const result = handleResolveMorale(state, moraleAction([4, 6]), { oob: MOCK_OOB });
-    // roll 10 for B → sh(1,1) → leaderLossCheck; pending should be leaderCasualty
-    if (result.pendingResolution !== null) {
-      expect(result.pendingResolution.type).toBe('leaderCasualty');
-      expect(result.pendingResolution.context.hex).toBe('10.11');
-    }
+    expect(result.pendingResolution).not.toBeNull();
+    expect(result.pendingResolution.type).toBe('leaderCasualty');
+    expect(result.pendingResolution.context.hex).toBe('10.11');
   });
 
   it('leaderCasualty pending includes hex in context (LOB §9.1a)', () => {
     // LOB §9.1a — context must have hex so the route layer can identify the leader
+    // morale B, roll 11 → dg(3,1): spLoss=1 → leaderLossCheck=true; roll is deterministic
     const state = makeCombatResultState({ moraleState: 'normal' });
-    // roll 11 for morale B → dg(3,1): spLoss=1 → leaderLossCheck=true
     const result = handleResolveMorale(state, moraleAction([5, 6]), { oob: MOCK_OOB });
-    if (result.pendingResolution?.type === 'leaderCasualty') {
-      expect(result.pendingResolution.context).toHaveProperty('hex', '10.11');
-    }
+    expect(result.pendingResolution).not.toBeNull();
+    expect(result.pendingResolution.type).toBe('leaderCasualty');
+    expect(result.pendingResolution.context).toHaveProperty('hex', '10.11');
   });
 
   it('pendingResolution is null when no SP loss result (no leader loss check triggered)', () => {
@@ -679,21 +656,13 @@ describe('Integration: FIRE_COMBAT → RESOLVE_MORALE (LOB §5 / §6)', () => {
 
   it('Step 3: RESOLVE_MORALE clears pendingResolution and updates unit morale (LOB §6.1)', () => {
     // Full pipeline: fire → morale resolution
+    // LOB §6.1 — roll 5/B → NE → unit stays normal, pending = null (deterministic)
     const afterFire = handleFireCombat(FIRE_INTEGRATION_STATE, FIRE_ACTION, { oob: MOCK_OOB });
     expect(afterFire.pendingResolution.type).toBe('combatResult');
 
-    // LOB §6.1 — player supplies dice for morale check; handler resolves and clears pending
-    // roll 5 for morale B → NE → unit stays normal, pending = null
     const afterMorale = handleResolveMorale(afterFire, moraleAction([2, 3]), { oob: MOCK_OOB });
-
-    // Pending cleared (or updated to leaderCasualty / cascade depending on roll result)
-    const pendingType = afterMorale.pendingResolution?.type ?? null;
-    expect(['leaderCasualty', 'moraleCheck', null]).toContain(pendingType);
-
-    // Unit morale state is set to a legal value
-    expect(['normal', 'shaken', 'disorganized', 'routed', 'bloodlust']).toContain(
-      afterMorale.units.c1.moraleState
-    );
+    expect(afterMorale.pendingResolution).toBeNull();
+    expect(afterMorale.units.c1.moraleState).toBe('normal');
   });
 
   it('RESOLVE_MORALE after FIRE_COMBAT: no effect roll leaves unit normal (LOB §6.1)', () => {
@@ -719,11 +688,10 @@ describe('Integration: FIRE_COMBAT → RESOLVE_MORALE (LOB §5 / §6)', () => {
   });
 
   it('RESOLVE_MORALE: high roll with SP loss produces leaderCasualty pending (LOB §9.1a)', () => {
+    // dice [4,6] = 10, morale B → sh(1,1) spLoss=1 → leaderLossCheck=true → leaderCasualty pending (deterministic)
     const afterFire = handleFireCombat(FIRE_INTEGRATION_STATE, FIRE_ACTION, { oob: MOCK_OOB });
-    // dice [4, 6] = 10, morale B → sh(1,1) spLoss=1 → leaderLossCheck=true → leaderCasualty pending
     const afterMorale = handleResolveMorale(afterFire, moraleAction([4, 6]), { oob: MOCK_OOB });
-    if (afterMorale.pendingResolution !== null) {
-      expect(afterMorale.pendingResolution.type).toBe('leaderCasualty');
-    }
+    expect(afterMorale.pendingResolution).not.toBeNull();
+    expect(afterMorale.pendingResolution.type).toBe('leaderCasualty');
   });
 });

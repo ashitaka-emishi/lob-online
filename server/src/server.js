@@ -38,6 +38,8 @@ export async function startServer() {
 
   // Security: CSP headers via helmet (#403)
   // In development, allow Vite dev server connections so HMR and API calls are not blocked.
+  // Derive the dev origin from CLIENT_ORIGIN so custom ports/hosts are covered.
+  const wsOrigin = CLIENT_ORIGIN.replace(/^http/, 'ws');
   app.use(
     helmet({
       contentSecurityPolicy:
@@ -46,7 +48,7 @@ export async function startServer() {
           : {
               directives: {
                 ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-                'connect-src': ["'self'", 'http://localhost:5173', 'ws://localhost:5173'],
+                'connect-src': ["'self'", CLIENT_ORIGIN, wsOrigin],
               },
             },
     })
