@@ -216,13 +216,15 @@ describe('handleCloseCombat', () => {
     expect(result.pendingResolution.context.leaderLossCheckRequired).toBe(true);
   });
 
-  it('leaderLossCheckRequired is false when closing roll fails', () => {
+  it('leaderLossCheckRequired is true even when closing roll fails if SP loss occurred (LOB §9.1a)', () => {
+    // LOB §9.1a: leader loss is driven by SP loss (m+ result), not Closing Roll pass/fail.
+    // MOCK_OOB has u1 with 4 SPs → automatic 1 SP loss fires → leader check required.
     const action = {
       ...CHARGE_ACTION,
       payload: { ...CHARGE_ACTION.payload, closingDie: 1 },
     };
     const result = handleCloseCombat(BASE_STATE, action, { oob: MOCK_OOB });
-    expect(result.pendingResolution.context.leaderLossCheckRequired).toBe(false);
+    expect(result.pendingResolution.context.leaderLossCheckRequired).toBe(true);
   });
 
   it('Opening Volley SP loss included in context (LOB §7.0b)', () => {
@@ -247,6 +249,127 @@ describe('handleCloseCombat', () => {
     if (ctx.openingVolleySpLoss > 0) {
       expect(result.units.u1.cbfMarker).toBe(true);
     }
+  });
+
+  describe('automatic SP loss gate — LOB §7.0 (#579)', () => {
+    // MOCK_OOB has u1 with 4 SPs (≥4 threshold met)
+    it('automatic 1 SP defender loss applies when attacker has ≥4 SPs (LOB §7.0)', () => {
+      const result = handleCloseCombat(BASE_STATE, CHARGE_ACTION, { oob: MOCK_OOB });
+      expect(result.pendingResolution.context.defenderSpLoss).toBe(1);
+    });
+
+    it('no automatic SP defender loss when attacker has <4 SPs (LOB §7.0)', () => {
+      const oob3Sp = {
+        ...MOCK_OOB,
+        union: {
+          ...MOCK_OOB.union,
+          corps: [
+            {
+              ...MOCK_OOB.union.corps[0],
+              divisions: [
+                {
+                  ...MOCK_OOB.union.corps[0].divisions[0],
+                  brigades: [
+                    {
+                      ...MOCK_OOB.union.corps[0].divisions[0].brigades[0],
+                      regiments: [
+                        {
+                          ...MOCK_OOB.union.corps[0].divisions[0].brigades[0].regiments[0],
+                          strengthPoints: 3,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      };
+      const result = handleCloseCombat(BASE_STATE, CHARGE_ACTION, { oob: oob3Sp });
+      expect(result.pendingResolution.context.defenderSpLoss).toBe(0);
+    });
+
+    it('defender does not get cbfMarker when attacker SPs < 4 (LOB §8.1)', () => {
+      const oob3Sp = {
+        ...MOCK_OOB,
+        union: {
+          ...MOCK_OOB.union,
+          corps: [
+            {
+              ...MOCK_OOB.union.corps[0],
+              divisions: [
+                {
+                  ...MOCK_OOB.union.corps[0].divisions[0],
+                  brigades: [
+                    {
+                      ...MOCK_OOB.union.corps[0].divisions[0].brigades[0],
+                      regiments: [
+                        {
+                          ...MOCK_OOB.union.corps[0].divisions[0].brigades[0].regiments[0],
+                          strengthPoints: 3,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      };
+      const result = handleCloseCombat(BASE_STATE, CHARGE_ACTION, { oob: oob3Sp });
+      expect(result.units.c1.cbfMarker).toBe(false);
+    });
+
+    it('DG attacker halves SP contribution (round down) for gate check (LOB §5.3)', () => {
+      // u1 has 4 SPs but is DG → effective = 2 → below gate → no automatic loss
+      const state = {
+        ...BASE_STATE,
+        units: { ...BASE_STATE.units, u1: { ...BASE_STATE.units.u1, moraleState: 'disorganized' } },
+      };
+      const result = handleCloseCombat(state, CHARGE_ACTION, { oob: MOCK_OOB });
+      expect(result.pendingResolution.context.defenderSpLoss).toBe(0);
+    });
+  });
+
+  describe('leader loss trigger — LOB §9.1a (#581)', () => {
+    it('leaderLossCheckRequired when attacker SPs ≥4 (SP loss occurs, LOB §9.1a)', () => {
+      const result = handleCloseCombat(BASE_STATE, CHARGE_ACTION, { oob: MOCK_OOB });
+      expect(result.pendingResolution.context.leaderLossCheckRequired).toBe(true);
+    });
+
+    it('leaderLossCheckRequired is false when attacker SPs <4 (no SP loss, LOB §9.1a)', () => {
+      const oob3Sp = {
+        ...MOCK_OOB,
+        union: {
+          ...MOCK_OOB.union,
+          corps: [
+            {
+              ...MOCK_OOB.union.corps[0],
+              divisions: [
+                {
+                  ...MOCK_OOB.union.corps[0].divisions[0],
+                  brigades: [
+                    {
+                      ...MOCK_OOB.union.corps[0].divisions[0].brigades[0],
+                      regiments: [
+                        {
+                          ...MOCK_OOB.union.corps[0].divisions[0].brigades[0].regiments[0],
+                          strengthPoints: 3,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      };
+      const result = handleCloseCombat(BASE_STATE, CHARGE_ACTION, { oob: oob3Sp });
+      expect(result.pendingResolution.context.leaderLossCheckRequired).toBe(false);
+    });
   });
 
   describe('validation errors', () => {

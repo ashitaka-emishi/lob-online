@@ -132,6 +132,16 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
     );
   }
 
+  // LOB §7.0 — attacker effective SPs determine the automatic 1-SP loss gate (≥4 required).
+  // DG attackers contribute half their printed SPs (round down), per LOB §5.3.
+  let attackerSPs = 0;
+  for (const au of attackerUnits) {
+    const auOob = findOobUnit(loadedOob, au.id);
+    if (!auOob) continue;
+    const printed = auOob.strengthPoints ?? 0;
+    attackerSPs += au.moraleState === 'disorganized' ? Math.floor(printed / 2) : printed;
+  }
+
   let updatedUnits = { ...state.units };
 
   // LOB §7.0b — Defender Opening Volley: fires against charger at range 1 (charge condition)
@@ -157,16 +167,18 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
   // Actual abort enforcement happens when morale cascade processes the combatResult.
   // For now, record ovSpLoss in the pending context so Phase 4 can apply it.
 
-  // LOB §7.0c — automatic 1 SP defender loss (close combat always costs the defender 1 SP)
-  // LOB §8.1 — CBF marker set on each defender unit that takes a loss
-  const defenderSpLoss = 1; // LOB §7.0c — automatic 1 SP loss for defender
-  const newUnits = { ...updatedUnits };
-  for (const du of defenderUnits) {
-    if (newUnits[du.id]) {
-      newUnits[du.id] = { ...newUnits[du.id], cbfMarker: true };
+  // LOB §7.0c — automatic 1 SP defender loss requires attacker to have ≥4 SPs engaged.
+  // LOB §8.1 — CBF marker set on each defender unit that takes a loss.
+  const defenderSpLoss = attackerSPs >= 4 ? 1 : 0; // LOB §7.0 — automatic 1 SP loss gated on ≥4 attacker SPs
+  if (defenderSpLoss > 0) {
+    const newUnits = { ...updatedUnits };
+    for (const du of defenderUnits) {
+      if (newUnits[du.id]) {
+        newUnits[du.id] = { ...newUnits[du.id], cbfMarker: true };
+      }
     }
+    updatedUnits = newUnits;
   }
-  updatedUnits = newUnits;
 
   // LOB §7.0d / §3.5 — Closing Roll
   // Determine attacker morale rating from OOB for the Closing Roll threshold
@@ -213,8 +225,9 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
         closingPass,
         closingThreshold,
         closingModifiedRoll,
-        // LOB §9.1a — leader loss check required when Closing Roll passes (charge succeeds)
-        leaderLossCheckRequired: closingPass,
+        // LOB §9.1a — leader loss checked on m+ result (SP loss), not on every Closing Roll.
+        // defenderSpLoss > 0 means the automatic SP loss occurred (gated on ≥4 attacker SPs).
+        leaderLossCheckRequired: defenderSpLoss > 0,
         // LOB §6.0 — defender morale check required after automatic SP loss
         moraleCheckRequired: true,
       },
