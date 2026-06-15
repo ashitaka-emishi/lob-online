@@ -12,6 +12,7 @@ const stubRouter = createRouter({
       component: { template: '<div/>' },
     },
     { path: '/modules/:moduleSlug/tools/map-editor', component: { template: '<div/>' } },
+    { path: '/about', component: { template: '<div/>' } },
   ],
 });
 
@@ -103,5 +104,17 @@ describe('HomeView', () => {
     HomeView = (await import('./HomeView.vue')).default;
     const wrapper = makeWrapper();
     expect(wrapper.find('[data-testid="editor-link"]').exists()).toBe(false);
+  });
+
+  it('renders About link', () => {
+    const wrapper = makeWrapper();
+    const aboutLink = wrapper.find('[data-testid="about-link"]');
+    expect(aboutLink.exists()).toBe(true);
+  });
+
+  it('About link navigates to /about', () => {
+    const wrapper = makeWrapper();
+    const aboutLink = wrapper.find('[data-testid="about-link"]');
+    expect(aboutLink.attributes('href')).toBe('/about');
   });
 });

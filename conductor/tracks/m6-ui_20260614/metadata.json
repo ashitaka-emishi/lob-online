@@ -1,0 +1,16 @@
+{
+  "id": "m6-ui_20260614",
+  "title": "M6 UI — Turn Control, ActionPanel Payloads, and About Page",
+  "type": "feature",
+  "status": "pending",
+  "created": "2026-06-14T00:00:00.000Z",
+  "updated": "2026-06-14T00:00:00.000Z",
+  "phases": {
+    "total": 4,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 16,
+    "completed": 0
+  }
+}

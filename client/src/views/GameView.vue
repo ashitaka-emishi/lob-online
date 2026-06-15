@@ -6,6 +6,7 @@ import { io } from 'socket.io-client';
 import HexMapOverlay from '../components/HexMapOverlay.vue';
 import UnitStatsPanel from '../components/UnitStatsPanel.vue';
 import ActionPanel from '../components/game/ActionPanel.vue';
+import TurnControl from '../components/game/TurnControl.vue';
 import { sanitizeCalibration } from '../utils/calibration.js';
 import { useOobData } from '../composables/useOobData.js';
 import { useGameStore } from '../stores/useGameStore.js';
@@ -16,6 +17,8 @@ const route = useRoute();
 const gameStore = useGameStore();
 const localPlayerSide = ref(null);
 const identityError = ref(null);
+const scenarioData = ref(null);
+const scenarioWarning = ref(null);
 
 // sanitizeCalibration fills missing fields from DEFAULT_CALIBRATION; the store
 // already calls it at the API boundary, so gridSpec is always a full calibration
@@ -34,6 +37,24 @@ const gameId = route.params.id;
 onMounted(async () => {
   await Promise.all([gameStore.loadGame(gameId), fetchOob()]);
   await gameStore.refreshValidActions(gameId);
+
+  // Fetch scenario data for TurnControl — non-blocking, failure hides TurnControl gracefully.
+  // 'full-battle' is the canonical default scenario slug when the route omits scenarioSlug.
+  const moduleSlug = route.params.moduleSlug;
+  if (moduleSlug) {
+    const scenarioSlug = route.params.scenarioSlug ?? 'full-battle';
+    fetch(
+      `/api/v1/modules/${encodeURIComponent(moduleSlug)}/scenarios/${encodeURIComponent(scenarioSlug)}/scenario`
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        scenarioData.value = data;
+      })
+      .catch((err) => {
+        console.error('[game] scenario fetch failed:', err);
+        scenarioWarning.value = 'Turn clock unavailable — scenario data could not be loaded.';
+      });
+  }
 
   // intentionally not awaited — identity is non-blocking for initial render
   fetch('/api/v1/games/me')
@@ -185,6 +206,17 @@ function onImageLoad(event) {
         <span class="sr-only">Warning: </span>
         {{ gameStore.mapConfigError }} — map hexes unavailable
       </div>
+      <div
+        v-show="scenarioWarning"
+        class="map-config-warning"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <span aria-hidden="true">⚠</span>
+        <span class="sr-only">Warning: </span>
+        {{ scenarioWarning }}
+      </div>
     </div>
     <div class="game-body">
       <!-- Map area: scrollable, fills remaining width -->
@@ -219,8 +251,14 @@ function onImageLoad(event) {
         </div>
       </div>
 
-      <!-- Sidebar: fixed width, holds unit stats panel and action panel -->
+      <!-- Sidebar: fixed width, holds turn control, unit stats panel and action panel -->
       <aside class="sidebar">
+        <TurnControl
+          :turn="gameStore.gameState?.turn ?? null"
+          :phase="gameStore.gameState?.phase ?? null"
+          :active-side="gameStore.gameState?.activePlayer ?? null"
+          :scenario="scenarioData"
+        />
         <UnitStatsPanel
           :unit="selectedDisplayUnit"
           :hex-units="hexUnits"

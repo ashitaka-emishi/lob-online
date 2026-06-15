@@ -131,3 +131,4 @@
 | [x] | closeout-debt-sprint_20260614 | Conductor Closeout + Debt Sprint — Score 33 → 21 | 2026-06-14 | 2026-06-14 |
 | [x] | pre-m6-debt-final_20260614 | Pre-M6 Final Debt Sprint + Debt Report Improvements | 2026-06-14 | 2026-06-14 |
 | [x] | m6-combat-engine_20260614 | M6 Combat Engine — Fire, Melee, Morale, Rally | 2026-06-14 | 2026-06-14 |
+| [x] | m6-ui_20260614 | M6 UI — Turn Control, ActionPanel Payloads, and About Page | 2026-06-14 | 2026-06-14 |
