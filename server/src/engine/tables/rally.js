@@ -62,18 +62,19 @@ export function rallyRollResult(moraleRating, diceRoll, currentMoraleState) {
 /**
  * Apply §6.4 automatic recovery steps to a units map before per-unit rally rolls.
  * LOB §6.4 — applied to all on-board units at Rally Phase entry:
- *   - shaken units that did NOT take a combat loss this turn (cbfMarker === false)
- *     automatically recover to normal
- *   - disorganized units automatically flip to shaken
- *   - routed units are flagged as requiring a rally roll (no automatic recovery)
+ *   1. Remove all Sh markers → shaken units recover to normal (unconditional; no CBF gate)
+ *   2. Flip all DG markers to Sh → disorganized units become shaken (unconditional)
+ *   3. Routed units require an individual rally roll (§6.3); flagged in unitsPendingRallyRoll
  *
- * CBF markers have already been cleared before entering Rally Phase (LOB §8.1);
- * this function must be called BEFORE clearCbfMarkers() to evaluate the cbfMarker flag.
+ * CBF markers do not affect morale recovery (LOB §5.8 lists only two CBF effects:
+ * precludes By Caisson replenishment and applies a Combat Table shift). This function
+ * must still be called BEFORE clearCbfMarkers() in index.js so the CBF clear follows
+ * the rally application in the correct sequence-of-play order.
  *
- * @param {Record<string, object>} units - current unit state map (cbfMarkers still set)
+ * @param {Record<string, object>} units - current unit state map
  * @returns {{ units: Record<string, object>, unitsPendingRallyRoll: string[] }}
  *   units:                  updated units map with §6.4 morale state changes applied
- *   unitsPendingRallyRoll:  unit IDs that still need a §6.3 rally roll (routed after §6.4)
+ *   unitsPendingRallyRoll:  unit IDs requiring a §6.3 rally roll (routed units only)
  */
 export function applySection64AutoRecovery(units) {
   const updated = { ...units };
@@ -82,32 +83,19 @@ export function applySection64AutoRecovery(units) {
   for (const [id, unit] of Object.entries(units)) {
     if (!unit.isOnBoard) continue;
 
-    const { moraleState, cbfMarker } = unit;
+    const { moraleState } = unit;
 
-    if (moraleState === 'shaken' && !cbfMarker) {
-      // LOB §6.4 — shaken units that did not take a loss auto-recover to normal
+    if (moraleState === 'shaken') {
+      // LOB §6.4 step 1 — "Remove all Sh markers": unconditional, no CBF gate
       updated[id] = { ...unit, moraleState: 'normal' };
     } else if (moraleState === 'disorganized') {
-      // LOB §6.4 — disorganized units automatically flip to shaken
+      // LOB §6.4 step 2 — "Flip all DG markers to Sh": unconditional
       updated[id] = { ...unit, moraleState: 'shaken' };
     } else if (moraleState === 'routed') {
-      // LOB §6.4 — routed units require an individual rally-eligibility roll (§6.3)
+      // LOB §6.4 step 3 — routed units require an individual §6.3 rally roll
       unitsPendingRallyRoll.push(id);
     }
-    // shaken with cbfMarker: no automatic recovery — stays shaken (must roll §6.3)
     // normal / bloodlust: no action
-  }
-
-  // Shaken units with cbfMarker also need a §6.3 roll to recover
-  for (const [id, unit] of Object.entries(updated)) {
-    if (!unit.isOnBoard) continue;
-    if (
-      unit.moraleState === 'shaken' &&
-      units[id]?.moraleState === 'shaken' &&
-      units[id]?.cbfMarker
-    ) {
-      unitsPendingRallyRoll.push(id);
-    }
   }
 
   return { units: updated, unitsPendingRallyRoll };
