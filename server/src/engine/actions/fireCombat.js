@@ -148,17 +148,17 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
     );
   }
 
-  // LOB §5.3 — sum SP contributions from all defender units; DG units count half (round down)
+  // LOB §5.1 / §5.6 — combat column is determined by the ATTACKER's effective SPs (not defender's).
+  // DG attackers count half their printed SPs (round down) per LOB §5.3.
   let effectiveSPs = 0;
-  for (const du of defenderUnits) {
-    const duInfo = unitSideMap.get(du.id);
-    if (!duInfo) continue;
-    // Look up printed SP from OOB — walk the tree to find this unit
-    const oobUnit = findOobUnit(loadedOob, du.id);
+  for (const au of attackerUnits) {
+    const auInfo = unitSideMap.get(au.id);
+    if (!auInfo) continue;
+    const oobUnit = findOobUnit(loadedOob, au.id);
     if (!oobUnit) continue;
     const printedSPs = oobUnit.strengthPoints;
-    // LOB §5.3 — DG state halves SP contribution (round down)
-    effectiveSPs += du.moraleState === 'disorganized' ? Math.floor(printedSPs / 2) : printedSPs;
+    // LOB §5.3 — DG attacker halves SP contribution (round down)
+    effectiveSPs += au.moraleState === 'disorganized' ? Math.floor(printedSPs / 2) : printedSPs;
   }
 
   // LOB §5.6 — column shifts
@@ -191,8 +191,12 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
     isOpenOrderCapable: false,
   });
 
-  // LOB §5.4 — Opening Volley: fires when the attacking stack fires immediately after moving
+  // LOB §5.4a — Opening Volley: fired by the INACTIVE DEFENDER against the moving attacker
+  // when the attacker fires immediately after moving. SP loss applies to the ATTACKER, not
+  // the defender. OV is resolved before the main combat roll; attacker's effective SPs are
+  // reduced if OV causes SP loss (additional morale check on the attacker is deferred to M7).
   let openingVolleySpLoss = 0;
+  let updatedUnits = { ...state.units };
   const willTriggerOpeningVolley =
     activity.currentActivation.movedThisActivation && !activity.currentActivation.openingVolley;
 
@@ -200,17 +204,34 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
     if (openingVolleyDie === undefined || openingVolleyDie === null) {
       throw new ActionError(
         'INVALID_PAYLOAD',
-        'openingVolleyDie (1d6) is required when firing after a Move action (LOB §5.4)'
+        'openingVolleyDie (1d6) is required when firing after a Move action (LOB §5.4a)'
       );
     }
     if (openingVolleyDie < 1 || openingVolleyDie > 6) {
       throw new ActionError('INVALID_PAYLOAD', 'openingVolleyDie must be 1–6');
     }
 
-    // LOB §5.4 — Opening Volley range condition: 1, 2, or 3+ hexes
+    // LOB §5.4a — Opening Volley range condition: 1, 2, or 3+ hexes
     const ovCondition = range === 1 ? 'range1' : range === 2 ? 'range2' : 'range3';
     const ovResult = openingVolleyResult(ovCondition, openingVolleyDie);
     openingVolleySpLoss = ovResult.spLoss;
+
+    // LOB §5.4a — OV SP loss applied to the attacker stack (defender fired at the moving attacker)
+    if (openingVolleySpLoss > 0 && attackerUnits.length > 0) {
+      const primaryAttacker = attackerUnits[0];
+      if (updatedUnits[primaryAttacker.id]) {
+        const currentSPs =
+          updatedUnits[primaryAttacker.id].strengthPoints ??
+          findOobUnit(loadedOob, primaryAttacker.id)?.strengthPoints ??
+          0;
+        updatedUnits[primaryAttacker.id] = {
+          ...updatedUnits[primaryAttacker.id],
+          strengthPoints: Math.max(0, currentSPs - openingVolleySpLoss),
+        };
+        // LOB §5.4a — OV SP loss also reduces effective SPs for the main combat column
+        effectiveSPs = Math.max(0, effectiveSPs - openingVolleySpLoss);
+      }
+    }
   }
 
   // LOB §5.6 — resolve the Combat Table
@@ -220,30 +241,34 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
   // Depletion is not rolled here — it is a deterministic band check. The depletion roll itself
   // is a separate pending resolution (deferred to M7; for now we set the marker on 'left' band).
   // NOTE: this is a simplification — full depletion requires a separate die roll per LOB §5.8.
-  let updatedUnits = state.units;
   const attackerId = attackerUnits[0].id;
-  if (result.depletionBand === 'left' && state.units[attackerId]) {
+  if (result.depletionBand === 'left' && updatedUnits[attackerId]) {
     updatedUnits = {
-      ...state.units,
+      ...updatedUnits,
       [attackerId]: {
-        ...state.units[attackerId],
+        ...updatedUnits[attackerId],
         depletionMarker: true,
       },
     };
   }
 
-  // LOB §8.1 — CBF marker: set on each defender unit when SP loss > 0
-  if (result.spLoss > 0 || openingVolleySpLoss > 0) {
+  // LOB §5.8 — CBF (Canister By Fire) marker: set on each DEFENDER unit that takes SP loss,
+  // but ONLY when ARTILLERY fires on ARTILLERY (arty-vs-arty). Infantry SP loss never sets CBF.
+  // Attacker weaponClass is from the action payload; defender artillery is identified by gunType.
+  if (result.spLoss > 0 && weaponClass === 'artillery') {
     const newUnits = { ...updatedUnits };
     for (const du of defenderUnits) {
-      if (newUnits[du.id]) {
+      if (!newUnits[du.id]) continue;
+      const defOobUnit = findOobUnit(loadedOob, du.id);
+      // LOB §5.8 — CBF only when the defender is also an artillery unit (has gunType)
+      if (defOobUnit?.gunType) {
         newUnits[du.id] = { ...newUnits[du.id], cbfMarker: true };
       }
     }
     updatedUnits = newUnits;
   }
 
-  // LOB §5.4 — mark Opening Volley as fired on the activation context
+  // LOB §5.4a — mark Opening Volley as fired on the activation context
   const newCurrentActivation = willTriggerOpeningVolley
     ? { ...activity.currentActivation, openingVolley: true }
     : activity.currentActivation;
