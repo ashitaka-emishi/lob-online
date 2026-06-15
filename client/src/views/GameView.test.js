@@ -191,6 +191,11 @@ async function mountGameView(
           ],
           emits: ['submit-action'],
         },
+        TurnControl: {
+          name: 'TurnControl',
+          template: '<div class="stub-turn-control"></div>',
+          props: ['turn', 'phase', 'activeSide', 'scenario'],
+        },
       },
     },
   });

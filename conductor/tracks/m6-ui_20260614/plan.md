@@ -85,15 +85,15 @@ Create `computeTurnTime` utility, `TurnControl.vue` component, and wire into `Ga
 
 ### Tasks
 
-- [ ] Task 3.1: Create `client/src/utils/turnTime.js` — `computeTurnTime(turnNumber, scenario)` returns `{ time, condition, visibilityHexes }` using `lightingSchedule` and `turnStructure.firstTurn`.
-- [ ] Task 3.2: Write unit tests for `computeTurnTime`: daytime sequence (turn 1, 10, 38), twilight (turn 39–44), night (turn 45+), and verify 15-min vs 30-min increments.
-- [ ] Task 3.3: Create `client/src/components/game/TurnControl.vue` — displays scenario date, computed time, turn number, active side, and current phase. Props: `{ turn, phase, activeSide, scenario }`.
-- [ ] Task 3.4: Write component tests for TurnControl: renders date, time, active side, and phase from props.
-- [ ] Task 3.5: Integrate `TurnControl` into `GameView.vue` — pass game store state and module scenario data.
+- [x] Task 3.1: Create `client/src/utils/turnTime.js` — `computeTurnTime(turnNumber, scenario)` returns `{ time, condition, visibilityHexes }` using `lightingSchedule` and `turnStructure.firstTurn`.
+- [x] Task 3.2: Write unit tests for `computeTurnTime`: daytime sequence (turn 1, 10, 38), twilight (turn 39–44), night (turn 45+), and verify 15-min vs 30-min increments.
+- [x] Task 3.3: Create `client/src/components/game/TurnControl.vue` — displays scenario date, computed time, turn number, active side, and current phase. Props: `{ turn, phase, activeSide, scenario }`.
+- [x] Task 3.4: Write component tests for TurnControl: renders date, time, active side, and phase from props.
+- [x] Task 3.5: Integrate `TurnControl` into `GameView.vue` — pass game store state and module scenario data.
 
 ### Verification
 
-- [ ] `npm run test` passes. `computeTurnTime` tests and TurnControl component tests green. GameView renders TurnControl without console errors.
+- [x] `npm run test` passes. `computeTurnTime` tests and TurnControl component tests green. GameView renders TurnControl without console errors.
 
 ---
 
