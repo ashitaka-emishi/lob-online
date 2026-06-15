@@ -315,7 +315,7 @@ describe('getValidActions', () => {
     expect(actions[0].type).toBe('RESOLVE_MORALE');
   });
 
-  it('returns [RESOLVE_MORALE] when pendingResolution.type is closingRoll — no soft-lock (#571)', () => {
+  it('returns [] when pendingResolution.type is closingRoll — handler not yet implemented (deferred M7)', () => {
     const state = {
       ...ACTIVITY_STATE,
       pendingResolution: {
@@ -324,11 +324,10 @@ describe('getValidActions', () => {
       },
     };
     const actions = getValidActions(state, 'union');
-    expect(actions).toHaveLength(1);
-    expect(actions[0].type).toBe('RESOLVE_MORALE');
+    expect(actions).toEqual([]);
   });
 
-  it('returns [RESOLVE_MORALE] when pendingResolution.type is moraleCheck — no soft-lock (#571)', () => {
+  it('returns [] when pendingResolution.type is moraleCheck — handler not yet implemented (deferred M7)', () => {
     const state = {
       ...ACTIVITY_STATE,
       pendingResolution: {
@@ -337,8 +336,7 @@ describe('getValidActions', () => {
       },
     };
     const actions = getValidActions(state, 'union');
-    expect(actions).toHaveLength(1);
-    expect(actions[0].type).toBe('RESOLVE_MORALE');
+    expect(actions).toEqual([]);
   });
 
   it('ACTIVATE_STACK is not included when all on-board hexes already activated (#550)', () => {

@@ -31,16 +31,8 @@ export function getValidActions(state, playerSide) {
     return [{ type: 'RESOLVE_MORALE', payload: null }];
   }
 
-  // LOB §7.0d — close combat closing roll result requires morale resolution. (#571)
-  if (state.pendingResolution?.type === 'closingRoll') {
-    return [{ type: 'RESOLVE_MORALE', payload: null }];
-  }
-
-  // LOB §6.3 — cascade morale check requires morale resolution. (#571)
-  if (state.pendingResolution?.type === 'moraleCheck') {
-    return [{ type: 'RESOLVE_MORALE', payload: null }];
-  }
-
+  // NOTE: 'closingRoll' and 'moraleCheck' pending types will surface RESOLVE_MORALE here
+  // once handleResolveMorale is extended to handle those types (deferred to M7).
   if (state.pendingResolution !== null) return [];
 
   const { phase, step } = state;
