@@ -1,6 +1,9 @@
 <script setup>
 import { RouterLink } from 'vue-router';
 import MenuLayout from '../components/MenuLayout.vue';
+
+// All external links use target="_blank"; the sr-only "(opens in new tab)" label is
+// injected via the .ext-link class pattern below so screen readers announce destination context.
 </script>
 
 <template>
@@ -19,7 +22,7 @@ import MenuLayout from '../components/MenuLayout.vue';
               rel="noopener noreferrer"
               data-testid="mmp-link"
             >
-              Multi-Man Publishing (MMP)
+              Multi-Man Publishing (MMP)<span class="sr-only"> (opens in new tab)</span>
             </a>
             and is based on the
             <em>Line of Battle v2.0</em> game system originally designed by
@@ -38,27 +41,27 @@ import MenuLayout from '../components/MenuLayout.vue';
                 rel="noopener noreferrer"
                 data-testid="gamers-archive-link"
               >
-                The Gamers Archive
+                The Gamers Archive<span class="sr-only"> (opens in new tab)</span>
               </a>
             </li>
             <li>
               <a
-                href="https://www.multimanpublishing.com/line-of-battle"
+                href="https://www.multimanpublishing.com/products/line-of-battle-series"
                 target="_blank"
                 rel="noopener noreferrer"
                 data-testid="lob-series-link"
               >
-                LoB Series Support (MMP)
+                LoB Series Support (MMP)<span class="sr-only"> (opens in new tab)</span>
               </a>
             </li>
             <li>
               <a
-                href="https://www.multimanpublishing.com/line-of-battle"
+                href="https://www.multimanpublishing.com/collections/line-of-battle"
                 target="_blank"
                 rel="noopener noreferrer"
                 data-testid="mmp-lob-link"
               >
-                MMP Line of Battle Page
+                MMP Line of Battle Page<span class="sr-only"> (opens in new tab)</span>
               </a>
             </li>
           </ul>
@@ -83,7 +86,9 @@ import MenuLayout from '../components/MenuLayout.vue';
         </section>
 
         <nav class="back-nav">
-          <RouterLink to="/" class="back-link" data-testid="back-home-link">← Home</RouterLink>
+          <RouterLink to="/" class="back-link" data-testid="back-home-link"
+            ><span aria-hidden="true">← </span>Home</RouterLink
+          >
         </nav>
       </div>
     </div>
@@ -181,5 +186,17 @@ a:hover {
 
 .back-link:hover {
   color: #c8b890;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>

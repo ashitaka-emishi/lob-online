@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { computeTurnTime } from '../../utils/turnTime.js';
+import { VISIBILITY_UNLIMITED } from '../../config/visibility.js';
 
 const props = defineProps({
   turn: { type: Number, default: null },
@@ -13,30 +14,64 @@ const turnInfo = computed(() => {
   if (props.turn == null || !props.scenario) return null;
   return computeTurnTime(props.turn, props.scenario);
 });
+
+const visibilityLabel = computed(() => {
+  if (!turnInfo.value) return '';
+  const n = turnInfo.value.visibilityHexes;
+  if (n === VISIBILITY_UNLIMITED) return 'Unlimited';
+  return `${n} ${n === 1 ? 'hex' : 'hexes'}`;
+});
 </script>
 
 <template>
-  <div v-if="turn !== null && scenario" class="turn-control" data-testid="turn-control">
+  <div
+    v-if="turn !== null && scenario"
+    class="turn-control"
+    role="region"
+    aria-label="Turn status"
+    data-testid="turn-control"
+  >
     <div class="turn-row">
-      <span class="turn-label">Turn</span>
-      <span class="turn-number" data-testid="turn-number">{{ turn }}</span>
-      <span v-if="turnInfo" class="turn-time" data-testid="turn-time">{{ turnInfo.time }}</span>
+      <span class="turn-label" aria-hidden="true">Turn</span>
+      <span class="turn-number" data-testid="turn-number" :aria-label="`Turn ${turn}`">{{
+        turn
+      }}</span>
+      <span
+        v-if="turnInfo"
+        class="turn-time"
+        data-testid="turn-time"
+        :aria-label="`Time: ${turnInfo.time}`"
+        >{{ turnInfo.time }}</span
+      >
     </div>
     <div v-if="turnInfo" class="condition-row">
-      <span class="condition" :data-condition="turnInfo.condition" data-testid="turn-condition">
+      <span
+        class="condition"
+        :data-condition="turnInfo.condition"
+        data-testid="turn-condition"
+        :aria-label="`Lighting: ${turnInfo.condition}`"
+      >
         {{ turnInfo.condition }}
       </span>
-      <span class="visibility" data-testid="turn-visibility">
-        {{ turnInfo.visibilityHexes === 999 ? 'Unlimited' : turnInfo.visibilityHexes + ' hex' }}
-      </span>
+      <span
+        class="visibility"
+        data-testid="turn-visibility"
+        :aria-label="`Visibility: ${visibilityLabel}`"
+        >{{ visibilityLabel }}</span
+      >
     </div>
     <div v-if="turnInfo?.date" class="date-row" data-testid="turn-date">
       {{ turnInfo.date }}
     </div>
-    <div v-if="activeSide" class="side-row" data-testid="turn-active-side">
+    <div
+      v-if="activeSide"
+      class="side-row"
+      data-testid="turn-active-side"
+      :aria-label="`Active side: ${activeSide}`"
+    >
       {{ activeSide }}
     </div>
-    <div v-if="phase" class="phase-row" data-testid="turn-phase">
+    <div v-if="phase" class="phase-row" data-testid="turn-phase" :aria-label="`Phase: ${phase}`">
       {{ phase }}
     </div>
   </div>

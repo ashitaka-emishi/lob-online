@@ -78,9 +78,18 @@ describe('TurnControl — lighting condition', () => {
     expect(wrapper.find('[data-testid="turn-visibility"]').text()).toMatch(/unlimited/i);
   });
 
-  it('renders numeric visibility for night turns', () => {
+  it('renders numeric visibility for night turns with correct plural', () => {
     const wrapper = makeWrapper({ turn: 45 });
-    expect(wrapper.find('[data-testid="turn-visibility"]').text()).toMatch(/2/);
+    expect(wrapper.find('[data-testid="turn-visibility"]').text()).toBe('2 hexes');
+  });
+
+  it('renders "1 hex" (singular) when visibility is 1', () => {
+    const scenario = {
+      turnStructure: { firstTurn: '09:00', date: '1862-09-14' },
+      lightingSchedule: [{ startTurn: 1, condition: 'night', visibilityHexes: 1 }],
+    };
+    const wrapper = makeWrapper({ turn: 1, scenario });
+    expect(wrapper.find('[data-testid="turn-visibility"]').text()).toBe('1 hex');
   });
 });
 
@@ -110,5 +119,25 @@ describe('TurnControl — active side and phase', () => {
   it('does not render phase element when phase is null', () => {
     const wrapper = makeWrapper({ phase: null });
     expect(wrapper.find('[data-testid="turn-phase"]').exists()).toBe(false);
+  });
+});
+
+describe('TurnControl — reactive prop updates (L5)', () => {
+  it('re-renders time and condition when turn prop changes', async () => {
+    const wrapper = makeWrapper({ turn: 1 });
+    expect(wrapper.find('[data-testid="turn-time"]').text()).toBe('09:00');
+    expect(wrapper.find('[data-testid="turn-condition"]').text()).toBe('day');
+    await wrapper.setProps({ turn: 45 });
+    expect(wrapper.find('[data-testid="turn-time"]').text()).toBe('20:00');
+    expect(wrapper.find('[data-testid="turn-condition"]').text()).toBe('night');
+  });
+});
+
+describe('TurnControl — ARIA structure (H2)', () => {
+  it('container has role=region and aria-label="Turn status"', () => {
+    const wrapper = makeWrapper({ turn: 1 });
+    const container = wrapper.find('[data-testid="turn-control"]');
+    expect(container.attributes('role')).toBe('region');
+    expect(container.attributes('aria-label')).toBe('Turn status');
   });
 });

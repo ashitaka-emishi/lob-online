@@ -18,6 +18,7 @@ const gameStore = useGameStore();
 const localPlayerSide = ref(null);
 const identityError = ref(null);
 const scenarioData = ref(null);
+const scenarioWarning = ref(null);
 
 // sanitizeCalibration fills missing fields from DEFAULT_CALIBRATION; the store
 // already calls it at the API boundary, so gridSpec is always a full calibration
@@ -37,19 +38,23 @@ onMounted(async () => {
   await Promise.all([gameStore.loadGame(gameId), fetchOob()]);
   await gameStore.refreshValidActions(gameId);
 
-  // Fetch scenario data for TurnControl — non-blocking, failure is non-fatal.
+  // Fetch scenario data for TurnControl — non-blocking, failure hides TurnControl gracefully.
+  // 'full-battle' is the canonical default scenario slug when the route omits scenarioSlug.
   const moduleSlug = route.params.moduleSlug;
-  const scenarioSlug = route.params.scenarioSlug ?? 'full-battle';
-  fetch(
-    `/api/v1/modules/${encodeURIComponent(moduleSlug)}/scenarios/${encodeURIComponent(scenarioSlug)}/scenario`
-  )
-    .then((r) => r.json())
-    .then((data) => {
-      scenarioData.value = data;
-    })
-    .catch((err) => {
-      console.error('[game] scenario fetch failed:', err);
-    });
+  if (moduleSlug) {
+    const scenarioSlug = route.params.scenarioSlug ?? 'full-battle';
+    fetch(
+      `/api/v1/modules/${encodeURIComponent(moduleSlug)}/scenarios/${encodeURIComponent(scenarioSlug)}/scenario`
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        scenarioData.value = data;
+      })
+      .catch((err) => {
+        console.error('[game] scenario fetch failed:', err);
+        scenarioWarning.value = 'Turn clock unavailable — scenario data could not be loaded.';
+      });
+  }
 
   // intentionally not awaited — identity is non-blocking for initial render
   fetch('/api/v1/games/me')
@@ -200,6 +205,17 @@ function onImageLoad(event) {
         <span aria-hidden="true">⚠</span>
         <span class="sr-only">Warning: </span>
         {{ gameStore.mapConfigError }} — map hexes unavailable
+      </div>
+      <div
+        v-show="scenarioWarning"
+        class="map-config-warning"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <span aria-hidden="true">⚠</span>
+        <span class="sr-only">Warning: </span>
+        {{ scenarioWarning }}
       </div>
     </div>
     <div class="game-body">

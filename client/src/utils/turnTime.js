@@ -1,8 +1,11 @@
 // LOB §9.1 — turn duration: daytime and twilight turns = 15 min; night turns = 30 min.
 
+import { VISIBILITY_UNLIMITED } from '../config/visibility.js';
+
 function getLightingEntry(turn, lightingSchedule) {
   if (!lightingSchedule || lightingSchedule.length === 0) {
-    return { condition: 'day', visibilityHexes: 999 };
+    // LOB §6.1 — unlimited visibility sentinel for daytime with no lighting schedule.
+    return { condition: 'day', visibilityHexes: VISIBILITY_UNLIMITED };
   }
   let entry = lightingSchedule[0];
   for (const slot of lightingSchedule) {
@@ -25,7 +28,8 @@ function formatTime(totalMinutes) {
  * Compute scenario clock time and lighting state for a given turn number.
  *
  * @param {number} turnNumber  1-based turn index
- * @param {object} scenario    Scenario data with turnStructure and optional lightingSchedule
+ * @param {object} scenario    Scenario data. Requires scenario.turnStructure.firstTurn ("HH:MM")
+ *                             and scenario.turnStructure.date. lightingSchedule is optional.
  * @returns {{ time: string, condition: string, visibilityHexes: number, date: string }}
  */
 export function computeTurnTime(turnNumber, scenario) {

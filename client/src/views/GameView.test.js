@@ -130,6 +130,11 @@ function makeRouter() {
       { path: '/', component: { template: '<div/>' } },
       { path: '/lobby', component: { template: '<div/>' } },
       { path: '/games/:id', component: { template: '<div/>' } },
+      // Module-prefixed route — needed to test scenario fetch URL construction (H4)
+      {
+        path: '/modules/:moduleSlug/scenarios/:scenarioSlug/games/:id',
+        component: { template: '<div/>' },
+      },
     ],
   });
 }
@@ -140,7 +145,8 @@ async function mountGameView(
   storeOverrides = {},
   fetchResponses = null,
   oobDataValue = STUB_OOB_DATA,
-  oobErrorValue = null
+  oobErrorValue = null,
+  routePath = '/games/game-1'
 ) {
   setActivePinia(createPinia());
   useGameStore.mockReturnValue(makeGameStore(storeOverrides));
@@ -150,7 +156,7 @@ async function mountGameView(
   vi.stubGlobal('fetch', fetchMock);
 
   const router = makeRouter();
-  await router.push('/games/game-1');
+  await router.push(routePath);
 
   return mount(GameView, {
     global: {
@@ -598,5 +604,90 @@ describe('GameView — localPlayerSide and validActions (#474)', () => {
     await flushPromises();
     const panel = wrapper.findComponent({ name: 'ActionPanel' });
     expect(panel.props('validActions')).toHaveLength(0);
+  });
+});
+
+describe('GameView — TurnControl rendering and wiring (#519, H3)', () => {
+  it('renders TurnControl in the sidebar', async () => {
+    const wrapper = await mountGameView();
+    expect(wrapper.findComponent({ name: 'TurnControl' }).exists()).toBe(true);
+  });
+
+  it('passes turn from gameState to TurnControl', async () => {
+    const gameState = {
+      units: {},
+      phase: 'command',
+      step: 'orders',
+      turn: 7,
+      activePlayer: 'union',
+    };
+    const wrapper = await mountGameView({ gameState });
+    const tc = wrapper.findComponent({ name: 'TurnControl' });
+    expect(tc.props('turn')).toBe(7);
+  });
+
+  it('passes phase from gameState to TurnControl', async () => {
+    const gameState = {
+      units: {},
+      phase: 'movement',
+      step: 'execute',
+      turn: 3,
+      activePlayer: 'union',
+    };
+    const wrapper = await mountGameView({ gameState });
+    const tc = wrapper.findComponent({ name: 'TurnControl' });
+    expect(tc.props('phase')).toBe('movement');
+  });
+
+  it('passes activeSide from gameState.activePlayer to TurnControl', async () => {
+    const gameState = {
+      units: {},
+      phase: 'command',
+      step: 'orders',
+      turn: 1,
+      activePlayer: 'confederate',
+    };
+    const wrapper = await mountGameView({ gameState });
+    const tc = wrapper.findComponent({ name: 'TurnControl' });
+    expect(tc.props('activeSide')).toBe('confederate');
+  });
+
+  it('TurnControl scenario prop is null before fetch resolves', async () => {
+    const wrapper = await mountGameView();
+    const tc = wrapper.findComponent({ name: 'TurnControl' });
+    expect(tc.props('scenario')).toBeNull();
+  });
+
+  it('populates TurnControl scenario prop after successful scenario fetch (H3/H4)', async () => {
+    const stubScenario = {
+      turnStructure: { firstTurn: '09:00', date: '1862-09-14' },
+      lightingSchedule: [{ startTurn: 1, condition: 'day', visibilityHexes: 999 }],
+    };
+    const wrapper = await mountGameView(
+      {},
+      [['/scenario', stubScenario]],
+      STUB_OOB_DATA,
+      null,
+      '/modules/SM/scenarios/full-battle/games/game-1'
+    );
+    await flushPromises();
+    const tc = wrapper.findComponent({ name: 'TurnControl' });
+    expect(tc.props('scenario')).toEqual(stubScenario);
+  });
+
+  it('scenario fetch uses module-prefixed URL with encodeURIComponent (H4)', async () => {
+    await mountGameView(
+      {},
+      [],
+      STUB_OOB_DATA,
+      null,
+      '/modules/SM/scenarios/full-battle/games/game-1'
+    );
+    await flushPromises();
+    const fetchMock = fetch;
+    const scenarioCalls = fetchMock.mock.calls.filter((c) =>
+      c[0].includes('/modules/SM/scenarios/full-battle/scenario')
+    );
+    expect(scenarioCalls.length).toBeGreaterThan(0);
   });
 });

@@ -117,11 +117,26 @@ describe('computeTurnTime — scenario date', () => {
   });
 });
 
-describe('computeTurnTime — edge cases', () => {
+describe('computeTurnTime — edge cases (L4)', () => {
   it('scenario without lightingSchedule returns day/999 for any turn', () => {
     const scenario = { turnStructure: { firstTurn: '09:00', date: '1862-09-14' } };
     const result = computeTurnTime(5, scenario);
     expect(result.condition).toBe('day');
     expect(result.visibilityHexes).toBe(999);
+  });
+
+  it('explicit empty lightingSchedule array returns day/999 sentinel', () => {
+    const scenario = {
+      turnStructure: { firstTurn: '09:00', date: '1862-09-14' },
+      lightingSchedule: [],
+    };
+    const result = computeTurnTime(1, scenario);
+    expect(result.condition).toBe('day');
+    expect(result.visibilityHexes).toBe(999);
+  });
+
+  it('turnNumber=0 returns firstTurn time (loop does not run)', () => {
+    const result = computeTurnTime(0, SM_SCENARIO);
+    expect(result.time).toBe('09:00');
   });
 });

@@ -57,19 +57,37 @@ describe('AboutView — credits and content', () => {
 });
 
 describe('AboutView — links', () => {
-  it('renders a link to The Gamers Archive', () => {
+  it('renders a link to The Gamers Archive with correct href and security attrs', () => {
     const wrapper = makeWrapper();
-    expect(wrapper.find('[data-testid="gamers-archive-link"]').exists()).toBe(true);
+    const link = wrapper.find('[data-testid="gamers-archive-link"]');
+    expect(link.exists()).toBe(true);
+    expect(link.attributes('href')).toContain('consimworld.com/gamers-archive');
+    expect(link.attributes('target')).toBe('_blank');
+    expect(link.attributes('rel')).toContain('noopener');
   });
 
-  it('renders a link for LoB Series Support', () => {
+  it('renders a link for LoB Series Support with distinct href from MMP page', () => {
     const wrapper = makeWrapper();
-    expect(wrapper.find('[data-testid="lob-series-link"]').exists()).toBe(true);
+    const seriesLink = wrapper.find('[data-testid="lob-series-link"]');
+    const lobLink = wrapper.find('[data-testid="mmp-lob-link"]');
+    expect(seriesLink.exists()).toBe(true);
+    expect(lobLink.exists()).toBe(true);
+    // M6 fix: the two links must not share the same URL
+    expect(seriesLink.attributes('href')).not.toBe(lobLink.attributes('href'));
   });
 
-  it('renders a link to the MMP LoB page', () => {
+  it('renders a link to the MMP LoB page with correct href and security attrs', () => {
     const wrapper = makeWrapper();
-    expect(wrapper.find('[data-testid="mmp-lob-link"]').exists()).toBe(true);
+    const link = wrapper.find('[data-testid="mmp-lob-link"]');
+    expect(link.attributes('href')).toContain('multimanpublishing.com');
+    expect(link.attributes('target')).toBe('_blank');
+    expect(link.attributes('rel')).toContain('noopener');
+  });
+
+  it('external links include "(opens in new tab)" for screen readers', () => {
+    const wrapper = makeWrapper();
+    const archiveLink = wrapper.find('[data-testid="gamers-archive-link"]');
+    expect(archiveLink.text()).toContain('opens in new tab');
   });
 
   it('renders a back-to-home link', () => {
