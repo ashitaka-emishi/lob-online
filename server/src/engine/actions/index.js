@@ -2,6 +2,7 @@ import { GameStateSchema } from '../../schemas/gameState.schema.js';
 import { PHASES, STEPS } from '../../constants/phases.js';
 import { ActionError } from './actionError.js';
 import { loadOob, buildUnitSideMap } from '../oob.js';
+import { applySection64AutoRecovery } from '../tables/rally.js';
 import { handleEndPhase } from './endPhase.js';
 import { handleRollInitiative, handleIssueOrder } from './issueOrder.js';
 import { handleActivateStack } from './activateStack.js';
@@ -194,22 +195,6 @@ function clearCbfMarkers(units) {
   return updated;
 }
 
-// LOB §8.1 — collect unit IDs that had their CBF marker set at Rally entry.
-// Used to populate rallyPhase.unitsPendingRally for morale recovery rolls.
-function collectCbfUnits(units) {
-  return Object.values(units)
-    .filter((u) => u.isOnBoard && u.cbfMarker)
-    .map((u) => u.id);
-}
-
-// LOB §6.3 — collect unit IDs with DG or Routed morale that require rally rolls.
-// At M6 depth: auto-advance when no such units exist; M7 will add interactive dice.
-function collectMoraleRecoveryUnits(units) {
-  return Object.values(units)
-    .filter((u) => u.isOnBoard && (u.moraleState === 'disorganized' || u.moraleState === 'routed'))
-    .map((u) => u.id);
-}
-
 // Phase-envelope guard: a per-phase envelope (activityPhase / ordersPhase) must not bleed into a
 // phase where it does not belong. See the biconditional .refine() calls in GameStateSchema
 // (server/src/schemas/gameState.schema.js) for the full bidirectional invariant enforced at the
@@ -285,21 +270,22 @@ export function drainAutoSteps(state) {
       continue;
     }
 
-    // LOB §6.3, §8.1 — Rally Phase: clear CBF markers, then advance morale for DG/Routed units.
-    // CBF clearing is automatic (LOB §8.1). Morale recovery rolls are auto-advanced when no
-    // DG/Routed units exist; M7 will add interactive dice when such units are present.
+    // LOB §6.4, §6.3, §8.1 — Rally Phase.
+    // Sequence: §6.4 automatic recovery (uses cbfMarker) → §8.1 clear CBF → §6.3 per-unit rolls.
+    // §6.3 per-unit rolls require interactive dice (M7); auto-advance when no units remain pending.
     if (phase === PHASES.RALLY && step === STEPS.RALLY) {
-      // LOB §8.1 — clear CBF markers from all on-board units entering Rally
-      // _cbfUnits tracked for M7 audit when interactive rally rolls are added
-      const _cbfUnits = collectCbfUnits(s.units);
-      const unitsAfterCbf = clearCbfMarkers(s.units);
+      // LOB §6.4 — apply automatic recovery BEFORE clearing CBF markers (cbfMarker determines
+      // whether a shaken unit auto-recovers). Must run first so cbfMarker values are still set.
+      const { units: unitsAfter64, unitsPendingRallyRoll } = applySection64AutoRecovery(s.units);
 
-      // LOB §6.3 — collect units requiring morale recovery rolls
-      // TODO(M7): when _moraleRecoveryIds.length > 0, pause for player dice and apply rally table.
-      const _moraleRecoveryIds = collectMoraleRecoveryUnits(unitsAfterCbf);
+      // LOB §8.1 — clear CBF markers from all on-board units after §6.4 has consumed them
+      const unitsAfterCbf = clearCbfMarkers(unitsAfter64);
 
-      // Rally entry: clear CBF markers, auto-advance to next Command Phase.
-      // LOB §6.3 — morale recovery rolls deferred to M7 (no DG/Routed units in scenario startup).
+      // LOB §6.3 — units still needing a rally roll after §6.4 (routed units, shaken+CBF survivors).
+      // TODO(M7): when unitsPendingRallyRoll.length > 0, pause for player dice and apply rally table.
+      // At M6 depth: auto-advance regardless (no DG/Routed units in scenario startup state).
+      const _pendingRallyRoll = unitsPendingRallyRoll;
+
       const nextActivePlayer = s.activePlayer === 'union' ? 'confederate' : 'union';
       s = {
         ...s,
