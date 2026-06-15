@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 
 import { requireSide } from '../auth/requireSide.js';
 import { getPlayerSession, setPlayerSession } from '../auth/session.js';
@@ -31,6 +32,10 @@ function regenerateSession(req) {
   );
 }
 
+// Security: rate limit game create/join to mitigate enumeration (#350)
+// 30 requests per 15-minute window per IP — generous for dev/testing, meaningful in prod.
+const gameLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
+
 const router = express.Router();
 
 // Validate :id is a UUID — prevents path traversal into gameFile storage
@@ -40,7 +45,7 @@ router.param('id', (req, res, next, id) => {
 });
 
 // POST /api/v1/games — create a new game, assign creator as union (USA) (#549)
-router.post('/', async (req, res) => {
+router.post('/', gameLimiter, async (req, res) => {
   try {
     const id = randomUUID();
     const scenario = getScenario();
@@ -63,7 +68,7 @@ router.post('/', async (req, res) => {
 });
 
 // POST /api/v1/games/:id/join — second player joins; side must be specified in body
-router.post('/:id/join', async (req, res) => {
+router.post('/:id/join', gameLimiter, async (req, res) => {
   try {
     const { id } = req.params;
     const { side } = req.body;

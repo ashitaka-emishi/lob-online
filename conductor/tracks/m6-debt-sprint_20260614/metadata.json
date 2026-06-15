@@ -1,0 +1,16 @@
+{
+  "id": "m6-debt-sprint_20260614",
+  "title": "M6 Debt Sprint — Small Fixes, Security Headers, Rate Limiting, Register Sync",
+  "type": "debt",
+  "status": "pending",
+  "created": "2026-06-14T00:00:00.000Z",
+  "updated": "2026-06-14T00:00:00.000Z",
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 9,
+    "completed": 0
+  }
+}

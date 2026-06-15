@@ -1,0 +1,16 @@
+{
+  "id": "m6-rules-handlers_20260614",
+  "title": "M6 Rules Handler Implementations — Rally §6.4, Close Combat Gate, Leader Loss, Fluke, Attack Recovery",
+  "type": "feature",
+  "status": "pending",
+  "created": "2026-06-14T00:00:00.000Z",
+  "updated": "2026-06-14T00:00:00.000Z",
+  "phases": {
+    "total": 4,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 10,
+    "completed": 0
+  }
+}

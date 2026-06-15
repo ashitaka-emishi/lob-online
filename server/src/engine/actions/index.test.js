@@ -87,17 +87,19 @@ describe('getValidActions', () => {
 
   // Task 1.1: ROLL_INITIATIVE candidates include { leaderId, unitId } payloads (#550)
   it('ROLL_INITIATIVE candidate carries { leaderId, unitId } payload for each eligible leader-unit pair', () => {
+    // LOB §10.3 — initiative candidates limited to active side's units per M6 OOB side-filter.
+    // Use real union unit IDs that exist in the OOB so side-filtering returns them.
     const state = {
       ...COMMAND_ORDERS_STATE,
       units: {
-        colquitt: {
+        '2ny-cav': {
           ...BASE_UNIT,
-          id: 'colquitt',
+          id: '2ny-cav',
           orders: { type: 'move', status: 'accepted', deliveryTurnDue: null },
         },
-        rodes: {
+        '1nh-lt': {
           ...BASE_UNIT,
-          id: 'rodes',
+          id: '1nh-lt',
           orders: { type: 'attack', status: 'accepted', deliveryTurnDue: null },
         },
       },
@@ -312,15 +314,15 @@ describe('getValidActions', () => {
     expect(actions.map((a) => a.type)).toContain('END_PHASE');
   });
 
-  // LOB §10.3 — only friendly units may be targeted for initiative (see #560 for M6 tracking).
-  // UnitStateSchema has no side field; side-filtering deferred to M6. In M5, scenario seeds only
-  // one side's units. This test pins current behavior: all on-board units are candidates.
-  it('ROLL_INITIATIVE candidates include all on-board units (M5 — side-filter deferred to M6 LOB §10.3)', () => {
+  // LOB §10.3 — M6 side-filter: initiative candidates limited to the active player's units.
+  // Uses OOB side map; units not found in OOB are excluded as a safe fallback.
+  it('ROLL_INITIATIVE candidates include union on-board units (M6 — side-filtered via OOB LOB §10.3)', () => {
+    // Use real union unit IDs that exist in the OOB so side-filtering resolves them correctly.
     const state = {
       ...COMMAND_ORDERS_STATE,
       units: {
-        colquitt: { ...BASE_UNIT, id: 'colquitt', isOnBoard: true },
-        rodes: { ...BASE_UNIT, id: 'rodes', isOnBoard: true },
+        '2ny-cav': { ...BASE_UNIT, id: '2ny-cav', isOnBoard: true },
+        '1nh-lt': { ...BASE_UNIT, id: '1nh-lt', isOnBoard: true },
       },
       leaderState: { cox: { hex: '29.22', isOnBoard: true } },
       ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
@@ -328,17 +330,19 @@ describe('getValidActions', () => {
     const actions = getValidActions(state, 'union');
     const rollActions = actions.filter((a) => a.type === 'ROLL_INITIATIVE');
     const unitIds = rollActions.map((a) => a.payload?.unitId).filter(Boolean);
-    expect(unitIds).toContain('colquitt');
-    expect(unitIds).toContain('rodes');
+    expect(unitIds).toContain('2ny-cav');
+    expect(unitIds).toContain('1nh-lt');
   });
 
   // Review L3: ROLL_INITIATIVE cartesian expansion cardinality (leaders × units)
-  it('ROLL_INITIATIVE produces L×U candidates for L leaders and U on-board units (#559 review L3)', () => {
+  // LOB §10.3 — M6 side-filter: candidates limited to the active player's OOB units.
+  it('ROLL_INITIATIVE produces L×U candidates for L leaders and U union on-board units (#559 review L3)', () => {
+    // Use real union unit IDs so OOB side-filtering resolves them as union units.
     const state = {
       ...COMMAND_ORDERS_STATE,
       units: {
-        unit1: { ...BASE_UNIT, id: 'unit1', isOnBoard: true },
-        unit2: { ...BASE_UNIT, id: 'unit2', isOnBoard: true },
+        '2ny-cav': { ...BASE_UNIT, id: '2ny-cav', isOnBoard: true },
+        '1nh-lt': { ...BASE_UNIT, id: '1nh-lt', isOnBoard: true },
       },
       leaderState: {
         cox: { hex: '29.22', isOnBoard: true },
@@ -348,13 +352,13 @@ describe('getValidActions', () => {
     };
     const actions = getValidActions(state, 'union');
     const rollActions = actions.filter((a) => a.type === 'ROLL_INITIATIVE');
-    // 2 leaders × 2 units = 4 candidates
+    // 2 leaders × 2 union units = 4 candidates
     expect(rollActions).toHaveLength(4);
     const pairs = rollActions.map((a) => `${a.payload.leaderId}:${a.payload.unitId}`);
-    expect(pairs).toContain('cox:unit1');
-    expect(pairs).toContain('cox:unit2');
-    expect(pairs).toContain('jones:unit1');
-    expect(pairs).toContain('jones:unit2');
+    expect(pairs).toContain('cox:2ny-cav');
+    expect(pairs).toContain('cox:1nh-lt');
+    expect(pairs).toContain('jones:2ny-cav');
+    expect(pairs).toContain('jones:1nh-lt');
   });
 
   // Review L4: ACTIVATE_STACK same-hex deduplication

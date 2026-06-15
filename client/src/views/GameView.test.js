@@ -54,6 +54,7 @@ function makeGameStore(overrides = {}) {
     gameState: null,
     gridSpec: null,
     hexes: null,
+    scenario: null, // (#583) scenario data co-located in the store, populated by loadGame
     selectedUnitId: null,
     selectedUnit: null,
     loading: false,
@@ -300,10 +301,12 @@ describe('GameView — calibration from gridSpec (#406)', () => {
 });
 
 describe('GameView — game store integration', () => {
-  it('calls loadGame with the game ID from route params on mount', async () => {
+  it('calls loadGame with the game ID and module context from route params on mount (#583)', async () => {
+    // GameView passes { moduleSlug, scenarioSlug } to loadGame so the store can co-fetch
+    // scenario data; the test verifies the new 2-arg call signature.
     const loadGame = vi.fn();
     await mountGameView({ loadGame });
-    await vi.waitFor(() => expect(loadGame).toHaveBeenCalledWith('game-1'));
+    await vi.waitFor(() => expect(loadGame).toHaveBeenCalledWith('game-1', expect.any(Object)));
   });
 
   it('passes selectedUnit enriched through OOB to UnitStatsPanel', async () => {
@@ -658,14 +661,17 @@ describe('GameView — TurnControl rendering and wiring (#519, H3)', () => {
     expect(tc.props('scenario')).toBeNull();
   });
 
-  it('populates TurnControl scenario prop after successful scenario fetch (H3/H4)', async () => {
+  it('TurnControl scenario prop reflects gameStore.scenario when set (#583, H3/H4)', async () => {
+    // Scenario data is now loaded inside useGameStore.loadGame (not fetched in GameView).
+    // GameView wires TurnControl with :scenario="gameStore.scenario". This test verifies
+    // that when the store exposes a scenario, TurnControl receives it as a prop.
     const stubScenario = {
       turnStructure: { firstTurn: '09:00', date: '1862-09-14' },
       lightingSchedule: [{ startTurn: 1, condition: 'day', visibilityHexes: 999 }],
     };
     const wrapper = await mountGameView(
-      {},
-      [['/scenario', stubScenario]],
+      { scenario: stubScenario },
+      [],
       STUB_OOB_DATA,
       null,
       '/modules/SM/scenarios/full-battle/games/game-1'
@@ -675,19 +681,20 @@ describe('GameView — TurnControl rendering and wiring (#519, H3)', () => {
     expect(tc.props('scenario')).toEqual(stubScenario);
   });
 
-  it('scenario fetch uses module-prefixed URL with encodeURIComponent (H4)', async () => {
+  it('loadGame is called with moduleSlug from route so store can fetch scenario (#583, H4)', async () => {
+    // Scenario fetch URL construction is now the store's responsibility. GameView must pass
+    // moduleSlug to loadGame so the store can construct the correct module-scoped API path.
+    const loadGame = vi.fn();
     await mountGameView(
-      {},
+      { loadGame },
       [],
       STUB_OOB_DATA,
       null,
       '/modules/SM/scenarios/full-battle/games/game-1'
     );
     await flushPromises();
-    const fetchMock = fetch;
-    const scenarioCalls = fetchMock.mock.calls.filter((c) =>
-      c[0].includes('/modules/SM/scenarios/full-battle/scenario')
+    await vi.waitFor(() =>
+      expect(loadGame).toHaveBeenCalledWith('game-1', expect.objectContaining({ moduleSlug: 'SM' }))
     );
-    expect(scenarioCalls.length).toBeGreaterThan(0);
   });
 });

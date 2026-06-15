@@ -1,0 +1,16 @@
+{
+  "id": "m6-combat-tests_20260614",
+  "title": "M6 Combat Tests — resolveMorale Suite and Dispatch Integration",
+  "type": "test",
+  "status": "pending",
+  "created": "2026-06-14T00:00:00.000Z",
+  "updated": "2026-06-14T00:00:00.000Z",
+  "phases": {
+    "total": 2,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 5,
+    "completed": 0
+  }
+}

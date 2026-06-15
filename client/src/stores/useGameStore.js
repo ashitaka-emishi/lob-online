@@ -7,6 +7,7 @@ export const useGameStore = defineStore('game', () => {
   const gameState = ref(null);
   const gridSpec = ref(null);
   const hexes = ref(null);
+  const scenario = ref(null);
   const selectedUnitId = ref(null);
   const loading = ref(false);
   const error = ref(null);
@@ -55,7 +56,10 @@ export const useGameStore = defineStore('game', () => {
     return gameState.value.units[selectedUnitId.value] ?? null;
   });
 
-  async function loadGame(id) {
+  // loadGame fetches game state, map config, and (when moduleSlug is provided) scenario data.
+  // moduleSlug and scenarioSlug are optional; scenario fetch is non-blocking and fails gracefully.
+  // (#583 — scenario fetch co-located here rather than in GameView to keep store as source of truth)
+  async function loadGame(id, { moduleSlug = null, scenarioSlug = 'full-battle' } = {}) {
     const gen = ++_loadGeneration;
     loading.value = true;
     error.value = null;
@@ -91,6 +95,19 @@ export const useGameStore = defineStore('game', () => {
         }
       } else if (mapConfigRes && !mapConfigRes.ok) {
         mapConfigError.value = `Map data unavailable (${mapConfigRes.status})`;
+      }
+
+      // Scenario fetch — non-blocking; failure leaves scenario null (TurnControl degrades gracefully).
+      // moduleSlug is required to resolve the scenario API path; omitting it skips the fetch. (#583)
+      if (moduleSlug) {
+        const slug = encodeURIComponent(moduleSlug);
+        const scenSlug = encodeURIComponent(scenarioSlug);
+        fetch(`/api/v1/modules/${slug}/scenarios/${scenSlug}/scenario`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            if (gen === _loadGeneration && data) scenario.value = data;
+          })
+          .catch(() => {}); // non-fatal — scenario remains null
       }
     } catch (err) {
       if (gen === _loadGeneration) error.value = err.message;
@@ -139,6 +156,7 @@ export const useGameStore = defineStore('game', () => {
     gameState,
     gridSpec,
     hexes,
+    scenario,
     selectedUnitId,
     selectedUnit,
     loading,

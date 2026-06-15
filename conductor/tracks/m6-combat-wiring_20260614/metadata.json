@@ -1,0 +1,16 @@
+{
+  "id": "m6-combat-wiring_20260614",
+  "title": "M6 Combat Wiring — Soft-lock Fix, Dispatch DI, OOB Deduplication",
+  "type": "bugfix",
+  "status": "pending",
+  "created": "2026-06-14T00:00:00.000Z",
+  "updated": "2026-06-14T00:00:00.000Z",
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 7,
+    "completed": 0
+  }
+}
