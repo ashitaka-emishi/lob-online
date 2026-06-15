@@ -15,7 +15,8 @@ export function handleEndActivation(state, _action) {
     throw new ActionError('INVALID_ACTION', 'No stack is currently mid-activation');
   }
 
-  const completedHex = activity.currentActivation;
+  // LOB §3.0d — extract hex from currentActivation object; add to activatedUnits set
+  const completedHex = activity.currentActivation.hex;
 
   return {
     ...state,

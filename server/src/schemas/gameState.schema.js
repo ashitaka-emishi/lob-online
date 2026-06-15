@@ -6,8 +6,8 @@ import { STATE_SCHEMA_VERSION } from '../constants/schemaVersion.js';
 // col.row format — e.g. "19.23"
 const HexId = z.string().regex(/^\d+\.\d+$/, 'Hex ID must be in col.row format (e.g. "19.23")');
 
-// LOB §6.0 — Morale States: Normal, Blood Lust (BL), Shaken (Sh), Disorganized (DG), Routed (R)
-export const MoraleState = z.enum(['normal', 'bloodLust', 'shaken', 'DG', 'routed']);
+// LOB §6.0 — Morale States: Normal (NM), Blood Lust (BL), Shaken (SH), Disorganized (DG), Routed (RT)
+export const MoraleState = z.enum(['normal', 'bloodlust', 'shaken', 'disorganized', 'routed']);
 
 // LOB §10.4a–b — Attack and Move order types; null = no order type assigned (distinct from in-delivery).
 // Reserve (§10.4c) and Association (§10.8e part 2) statuses are deferred to a later milestone.
@@ -68,6 +68,10 @@ export const UnitStateSchema = z
     // the order-holding level.
     orders: UnitOrderState.nullable(),
     ammo: AmmoState,
+    // LOB §5.8 — Shell/Canister Depletion marker: placed on unit when depletion roll triggers during fire
+    depletionMarker: z.boolean(),
+    // LOB §8.1 — Can't Be Fought (CBF) marker: placed after a unit takes a combat loss; cleared at Rally Phase
+    cbfMarker: z.boolean(),
     isOnBoard: z.boolean(),
     entryTurn: z.number().int().positive().nullable(),
     // SM §2.3, §3.3 — true when a brigade is operating independently of its parent division.
@@ -106,7 +110,18 @@ export const LeaderStateSchema = z
 // Pending interrupt requiring a dice roll or player decision before the current step completes
 export const PendingResolutionSchema = z
   .object({
-    type: z.enum(['looseCannonRoll', 'variableReinforcement', 'leaderCasualty']),
+    type: z.enum([
+      'looseCannonRoll',
+      'variableReinforcement',
+      // LOB §6.0 — morale check triggered by m/m+ combat result; context: { unitId, roll, modifier }
+      'moraleCheck',
+      // LOB §9.1a — leader casualty check triggered by m+ result or close combat; context: { leaderId }
+      'leaderCasualty',
+      // LOB §7.0b — closing roll triggered at start of charge sequence; context: { attackerId, defenderId }
+      'closingRoll',
+      // LOB §5.6 — fire combat result awaiting morale cascade to resolve; context: { attackerHex, defenderHex, result }
+      'combatResult',
+    ]),
     context: z.record(z.string(), z.unknown()),
   })
   .strict();
@@ -140,11 +155,23 @@ export const GameStateSchema = z
     // Non-null when a mid-step interrupt requires a dice roll or player decision before the step completes
     pendingResolution: PendingResolutionSchema.nullable(),
     // LOB §3.0d — non-null only during Activity Phase; tracks stacks that have completed activation this phase
-    // currentActivation: hex of the stack currently mid-activation; null when no activation in progress
+    // currentActivation: null when no activation in progress; non-null object when a stack is mid-activation
     activityPhase: z
       .object({
         activatedUnits: z.array(z.string()),
-        currentActivation: z.string().nullable(),
+        // LOB §3.0d — tracks the hex and activation context of the stack currently mid-activation
+        currentActivation: z
+          .object({
+            hex: z.string().regex(/^\d+\.\d+$/),
+            // LOB §5.4 — true when this activation included a Move action (enables Opening Volley on fire)
+            movedThisActivation: z.boolean(),
+            // LOB §5.4 — true when Opening Volley was triggered this activation
+            openingVolley: z.boolean(),
+            // LOB §9.1e — true when Zero Rule MA roll fired a zero result; blocks attack this activation
+            zeroRuleFired: z.boolean(),
+          })
+          .strict()
+          .nullable(),
       })
       .strict()
       .nullable(),
@@ -157,6 +184,13 @@ export const GameStateSchema = z
           .object({ leaderId: z.string(), unitId: z.string() })
           .strict()
           .nullable(),
+      })
+      .strict()
+      .nullable(),
+    // LOB §8.1 — non-null only during Rally Phase; tracks units with CBF markers pending rally
+    rallyPhase: z
+      .object({
+        unitsPendingRally: z.array(z.string()),
       })
       .strict()
       .nullable(),
@@ -187,4 +221,9 @@ export const GameStateSchema = z
   .refine((data) => data.phase !== PHASES.RALLY || data.ordersPhase === null, {
     message: "ordersPhase must be null during 'rally' phase",
     path: ['ordersPhase'],
+  })
+  // LOB §8.1 — rallyPhase envelope biconditional: non-null iff phase is 'rally'
+  .refine((data) => (data.phase === PHASES.RALLY) === (data.rallyPhase !== null), {
+    message: "rallyPhase must be non-null iff phase is 'rally'",
+    path: ['rallyPhase'],
   });

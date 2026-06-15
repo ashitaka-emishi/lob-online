@@ -19,6 +19,8 @@ const BASE_UNIT = {
   wrecked: false,
   orders: { type: 'move', status: 'accepted', deliveryTurnDue: null },
   ammo: 'full',
+  depletionMarker: false,
+  cbfMarker: false,
   isOnBoard: true,
   entryTurn: null,
   isDetached: false,
@@ -27,7 +29,7 @@ const BASE_UNIT = {
 const BASE_GAME_STATE = {
   id: 'game-abc123',
   scenarioId: 'south-mountain',
-  schemaVersion: 1,
+  schemaVersion: 3,
   version: 0,
   turn: 1,
   phase: null,
@@ -43,6 +45,7 @@ const BASE_GAME_STATE = {
   pendingResolution: null,
   activityPhase: null,
   ordersPhase: null,
+  rallyPhase: null,
 };
 
 describe('UnitStateSchema', () => {
@@ -91,6 +94,32 @@ describe('UnitStateSchema', () => {
 
   it('rejects invalid ammo value', () => {
     expect(UnitStateSchema.safeParse({ ...BASE_UNIT, ammo: 'depleted' }).success).toBe(false);
+  });
+
+  it('accepts depletionMarker: true (LOB §5.8 — depletion triggered)', () => {
+    expect(UnitStateSchema.safeParse({ ...BASE_UNIT, depletionMarker: true }).success).toBe(true);
+  });
+
+  it('rejects missing depletionMarker field (LOB §5.8)', () => {
+    const { depletionMarker: _d, ...noDepletion } = BASE_UNIT;
+    expect(UnitStateSchema.safeParse(noDepletion).success).toBe(false);
+  });
+
+  it('rejects non-boolean depletionMarker', () => {
+    expect(UnitStateSchema.safeParse({ ...BASE_UNIT, depletionMarker: 1 }).success).toBe(false);
+  });
+
+  it('accepts cbfMarker: true (LOB §8.1 — unit took combat loss)', () => {
+    expect(UnitStateSchema.safeParse({ ...BASE_UNIT, cbfMarker: true }).success).toBe(true);
+  });
+
+  it('rejects missing cbfMarker field (LOB §8.1)', () => {
+    const { cbfMarker: _c, ...noCbf } = BASE_UNIT;
+    expect(UnitStateSchema.safeParse(noCbf).success).toBe(false);
+  });
+
+  it('rejects non-boolean cbfMarker', () => {
+    expect(UnitStateSchema.safeParse({ ...BASE_UNIT, cbfMarker: 'yes' }).success).toBe(false);
   });
 
   it('accepts isDetached: true (detached brigade)', () => {
@@ -145,7 +174,7 @@ describe('UnitStateSchema', () => {
 });
 
 describe('MoraleState enum exhaustiveness', () => {
-  const validStates = ['normal', 'bloodLust', 'shaken', 'DG', 'routed'];
+  const validStates = ['normal', 'bloodlust', 'shaken', 'disorganized', 'routed'];
   for (const state of validStates) {
     it(`accepts moraleState: '${state}'`, () => {
       expect(MoraleState.safeParse(state).success).toBe(true);
@@ -286,13 +315,47 @@ describe('PendingResolutionSchema', () => {
   });
 
   it('accepts all valid resolution types', () => {
-    for (const type of ['looseCannonRoll', 'variableReinforcement', 'leaderCasualty']) {
+    for (const type of [
+      'looseCannonRoll',
+      'variableReinforcement',
+      'moraleCheck',
+      'leaderCasualty',
+      'closingRoll',
+      'combatResult',
+    ]) {
       expect(PendingResolutionSchema.safeParse({ type, context: {} }).success).toBe(true);
     }
   });
 
+  it('accepts moraleCheck with unitId context (LOB §6.0)', () => {
+    expect(
+      PendingResolutionSchema.safeParse({
+        type: 'moraleCheck',
+        context: { unitId: 'colquitt', roll: 7, modifier: -1 },
+      }).success
+    ).toBe(true);
+  });
+
+  it('accepts closingRoll with attacker/defender context (LOB §7.0b)', () => {
+    expect(
+      PendingResolutionSchema.safeParse({
+        type: 'closingRoll',
+        context: { attackerId: 'colquitt', defenderId: 'cox' },
+      }).success
+    ).toBe(true);
+  });
+
+  it('accepts combatResult awaiting morale cascade (LOB §5.6)', () => {
+    expect(
+      PendingResolutionSchema.safeParse({
+        type: 'combatResult',
+        context: { attackerHex: '29.22', defenderHex: '30.21', result: 'm' },
+      }).success
+    ).toBe(true);
+  });
+
   it('rejects unknown resolution type', () => {
-    expect(PendingResolutionSchema.safeParse({ type: 'combatResult', context: {} }).success).toBe(
+    expect(PendingResolutionSchema.safeParse({ type: 'unknownType', context: {} }).success).toBe(
       false
     );
   });
@@ -342,6 +405,7 @@ describe('GameStateSchema', () => {
       activePlayer: 'confederate',
       step: 'rally',
       turn: 45,
+      rallyPhase: { unitsPendingRally: [] },
     };
     expect(GameStateSchema.safeParse(state).success).toBe(true);
   });
@@ -544,8 +608,8 @@ describe('GameStateSchema', () => {
     expect(result.error.issues.some((i) => i.path.includes('ordersPhase'))).toBe(true);
   });
 
-  // Rally phase envelope invariants (LOB §2.1) — both envelopes must be null during rally
-  it('accepts rally phase with both envelopes null (LOB §2.1)', () => {
+  // Rally phase envelope invariants (LOB §2.1, §8.1) — activityPhase/ordersPhase must be null; rallyPhase must be non-null
+  it('accepts rally phase with correct envelopes (LOB §2.1, §8.1)', () => {
     const state = {
       ...BASE_GAME_STATE,
       status: 'active',
@@ -554,6 +618,21 @@ describe('GameStateSchema', () => {
       step: 'rally',
       activityPhase: null,
       ordersPhase: null,
+      rallyPhase: { unitsPendingRally: [] },
+    };
+    expect(GameStateSchema.safeParse(state).success).toBe(true);
+  });
+
+  it('accepts rally phase with units pending rally (LOB §8.1)', () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      status: 'active',
+      phase: 'rally',
+      activePlayer: 'confederate',
+      step: 'rally',
+      activityPhase: null,
+      ordersPhase: null,
+      rallyPhase: { unitsPendingRally: ['colquitt', '23ga'] },
     };
     expect(GameStateSchema.safeParse(state).success).toBe(true);
   });
@@ -567,6 +646,7 @@ describe('GameStateSchema', () => {
       step: 'rally',
       activityPhase: { activatedUnits: [], currentActivation: null },
       ordersPhase: null,
+      rallyPhase: { unitsPendingRally: [] },
     };
     const result = GameStateSchema.safeParse(state);
     expect(result.success).toBe(false);
@@ -582,9 +662,43 @@ describe('GameStateSchema', () => {
       step: 'rally',
       activityPhase: null,
       ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+      rallyPhase: { unitsPendingRally: [] },
     };
     const result = GameStateSchema.safeParse(state);
     expect(result.success).toBe(false);
     expect(result.error.issues.some((i) => i.path.includes('ordersPhase'))).toBe(true);
+  });
+
+  // rallyPhase biconditional invariants (LOB §8.1) — non-null iff phase is 'rally'
+  it("rejects null rallyPhase when phase is 'rally' (LOB §8.1)", () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      status: 'active',
+      phase: 'rally',
+      activePlayer: 'confederate',
+      step: 'rally',
+      activityPhase: null,
+      ordersPhase: null,
+      rallyPhase: null,
+    };
+    const result = GameStateSchema.safeParse(state);
+    expect(result.success).toBe(false);
+    expect(result.error.issues.some((i) => i.path.includes('rallyPhase'))).toBe(true);
+  });
+
+  it("rejects non-null rallyPhase when phase is not 'rally' (LOB §8.1)", () => {
+    const state = {
+      ...BASE_GAME_STATE,
+      status: 'active',
+      phase: 'command',
+      activePlayer: 'union',
+      step: 'orders',
+      activityPhase: null,
+      ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+      rallyPhase: { unitsPendingRally: [] },
+    };
+    const result = GameStateSchema.safeParse(state);
+    expect(result.success).toBe(false);
+    expect(result.error.issues.some((i) => i.path.includes('rallyPhase'))).toBe(true);
   });
 });

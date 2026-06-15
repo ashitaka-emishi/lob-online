@@ -20,7 +20,16 @@ const MID_ACTIVATION_STATE = {
   leaderState: {},
   pendingResolution: null,
   ordersPhase: null,
-  activityPhase: { activatedUnits: [], currentActivation: '29.22' },
+  activityPhase: {
+    activatedUnits: [],
+    currentActivation: {
+      hex: '29.22',
+      movedThisActivation: false,
+      openingVolley: false,
+      zeroRuleFired: false,
+    },
+  },
+  rallyPhase: null,
 };
 
 describe('handleEndActivation', () => {
@@ -33,7 +42,15 @@ describe('handleEndActivation', () => {
   it('appends to existing activatedUnits without overwriting', () => {
     const state = {
       ...MID_ACTIVATION_STATE,
-      activityPhase: { activatedUnits: ['10.10'], currentActivation: '29.22' },
+      activityPhase: {
+        activatedUnits: ['10.10'],
+        currentActivation: {
+          hex: '29.22',
+          movedThisActivation: false,
+          openingVolley: false,
+          zeroRuleFired: false,
+        },
+      },
     };
     const result = handleEndActivation(state, { type: 'END_ACTIVATION' });
     expect(result.activityPhase.activatedUnits).toEqual(['10.10', '29.22']);

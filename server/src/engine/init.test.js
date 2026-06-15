@@ -230,6 +230,15 @@ describe('initGameState — default unit fields', () => {
     }
   });
 
+  it('all at-start units default to depletionMarker: false and cbfMarker: false (LOB §5.8, §8.1)', () => {
+    const { units } = initGameState(SCENARIO, 'g1');
+    const atStartIds = ['5va-cav', 'pelham-a', 'colquitt', '23ga', 'pleasonton', 'gb-anderson'];
+    for (const id of atStartIds) {
+      expect(units[id].depletionMarker, id).toBe(false);
+      expect(units[id].cbfMarker, id).toBe(false);
+    }
+  });
+
   it('all at-start units default to isDetached: false', () => {
     const { units } = initGameState(SCENARIO, 'g1');
     const atStartIds = ['5va-cav', 'pelham-a', 'colquitt', '23ga', 'pleasonton', 'gb-anderson'];
@@ -391,9 +400,9 @@ describe('initGameState — reinforcement orderType propagation (#360)', () => {
 
 // #363 — schemaVersion must be present in initGameState output
 describe('initGameState — schemaVersion (#363)', () => {
-  it('output includes schemaVersion: 1', () => {
+  it('output includes schemaVersion: 3', () => {
     const state = initGameState(SCENARIO, 'g1');
-    expect(state.schemaVersion).toBe(1);
+    expect(state.schemaVersion).toBe(3);
   });
 });
 

@@ -23,6 +23,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { PHASES, STEPS } from '../../constants/phases.js';
 import { dispatch, getValidActions, ActionError } from './index.js';
+import { handleFireCombat } from './fireCombat.js';
+import { handleResolveMorale } from './resolveMorale.js';
+import { handleResolveLeaderCasualty } from './resolveLeaderCasualty.js';
 import { saveGame, loadGame } from '../../store/gameFile.js';
 
 // ── Deterministic fixture ────────────────────────────────────────────────────
@@ -39,6 +42,8 @@ const BASE_UNIT = {
   wrecked: false,
   orders: { type: 'move', status: 'accepted', deliveryTurnDue: null },
   ammo: 'full',
+  depletionMarker: false,
+  cbfMarker: false,
   isOnBoard: true,
   entryTurn: null,
   isDetached: false,
@@ -47,7 +52,7 @@ const BASE_UNIT = {
 const ACTIVE_STATE = {
   id: GAME_ID,
   scenarioId: 'south-mountain',
-  schemaVersion: 1,
+  schemaVersion: 3,
   version: 1,
   turn: 1,
   phase: PHASES.COMMAND,
@@ -68,6 +73,7 @@ const ACTIVE_STATE = {
   pendingResolution: null,
   activityPhase: null,
   ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+  rallyPhase: null,
 };
 
 // ── Setup / teardown ─────────────────────────────────────────────────────────
@@ -211,12 +217,12 @@ describe('Turn-loop steel-thread smoke (#554)', () => {
       payload: activateCandidate.payload,
       playerSide: 'union',
     });
-    expect(afterActivate.activityPhase.currentActivation).toBe(activateCandidate.payload.hex);
+    expect(afterActivate.activityPhase.currentActivation.hex).toBe(activateCandidate.payload.hex);
 
-    // Only END_ACTIVATION should be valid mid-activation
+    // END_ACTIVATION always present mid-activation; FIRE_COMBAT also offered (LOB §5.5)
     const midActions = getValidActions(afterActivate, 'union');
-    expect(midActions).toHaveLength(1);
-    expect(midActions[0].type).toBe('END_ACTIVATION');
+    expect(midActions.map((a) => a.type)).toContain('END_ACTIVATION');
+    expect(midActions.map((a) => a.type)).toContain('FIRE_COMBAT');
 
     const afterEnd = dispatch(afterActivate, {
       type: 'END_ACTIVATION',
@@ -272,7 +278,7 @@ describe('Turn-loop steel-thread smoke (#554)', () => {
       expect(loaded).toMatchObject({
         id: GAME_ID,
         scenarioId: 'south-mountain',
-        schemaVersion: 1,
+        schemaVersion: 3,
         phase: expect.any(String),
         step: expect.any(String),
         activePlayer: expect.any(String),
@@ -323,5 +329,244 @@ describe('Turn-loop steel-thread smoke (#554)', () => {
     } finally {
       await rm(cycleDir, { recursive: true, force: true });
     }
+  });
+});
+
+// ── M6 combat activation smoke test ────────────────────────────────────────────
+// Exercises the M6 handler chain in memory (no file I/O):
+//   ACTIVATE_STACK → FIRE_COMBAT (sets pendingResolution combatResult)
+//   → RESOLVE_MORALE (clears pending) → RESOLVE_LEADER_CASUALTY (if needed)
+//   → END_ACTIVATION → CBF cleared in Rally → turn advances.
+//
+// Uses minimal OOB fixture to avoid reading from disk.
+
+const MOCK_OOB_SMOKE = {
+  _status: 'test',
+  _source: 'test',
+  _errata_applied: [],
+  union: {
+    army: 'Army of the Potomac',
+    supplyTrain: { id: 'supply-u' },
+    corps: [
+      {
+        id: 'i-corps',
+        name: 'I Corps',
+        successionIds: [],
+        divisions: [
+          {
+            id: 'div1',
+            name: '1st Division',
+            wreckThreshold: 2,
+            successionIds: [],
+            brigades: [
+              {
+                id: 'brig1',
+                wreckThreshold: 2,
+                regiments: [
+                  {
+                    id: 'u1',
+                    name: '1st Union',
+                    type: 'infantry',
+                    morale: 'A',
+                    weapon: 'R',
+                    strengthPoints: 6,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    cavalryDivision: { id: 'cav-div', name: 'Cavalry Division', successionIds: [], brigades: [] },
+  },
+  confederate: {
+    army: 'Army of Northern Virginia',
+    wing: 'Right Wing',
+    supplyWagon: { id: 'supply-c' },
+    independent: { cavalry: [], artillery: [] },
+    reserveArtillery: { batteries: [] },
+    divisions: [
+      {
+        id: 'div-csa',
+        name: 'CSA Division',
+        wreckThreshold: 2,
+        successionIds: [],
+        brigades: [
+          {
+            id: 'brig-csa',
+            wreckThreshold: 2,
+            regiments: [
+              {
+                id: 'c1',
+                name: '1st CSA',
+                type: 'infantry',
+                morale: 'D',
+                weapon: 'R',
+                strengthPoints: 4,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+};
+
+const COMBAT_STATE = {
+  id: 'smoke-combat-g1',
+  scenarioId: 'south-mountain',
+  schemaVersion: 3,
+  version: 1,
+  turn: 1,
+  phase: PHASES.ACTIVITY,
+  step: STEPS.ACTIVATION,
+  activePlayer: 'union',
+  completedSteps: [],
+  initiative: null,
+  sides: { union: 'tok-union', confederate: 'tok-csa' },
+  reinforcementQueue: [],
+  status: 'active',
+  leaderState: { cox: { casualtyRollPending: false, replacedBy: null } },
+  pendingResolution: null,
+  ordersPhase: null,
+  rallyPhase: null,
+  activityPhase: { activatedUnits: [], currentActivation: null },
+  units: {
+    u1: {
+      id: 'u1',
+      hex: '10.10',
+      facing: 0,
+      moraleState: 'normal',
+      wrecked: false,
+      orders: null,
+      ammo: 'full',
+      depletionMarker: false,
+      cbfMarker: false,
+      isOnBoard: true,
+      entryTurn: null,
+      isDetached: false,
+    },
+    c1: {
+      id: 'c1',
+      hex: '10.11',
+      facing: 3,
+      moraleState: 'normal',
+      wrecked: false,
+      orders: null,
+      ammo: 'full',
+      depletionMarker: false,
+      cbfMarker: false,
+      isOnBoard: true,
+      entryTurn: null,
+      isDetached: false,
+    },
+  },
+};
+
+describe('M6 combat activation smoke (#570)', () => {
+  it('ACTIVATE_STACK sets currentActivation', () => {
+    const s = dispatch(COMBAT_STATE, {
+      type: 'ACTIVATE_STACK',
+      payload: { hex: '10.10' },
+      playerSide: 'union',
+    });
+    expect(s.activityPhase.currentActivation.hex).toBe('10.10');
+    expect(s.activityPhase.currentActivation.movedThisActivation).toBe(false);
+    expect(s.activityPhase.currentActivation.openingVolley).toBe(false);
+  });
+
+  it('FIRE_COMBAT sets pendingResolution combatResult (LOB §5.6)', () => {
+    const afterActivate = dispatch(COMBAT_STATE, {
+      type: 'ACTIVATE_STACK',
+      payload: { hex: '10.10' },
+      playerSide: 'union',
+    });
+
+    const afterFire = handleFireCombat(
+      afterActivate,
+      {
+        type: 'FIRE_COMBAT',
+        payload: {
+          attackerHex: '10.10',
+          defenderHex: '10.11',
+          weaponClass: 'smallArms',
+          weaponType: 'R',
+          dice: [3, 3],
+        },
+        playerSide: 'union',
+      },
+      { oob: MOCK_OOB_SMOKE }
+    );
+
+    expect(afterFire.pendingResolution).not.toBeNull();
+    expect(afterFire.pendingResolution.type).toBe('combatResult');
+  });
+
+  it('RESOLVE_MORALE clears combatResult pending (LOB §6.1)', () => {
+    const afterActivate = dispatch(COMBAT_STATE, {
+      type: 'ACTIVATE_STACK',
+      payload: { hex: '10.10' },
+      playerSide: 'union',
+    });
+    const afterFire = handleFireCombat(
+      afterActivate,
+      {
+        type: 'FIRE_COMBAT',
+        payload: {
+          attackerHex: '10.10',
+          defenderHex: '10.11',
+          weaponClass: 'smallArms',
+          weaponType: 'R',
+          dice: [2, 2],
+        },
+        playerSide: 'union',
+      },
+      { oob: MOCK_OOB_SMOKE }
+    );
+    expect(afterFire.pendingResolution.type).toBe('combatResult');
+
+    // Resolve morale with noEffect roll (A morale, roll 4 → noEffect)
+    const afterMorale = handleResolveMorale(afterFire, {
+      type: 'RESOLVE_MORALE',
+      payload: { dice: [2, 2] },
+      playerSide: 'union',
+    });
+    // pendingResolution cleared or changed to cascade/leaderCasualty — not combatResult
+    expect(afterMorale.pendingResolution?.type).not.toBe('combatResult');
+  });
+
+  it('RESOLVE_LEADER_CASUALTY clears leaderCasualty pending (LOB §9.1a)', () => {
+    const stateWithPending = {
+      ...COMBAT_STATE,
+      pendingResolution: {
+        type: 'leaderCasualty',
+        context: { leaderId: 'cox', hex: '10.10', reason: 'test' },
+      },
+    };
+    const result = handleResolveLeaderCasualty(stateWithPending, {
+      type: 'RESOLVE_LEADER_CASUALTY',
+      payload: { leaderId: 'cox', roll: 7, situation: 'other', isSharpshooter: false },
+      playerSide: 'union',
+    });
+    expect(result.pendingResolution).toBeNull();
+  });
+
+  it('CBF markers cleared when turn advances through Rally (LOB §8.1)', () => {
+    // Inject a CBF marker on u1 then advance through Rally via END_PHASE chain
+    const stateWithCbf = {
+      ...COMBAT_STATE,
+      units: {
+        ...COMBAT_STATE.units,
+        u1: { ...COMBAT_STATE.units.u1, cbfMarker: true },
+      },
+    };
+    // End activity to enter rally
+    let s = dispatch(stateWithCbf, { type: 'END_PHASE', payload: null, playerSide: 'union' });
+    // Confederate also ends to trigger rally
+    s = dispatch(s, { type: 'END_PHASE', payload: null, playerSide: 'confederate' });
+    // Now in next turn command phase — CBF should be cleared
+    expect(s.phase).toBe(PHASES.COMMAND);
+    expect(s.units.u1.cbfMarker).toBe(false);
   });
 });

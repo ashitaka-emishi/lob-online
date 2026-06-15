@@ -12,7 +12,14 @@
  * Legal morale states for LOB v2.0 units.
  * LOB_CHARTS p.4 — Morale State Effects Chart.
  */
-export const MORALE_STATES = Object.freeze(['bl', 'normal', 'shaken', 'dg', 'rout']);
+// LOB §6.0 — abbreviations: NM=normal, BL=bloodlust, SH=shaken, DG=disorganized, RT=routed
+export const MORALE_STATES = Object.freeze([
+  'bloodlust',
+  'normal',
+  'shaken',
+  'disorganized',
+  'routed',
+]);
 
 // ─── Morale Table ──────────────────────────────────────────────────────────────
 
@@ -21,10 +28,10 @@ export const MORALE_STATES = Object.freeze(['bl', 'normal', 'shaken', 'dg', 'rou
  * Not exported; callers use the typed objects returned by moraleTableResult().
  */
 const NE = null; // no effect (— in chart)
-const BL = Object.freeze({ type: 'bl', retreatHexes: 0, spLoss: 0 }); // Blood Lust — LOB §6.2
-const sh = (b, l = 0) => Object.freeze({ type: 'shaken', retreatHexes: b, spLoss: l });
-const dg = (b, l = 0) => Object.freeze({ type: 'dg', retreatHexes: b, spLoss: l });
-const ro = (b, l = 0) => Object.freeze({ type: 'rout', retreatHexes: b, spLoss: l });
+const BL = Object.freeze({ type: 'bloodlust', retreatHexes: 0, spLoss: 0 }); // Blood Lust (BL) — LOB §6.2
+const sh = (b, l = 0) => Object.freeze({ type: 'shaken', retreatHexes: b, spLoss: l }); // Shaken (SH)
+const dg = (b, l = 0) => Object.freeze({ type: 'disorganized', retreatHexes: b, spLoss: l }); // Disorganized (DG)
+const ro = (b, l = 0) => Object.freeze({ type: 'routed', retreatHexes: b, spLoss: l }); // Routed (RT)
 
 /**
  * Morale Table — complete cell values.
@@ -36,7 +43,7 @@ const ro = (b, l = 0) => Object.freeze({ type: 'rout', retreatHexes: b, spLoss: 
  * null  = No effect
  * BL    = Blood Lust
  * sh(b, l) = Shaken, retreat b hexes, lose l SPs
- * dg(b, l) = Defensive Ground (Disorganized), retreat b hexes, lose l SPs
+ * dg(b, l) = Disorganized (DG), retreat b hexes, lose l SPs
  * ro(b, l) = Rout, retreat b hexes, lose l SPs
  *
  * SP losses are taken AFTER retreat (LOB §6.1 footnote).
@@ -69,8 +76,9 @@ export const MORALE_RATING_INDEX = Object.freeze({ A: 0, B: 1, C: 2, D: 3, E: 4,
  * Additive Morale Effects Chart — resolved state transitions.
  * LOB_CHARTS p.4 — LOB §6.2a.
  *
- * Keys: `${currentState}/${incomingResult}` where incomingResult is
- *   'bl'|'normal'|'shaken'|'dg'|'rout'|'townHex'
+ * Keys: `${currentState}/${incomingResult}` where states use full-word vocabulary:
+ *   'bloodlust'|'normal'|'shaken'|'disorganized'|'routed'|'townHex'
+ * Abbreviations: NM=normal, BL=bloodlust, SH=shaken, DG=disorganized, RT=routed
  *
  * Value: { newState, suppressRetreatsAndLosses }
  *   newState: resolved morale state string
@@ -78,45 +86,45 @@ export const MORALE_RATING_INDEX = Object.freeze({ A: 0, B: 1, C: 2, D: 3, E: 4,
  *     transitions to a bad state but ignores retreat and SP loss (LOB §6.2a).
  */
 export const ADDITIVE_MORALE_EFFECTS = Object.freeze({
-  // LOB_CHARTS p.4 — BL current state
-  'bl/bl': { newState: 'bl', suppressRetreatsAndLosses: false },
-  'bl/normal': { newState: 'bl', suppressRetreatsAndLosses: false },
-  'bl/shaken': { newState: 'shaken', suppressRetreatsAndLosses: true }, // * — ignore retreat & loss
-  'bl/dg': { newState: 'dg', suppressRetreatsAndLosses: true }, // * — ignore retreat & loss
-  'bl/rout': { newState: 'rout', suppressRetreatsAndLosses: true }, // * — ignore retreat & loss
-  'bl/townHex': { newState: 'dg', suppressRetreatsAndLosses: false }, // LOB §1.7g
+  // LOB_CHARTS p.4 — BL (Blood Lust) current state
+  'bloodlust/bloodlust': { newState: 'bloodlust', suppressRetreatsAndLosses: false },
+  'bloodlust/normal': { newState: 'bloodlust', suppressRetreatsAndLosses: false },
+  'bloodlust/shaken': { newState: 'shaken', suppressRetreatsAndLosses: true }, // * — ignore retreat & loss
+  'bloodlust/disorganized': { newState: 'disorganized', suppressRetreatsAndLosses: true }, // * — ignore retreat & loss
+  'bloodlust/routed': { newState: 'routed', suppressRetreatsAndLosses: true }, // * — ignore retreat & loss
+  'bloodlust/townHex': { newState: 'disorganized', suppressRetreatsAndLosses: false }, // LOB §1.7g
 
-  // LOB_CHARTS p.4 — Normal current state
-  'normal/bl': { newState: 'bl', suppressRetreatsAndLosses: false },
+  // LOB_CHARTS p.4 — NM (Normal) current state
+  'normal/bloodlust': { newState: 'bloodlust', suppressRetreatsAndLosses: false },
   'normal/normal': { newState: 'normal', suppressRetreatsAndLosses: false },
   'normal/shaken': { newState: 'shaken', suppressRetreatsAndLosses: false },
-  'normal/dg': { newState: 'dg', suppressRetreatsAndLosses: false },
-  'normal/rout': { newState: 'rout', suppressRetreatsAndLosses: false },
-  'normal/townHex': { newState: 'dg', suppressRetreatsAndLosses: false }, // LOB §1.7g
+  'normal/disorganized': { newState: 'disorganized', suppressRetreatsAndLosses: false },
+  'normal/routed': { newState: 'routed', suppressRetreatsAndLosses: false },
+  'normal/townHex': { newState: 'disorganized', suppressRetreatsAndLosses: false }, // LOB §1.7g
 
-  // LOB_CHARTS p.4 — Shaken current state
-  'shaken/bl': { newState: 'bl', suppressRetreatsAndLosses: false },
+  // LOB_CHARTS p.4 — SH (Shaken) current state
+  'shaken/bloodlust': { newState: 'bloodlust', suppressRetreatsAndLosses: false },
   'shaken/normal': { newState: 'shaken', suppressRetreatsAndLosses: false },
   'shaken/shaken': { newState: 'shaken', suppressRetreatsAndLosses: false },
-  'shaken/dg': { newState: 'dg', suppressRetreatsAndLosses: false },
-  'shaken/rout': { newState: 'rout', suppressRetreatsAndLosses: false },
-  'shaken/townHex': { newState: 'dg', suppressRetreatsAndLosses: false }, // LOB §1.7g
+  'shaken/disorganized': { newState: 'disorganized', suppressRetreatsAndLosses: false },
+  'shaken/routed': { newState: 'routed', suppressRetreatsAndLosses: false },
+  'shaken/townHex': { newState: 'disorganized', suppressRetreatsAndLosses: false }, // LOB §1.7g
 
-  // LOB_CHARTS p.4 — DG current state
-  'dg/bl': { newState: 'normal', suppressRetreatsAndLosses: false },
-  'dg/normal': { newState: 'dg', suppressRetreatsAndLosses: false },
-  'dg/shaken': { newState: 'dg', suppressRetreatsAndLosses: false },
-  'dg/dg': { newState: 'rout', suppressRetreatsAndLosses: false },
-  'dg/rout': { newState: 'rout', suppressRetreatsAndLosses: false },
-  'dg/townHex': { newState: 'dg', suppressRetreatsAndLosses: false }, // LOB §1.7g
+  // LOB_CHARTS p.4 — DG (Disorganized) current state
+  'disorganized/bloodlust': { newState: 'normal', suppressRetreatsAndLosses: false },
+  'disorganized/normal': { newState: 'disorganized', suppressRetreatsAndLosses: false },
+  'disorganized/shaken': { newState: 'disorganized', suppressRetreatsAndLosses: false },
+  'disorganized/disorganized': { newState: 'routed', suppressRetreatsAndLosses: false },
+  'disorganized/routed': { newState: 'routed', suppressRetreatsAndLosses: false },
+  'disorganized/townHex': { newState: 'disorganized', suppressRetreatsAndLosses: false }, // LOB §1.7g
 
-  // LOB_CHARTS p.4 — Rout current state
-  'rout/bl': { newState: 'shaken', suppressRetreatsAndLosses: false },
-  'rout/normal': { newState: 'rout', suppressRetreatsAndLosses: false },
-  'rout/shaken': { newState: 'rout', suppressRetreatsAndLosses: false },
-  'rout/dg': { newState: 'rout', suppressRetreatsAndLosses: false },
-  'rout/rout': { newState: 'rout', suppressRetreatsAndLosses: false },
-  'rout/townHex': { newState: 'rout', suppressRetreatsAndLosses: false }, // LOB §1.7g
+  // LOB_CHARTS p.4 — RT (Routed) current state
+  'routed/bloodlust': { newState: 'shaken', suppressRetreatsAndLosses: false },
+  'routed/normal': { newState: 'routed', suppressRetreatsAndLosses: false },
+  'routed/shaken': { newState: 'routed', suppressRetreatsAndLosses: false },
+  'routed/disorganized': { newState: 'routed', suppressRetreatsAndLosses: false },
+  'routed/routed': { newState: 'routed', suppressRetreatsAndLosses: false },
+  'routed/townHex': { newState: 'routed', suppressRetreatsAndLosses: false }, // LOB §1.7g
 });
 
 // ─── Modifier constants ────────────────────────────────────────────────────────
@@ -269,8 +277,8 @@ export function moraleResult(rating, modifiers, diceRoll) {
  * Resolve a morale state transition using the Additive Morale Effects Chart.
  * LOB §6.2a.
  *
- * @param {'bl'|'normal'|'shaken'|'dg'|'rout'} currentState
- * @param {'bl'|'normal'|'shaken'|'dg'|'rout'|'townHex'} incomingResult
+ * @param {'bloodlust'|'normal'|'shaken'|'disorganized'|'routed'} currentState
+ * @param {'bloodlust'|'normal'|'shaken'|'disorganized'|'routed'|'townHex'} incomingResult
  *   Use 'normal' when the morale check had no adverse effect (null from moraleTableResult).
  * @returns {{ newState: string, suppressRetreatsAndLosses: boolean } | null}
  *   null if the combination is not in the chart.

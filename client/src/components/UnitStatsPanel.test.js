@@ -56,7 +56,7 @@ describe('UnitStatsPanel — unit display', () => {
 
   it('renders "Blood Lust" for bloodLust morale state', () => {
     const wrapper = mount(UnitStatsPanel, {
-      props: { unit: { ...FULL_UNIT, moraleState: 'bloodLust' } },
+      props: { unit: { ...FULL_UNIT, moraleState: 'bloodlust' } },
     });
     expect(wrapper.text()).toMatch(/blood lust/i);
   });
@@ -75,7 +75,7 @@ describe('UnitStatsPanel — unit display', () => {
 
   it('renders "Disorganized" for DG morale state', () => {
     const wrapper = mount(UnitStatsPanel, {
-      props: { unit: { ...FULL_UNIT, moraleState: 'DG' } },
+      props: { unit: { ...FULL_UNIT, moraleState: 'disorganized' } },
     });
     expect(wrapper.text()).toMatch(/disorganized/i);
   });

@@ -40,6 +40,10 @@ export function handleEndPhase(state, _action) {
       // We set activePlayer to otherSide (the turn's original FIRST player) here so that
       // drainAutoSteps' Rally branch (index.js) flips it to the other side, producing the
       // correct next-turn first player. Both files must be edited together if this invariant changes.
+      // LOB §8.1 — build unitsPendingRally from all on-board units with cbfMarker: true
+      const unitsPendingRally = Object.values(state.units)
+        .filter((u) => u.isOnBoard && u.cbfMarker)
+        .map((u) => u.id);
       return {
         ...state,
         phase: PHASES.RALLY,
@@ -48,6 +52,7 @@ export function handleEndPhase(state, _action) {
         activePlayer: otherSide,
         activityPhase: null,
         ordersPhase: null,
+        rallyPhase: { unitsPendingRally },
       };
     }
 

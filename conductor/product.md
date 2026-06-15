@@ -25,16 +25,14 @@ Wargame enthusiasts familiar with the _Line of Battle_ ruleset who want to play 
 
 ## Current Phase
 
-M5.5 complete. The rules engine foundation (M3), game state model + persistence + lobby UI
-(M4), turn reducer + valid-actions engine + action API + `GameView` (M5), and multi-module
-platform + scenario editor enhancements + `HomeView` (M5.5) are all fully delivered. Key
-deliverables include: `GameStateSchema`/`UnitStateSchema` Zod schemas, `initGameState()`
-engine, `gameFile`/`gameSqlite` stores, games API routes with express-session, `LobbyView` +
-`useLobbyStore`, `UnitOrderState` schema, `engine/phase.js` turn reducer and valid-actions
-engine, `POST /api/v1/games/:id/actions` with Socket.io room events, `GameView` with
-`UnitCounterLayer` + `UnitStatsPanel`, `useGameStore`, `resolveModulePath` utility,
-module-level map/OOB data under `data/modules/`, and scenario start states under
-`scenarios/full-battle/`.
+M6 complete. All prior milestones delivered (M3–M5.5). M6 added: fire combat handler
+(`FIRE_COMBAT`), close combat handler (`CLOSE_COMBAT`), morale cascade engine
+(`engine/morale.js`) with `RESOLVE_MORALE` handler, leader casualty resolution
+(`RESOLVE_LEADER_CASUALTY`), CBF marker clearing in Rally Phase (`drainAutoSteps`),
+and unified morale state vocabulary (normal/bloodlust/shaken/disorganized/routed —
+NM/BL/SH/DG/RT). `GameStateSchema` bumped to v3 with `currentActivation` object shape
+and `PendingResolutionSchema` extended for combatResult/closingRoll/moraleCheck/leaderCasualty.
+`buildUnitSideMap()` added to `engine/oob.js` for OOB side-affiliation in action gating.
 
-**Starting M6 — Combat, Morale, and Orders Resolution.** See
-`docs/designs/high-level-design.md` §2 for the full M6–M8 milestone plan.
+**Starting M7 — Movement, Formation, and Full Combat Resolution.** See
+`docs/designs/high-level-design.md` §2 for the M7–M8 milestone plan.

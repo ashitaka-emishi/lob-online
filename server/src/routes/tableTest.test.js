@@ -46,7 +46,7 @@ vi.mock('../engine/tables/leader-loss.js', () => ({
 vi.mock('../engine/tables/morale.js', () => ({
   moraleResult: vi.fn(),
   moraleTransition: vi.fn(),
-  MORALE_STATES: ['bl', 'normal', 'shaken', 'dg', 'rout'],
+  MORALE_STATES: ['bloodlust', 'normal', 'shaken', 'disorganized', 'routed'],
   MORALE_BOOL_MOD_KEYS: Object.freeze([
     'isShakenOrDG',
     'isWrecked',
@@ -252,14 +252,17 @@ describe('POST /morale', () => {
 
 describe('POST /morale-transition', () => {
   it('returns transition result with valid inputs', async () => {
-    moraleTransition.mockReturnValue({ newState: 'dg', suppressRetreatsAndLosses: false });
+    moraleTransition.mockReturnValue({
+      newState: 'disorganized',
+      suppressRetreatsAndLosses: false,
+    });
 
     const res = await request(app)
       .post('/api/tools/table-test/morale-transition')
       .send({ currentState: 'shaken', incomingResult: 'shaken' });
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ newState: 'dg', suppressRetreatsAndLosses: false });
+    expect(res.body).toEqual({ newState: 'disorganized', suppressRetreatsAndLosses: false });
   });
 
   it('returns 400 when currentState is missing', async () => {
@@ -281,7 +284,7 @@ describe('POST /morale-transition', () => {
 
     const res = await request(app)
       .post('/api/tools/table-test/morale-transition')
-      .send({ currentState: 'bl', incomingResult: 'unknownResult' });
+      .send({ currentState: 'bloodlust', incomingResult: 'unknownResult' });
     expect(res.status).toBe(400);
   });
 });

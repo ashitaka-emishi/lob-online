@@ -12,6 +12,8 @@ const BASE_UNIT = {
   wrecked: false,
   orders: { type: 'move', status: 'accepted', deliveryTurnDue: null },
   ammo: 'full',
+  depletionMarker: false,
+  cbfMarker: false,
   isOnBoard: true,
   entryTurn: null,
   isDetached: false,
@@ -20,7 +22,7 @@ const BASE_UNIT = {
 const SETUP_STATE = {
   id: 'game-1',
   scenarioId: 'south-mountain',
-  schemaVersion: 1,
+  schemaVersion: 3,
   version: 1,
   turn: 1,
   phase: null,
@@ -36,6 +38,7 @@ const SETUP_STATE = {
   pendingResolution: null,
   activityPhase: null,
   ordersPhase: null,
+  rallyPhase: null,
 };
 
 const COMMAND_ORDERS_STATE = {
@@ -226,23 +229,44 @@ describe('getValidActions', () => {
     expect(hexes).not.toContain(null);
   });
 
-  // Task 1.4: END_ACTIVATION only when currentActivation is set (#550)
-  it('returns only END_ACTIVATION when a stack is mid-activation', () => {
+  // Task 1.4: END_ACTIVATION always present when a stack is mid-activation (#550)
+  // M6: FIRE_COMBAT and CLOSE_COMBAT candidates also offered mid-activation (LOB §5, §7)
+  it('includes END_ACTIVATION when a stack is mid-activation', () => {
     const state = {
       ...ACTIVITY_STATE,
-      activityPhase: { activatedUnits: [], currentActivation: '29.22' },
+      activityPhase: {
+        activatedUnits: [],
+        currentActivation: {
+          hex: '29.22',
+          movedThisActivation: false,
+          openingVolley: false,
+          zeroRuleFired: false,
+        },
+      },
     };
     const actions = getValidActions(state, 'union');
-    expect(actions.map((a) => a.type)).toEqual(['END_ACTIVATION']);
+    expect(actions.map((a) => a.type)).toContain('END_ACTIVATION');
+    // FIRE_COMBAT always offered as a generic candidate mid-activation (LOB §5.5)
+    expect(actions.map((a) => a.type)).toContain('FIRE_COMBAT');
   });
 
   it('END_ACTIVATION has null payload (#550)', () => {
     const state = {
       ...ACTIVITY_STATE,
-      activityPhase: { activatedUnits: [], currentActivation: '29.22' },
+      activityPhase: {
+        activatedUnits: [],
+        currentActivation: {
+          hex: '29.22',
+          movedThisActivation: false,
+          openingVolley: false,
+          zeroRuleFired: false,
+        },
+      },
     };
     const actions = getValidActions(state, 'union');
-    expect(actions[0].payload).toBeNull();
+    const endAction = actions.find((a) => a.type === 'END_ACTIVATION');
+    expect(endAction).toBeDefined();
+    expect(endAction.payload).toBeNull();
   });
 
   it('does not return END_ACTIVATION when no stack is mid-activation (#550)', () => {
@@ -385,6 +409,7 @@ describe('drainAutoSteps', () => {
       turn: 1,
       activePlayer: 'union',
       completedSteps: [],
+      rallyPhase: { unitsPendingRally: [] },
     };
     const result = drainAutoSteps(state);
     expect(result.phase).toBe('command');
@@ -596,7 +621,7 @@ describe('dispatch', () => {
       payload: { hex: '29.22' },
       playerSide: 'union',
     });
-    expect(state.activityPhase.currentActivation).toBe('29.22');
+    expect(state.activityPhase.currentActivation.hex).toBe('29.22');
 
     state = dispatch(state, { type: 'END_ACTIVATION', payload: null, playerSide: 'union' });
     expect(state.activityPhase.activatedUnits).toContain('29.22');
