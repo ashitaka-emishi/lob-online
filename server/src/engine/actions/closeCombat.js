@@ -3,6 +3,7 @@ import { loadOob, buildUnitSideMap, findOobUnit } from '../oob.js';
 import { hexDistance } from '../hex.js';
 import { openingVolleyResult } from '../tables/combat.js';
 import { closingRollResult } from '../tables/charge.js';
+import { CloseCombatPayloadSchema, parsePayload } from './payloads.js';
 
 /**
  * CLOSE_COMBAT action handler.
@@ -40,35 +41,11 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
     throw new ActionError('INVALID_ACTION', 'No stack is mid-activation — cannot charge');
   }
 
-  const {
-    attackerHex,
-    defenderHex,
-    closingDie,
-    openingVolleyDie,
-    mods = {},
-  } = action.payload ?? {};
-
-  // LOB §7.0 — payload validation
-  if (!attackerHex || !defenderHex || closingDie === undefined || closingDie === null) {
-    throw new ActionError(
-      'INVALID_PAYLOAD',
-      'CLOSE_COMBAT requires attackerHex, defenderHex, and closingDie'
-    );
-  }
-  if (closingDie < 1 || closingDie > 6) {
-    throw new ActionError('INVALID_PAYLOAD', 'closingDie must be 1–6');
-  }
-
-  // LOB §7.0b — defender always fires Opening Volley against charger; die is required
-  if (openingVolleyDie === undefined || openingVolleyDie === null) {
-    throw new ActionError(
-      'INVALID_PAYLOAD',
-      'openingVolleyDie (1d6) is required — defender fires Opening Volley (LOB §7.0b)'
-    );
-  }
-  if (openingVolleyDie < 1 || openingVolleyDie > 6) {
-    throw new ActionError('INVALID_PAYLOAD', 'openingVolleyDie must be 1–6');
-  }
+  // LOB §7.0 — validate payload at the boundary before any field is consumed
+  const { attackerHex, defenderHex, closingDie, openingVolleyDie, mods } = parsePayload(
+    action.payload,
+    CloseCombatPayloadSchema
+  );
 
   // LOB §3.0d — attacker must be in the active stack's hex
   if (attackerHex !== activity.currentActivation.hex) {
