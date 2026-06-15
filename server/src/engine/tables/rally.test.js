@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
+import { drainAutoSteps } from '../actions/index.js';
+import { PHASES, STEPS } from '../../constants/phases.js';
 import { RALLY_THRESHOLDS, rallyRollResult, applySection64AutoRecovery } from './rally.js';
 
 // ─── RALLY_THRESHOLDS ─────────────────────────────────────────────────────────
@@ -164,9 +166,6 @@ describe('applySection64AutoRecovery (LOB §6.4)', () => {
 // ─── drainAutoSteps — §6.4 integration ───────────────────────────────────────
 
 // These tests verify that §6.4 runs during Rally Phase drain (before CBF clearing).
-
-import { drainAutoSteps } from '../actions/index.js';
-import { PHASES, STEPS } from '../../constants/phases.js';
 
 const makeRallyState = (unitOverrides = {}) => ({
   id: 'g1',
