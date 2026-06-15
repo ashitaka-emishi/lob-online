@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-14 after m6-debt-sprint_20260614 (resolved #560, #583, #584, #403, #350)._
+_Last updated: 2026-06-15 after PR #586._
 
 ---
 
@@ -8,11 +8,11 @@ _Last updated: 2026-06-14 after m6-debt-sprint_20260614 (resolved #560, #583, #5
 
 | Metric                           | Value                                                                                             |
 | -------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Open debt items                  | 5                                                                                                 |
-| Cumulative debt score (net open) | 7                                                                                                 |
-| Current-milestone open debt      | 0 items (all M6 items resolved by m6-debt-sprint_20260614)                                        |
+| Open debt items                  | 10                                                                                                |
+| Cumulative debt score (net open) | 17                                                                                                |
+| Current-milestone open debt      | 1 item (#587 score 3, M6 — ROLL_INITIATIVE leader side filter)                                    |
 | Highest-risk item                | Security: bind side tokens to factions in DB; derive player.side from token match (#562, score 4) |
-| PRs tracked                      | 291                                                                                               |
+| PRs tracked                      | 292                                                                                               |
 
 ---
 
@@ -391,6 +391,7 @@ _Last updated: 2026-06-14 after m6-debt-sprint_20260614 (resolved #560, #583, #5
 | 2026-06-14 | m6-debt-sprint_20260614 (resolved #584)                        | -2                   | —         | 545                      |
 | 2026-06-14 | m6-debt-sprint_20260614 (resolved #403)                        | -2                   | —         | 545                      |
 | 2026-06-14 | m6-debt-sprint_20260614 (resolved #350)                        | -2                   | —         | 545                      |
+| 2026-06-15 | PR #586 (m6-debt-sprint + m6-combat-tests team-review)         | 10                   | +10       | 555                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -398,9 +399,9 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Moderate risk. All M6 milestone items resolved; remaining debt is deferred to M8 auth hardening and M7+ rules-engine stubs.
+Elevated risk. PR #586 team-review deferred 10 points of new debt across 5 items, raising the net open score from 7 to 17.
 
-m6-debt-sprint_20260614 resolved all 5 open M6 items (#560 #583 #584 #403 #350), reducing the net open score from 23 to 7 across 5 items. The 5 remaining items fall into two clusters: (1) **Auth/security scaffolding** — #562 (score 4, token/faction binding, M8 prerequisite) and #563 (score 3, re-join side-switching enforcement, M8) — intentional single-user testing scaffolding; (2) **Deferred rules-engine stubs** — #383, #382, #381 (score 2 each, M7-blocked). Current-milestone (M6) debt is fully cleared. The score-4 auth item (#562) remains the highest-priority pre-M8 work and is a hard prerequisite for multiplayer.
+Debt is now concentrated in three clusters: (1) **Auth/security scaffolding** — #562 (score 4, token/faction binding, M8 prerequisite) and #563 (score 3, re-join side-switching, M8) — intentional single-user scaffolding, hard prereqs for multiplayer; (2) **Rules-engine correctness** — #587 (score 3, M6, ROLL_INITIATIVE leader side filter — Checkpointed surface, should be addressed before M6 closes) and #589 (score 3, M8, rate limiter trust proxy — production deployment concern); (3) **Store and test quality** — #588 (score 2, M7, silent scenario-fetch error swallowing), #383/#382/#381 (score 2 each, M7-blocked rules stubs), #590/#591 (score 1 each, M7, test coverage gaps). The score-4 auth item (#562) remains the highest-priority pre-M8 work. The score-3 M6 item (#587) is the only current-milestone debt and should be resolved before M6 closes.
 
 ---
 
@@ -412,9 +413,14 @@ _Ordered by score descending (ties: current milestone first, then newest first).
 | ----- | --------- | ----- | ------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 4     | M8        | #562  | Security: bind side tokens to factions in DB; derive player.side from token match    | PR #561       | DB stores two opaque tokens with no faction binding; `requireSide` validates token matches either slot but never checks which side it belongs to. A player can claim either faction. Intentional single-user testing scaffolding; hard prerequisite for M8 multiplayer — requires DB migration, session rewrite, and engine authorization update. |
 | 3     | M8        | #563  | Security: enforce side binding on re-join — reject side-switch to opponent's faction | PR #561       | Re-join path accepts any `side` from request body while reusing existing token, allowing side impersonation between turns. Acknowledged scaffolding (#349); depends on #562 (token/faction binding) to derive correct side. Deferred to M8 alongside full auth hardening.                                                                         |
+| 3     | M6        | #587  | ROLL_INITIATIVE: filter leader candidates to playerSide (LOB §10.3)                  | PR #586       | Leader eligibility is not side-filtered; cross-side candidate pairs possible. No state corruption (handlers don't write to wrong units), but violates LOB §10.3 own-command principle. Degraded mode has no handler-layer backstop. Checkpointed surface.                                                                                         |
+| 3     | M8        | #589  | Rate limiter: add trust proxy config and split create/join limiters                  | PR #586       | Without `trust proxy`, express-rate-limit keys by proxy IP in production, collapsing all clients into one bucket. Risks unexpected validation warning violating warning-free policy. Shared limiter coupling (create + join) is a secondary concern.                                                                                              |
+| 2     | M7        | #588  | useGameStore: scenario fetch swallows errors silently, breaks await pattern          | PR #586       | Fire-and-forget `.catch(() => {})` makes scenario load failures invisible and breaks the await pattern within `loadGame`. Non-critical (scenario is non-blocking), but removes all diagnostic visibility for a class of failures.                                                                                                                 |
 | 2     | M7        | #383  | Implement Rally Phase handler with per-unit rally rolls (LOB §6.3)                   | PR #375       | Requires morale state tracking (DG/Routed units) from M6. No units qualify at M5 depth. Safe stub.                                                                                                                                                                                                                                                |
 | 2     | M7        | #382  | Implement Fluke Stoppage step handler (LOB §10.7)                                    | PR #375       | Requires accepted attack order data from M6. No impact at M5 depth.                                                                                                                                                                                                                                                                               |
 | 2     | M7        | #381  | Implement Attack Recovery step handler (LOB §10.6b)                                  | PR #375       | Correctly stubbed at M5; requires combat result data (stopped attack orders) from M6 combat track. No game-correctness impact until attack orders can be stopped.                                                                                                                                                                                 |
+| 1     | M7        | #590  | resolveMorale tests: multi-unit defender hex and mods propagation coverage           | PR #586       | Missing tests for stacked defenders and modifier propagation through the handler chain. Production code is correct; gaps are coverage-only with low regression risk given the deterministic engine.                                                                                                                                               |
+| 1     | M7        | #591  | useGameStore: add scenario-fetch failure test (non-blocking contract)                | PR #586       | Missing parity test for "game still loads when scenario fetch fails" — map-config failure path is tested but scenario is not. Low risk.                                                                                                                                                                                                           |
 
 ---
 
