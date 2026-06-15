@@ -43,6 +43,9 @@ const moduleStore = useModuleStore();
           >
             Editor
           </RouterLink>
+          <RouterLink to="/about" data-testid="about-link" class="menu-btn about-btn">
+            About
+          </RouterLink>
         </nav>
       </div>
     </div>
@@ -133,5 +136,11 @@ h1 {
 .menu-btn:hover {
   background: rgba(60, 48, 24, 0.9);
   color: #e8d8b0;
+}
+
+.about-btn {
+  font-size: 0.85rem;
+  color: #8a7a6a;
+  border-color: #3a3020;
 }
 </style>

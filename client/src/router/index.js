@@ -7,6 +7,7 @@ export default createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', component: HomeView },
+    { path: '/about', component: () => import('../views/AboutView.vue') },
 
     // Module-scoped routes (#529): modules are published LoB/RSS games like THG, SM, NBH.
     {
