@@ -3,7 +3,7 @@
 **Track ID:** m6-ui_20260614
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-14
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -21,12 +21,12 @@ Three self-contained UI deliverables, implemented in order of dependency depth: 
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -34,11 +34,11 @@ Three self-contained UI deliverables, implemented in order of dependency depth: 
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated if any debt was accepted
-- [ ] Ready for `/team-review`
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated if any debt was accepted (none accepted)
+- [x] Ready for `/team-review`
 
 ---
 
@@ -101,9 +101,9 @@ Create `computeTurnTime` utility, `TurnControl.vue` component, and wire into `Ga
 
 ### Tasks
 
-- [ ] Task 4.1: Run `npm run quality:strict` — all gates pass.
+- [x] Task 4.1: Run `npm run quality:strict` — all gates pass.
 - [ ] Task 4.2: Close GitHub issues #519, #551, #528 with merge summary comments.
-- [ ] Task 4.3: Verify no unexpected warnings in test output.
+- [x] Task 4.3: Verify no unexpected warnings in test output.
 
 ### Verification
 
