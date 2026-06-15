@@ -498,6 +498,19 @@ describe('GameView — ActionPanel rendering (#474)', () => {
     const wrapper = await mountGameView({ error: 'Action failed' });
     expect(wrapper.find('.error-banner').text()).toContain('Action failed');
   });
+
+  it('forwards ACTIVATE_STACK payload from ActionPanel submit-action to gameStore.submitAction (#551)', async () => {
+    // Integration: GameView wires ActionPanel submit-action → gameStore.submitAction.
+    // Payload-bearing action: { hex } must be forwarded verbatim.
+    const submitAction = vi.fn();
+    const wrapper = await mountGameView({ submitAction });
+    const panel = wrapper.findComponent({ name: 'ActionPanel' });
+    await panel.vm.$emit('submit-action', {
+      type: 'ACTIVATE_STACK',
+      payload: { hex: '29.22' },
+    });
+    expect(submitAction).toHaveBeenCalledWith('game-1', 'ACTIVATE_STACK', { hex: '29.22' });
+  });
 });
 
 describe('GameView — localPlayerSide and validActions (#474)', () => {
