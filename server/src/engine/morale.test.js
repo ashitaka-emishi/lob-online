@@ -293,3 +293,157 @@ describe('resolvePendingMorale (LOB §6.1)', () => {
     expect(result.pendingResolution).toBeNull();
   });
 });
+
+// ─── Bug #577 regression — cascade uses brigade hierarchy, not hex scope ──────
+describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (LOB §6.3)', () => {
+  // OOB with two brigades: brig-a (u1, u2) and brig-b (u3)
+  const MOCK_OOB = {
+    _status: 'test',
+    _source: 'test',
+    _errata_applied: [],
+    union: {
+      army: 'test',
+      supplyTrain: { id: 'supply-u' },
+      corps: [
+        {
+          id: 'corps1',
+          name: 'I Corps',
+          successionIds: [],
+          divisions: [
+            {
+              id: 'div1',
+              name: 'Div 1',
+              wreckThreshold: 2,
+              successionIds: [],
+              brigades: [
+                {
+                  id: 'brig-a',
+                  wreckThreshold: 2,
+                  regiments: [
+                    {
+                      id: 'u1',
+                      name: 'U1',
+                      type: 'infantry',
+                      morale: 'B',
+                      weapon: 'R',
+                      strengthPoints: 4,
+                    },
+                    {
+                      id: 'u2',
+                      name: 'U2',
+                      type: 'infantry',
+                      morale: 'B',
+                      weapon: 'R',
+                      strengthPoints: 4,
+                    },
+                  ],
+                },
+                {
+                  id: 'brig-b',
+                  wreckThreshold: 2,
+                  regiments: [
+                    {
+                      id: 'u3',
+                      name: 'U3',
+                      type: 'infantry',
+                      morale: 'B',
+                      weapon: 'R',
+                      strengthPoints: 4,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      cavalryDivision: { id: 'cav', name: 'Cav', successionIds: [], brigades: [] },
+    },
+    confederate: {
+      army: 'test',
+      wing: 'test',
+      supplyWagon: { id: 'supply-c' },
+      independent: { cavalry: [], artillery: [] },
+      reserveArtillery: { batteries: [] },
+      independentBrigades: [],
+      divisions: [],
+    },
+  };
+
+  const makeOobState = (units) => ({
+    ...BASE_STATE,
+    units,
+  });
+
+  it('does NOT cascade when only one of two brigade units is routed (LOB §6.3)', () => {
+    // u1 routed, u2 normal — brig-a is not fully routed → no cascade
+    const state = makeOobState({
+      u1: makeUnit('u1', '10.10', 'routed'),
+      u2: makeUnit('u2', '10.10', 'normal'),
+    });
+    const result = cascadeMorale(state, '10.10', MOCK_OOB);
+    expect(result.pendingResolution).toBeNull();
+  });
+
+  it('cascades when all units in a brigade are routed, even if co-occupants from another brigade are not (LOB §6.3)', () => {
+    // brig-a: u1 routed, u2 routed → brigade-a fully routed → cascade
+    // brig-b: u3 normal (different brigade, same hex) → must NOT prevent cascade
+    const state = makeOobState({
+      u1: makeUnit('u1', '10.10', 'routed'),
+      u2: makeUnit('u2', '10.10', 'routed'),
+      u3: makeUnit('u3', '10.10', 'normal'), // same hex, different brigade
+    });
+    const result = cascadeMorale(state, '10.10', MOCK_OOB);
+    expect(result.pendingResolution).not.toBeNull();
+    expect(result.pendingResolution.type).toBe('moraleCheck');
+    expect(result.pendingResolution.context.cascade).toBe(true);
+    expect(result.pendingResolution.context.brigadeId).toBe('brig-a');
+  });
+
+  it('does NOT cascade when only brig-b unit is routed but brig-a is normal (LOB §6.3)', () => {
+    // u1 normal, u2 normal (brig-a), u3 routed (brig-b) → brig-a not routed → no cascade
+    const state = makeOobState({
+      u1: makeUnit('u1', '10.10', 'normal'),
+      u2: makeUnit('u2', '10.10', 'normal'),
+      u3: makeUnit('u3', '10.10', 'routed'),
+    });
+    // brig-b has only u3, which is routed → cascade for brig-b
+    const result = cascadeMorale(state, '10.10', MOCK_OOB);
+    expect(result.pendingResolution).not.toBeNull();
+    expect(result.pendingResolution.context.brigadeId).toBe('brig-b');
+  });
+
+  it('cascadesMorale context includes brigadeId (LOB §6.3)', () => {
+    const state = makeOobState({
+      u1: makeUnit('u1', '10.10', 'routed'),
+      u2: makeUnit('u2', '10.10', 'routed'),
+    });
+    const result = cascadeMorale(state, '10.10', MOCK_OOB);
+    expect(result.pendingResolution?.context?.brigadeId).toBe('brig-a');
+  });
+
+  it('falls back to hex-scope degraded mode when oob is null (LOB §6.3)', () => {
+    // No OOB — degraded mode uses hex-scope (all in hex routed)
+    const state = makeOobState({
+      u1: makeUnit('u1', '10.10', 'routed'),
+      u2: makeUnit('u2', '10.10', 'routed'),
+    });
+    const result = cascadeMorale(state, '10.10', null);
+    expect(result.pendingResolution).not.toBeNull();
+    expect(result.pendingResolution.type).toBe('moraleCheck');
+    // Degraded mode: context has hex but no brigadeId
+    expect(result.pendingResolution.context.hex).toBe('10.10');
+    expect(result.pendingResolution.context.brigadeId).toBeUndefined();
+  });
+
+  it('off-board brigade members do not block cascade (LOB §6.3)', () => {
+    // u2 is off-board — only u1 counts as on-board for brig-a; u1 is routed → cascade
+    const state = makeOobState({
+      u1: makeUnit('u1', '10.10', 'routed'),
+      u2: { ...makeUnit('u2', '10.10', 'normal'), isOnBoard: false },
+    });
+    const result = cascadeMorale(state, '10.10', MOCK_OOB);
+    expect(result.pendingResolution).not.toBeNull();
+    expect(result.pendingResolution.context.brigadeId).toBe('brig-a');
+  });
+});

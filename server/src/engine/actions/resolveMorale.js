@@ -47,5 +47,6 @@ export function handleResolveMorale(state, action, { oob } = {}) {
     return unit?.morale ?? 'D';
   };
 
-  return resolvePendingMorale(state, diceRoll, mods, getRating);
+  // LOB §6.3 — pass oob for brigade cascade lookup
+  return resolvePendingMorale(state, diceRoll, mods, getRating, loadedOob);
 }
