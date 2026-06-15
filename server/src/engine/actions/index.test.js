@@ -301,6 +301,44 @@ describe('getValidActions', () => {
     expect(getValidActions(state, 'union')).toEqual([]);
   });
 
+  // Task 3.4 — no soft-lock after combat sets a pending resolution (#571)
+  it('returns [RESOLVE_MORALE] when pendingResolution.type is combatResult — no soft-lock (#571)', () => {
+    const state = {
+      ...ACTIVITY_STATE,
+      pendingResolution: {
+        type: 'combatResult',
+        context: { attackerHex: '29.22', defenderHex: '30.22', resultType: 'SP', spLoss: 1 },
+      },
+    };
+    const actions = getValidActions(state, 'union');
+    expect(actions).toHaveLength(1);
+    expect(actions[0].type).toBe('RESOLVE_MORALE');
+  });
+
+  it('returns [] when pendingResolution.type is closingRoll — handler not yet implemented (deferred M7)', () => {
+    const state = {
+      ...ACTIVITY_STATE,
+      pendingResolution: {
+        type: 'closingRoll',
+        context: { attackerHex: '29.22', defenderHex: '30.22', closingPass: true },
+      },
+    };
+    const actions = getValidActions(state, 'union');
+    expect(actions).toEqual([]);
+  });
+
+  it('returns [] when pendingResolution.type is moraleCheck — handler not yet implemented (deferred M7)', () => {
+    const state = {
+      ...ACTIVITY_STATE,
+      pendingResolution: {
+        type: 'moraleCheck',
+        context: { hex: '30.22', cascade: true },
+      },
+    };
+    const actions = getValidActions(state, 'union');
+    expect(actions).toEqual([]);
+  });
+
   it('ACTIVATE_STACK is not included when all on-board hexes already activated (#550)', () => {
     const state = {
       ...ACTIVITY_STATE,

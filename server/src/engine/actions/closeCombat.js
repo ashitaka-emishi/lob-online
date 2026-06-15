@@ -1,5 +1,5 @@
 import { ActionError } from './actionError.js';
-import { loadOob, buildUnitSideMap } from '../oob.js';
+import { loadOob, buildUnitSideMap, findOobUnit } from '../oob.js';
 import { hexDistance } from '../hex.js';
 import { openingVolleyResult } from '../tables/combat.js';
 import { closingRollResult } from '../tables/charge.js';
@@ -220,71 +220,4 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
       },
     },
   };
-}
-
-/**
- * Walk the OOB tree and return the unit object with matching id.
- * Duplicated from fireCombat.js — will be extracted to engine/oob.js in M7 cleanup.
- * LOB §7.0d — needed to resolve attacker morale rating for Closing Roll threshold.
- *
- * @param {object} oob
- * @param {string} unitId
- * @returns {object|null}
- */
-function findOobUnit(oob, unitId) {
-  function searchList(list) {
-    for (const item of list ?? []) {
-      if (item.id === unitId) return item;
-    }
-    return null;
-  }
-
-  function searchBrigade(brigade) {
-    return searchList(brigade.regiments) ?? searchList(brigade.batteries);
-  }
-
-  function searchArtilleryGroup(artGroup) {
-    for (const group of Object.values(artGroup ?? {})) {
-      const found = searchList(group.batteries);
-      if (found) return found;
-    }
-    return null;
-  }
-
-  function searchDivision(div) {
-    for (const brig of div.brigades ?? []) {
-      const found = searchBrigade(brig);
-      if (found) return found;
-    }
-    return searchArtilleryGroup(div.artillery) ?? searchList(div.batteries);
-  }
-
-  for (const corps of oob.union.corps ?? []) {
-    const found =
-      searchList(corps.corpsUnits) ??
-      searchArtilleryGroup(corps.artillery) ??
-      corps.divisions?.reduce((acc, d) => acc ?? searchDivision(d), null);
-    if (found) return found;
-  }
-  const cavFound =
-    oob.union.cavalryDivision?.brigades?.reduce((acc, b) => acc ?? searchBrigade(b), null) ??
-    searchArtilleryGroup(oob.union.cavalryDivision?.artillery);
-  if (cavFound) return cavFound;
-
-  for (const div of oob.confederate.divisions ?? []) {
-    const found = searchDivision(div);
-    if (found) return found;
-  }
-  const indFound =
-    searchList(oob.confederate.independent?.cavalry) ??
-    searchList(oob.confederate.independent?.artillery) ??
-    searchList(oob.confederate.reserveArtillery?.batteries);
-  if (indFound) return indFound;
-
-  for (const brig of oob.confederate.independentBrigades ?? []) {
-    const found = searchList(brig.regiments) ?? searchArtilleryGroup(brig.artillery);
-    if (found) return found;
-  }
-
-  return null;
 }

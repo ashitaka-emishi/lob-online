@@ -644,14 +644,13 @@ describe('Integration: FIRE_COMBAT → RESOLVE_MORALE (LOB §5 / §6)', () => {
     expect(afterFire.pendingResolution.type).toBe('combatResult');
   });
 
-  it('Step 2: getValidActions returns [] (soft-lock) when combatResult is pending (LOB §6.1)', () => {
-    // LOB §6.1 — while combatResult pending, no further actions can proceed through dispatch.
-    // getValidActions returns [] for non-leaderCasualty pending resolutions.
+  it('Step 2: getValidActions returns [RESOLVE_MORALE] when combatResult is pending — no soft-lock (LOB §6.1 #571)', () => {
+    // LOB §6.1 — while combatResult pending, only RESOLVE_MORALE is valid. (#571 fix)
     const afterFire = handleFireCombat(FIRE_INTEGRATION_STATE, FIRE_ACTION, { oob: MOCK_OOB });
     expect(afterFire.pendingResolution.type).toBe('combatResult');
-    // The engine soft-locks: valid actions are empty until morale is resolved
     const validActions = getValidActions(afterFire, 'union');
-    expect(validActions).toEqual([]);
+    expect(validActions).toHaveLength(1);
+    expect(validActions[0].type).toBe('RESOLVE_MORALE');
   });
 
   it('Step 3: RESOLVE_MORALE clears pendingResolution and updates unit morale (LOB §6.1)', () => {

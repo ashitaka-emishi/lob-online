@@ -535,11 +535,16 @@ describe('POST /api/v1/games/:id/actions', () => {
       .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
     expect(res.status).toBe(200);
     expect(res.body.version).toBe(4);
-    expect(dispatch).toHaveBeenCalledWith(ACTIVE_STATE, {
-      type: 'END_PHASE',
-      payload: null,
-      playerSide: 'union',
-    });
+    expect(dispatch).toHaveBeenCalledWith(
+      ACTIVE_STATE,
+      { type: 'END_PHASE', payload: null, playerSide: 'union' },
+      expect.objectContaining({
+        oob: expect.anything(),
+        scenario: expect.anything(),
+        mapData: expect.anything(),
+        hexIndex: expect.anything(),
+      })
+    );
   });
 
   it('sources playerSide from session, never from request body (#387)', async () => {
@@ -554,7 +559,8 @@ describe('POST /api/v1/games/:id/actions', () => {
       .send({ type: 'END_PHASE', payload: null, playerSide: 'union', expectedVersion: 3 });
     expect(dispatch).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ playerSide: 'confederate' })
+      expect.objectContaining({ playerSide: 'confederate' }),
+      expect.objectContaining({ oob: expect.anything() })
     );
   });
 
