@@ -109,14 +109,14 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
     );
   }
 
-  // LOB §7.0 — attacker effective SPs determine the automatic 1-SP loss gate (≥4 required).
-  // DG attackers contribute half their printed SPs (round down), per LOB §5.3.
+  // LOB §7.0 — sum attacker current SPs (not printed). DG halving does NOT apply to this
+  // gate — §5.3 halving is only for the Combat Table column; §7.0 uses raw current strength.
+  // "SPs remaining in the attack" = current strength (with OOB printed as fallback if no marker).
   let attackerSPs = 0;
   for (const au of attackerUnits) {
     const auOob = findOobUnit(loadedOob, au.id);
     if (!auOob) continue;
-    const printed = auOob.strengthPoints ?? 0;
-    attackerSPs += au.moraleState === 'disorganized' ? Math.floor(printed / 2) : printed;
+    attackerSPs += au.strengthPoints ?? auOob.strengthPoints ?? 0;
   }
 
   let updatedUnits = { ...state.units };
@@ -144,9 +144,11 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
   // Actual abort enforcement happens when morale cascade processes the combatResult.
   // For now, record ovSpLoss in the pending context so Phase 4 can apply it.
 
-  // LOB §7.0c — automatic 1 SP defender loss requires attacker to have ≥4 SPs engaged.
+  // LOB §7.0c — gate is evaluated on post-Opening-Volley SPs ("remaining in the attack").
+  // Charge Sequence: OV fires first (step 1), then automatic SP loss check (step 2).
   // LOB §8.1 — CBF marker set on each defender unit that takes a loss.
-  const defenderSpLoss = attackerSPs >= 4 ? 1 : 0; // LOB §7.0 — automatic 1 SP loss gated on ≥4 attacker SPs
+  const postOvAttackerSPs = Math.max(0, attackerSPs - ovSpLoss);
+  const defenderSpLoss = postOvAttackerSPs >= 4 ? 1 : 0; // LOB §7.0c — ≥4 SPs remaining after OV
   if (defenderSpLoss > 0) {
     const newUnits = { ...updatedUnits };
     for (const du of defenderUnits) {

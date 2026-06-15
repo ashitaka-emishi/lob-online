@@ -322,14 +322,16 @@ describe('handleCloseCombat', () => {
       expect(result.units.c1.cbfMarker).toBe(false);
     });
 
-    it('DG attacker halves SP contribution (round down) for gate check (LOB §5.3)', () => {
-      // u1 has 4 SPs but is DG → effective = 2 → below gate → no automatic loss
+    it('DG state does NOT reduce SP contribution for gate check — gate uses raw current SPs (LOB §7.0)', () => {
+      // §7.0 "SPs remaining in the attack" = current SP count, unmodified by DG.
+      // DG halving (§5.3) applies only to the Combat Table column, not the §7.0 gate.
+      // u1 has 4 SPs and is DG → still contributes 4 to the gate → loss fires.
       const state = {
         ...BASE_STATE,
         units: { ...BASE_STATE.units, u1: { ...BASE_STATE.units.u1, moraleState: 'disorganized' } },
       };
       const result = handleCloseCombat(state, CHARGE_ACTION, { oob: MOCK_OOB });
-      expect(result.pendingResolution.context.defenderSpLoss).toBe(0);
+      expect(result.pendingResolution.context.defenderSpLoss).toBe(1);
     });
   });
 

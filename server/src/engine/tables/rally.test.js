@@ -2,75 +2,63 @@ import { describe, it, expect } from 'vitest';
 
 import { drainAutoSteps } from '../actions/index.js';
 import { PHASES, STEPS } from '../../constants/phases.js';
-import { RALLY_THRESHOLDS, rallyRollResult, applySection64AutoRecovery } from './rally.js';
-
-// ─── RALLY_THRESHOLDS ─────────────────────────────────────────────────────────
-
-describe('RALLY_THRESHOLDS (LOB §6.3)', () => {
-  it('A-rated units have highest threshold (10)', () => {
-    expect(RALLY_THRESHOLDS.A).toBe(10);
-  });
-
-  it('B-rated units have threshold 9', () => {
-    expect(RALLY_THRESHOLDS.B).toBe(9);
-  });
-
-  it('D-rated units have threshold 7', () => {
-    expect(RALLY_THRESHOLDS.D).toBe(7);
-  });
-
-  it('F-rated units have lowest threshold (5)', () => {
-    expect(RALLY_THRESHOLDS.F).toBe(5);
-  });
-
-  it('thresholds decrease monotonically from A to F', () => {
-    expect(RALLY_THRESHOLDS.A).toBeGreaterThan(RALLY_THRESHOLDS.B);
-    expect(RALLY_THRESHOLDS.B).toBeGreaterThan(RALLY_THRESHOLDS.C);
-    expect(RALLY_THRESHOLDS.C).toBeGreaterThan(RALLY_THRESHOLDS.D);
-    expect(RALLY_THRESHOLDS.D).toBeGreaterThan(RALLY_THRESHOLDS.E);
-    expect(RALLY_THRESHOLDS.E).toBeGreaterThan(RALLY_THRESHOLDS.F);
-  });
-});
+import { rallyRollResult, applySection64AutoRecovery } from './rally.js';
 
 // ─── rallyRollResult ─────────────────────────────────────────────────────────
+// LOB §6.4 step 3: Roll 1d6 + leader Morale Value. Modified total ≥ 5 → Routed becomes DG.
+// The unit's morale rating (A–F) is NOT a parameter — only Routed units roll, result is always →DG.
 
-describe('rallyRollResult (LOB §6.3)', () => {
-  it('succeeds when 2d6 ≤ threshold (shaken B-rated, roll 9)', () => {
-    const result = rallyRollResult('B', 9, 'shaken');
+describe('rallyRollResult (LOB §6.4 step 3)', () => {
+  it('succeeds when die + leaderMV ≥ 5 (roll 3 + MV 2 = 5)', () => {
+    const result = rallyRollResult(3, 2);
     expect(result.success).toBe(true);
-    expect(result.threshold).toBe(9);
-    expect(result.newMoraleState).toBe('normal');
-  });
-
-  it('fails when 2d6 > threshold (shaken B-rated, roll 10)', () => {
-    const result = rallyRollResult('B', 10, 'shaken');
-    expect(result.success).toBe(false);
-    expect(result.newMoraleState).toBeNull();
-  });
-
-  it('succeeds on exact threshold boundary (shaken D-rated, roll 7)', () => {
-    const result = rallyRollResult('D', 7, 'shaken');
-    expect(result.success).toBe(true);
-    expect(result.newMoraleState).toBe('normal');
-  });
-
-  it('routed unit improves to disorganized on success (LOB §6.3)', () => {
-    const result = rallyRollResult('A', 5, 'routed');
-    expect(result.success).toBe(true);
+    expect(result.modifiedRoll).toBe(5);
     expect(result.newMoraleState).toBe('disorganized');
   });
 
-  it('disorganized unit improves to shaken on success (LOB §6.3)', () => {
-    const result = rallyRollResult('A', 5, 'disorganized');
-    expect(result.success).toBe(true);
-    expect(result.newMoraleState).toBe('shaken');
+  it('fails when die + leaderMV < 5 (roll 2 + MV 2 = 4)', () => {
+    const result = rallyRollResult(2, 2);
+    expect(result.success).toBe(false);
+    expect(result.modifiedRoll).toBe(4);
+    expect(result.newMoraleState).toBeNull();
   });
 
-  it('unknown morale rating returns success=false, threshold=null (LOB §6.3)', () => {
-    const result = rallyRollResult('Z', 5, 'shaken');
+  it('succeeds on exact boundary (roll 4 + MV 1 = 5)', () => {
+    const result = rallyRollResult(4, 1);
+    expect(result.success).toBe(true);
+    expect(result.modifiedRoll).toBe(5);
+  });
+
+  it('fails just below boundary (roll 3 + MV 1 = 4)', () => {
+    const result = rallyRollResult(3, 1);
     expect(result.success).toBe(false);
-    expect(result.threshold).toBeNull();
+    expect(result.modifiedRoll).toBe(4);
+  });
+
+  it('succeeds with no leader present (MV 0) when roll ≥ 5', () => {
+    // No leader in hex — Morale Value contribution is 0
+    const result = rallyRollResult(5, 0);
+    expect(result.success).toBe(true);
+    expect(result.modifiedRoll).toBe(5);
+    expect(result.newMoraleState).toBe('disorganized');
+  });
+
+  it('fails with no leader when roll < 5 (roll 3 + MV 0 = 3)', () => {
+    const result = rallyRollResult(3, 0);
+    expect(result.success).toBe(false);
     expect(result.newMoraleState).toBeNull();
+  });
+
+  it('minimum die roll (1) + high leader MV can still succeed', () => {
+    const result = rallyRollResult(1, 4);
+    expect(result.success).toBe(true);
+    expect(result.modifiedRoll).toBe(5);
+  });
+
+  it('maximum die roll (6) + MV 0 always succeeds', () => {
+    const result = rallyRollResult(6, 0);
+    expect(result.success).toBe(true);
+    expect(result.modifiedRoll).toBe(6);
   });
 });
 
