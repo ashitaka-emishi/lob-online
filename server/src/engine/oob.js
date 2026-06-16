@@ -104,6 +104,26 @@ export function buildUnitSideMap(oob) {
 }
 
 /**
+ * Build a flat map of leaderId → side from a loaded leaders data structure.
+ * LOB §10.3 — initiative rolls are limited to the active player's own leaders.
+ *
+ * @param {import('zod').infer<typeof LeadersSchema>} leaders
+ * @returns {Map<string, 'union'|'confederate'>}
+ */
+export function buildLeaderSideMap(leaders) {
+  const map = new Map();
+  const unionGroups = ['army', 'corps', 'cavalry', 'divisions', 'brigades'];
+  for (const group of unionGroups) {
+    for (const leader of leaders.union[group] ?? []) map.set(leader.id, 'union');
+  }
+  const confGroups = ['wing', 'divisions', 'brigades'];
+  for (const group of confGroups) {
+    for (const leader of leaders.confederate[group] ?? []) map.set(leader.id, 'confederate');
+  }
+  return map;
+}
+
+/**
  * Walk the OOB tree and return the unit object with matching id.
  * LOB §5.3 — needed to look up printed strengthPoints for SP computation.
  * LOB §6.1 — needed to look up morale rating for each unit being checked.

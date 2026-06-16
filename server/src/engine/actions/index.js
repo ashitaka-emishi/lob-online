@@ -1,7 +1,7 @@
 import { GameStateSchema } from '../../schemas/gameState.schema.js';
 import { PHASES, STEPS } from '../../constants/phases.js';
 import { ActionError } from './actionError.js';
-import { loadOob, buildUnitSideMap } from '../oob.js';
+import { loadOob, buildUnitSideMap, loadLeaders, buildLeaderSideMap } from '../oob.js';
 import { applySection64AutoRecovery } from '../tables/rally.js';
 import { handleEndPhase } from './endPhase.js';
 import { handleRollInitiative, handleIssueOrder } from './issueOrder.js';
@@ -54,7 +54,20 @@ export function getValidActions(state, playerSide) {
     // Falls back to a single null-payload candidate when leaderState is empty (M5 steel-thread).
     const leaderRollUsed = state.ordersPhase?.leaderRollUsed ?? {};
     const leaderEntries = Object.entries(state.leaderState ?? {});
-    const eligibleLeaders = leaderEntries.filter(([id, ls]) => !leaderRollUsed[id] && ls.isOnBoard);
+    // LOB §10.3 — initiative is rolled by the active player's own leaders only (#587).
+    // Build leader side map; leaders not found in OOB are excluded as a safe fallback.
+    let leaderSideMapForOrders;
+    try {
+      leaderSideMapForOrders = buildLeaderSideMap(loadLeaders());
+    } catch {
+      leaderSideMapForOrders = null;
+    }
+    const eligibleLeaders = leaderEntries.filter(([id, ls]) => {
+      if (leaderRollUsed[id] || !ls.isOnBoard) return false;
+      if (!leaderSideMapForOrders) return true; // degraded mode — include all on-board leaders
+      const side = leaderSideMapForOrders.get(id);
+      return side === playerSide;
+    });
     // Hoisted outside flatMap — invariant across all eligible leaders.
     // LOB §10.3 — initiative candidates limited to active side's units
     // Side is looked up via OOB data; units whose side cannot be determined are excluded

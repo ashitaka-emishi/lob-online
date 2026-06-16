@@ -158,6 +158,30 @@ describe('handleIssueOrder', () => {
     }
   });
 
+  // #587 — defense-in-depth: handleIssueOrder must reject orders from a cross-side leader (LOB §10.3)
+  it('throws INVALID_ACTION when the pending leader belongs to the opposing side (#587)', () => {
+    // 'longstreet' is a confederate leader; issuing an order as 'union' must be rejected.
+    const state = {
+      ...COMMAND_ORDERS,
+      ordersPhase: {
+        leaderRollUsed: { longstreet: true },
+        pendingOrderIssuance: { leaderId: 'longstreet', unitId: 'colquitt' },
+      },
+    };
+    const action = {
+      type: 'ISSUE_ORDER',
+      payload: { unitId: 'colquitt', orderType: 'move' },
+      playerSide: 'union',
+    };
+    expect(() => handleIssueOrder(state, action)).toThrow(ActionError);
+    try {
+      handleIssueOrder(state, action);
+    } catch (e) {
+      expect(e.code).toBe('INVALID_ACTION');
+      expect(e.message).toMatch(/cross-side/i);
+    }
+  });
+
   it('does not mutate input state', () => {
     const snapshot = JSON.parse(JSON.stringify(PENDING_STATE));
     const action = { type: 'ISSUE_ORDER', payload: { unitId: 'colquitt', orderType: 'move' } };

@@ -129,17 +129,17 @@ describe('getValidActions', () => {
       ...COMMAND_ORDERS_STATE,
       leaderState: {
         cox: { hex: '29.22', isOnBoard: true },
-        jones: { hex: '30.22', isOnBoard: true },
+        phelps: { hex: '30.22', isOnBoard: true }, // real union brigade leader
       },
       ordersPhase: { leaderRollUsed: { cox: true }, pendingOrderIssuance: null },
       units: {
-        colquitt: { ...BASE_UNIT, id: 'colquitt' },
-        rodes: { ...BASE_UNIT, id: 'rodes' },
+        '2ny-cav': { ...BASE_UNIT, id: '2ny-cav' },
+        '1nh-lt': { ...BASE_UNIT, id: '1nh-lt' },
       },
     };
     const actions = getValidActions(state, 'union');
     const rollActions = actions.filter((a) => a.type === 'ROLL_INITIATIVE');
-    // cox already rolled — should only get candidates for jones
+    // cox already rolled — should only get candidates for phelps
     const leaderIds = rollActions.map((a) => a.payload?.leaderId).filter(Boolean);
     expect(leaderIds).not.toContain('cox');
   });
@@ -375,7 +375,7 @@ describe('getValidActions', () => {
   // Review L3: ROLL_INITIATIVE cartesian expansion cardinality (leaders × units)
   // LOB §10.3 — M6 side-filter: candidates limited to the active player's OOB units.
   it('ROLL_INITIATIVE produces L×U candidates for L leaders and U union on-board units (#559 review L3)', () => {
-    // Use real union unit IDs so OOB side-filtering resolves them as union units.
+    // Use real union unit IDs and real union leader IDs so OOB/leaders side-filtering resolves them.
     const state = {
       ...COMMAND_ORDERS_STATE,
       units: {
@@ -384,7 +384,7 @@ describe('getValidActions', () => {
       },
       leaderState: {
         cox: { hex: '29.22', isOnBoard: true },
-        jones: { hex: '30.22', isOnBoard: true },
+        phelps: { hex: '30.22', isOnBoard: true }, // real union brigade leader
       },
       ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
     };
@@ -395,8 +395,41 @@ describe('getValidActions', () => {
     const pairs = rollActions.map((a) => `${a.payload.leaderId}:${a.payload.unitId}`);
     expect(pairs).toContain('cox:2ny-cav');
     expect(pairs).toContain('cox:1nh-lt');
-    expect(pairs).toContain('jones:2ny-cav');
-    expect(pairs).toContain('jones:1nh-lt');
+    expect(pairs).toContain('phelps:2ny-cav');
+    expect(pairs).toContain('phelps:1nh-lt');
+  });
+
+  // #587 — ROLL_INITIATIVE cross-side leader filter (LOB §10.3)
+  // A confederate leader must not appear in union ROLL_INITIATIVE candidates.
+  it('ROLL_INITIATIVE excludes confederate leaders when playerSide is union (#587)', () => {
+    // 'longstreet' is a real confederate leader in leaders.json.
+    // 'cox' is a real union leader.
+    const state = {
+      ...COMMAND_ORDERS_STATE,
+      units: {
+        '2ny-cav': { ...BASE_UNIT, id: '2ny-cav', isOnBoard: true },
+      },
+      leaderState: {
+        cox: { hex: '29.22', isOnBoard: true },
+        longstreet: { hex: '30.22', isOnBoard: true }, // confederate — must be excluded
+      },
+      ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+    };
+    const actions = getValidActions(state, 'union');
+    const rollLeaderIds = actions
+      .filter((a) => a.type === 'ROLL_INITIATIVE' && a.payload)
+      .map((a) => a.payload.leaderId);
+    // cox (union) should be included; longstreet (confederate) must not be
+    expect(rollLeaderIds).toContain('cox');
+    expect(rollLeaderIds).not.toContain('longstreet');
+  });
+
+  it('ROLL_INITIATIVE null-payload fallback is unaffected by leader side filter (#587 degraded mode)', () => {
+    // When leaderState is empty, the fallback null-payload candidate must still be produced.
+    const actions = getValidActions(COMMAND_ORDERS_STATE, 'union');
+    const rollAction = actions.find((a) => a.type === 'ROLL_INITIATIVE');
+    expect(rollAction).toBeDefined();
+    expect(rollAction.payload).toBeNull();
   });
 
   // Review L4: ACTIVATE_STACK same-hex deduplication

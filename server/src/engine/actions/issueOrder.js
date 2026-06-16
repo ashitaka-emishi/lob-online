@@ -1,4 +1,5 @@
 import { ActionError } from './actionError.js';
+import { loadLeaders, buildLeaderSideMap } from '../oob.js';
 
 // LOB §10.6 — Command Roll: one roll per leader per turn; marks the leader as rolled.
 // M5 steel-thread: the roll always succeeds, setting pendingOrderIssuance for ISSUE_ORDER.
@@ -43,6 +44,24 @@ export function handleIssueOrder(state, action) {
       'INVALID_ACTION',
       'ISSUE_ORDER requires a preceding successful ROLL_INITIATIVE'
     );
+  }
+
+  // LOB §10.3 — defense-in-depth: reject orders issued by a leader of the opposing side (#587).
+  // Skipped when playerSide is absent (test contexts that don't supply it) or leaders unavailable.
+  if (action.playerSide) {
+    try {
+      const leaderSideMap = buildLeaderSideMap(loadLeaders());
+      const leaderSide = leaderSideMap.get(pending.leaderId);
+      if (leaderSide && leaderSide !== action.playerSide) {
+        throw new ActionError(
+          'INVALID_ACTION',
+          `cross-side order rejected: leader '${pending.leaderId}' belongs to '${leaderSide}', not '${action.playerSide}' (LOB §10.3)`
+        );
+      }
+    } catch (err) {
+      if (err instanceof ActionError) throw err;
+      // leaders.json unavailable — skip defense-in-depth check (degraded mode)
+    }
   }
 
   if (pending.unitId !== unitId) {
