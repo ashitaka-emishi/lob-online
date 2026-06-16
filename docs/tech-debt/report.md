@@ -1,18 +1,18 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-15 after PR #611._
+_Last updated: 2026-06-15 after m6-debt-closeout_20260615 (closed #587, #593)._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                                                                                                                        |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Open debt items                  | 24                                                                                                                                                                           |
-| Cumulative debt score (net open) | 55                                                                                                                                                                           |
-| Current-milestone open debt      | 4 items (#587 score 3, M6 — ROLL_INITIATIVE side filter; #593 score 3, M6 — sync I/O on dispatch; #616 score 3, M6 — §7.0 threshold; #618 score 2, M6 — §6.4 step asymmetry) |
-| Highest-risk item                | Security: add Zod payload schema for CLOSE_COMBAT — route forwards raw payload without field-level validation (#612, score 4)                                                |
-| PRs tracked                      | 296                                                                                                                                                                          |
+| Metric                           | Value                                                                                                                         |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Open debt items                  | 22                                                                                                                            |
+| Cumulative debt score (net open) | 49                                                                                                                            |
+| Current-milestone open debt      | 2 items (#616 score 3, M6 — §7.0 threshold; #618 score 2, M6 — §6.4 step asymmetry)                                           |
+| Highest-risk item                | Security: add Zod payload schema for CLOSE_COMBAT — route forwards raw payload without field-level validation (#612, score 4) |
+| PRs tracked                      | 296                                                                                                                           |
 
 ---
 
@@ -425,6 +425,9 @@ _Last updated: 2026-06-15 after PR #611._
 | 2026-06-15 | PR #611 (added #621)                                           | +2                   | —         | 593                      |
 | 2026-06-15 | PR #611 (added #622)                                           | +1                   | —         | 593                      |
 | 2026-06-15 | PR #611 (added #623)                                           | +1                   | —         | 593                      |
+| 2026-06-15 | m6-debt-closeout_20260615                                      | 0                    | -6        | 593                      |
+| 2026-06-15 | m6-debt-closeout_20260615 (resolved #587)                      | -3                   | —         | 593                      |
+| 2026-06-15 | m6-debt-closeout_20260615 (resolved #593)                      | -3                   | —         | 593                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -432,9 +435,9 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Elevated risk. Net open debt score is 55 across 24 items. PR #611 team-review resolved 14 points (six M6/M7 stubs: #578, #579, #581, #383, #382, #381) and PR #598 reconciliation resolved 18 additional points (#574–#577, not previously captured), but introduced 27 new points across 12 deferred domain verification and refactoring items, raising the net open score from 18 to 55.
+Elevated risk. Net open debt score is 49 across 22 items. m6-debt-closeout_20260615 closed #587 (ROLL_INITIATIVE side filter, score 3) and #593 (sync I/O memoization, score 3), reducing the net open score from 55 to 49 and clearing all combat-pipeline M6 items.
 
-Debt is concentrated in five clusters: (1) **Security** — #612 (score 4, M6, CLOSE_COMBAT/FIRE_COMBAT payload validation gap — **merge-blocker**) and #562/#563 (score 4/3, M8, token/faction binding); (2) **Domain verification backlog** — #616 (score 3, M6, §7.0 SP gate operator), #617 (score 3, M7, §9.1a leader loss scope), #613 (score 3, M7, §6.3 rally thresholds unverified dead code), #618 (score 2, M6, §6.4 step asymmetry), #621 (score 2, M7, Fluke/AR rule basis); (3) **Combat pipeline** — #593 (score 3, M6, sync I/O on dispatch), #594 (score 3, M7, silent ctx degradation), #587 (score 3, M6, ROLL_INITIATIVE side filter — Checkpointed surface); (4) **Test quality** — #619/#620 (score 2 each, M7, rally test gaps), #595 (score 2, M7, route integration test), #597/#590/#591 (score 1 each, M7); (5) **Refactoring** — #614/#615 (score 2 each, M7, effectiveSPs duplication and two-pass algorithm). Four current-milestone items (#612, #587, #593, #616) should be resolved before M6 closes; #612 is a merge-blocker for PR #611.
+Debt is concentrated in five clusters: (1) **Security** — #612 (score 4, M6, CLOSE_COMBAT/FIRE_COMBAT payload validation gap — **merge-blocker**) and #562/#563 (score 4/3, M8, token/faction binding); (2) **Domain verification backlog** — #616 (score 3, M6, §7.0 SP gate operator), #617 (score 3, M7, §9.1a leader loss scope), #613 (score 3, M7, §6.3 rally thresholds unverified dead code), #618 (score 2, M6, §6.4 step asymmetry), #621 (score 2, M7, Fluke/AR rule basis); (3) **Reliability/perf** — #594 (score 3, M7, silent ctx degradation), #596 (score 2, M7, O(n) findOobUnit); (4) **Test quality** — #619/#620 (score 2 each, M7, rally test gaps), #595 (score 2, M7, route integration test), #597/#590/#591 (score 1 each, M7); (5) **Refactoring** — #614/#615 (score 2 each, M7, effectiveSPs duplication and two-pass algorithm). Two current-milestone items remain open (#616, #618); #612 is a merge-blocker for PR #611.
 
 ---
 
@@ -446,8 +449,6 @@ _Ordered by score descending (ties: current milestone first, then newest first).
 | ----- | --------- | ----- | ------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 4     | M6        | #612  | Security: add Zod payload schema for CLOSE_COMBAT — route forwards raw payload without field-level validation       | PR #611       | The route forwards `req.body.payload` raw; in-handler checks don't validate types or integer bounds. `closingDie: 3.7` or `closingDie: "abc"` passes the `< 1 \|\| > 6` gate and corrupts deterministic game state on a shared authoritative server. Same gap exists for FIRE_COMBAT payload.                                                     |
 | 4     | M8        | #562  | Security: bind side tokens to factions in DB; derive player.side from token match                                   | PR #561       | DB stores two opaque tokens with no faction binding; `requireSide` validates token matches either slot but never checks which side it belongs to. A player can claim either faction. Intentional single-user testing scaffolding; hard prerequisite for M8 multiplayer — requires DB migration, session rewrite, and engine authorization update. |
-| 3     | M6        | #587  | ROLL_INITIATIVE: filter leader candidates to playerSide (LOB §10.3)                                                 | PR #586       | Leader eligibility is not side-filtered; cross-side candidate pairs possible. No state corruption (handlers don't write to wrong units), but violates LOB §10.3 own-command principle. Degraded mode has no handler-layer backstop. Checkpointed surface.                                                                                         |
-| 3     | M6        | #593  | Perf: memoize loadOob/loadMap/getScenario in games.js — sync I/O on every action dispatch                           | PR #592       | `loadOob()`, `loadMap()`, and `getScenario()` are synchronous file reads called on every action, including non-combat actions like `END_PHASE`. Blocks the event loop. Fix: cache at module-init or use a memoized singleton. Should be resolved before M6 closes.                                                                                |
 | 3     | M6        | #616  | Domain: confirm LOB §7.0 close combat SP gate is ≥4 (inclusive) and uses printed vs current SPs                     | PR #611       | Gate uses `attackerSPs >= 4` per plan wording but ≥4 vs >4 cannot be confirmed from code. Also uses printed OOB SPs — LOB §7.0 "engaged SPs" may intend current strength. Edge case at exactly 4 SPs; tests don't cover the exclusive boundary.                                                                                                   |
 | 3     | M7        | #617  | Domain: confirm LOB §9.1a leader loss scope — §7.0c automatic loss only, or any SP loss in close combat resolution? | PR #611       | `leaderLossCheckRequired: defenderSpLoss > 0` couples leader loss only to the §7.0c automatic gate. A <4-SP charge that inflicts loss via Opening Volley or cascade would skip the leader-loss check entirely.                                                                                                                                    |
 | 3     | M7        | #613  | Domain: verify LOB §6.3 rally roll thresholds (A=10…F=5) and 2d6-roll-under mechanic before M7 wiring               | PR #611       | `rallyRollResult()` is dead code at M6 — `drainAutoSteps` auto-advances and discards the result. A wrong threshold value would go undetected until M7 interactive dice are wired. Thresholds are plausible but unverified against the LOB §6.3 table.                                                                                             |
