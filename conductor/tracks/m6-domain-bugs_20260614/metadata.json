@@ -2,15 +2,15 @@
   "id": "m6-domain-bugs_20260614",
   "title": "M6 Domain Bug Fixes — Fire Combat SP Column, Opening Volley, CBF Trigger, Morale Cascade",
   "type": "bugfix",
-  "status": "pending",
+  "status": "complete",
   "created": "2026-06-14T00:00:00.000Z",
-  "updated": "2026-06-14T00:00:00.000Z",
+  "updated": "2026-06-15T00:00:00.000Z",
   "phases": {
     "total": 4,
-    "completed": 0
+    "completed": 4
   },
   "tasks": {
     "total": 8,
-    "completed": 0
+    "completed": 8
   }
 }

@@ -132,8 +132,8 @@
 | [x] | pre-m6-debt-final_20260614 | Pre-M6 Final Debt Sprint + Debt Report Improvements | 2026-06-14 | 2026-06-14 |
 | [x] | m6-combat-engine_20260614 | M6 Combat Engine — Fire, Melee, Morale, Rally | 2026-06-14 | 2026-06-14 |
 | [x] | m6-ui_20260614 | M6 UI — Turn Control, ActionPanel Payloads, and About Page | 2026-06-14 | 2026-06-14 |
-| [ ] | m6-domain-bugs_20260614 | M6 Domain Bug Fixes — Fire Combat SP Column, Opening Volley, CBF Trigger, Morale Cascade (#574 #575 #576 #577) | 2026-06-14 | 2026-06-14 |
+| [x] | m6-domain-bugs_20260614 | M6 Domain Bug Fixes — Fire Combat SP Column, Opening Volley, CBF Trigger, Morale Cascade (#574 #575 #576 #577) | 2026-06-14 | 2026-06-15 |
 | [x] | m6-combat-wiring_20260614 | M6 Combat Wiring — Soft-lock Fix, Dispatch DI, OOB Deduplication (#571 #572 #573) | 2026-06-14 | 2026-06-15 |
 | [x] | m6-combat-tests_20260614 | M6 Combat Tests — resolveMorale Suite and Dispatch Integration (#580) | 2026-06-14 | 2026-06-15 |
-| [ ] | m6-rules-handlers_20260614 | M6 Rules Handler Implementations — Rally §6.4, Close Combat Gate, Leader Loss, Fluke, Attack Recovery (#578 #579 #581 #383 #382 #381) | 2026-06-14 | 2026-06-14 |
+| [x] | m6-rules-handlers_20260614 | M6 Rules Handler Implementations — Rally §6.4, Close Combat Gate, Leader Loss, Fluke, Attack Recovery (#578 #579 #581 #383 #382 #381) | 2026-06-14 | 2026-06-15 |
 | [x] | m6-debt-sprint_20260614 | M6 Debt Sprint — Small Fixes, Security Headers, Rate Limiting, Register Sync (#583 #584 #560 #506 #403 #350) | 2026-06-14 | 2026-06-15 |

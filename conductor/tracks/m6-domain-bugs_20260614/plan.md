@@ -12,12 +12,12 @@
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -25,15 +25,15 @@
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated if any debt was accepted
-- [ ] Ready for `/team-review`
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated if any debt was accepted
+- [x] Ready for `/team-review`
 
 ---
 
-## Phase 1 — Fix fire combat SP column (#574)
+## Phase 1 — Fix fire combat SP column (#574) [COMPLETE]
 
 ### Task 1.1 — Locate and fix `computeCombatColumn` in `fire.js`
 
@@ -48,7 +48,7 @@ In the existing fire combat test file, add a test that fires a 4-SP attacker aga
 
 ---
 
-## Phase 2 — Fix Opening Volley direction (#575)
+## Phase 2 — Fix Opening Volley direction (#575) [COMPLETE]
 
 ### Task 2.1 — Reverse OV firer/target in `fire.js`
 
@@ -69,7 +69,7 @@ not the defender.
 
 ---
 
-## Phase 3 — Fix CBF trigger (#576)
+## Phase 3 — Fix CBF trigger (#576) [COMPLETE]
 
 ### Task 3.1 — Gate CBF marker behind arty-vs-arty check in `fire.js`
 
@@ -84,7 +84,7 @@ DOES set CBF when SP loss occurs.
 
 ---
 
-## Phase 4 — Fix morale cascade scope (#577)
+## Phase 4 — Fix morale cascade scope (#577) [COMPLETE]
 
 ### Task 4.1 — Replace hex-scope cascade with brigade-hierarchy cascade in `morale.js`
 

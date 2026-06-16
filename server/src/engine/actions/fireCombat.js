@@ -2,6 +2,7 @@ import { ActionError } from './actionError.js';
 import { loadOob, buildUnitSideMap, findOobUnit } from '../oob.js';
 import { computeLOS } from '../los.js';
 import { hexDistance } from '../hex.js';
+import { FireCombatPayloadSchema, parsePayload } from './payloads.js';
 import {
   combatResult,
   openingVolleyResult,
@@ -40,19 +41,10 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
     throw new ActionError('INVALID_ACTION', 'No stack is mid-activation — cannot fire');
   }
 
+  // LOB §5.0 — validate payload at the boundary before any field is consumed
   const { attackerHex, defenderHex, weaponClass, weaponType, dice, openingVolleyDie } =
-    action.payload ?? {};
+    parsePayload(action.payload, FireCombatPayloadSchema);
 
-  // LOB §5.0 — payload validation
-  if (!attackerHex || !defenderHex || !weaponClass || !weaponType || !Array.isArray(dice)) {
-    throw new ActionError(
-      'INVALID_PAYLOAD',
-      'FIRE_COMBAT requires attackerHex, defenderHex, weaponClass, weaponType, dice'
-    );
-  }
-  if (dice.length !== 2 || dice[0] < 1 || dice[0] > 6 || dice[1] < 1 || dice[1] > 6) {
-    throw new ActionError('INVALID_PAYLOAD', 'dice must be two values each 1–6');
-  }
   const combatDiceRoll = dice[0] + dice[1];
 
   // LOB §3.0d — attacker must be in the active stack's hex
@@ -60,14 +52,6 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
     throw new ActionError(
       'INVALID_ACTION',
       `Attacker hex '${attackerHex}' is not the active stack hex '${activity.currentActivation.hex}' (LOB §3.0d)`
-    );
-  }
-
-  // LOB §5.5 — weapon class must be valid
-  if (weaponClass !== 'smallArms' && weaponClass !== 'artillery') {
-    throw new ActionError(
-      'INVALID_PAYLOAD',
-      `weaponClass must be 'smallArms' or 'artillery', got '${weaponClass}'`
     );
   }
 

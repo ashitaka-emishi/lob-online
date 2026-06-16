@@ -3,6 +3,7 @@ import { loadOob, buildUnitSideMap, findOobUnit } from '../oob.js';
 import { hexDistance } from '../hex.js';
 import { openingVolleyResult } from '../tables/combat.js';
 import { closingRollResult } from '../tables/charge.js';
+import { CloseCombatPayloadSchema, parsePayload } from './payloads.js';
 
 /**
  * CLOSE_COMBAT action handler.
@@ -40,35 +41,11 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
     throw new ActionError('INVALID_ACTION', 'No stack is mid-activation — cannot charge');
   }
 
-  const {
-    attackerHex,
-    defenderHex,
-    closingDie,
-    openingVolleyDie,
-    mods = {},
-  } = action.payload ?? {};
-
-  // LOB §7.0 — payload validation
-  if (!attackerHex || !defenderHex || closingDie === undefined || closingDie === null) {
-    throw new ActionError(
-      'INVALID_PAYLOAD',
-      'CLOSE_COMBAT requires attackerHex, defenderHex, and closingDie'
-    );
-  }
-  if (closingDie < 1 || closingDie > 6) {
-    throw new ActionError('INVALID_PAYLOAD', 'closingDie must be 1–6');
-  }
-
-  // LOB §7.0b — defender always fires Opening Volley against charger; die is required
-  if (openingVolleyDie === undefined || openingVolleyDie === null) {
-    throw new ActionError(
-      'INVALID_PAYLOAD',
-      'openingVolleyDie (1d6) is required — defender fires Opening Volley (LOB §7.0b)'
-    );
-  }
-  if (openingVolleyDie < 1 || openingVolleyDie > 6) {
-    throw new ActionError('INVALID_PAYLOAD', 'openingVolleyDie must be 1–6');
-  }
+  // LOB §7.0 — validate payload at the boundary before any field is consumed
+  const { attackerHex, defenderHex, closingDie, openingVolleyDie, mods } = parsePayload(
+    action.payload,
+    CloseCombatPayloadSchema
+  );
 
   // LOB §3.0d — attacker must be in the active stack's hex
   if (attackerHex !== activity.currentActivation.hex) {
@@ -132,6 +109,16 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
     );
   }
 
+  // LOB §7.0 — sum attacker current SPs (not printed). DG halving does NOT apply to this
+  // gate — §5.3 halving is only for the Combat Table column; §7.0 uses raw current strength.
+  // "SPs remaining in the attack" = current strength (with OOB printed as fallback if no marker).
+  let attackerSPs = 0;
+  for (const au of attackerUnits) {
+    const auOob = findOobUnit(loadedOob, au.id);
+    if (!auOob) continue;
+    attackerSPs += au.strengthPoints ?? auOob.strengthPoints ?? 0;
+  }
+
   let updatedUnits = { ...state.units };
 
   // LOB §7.0b — Defender Opening Volley: fires against charger at range 1 (charge condition)
@@ -157,16 +144,20 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
   // Actual abort enforcement happens when morale cascade processes the combatResult.
   // For now, record ovSpLoss in the pending context so Phase 4 can apply it.
 
-  // LOB §7.0c — automatic 1 SP defender loss (close combat always costs the defender 1 SP)
-  // LOB §8.1 — CBF marker set on each defender unit that takes a loss
-  const defenderSpLoss = 1; // LOB §7.0c — automatic 1 SP loss for defender
-  const newUnits = { ...updatedUnits };
-  for (const du of defenderUnits) {
-    if (newUnits[du.id]) {
-      newUnits[du.id] = { ...newUnits[du.id], cbfMarker: true };
+  // LOB §7.0c — gate is evaluated on post-Opening-Volley SPs ("remaining in the attack").
+  // Charge Sequence: OV fires first (step 1), then automatic SP loss check (step 2).
+  // LOB §8.1 — CBF marker set on each defender unit that takes a loss.
+  const postOvAttackerSPs = Math.max(0, attackerSPs - ovSpLoss);
+  const defenderSpLoss = postOvAttackerSPs >= 4 ? 1 : 0; // LOB §7.0c — ≥4 SPs remaining after OV
+  if (defenderSpLoss > 0) {
+    const newUnits = { ...updatedUnits };
+    for (const du of defenderUnits) {
+      if (newUnits[du.id]) {
+        newUnits[du.id] = { ...newUnits[du.id], cbfMarker: true };
+      }
     }
+    updatedUnits = newUnits;
   }
-  updatedUnits = newUnits;
 
   // LOB §7.0d / §3.5 — Closing Roll
   // Determine attacker morale rating from OOB for the Closing Roll threshold
@@ -213,8 +204,9 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
         closingPass,
         closingThreshold,
         closingModifiedRoll,
-        // LOB §9.1a — leader loss check required when Closing Roll passes (charge succeeds)
-        leaderLossCheckRequired: closingPass,
+        // LOB §9.1a — leader loss checked on m+ result (SP loss), not on every Closing Roll.
+        // defenderSpLoss > 0 means the automatic SP loss occurred (gated on ≥4 attacker SPs).
+        leaderLossCheckRequired: defenderSpLoss > 0,
         // LOB §6.0 — defender morale check required after automatic SP loss
         moraleCheckRequired: true,
       },

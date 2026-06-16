@@ -113,6 +113,8 @@ describe('drainAutoSteps — Rally Phase CBF clearing (LOB §8.1)', () => {
   });
 
   it('preserves other unit fields after CBF clearing', () => {
+    // §6.4 step 1 unconditionally removes Sh markers (CBF has no effect on morale recovery),
+    // then §8.1 clears cbfMarker. A shaken+cbfMarker unit ends up normal with cbfMarker=false.
     const state = {
       ...RALLY_STATE,
       units: {
@@ -120,9 +122,9 @@ describe('drainAutoSteps — Rally Phase CBF clearing (LOB §8.1)', () => {
       },
     };
     const result = drainAutoSteps(state);
-    expect(result.units.u1.moraleState).toBe('shaken');
+    expect(result.units.u1.moraleState).toBe('normal'); // §6.4 step 1 unconditional
     expect(result.units.u1.hex).toBe('10.10');
-    expect(result.units.u1.cbfMarker).toBe(false);
+    expect(result.units.u1.cbfMarker).toBe(false); // §8.1 clears CBF
   });
 
   it('resets activityPhase to null after rally', () => {
