@@ -1,6 +1,6 @@
 # Plan — M6 Debt Closeout (#587 #593)
 
-**Status:** [ ] Pending
+**Status:** [~] In Progress
 
 ## Interaction Mode
 
@@ -38,10 +38,10 @@
 
 ## Phase 1 — Fix ROLL_INITIATIVE cross-side leader filter (#587)
 
-- [ ] Task 1.1: Write failing tests — cross-side leader excluded from ROLL_INITIATIVE candidates; degraded-mode null-payload fallback unaffected
-- [ ] Task 1.2: Filter `eligibleLeaders` by `info.side === playerSide` using the existing `unitSideMapForOrders` in `getValidActions`
-- [ ] Task 1.3: Add defense-in-depth side check in `handleIssueOrder` — reject if leader's OOB side ≠ `playerSide`
-- [ ] Task 1.4: Verify tests pass; close #587
+- [x] Task 1.1: Write failing tests — cross-side leader excluded from ROLL_INITIATIVE candidates; degraded-mode null-payload fallback unaffected
+- [x] Task 1.2: Filter `eligibleLeaders` by `info.side === playerSide` using the existing `unitSideMapForOrders` in `getValidActions`
+- [x] Task 1.3: Add defense-in-depth side check in `handleIssueOrder` — reject if leader's OOB side ≠ `playerSide`
+- [x] Task 1.4: Verify tests pass; close #587
 
 **Verification:** `npm run test` green; no new lint warnings; cross-side test cases pass.
 
