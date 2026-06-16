@@ -137,3 +137,4 @@
 | [x] | m6-combat-tests_20260614 | M6 Combat Tests — resolveMorale Suite and Dispatch Integration (#580) | 2026-06-14 | 2026-06-15 |
 | [x] | m6-rules-handlers_20260614 | M6 Rules Handler Implementations — Rally §6.4, Close Combat Gate, Leader Loss, Fluke, Attack Recovery (#578 #579 #581 #383 #382 #381) | 2026-06-14 | 2026-06-15 |
 | [x] | m6-debt-sprint_20260614 | M6 Debt Sprint — Small Fixes, Security Headers, Rate Limiting, Register Sync (#583 #584 #560 #506 #403 #350) | 2026-06-14 | 2026-06-15 |
+| [ ] | m6-debt-closeout_20260615 | M6 Debt Closeout — ROLL_INITIATIVE Side Filter + Sync I/O Memoization (#587 #593) | 2026-06-15 | 2026-06-15 |

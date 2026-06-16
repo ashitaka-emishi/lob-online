@@ -345,15 +345,15 @@ describe('GET /api/v1/games', () => {
   });
 });
 
-// #393 — getScenario() is called by POST /games; cache behaviour tested in scenario.test.js
+// #393 / #593 — getScenario() is cached at module init; initGameState receives the cached value.
 describe('POST /api/v1/games — scenario wiring', () => {
-  it('calls getScenario and passes result to initGameState', async () => {
+  it('passes cached scenario to initGameState (#593 — module-level cache, not per-request)', async () => {
+    // beforeEach sets getScenario.mockReturnValue({ id: 'south-mountain', ... }).
+    // games.js evaluates the cache once at module load, so the per-request call is gone.
     const app = await buildApp();
-    getScenario.mockReturnValue({ id: 'v1', turnStructure: {} });
     await request(app).post('/api/v1/games').send({});
-    expect(getScenario).toHaveBeenCalled();
     expect(initGameState).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'v1' }),
+      expect.objectContaining({ id: 'south-mountain' }),
       expect.any(String)
     );
   });

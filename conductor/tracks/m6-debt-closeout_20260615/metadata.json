@@ -1,0 +1,20 @@
+{
+  "id": "m6-debt-closeout_20260615",
+  "title": "M6 Debt Closeout — ROLL_INITIATIVE Side Filter + Sync I/O Memoization (#587 #593)",
+  "type": "chore",
+  "status": "pending",
+  "milestone": "M6",
+  "created": "2026-06-15",
+  "updated": "2026-06-15",
+  "current_phase": 1,
+  "current_task": "1.1",
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 9,
+    "completed": 0
+  },
+  "commits": []
+}
