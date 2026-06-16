@@ -1,6 +1,6 @@
 # Plan — M6 Debt Closeout (#587 #593)
 
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Interaction Mode
 
@@ -27,12 +27,12 @@
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated if any debt was accepted
-- [ ] Issues #587 and #593 closed on GitHub
-- [ ] Ready for `/team-review`
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated (net open score 55 → 49)
+- [x] Issues #587 and #593 closed on GitHub
+- [x] Ready for `/team-review`
 
 ---
 
@@ -49,14 +49,14 @@
 
 ## Phase 2 — Memoize sync I/O in games.js (#593)
 
-- [ ] Task 2.1: Hoist `loadOob()`, `loadMap()`, `getScenario()` to module-level constants in `games.js`
-- [ ] Task 2.2: Replace all per-request call sites (dispatch handler + GET scenario endpoint) with cached values
-- [ ] Task 2.3: Verify existing route tests still pass; close #593
+- [x] Task 2.1: Hoist `loadOob()`, `loadMap()`, `getScenario()` to module-level constants in `games.js`
+- [x] Task 2.2: Replace all per-request call sites (dispatch handler + GET scenario endpoint) with cached values
+- [x] Task 2.3: Verify existing route tests still pass; close #593
 
 **Verification:** `npm run quality:strict` passes; no new debt.
 
 ## Phase 3 — Debt Register + M6 Closeout
 
-- [ ] Task 3.1: Remove #587 and #593 from Open Debt Items in `docs/tech-debt/report.md`; update Executive Summary and Risk Assessment
-- [ ] Task 3.2: Close M6 GitHub milestone (confirm 0 open issues)
-- [ ] Task 3.3: Commit debt register update
+- [x] Task 3.1: Remove #587 and #593 from Open Debt Items in `docs/tech-debt/report.md`; update Executive Summary and Risk Assessment
+- [x] Task 3.2: Close M6 GitHub milestone (confirm 0 open issues)
+- [x] Task 3.3: Commit debt register update
