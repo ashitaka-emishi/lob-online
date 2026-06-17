@@ -133,6 +133,68 @@ export function buildLeaderSideMap(leaders) {
  * @param {string} unitId
  * @returns {object|null}
  */
+/**
+ * Build a flat Map<unitId, unitObject> index from the OOB tree for O(1) lookups (#596).
+ * Call once per loaded OOB and pass the result to findOobUnitFast() for hot-path lookups.
+ *
+ * @param {object} oob - validated OOB data from loadOob()
+ * @returns {Map<string, object>}
+ */
+export function buildUnitIndex(oob) {
+  const index = new Map();
+
+  function indexList(list) {
+    for (const item of list ?? []) {
+      if (item.id) index.set(item.id, item);
+    }
+  }
+
+  function indexBrigade(brig) {
+    indexList(brig.regiments);
+    indexList(brig.batteries);
+  }
+
+  function indexArtilleryGroup(artGroup) {
+    for (const group of Object.values(artGroup ?? {})) indexList(group.batteries);
+  }
+
+  function indexDivision(div) {
+    for (const brig of div.brigades ?? []) indexBrigade(brig);
+    indexArtilleryGroup(div.artillery);
+    indexList(div.batteries);
+  }
+
+  for (const corps of oob.union?.corps ?? []) {
+    indexList(corps.corpsUnits);
+    indexArtilleryGroup(corps.artillery);
+    for (const div of corps.divisions ?? []) indexDivision(div);
+  }
+  for (const brig of oob.union?.cavalryDivision?.brigades ?? []) indexBrigade(brig);
+  indexArtilleryGroup(oob.union?.cavalryDivision?.artillery);
+
+  for (const div of oob.confederate?.divisions ?? []) indexDivision(div);
+  indexList(oob.confederate?.independent?.cavalry);
+  indexList(oob.confederate?.independent?.artillery);
+  indexList(oob.confederate?.reserveArtillery?.batteries);
+  for (const brig of oob.confederate?.independentBrigades ?? []) {
+    indexList(brig.regiments);
+    indexArtilleryGroup(brig.artillery);
+  }
+
+  return index;
+}
+
+/**
+ * O(1) unit lookup using a pre-built index from buildUnitIndex(). (#596)
+ *
+ * @param {Map<string, object>} index - from buildUnitIndex(oob)
+ * @param {string} unitId
+ * @returns {object|null}
+ */
+export function findOobUnitFast(index, unitId) {
+  return index.get(unitId) ?? null;
+}
+
 export function findOobUnit(oob, unitId) {
   function searchList(list) {
     for (const item of list ?? []) {
@@ -277,4 +339,28 @@ export function findBrigadeForUnit(oob, unitId) {
   }
 
   return null;
+}
+
+/**
+ * LOB §5.3 / §5.6 — sum effective SPs for a list of unit states against the OOB.
+ *
+ * Each unit contributes its current SP (state.strengthPoints) falling back to the OOB
+ * printed value. When applyDgHalving is true, DG units halve their contribution (§5.3,
+ * Combat Table column only). When false, raw current SPs are used (§7.0 gate).
+ *
+ * @param {object[]} unitStates - array of on-board unit state objects
+ * @param {object} loadedOob - OOB data from loadOob() or a test fixture
+ * @param {{ applyDgHalving?: boolean }} [options]
+ * @returns {number} total effective SP contribution
+ */
+export function sumCurrentSPs(unitStates, loadedOob, { applyDgHalving = false } = {}) {
+  // LOB §5.3 — DG attacker halves current SP contribution (round down) for combat column
+  let total = 0;
+  for (const u of unitStates) {
+    const oobUnit = findOobUnit(loadedOob, u.id);
+    if (!oobUnit) continue;
+    const current = u.strengthPoints ?? oobUnit.strengthPoints ?? 0;
+    total += applyDgHalving && u.moraleState === 'disorganized' ? Math.floor(current / 2) : current;
+  }
+  return total;
 }

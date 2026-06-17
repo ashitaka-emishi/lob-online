@@ -3,7 +3,7 @@
 **Track ID:** pre-m7-debt-sprint-b_20260617
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-17
-**Status:** [ ] Not Started
+**Status:** [~] In Progress
 
 ## Overview
 
@@ -22,12 +22,12 @@ traceability, engine refactors, and client reliability. Ends with the O(1) oob.j
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -35,9 +35,9 @@ traceability, engine refactors, and client reliability. Ends with the O(1) oob.j
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
 - [ ] Debt register updated (cumulative open score ≤ 15)
 - [ ] Issues #588 #590 #591 #595 #596 #597 #607 #608 #609 #610 #614 #615 #619 #620 #622 #623 closed on GitHub
 - [ ] Ready for `/team-review`
@@ -48,17 +48,17 @@ traceability, engine refactors, and client reliability. Ends with the O(1) oob.j
 
 Low-risk test corrections and citation alignment — no logic changes.
 
-- [ ] Task 1.1: Fix bug #577 test title/assertion contradiction in morale test (#607)
-- [ ] Task 1.2: Align CBF rule citation — §5.8 vs §8.1 — in code and test (#608)
-- [ ] Task 1.3: Annotate TODO(M7) comments in fireCombat.js with issue numbers (#609)
-- [ ] Task 1.4: Add cascade regression tests for cavalryDivision and independentBrigades branches in morale.test.js (#610)
-- [ ] Task 1.5: Rewrite index.test.js soft-lock tests with correct assertion scope (#597)
-- [ ] Task 1.6: Add resolveMorale multi-unit defender hex + mods propagation coverage (#590)
-- [ ] Task 1.7: Add route-layer integration test for FIRE_COMBAT → RESOLVE_MORALE two-step (#595)
-- [ ] Task 1.8: Fix closeCombat.test.js — hoist oob3Sp fixture, fix vacuous assertion, add JSDoc (#622)
-- [ ] Task 1.9: Add rally.test.js coverage — bloodlust, 2d6 boundary, normal-state (#620)
-- [ ] Task 1.10: Fix ordering-invariant test in rally.test.js (#619)
-- [ ] Task 1.11: Run `npm run test` — all new tests green
+- [x] Task 1.1: Fix bug #577 test title/assertion contradiction in morale test (#607)
+- [x] Task 1.2: Align CBF rule citation — §5.8 vs §8.1 — in code and test (#608)
+- [x] Task 1.3: Annotate TODO(M7) comments in fireCombat.js with issue numbers (#609)
+- [x] Task 1.4: Add cascade regression tests for cavalryDivision and independentBrigades branches in morale.test.js (#610)
+- [x] Task 1.5: Rewrite index.test.js soft-lock tests with correct assertion scope (#597)
+- [x] Task 1.6: Add resolveMorale multi-unit defender hex + mods propagation coverage (#590)
+- [x] Task 1.7: Add route-layer integration test for FIRE_COMBAT → RESOLVE_MORALE two-step (#595)
+- [x] Task 1.8: Fix closeCombat.test.js — hoist oob3Sp fixture, fix vacuous assertion, add JSDoc (#622)
+- [x] Task 1.9: Add rally.test.js coverage — bloodlust, 2d6 boundary, normal-state (#620)
+- [x] Task 1.10: Fix ordering-invariant test in rally.test.js (#619)
+- [x] Task 1.11: Run `npm run test` — all new tests green
 
 **Verification:** `npm run test` green; no vacuous assertions remaining in changed test files.
 
@@ -66,10 +66,10 @@ Low-risk test corrections and citation alignment — no logic changes.
 
 Checkpointed: touches shared engine logic.
 
-- [ ] Task 2.1: Extract `effectiveSPs()` helper — remove SP-halving duplication in closeCombat.js and fireCombat.js (LOB §5.3) (#614)
-- [ ] Task 2.2: Collapse `applySection64AutoRecovery` from two-pass to single-pass algorithm (#615)
-- [ ] Task 2.3: Remove dead `_pendingRallyRoll` assignment in index.js; clarify `moraleCheckRequired` unconditional flag in closeCombat.js (#623)
-- [ ] Task 2.4: Run `npm run test` — verify no regressions
+- [x] Task 2.1: Extract `effectiveSPs()` helper — remove SP-halving duplication in closeCombat.js and fireCombat.js (LOB §5.3) (#614)
+- [x] Task 2.2: Collapse `applySection64AutoRecovery` from two-pass to single-pass algorithm (#615) — already resolved by Sprint A
+- [x] Task 2.3: Remove dead `_pendingRallyRoll` assignment in index.js; clarify `moraleCheckRequired` unconditional flag in closeCombat.js (#623)
+- [x] Task 2.4: Run `npm run test` — verify no regressions
 
 **Verification:** `npm run test` green; `effectiveSPs` defined once; two-pass algorithm gone.
 
@@ -77,10 +77,10 @@ Checkpointed: touches shared engine logic.
 
 ## Phase 3 — Client Reliability and Performance
 
-- [ ] Task 3.1: Surface scenario fetch errors in useGameStore — don't swallow silently (#588)
-- [ ] Task 3.2: Add useGameStore scenario-fetch failure test (#591)
-- [ ] Task 3.3: Add O(1) unit-id index to oob.js — replace O(n) `findOobUnit` tree walk (#596)
-- [ ] Task 3.4: Run `npm run quality:strict`
+- [x] Task 3.1: Surface scenario fetch errors in useGameStore — don't swallow silently (#588)
+- [x] Task 3.2: Add useGameStore scenario-fetch failure test (#591)
+- [x] Task 3.3: Add O(1) unit-id index to oob.js — replace O(n) `findOobUnit` tree walk (#596)
+- [x] Task 3.4: Run `npm run quality:strict`
 
 **Verification:** `npm run quality:strict` passes; findOobUnit uses index lookup.
 

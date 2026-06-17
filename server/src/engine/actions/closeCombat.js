@@ -1,5 +1,5 @@
 import { ActionError } from './actionError.js';
-import { loadOob, buildUnitSideMap, findOobUnit } from '../oob.js';
+import { loadOob, buildUnitSideMap, findOobUnit, sumCurrentSPs } from '../oob.js';
 import { hexDistance } from '../hex.js';
 import { openingVolleyResult } from '../tables/combat.js';
 import { closingRollResult } from '../tables/charge.js';
@@ -119,12 +119,7 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
   // LOB §7.0 — sum attacker current SPs (not printed). DG halving does NOT apply to this
   // gate — §5.3 halving is only for the Combat Table column; §7.0 uses raw current strength.
   // "SPs remaining in the attack" = current strength (with OOB printed as fallback if no marker).
-  let attackerSPs = 0;
-  for (const au of attackerUnits) {
-    const auOob = findOobUnit(loadedOob, au.id);
-    if (!auOob) continue;
-    attackerSPs += au.strengthPoints ?? auOob.strengthPoints ?? 0;
-  }
+  const attackerSPs = sumCurrentSPs(attackerUnits, loadedOob, { applyDgHalving: false });
 
   let updatedUnits = { ...state.units };
 
@@ -134,7 +129,7 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
 
   // Apply Opening Volley SP loss as CBF markers on attacker units (morale cascade handles actual
   // SP reduction; for now we record the loss in context and mark CBF).
-  // LOB §8.1 — CBF marker on units that take a loss
+  // LOB §5.8 — CBF marker set on units that take an SP loss from fire
   if (ovSpLoss > 0) {
     const attackerId = attackerUnits[0].id;
     if (updatedUnits[attackerId]) {
@@ -145,15 +140,11 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
     }
   }
 
-  // LOB §7.0b — if Opening Volley would eliminate the attacker (OV loss ≥ attacker printed SPs),
-  // the charge is aborted. Full SP tracking is deferred to morale cascade; here we check the
-  // OV condition flag and record it in context for the morale cascade to resolve.
-  // Actual abort enforcement happens when morale cascade processes the combatResult.
-  // For now, record ovSpLoss in the pending context so Phase 4 can apply it.
+  // TODO(M7): enforce OV abort when ovSpLoss >= attackerSPs — charge aborted (LOB §7.0b). (#609)
 
   // LOB §7.0c — gate is evaluated on post-Opening-Volley SPs ("remaining in the attack").
   // Charge Sequence: OV fires first (step 1), then automatic SP loss check (step 2).
-  // LOB §8.1 — CBF marker set on each defender unit that takes a loss.
+  // LOB §5.8 — CBF marker set on each defender unit that takes a loss.
   const postOvAttackerSPs = Math.max(0, attackerSPs - ovSpLoss);
   const defenderSpLoss = postOvAttackerSPs >= 4 ? 1 : 0; // LOB §7.0c — ≥4 SPs remaining after OV
   if (defenderSpLoss > 0) {
@@ -175,7 +166,7 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
 
   // LOB §9.4 — Open Order Capable units pass the Closing Roll automatically (no die needed)
   // TODO(M7): determine Open Order Capable status from OOB/formation data; for now no units
-  // are Open Order Capable in South Mountain at this stage.
+  // are Open Order Capable in South Mountain at this stage. (#609)
   const isOpenOrderCapable = false;
 
   let closingPass;
@@ -214,7 +205,7 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
         // LOB §9.1a — leader loss checked on m+ result (SP loss), not on every Closing Roll.
         // defenderSpLoss > 0 means the automatic SP loss occurred (gated on ≥4 attacker SPs).
         leaderLossCheckRequired: defenderSpLoss > 0,
-        // LOB §6.0 — defender morale check required after automatic SP loss
+        // LOB §6.0 — charge always triggers defender morale check, independent of SP loss
         moraleCheckRequired: true,
       },
     },

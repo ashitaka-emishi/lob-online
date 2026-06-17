@@ -19,6 +19,7 @@
  *
  * @param {number} dieRoll - 1d6 raw result (1–6)
  * @param {number} leaderMoraleValue - Morale Value of best available leader (0 if no leader)
+ * @param {string} [currentMoraleState='routed'] - caller's morale state; only 'routed' units roll
  * @returns {{ success: boolean, modifiedRoll: number, newMoraleState: string|null }}
  *   success:        true when modifiedRoll ≥ 5
  *   modifiedRoll:   dieRoll + leaderMoraleValue

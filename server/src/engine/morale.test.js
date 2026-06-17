@@ -475,6 +475,101 @@ describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (LOB §6.
     expect(result.pendingResolution.context.brigadeId).toBe('brig-a');
   });
 
+  // #610 — cascade regression for cavalryDivision brigades
+  it('cascades when all units in a cavalryDivision brigade are routed (LOB §6.3)', () => {
+    // cavalryDivision brigades must be walked by findBrigadeForUnit (#610)
+    const CAV_OOB = {
+      _status: 'test',
+      _source: 'test',
+      _errata_applied: [],
+      union: {
+        army: 'test',
+        supplyTrain: { id: 'supply-u' },
+        corps: [],
+        cavalryDivision: {
+          id: 'cav-div',
+          name: 'Cav',
+          successionIds: [],
+          brigades: [
+            {
+              id: 'cav-brig',
+              wreckThreshold: 2,
+              regiments: [
+                {
+                  id: 'cv1',
+                  name: 'CV1',
+                  type: 'cavalry',
+                  morale: 'B',
+                  weapon: 'R',
+                  strengthPoints: 3,
+                },
+              ],
+            },
+          ],
+        },
+      },
+      confederate: {
+        army: 'test',
+        wing: 'test',
+        supplyWagon: { id: 'supply-c' },
+        independent: { cavalry: [], artillery: [] },
+        reserveArtillery: { batteries: [] },
+        independentBrigades: [],
+        divisions: [],
+      },
+    };
+    const state = makeOobState({ cv1: makeUnit('cv1', '10.10', 'routed') });
+    const result = cascadeMorale(state, '10.10', CAV_OOB);
+    expect(result.pendingResolution).not.toBeNull();
+    expect(result.pendingResolution.type).toBe('moraleCheck');
+    expect(result.pendingResolution.context.brigadeId).toBe('cav-brig');
+  });
+
+  // #610 — cascade regression for confederate independentBrigades
+  it('cascades when all units in a confederate independentBrigade are routed (LOB §6.3)', () => {
+    // independentBrigades must be walked by findBrigadeForUnit (#610)
+    const IND_OOB = {
+      _status: 'test',
+      _source: 'test',
+      _errata_applied: [],
+      union: {
+        army: 'test',
+        supplyTrain: { id: 'supply-u' },
+        corps: [],
+        cavalryDivision: { id: 'cav-div', name: 'Cav', successionIds: [], brigades: [] },
+      },
+      confederate: {
+        army: 'test',
+        wing: 'test',
+        supplyWagon: { id: 'supply-c' },
+        independent: { cavalry: [], artillery: [] },
+        reserveArtillery: { batteries: [] },
+        independentBrigades: [
+          {
+            id: 'ind-brig',
+            wreckThreshold: 2,
+            regiments: [
+              {
+                id: 'ib1',
+                name: 'IB1',
+                type: 'infantry',
+                morale: 'C',
+                weapon: 'R',
+                strengthPoints: 4,
+              },
+            ],
+          },
+        ],
+        divisions: [],
+      },
+    };
+    const state = makeOobState({ ib1: makeUnit('ib1', '10.10', 'routed') });
+    const result = cascadeMorale(state, '10.10', IND_OOB);
+    expect(result.pendingResolution).not.toBeNull();
+    expect(result.pendingResolution.type).toBe('moraleCheck');
+    expect(result.pendingResolution.context.brigadeId).toBe('ind-brig');
+  });
+
   // #606 — hex-scope fallback only when oob is absent, not when unit not found in OOB
   it('does NOT fall back to hex-scope when oob is present but unit not in any brigade (#606)', () => {
     // Corps-level unit (not in any brigade) — findBrigadeForUnit returns null even with OOB present.

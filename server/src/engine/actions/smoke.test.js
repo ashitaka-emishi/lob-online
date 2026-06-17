@@ -552,6 +552,52 @@ describe('M6 combat activation smoke (#570)', () => {
     expect(result.pendingResolution).toBeNull();
   });
 
+  // #595 — route-layer contract: after FIRE_COMBAT sets combatResult, only RESOLVE_MORALE is valid;
+  // after RESOLVE_MORALE clears it, END_ACTIVATION is valid again.
+  it('route contract: FIRE_COMBAT → RESOLVE_MORALE two-step — valid actions gate correctly (#595)', () => {
+    const afterActivate = dispatch(COMBAT_STATE, {
+      type: 'ACTIVATE_STACK',
+      payload: { hex: '10.10' },
+      playerSide: 'union',
+    });
+
+    const afterFire = handleFireCombat(
+      afterActivate,
+      {
+        type: 'FIRE_COMBAT',
+        payload: {
+          attackerHex: '10.10',
+          defenderHex: '10.11',
+          weaponClass: 'smallArms',
+          weaponType: 'R',
+          dice: [2, 2],
+        },
+        playerSide: 'union',
+      },
+      { oob: MOCK_OOB_SMOKE }
+    );
+
+    // After FIRE_COMBAT: only RESOLVE_MORALE is valid (combatResult pending)
+    const actionsAfterFire = getValidActions(afterFire, 'union');
+    expect(actionsAfterFire).toHaveLength(1);
+    expect(actionsAfterFire[0].type).toBe('RESOLVE_MORALE');
+
+    const afterMorale = handleResolveMorale(
+      afterFire,
+      { type: 'RESOLVE_MORALE', payload: { dice: [2, 2] }, playerSide: 'union' },
+      { oob: MOCK_OOB_SMOKE }
+    );
+
+    // After RESOLVE_MORALE: pending cleared (or changed to leaderCasualty/cascade) — not combatResult
+    expect(afterMorale.pendingResolution?.type).not.toBe('combatResult');
+
+    // When pending fully cleared, END_ACTIVATION is valid again
+    if (afterMorale.pendingResolution === null) {
+      const actionsAfterMorale = getValidActions(afterMorale, 'union');
+      expect(actionsAfterMorale.map((a) => a.type)).toContain('END_ACTIVATION');
+    }
+  });
+
   it('CBF markers cleared when turn advances through Rally (LOB §8.1)', () => {
     // Inject a CBF marker on u1 then advance through Rally via END_PHASE chain
     const stateWithCbf = {

@@ -97,17 +97,18 @@ export const useGameStore = defineStore('game', () => {
         mapConfigError.value = `Map data unavailable (${mapConfigRes.status})`;
       }
 
-      // Scenario fetch — non-blocking; failure leaves scenario null (TurnControl degrades gracefully).
+      // Scenario fetch — awaited; failure is non-fatal but logged for diagnostics (#588).
       // moduleSlug is required to resolve the scenario API path; omitting it skips the fetch. (#583)
       if (moduleSlug) {
-        const slug = encodeURIComponent(moduleSlug);
-        const scenSlug = encodeURIComponent(scenarioSlug);
-        fetch(`/api/v1/modules/${slug}/scenarios/${scenSlug}/scenario`)
-          .then((r) => (r.ok ? r.json() : null))
-          .then((data) => {
-            if (gen === _loadGeneration && data) scenario.value = data;
-          })
-          .catch(() => {}); // non-fatal — scenario remains null
+        try {
+          const slug = encodeURIComponent(moduleSlug);
+          const scenSlug = encodeURIComponent(scenarioSlug);
+          const r = await fetch(`/api/v1/modules/${slug}/scenarios/${scenSlug}/scenario`);
+          const data = r.ok ? await r.json() : null;
+          if (gen === _loadGeneration && data) scenario.value = data;
+        } catch (e) {
+          console.warn('[store] scenario fetch failed (non-fatal):', e.message);
+        }
       }
     } catch (err) {
       if (gen === _loadGeneration) error.value = err.message;

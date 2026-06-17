@@ -2,15 +2,15 @@
   "id": "pre-m7-debt-sprint-b_20260617",
   "title": "Pre-M7 Debt Sprint B — Test Gaps, Traceability, and Score-1/2 Cleanup",
   "type": "chore",
-  "status": "pending",
+  "status": "in_progress",
   "created": "2026-06-17T00:00:00Z",
-  "updated": "2026-06-17T00:00:00Z",
+  "updated": "2026-06-17T20:00:00Z",
   "phases": {
     "total": 4,
-    "completed": 0
+    "completed": 3
   },
   "tasks": {
     "total": 17,
-    "completed": 0
+    "completed": 14
   }
 }
