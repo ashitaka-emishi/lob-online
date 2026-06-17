@@ -8,6 +8,7 @@
  */
 
 import { moraleResult, moraleTransition } from './tables/morale.js';
+import { findBrigadeForUnit } from './oob.js';
 
 // LOB §6.0 — Schema moraleState and morale table result types now share the same vocabulary:
 // 'normal' (NM), 'bloodlust' (BL), 'shaken' (SH), 'disorganized' (DG), 'routed' (RT).
@@ -106,33 +107,6 @@ export function applyMoraleToHex(state, targetHex, mods, diceRoll, getRating) {
 }
 
 // ─── Morale cascade ───────────────────────────────────────────────────────────
-
-/**
- * Find the brigade that contains a given unit, walking the full OOB hierarchy.
- * Returns { brigadeId, unitIds } or null if not found.
- * LOB §6.3 — cascade travels brigade hierarchy, not hex scope.
- */
-function findBrigadeForUnit(oob, unitId) {
-  if (!oob) return null;
-
-  // Walk union corps → divisions → brigades
-  for (const corps of oob.union?.corps ?? []) {
-    for (const div of corps.divisions ?? []) {
-      for (const brig of div.brigades ?? []) {
-        const ids = (brig.regiments ?? []).map((r) => r.id);
-        if (ids.includes(unitId)) return { brigadeId: brig.id, unitIds: ids };
-      }
-    }
-  }
-  // Walk confederate divisions → brigades
-  for (const div of oob.confederate?.divisions ?? []) {
-    for (const brig of div.brigades ?? []) {
-      const ids = (brig.regiments ?? []).map((r) => r.id);
-      if (ids.includes(unitId)) return { brigadeId: brig.id, unitIds: ids };
-    }
-  }
-  return null;
-}
 
 /**
  * Cascade morale upward: if all units in a brigade route, trigger a morale check

@@ -1,38 +1,6 @@
 import { leaderLossResult } from '../tables/leader-loss.js';
-import { loadOob } from '../oob.js';
+import { loadOob, findOobLeader } from '../oob.js';
 import { ActionError } from './actionError.js';
-
-// LOB §9.1a — private helper: walk OOB tree to find a leader entry by id.
-// Returns the leader object or null. Same pattern as findOobUnit; extract to oob.js in M7.
-function findOobLeader(oob, leaderId) {
-  const allLeaders = [];
-
-  // Union corps leaders
-  for (const corps of oob.union?.corps ?? []) {
-    if (corps.id === leaderId) allLeaders.push(corps);
-    for (const div of corps.divisions ?? []) {
-      if (div.id === leaderId) allLeaders.push(div);
-      for (const brig of div.brigades ?? []) {
-        if (brig.id === leaderId) allLeaders.push(brig);
-      }
-    }
-  }
-
-  // Confederate division leaders
-  for (const div of oob.confederate?.divisions ?? []) {
-    if (div.id === leaderId) allLeaders.push(div);
-    for (const brig of div.brigades ?? []) {
-      if (brig.id === leaderId) allLeaders.push(brig);
-    }
-  }
-
-  // Independent brigades
-  for (const brig of oob.confederate?.independentBrigades ?? []) {
-    if (brig.id === leaderId) allLeaders.push(brig);
-  }
-
-  return allLeaders[0] ?? null;
-}
 
 /**
  * RESOLVE_LEADER_CASUALTY handler.
