@@ -192,3 +192,74 @@ export function findOobUnit(oob, unitId) {
 
   return null;
 }
+
+/**
+ * Walk the OOB tree and return the formation (corps/division/brigade) with matching id.
+ * Used to look up leaders for succession resolution and leader casualty checks.
+ *
+ * LOB §9.1a — needed to resolve leader succession list.
+ *
+ * @param {object} oob - validated OOB data
+ * @param {string} leaderId
+ * @returns {object|null}
+ */
+export function findOobLeader(oob, leaderId) {
+  // Union corps
+  for (const corps of oob.union?.corps ?? []) {
+    if (corps.id === leaderId) return corps;
+    for (const div of corps.divisions ?? []) {
+      if (div.id === leaderId) return div;
+      for (const brig of div.brigades ?? []) {
+        if (brig.id === leaderId) return brig;
+      }
+    }
+  }
+
+  // Confederate divisions and brigades
+  for (const div of oob.confederate?.divisions ?? []) {
+    if (div.id === leaderId) return div;
+    for (const brig of div.brigades ?? []) {
+      if (brig.id === leaderId) return brig;
+    }
+  }
+
+  // Confederate independent brigades
+  for (const brig of oob.confederate?.independentBrigades ?? []) {
+    if (brig.id === leaderId) return brig;
+  }
+
+  return null;
+}
+
+/**
+ * Find the brigade that contains a given unit, walking the full OOB hierarchy.
+ * Returns { brigadeId, unitIds } or null if not found.
+ *
+ * LOB §6.3 — cascade travels brigade hierarchy, not hex scope.
+ *
+ * @param {object|null} oob - validated OOB data (returns null when oob is null)
+ * @param {string} unitId
+ * @returns {{ brigadeId: string, unitIds: string[] }|null}
+ */
+export function findBrigadeForUnit(oob, unitId) {
+  if (!oob) return null;
+
+  // Walk union corps → divisions → brigades
+  for (const corps of oob.union?.corps ?? []) {
+    for (const div of corps.divisions ?? []) {
+      for (const brig of div.brigades ?? []) {
+        const ids = (brig.regiments ?? []).map((r) => r.id);
+        if (ids.includes(unitId)) return { brigadeId: brig.id, unitIds: ids };
+      }
+    }
+  }
+  // Walk confederate divisions → brigades
+  for (const div of oob.confederate?.divisions ?? []) {
+    for (const brig of div.brigades ?? []) {
+      const ids = (brig.regiments ?? []).map((r) => r.id);
+      if (ids.includes(unitId)) return { brigadeId: brig.id, unitIds: ids };
+    }
+  }
+
+  return null;
+}

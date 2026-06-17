@@ -8,6 +8,7 @@
  */
 
 import { moraleResult, moraleTransition } from './tables/morale.js';
+import { findBrigadeForUnit } from './oob.js';
 
 // LOB §6.0 — Schema moraleState and morale table result types now share the same vocabulary:
 // 'normal' (NM), 'bloodlust' (BL), 'shaken' (SH), 'disorganized' (DG), 'routed' (RT).
@@ -108,33 +109,6 @@ export function applyMoraleToHex(state, targetHex, mods, diceRoll, getRating) {
 // ─── Morale cascade ───────────────────────────────────────────────────────────
 
 /**
- * Find the brigade that contains a given unit, walking the full OOB hierarchy.
- * Returns { brigadeId, unitIds } or null if not found.
- * LOB §6.3 — cascade travels brigade hierarchy, not hex scope.
- */
-function findBrigadeForUnit(oob, unitId) {
-  if (!oob) return null;
-
-  // Walk union corps → divisions → brigades
-  for (const corps of oob.union?.corps ?? []) {
-    for (const div of corps.divisions ?? []) {
-      for (const brig of div.brigades ?? []) {
-        const ids = (brig.regiments ?? []).map((r) => r.id);
-        if (ids.includes(unitId)) return { brigadeId: brig.id, unitIds: ids };
-      }
-    }
-  }
-  // Walk confederate divisions → brigades
-  for (const div of oob.confederate?.divisions ?? []) {
-    for (const brig of div.brigades ?? []) {
-      const ids = (brig.regiments ?? []).map((r) => r.id);
-      if (ids.includes(unitId)) return { brigadeId: brig.id, unitIds: ids };
-    }
-  }
-  return null;
-}
-
-/**
  * Cascade morale upward: if all units in a brigade route, trigger a morale check
  * for the next level of the OOB hierarchy per LOB §6.3.
  *
@@ -155,58 +129,63 @@ export function cascadeMorale(state, targetHex, oob = null) {
 
   if (state.pendingResolution !== null) return state;
 
-  // Check each brigade represented in this hex — if all on-board brigade members
-  // are routed, the brigade itself triggers a cascade check.
+  // Degraded mode: OOB absent — fall back to hex-scope check only when oob is null (#606).
+  // This must not trigger when oob is present but a unit happens to not be in any brigade
+  // (e.g. corps-level units, batteries). Those cases are silently skipped.
+  if (!oob) {
+    const allHexRouted = hexUnits.every((u) => u.moraleState === 'routed');
+    if (allHexRouted) {
+      return {
+        ...state,
+        pendingResolution: {
+          type: 'moraleCheck',
+          context: {
+            hex: targetHex,
+            cascade: true,
+            reason: 'all units in hex routed — cascade check required (LOB §6.3, degraded)',
+          },
+        },
+      };
+    }
+    return state;
+  }
+
+  // LOB §6.3 — check each brigade represented by routed hex units.
+  // When multiple brigades fully rout simultaneously, return cascade for the first one found
+  // and let the next RESOLVE_MORALE cycle handle subsequent cascades (#605).
   const checkedBrigades = new Set();
   for (const unit of hexUnits) {
     if (unit.moraleState !== 'routed') continue;
 
-    // LOB §6.3 — find the brigade for this unit via OOB hierarchy
-    const brigInfo = oob ? findBrigadeForUnit(oob, unit.id) : null;
+    // LOB §6.3 — find the brigade for this unit via OOB hierarchy.
+    // If the unit is not in any brigade (corps-level unit, battery), skip it — do not degrade.
+    const brigInfo = findBrigadeForUnit(oob, unit.id);
+    if (!brigInfo) continue;
 
-    if (brigInfo) {
-      if (checkedBrigades.has(brigInfo.brigadeId)) continue;
-      checkedBrigades.add(brigInfo.brigadeId);
+    if (checkedBrigades.has(brigInfo.brigadeId)) continue;
+    checkedBrigades.add(brigInfo.brigadeId);
 
-      // LOB §6.3 — brigade cascades when ALL its on-board members are routed
-      const brigadeOnBoardUnits = brigInfo.unitIds.filter(
-        (id) => state.units[id]?.isOnBoard ?? false
-      );
-      const allBrigadeRouted =
-        brigadeOnBoardUnits.length > 0 &&
-        brigadeOnBoardUnits.every((id) => state.units[id]?.moraleState === 'routed');
+    // LOB §6.3 — brigade cascades when ALL its on-board members are routed
+    const brigadeOnBoardUnits = brigInfo.unitIds.filter(
+      (id) => state.units[id]?.isOnBoard ?? false
+    );
+    const allBrigadeRouted =
+      brigadeOnBoardUnits.length > 0 &&
+      brigadeOnBoardUnits.every((id) => state.units[id]?.moraleState === 'routed');
 
-      if (allBrigadeRouted) {
-        return {
-          ...state,
-          pendingResolution: {
-            type: 'moraleCheck',
-            context: {
-              brigadeId: brigInfo.brigadeId,
-              hex: targetHex,
-              cascade: true,
-              reason: `brigade ${brigInfo.brigadeId} — all units routed (LOB §6.3)`,
-            },
+    if (allBrigadeRouted) {
+      return {
+        ...state,
+        pendingResolution: {
+          type: 'moraleCheck',
+          context: {
+            brigadeId: brigInfo.brigadeId,
+            hex: targetHex,
+            cascade: true,
+            reason: `brigade ${brigInfo.brigadeId} — all units routed (LOB §6.3)`,
           },
-        };
-      }
-    } else {
-      // OOB unavailable — fall back to hex-scope check (degraded mode)
-      const allHexRouted = hexUnits.every((u) => u.moraleState === 'routed');
-      if (allHexRouted) {
-        return {
-          ...state,
-          pendingResolution: {
-            type: 'moraleCheck',
-            context: {
-              hex: targetHex,
-              cascade: true,
-              reason: 'all units in hex routed — cascade check required (LOB §6.3, degraded)',
-            },
-          },
-        };
-      }
-      break;
+        },
+      };
     }
   }
 
@@ -215,14 +194,16 @@ export function cascadeMorale(state, targetHex, oob = null) {
 
 // ─── RESOLVE_MORALE handler helper ────────────────────────────────────────────
 
+// LOB §6.1/§7.0/§6.3 — all three pending types apply a player morale roll to a target hex. (#571)
+const MORALE_PENDING_TYPES = new Set(['combatResult', 'closingRoll', 'moraleCheck']);
+
 /**
- * Resolve a pending 'combatResult' by applying morale checks and clearing pendingResolution.
+ * Resolve a pending combat-result, closing-roll, or morale-cascade check by applying
+ * the player-supplied dice roll to the affected hex units and clearing pendingResolution.
  *
- * LOB §6.1 — called by the RESOLVE_MORALE action handler after the player
- * supplies the morale dice roll(s) for the affected units.
- *
- * NOTE: only handles 'combatResult' pending type. 'closingRoll' and 'moraleCheck' cascade
- * resolution are deferred to M7 — see GitHub issues #571 (soft-lock) and #577 (cascade scope).
+ * LOB §6.1 — called by RESOLVE_MORALE after the player supplies the morale dice roll.
+ * LOB §7.0d — closingRoll resolves defender morale after close combat.
+ * LOB §6.3 — moraleCheck resolves brigade cascade check.
  *
  * @param {object} state - GameState with pendingResolution set
  * @param {number} diceRoll - raw 2d6 result for the morale check
@@ -233,11 +214,13 @@ export function cascadeMorale(state, targetHex, oob = null) {
  */
 export function resolvePendingMorale(state, diceRoll, mods, getRating, oob = null) {
   const pending = state.pendingResolution;
-  if (!pending || pending.type !== 'combatResult') {
+  if (!pending || !MORALE_PENDING_TYPES.has(pending.type)) {
     return state;
   }
 
-  const { defenderHex } = pending.context;
+  // LOB §6.1 — target hex: combatResult uses defenderHex; closingRoll uses defenderHex;
+  // moraleCheck (cascade) uses hex from context.
+  const defenderHex = pending.context.defenderHex ?? pending.context.hex;
 
   // LOB §6.1 — apply morale check to all units in the defender hex
   const { state: afterMorale, anyLeaderLossCheck } = applyMoraleToHex(

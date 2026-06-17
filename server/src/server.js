@@ -36,6 +36,12 @@ export async function startServer() {
   // Expose io to route handlers via app.locals so POST /actions can emit after dispatch (#356)
   app.locals.io = io;
 
+  // #589 — trust proxy so express-rate-limit uses the real client IP via X-Forwarded-For
+  // when running behind a reverse proxy (nginx, fly.io, etc.). '1' trusts one hop.
+  if (process.env.TRUST_PROXY === 'true') {
+    app.set('trust proxy', 1);
+  }
+
   // Security: CSP headers via helmet (#403)
   // In development, allow Vite dev server connections so HMR and API calls are not blocked.
   // Derive the dev origin from CLIENT_ORIGIN so custom ports/hosts are covered.
