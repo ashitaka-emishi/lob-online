@@ -102,6 +102,13 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
       `Defender unit '${defenderUnits[0].id}' not found in OOB`
     );
   }
+  // LOB §7.0 / Security — active player may only charge with their own units (#603)
+  if (attackerInfo.side !== action.playerSide) {
+    throw new ActionError(
+      'INVALID_ACTION',
+      `Player '${action.playerSide}' cannot charge with ${attackerInfo.side} units (LOB §7.0)`
+    );
+  }
   if (attackerInfo.side === defenderInfo.side) {
     throw new ActionError(
       'INVALID_ACTION',

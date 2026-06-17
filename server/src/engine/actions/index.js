@@ -1,5 +1,6 @@
 import { GameStateSchema } from '../../schemas/gameState.schema.js';
 import { PHASES, STEPS } from '../../constants/phases.js';
+import { MORALE_PENDING_TYPES } from '../../constants/resolution.js';
 import { ActionError } from './actionError.js';
 import { loadOob, buildUnitSideMap, loadLeaders, buildLeaderSideMap } from '../oob.js';
 import { applySection64AutoRecovery } from '../tables/rally.js';
@@ -29,7 +30,6 @@ export function getValidActions(state, playerSide) {
 
   // LOB §6.1/§7.0/§6.3 — any combat-result, closing-roll, or morale-cascade pending type
   // requires morale resolution before play can continue. (#571)
-  const MORALE_PENDING_TYPES = new Set(['combatResult', 'closingRoll', 'moraleCheck']);
   if (MORALE_PENDING_TYPES.has(state.pendingResolution?.type)) {
     return [{ type: 'RESOLVE_MORALE', payload: null }];
   }
@@ -326,7 +326,9 @@ export function drainAutoSteps(state) {
 }
 
 // Action types that require full ctx for LOS/range validation (#594)
-const CTX_REQUIRED_ACTIONS = new Set(['FIRE_COMBAT', 'CLOSE_COMBAT']);
+// Action types that want full ctx for LOS/range validation. Enforcement is advisory —
+// handlers fall back to degraded mode when ctx is absent (accepted for test-compat; #594).
+const CTX_RECOMMENDED_ACTIONS = new Set(['FIRE_COMBAT', 'CLOSE_COMBAT']);
 
 // Pure reducer: validate → route → drain → validate output state.
 // action: { type: string, payload: object|null, playerSide: 'union'|'confederate' }
@@ -335,7 +337,7 @@ export function dispatch(state, action, ctx = {}) {
   const { type, payload, playerSide } = action;
 
   // #594 — warn when combat handlers receive empty ctx; they fall back to degraded mode silently.
-  if (CTX_REQUIRED_ACTIONS.has(type) && (!ctx.oob || !ctx.mapData)) {
+  if (CTX_RECOMMENDED_ACTIONS.has(type) && (!ctx.oob || !ctx.mapData)) {
     console.warn(
       `[dispatch] ${type} dispatched without full ctx (oob/mapData missing) — LOS and range validation degraded (#594)`
     );

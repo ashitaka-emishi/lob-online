@@ -101,4 +101,18 @@ describe('startServer (#338)', () => {
     sighandlers['SIGTERM']();
     expect(mockClose).toHaveBeenCalled();
   });
+
+  // #589 — TRUST_PROXY guard: log line fires only when TRUST_PROXY=true
+  it('logs trust proxy enabled message only when TRUST_PROXY=true', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    // Without TRUST_PROXY — no trust proxy log
+    delete process.env.TRUST_PROXY;
+    const { startServer: startNoProxy } = await import('./server.js');
+    await startNoProxy();
+    const noProxyCalls = logSpy.mock.calls.map((a) => a.join(' '));
+    expect(noProxyCalls.some((s) => s.includes('trust proxy'))).toBe(false);
+
+    logSpy.mockRestore();
+  });
 });
