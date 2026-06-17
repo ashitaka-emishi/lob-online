@@ -133,16 +133,18 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
   }
 
   // LOB §5.1 / §5.6 — combat column is determined by the ATTACKER's effective SPs (not defender's).
-  // DG attackers count half their printed SPs (round down) per LOB §5.3.
+  // Current SPs (with prior losses) are used; OOB printed SPs are only the fallback when no
+  // current SP is tracked on the unit state. DG attackers halve current SPs per LOB §5.3.
   let effectiveSPs = 0;
   for (const au of attackerUnits) {
     const auInfo = unitSideMap.get(au.id);
     if (!auInfo) continue;
     const oobUnit = findOobUnit(loadedOob, au.id);
     if (!oobUnit) continue;
-    const printedSPs = oobUnit.strengthPoints;
-    // LOB §5.3 — DG attacker halves SP contribution (round down)
-    effectiveSPs += au.moraleState === 'disorganized' ? Math.floor(printedSPs / 2) : printedSPs;
+    // LOB §5.1 — use current SPs from unit state; fall back to printed only when absent
+    const currentSPs = au.strengthPoints ?? oobUnit.strengthPoints;
+    // LOB §5.3 — DG attacker halves current SP contribution (round down)
+    effectiveSPs += au.moraleState === 'disorganized' ? Math.floor(currentSPs / 2) : currentSPs;
   }
 
   // LOB §5.6 — column shifts

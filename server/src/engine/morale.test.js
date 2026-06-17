@@ -446,4 +446,39 @@ describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (LOB §6.
     expect(result.pendingResolution).not.toBeNull();
     expect(result.pendingResolution.context.brigadeId).toBe('brig-a');
   });
+
+  // #605 — simultaneous multi-brigade rout
+  it('cascades when two brigades both fully rout simultaneously — first routed brigade wins (#605)', () => {
+    // Both brig-a (u1, u2) and brig-b (u3) are fully routed in the same hex.
+    // The function must not silently drop the second brigade rout — it should
+    // return a cascade for the first fully-routed brigade it encounters.
+    const state = makeOobState({
+      u1: makeUnit('u1', '10.10', 'routed'),
+      u2: makeUnit('u2', '10.10', 'routed'),
+      u3: makeUnit('u3', '10.10', 'routed'),
+    });
+    const result = cascadeMorale(state, '10.10', MOCK_OOB);
+    expect(result.pendingResolution).not.toBeNull();
+    expect(result.pendingResolution.type).toBe('moraleCheck');
+    expect(result.pendingResolution.context.cascade).toBe(true);
+    // Must return a brigadeId — not drop both cascades silently
+    expect(result.pendingResolution.context.brigadeId).toBeDefined();
+  });
+
+  // #606 — hex-scope fallback only when oob is absent, not when unit not found in OOB
+  it('does NOT fall back to hex-scope when oob is present but unit not in any brigade (#606)', () => {
+    // Corps-level unit (not in any brigade) — findBrigadeForUnit returns null even with OOB present.
+    // Must NOT trigger degraded hex-scope fallback; should silently skip and return state.
+    const state = makeOobState({
+      u1: makeUnit('u1', '10.10', 'routed'), // not in any brigade in MOCK_OOB
+    });
+    // Provide an OOB that doesn't contain u1 in any brigade
+    const SPARSE_OOB = {
+      union: { corps: [], cavalryDivision: { brigades: [], artillery: {} } },
+      confederate: { divisions: [], independentBrigades: [] },
+    };
+    const result = cascadeMorale(state, '10.10', SPARSE_OOB);
+    // OOB present but unit not in a brigade → no cascade (not degraded hex-scope)
+    expect(result.pendingResolution).toBeNull();
+  });
 });

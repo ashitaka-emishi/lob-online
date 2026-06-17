@@ -38,10 +38,11 @@ function regenerateSession(req) {
 // 30 requests per 15-minute window per IP — generous for dev/testing, meaningful in prod.
 const gameLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
 
-// #593 — cache sync I/O at module init; data files don't change during a server session.
+// #593/#572 — cache sync I/O and hex index at module init; data files don't change during a server session.
 const _oob = loadOob();
 const _mapData = loadMap();
 const _scenario = getScenario();
+const _hexIndex = buildHexIndex(_mapData);
 
 const router = express.Router();
 
@@ -195,11 +196,10 @@ router.post('/:id/actions', requireSide, async (req, res) => {
     }
 
     // Build DI context so combat handlers use real LOS/hex-distance rather than fallbacks (#572)
-    const hexIndex = buildHexIndex(_mapData);
     const nextState = dispatch(
       state,
       { type, payload, playerSide },
-      { oob: _oob, scenario: _scenario, mapData: _mapData, hexIndex }
+      { oob: _oob, scenario: _scenario, mapData: _mapData, hexIndex: _hexIndex }
     );
     const saved = await saveGame(id, nextState);
 

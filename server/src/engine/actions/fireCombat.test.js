@@ -651,4 +651,59 @@ describe('handleFireCombat', () => {
       expect(result.units.c1.cbfMarker).toBe(false);
     });
   });
+
+  // #604 — combat column must use current SPs (with losses), not printed SPs
+  describe('Bug #604 regression — combat column uses current SPs, not printed SPs (LOB §5.1/§5.6)', () => {
+    it('1-SP attacker gets column "1", not "4-5" (printed SPs) (#604)', () => {
+      // u1 OOB printed = 4 SPs; set current to 1 SP (heavy losses).
+      // The combat column must start from "1" (1-SP column), not "4-5".
+      const stateWithLosses = {
+        ...BASE_STATE,
+        units: {
+          ...BASE_STATE.units,
+          u1: { ...BASE_STATE.units.u1, strengthPoints: 1 },
+        },
+      };
+      const stateFullStrength = {
+        ...BASE_STATE,
+        units: {
+          ...BASE_STATE.units,
+          u1: { ...BASE_STATE.units.u1, strengthPoints: 4 },
+        },
+      };
+      const resultLosses = handleFireCombat(stateWithLosses, FIRE_ACTION, { oob: MOCK_OOB });
+      const resultFull = handleFireCombat(stateFullStrength, FIRE_ACTION, { oob: MOCK_OOB });
+      // With 1 current SP the starting column is "1"; with 4 current SP it is "4-5".
+      // They must differ — confirming current SPs drive the column, not printed SPs.
+      // (If the bug were present, both would use the OOB value 4 → same column.)
+      expect(resultLosses.pendingResolution.context.finalColumn).not.toBe(
+        resultFull.pendingResolution.context.finalColumn
+      );
+    });
+
+    it('DG attacker halves current SPs (not printed SPs) — LOB §5.3 (#604)', () => {
+      // current=4, DG → effective 2 → column "2-3"
+      // current=2, DG → effective 1 → column "1"
+      // Columns must differ — current SPs are the base for the halving.
+      const stateDgCurrent4 = {
+        ...BASE_STATE,
+        units: {
+          ...BASE_STATE.units,
+          u1: { ...BASE_STATE.units.u1, moraleState: 'disorganized', strengthPoints: 4 },
+        },
+      };
+      const stateDgCurrent2 = {
+        ...BASE_STATE,
+        units: {
+          ...BASE_STATE.units,
+          u1: { ...BASE_STATE.units.u1, moraleState: 'disorganized', strengthPoints: 2 },
+        },
+      };
+      const r1 = handleFireCombat(stateDgCurrent4, FIRE_ACTION, { oob: MOCK_OOB });
+      const r2 = handleFireCombat(stateDgCurrent2, FIRE_ACTION, { oob: MOCK_OOB });
+      expect(r2.pendingResolution.context.finalColumn).not.toBe(
+        r1.pendingResolution.context.finalColumn
+      );
+    });
+  });
 });

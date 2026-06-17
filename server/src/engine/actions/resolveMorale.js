@@ -2,28 +2,31 @@ import { ActionError } from './actionError.js';
 import { loadOob, findOobUnit } from '../oob.js';
 import { resolvePendingMorale } from '../morale.js';
 
+// LOB §6.1/§7.0/§6.3 — all three pending types require a player morale roll to resolve. (#571)
+const MORALE_PENDING_TYPES = new Set(['combatResult', 'closingRoll', 'moraleCheck']);
+
 /**
  * RESOLVE_MORALE action handler.
  *
- * LOB §6.1 — resolves a pending 'combatResult' morale check by applying the
- * player-supplied dice roll to all units in the defender hex.
+ * LOB §6.1/§7.0/§6.3 — resolves a pending combat-result, closing-roll, or morale-cascade
+ * check by applying the player-supplied dice roll to the affected hex units.
  *
  * Payload: { dice: [d1, d2], mods?: { ... } }
  *
  *   dice: [d1, d2] — two d6 rolls for the Morale Table (sum 2–12)
  *   mods: morale modifier flags (see engine/tables/morale.js computeEffectiveRoll)
  *
- * Precondition: state.pendingResolution.type === 'combatResult'
+ * Precondition: state.pendingResolution.type ∈ { 'combatResult', 'closingRoll', 'moraleCheck' }
  *
- * Returns new state with morale applied to defender hex units and
- * pendingResolution cleared (or updated to 'leaderCasualty' / cascade check).
+ * Returns new state with morale applied to the target hex units and
+ * pendingResolution cleared (or updated to 'leaderCasualty' / next cascade check).
  */
 export function handleResolveMorale(state, action, { oob } = {}) {
-  // LOB §6.1 — only valid when a combat result is pending morale resolution
-  if (!state.pendingResolution || state.pendingResolution.type !== 'combatResult') {
+  // LOB §6.1 — only valid when a morale-type resolution is pending (#571)
+  if (!state.pendingResolution || !MORALE_PENDING_TYPES.has(state.pendingResolution.type)) {
     throw new ActionError(
       'INVALID_ACTION',
-      "RESOLVE_MORALE is only valid when pendingResolution type is 'combatResult'"
+      "RESOLVE_MORALE is only valid when pendingResolution type is 'combatResult', 'closingRoll', or 'moraleCheck'"
     );
   }
 
