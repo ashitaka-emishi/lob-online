@@ -74,6 +74,9 @@ export const UnitStateSchema = z
     cbfMarker: z.boolean(),
     isOnBoard: z.boolean(),
     entryTurn: z.number().int().positive().nullable(),
+    // LOB §5.6 — current strength points (casualties applied). Absent = no loss yet;
+    // engine falls back to OOB printed SPs. Explicitly 0 means the unit is eliminated.
+    strengthPoints: z.number().int().min(0).optional(),
     // SM §2.3, §3.3 — true when a brigade is operating independently of its parent division.
     // Union: 1st Corps may detach one Division; each 1st Corps Division may detach one Brigade;
     // 9th Corps may detach up to two Divisions but may not detach Brigades (§2.3).

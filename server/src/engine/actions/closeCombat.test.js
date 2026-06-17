@@ -438,6 +438,18 @@ describe('handleCloseCombat', () => {
       }
     });
 
+    // #603 — attacker-side ownership check mirrors the fireCombat fix
+    it('throws INVALID_ACTION when playerSide does not own the attacker units (#603)', () => {
+      const action = { ...CHARGE_ACTION, playerSide: 'confederate' };
+      try {
+        handleCloseCombat(BASE_STATE, action, { oob: MOCK_OOB });
+        expect.fail('should have thrown');
+      } catch (e) {
+        expect(e).toBeInstanceOf(ActionError);
+        expect(e.code).toBe('INVALID_ACTION');
+      }
+    });
+
     it('throws INVALID_ACTION when attacker and defender are on the same side', () => {
       const state = {
         ...BASE_STATE,

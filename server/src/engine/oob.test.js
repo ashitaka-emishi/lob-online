@@ -143,6 +143,23 @@ describe('findBrigadeForUnit', () => {
     expect(result?.unitIds).toContain('csa-r1');
   });
 
+  it('finds brigade for a union cavalry regiment', () => {
+    const result = findBrigadeForUnit(OOB, 'cav-r1');
+    expect(result?.brigadeId).toBe('cav-brig');
+    expect(result?.unitIds).toContain('cav-r1');
+  });
+
+  it('finds brigade for a confederate independent brigade regiment', () => {
+    const result = findBrigadeForUnit(OOB, 'ind-r1');
+    expect(result?.brigadeId).toBe('ind-brig');
+    expect(result?.unitIds).toContain('ind-r1');
+  });
+
+  // #606 — corps-level units and batteries are NOT in any brigade; cascade must not fire for them
+  it('returns null for a corps-level unit (not in any brigade) — load-bearing for #606', () => {
+    expect(findBrigadeForUnit(OOB, 'cox-hq')).toBeNull();
+  });
+
   it('returns null for a unit not in any brigade', () => {
     expect(findBrigadeForUnit(OOB, 'no-such')).toBeNull();
   });

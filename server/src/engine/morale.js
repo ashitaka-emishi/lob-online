@@ -9,6 +9,8 @@
 
 import { moraleResult, moraleTransition } from './tables/morale.js';
 import { findBrigadeForUnit } from './oob.js';
+import { ActionError } from './actions/actionError.js';
+import { MORALE_PENDING_TYPES } from '../constants/resolution.js';
 
 // LOB §6.0 — Schema moraleState and morale table result types now share the same vocabulary:
 // 'normal' (NM), 'bloodlust' (BL), 'shaken' (SH), 'disorganized' (DG), 'routed' (RT).
@@ -142,7 +144,8 @@ export function cascadeMorale(state, targetHex, oob = null) {
           context: {
             hex: targetHex,
             cascade: true,
-            reason: 'all units in hex routed — cascade check required (LOB §6.3, degraded)',
+            reason:
+              'all units in hex routed — degraded hex-scope heuristic (not a faithful §6.3 cascade; OOB unavailable #606)',
           },
         },
       };
@@ -194,9 +197,6 @@ export function cascadeMorale(state, targetHex, oob = null) {
 
 // ─── RESOLVE_MORALE handler helper ────────────────────────────────────────────
 
-// LOB §6.1/§7.0/§6.3 — all three pending types apply a player morale roll to a target hex. (#571)
-const MORALE_PENDING_TYPES = new Set(['combatResult', 'closingRoll', 'moraleCheck']);
-
 /**
  * Resolve a pending combat-result, closing-roll, or morale-cascade check by applying
  * the player-supplied dice roll to the affected hex units and clearing pendingResolution.
@@ -221,6 +221,12 @@ export function resolvePendingMorale(state, diceRoll, mods, getRating, oob = nul
   // LOB §6.1 — target hex: combatResult uses defenderHex; closingRoll uses defenderHex;
   // moraleCheck (cascade) uses hex from context.
   const defenderHex = pending.context.defenderHex ?? pending.context.hex;
+  if (!defenderHex) {
+    throw new ActionError(
+      'INVALID_STATE',
+      `pendingResolution type '${pending.type}' context missing target hex`
+    );
+  }
 
   // LOB §6.1 — apply morale check to all units in the defender hex
   const { state: afterMorale, anyLeaderLossCheck } = applyMoraleToHex(

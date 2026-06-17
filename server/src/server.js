@@ -38,8 +38,14 @@ export async function startServer() {
 
   // #589 — trust proxy so express-rate-limit uses the real client IP via X-Forwarded-For
   // when running behind a reverse proxy (nginx, fly.io, etc.). '1' trusts one hop.
+  // WARNING: only set TRUST_PROXY=true when a trusted reverse proxy that overwrites
+  // X-Forwarded-For is in front of the app; otherwise clients can spoof the header
+  // and bypass rate limiters.
   if (process.env.TRUST_PROXY === 'true') {
     app.set('trust proxy', 1);
+    console.log(
+      '[server] trust proxy enabled (TRUST_PROXY=true) — ensure a trusted reverse proxy is in front'
+    );
   }
 
   // Security: CSP headers via helmet (#403)

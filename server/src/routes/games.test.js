@@ -927,3 +927,30 @@ describe('Session guard — requireSameGame (#553)', () => {
     expect(res.status).toBe(401);
   });
 });
+
+// ─── Rate-limiter configuration (#589) ───────────────────────────────────────
+
+describe('Rate-limiter configuration — createLimiter vs joinLimiter (#589)', () => {
+  it('createLimiter max (10) is lower than joinLimiter max (30)', async () => {
+    // Capture the max values passed to rateLimit() at module init time.
+    // The security invariant: POST /games is throttled tighter than POST /games/:id/join.
+    const capturedOptions = [];
+    vi.doMock('express-rate-limit', () => ({
+      default: (opts) => {
+        capturedOptions.push(opts);
+        return (_req, _res, next) => next();
+      },
+    }));
+    vi.resetModules();
+    await import('./games.js');
+    // Two limiters are registered: createLimiter and joinLimiter
+    expect(capturedOptions).toHaveLength(2);
+    const [createMax, joinMax] = capturedOptions.map((o) => o.max);
+    expect(createMax).toBeLessThan(joinMax);
+    // Exact values: create=10, join=30 per #589
+    expect(createMax).toBe(10);
+    expect(joinMax).toBe(30);
+    vi.doUnmock('express-rate-limit');
+    vi.resetModules();
+  });
+});

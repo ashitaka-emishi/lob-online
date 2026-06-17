@@ -140,7 +140,7 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
     );
   }
 
-  // LOB §5.1 / §5.6 — combat column is determined by the ATTACKER's effective SPs (not defender's).
+  // LOB §5.6 — combat column is determined by the ATTACKER's effective SPs (not defender's).
   // Current SPs (with prior losses) are used; OOB printed SPs are only the fallback when no
   // current SP is tracked on the unit state. DG attackers halve current SPs per LOB §5.3.
   let effectiveSPs = 0;
@@ -149,8 +149,8 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
     if (!auInfo) continue;
     const oobUnit = findOobUnit(loadedOob, au.id);
     if (!oobUnit) continue;
-    // LOB §5.1 — use current SPs from unit state; fall back to printed only when absent
-    const currentSPs = au.strengthPoints ?? oobUnit.strengthPoints;
+    // LOB §5.6 — use current SPs from unit state; fall back to printed only when absent
+    const currentSPs = au.strengthPoints ?? oobUnit.strengthPoints ?? 0;
     // LOB §5.3 — DG attacker halves current SP contribution (round down)
     effectiveSPs += au.moraleState === 'disorganized' ? Math.floor(currentSPs / 2) : currentSPs;
   }
@@ -166,11 +166,14 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
     netColumnShifts += artilleryRangeShift(range);
   }
 
-  // LOB §5.6 — ammo-type firepower shift (right shift if firer meets threshold)
+  // LOB §5.6 — ammo-type firepower shift (right shift if firer meets SP threshold)
+  // Threshold uses current SPs (post-loss), not printed strength, matching §5.6 "engaged SPs".
   const ammoType = weaponClass === 'smallArms' ? weaponDef.ammo : null;
   if (ammoType) {
-    const attackerOobUnit = findOobUnit(loadedOob, attackerUnits[0].id);
-    const firerSPs = attackerOobUnit?.strengthPoints ?? 0;
+    const primaryAttacker = attackerUnits[0];
+    const attackerOobUnit = findOobUnit(loadedOob, primaryAttacker.id);
+    // LOB §5.6 — current SPs; fall back to printed when no loss has been tracked yet
+    const firerSPs = primaryAttacker.strengthPoints ?? attackerOobUnit?.strengthPoints ?? 0;
     netColumnShifts += ammoTypeShift(ammoType, range, firerSPs);
   }
 

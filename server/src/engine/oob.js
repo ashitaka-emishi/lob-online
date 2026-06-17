@@ -244,21 +244,36 @@ export function findOobLeader(oob, leaderId) {
 export function findBrigadeForUnit(oob, unitId) {
   if (!oob) return null;
 
+  function matchBrigade(brig) {
+    const ids = (brig.regiments ?? []).map((r) => r.id);
+    return ids.includes(unitId) ? { brigadeId: brig.id, unitIds: ids } : null;
+  }
+
   // Walk union corps → divisions → brigades
   for (const corps of oob.union?.corps ?? []) {
     for (const div of corps.divisions ?? []) {
       for (const brig of div.brigades ?? []) {
-        const ids = (brig.regiments ?? []).map((r) => r.id);
-        if (ids.includes(unitId)) return { brigadeId: brig.id, unitIds: ids };
+        const m = matchBrigade(brig);
+        if (m) return m;
       }
     }
+  }
+  // Walk union cavalry division → brigades
+  for (const brig of oob.union?.cavalryDivision?.brigades ?? []) {
+    const m = matchBrigade(brig);
+    if (m) return m;
   }
   // Walk confederate divisions → brigades
   for (const div of oob.confederate?.divisions ?? []) {
     for (const brig of div.brigades ?? []) {
-      const ids = (brig.regiments ?? []).map((r) => r.id);
-      if (ids.includes(unitId)) return { brigadeId: brig.id, unitIds: ids };
+      const m = matchBrigade(brig);
+      if (m) return m;
     }
+  }
+  // Walk confederate independent brigades
+  for (const brig of oob.confederate?.independentBrigades ?? []) {
+    const m = matchBrigade(brig);
+    if (m) return m;
   }
 
   return null;

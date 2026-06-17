@@ -1,9 +1,7 @@
 import { ActionError } from './actionError.js';
 import { loadOob, findOobUnit } from '../oob.js';
 import { resolvePendingMorale } from '../morale.js';
-
-// LOB §6.1/§7.0/§6.3 — all three pending types require a player morale roll to resolve. (#571)
-const MORALE_PENDING_TYPES = new Set(['combatResult', 'closingRoll', 'moraleCheck']);
+import { MORALE_PENDING_TYPES } from '../../constants/resolution.js';
 
 /**
  * RESOLVE_MORALE action handler.

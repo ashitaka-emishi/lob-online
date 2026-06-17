@@ -436,6 +436,16 @@ describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (LOB §6.
     expect(result.pendingResolution.context.brigadeId).toBeUndefined();
   });
 
+  it('does NOT cascade in degraded mode when hex is only partially routed (oob null)', () => {
+    // Degraded path: oob null, one unit routed and one normal → allHexRouted is false → no cascade
+    const state = makeOobState({
+      u1: makeUnit('u1', '10.10', 'routed'),
+      u2: makeUnit('u2', '10.10', 'normal'),
+    });
+    const result = cascadeMorale(state, '10.10', null);
+    expect(result.pendingResolution).toBeNull();
+  });
+
   it('off-board brigade members do not block cascade (LOB §6.3)', () => {
     // u2 is off-board — only u1 counts as on-board for brig-a; u1 is routed → cascade
     const state = makeOobState({
@@ -447,11 +457,11 @@ describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (LOB §6.
     expect(result.pendingResolution.context.brigadeId).toBe('brig-a');
   });
 
-  // #605 — simultaneous multi-brigade rout
-  it('cascades when two brigades both fully rout simultaneously — first routed brigade wins (#605)', () => {
+  // #605 — simultaneous multi-brigade rout: first fully-routed brigade wins
+  it('cascades when two brigades both fully rout simultaneously — brig-a wins (#605)', () => {
     // Both brig-a (u1, u2) and brig-b (u3) are fully routed in the same hex.
-    // The function must not silently drop the second brigade rout — it should
-    // return a cascade for the first fully-routed brigade it encounters.
+    // The loop processes hex units in state order; u1 belongs to brig-a, which is checked first.
+    // brig-b's cascade is deferred to the next RESOLVE_MORALE cycle (#605).
     const state = makeOobState({
       u1: makeUnit('u1', '10.10', 'routed'),
       u2: makeUnit('u2', '10.10', 'routed'),
@@ -461,8 +471,8 @@ describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (LOB §6.
     expect(result.pendingResolution).not.toBeNull();
     expect(result.pendingResolution.type).toBe('moraleCheck');
     expect(result.pendingResolution.context.cascade).toBe(true);
-    // Must return a brigadeId — not drop both cascades silently
-    expect(result.pendingResolution.context.brigadeId).toBeDefined();
+    // Must select the first fully-routed brigade (brig-a), not silently drop all cascades
+    expect(result.pendingResolution.context.brigadeId).toBe('brig-a');
   });
 
   // #606 — hex-scope fallback only when oob is absent, not when unit not found in OOB
