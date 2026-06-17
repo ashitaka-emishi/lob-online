@@ -3,7 +3,7 @@
 **Track ID:** pre-m7-debt-sprint-a_20260617
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-17
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -35,12 +35,12 @@ for cascade fixes), then rules-engine bugs, then security/reliability.
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated (net open score reduced by ≥ 28)
-- [ ] Issues #571 #572 #573 #589 #594 #600 #603 #604 #605 #606 closed on GitHub
-- [ ] Ready for `/team-review`
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated (net open score 49 → 43; 10 issues closed)
+- [x] Issues #571 #572 #573 #589 #594 #600 #603 #604 #605 #606 closed on GitHub
+- [x] Ready for `/team-review`
 
 ---
 
