@@ -34,9 +34,11 @@ function regenerateSession(req) {
   );
 }
 
-// Security: rate limit game create/join to mitigate enumeration (#350)
-// 30 requests per 15-minute window per IP — generous for dev/testing, meaningful in prod.
-const gameLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
+// #589 — split create/join limiters so aggressive game-creation is throttled tighter than joins.
+// Create: 10 per 15-min (new games are expensive; low churn expected).
+// Join: 30 per 15-min (players may refresh or retry; higher tolerance acceptable).
+const createLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
+const joinLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
 
 // #593/#572 — cache sync I/O and hex index at module init; data files don't change during a server session.
 const _oob = loadOob();
@@ -53,7 +55,7 @@ router.param('id', (req, res, next, id) => {
 });
 
 // POST /api/v1/games — create a new game, assign creator as union (USA) (#549)
-router.post('/', gameLimiter, async (req, res) => {
+router.post('/', createLimiter, async (req, res) => {
   try {
     const id = randomUUID();
     const state = initGameState(_scenario, id);
@@ -75,7 +77,7 @@ router.post('/', gameLimiter, async (req, res) => {
 });
 
 // POST /api/v1/games/:id/join — second player joins; side must be specified in body
-router.post('/:id/join', gameLimiter, async (req, res) => {
+router.post('/:id/join', joinLimiter, async (req, res) => {
   try {
     const { id } = req.params;
     const { side } = req.body;

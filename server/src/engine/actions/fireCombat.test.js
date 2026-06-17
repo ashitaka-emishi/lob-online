@@ -217,6 +217,19 @@ describe('handleFireCombat', () => {
     }
   });
 
+  // #603 — attacker-side ownership check
+  it('throws INVALID_ACTION when playerSide does not own the attacker units (#603)', () => {
+    // u1 is union; playerSide is 'confederate' — should be rejected
+    const action = { ...FIRE_ACTION, playerSide: 'confederate' };
+    try {
+      handleFireCombat(BASE_STATE, action, { oob: MOCK_OOB });
+      expect.fail('should have thrown');
+    } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
+      expect(e.code).toBe('INVALID_ACTION');
+    }
+  });
+
   it('throws INVALID_ACTION when attacker hex does not match active stack (LOB §3.0d)', () => {
     const action = {
       ...FIRE_ACTION,

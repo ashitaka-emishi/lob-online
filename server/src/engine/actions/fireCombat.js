@@ -99,6 +99,14 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
     );
   }
 
+  // LOB §5.5 / Security — active player may only fire with their own units (#603)
+  if (attackerUnitInfo.side !== action.playerSide) {
+    throw new ActionError(
+      'INVALID_ACTION',
+      `Player '${action.playerSide}' cannot fire with ${attackerUnitInfo.side} units (LOB §5.5)`
+    );
+  }
+
   if (attackerUnitInfo.side === defenderUnitInfo.side) {
     throw new ActionError(
       'INVALID_ACTION',

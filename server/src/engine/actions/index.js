@@ -325,11 +325,21 @@ export function drainAutoSteps(state) {
   );
 }
 
+// Action types that require full ctx for LOS/range validation (#594)
+const CTX_REQUIRED_ACTIONS = new Set(['FIRE_COMBAT', 'CLOSE_COMBAT']);
+
 // Pure reducer: validate → route → drain → validate output state.
 // action: { type: string, payload: object|null, playerSide: 'union'|'confederate' }
 // ctx: { oob, scenario, mapData, hexIndex } — injected by the route layer for LOS/range validation
 export function dispatch(state, action, ctx = {}) {
   const { type, payload, playerSide } = action;
+
+  // #594 — warn when combat handlers receive empty ctx; they fall back to degraded mode silently.
+  if (CTX_REQUIRED_ACTIONS.has(type) && (!ctx.oob || !ctx.mapData)) {
+    console.warn(
+      `[dispatch] ${type} dispatched without full ctx (oob/mapData missing) — LOS and range validation degraded (#594)`
+    );
+  }
 
   // LOB §2.1 — explicit side check before getValidActions so the error is unambiguous whose-turn message.
   // Skipped during setup (activePlayer === null) where no player is designated active.
