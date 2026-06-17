@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-15 after m6-debt-closeout_20260615 (closed #587, #593)._
+_Last updated: 2026-06-17 after pre-m7-debt-sprint-a_20260617 (closed #571 #572 #573 #589 #594 #600 #603 #604 #605 #606)._
 
 ---
 
@@ -8,11 +8,11 @@ _Last updated: 2026-06-15 after m6-debt-closeout_20260615 (closed #587, #593)._
 
 | Metric                           | Value                                                                                                                         |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Open debt items                  | 22                                                                                                                            |
-| Cumulative debt score (net open) | 49                                                                                                                            |
+| Open debt items                  | 20                                                                                                                            |
+| Cumulative debt score (net open) | 43                                                                                                                            |
 | Current-milestone open debt      | 2 items (#616 score 3, M6 — §7.0 threshold; #618 score 2, M6 — §6.4 step asymmetry)                                           |
 | Highest-risk item                | Security: add Zod payload schema for CLOSE_COMBAT — route forwards raw payload without field-level validation (#612, score 4) |
-| PRs tracked                      | 296                                                                                                                           |
+| PRs tracked                      | 297                                                                                                                           |
 
 ---
 
@@ -428,6 +428,9 @@ _Last updated: 2026-06-15 after m6-debt-closeout_20260615 (closed #587, #593)._
 | 2026-06-15 | m6-debt-closeout_20260615                                      | 0                    | -6        | 593                      |
 | 2026-06-15 | m6-debt-closeout_20260615 (resolved #587)                      | -3                   | —         | 593                      |
 | 2026-06-15 | m6-debt-closeout_20260615 (resolved #593)                      | -3                   | —         | 593                      |
+| 2026-06-17 | pre-m7-debt-sprint-a_20260617                                  | 0                    | -6        | 593                      |
+| 2026-06-17 | pre-m7-debt-sprint-a_20260617 (resolved #594)                  | -3                   | —         | 593                      |
+| 2026-06-17 | pre-m7-debt-sprint-a_20260617 (resolved #589)                  | -3                   | —         | 593                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -435,9 +438,9 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Elevated risk. Net open debt score is 49 across 22 items. m6-debt-closeout_20260615 closed #587 (ROLL_INITIATIVE side filter, score 3) and #593 (sync I/O memoization, score 3), reducing the net open score from 55 to 49 and clearing all combat-pipeline M6 items.
+Moderate risk. Net open debt score is 43 across 20 items. pre-m7-debt-sprint-a_20260617 closed #571/#572/#573/#589/#594/#600/#603/#604/#605/#606 — OOB consolidation, cascade-morale bugs, SP column fix, soft-lock fix, attacker ownership check, dispatch ctx guard, and rate limiter split.
 
-Debt is concentrated in five clusters: (1) **Security** — #612 (score 4, M6, CLOSE_COMBAT/FIRE_COMBAT payload validation gap — **merge-blocker**) and #562/#563 (score 4/3, M8, token/faction binding); (2) **Domain verification backlog** — #616 (score 3, M6, §7.0 SP gate operator), #617 (score 3, M7, §9.1a leader loss scope), #613 (score 3, M7, §6.3 rally thresholds unverified dead code), #618 (score 2, M6, §6.4 step asymmetry), #621 (score 2, M7, Fluke/AR rule basis); (3) **Reliability/perf** — #594 (score 3, M7, silent ctx degradation), #596 (score 2, M7, O(n) findOobUnit); (4) **Test quality** — #619/#620 (score 2 each, M7, rally test gaps), #595 (score 2, M7, route integration test), #597/#590/#591 (score 1 each, M7); (5) **Refactoring** — #614/#615 (score 2 each, M7, effectiveSPs duplication and two-pass algorithm). Two current-milestone items remain open (#616, #618); #612 is a merge-blocker for PR #611.
+Debt is concentrated in four clusters: (1) **Security** — #612 (score 4, M6, CLOSE_COMBAT/FIRE_COMBAT payload validation gap — **merge-blocker**) and #562/#563 (score 4/3, M8, token/faction binding); (2) **Domain verification backlog** — #616 (score 3, M6, §7.0 SP gate operator), #617 (score 3, M7, §9.1a leader loss scope), #613 (score 3, M7, §6.3 rally thresholds unverified dead code), #618 (score 2, M6, §6.4 step asymmetry), #621 (score 2, M7, Fluke/AR rule basis); (3) **Perf** — #596 (score 2, M7, O(n) findOobUnit); (4) **Test quality and refactoring** — #619/#620/#615/#614 (score 2 each, M7), #595 (score 2, M7, route integration test), #597/#590/#591/#622/#623 (score 1 each, M7). Two current-milestone items remain open (#616, #618); #612 is a merge-blocker for PR #611.
 
 ---
 
@@ -452,9 +455,7 @@ _Ordered by score descending (ties: current milestone first, then newest first).
 | 3     | M6        | #616  | Domain: confirm LOB §7.0 close combat SP gate is ≥4 (inclusive) and uses printed vs current SPs                     | PR #611       | Gate uses `attackerSPs >= 4` per plan wording but ≥4 vs >4 cannot be confirmed from code. Also uses printed OOB SPs — LOB §7.0 "engaged SPs" may intend current strength. Edge case at exactly 4 SPs; tests don't cover the exclusive boundary.                                                                                                   |
 | 3     | M7        | #617  | Domain: confirm LOB §9.1a leader loss scope — §7.0c automatic loss only, or any SP loss in close combat resolution? | PR #611       | `leaderLossCheckRequired: defenderSpLoss > 0` couples leader loss only to the §7.0c automatic gate. A <4-SP charge that inflicts loss via Opening Volley or cascade would skip the leader-loss check entirely.                                                                                                                                    |
 | 3     | M7        | #613  | Domain: verify LOB §6.3 rally roll thresholds (A=10…F=5) and 2d6-roll-under mechanic before M7 wiring               | PR #611       | `rallyRollResult()` is dead code at M6 — `drainAutoSteps` auto-advances and discards the result. A wrong threshold value would go undetected until M7 interactive dice are wired. Thresholds are plausible but unverified against the LOB §6.3 table.                                                                                             |
-| 3     | M7        | #594  | Reliability: dispatch() ctx degradation silent — combat handlers fall back to stale data if ctx omitted             | PR #592       | `dispatch(state, action, ctx = {})` defaults ctx to `{}`. Omitting ctx causes silent degradation in handlers rather than a fail-fast error. Future call sites can silently get incorrect LOS/range validation with no test failure to catch the regression.                                                                                       |
 | 3     | M8        | #563  | Security: enforce side binding on re-join — reject side-switch to opponent's faction                                | PR #561       | Re-join path accepts any `side` from request body while reusing existing token, allowing side impersonation between turns. Acknowledged scaffolding (#349); depends on #562 (token/faction binding) to derive correct side. Deferred to M8 alongside full auth hardening.                                                                         |
-| 3     | M8        | #589  | Rate limiter: add trust proxy config and split create/join limiters                                                 | PR #586       | Without `trust proxy`, express-rate-limit keys by proxy IP in production, collapsing all clients into one bucket. Risks unexpected validation warning violating warning-free policy. Shared limiter coupling (create + join) is a secondary concern.                                                                                              |
 | 2     | M6        | #618  | Domain: confirm LOB §6.4 shaken two-step (shaken→normal) vs DG one-step (DG→shaken) asymmetry                       | PR #611       | Shaken-no-CBF auto-recovers two steps to normal; DG improves one step to shaken. Likely per §6.4 but unusual asymmetry. DG→shaken flip is also unconditional (not gated on cbfMarker) — both need rule confirmation.                                                                                                                              |
 | 2     | M7        | #621  | Domain: reconcile Fluke Stoppage/Attack Recovery rule input (unit MA vs leader Command Value) and section citations | PR #611       | Plan prose describes rolling against "unit MA"; existing table functions use leader Command Value. Stub comment citations (§10.8c/§10.7b) differ from plan citations (§10.6b/§10.7). Deferral to M7 is correct but ambiguity should be resolved before M7 implementation.                                                                         |
 | 2     | M7        | #619  | Test: fix ordering-invariant test in rally.test.js — DG unit cannot distinguish §6.4-before-§8.1 ordering           | PR #611       | The "§6.4 runs BEFORE §8.1" test uses a disorganized unit; DG→shaken is unconditional and ignores cbfMarker, so both orderings yield the same result. The test cannot fail and provides zero protection for the invariant it claims to guard.                                                                                                     |
