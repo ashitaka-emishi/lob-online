@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-17 after pre-m7-debt-sprint-b_20260617 (closed #588 #590 #591 #595 #596 #597 #607 #608 #609 #610 #614 #615 #619 #620 #622 #623)._
+_Last updated: 2026-06-17 after PR #631._
 
 ---
 
@@ -12,7 +12,7 @@ _Last updated: 2026-06-17 after pre-m7-debt-sprint-b_20260617 (closed #588 #590 
 | Cumulative debt score (net open) | 24                                                                                                                            |
 | Current-milestone open debt      | 2 items (#616 score 3, M6 — §7.0 threshold; #618 score 2, M6 — §6.4 step asymmetry)                                           |
 | Highest-risk item                | Security: add Zod payload schema for CLOSE_COMBAT — route forwards raw payload without field-level validation (#612, score 4) |
-| PRs tracked                      | 297                                                                                                                           |
+| PRs tracked                      | 298                                                                                                                           |
 
 ---
 
@@ -444,6 +444,7 @@ _Last updated: 2026-06-17 after pre-m7-debt-sprint-b_20260617 (closed #588 #590 
 | 2026-06-17 | pre-m7-debt-sprint-b_20260617 (resolved #620)                  | -2                   | —         | 593                      |
 | 2026-06-17 | pre-m7-debt-sprint-b_20260617 (resolved #622)                  | -1                   | —         | 593                      |
 | 2026-06-17 | pre-m7-debt-sprint-b_20260617 (resolved #623)                  | -1                   | —         | 593                      |
+| 2026-06-17 | PR #631 (pre-m7-debt-sprint-b — team-review fixes in-place)    | 0                    | 0         | 593                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
