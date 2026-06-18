@@ -4,16 +4,16 @@
   "type": "feature",
   "status": "in_progress",
   "created": "2026-06-17T00:00:00Z",
-  "updated": "2026-06-18T00:07:00Z",
-  "current_phase": 3,
-  "current_task": "3.7",
+  "updated": "2026-06-18T00:23:00Z",
+  "current_phase": 4,
+  "current_task": "4.7",
   "phases": {
     "total": 5,
-    "completed": 2
+    "completed": 3
   },
   "tasks": {
     "total": 27,
-    "completed": 17
+    "completed": 24
   },
   "commits": [
     "d77b428: fix(engine): #617 — leaderLossCheckRequired fires on OV attacker SP loss (LOB §9.1a)",
@@ -21,6 +21,7 @@
     "dda50de: feat(engine): wire retreat + SP losses into RESOLVE_MORALE (LOB §6.1)",
     "1411e3a: chore: mark Phase 1 tasks complete (m7-special-rules_20260617)",
     "d713576: feat(engine): Phase 2 — interactive RALLY_ROLL action (LOB §6.4 step 3)",
-    "d89916d: feat(engine): Phase 3 — artillery actions LIMBER/UNLIMBER/FIRE_ARTILLERY/REPLENISH (LOB §3.6/§8.2/§9.1, SM §3.6)"
+    "d89916d: feat(engine): Phase 3 — artillery actions LIMBER/UNLIMBER/FIRE_ARTILLERY/REPLENISH (LOB §3.6/§8.2/§9.1, SM §3.6)",
+    "efc28c9: feat(engine): Phase 4 — end-of-turn accounting (LOB §10.8c, SM §7.0, SM §7.1–7.2)"
   ]
 }

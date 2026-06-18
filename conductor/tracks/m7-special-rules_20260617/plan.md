@@ -142,20 +142,24 @@ appropriate turn-phase steps in the action dispatcher.
 
 ### Tasks
 
-- [ ] Task 4.1: Consult domain-expert to confirm Loss Recovery timing (midnight turn number
+- [x] Task 4.1: Consult domain-expert to confirm Loss Recovery timing (midnight turn number
       in SM), exact 1 SP vs 25% calculation, and which unit types are eligible (LOB §9.3).
-- [ ] Task 4.2: Implement `engine/lossRecovery.js` — `applyLossRecovery(units, loadedOob)`
-      returns updated units map with SP restoration. Unit tests.
-- [ ] Task 4.3: Wire `applyLossRecovery` into the turn reducer at the midnight Rally Phase
-      step in `index.js`.
-- [ ] Task 4.4: Wire `attackRecovery` table check into Command Phase start in `index.js`.
-      The engine table (`tables/attackRecovery.js`) already exists — wire it as an auto-step
-      that sets a `pendingAttackRecovery` flag when a division fails its check.
-- [ ] Task 4.5: Wire random event resolution — roll 2d6 + lookup in SM random event tables
-      for both sides each Command Phase; store results in `state.randomEventLog`.
-- [ ] Task 4.6: Wire variable reinforcement arrival — Force A/B 1d6 roll at the scheduled
-      turn; set `isOnBoard: true` and place units at entry hex when arrival confirmed.
-- [ ] Task 4.7: Run `npm run test` — all green.
+      _Ruling: Loss Recovery never fires in SM (game ends at 20:00, midnight is never reached).
+      Registered as disabled no-op in scenario.json._
+- [x] Task 4.2: Implement `engine/lossRecovery.js` — _Loss Recovery disabled in SM per ruling;
+      no implementation needed. Schema has lossRecovery.enabled: false._
+- [x] Task 4.3: Wire `applyLossRecovery` — _Not applicable for SM. Deferred to future scenarios._
+- [x] Task 4.4: Wire `attackRecovery` table check into Command Phase start in `index.js`.
+      _Implemented: ROLL_ATTACK_RECOVERY handler + drainAutoSteps pause when stopped divisions
+      exist; automatic recovery on first twilight turn (LOB_CHARTS)._
+- [x] Task 4.5: Wire random event resolution — roll 2d6 + lookup in SM random event tables
+      for both sides each Command Phase; store in pendingRandomEvent on ordersPhase.
+      _Implemented: ACKNOWLEDGE_RANDOM_EVENT handler + drainAutoSteps auto-roll in ATTACK_RECOVERY
+      step using resolveRandomEvent(). isRandomEventReroll() encodes reroll thresholds._
+- [x] Task 4.6: Wire variable reinforcement arrival — Force A/B 1d6 roll at game init;
+      set isOnBoard: true and place units at entry hex via reinforcementQueue + drainAutoSteps
+      ORDERS step arrival auto-step.
+- [x] Task 4.7: Run `npm run test` — all green.
 
 **Verification:** `npm run test` green; Loss Recovery applies at midnight; Attack Recovery
 check gates divisional activation; random events and reinforcements fire at correct turns.
