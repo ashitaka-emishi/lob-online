@@ -115,18 +115,18 @@ present in `tables/`. Includes supply trace and SM §3.6 Pelham/Pleasonton reple
 
 ### Tasks
 
-- [ ] Task 3.1: Consult domain-expert to confirm artillery limber/unlimber MP costs, canister
+- [x] Task 3.1: Consult domain-expert to confirm artillery limber/unlimber MP costs, canister
       vs shell range threshold, and second/third shot eligibility rules (LOB §9.1) before coding.
-- [ ] Task 3.2: Add `LIMBER` and `UNLIMBER` action handlers in `engine/actions/artillery.js`.
+- [x] Task 3.2: Add `LIMBER` and `UNLIMBER` action handlers in `engine/actions/artillery.js`.
       Validate formation transition costs against unit MP allowance. Unit tests.
-- [ ] Task 3.3: Add `FIRE_ARTILLERY` handler — selects canister or shell based on range; applies
+- [x] Task 3.3: Add `FIRE_ARTILLERY` handler — selects canister or shell based on range; applies
       §9.1 depletion; gate on supply trace to Wing Wagon or west-edge road hex (SM §3.6). Unit tests.
-- [ ] Task 3.4: Add `REPLENISH_ARTILLERY` handler for Pelham/Pleasonton special replenishment
+- [x] Task 3.4: Add `REPLENISH_ARTILLERY` handler for Pelham/Pleasonton special replenishment
       (SM §3.6: replenish from any friendly ammo reserve). Unit tests.
-- [ ] Task 3.5: Update `getValidActions` to return `LIMBER`, `UNLIMBER`, `FIRE_ARTILLERY`, and
+- [x] Task 3.5: Update `getValidActions` to return `LIMBER`, `UNLIMBER`, `FIRE_ARTILLERY`, and
       `REPLENISH_ARTILLERY` candidates for eligible artillery units.
-- [ ] Task 3.6: Wire new actions into `ActionPanel.vue`.
-- [ ] Task 3.7: Run `npm run test` — all green.
+- [x] Task 3.6: Wire new actions into `ActionPanel.vue`.
+- [x] Task 3.7: Run `npm run test` — all green.
 
 **Verification:** `npm run test` green; artillery units can limber, fire with correct
 ammunition type, and are blocked when supply trace fails.
