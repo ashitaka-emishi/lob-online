@@ -2,7 +2,7 @@ import { GameStateSchema } from '../../schemas/gameState.schema.js';
 import { PHASES, STEPS } from '../../constants/phases.js';
 import { MORALE_PENDING_TYPES } from '../../constants/resolution.js';
 import { ActionError } from './actionError.js';
-import { loadOob, buildUnitSideMap, loadLeaders, buildLeaderSideMap } from '../oob.js';
+import { loadOob, buildUnitSideMap, loadLeaders, buildLeaderSideMap, findOobUnit } from '../oob.js';
 import { applySection64AutoRecovery } from '../tables/rally.js';
 import { handleEndPhase } from './endPhase.js';
 import { handleRollInitiative, handleIssueOrder } from './issueOrder.js';
@@ -13,6 +13,12 @@ import { handleCloseCombat } from './closeCombat.js';
 import { handleResolveMorale } from './resolveMorale.js';
 import { handleResolveLeaderCasualty } from './resolveLeaderCasualty.js';
 import { handleRallyRoll } from './rallyRoll.js';
+import {
+  handleLimber,
+  handleUnlimber,
+  handleFireArtillery,
+  handleReplenishArtillery,
+} from './artillery.js';
 
 export { ActionError };
 
@@ -164,11 +170,40 @@ export function getValidActions(state, playerSide) {
           payload: { attackerHex: activeHex, defenderHex },
         }));
 
+      // LOB §3.6 / §8.2 — artillery action candidates for batteries in the active hex
+      const artilleryCandidates = activeUnits.flatMap((u) => {
+        const oobUnit = (() => {
+          try {
+            return findOobUnit(loadOob(), u.id);
+          } catch {
+            return null;
+          }
+        })();
+        if (!oobUnit || (oobUnit.type !== 'artillery' && oobUnit.gunType === undefined)) return [];
+        const formation = u.formation ?? 'unlimbered';
+        const candidates = [];
+        if (formation === 'unlimbered') {
+          // LOB §3.6a — unlimbered battery can limber (no range restriction)
+          candidates.push({ type: 'LIMBER', payload: { unitId: u.id } });
+          // LOB §8.2 — unlimbered battery can fire; client supplies full payload
+          candidates.push({ type: 'FIRE_ARTILLERY', payload: { attackerUnitId: u.id } });
+        } else {
+          // LOB §3.6b — limbered battery can unlimber (subject to range gate in handler)
+          candidates.push({ type: 'UNLIMBER', payload: { unitId: u.id } });
+        }
+        // LOB §8.3 — depleted battery can replenish if supply trace exists
+        if (u.ammo !== 'full') {
+          candidates.push({ type: 'REPLENISH_ARTILLERY', payload: { unitId: u.id } });
+        }
+        return candidates;
+      });
+
       return [
         { type: 'END_ACTIVATION', payload: null },
         ...closeCombatCandidates,
         // LOB §5.5 — generic FIRE_COMBAT candidate; client supplies full payload
         { type: 'FIRE_COMBAT', payload: null },
+        ...artilleryCandidates,
       ];
     }
     // Build one ACTIVATE_STACK candidate per occupied, un-activated hex. (#550)
@@ -204,6 +239,10 @@ export const ACTION_HANDLERS = new Map([
   ['RESOLVE_MORALE', handleResolveMorale],
   ['RESOLVE_LEADER_CASUALTY', handleResolveLeaderCasualty],
   ['RALLY_ROLL', handleRallyRoll],
+  ['LIMBER', handleLimber],
+  ['UNLIMBER', handleUnlimber],
+  ['FIRE_ARTILLERY', handleFireArtillery],
+  ['REPLENISH_ARTILLERY', handleReplenishArtillery],
 ]);
 
 // Current auto-advance steps: attackRecovery, flukeStoppage, rally (3 steps, 8 gives headroom for M6+)

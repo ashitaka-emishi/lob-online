@@ -56,6 +56,18 @@ function actionLabel(action) {
   if (action.type === 'RALLY_ROLL' && action.payload?.unitId) {
     return `Rally Roll — ${action.payload.unitId}`;
   }
+  if (action.type === 'LIMBER' && action.payload?.unitId) {
+    return `Limber — ${action.payload.unitId}`;
+  }
+  if (action.type === 'UNLIMBER' && action.payload?.unitId) {
+    return `Unlimber — ${action.payload.unitId}`;
+  }
+  if (action.type === 'FIRE_ARTILLERY' && action.payload?.attackerUnitId) {
+    return `Fire Artillery — ${action.payload.attackerUnitId}`;
+  }
+  if (action.type === 'REPLENISH_ARTILLERY' && action.payload?.unitId) {
+    return `Replenish — ${action.payload.unitId}`;
+  }
   return toTitleCase(action.type);
 }
 
