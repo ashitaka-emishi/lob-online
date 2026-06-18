@@ -283,16 +283,16 @@ export function drainAutoSteps(state) {
       continue;
     }
 
-    // LOB §6.4, §6.3, §8.1 — Rally Phase.
-    // Sequence: §6.4 automatic recovery (uses cbfMarker) → §8.1 clear CBF → §6.3 per-unit rolls.
+    // LOB §6.4, §6.3, §5.8c — Rally Phase.
+    // Sequence: §6.4 automatic recovery → §5.8c clear CBF → §6.3 per-unit rolls.
+    // §6.4 steps 1+2 are unconditional (no CBF gate). CBF cleared after §6.4 per sequence-of-play.
     // §6.3 per-unit rolls require interactive dice (M7); auto-advance when no units remain pending.
     if (phase === PHASES.RALLY && step === STEPS.RALLY) {
-      // LOB §6.4 — apply automatic recovery BEFORE clearing CBF markers (cbfMarker determines
-      // whether a shaken unit auto-recovers). Must run first so cbfMarker values are still set.
+      // LOB §6.4 steps 1+2 — unconditional: Sh→Normal, DG→Sh (CBF does not gate either step).
       const { units: unitsAfter64, unitsPendingRallyRoll: _unitsPendingRallyRoll } =
         applySection64AutoRecovery(s.units);
 
-      // LOB §8.1 — clear CBF markers from all on-board units after §6.4 has consumed them
+      // LOB §5.8c — clear CBF markers from all on-board units after §6.4 completes
       const unitsAfterCbf = clearCbfMarkers(unitsAfter64);
 
       // LOB §6.3 — units still needing a rally roll after §6.4 (routed units).
