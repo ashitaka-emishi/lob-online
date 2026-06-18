@@ -793,3 +793,84 @@ describe('handleResolveMorale — multi-unit defender hex (LOB §6.1 #590)', () 
     expect(result.units.u2.moraleState).toBe('normal');
   });
 });
+
+// ─── Retreat and SP-loss application (Task 1.3 / LOB §6.1) ───────────────────
+
+// Minimal 5×5 mapData fixture (all hexes passable, no terrain features)
+function makeMapData() {
+  const hexes = [];
+  for (let c = 1; c <= 15; c++) {
+    for (let r = 1; r <= 15; r++) {
+      hexes.push({ hex: `${String(c).padStart(2, '0')}.${String(r).padStart(2, '0')}` });
+    }
+  }
+  return { gridSpec: { cols: 15, rows: 15 }, hexes };
+}
+
+describe('handleResolveMorale — retreat application (LOB §6.1)', () => {
+  it('moves defender hex when morale result has retreatHexes and attackerHex is in context', () => {
+    // morale B, roll 10 → sh(1,1): shaken, retreatHexes=1, spLoss=1
+    // Defender (c1) starts at 10.11, attacker at 10.10 — retreat should move c1 away from 10.10
+    const state = makeCombatResultState({ moraleState: 'normal' });
+    const mapData = makeMapData();
+    const result = handleResolveMorale(state, moraleAction([4, 6]), { oob: MOCK_OOB, mapData });
+    // Roll 10 → sh(1,1) for morale B: unit moves 1 hex away from attacker (10.10)
+    expect(result.units.c1.hex).not.toBe('10.11');
+    expect(result.units.c1.moraleState).toBe('shaken');
+  });
+
+  it('does not move defender when no mapData provided (graceful degradation)', () => {
+    // Without mapData applyRetreat returns unit-in-place
+    const state = makeCombatResultState({ moraleState: 'normal' });
+    const result = handleResolveMorale(state, moraleAction([4, 6]), { oob: MOCK_OOB });
+    // Unit stays at original hex when mapData absent (retreat cannot be computed)
+    expect(result.units.c1.hex).toBe('10.11');
+  });
+
+  it('reduces defender strengthPoints by spLoss from morale result (LOB §6.1)', () => {
+    // morale B, roll 10 → sh(1,1): spLoss=1. c1 has no strengthPoints → uses OOB (5).
+    const state = makeCombatResultState({ moraleState: 'normal' });
+    const mapData = makeMapData();
+    const result = handleResolveMorale(state, moraleAction([4, 6]), { oob: MOCK_OOB, mapData });
+    // OOB printed SPs for c1 is 5 (from MOCK_OOB); spLoss=1 → strengthPoints=4
+    expect(result.units.c1.strengthPoints).toBe(4);
+  });
+
+  it('does not reduce strengthPoints when result has no spLoss (LOB §6.1)', () => {
+    // morale B, roll 5 → NE: no retreat, no spLoss
+    const state = makeCombatResultState({ moraleState: 'normal' });
+    const mapData = makeMapData();
+    const result = handleResolveMorale(state, moraleAction([2, 3]), { oob: MOCK_OOB, mapData });
+    expect(result.units.c1.strengthPoints).toBeUndefined(); // no loss applied, field absent
+  });
+
+  it('marks unit wrecked when SP loss drops below 50% of printed SPs (LOB §5.7)', () => {
+    // c1 printed SPs = 5. Start with strengthPoints=2. spLoss=1 → newSPs=1 < 2.5 → wrecked.
+    const state = {
+      ...makeCombatResultState({ moraleState: 'normal' }),
+      units: {
+        ...makeCombatResultState({ moraleState: 'normal' }).units,
+        c1: { ...makeCombatResultState({ moraleState: 'normal' }).units.c1, strengthPoints: 2 },
+      },
+    };
+    const mapData = makeMapData();
+    // Roll 10 → sh(1,1) spLoss=1: 2-1=1 < 50% of 5 → wrecked
+    const result = handleResolveMorale(state, moraleAction([4, 6]), { oob: MOCK_OOB, mapData });
+    expect(result.units.c1.strengthPoints).toBe(1);
+    expect(result.units.c1.wrecked).toBe(true);
+  });
+
+  it('suppresses retreat and SP loss for bloodlust transition (LOB §6.2a *rule)', () => {
+    // BL unit + incoming SH → stays SH but retreat/losses suppressed per §6.2a.
+    // morale A, roll 10 → sh(2,1). BL+SH → SH, suppressRetreatsAndLosses=true.
+    const state = makeCombatResultState({ moraleState: 'bloodlust' });
+    // Override c1 to use morale A (matching MOCK_OOB u2, but c1 is CSA morale B in MOCK_OOB)
+    // Use the existing BL test state pattern — the suppression comes from the transition chart.
+    // c1 morale B roll 10 → sh(1,1) incoming; BL+SH → SH+suppress.
+    const mapData = makeMapData();
+    const result = handleResolveMorale(state, moraleAction([4, 6]), { oob: MOCK_OOB, mapData });
+    expect(result.units.c1.moraleState).toBe('shaken'); // state transitions to SH
+    expect(result.units.c1.hex).toBe('10.11'); // retreat suppressed — hex unchanged
+    expect(result.units.c1.strengthPoints).toBeUndefined(); // SP loss suppressed
+  });
+});

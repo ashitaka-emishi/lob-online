@@ -19,7 +19,7 @@ import { MORALE_PENDING_TYPES } from '../../constants/resolution.js';
  * Returns new state with morale applied to the target hex units and
  * pendingResolution cleared (or updated to 'leaderCasualty' / next cascade check).
  */
-export function handleResolveMorale(state, action, { oob } = {}) {
+export function handleResolveMorale(state, action, { oob, mapData } = {}) {
   // LOB §6.1 — only valid when a morale-type resolution is pending (#571)
   if (!state.pendingResolution || !MORALE_PENDING_TYPES.has(state.pendingResolution.type)) {
     throw new ActionError(
@@ -48,6 +48,6 @@ export function handleResolveMorale(state, action, { oob } = {}) {
     return unit?.morale ?? 'D';
   };
 
-  // LOB §6.3 — pass oob for brigade cascade lookup
-  return resolvePendingMorale(state, diceRoll, mods, getRating, loadedOob);
+  // LOB §6.3 — pass oob for brigade cascade lookup; mapData for LOB §6.1 retreat paths
+  return resolvePendingMorale(state, diceRoll, mods, getRating, loadedOob, mapData ?? null);
 }
