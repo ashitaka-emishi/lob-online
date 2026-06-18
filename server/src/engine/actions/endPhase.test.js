@@ -44,7 +44,9 @@ describe('handleEndPhase — Command phase → attackRecovery', () => {
     const result = handleEndPhase(COMMAND_ORDERS, { type: 'END_PHASE', payload: null });
     expect(result.step).toBe('attackRecovery');
     expect(result.completedSteps).toContain('orders');
-    expect(result.ordersPhase).toBeNull();
+    // SM §7.0 — ordersPhase kept alive through ATTACK_RECOVERY for random-event pendingRandomEvent;
+    // nulled by drainAutoSteps when advancing to FLUKE_STOPPAGE.
+    expect(result.ordersPhase).not.toBeNull();
   });
 
   it('preserves all other state fields', () => {

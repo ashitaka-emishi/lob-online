@@ -397,15 +397,19 @@ describe('GameStateSchema', () => {
     expect(GameStateSchema.safeParse(state).success).toBe(true);
   });
 
-  it('accepts complete status with a non-null phase', () => {
+  it('accepts complete status with phase=null (SM §5.0 — terminal state)', () => {
+    // SM §5.0 — when game ends (status: complete) all phase envelopes are null
     const state = {
       ...BASE_GAME_STATE,
       status: 'complete',
-      phase: 'rally',
-      activePlayer: 'confederate',
-      step: 'rally',
+      phase: null,
+      activePlayer: null,
+      step: null,
       turn: 45,
-      rallyPhase: { unitsPendingRally: [] },
+      gameOver: true,
+      activityPhase: null,
+      ordersPhase: null,
+      rallyPhase: null,
     };
     expect(GameStateSchema.safeParse(state).success).toBe(true);
   });

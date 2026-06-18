@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import { io } from 'socket.io-client';
 
@@ -7,6 +7,7 @@ import HexMapOverlay from '../components/HexMapOverlay.vue';
 import UnitStatsPanel from '../components/UnitStatsPanel.vue';
 import ActionPanel from '../components/game/ActionPanel.vue';
 import TurnControl from '../components/game/TurnControl.vue';
+import VpPanel from '../components/game/VpPanel.vue';
 import { sanitizeCalibration } from '../utils/calibration.js';
 import { useOobData } from '../composables/useOobData.js';
 import { useGameStore } from '../stores/useGameStore.js';
@@ -166,6 +167,17 @@ function onImageLoad(event) {
   imgNaturalWidth.value = event.target.naturalWidth;
   imgNaturalHeight.value = event.target.naturalHeight;
 }
+
+// SM §5.3 — accessibility: move focus into game-over dialog when it appears (WCAG 2.1 SC 2.4.3)
+const gameOverCardRef = ref(null);
+watch(
+  () => gameStore.gameState?.gameOver,
+  (isOver) => {
+    if (isOver) {
+      nextTick(() => gameOverCardRef.value?.focus());
+    }
+  }
+);
 </script>
 
 <template>
@@ -189,7 +201,7 @@ function onImageLoad(event) {
         {{ gameStore.mapConfigError }} — map hexes unavailable
       </div>
     </div>
-    <div class="game-body">
+    <div class="game-body" :inert="gameStore.gameState?.gameOver || undefined">
       <!-- Map area: scrollable, fills remaining width -->
       <div class="map-area">
         <div
@@ -246,7 +258,42 @@ function onImageLoad(event) {
           :local-player-side="localPlayerSide"
           @submit-action="onSubmitAction"
         />
+        <VpPanel
+          :vp="gameStore.gameState?.vp ?? null"
+          :game-over="gameStore.gameState?.gameOver ?? false"
+          :victory-result="gameStore.gameState?.victoryResult ?? null"
+        />
       </aside>
+    </div>
+
+    <!-- SM §5.3 — game-complete overlay: shown when status is 'complete' -->
+    <!-- WCAG 2.1 SC 2.4.3: focus is moved here programmatically via gameOverCardRef watcher -->
+    <div
+      v-if="gameStore.gameState?.gameOver"
+      class="game-over-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="game-over-title"
+      aria-describedby="game-over-result"
+    >
+      <div ref="gameOverCardRef" class="game-over-card" tabindex="-1">
+        <h2 id="game-over-title" class="game-over-title">Battle Complete</h2>
+        <div id="game-over-result" class="game-over-result">
+          {{ gameStore.gameState?.victoryResult ?? 'Result unavailable' }}
+        </div>
+        <div v-if="gameStore.gameState?.vp" class="game-over-vp">
+          <span class="vp-label union">Union {{ gameStore.gameState.vp.union }} VP</span>
+          <span class="vp-sep">·</span>
+          <span class="vp-label confederate"
+            >Confederate {{ gameStore.gameState.vp.confederate }} VP</span
+          >
+          <span class="vp-sep">·</span>
+          <span class="vp-label net"
+            >Net {{ gameStore.gameState.vp.net > 0 ? '+' : ''
+            }}{{ gameStore.gameState.vp.net }}</span
+          >
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -305,5 +352,66 @@ function onImageLoad(event) {
   background: #12100c;
   border-left: 1px solid #2a2418;
   overflow-y: auto;
+}
+
+/* SM §5.3 — game-complete overlay */
+.game-over-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.game-over-card {
+  background: #1a1610;
+  border: 2px solid #8a6a30;
+  border-radius: 4px;
+  outline: none; /* focus indicator provided by the border itself */
+  padding: 2rem 2.5rem;
+  text-align: center;
+  min-width: 320px;
+  max-width: 480px;
+}
+
+.game-over-title {
+  font-size: 0.8rem;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #8a7a6a;
+  margin: 0 0 0.75rem;
+}
+
+.game-over-result {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #d4b870;
+  margin-bottom: 1rem;
+}
+
+.game-over-vp {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #8a7a6a;
+}
+
+/* WCAG AA: #88a8e0 on #1a1610 ≈ 4.8:1 */
+.vp-label.union {
+  color: #88a8e0;
+}
+
+/* WCAG AA: #e08a66 on #1a1610 ≈ 4.6:1 */
+.vp-label.confederate {
+  color: #e08a66;
+}
+
+.vp-sep {
+  color: #5a4a38;
 }
 </style>

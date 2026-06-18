@@ -8,9 +8,10 @@
  */
 
 import { moraleResult, moraleTransition } from './tables/morale.js';
-import { findBrigadeForUnit } from './oob.js';
+import { findBrigadeForUnit, findOobUnit } from './oob.js';
 import { ActionError } from './actions/actionError.js';
 import { MORALE_PENDING_TYPES } from '../constants/resolution.js';
+import { applyRetreat } from './retreat.js';
 
 // LOB §6.0 — Schema moraleState and morale table result types now share the same vocabulary:
 // 'normal' (NM), 'bloodlust' (BL), 'shaken' (SH), 'disorganized' (DG), 'routed' (RT).
@@ -93,18 +94,31 @@ export function applyMoraleToHex(state, targetHex, mods, diceRoll, getRating) {
 
   let updatedUnits = { ...state.units };
   let anyLeaderLossCheck = false;
+  // Per-unit retreat/SP data for callers that apply position and strength changes
+  const unitEffects = [];
 
   for (const unit of hexUnits) {
     // LOB §6.1 — each unit checked with its own morale rating
     const rating = getRating ? (getRating(unit.id) ?? 'D') : 'D';
-    const { unit: updated, leaderLossCheck } = applyMoraleCheck(unit, rating, mods, diceRoll);
+    const {
+      unit: updated,
+      result,
+      suppressRetreats,
+      leaderLossCheck,
+    } = applyMoraleCheck(unit, rating, mods, diceRoll);
     updatedUnits[unit.id] = updated;
     if (leaderLossCheck) anyLeaderLossCheck = true;
+    unitEffects.push({
+      unitId: unit.id,
+      retreatHexes: suppressRetreats ? 0 : (result.retreatHexes ?? 0),
+      spLoss: suppressRetreats ? 0 : (result.spLoss ?? 0),
+    });
   }
 
   return {
     state: { ...state, units: updatedUnits },
     anyLeaderLossCheck,
+    unitEffects,
   };
 }
 
@@ -195,6 +209,63 @@ export function cascadeMorale(state, targetHex, oob = null) {
   return state;
 }
 
+// ─── Retreat and SP-loss application ──────────────────────────────────────────
+
+/**
+ * Apply retreat hex moves and SP losses from morale results to game state.
+ *
+ * LOB §6.1 — SP losses are taken AFTER retreat (footnote). Retreat moves the
+ * unit's hex; SP loss reduces strengthPoints (falling back to OOB printed SPs).
+ * LOB §5.7 — wrecked status is re-evaluated after SP loss.
+ *
+ * @param {object} state - GameState after morale state has been applied
+ * @param {string} combatHex - the hex units are retreating FROM (enemy position)
+ * @param {Array<{unitId: string, retreatHexes: number, spLoss: number}>} unitEffects
+ * @param {object|null} oob - loaded OOB for printed SP lookup
+ * @param {object|null} mapData - loaded map for retreat path computation
+ * @returns {object} new state with hex positions and strengthPoints updated
+ */
+export function applyRetreatsAndSpLosses(
+  state,
+  combatHex,
+  unitEffects,
+  oob = null,
+  mapData = null
+) {
+  let updatedUnits = { ...state.units };
+
+  for (const { unitId, retreatHexes, spLoss } of unitEffects) {
+    const unit = updatedUnits[unitId];
+    if (!unit || !unit.isOnBoard) continue;
+
+    let updatedUnit = { ...unit };
+
+    // LOB §6.1 — apply retreat before SP loss
+    if (retreatHexes > 0 && combatHex) {
+      const { destHex } = applyRetreat(unit.hex, combatHex, retreatHexes, mapData);
+      updatedUnit = { ...updatedUnit, hex: destHex };
+    }
+
+    // LOB §6.1 footnote — SP loss taken after retreat
+    if (spLoss > 0) {
+      const oobUnit = oob ? findOobUnit(oob, unitId) : null;
+      const printedSPs = oobUnit?.strengthPoints ?? 0;
+      const currentSPs = updatedUnit.strengthPoints ?? printedSPs;
+      const newSPs = Math.max(0, currentSPs - spLoss);
+      updatedUnit = {
+        ...updatedUnit,
+        strengthPoints: newSPs,
+        // LOB §5.7 — wrecked when current SPs fall below 50% of printed strength
+        wrecked: printedSPs > 0 ? isWrecked(newSPs, printedSPs) : updatedUnit.wrecked,
+      };
+    }
+
+    updatedUnits[unitId] = updatedUnit;
+  }
+
+  return { ...state, units: updatedUnits };
+}
+
 // ─── RESOLVE_MORALE handler helper ────────────────────────────────────────────
 
 /**
@@ -210,9 +281,10 @@ export function cascadeMorale(state, targetHex, oob = null) {
  * @param {object} mods - morale modifier flags
  * @param {Function} getRating - (unitId) => moraleRating from OOB
  * @param {object|null} oob - loaded OOB data for brigade cascade lookup (LOB §6.3)
+ * @param {object|null} mapData - loaded map data for retreat path computation (LOB §6.1)
  * @returns {object} new state with morale applied and pendingResolution cleared or updated
  */
-export function resolvePendingMorale(state, diceRoll, mods, getRating, oob = null) {
+export function resolvePendingMorale(state, diceRoll, mods, getRating, oob = null, mapData = null) {
   const pending = state.pendingResolution;
   if (!pending || !MORALE_PENDING_TYPES.has(pending.type)) {
     return state;
@@ -229,16 +301,19 @@ export function resolvePendingMorale(state, diceRoll, mods, getRating, oob = nul
   }
 
   // LOB §6.1 — apply morale check to all units in the defender hex
-  const { state: afterMorale, anyLeaderLossCheck } = applyMoraleToHex(
-    state,
-    defenderHex,
-    mods,
-    diceRoll,
-    getRating
-  );
+  const {
+    state: afterMorale,
+    anyLeaderLossCheck,
+    unitEffects,
+  } = applyMoraleToHex(state, defenderHex, mods, diceRoll, getRating);
+
+  // LOB §6.1 — apply retreat and SP losses; combat hex is the attacker hex for combatResult
+  // and closingRoll (defenderHex is the target; attackerHex is where they retreat from).
+  const combatHex = pending.context.attackerHex ?? null;
+  const afterEffects = applyRetreatsAndSpLosses(afterMorale, combatHex, unitEffects, oob, mapData);
 
   // LOB §6.3 — check for cascade via brigade hierarchy (not hex scope)
-  const afterCascade = cascadeMorale(afterMorale, defenderHex, oob);
+  const afterCascade = cascadeMorale(afterEffects, defenderHex, oob);
 
   // If cascade triggered a new pending resolution, preserve it; otherwise clear
   const newPending =

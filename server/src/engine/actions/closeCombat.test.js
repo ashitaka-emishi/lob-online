@@ -319,9 +319,27 @@ describe('handleCloseCombat', () => {
       expect(result.pendingResolution.context.leaderLossCheckRequired).toBe(true);
     });
 
-    it('leaderLossCheckRequired is false when attacker SPs <4 (no SP loss, LOB §9.1a)', () => {
-      const result = handleCloseCombat(BASE_STATE, CHARGE_ACTION, { oob: makeOob(3) });
+    it('leaderLossCheckRequired is false when attacker SPs <4 AND no OV loss (no SP loss, LOB §9.1a)', () => {
+      // openingVolleyDie 1 → 0 OV loss; attacker SPs 3 → no auto defender loss → no check
+      const action = {
+        ...CHARGE_ACTION,
+        payload: { ...CHARGE_ACTION.payload, openingVolleyDie: 1 },
+      };
+      const result = handleCloseCombat(BASE_STATE, action, { oob: makeOob(3) });
       expect(result.pendingResolution.context.leaderLossCheckRequired).toBe(false);
+    });
+
+    it('leaderLossCheckRequired is true when OV inflicts SP loss even with attacker SPs <4 (#617, LOB §9.1a)', () => {
+      // attacker SPs 3 → no §7.0a(e) auto defender loss (defenderSpLoss = 0)
+      // but OV die 6 → 2 SP loss on attacker → §9.1a leader check must still fire
+      const action = {
+        ...CHARGE_ACTION,
+        payload: { ...CHARGE_ACTION.payload, openingVolleyDie: 6 },
+      };
+      const result = handleCloseCombat(BASE_STATE, action, { oob: makeOob(3) });
+      expect(result.pendingResolution.context.defenderSpLoss).toBe(0); // confirm no auto loss
+      expect(result.pendingResolution.context.openingVolleySpLoss).toBeGreaterThan(0); // OV fired
+      expect(result.pendingResolution.context.leaderLossCheckRequired).toBe(true);
     });
   });
 

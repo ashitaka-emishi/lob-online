@@ -116,7 +116,28 @@ function processSetupSide(entries, defaultOrder) {
 
 // Process one reinforcement group, returning array of { unitId, turn, entryHex } entries
 // and a map of unitId -> UnitState (off-board)
-function processReinforcementGroup(group, firstTurnTime) {
+// SM §7.0 / Confederate Order of Arrival — resolve a variable arrival table entry for 1d6.
+// rollFn: () => number (1–6); default uses Math.random() for production.
+// Returns the matching variableTable entry { time, entryHex }.
+function resolveVariableArrival(variableTable, rollFn) {
+  const roll = rollFn();
+  for (const entry of variableTable) {
+    const spec = entry.roll;
+    if (typeof spec === 'number' && roll === spec) return entry;
+    if (typeof spec === 'string' && spec.includes('-')) {
+      const [lo, hi] = spec.split('-').map(Number);
+      if (roll >= lo && roll <= hi) return entry;
+    }
+  }
+  // Fallback: use last entry (should never happen with a complete table)
+  return variableTable[variableTable.length - 1];
+}
+
+function processReinforcementGroup(
+  group,
+  firstTurnTime,
+  rollFn = () => Math.ceil(Math.random() * 6)
+) {
   const queueEntries = [];
   const units = {};
 
@@ -124,10 +145,10 @@ function processReinforcementGroup(group, firstTurnTime) {
   let entryHex;
 
   if (group.variable) {
-    // Variable timing — use the first variableTable entry (earliest possible arrival)
-    const earliest = group.variableTable[0];
-    timeStr = earliest.time;
-    entryHex = earliest.entryHex;
+    // SM §7.0 — variable arrival: roll 1d6 at game start to determine time + entry hex
+    const resolved = resolveVariableArrival(group.variableTable, rollFn);
+    timeStr = resolved.time;
+    entryHex = resolved.entryHex;
   } else {
     timeStr = group.time;
     entryHex = group.entryHex;
@@ -210,6 +231,13 @@ export function initGameState(scenario, gameId) {
     ordersPhase: null,
     // LOB §8.1 — null until Rally Phase begins
     rallyPhase: null,
+    // SM §7.0 — variable reinforcement 1d6 rolls resolved at game init; always true after init
+    variableReinforcementsScheduled: true,
+    pendingAttackRecovery: null,
+    hexControl: {},
+    vp: null,
+    victoryResult: null,
+    gameOver: false,
   };
 
   return GameStateSchema.parse(state);

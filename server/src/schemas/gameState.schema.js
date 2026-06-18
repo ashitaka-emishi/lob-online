@@ -77,6 +77,9 @@ export const UnitStateSchema = z
     // LOB §5.6 — current strength points (casualties applied). Absent = no loss yet;
     // engine falls back to OOB printed SPs. Explicitly 0 means the unit is eliminated.
     strengthPoints: z.number().int().min(0).optional(),
+    // LOB §3.6 — artillery formation state: 'limbered' (can move) or 'unlimbered' (can fire).
+    // Absent for non-artillery units. Artillery batteries start limbered unless scenario sets otherwise.
+    formation: z.enum(['limbered', 'unlimbered']).optional(),
     // SM §2.3, §3.3 — true when a brigade is operating independently of its parent division.
     // Union: 1st Corps may detach one Division; each 1st Corps Division may detach one Brigade;
     // 9th Corps may detach up to two Divisions but may not detach Brigades (§2.3).
@@ -187,22 +190,91 @@ export const GameStateSchema = z
           .object({ leaderId: z.string(), unitId: z.string() })
           .strict()
           .nullable(),
+        // SM §7.0 / SM §7.1–7.2 — non-null when a random-event roll result is awaiting
+        // player acknowledgement. Cleared by ACKNOWLEDGE_RANDOM_EVENT. null = no pending event.
+        pendingRandomEvent: z
+          .object({
+            side: z.enum(['union', 'confederate']),
+            roll: z.number().int().min(2).max(12),
+            event: z.string(),
+            text: z.string(),
+          })
+          .strict()
+          .nullable()
+          .default(null),
       })
       .strict()
       .nullable(),
+    // LOB §10.8c — non-null during ATTACK_RECOVERY step when stopped divisions are present.
+    // Stores the division IDs that still need recovery rolls this step.
+    // null = no pending attack recovery (auto-advance).
+    pendingAttackRecovery: z
+      .object({
+        divisionIds: z.array(z.string()).min(1),
+      })
+      .strict()
+      .nullable()
+      .default(null),
+    // SM §7.0 (Confederate Order of Arrival) — true once Force A and Force B variable arrival
+    // turns have been determined by 1d6 roll at game start. Prevents re-rolling.
+    variableReinforcementsScheduled: z.boolean().default(false),
+    // SM §5.1 — terrain hex control: tracks which side last moved a qualifying non-Routed
+    // infantry or unlimbered artillery unit through each VP hex. Keyed by hex ID.
+    // null = uncontrolled (no qualifying unit has passed through yet).
+    hexControl: z.record(z.string(), z.enum(['union', 'confederate']).nullable()).default({}),
+    // SM §5.0–5.3 — current VP totals and victory state.
+    // vp: null until first VP computation (end of first turn). gameOver: true when game ends.
+    vp: z
+      .object({
+        union: z.number(),
+        confederate: z.number(),
+        net: z.number(),
+        vpLog: z.array(z.record(z.string(), z.unknown())),
+      })
+      .strict()
+      .nullable()
+      .default(null),
+    // SM §5.3 — the evaluated victory outcome label (e.g. 'Union Marginal Victory').
+    // null until game ends (status: 'complete').
+    victoryResult: z.string().nullable().default(null),
+    // SM §5.0 — true when the game has reached turn 45 or another terminal condition.
+    gameOver: z.boolean().default(false),
     // LOB §8.1 — non-null only during Rally Phase; tracks units with CBF markers pending rally
     rallyPhase: z
       .object({
         unitsPendingRally: z.array(z.string()),
+        // LOB §6.4 step 3 — non-null when routed units are waiting for interactive rally dice;
+        // cleared after all unit rolls are resolved. null = no pending rally rolls.
+        pendingRallyRoll: z
+          .object({ unitIds: z.array(z.string()).min(1) })
+          .strict()
+          .nullable()
+          .default(null),
       })
       .strict()
       .nullable(),
   })
   .strict()
-  .refine((data) => (data.status === 'setup') === (data.phase === null), {
-    message: "phase must be null when status is 'setup', and non-null otherwise",
-    path: ['phase'],
-  })
+  // SM §5.0 — phase is null when status is 'setup' OR 'complete' (terminal states).
+  // During active play phase must be non-null.
+  .refine(
+    (data) =>
+      data.status === 'setup' || data.status === 'complete'
+        ? data.phase === null
+        : data.phase !== null,
+    {
+      message: "phase must be null when status is 'setup' or 'complete', non-null when 'active'",
+      path: ['phase'],
+    }
+  )
+  // SM §5.3 — terminal 'complete' state requires activePlayer and step to be null (#team-review)
+  .refine(
+    (data) => data.status !== 'complete' || (data.activePlayer === null && data.step === null),
+    {
+      message: "activePlayer and step must be null when status is 'complete'",
+      path: ['activePlayer'],
+    }
+  )
   // LOB §3.0d — activityPhase tracks mid-activation state; must be null outside Activity Phase (#378)
   .refine((data) => (data.phase === PHASES.ACTIVITY) === (data.activityPhase !== null), {
     message: "activityPhase must be non-null iff phase is 'activity'",

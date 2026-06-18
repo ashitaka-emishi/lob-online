@@ -2,7 +2,7 @@ import { GameStateSchema } from '../../schemas/gameState.schema.js';
 import { PHASES, STEPS } from '../../constants/phases.js';
 import { MORALE_PENDING_TYPES } from '../../constants/resolution.js';
 import { ActionError } from './actionError.js';
-import { loadOob, buildUnitSideMap, loadLeaders, buildLeaderSideMap } from '../oob.js';
+import { loadOob, buildUnitSideMap, loadLeaders, buildLeaderSideMap, findOobUnit } from '../oob.js';
 import { applySection64AutoRecovery } from '../tables/rally.js';
 import { handleEndPhase } from './endPhase.js';
 import { handleRollInitiative, handleIssueOrder } from './issueOrder.js';
@@ -12,6 +12,19 @@ import { handleFireCombat } from './fireCombat.js';
 import { handleCloseCombat } from './closeCombat.js';
 import { handleResolveMorale } from './resolveMorale.js';
 import { handleResolveLeaderCasualty } from './resolveLeaderCasualty.js';
+import { handleRallyRoll } from './rallyRoll.js';
+import {
+  handleLimber,
+  handleUnlimber,
+  handleFireArtillery,
+  handleReplenishArtillery,
+} from './artillery.js';
+import {
+  handleRollAttackRecovery,
+  handleAcknowledgeRandomEvent,
+  resolveRandomEvent,
+} from './endOfTurn.js';
+import { computeVP, evaluateVictory } from '../vp.js';
 
 export { ActionError };
 
@@ -21,6 +34,19 @@ export { ActionError };
 export function getValidActions(state, playerSide) {
   if (state.status !== 'active') return [];
   if (state.activePlayer !== playerSide) return [];
+
+  // SM §7.0 — random event pending acknowledgement: only ACKNOWLEDGE_RANDOM_EVENT is valid.
+  if (state.ordersPhase?.pendingRandomEvent) {
+    return [{ type: 'ACKNOWLEDGE_RANDOM_EVENT', payload: null }];
+  }
+
+  // LOB §10.8c — attack recovery pending: only ROLL_ATTACK_RECOVERY is valid.
+  if (state.pendingAttackRecovery?.divisionIds?.length > 0) {
+    return state.pendingAttackRecovery.divisionIds.map((divisionId) => ({
+      type: 'ROLL_ATTACK_RECOVERY',
+      payload: { divisionId },
+    }));
+  }
 
   // LOB §9.1a — when a leader casualty check is pending, only RESOLVE_LEADER_CASUALTY is valid.
   // Player must supply leaderId, roll, and situation before the game can continue.
@@ -35,6 +61,15 @@ export function getValidActions(state, playerSide) {
   }
 
   if (state.pendingResolution !== null) return [];
+
+  // LOB §6.4 step 3 — when routed units are pending rally rolls, surface one RALLY_ROLL
+  // candidate per pending unit. No other actions are valid until all rolls are resolved.
+  if (state.phase === PHASES.RALLY && state.rallyPhase?.pendingRallyRoll) {
+    return state.rallyPhase.pendingRallyRoll.unitIds.map((unitId) => ({
+      type: 'RALLY_ROLL',
+      payload: { unitId },
+    }));
+  }
 
   const { phase, step } = state;
 
@@ -154,11 +189,40 @@ export function getValidActions(state, playerSide) {
           payload: { attackerHex: activeHex, defenderHex },
         }));
 
+      // LOB §3.6 / §8.2 — artillery action candidates for batteries in the active hex
+      const artilleryCandidates = activeUnits.flatMap((u) => {
+        const oobUnit = (() => {
+          try {
+            return findOobUnit(loadOob(), u.id);
+          } catch {
+            return null;
+          }
+        })();
+        if (!oobUnit || (oobUnit.type !== 'artillery' && oobUnit.gunType === undefined)) return [];
+        const formation = u.formation ?? 'unlimbered';
+        const candidates = [];
+        if (formation === 'unlimbered') {
+          // LOB §3.6a — unlimbered battery can limber (no range restriction)
+          candidates.push({ type: 'LIMBER', payload: { unitId: u.id } });
+          // LOB §8.2 — unlimbered battery can fire; client supplies full payload
+          candidates.push({ type: 'FIRE_ARTILLERY', payload: { attackerUnitId: u.id } });
+        } else {
+          // LOB §3.6b — limbered battery can unlimber (subject to range gate in handler)
+          candidates.push({ type: 'UNLIMBER', payload: { unitId: u.id } });
+        }
+        // LOB §8.3 — depleted battery can replenish if supply trace exists
+        if (u.ammo !== 'full') {
+          candidates.push({ type: 'REPLENISH_ARTILLERY', payload: { unitId: u.id } });
+        }
+        return candidates;
+      });
+
       return [
         { type: 'END_ACTIVATION', payload: null },
         ...closeCombatCandidates,
         // LOB §5.5 — generic FIRE_COMBAT candidate; client supplies full payload
         { type: 'FIRE_COMBAT', payload: null },
+        ...artilleryCandidates,
       ];
     }
     // Build one ACTIVATE_STACK candidate per occupied, un-activated hex. (#550)
@@ -193,6 +257,13 @@ export const ACTION_HANDLERS = new Map([
   ['CLOSE_COMBAT', handleCloseCombat],
   ['RESOLVE_MORALE', handleResolveMorale],
   ['RESOLVE_LEADER_CASUALTY', handleResolveLeaderCasualty],
+  ['RALLY_ROLL', handleRallyRoll],
+  ['LIMBER', handleLimber],
+  ['UNLIMBER', handleUnlimber],
+  ['FIRE_ARTILLERY', handleFireArtillery],
+  ['REPLENISH_ARTILLERY', handleReplenishArtillery],
+  ['ROLL_ATTACK_RECOVERY', handleRollAttackRecovery],
+  ['ACKNOWLEDGE_RANDOM_EVENT', handleAcknowledgeRandomEvent],
 ]);
 
 // Current auto-advance steps: attackRecovery, flukeStoppage, rally (3 steps, 8 gives headroom for M6+)
@@ -227,7 +298,8 @@ function assertEnvelope(value, key, expectedPhase, phase, step) {
 
 // LOB §2.1 — advances through automatic steps until the next interactive step.
 // Called by dispatch after every handler invocation.
-export function drainAutoSteps(state) {
+// ctx: passed from dispatch; used for scenario-dependent auto-steps (random events, reinforcements).
+export function drainAutoSteps(state, ctx = {}) {
   let s = state;
 
   // Iteration cap guards against a future handler bug that creates a cycle in the step state machine,
@@ -239,21 +311,100 @@ export function drainAutoSteps(state) {
     assertEnvelope(s.ordersPhase, 'ordersPhase', PHASES.COMMAND, phase, step);
     assertEnvelope(s.rallyPhase, 'rallyPhase', PHASES.RALLY, phase, step);
 
-    // LOB §10.8c — Attack Recovery: roll per division with a 'stopped' attack order.
-    // Auto-advance when no stopped divisions exist (common at game start).
-    // M7 will add interactive dice when stopped divisions are present mid-game.
+    // LOB §3.7 / SM reinforcements — place units that are due this turn from the queue.
+    // Fires every time we land on ORDERS step so arriving units are ready before activation.
+    // Only runs if there are queue entries for the current turn.
+    if (phase === PHASES.COMMAND && step === STEPS.ORDERS) {
+      const due = s.reinforcementQueue.filter((e) => e.turn === s.turn);
+      if (due.length > 0) {
+        const remainingQueue = s.reinforcementQueue.filter((e) => e.turn !== s.turn);
+        const updatedUnits = { ...s.units };
+        for (const { unitId, entryHex } of due) {
+          if (updatedUnits[unitId]) {
+            updatedUnits[unitId] = { ...updatedUnits[unitId], isOnBoard: true, hex: entryHex };
+          }
+        }
+        s = { ...s, reinforcementQueue: remainingQueue, units: updatedUnits };
+        // Continue — do not advance step; let ORDERS interactive loop proceed normally.
+        // We must return here to avoid re-processing arrivals on subsequent drain iterations.
+        return s;
+      }
+    }
+
+    // SM §7.0 — Random Event: roll 2d6 for the active player after the Orders step ends.
+    // Fires exactly once per Command Phase when entering ATTACK_RECOVERY (SM §7.0 — one check
+    // per active player per Command Phase). Guard: completedSteps must not already include
+    // 'randomEvent'; the flag is pushed when the event is acknowledged or resolved to no-op.
     if (phase === PHASES.COMMAND && step === STEPS.ATTACK_RECOVERY) {
-      // LOB §10.8c — enumerate units whose orders are 'stopped' (stopped attack order).
-      // At M6 depth: stopped orders are not yet created in the South Mountain scenario startup;
-      // auto-advance is correct for all current game states.
-      // TODO(M7): when _stoppedUnitIds.length > 0, pause for player dice and roll recovery table. (#609)
-      const _stoppedUnitIds = Object.values(s.units)
+      const scenario = ctx.scenario;
+      const alreadyRolled = s.completedSteps.includes('randomEvent');
+      // ordersPhase is always non-null at ATTACK_RECOVERY (handleEndPhase no longer clears it here).
+      if (scenario?.randomEventsEnabled && !alreadyRolled) {
+        const side = s.activePlayer;
+        // Use ctx.rollFn if supplied (test injection); fall back to Math.random() at the boundary.
+        const rollFn = ctx.rollFn ?? (() => Math.ceil(Math.random() * 6));
+        const roll = rollFn() + rollFn();
+        // SM §7.1/§7.2 — reroll triggers not yet implemented; take first roll only.
+        // Reroll wiring deferred to M8+ — see #633.
+        const resolved = resolveRandomEvent(roll, side, scenario);
+        if (resolved) {
+          s = {
+            ...s,
+            ordersPhase: { ...s.ordersPhase, pendingRandomEvent: resolved },
+          };
+          return s; // pause — player must submit ACKNOWLEDGE_RANDOM_EVENT
+        }
+        // No event matched (roll out of table range) — mark done so we don't re-fire.
+        s = { ...s, completedSteps: [...s.completedSteps, 'randomEvent'] };
+      }
+    }
+
+    // LOB §10.8c — Attack Recovery: roll per division with a 'stopped' attack order.
+    // Pause for player dice when stopped divisions are present; auto-advance otherwise.
+    if (phase === PHASES.COMMAND && step === STEPS.ATTACK_RECOVERY) {
+      // LOB §10.8c — automatic recovery on first twilight turn (LOB_CHARTS).
+      // First twilight turn is the first turn where lightingSchedule condition !== 'day'.
+      const scenario = ctx.scenario;
+      const lightingSchedule = scenario?.lightingSchedule ?? [];
+      const firstTwilightTurn =
+        lightingSchedule.find((e) => e.condition !== 'day')?.startTurn ?? null;
+      const isAutoRecoveryTurn = firstTwilightTurn !== null && s.turn >= firstTwilightTurn;
+
+      // LOB §10.8c — enumerate divisions with 'stopped' attack orders
+      const stoppedDivisionIds = Object.values(s.units)
         .filter((u) => u.isOnBoard && u.orders?.status === 'stopped')
         .map((u) => u.id);
+
+      if (stoppedDivisionIds.length > 0 && !isAutoRecoveryTurn) {
+        // LOB §10.8c — pause for interactive recovery rolls; set pendingAttackRecovery
+        if (!s.pendingAttackRecovery) {
+          s = { ...s, pendingAttackRecovery: { divisionIds: stoppedDivisionIds } };
+          return s; // pause — player must submit ROLL_ATTACK_RECOVERY for each division
+        }
+        // pendingAttackRecovery already set — still waiting for submissions
+        return s;
+      } else if (stoppedDivisionIds.length > 0 && isAutoRecoveryTurn) {
+        // LOB_CHARTS — automatic recovery: clear all stopped orders unconditionally
+        const autoRecoveredUnits = { ...s.units };
+        for (const divId of stoppedDivisionIds) {
+          const u = autoRecoveredUnits[divId];
+          if (u) {
+            autoRecoveredUnits[divId] = {
+              ...u,
+              orders: { ...u.orders, status: 'none', type: null, deliveryTurnDue: null },
+            };
+          }
+        }
+        s = { ...s, units: autoRecoveredUnits, pendingAttackRecovery: null };
+      }
+
+      // SM §7.0 — ordersPhase kept alive through ATTACK_RECOVERY for random-event pendingRandomEvent;
+      // null it here when advancing to FLUKE_STOPPAGE (schema: ordersPhase null outside command/orders).
       s = {
         ...s,
         step: STEPS.FLUKE_STOPPAGE,
         completedSteps: [...s.completedSteps, STEPS.ATTACK_RECOVERY],
+        ordersPhase: null,
       };
       continue;
     }
@@ -283,34 +434,85 @@ export function drainAutoSteps(state) {
       continue;
     }
 
-    // LOB §6.4, §6.3, §8.1 — Rally Phase.
-    // Sequence: §6.4 automatic recovery (uses cbfMarker) → §8.1 clear CBF → §6.3 per-unit rolls.
+    // LOB §6.4, §6.3, §5.8c — Rally Phase.
+    // Sequence: §6.4 automatic recovery → §5.8c clear CBF → §6.3 per-unit rolls.
+    // §6.4 steps 1+2 are unconditional (no CBF gate). CBF cleared after §6.4 per sequence-of-play.
     // §6.3 per-unit rolls require interactive dice (M7); auto-advance when no units remain pending.
     if (phase === PHASES.RALLY && step === STEPS.RALLY) {
-      // LOB §6.4 — apply automatic recovery BEFORE clearing CBF markers (cbfMarker determines
-      // whether a shaken unit auto-recovers). Must run first so cbfMarker values are still set.
+      // LOB §6.4 steps 1+2 — unconditional: Sh→Normal, DG→Sh (CBF does not gate either step).
       const { units: unitsAfter64, unitsPendingRallyRoll: _unitsPendingRallyRoll } =
         applySection64AutoRecovery(s.units);
 
-      // LOB §8.1 — clear CBF markers from all on-board units after §6.4 has consumed them
+      // LOB §5.8c — clear CBF markers from all on-board units after §6.4 completes
       const unitsAfterCbf = clearCbfMarkers(unitsAfter64);
 
-      // LOB §6.3 — units still needing a rally roll after §6.4 (routed units).
-      // TODO(M7): when _unitsPendingRallyRoll.length > 0, pause for player dice and apply rally table. (#609)
+      // LOB §6.4 step 3 / §6.3 — routed units require an interactive rally roll.
+      // Pause drainAutoSteps and set pendingRallyRoll so getValidActions surfaces RALLY_ROLL.
+      if (_unitsPendingRallyRoll.length > 0) {
+        s = {
+          ...s,
+          units: unitsAfterCbf,
+          rallyPhase: {
+            ...s.rallyPhase,
+            unitsPendingRally: s.rallyPhase?.unitsPendingRally ?? [],
+            pendingRallyRoll: { unitIds: _unitsPendingRallyRoll },
+          },
+        };
+        return s; // pause — player must submit RALLY_ROLL for each pending unit
+      }
 
       const nextActivePlayer = s.activePlayer === 'union' ? 'confederate' : 'union';
+      const nextTurn = s.turn + 1;
+
+      // SM §5.0 / SM §5.3 — compute VP and evaluate victory at end of each turn.
+      // Only runs when ctx.scenario and ctx.oob are available (production path).
+      // ctx.scenario.turnStructure.totalTurns used to detect last turn.
+      const scenario = ctx.scenario;
+      const oob =
+        ctx.oob ??
+        (() => {
+          try {
+            return loadOob();
+          } catch {
+            return null;
+          }
+        })();
+      let vpResult = s.vp;
+      let victoryResult = s.victoryResult;
+      let gameOver = s.gameOver ?? false;
+
+      if (scenario && oob && !gameOver) {
+        vpResult = computeVP({ ...s, units: unitsAfterCbf }, oob, scenario);
+        const totalTurns = scenario.turnStructure?.totalTurns ?? 45; // SM §1.0 — 45 turns
+        if (s.turn >= totalTurns) {
+          // SM §5.3 — evaluate final outcome after last turn
+          victoryResult = evaluateVictory(vpResult.net, scenario.victoryConditions?.results ?? []);
+          gameOver = true;
+        }
+      }
+
+      // SM §5.3 — terminal state: status='complete' with phase/step/activePlayer/all-envelopes null
+      // so GameStateSchema biconditionals pass. Turn is NOT incremented when gameOver to avoid
+      // storing turn=46 for a 45-turn game.
       s = {
         ...s,
-        turn: s.turn + 1,
-        phase: PHASES.COMMAND,
-        step: STEPS.ORDERS,
+        turn: gameOver ? s.turn : nextTurn, // do not increment past totalTurns on game over
+        phase: gameOver ? null : PHASES.COMMAND,
+        step: gameOver ? null : STEPS.ORDERS,
         completedSteps: [],
-        activePlayer: nextActivePlayer,
+        activePlayer: gameOver ? null : nextActivePlayer,
         units: unitsAfterCbf,
         activityPhase: null,
-        ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+        ordersPhase: null,
         rallyPhase: null,
+        vp: vpResult,
+        victoryResult,
+        gameOver,
+        status: gameOver ? 'complete' : s.status,
       };
+      if (!gameOver) {
+        s = { ...s, ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null } };
+      }
       continue;
     }
 
@@ -370,7 +572,7 @@ export function dispatch(state, action, ctx = {}) {
   }
 
   const nextState = handler(state, { type, payload, playerSide }, ctx);
-  const drainedState = drainAutoSteps(nextState);
+  const drainedState = drainAutoSteps(nextState, ctx);
 
   const parsed = GameStateSchema.safeParse(drainedState);
   if (!parsed.success) {

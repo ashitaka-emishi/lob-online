@@ -159,7 +159,7 @@ describe('drainAutoSteps — Attack Recovery (LOB §10.8c)', () => {
     expect(result.phase).toBe(PHASES.ACTIVITY);
   });
 
-  it('auto-advances when a unit has stopped orders (M6 depth — real dice deferred to M7)', () => {
+  it('pauses for interactive dice when a unit has stopped orders (LOB §10.8c, M7)', () => {
     const state = {
       ...ATTACK_RECOVERY_STATE,
       units: {
@@ -168,9 +168,11 @@ describe('drainAutoSteps — Attack Recovery (LOB §10.8c)', () => {
         }),
       },
     };
-    // At M6 depth: still auto-advances (interactive dice path deferred to M7)
+    // LOB §10.8c — stopped divisions require ROLL_ATTACK_RECOVERY; drainAutoSteps must pause
     const result = drainAutoSteps(state);
-    expect(result.phase).toBe(PHASES.ACTIVITY);
+    expect(result.phase).toBe(PHASES.COMMAND);
+    expect(result.step).toBe(STEPS.ATTACK_RECOVERY);
+    expect(result.pendingAttackRecovery?.divisionIds).toContain('u1');
   });
 });
 
@@ -210,5 +212,80 @@ describe('drainAutoSteps — Fluke Stoppage (LOB §10.7b)', () => {
   it('clears ordersPhase on transition to activity', () => {
     const result = drainAutoSteps(FLUKE_STOPPAGE_STATE);
     expect(result.ordersPhase).toBeNull();
+  });
+});
+
+// ─── VP computation and game-over at rally transition (SM §5.0–5.3) ────────────
+
+// Minimal ctx fixtures for VP drain tests
+const MINIMAL_OOB = {
+  union: { corps: [], cavalryDivision: { brigades: [], artillery: {} } },
+  confederate: {
+    divisions: [],
+    reserveArtillery: { batteries: [] },
+    independent: { artillery: [], cavalry: [] },
+  },
+};
+
+const MINIMAL_SCENARIO = {
+  turnStructure: { totalTurns: 3, firstTurn: '06:00' },
+  victoryPoints: {
+    terrain: [],
+    wreck: {
+      union: { perBrigadeWrecked: 1, perArtilleryEliminated: 1 },
+      confederate: { perBrigadeWrecked: 1, perArtilleryEliminated: 1 },
+    },
+  },
+  victoryConditions: { results: [{ label: 'Draw', min: null, max: null }] },
+  lightingSchedule: [],
+};
+
+describe('drainAutoSteps — VP compute and game-over (SM §5.0–5.3)', () => {
+  it('computes vp on a non-final turn when ctx is provided', () => {
+    const state = { ...RALLY_STATE, turn: 1 };
+    const result = drainAutoSteps(state, { scenario: MINIMAL_SCENARIO, oob: MINIMAL_OOB });
+    expect(result.vp).not.toBeNull();
+    expect(result.vp).toHaveProperty('union');
+    expect(result.vp).toHaveProperty('confederate');
+    expect(result.vp).toHaveProperty('net');
+    expect(result.gameOver).toBe(false);
+    expect(result.turn).toBe(2);
+  });
+
+  it('does not set gameOver before the final turn', () => {
+    const state = { ...RALLY_STATE, turn: 2 }; // totalTurns=3; turn 2 < 3
+    const result = drainAutoSteps(state, { scenario: MINIMAL_SCENARIO, oob: MINIMAL_OOB });
+    expect(result.gameOver).toBe(false);
+    expect(result.status).toBe('active');
+  });
+
+  it('sets gameOver and status=complete on the final turn (SM §5.3)', () => {
+    const state = { ...RALLY_STATE, turn: 3 }; // turn === totalTurns
+    const result = drainAutoSteps(state, { scenario: MINIMAL_SCENARIO, oob: MINIMAL_OOB });
+    expect(result.gameOver).toBe(true);
+    expect(result.status).toBe('complete');
+    expect(result.victoryResult).toBe('Draw');
+  });
+
+  it('nulls phase, step, activePlayer on game-over (SM §5.3 terminal state)', () => {
+    const state = { ...RALLY_STATE, turn: 3 };
+    const result = drainAutoSteps(state, { scenario: MINIMAL_SCENARIO, oob: MINIMAL_OOB });
+    expect(result.phase).toBeNull();
+    expect(result.step).toBeNull();
+    expect(result.activePlayer).toBeNull();
+  });
+
+  it('does not increment turn past totalTurns on game-over', () => {
+    const state = { ...RALLY_STATE, turn: 3 }; // totalTurns=3
+    const result = drainAutoSteps(state, { scenario: MINIMAL_SCENARIO, oob: MINIMAL_OOB });
+    expect(result.turn).toBe(3); // stays at 3, not 4
+  });
+
+  it('skips VP compute when ctx has no scenario (graceful degradation)', () => {
+    const state = { ...RALLY_STATE, turn: 3 };
+    const result = drainAutoSteps(state, {}); // no ctx.scenario
+    expect(result.gameOver).toBeFalsy(); // no scenario = no game-over detection
+    expect(result.vp == null).toBe(true); // vp stays null/undefined — not computed
+    expect(result.turn).toBe(4); // turn advances normally when not in game-over mode
   });
 });

@@ -14,6 +14,7 @@ Navigation hub for project context.
 
 | Track ID                                                                               | Title                                                                    | Status   |
 | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | -------- |
+| [m7-special-rules_20260617](./tracks/m7-special-rules_20260617/index.md)               | M7 — Special Rules + Victory Conditions                                  | Pending  |
 | [editor-polish-526-527_20260608](./tracks/editor-polish-526-527_20260608/index.md)     | Editor Polish — Issues #526 and #527                                     | Pending  |
 | [multi-scenario-platform_20260608](./tracks/multi-scenario-platform_20260608/index.md) | Multi-Scenario Platform — Scenario-Scoped Routes and Data Folders (#529) | Pending  |
 | [home-nav-menu_20260607](./tracks/home-nav-menu_20260607/index.md)                     | App Home Page and Editor Navigation Menu (#518)                          | Complete |

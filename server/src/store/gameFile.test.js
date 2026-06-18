@@ -164,6 +164,12 @@ describe('loadGame', () => {
       activityPhase: null,
       ordersPhase: null,
       rallyPhase: null,
+      pendingAttackRecovery: null,
+      variableReinforcementsScheduled: false,
+      hexControl: {},
+      vp: null,
+      victoryResult: null,
+      gameOver: false,
     };
     await saveGame('rt1', state, tmpDir);
     const loaded = await loadGame('rt1', tmpDir);

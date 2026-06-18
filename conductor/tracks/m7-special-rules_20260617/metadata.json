@@ -1,0 +1,28 @@
+{
+  "id": "m7-special-rules_20260617",
+  "title": "M7 — Special Rules + Victory Conditions",
+  "type": "feature",
+  "status": "in_progress",
+  "created": "2026-06-17T00:00:00Z",
+  "updated": "2026-06-18T00:35:00Z",
+  "current_phase": 5,
+  "current_task": "5.9",
+  "phases": {
+    "total": 5,
+    "completed": 4
+  },
+  "tasks": {
+    "total": 27,
+    "completed": 32
+  },
+  "commits": [
+    "d77b428: fix(engine): #617 — leaderLossCheckRequired fires on OV attacker SP loss (LOB §9.1a)",
+    "1d083c9: feat(engine): add applyRetreat() helper — LOB §6.1 retreat resolution",
+    "dda50de: feat(engine): wire retreat + SP losses into RESOLVE_MORALE (LOB §6.1)",
+    "1411e3a: chore: mark Phase 1 tasks complete (m7-special-rules_20260617)",
+    "d713576: feat(engine): Phase 2 — interactive RALLY_ROLL action (LOB §6.4 step 3)",
+    "d89916d: feat(engine): Phase 3 — artillery actions LIMBER/UNLIMBER/FIRE_ARTILLERY/REPLENISH (LOB §3.6/§8.2/§9.1, SM §3.6)",
+    "efc28c9: feat(engine): Phase 4 — end-of-turn accounting (LOB §10.8c, SM §7.0, SM §7.1–7.2)",
+    "fd5c53c: feat(engine): Phase 5 — VP tracking + victory conditions (SM §5.0–5.3, LOB §5.7)"
+  ]
+}
