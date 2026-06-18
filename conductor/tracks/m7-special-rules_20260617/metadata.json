@@ -2,18 +2,18 @@
   "id": "m7-special-rules_20260617",
   "title": "M7 — Special Rules + Victory Conditions",
   "type": "feature",
-  "status": "in_progress",
+  "status": "complete",
   "created": "2026-06-17T00:00:00Z",
-  "updated": "2026-06-18T00:35:00Z",
+  "updated": "2026-06-18T02:00:00Z",
   "current_phase": 5,
-  "current_task": "5.9",
+  "current_task": null,
   "phases": {
     "total": 5,
-    "completed": 4
+    "completed": 5
   },
   "tasks": {
     "total": 27,
-    "completed": 32
+    "completed": 27
   },
   "commits": [
     "d77b428: fix(engine): #617 — leaderLossCheckRequired fires on OV attacker SP loss (LOB §9.1a)",
@@ -23,6 +23,10 @@
     "d713576: feat(engine): Phase 2 — interactive RALLY_ROLL action (LOB §6.4 step 3)",
     "d89916d: feat(engine): Phase 3 — artillery actions LIMBER/UNLIMBER/FIRE_ARTILLERY/REPLENISH (LOB §3.6/§8.2/§9.1, SM §3.6)",
     "efc28c9: feat(engine): Phase 4 — end-of-turn accounting (LOB §10.8c, SM §7.0, SM §7.1–7.2)",
-    "fd5c53c: feat(engine): Phase 5 — VP tracking + victory conditions (SM §5.0–5.3, LOB §5.7)"
+    "fd5c53c: feat(engine): Phase 5 — VP tracking + victory conditions (SM §5.0–5.3, LOB §5.7)",
+    "02f2b47: fix(review): apply team-review high-severity findings for PR #632",
+    "45627ee: fix(review): second-pass — random events now fire in production (SM §7.0)",
+    "170797d: docs(tech-debt): add debt report for PR #632 (2026-06-18)",
+    "32029fc: feat(engine): M7 — Special Rules + Victory Conditions (#632) [squash merge]"
   ]
 }
