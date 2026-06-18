@@ -405,7 +405,7 @@ describe('GameStateSchema', () => {
       phase: null,
       activePlayer: null,
       step: null,
-      turn: 46,
+      turn: 45,
       gameOver: true,
       activityPhase: null,
       ordersPhase: null,

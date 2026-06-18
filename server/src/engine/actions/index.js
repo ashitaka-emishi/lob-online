@@ -332,29 +332,29 @@ export function drainAutoSteps(state, ctx = {}) {
     }
 
     // SM §7.0 — Random Event: roll 2d6 for the active player after the Orders step ends.
-    // Fires when entering ATTACK_RECOVERY; pendingRandomEvent must be acknowledged before advancing.
-    // Only applies when scenario has random events enabled.
+    // Fires exactly once per Command Phase when entering ATTACK_RECOVERY (SM §7.0 — one check
+    // per active player per Command Phase). Guard: completedSteps must not already include
+    // 'randomEvent'; the flag is pushed when the event is acknowledged or resolved to no-op.
     if (phase === PHASES.COMMAND && step === STEPS.ATTACK_RECOVERY) {
       const scenario = ctx.scenario;
-      if (scenario?.randomEventsEnabled && s.ordersPhase?.pendingRandomEvent == null) {
-        // ordersPhase may be null if we just cleared it; check defensively
+      const alreadyRolled = s.completedSteps.includes('randomEvent');
+      if (scenario?.randomEventsEnabled && !alreadyRolled && s.ordersPhase !== null) {
         const side = s.activePlayer;
-        // Deterministic: use a seeded roll derived from turn + side for auto-advance tests;
-        // in production the route layer will supply the roll via ROLL_RANDOM_EVENT action.
-        // For M7: auto-roll using Math.random() — M8+ can wire player-supplied dice.
-        const roll1 = Math.ceil(Math.random() * 6);
-        const roll2 = Math.ceil(Math.random() * 6);
-        const roll = roll1 + roll2;
-        // SM §7.1/§7.2 — reroll triggers; for simplicity take the first roll result only
-        // (second roll on reroll trigger is a TODO for M8+ per plan).
+        // Use ctx.rollFn if supplied (test injection); fall back to Math.random() at the boundary.
+        const rollFn = ctx.rollFn ?? (() => Math.ceil(Math.random() * 6));
+        const roll = rollFn() + rollFn();
+        // SM §7.1/§7.2 — reroll triggers not yet implemented; take first roll only.
+        // Reroll wiring deferred to M8+ — see #633.
         const resolved = resolveRandomEvent(roll, side, scenario);
-        if (resolved && s.ordersPhase !== null) {
+        if (resolved) {
           s = {
             ...s,
             ordersPhase: { ...s.ordersPhase, pendingRandomEvent: resolved },
           };
           return s; // pause — player must submit ACKNOWLEDGE_RANDOM_EVENT
         }
+        // No event matched (roll out of table range) — mark done so we don't re-fire.
+        s = { ...s, completedSteps: [...s.completedSteps, 'randomEvent'] };
       }
     }
 
@@ -487,13 +487,12 @@ export function drainAutoSteps(state, ctx = {}) {
         }
       }
 
-      // SM §5.0 — when gameOver, status → 'complete'; schema requires phase=null when status='setup'
-      // but 'complete' has no phase constraint — keep phase non-null is fine. However, all
-      // phase-scoped envelopes must be null to pass the biconditionals. Set phase=null as the
-      // cleanest terminal state; the client uses status==='complete' to detect game end.
+      // SM §5.3 — terminal state: status='complete' with phase/step/activePlayer/all-envelopes null
+      // so GameStateSchema biconditionals pass. Turn is NOT incremented when gameOver to avoid
+      // storing turn=46 for a 45-turn game.
       s = {
         ...s,
-        turn: nextTurn,
+        turn: gameOver ? s.turn : nextTurn, // do not increment past totalTurns on game over
         phase: gameOver ? null : PHASES.COMMAND,
         step: gameOver ? null : STEPS.ORDERS,
         completedSteps: [],

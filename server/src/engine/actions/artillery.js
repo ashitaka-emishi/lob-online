@@ -217,7 +217,7 @@ export function handleUnlimber(state, action, { oob: injectedOob, mapData } = {}
  *   diceRoll: 2d6 sum (2–12)
  *   ammoType: 'shell' or 'canister' (player's choice, validated against range)
  */
-export function handleFireArtillery(state, action, { oob: injectedOob, mapData: _mapData } = {}) {
+export function handleFireArtillery(state, action, { oob: injectedOob, mapData } = {}) {
   if (!state.activityPhase) {
     throw new ActionError(
       'INVALID_ACTION',
@@ -252,6 +252,20 @@ export function handleFireArtillery(state, action, { oob: injectedOob, mapData: 
   const unit = state.units[attackerUnitId];
   if (!unit || !unit.isOnBoard) {
     throw new ActionError('INVALID_ACTION', `Unit '${attackerUnitId}' is not on board`);
+  }
+
+  // Security: validate the client-supplied range against the actual board geometry when
+  // mapData is available. The client value is used for column-shift selection and canister
+  // gating — a lying player could claim range 1 to unlock canister shifts at long distance.
+  // (#634 — always required once the movement handler is wired)
+  if (mapData?.gridSpec && unit.hex) {
+    const actualRange = hexDistance(unit.hex, defenderHex, mapData.gridSpec);
+    if (actualRange !== range) {
+      throw new ActionError(
+        'INVALID_ACTION',
+        `FIRE_ARTILLERY range mismatch: claimed ${range} but actual hex distance is ${actualRange}`
+      );
+    }
   }
 
   const oob = injectedOob ?? loadOob();

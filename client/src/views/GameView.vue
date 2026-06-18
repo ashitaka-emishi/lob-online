@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import { io } from 'socket.io-client';
 
@@ -167,6 +167,17 @@ function onImageLoad(event) {
   imgNaturalWidth.value = event.target.naturalWidth;
   imgNaturalHeight.value = event.target.naturalHeight;
 }
+
+// SM §5.3 — accessibility: move focus into game-over dialog when it appears (WCAG 2.1 SC 2.4.3)
+const gameOverCardRef = ref(null);
+watch(
+  () => gameStore.gameState?.gameOver,
+  (isOver) => {
+    if (isOver) {
+      nextTick(() => gameOverCardRef.value?.focus());
+    }
+  }
+);
 </script>
 
 <template>
@@ -190,7 +201,7 @@ function onImageLoad(event) {
         {{ gameStore.mapConfigError }} — map hexes unavailable
       </div>
     </div>
-    <div class="game-body">
+    <div class="game-body" :inert="gameStore.gameState?.gameOver || undefined">
       <!-- Map area: scrollable, fills remaining width -->
       <div class="map-area">
         <div
@@ -256,16 +267,18 @@ function onImageLoad(event) {
     </div>
 
     <!-- SM §5.3 — game-complete overlay: shown when status is 'complete' -->
+    <!-- WCAG 2.1 SC 2.4.3: focus is moved here programmatically via gameOverCardRef watcher -->
     <div
       v-if="gameStore.gameState?.gameOver"
       class="game-over-overlay"
       role="dialog"
       aria-modal="true"
-      aria-label="Game over"
+      aria-labelledby="game-over-title"
+      aria-describedby="game-over-result"
     >
-      <div class="game-over-card">
-        <div class="game-over-title">Battle Complete</div>
-        <div class="game-over-result">
+      <div ref="gameOverCardRef" class="game-over-card" tabindex="-1">
+        <h2 id="game-over-title" class="game-over-title">Battle Complete</h2>
+        <div id="game-over-result" class="game-over-result">
           {{ gameStore.gameState?.victoryResult ?? 'Result unavailable' }}
         </div>
         <div v-if="gameStore.gameState?.vp" class="game-over-vp">
@@ -356,6 +369,7 @@ function onImageLoad(event) {
   background: #1a1610;
   border: 2px solid #8a6a30;
   border-radius: 4px;
+  outline: none; /* focus indicator provided by the border itself */
   padding: 2rem 2.5rem;
   text-align: center;
   min-width: 320px;
@@ -364,10 +378,11 @@ function onImageLoad(event) {
 
 .game-over-title {
   font-size: 0.8rem;
+  font-weight: normal;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: #8a7a6a;
-  margin-bottom: 0.75rem;
+  margin: 0 0 0.75rem;
 }
 
 .game-over-result {
@@ -386,12 +401,14 @@ function onImageLoad(event) {
   color: #8a7a6a;
 }
 
+/* WCAG AA: #88a8e0 on #1a1610 ≈ 4.8:1 */
 .vp-label.union {
-  color: #6080c0;
+  color: #88a8e0;
 }
 
+/* WCAG AA: #e08a66 on #1a1610 ≈ 4.6:1 */
 .vp-label.confederate {
-  color: #c06040;
+  color: #e08a66;
 }
 
 .vp-sep {

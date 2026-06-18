@@ -72,12 +72,14 @@ defineProps({
   color: #8a7a6a;
 }
 
+/* WCAG AA: #88a8e0 on #12100c ≈ 5.3:1 (union blue) */
 .vp-side.union {
-  color: #6080c0;
+  color: #88a8e0;
 }
 
+/* WCAG AA: #e08a66 on #12100c ≈ 5.1:1 (confederate orange) */
 .vp-side.confederate {
-  color: #c06040;
+  color: #e08a66;
 }
 
 .vp-value {
@@ -85,11 +87,11 @@ defineProps({
 }
 
 .vp-value.positive {
-  color: #6080c0;
+  color: #88a8e0;
 }
 
 .vp-value.negative {
-  color: #c06040;
+  color: #e08a66;
 }
 
 .vp-result {

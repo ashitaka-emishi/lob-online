@@ -122,9 +122,12 @@ export function handleAcknowledgeRandomEvent(state) {
     );
   }
 
+  // SM §7.0 — mark the random-event check as done for this Command Phase so drainAutoSteps
+  // does not re-fire on the next iteration (one check per active player per Command Phase).
   return {
     ...state,
     ordersPhase: { ...state.ordersPhase, pendingRandomEvent: null },
+    completedSteps: [...(state.completedSteps ?? []), 'randomEvent'],
   };
 }
 

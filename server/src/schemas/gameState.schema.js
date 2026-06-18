@@ -267,6 +267,14 @@ export const GameStateSchema = z
       path: ['phase'],
     }
   )
+  // SM §5.3 — terminal 'complete' state requires activePlayer and step to be null (#team-review)
+  .refine(
+    (data) => data.status !== 'complete' || (data.activePlayer === null && data.step === null),
+    {
+      message: "activePlayer and step must be null when status is 'complete'",
+      path: ['activePlayer'],
+    }
+  )
   // LOB §3.0d — activityPhase tracks mid-activation state; must be null outside Activity Phase (#378)
   .refine((data) => (data.phase === PHASES.ACTIVITY) === (data.activityPhase !== null), {
     message: "activityPhase must be non-null iff phase is 'activity'",

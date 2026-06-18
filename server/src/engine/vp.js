@@ -79,8 +79,10 @@ export function isVpControlEligible(unit, oobUnit) {
  * Return an updated hexControl map after a unit moves to (or through) newHex.
  *
  * SM §5.1 — "the player who last occupied or moved through the hex" claims control.
- * Called by the movement handler whenever a qualifying unit enters a VP hex.
- * The vpHexSet is a Set of hex IDs that award VP (derived from scenario.victoryPoints.terrain).
+ * Must be called by the movement handler whenever a qualifying unit enters a hex in vpHexSet.
+ * NOTE: terrain VP is not yet tracked during play — no movement handler calls this yet.
+ * Wiring deferred to M8+ when the MOVE action is implemented. See #635.
+ * Until then, state.hexControl stays {} and computeTerrainVP always returns 0.
  *
  * @param {object} hexControl  — current { hex: 'union'|'confederate'|null } map
  * @param {string} hex         — hex the unit moved into
