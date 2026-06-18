@@ -19,6 +19,11 @@ import {
   handleFireArtillery,
   handleReplenishArtillery,
 } from './artillery.js';
+import {
+  handleRollAttackRecovery,
+  handleAcknowledgeRandomEvent,
+  resolveRandomEvent,
+} from './endOfTurn.js';
 
 export { ActionError };
 
@@ -28,6 +33,19 @@ export { ActionError };
 export function getValidActions(state, playerSide) {
   if (state.status !== 'active') return [];
   if (state.activePlayer !== playerSide) return [];
+
+  // SM §7.0 — random event pending acknowledgement: only ACKNOWLEDGE_RANDOM_EVENT is valid.
+  if (state.ordersPhase?.pendingRandomEvent) {
+    return [{ type: 'ACKNOWLEDGE_RANDOM_EVENT', payload: null }];
+  }
+
+  // LOB §10.8c — attack recovery pending: only ROLL_ATTACK_RECOVERY is valid.
+  if (state.pendingAttackRecovery?.divisionIds?.length > 0) {
+    return state.pendingAttackRecovery.divisionIds.map((divisionId) => ({
+      type: 'ROLL_ATTACK_RECOVERY',
+      payload: { divisionId },
+    }));
+  }
 
   // LOB §9.1a — when a leader casualty check is pending, only RESOLVE_LEADER_CASUALTY is valid.
   // Player must supply leaderId, roll, and situation before the game can continue.
@@ -243,6 +261,8 @@ export const ACTION_HANDLERS = new Map([
   ['UNLIMBER', handleUnlimber],
   ['FIRE_ARTILLERY', handleFireArtillery],
   ['REPLENISH_ARTILLERY', handleReplenishArtillery],
+  ['ROLL_ATTACK_RECOVERY', handleRollAttackRecovery],
+  ['ACKNOWLEDGE_RANDOM_EVENT', handleAcknowledgeRandomEvent],
 ]);
 
 // Current auto-advance steps: attackRecovery, flukeStoppage, rally (3 steps, 8 gives headroom for M6+)
@@ -277,7 +297,8 @@ function assertEnvelope(value, key, expectedPhase, phase, step) {
 
 // LOB §2.1 — advances through automatic steps until the next interactive step.
 // Called by dispatch after every handler invocation.
-export function drainAutoSteps(state) {
+// ctx: passed from dispatch; used for scenario-dependent auto-steps (random events, reinforcements).
+export function drainAutoSteps(state, ctx = {}) {
   let s = state;
 
   // Iteration cap guards against a future handler bug that creates a cycle in the step state machine,
@@ -289,17 +310,92 @@ export function drainAutoSteps(state) {
     assertEnvelope(s.ordersPhase, 'ordersPhase', PHASES.COMMAND, phase, step);
     assertEnvelope(s.rallyPhase, 'rallyPhase', PHASES.RALLY, phase, step);
 
-    // LOB §10.8c — Attack Recovery: roll per division with a 'stopped' attack order.
-    // Auto-advance when no stopped divisions exist (common at game start).
-    // M7 will add interactive dice when stopped divisions are present mid-game.
+    // LOB §3.7 / SM reinforcements — place units that are due this turn from the queue.
+    // Fires every time we land on ORDERS step so arriving units are ready before activation.
+    // Only runs if there are queue entries for the current turn.
+    if (phase === PHASES.COMMAND && step === STEPS.ORDERS) {
+      const due = s.reinforcementQueue.filter((e) => e.turn === s.turn);
+      if (due.length > 0) {
+        const remainingQueue = s.reinforcementQueue.filter((e) => e.turn !== s.turn);
+        const updatedUnits = { ...s.units };
+        for (const { unitId, entryHex } of due) {
+          if (updatedUnits[unitId]) {
+            updatedUnits[unitId] = { ...updatedUnits[unitId], isOnBoard: true, hex: entryHex };
+          }
+        }
+        s = { ...s, reinforcementQueue: remainingQueue, units: updatedUnits };
+        // Continue — do not advance step; let ORDERS interactive loop proceed normally.
+        // We must return here to avoid re-processing arrivals on subsequent drain iterations.
+        return s;
+      }
+    }
+
+    // SM §7.0 — Random Event: roll 2d6 for the active player after the Orders step ends.
+    // Fires when entering ATTACK_RECOVERY; pendingRandomEvent must be acknowledged before advancing.
+    // Only applies when scenario has random events enabled.
     if (phase === PHASES.COMMAND && step === STEPS.ATTACK_RECOVERY) {
-      // LOB §10.8c — enumerate units whose orders are 'stopped' (stopped attack order).
-      // At M6 depth: stopped orders are not yet created in the South Mountain scenario startup;
-      // auto-advance is correct for all current game states.
-      // TODO(M7): when _stoppedUnitIds.length > 0, pause for player dice and roll recovery table. (#609)
-      const _stoppedUnitIds = Object.values(s.units)
+      const scenario = ctx.scenario;
+      if (scenario?.randomEventsEnabled && s.ordersPhase?.pendingRandomEvent == null) {
+        // ordersPhase may be null if we just cleared it; check defensively
+        const side = s.activePlayer;
+        // Deterministic: use a seeded roll derived from turn + side for auto-advance tests;
+        // in production the route layer will supply the roll via ROLL_RANDOM_EVENT action.
+        // For M7: auto-roll using Math.random() — M8+ can wire player-supplied dice.
+        const roll1 = Math.ceil(Math.random() * 6);
+        const roll2 = Math.ceil(Math.random() * 6);
+        const roll = roll1 + roll2;
+        // SM §7.1/§7.2 — reroll triggers; for simplicity take the first roll result only
+        // (second roll on reroll trigger is a TODO for M8+ per plan).
+        const resolved = resolveRandomEvent(roll, side, scenario);
+        if (resolved && s.ordersPhase !== null) {
+          s = {
+            ...s,
+            ordersPhase: { ...s.ordersPhase, pendingRandomEvent: resolved },
+          };
+          return s; // pause — player must submit ACKNOWLEDGE_RANDOM_EVENT
+        }
+      }
+    }
+
+    // LOB §10.8c — Attack Recovery: roll per division with a 'stopped' attack order.
+    // Pause for player dice when stopped divisions are present; auto-advance otherwise.
+    if (phase === PHASES.COMMAND && step === STEPS.ATTACK_RECOVERY) {
+      // LOB §10.8c — automatic recovery on first twilight turn (LOB_CHARTS).
+      // First twilight turn is the first turn where lightingSchedule condition !== 'day'.
+      const scenario = ctx.scenario;
+      const lightingSchedule = scenario?.lightingSchedule ?? [];
+      const firstTwilightTurn =
+        lightingSchedule.find((e) => e.condition !== 'day')?.startTurn ?? null;
+      const isAutoRecoveryTurn = firstTwilightTurn !== null && s.turn >= firstTwilightTurn;
+
+      // LOB §10.8c — enumerate divisions with 'stopped' attack orders
+      const stoppedDivisionIds = Object.values(s.units)
         .filter((u) => u.isOnBoard && u.orders?.status === 'stopped')
         .map((u) => u.id);
+
+      if (stoppedDivisionIds.length > 0 && !isAutoRecoveryTurn) {
+        // LOB §10.8c — pause for interactive recovery rolls; set pendingAttackRecovery
+        if (!s.pendingAttackRecovery) {
+          s = { ...s, pendingAttackRecovery: { divisionIds: stoppedDivisionIds } };
+          return s; // pause — player must submit ROLL_ATTACK_RECOVERY for each division
+        }
+        // pendingAttackRecovery already set — still waiting for submissions
+        return s;
+      } else if (stoppedDivisionIds.length > 0 && isAutoRecoveryTurn) {
+        // LOB_CHARTS — automatic recovery: clear all stopped orders unconditionally
+        const autoRecoveredUnits = { ...s.units };
+        for (const divId of stoppedDivisionIds) {
+          const u = autoRecoveredUnits[divId];
+          if (u) {
+            autoRecoveredUnits[divId] = {
+              ...u,
+              orders: { ...u.orders, status: 'none', type: null, deliveryTurnDue: null },
+            };
+          }
+        }
+        s = { ...s, units: autoRecoveredUnits, pendingAttackRecovery: null };
+      }
+
       s = {
         ...s,
         step: STEPS.FLUKE_STOPPAGE,
@@ -432,7 +528,7 @@ export function dispatch(state, action, ctx = {}) {
   }
 
   const nextState = handler(state, { type, payload, playerSide }, ctx);
-  const drainedState = drainAutoSteps(nextState);
+  const drainedState = drainAutoSteps(nextState, ctx);
 
   const parsed = GameStateSchema.safeParse(drainedState);
   if (!parsed.success) {

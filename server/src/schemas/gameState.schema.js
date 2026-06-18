@@ -190,9 +190,34 @@ export const GameStateSchema = z
           .object({ leaderId: z.string(), unitId: z.string() })
           .strict()
           .nullable(),
+        // SM §7.0 / SM §7.1–7.2 — non-null when a random-event roll result is awaiting
+        // player acknowledgement. Cleared by ACKNOWLEDGE_RANDOM_EVENT. null = no pending event.
+        pendingRandomEvent: z
+          .object({
+            side: z.enum(['union', 'confederate']),
+            roll: z.number().int().min(2).max(12),
+            event: z.string(),
+            text: z.string(),
+          })
+          .strict()
+          .nullable()
+          .default(null),
       })
       .strict()
       .nullable(),
+    // LOB §10.8c — non-null during ATTACK_RECOVERY step when stopped divisions are present.
+    // Stores the division IDs that still need recovery rolls this step.
+    // null = no pending attack recovery (auto-advance).
+    pendingAttackRecovery: z
+      .object({
+        divisionIds: z.array(z.string()).min(1),
+      })
+      .strict()
+      .nullable()
+      .default(null),
+    // SM §7.0 (Confederate Order of Arrival) — true once Force A and Force B variable arrival
+    // turns have been determined by 1d6 roll at game start. Prevents re-rolling.
+    variableReinforcementsScheduled: z.boolean().default(false),
     // LOB §8.1 — non-null only during Rally Phase; tracks units with CBF markers pending rally
     rallyPhase: z
       .object({

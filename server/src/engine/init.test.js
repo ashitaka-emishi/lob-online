@@ -287,13 +287,16 @@ describe('initGameState — reinforcement pre-queuing', () => {
     expect(ripleyEntry.entryHex).toBe('39.35');
   });
 
-  it('queues variable reinforcements at earliest variableTable entry', () => {
+  it('queues variable reinforcements at a valid variableTable entry (SM §7.0)', () => {
     const { reinforcementQueue } = initGameState(SCENARIO, 'g1');
     const jonesEntry = reinforcementQueue.find((e) => e.unitId === 'dr-jones');
     expect(jonesEntry).toBeDefined();
-    // LOB §1.1 — 15 min/turn: 14:30 → (330/15)+1 = 22+1 = turn 23
-    expect(jonesEntry.turn).toBe(23);
-    expect(jonesEntry.entryHex).toBe('39.35');
+    // SM §7.0 — valid arrival turns: roll1→turn23@39.35, roll2-3→turn25@20.34,
+    //            roll4-5→turn27@39.35, roll6→turn29@39.35
+    const validTurns = [23, 25, 27, 29];
+    const validHexes = ['39.35', '20.34'];
+    expect(validTurns).toContain(jonesEntry.turn);
+    expect(validHexes).toContain(jonesEntry.entryHex);
   });
 
   it('reinforcement units are not on board', () => {

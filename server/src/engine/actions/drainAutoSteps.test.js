@@ -159,7 +159,7 @@ describe('drainAutoSteps — Attack Recovery (LOB §10.8c)', () => {
     expect(result.phase).toBe(PHASES.ACTIVITY);
   });
 
-  it('auto-advances when a unit has stopped orders (M6 depth — real dice deferred to M7)', () => {
+  it('pauses for interactive dice when a unit has stopped orders (LOB §10.8c, M7)', () => {
     const state = {
       ...ATTACK_RECOVERY_STATE,
       units: {
@@ -168,9 +168,11 @@ describe('drainAutoSteps — Attack Recovery (LOB §10.8c)', () => {
         }),
       },
     };
-    // At M6 depth: still auto-advances (interactive dice path deferred to M7)
+    // LOB §10.8c — stopped divisions require ROLL_ATTACK_RECOVERY; drainAutoSteps must pause
     const result = drainAutoSteps(state);
-    expect(result.phase).toBe(PHASES.ACTIVITY);
+    expect(result.phase).toBe(PHASES.COMMAND);
+    expect(result.step).toBe(STEPS.ATTACK_RECOVERY);
+    expect(result.pendingAttackRecovery?.divisionIds).toContain('u1');
   });
 });
 

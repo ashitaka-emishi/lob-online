@@ -68,6 +68,12 @@ function actionLabel(action) {
   if (action.type === 'REPLENISH_ARTILLERY' && action.payload?.unitId) {
     return `Replenish — ${action.payload.unitId}`;
   }
+  if (action.type === 'ACKNOWLEDGE_RANDOM_EVENT') {
+    return 'Acknowledge Random Event';
+  }
+  if (action.type === 'ROLL_ATTACK_RECOVERY' && action.payload?.divisionId) {
+    return `Attack Recovery — ${action.payload.divisionId}`;
+  }
   return toTitleCase(action.type);
 }
 
