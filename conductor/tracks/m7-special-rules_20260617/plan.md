@@ -3,7 +3,7 @@
 **Track ID:** m7-special-rules_20260617
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-17
-**Status:** [ ] Not Started
+**Status:** [~] In Progress
 
 ## Overview
 
@@ -60,17 +60,17 @@ later phases — retreat must apply before artillery fire or VP can be meaningfu
 
 ### Tasks
 
-- [ ] Task 1.1: Fix #617 — extend `leaderLossCheckRequired` in `closeCombat.js` to fire on
+- [x] Task 1.1: Fix #617 — extend `leaderLossCheckRequired` in `closeCombat.js` to fire on
       Opening Volley defender SP loss in addition to the §7.0a(e) automatic 1-SP loss. Add test
       covering OV-loss-only path (attacker < 4 SPs, OV inflicts loss → leader check required).
-- [ ] Task 1.2: Add `applyRetreat(state, unitId, hexCount)` engine helper in
+- [x] Task 1.2: Add `applyRetreat(state, unitId, hexCount)` engine helper in
       `engine/movement.js` or new `engine/retreat.js` — moves a unit `hexCount` hexes away from
       the combat hex following LOB §6.1 retreat rules (toward friendly edge; no ZOC crossing).
       Unit tests for basic retreat path and impassable-terrain fallback.
-- [ ] Task 1.3: Wire morale resolution to apply retreat and SP losses from `moraleResult` to
+- [x] Task 1.3: Wire morale resolution to apply retreat and SP losses from `moraleResult` to
       game state in `handleResolveMorale` — currently these are recorded in `pendingResolution`
       but the position/SP changes are not committed.
-- [ ] Task 1.4: Run `npm run test` — all green.
+- [x] Task 1.4: Run `npm run test` — all green.
 
 **Verification:** `npm run test` green; `leaderLossCheckRequired` fires on OV losses; retreat
 application commits position + SP to `state.units`.

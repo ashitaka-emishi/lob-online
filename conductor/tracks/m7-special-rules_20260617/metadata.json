@@ -2,15 +2,22 @@
   "id": "m7-special-rules_20260617",
   "title": "M7 — Special Rules + Victory Conditions",
   "type": "feature",
-  "status": "pending",
+  "status": "in_progress",
   "created": "2026-06-17T00:00:00Z",
-  "updated": "2026-06-17T00:00:00Z",
+  "updated": "2026-06-17T23:45:00Z",
+  "current_phase": 1,
+  "current_task": "1.4",
   "phases": {
     "total": 5,
     "completed": 0
   },
   "tasks": {
     "total": 27,
-    "completed": 0
-  }
+    "completed": 4
+  },
+  "commits": [
+    "d77b428: fix(engine): #617 — leaderLossCheckRequired fires on OV attacker SP loss (LOB §9.1a)",
+    "1d083c9: feat(engine): add applyRetreat() helper — LOB §6.1 retreat resolution",
+    "dda50de: feat(engine): wire retreat + SP losses into RESOLVE_MORALE (LOB §6.1)"
+  ]
 }
