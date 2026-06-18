@@ -124,7 +124,7 @@ export function getValidActions(state, playerSide) {
 
       // LOB §5.5 — FIRE_COMBAT: enumerate enemy hexes in range; candidates use null payload
       // (client supplies dice at submission time; exact LOS/range gating deferred to handler).
-      // TODO(M7): enumerate concrete (attackerHex, defenderHex) pairs when map data is available.
+      // TODO(M7): enumerate concrete (attackerHex, defenderHex) pairs when map data is available. (#609)
       const enemyHexesOnBoard = new Set(
         Object.values(state.units)
           .filter((u) => {
@@ -246,7 +246,7 @@ export function drainAutoSteps(state) {
       // LOB §10.8c — enumerate units whose orders are 'stopped' (stopped attack order).
       // At M6 depth: stopped orders are not yet created in the South Mountain scenario startup;
       // auto-advance is correct for all current game states.
-      // TODO(M7): when _stoppedUnitIds.length > 0, pause for player dice and roll recovery table.
+      // TODO(M7): when _stoppedUnitIds.length > 0, pause for player dice and roll recovery table. (#609)
       const _stoppedUnitIds = Object.values(s.units)
         .filter((u) => u.isOnBoard && u.orders?.status === 'stopped')
         .map((u) => u.id);
@@ -265,7 +265,7 @@ export function drainAutoSteps(state) {
       // LOB §10.7b — enumerate units whose accepted order is 'attack'.
       // At M6 depth: accepted attack orders without a completed fluke roll require a die roll,
       // but the South Mountain scenario startup has no such orders. Auto-advance is correct.
-      // TODO(M7): when _attackOrderUnitIds.length > 0, pause for player dice and apply fluke table.
+      // TODO(M7): when _attackOrderUnitIds.length > 0, pause for player dice and apply fluke table. (#609)
       const _attackOrderUnitIds = Object.values(s.units)
         .filter(
           (u) => u.isOnBoard && u.orders?.type === 'attack' && u.orders?.status === 'accepted'
@@ -289,15 +289,14 @@ export function drainAutoSteps(state) {
     if (phase === PHASES.RALLY && step === STEPS.RALLY) {
       // LOB §6.4 — apply automatic recovery BEFORE clearing CBF markers (cbfMarker determines
       // whether a shaken unit auto-recovers). Must run first so cbfMarker values are still set.
-      const { units: unitsAfter64, unitsPendingRallyRoll } = applySection64AutoRecovery(s.units);
+      const { units: unitsAfter64, unitsPendingRallyRoll: _unitsPendingRallyRoll } =
+        applySection64AutoRecovery(s.units);
 
       // LOB §8.1 — clear CBF markers from all on-board units after §6.4 has consumed them
       const unitsAfterCbf = clearCbfMarkers(unitsAfter64);
 
-      // LOB §6.3 — units still needing a rally roll after §6.4 (routed units, shaken+CBF survivors).
-      // TODO(M7): when unitsPendingRallyRoll.length > 0, pause for player dice and apply rally table.
-      // At M6 depth: auto-advance regardless (no DG/Routed units in scenario startup state).
-      const _pendingRallyRoll = unitsPendingRallyRoll;
+      // LOB §6.3 — units still needing a rally roll after §6.4 (routed units).
+      // TODO(M7): when _unitsPendingRallyRoll.length > 0, pause for player dice and apply rally table. (#609)
 
       const nextActivePlayer = s.activePlayer === 'union' ? 'confederate' : 'union';
       s = {

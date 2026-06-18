@@ -82,6 +82,38 @@ const MOCK_OOB = {
   },
 };
 
+// Returns a copy of MOCK_OOB with the first union regiment's strengthPoints overridden.
+// Hoisted here to avoid copy-pasting the deeply-nested structure in each test (#622).
+function makeOob(strengthPoints) {
+  return {
+    ...MOCK_OOB,
+    union: {
+      ...MOCK_OOB.union,
+      corps: [
+        {
+          ...MOCK_OOB.union.corps[0],
+          divisions: [
+            {
+              ...MOCK_OOB.union.corps[0].divisions[0],
+              brigades: [
+                {
+                  ...MOCK_OOB.union.corps[0].divisions[0].brigades[0],
+                  regiments: [
+                    {
+                      ...MOCK_OOB.union.corps[0].divisions[0].brigades[0].regiments[0],
+                      strengthPoints,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  };
+}
+
 // ─── Minimal game state fixture ────────────────────────────────────────────────
 const BASE_STATE = {
   id: 'g1',
@@ -177,7 +209,7 @@ describe('handleCloseCombat', () => {
     expect(result.pendingResolution.context.defenderSpLoss).toBe(1);
   });
 
-  it('sets cbfMarker on defender unit (LOB §8.1)', () => {
+  it('sets cbfMarker on defender unit (LOB §5.8)', () => {
     const result = handleCloseCombat(BASE_STATE, CHARGE_ACTION, { oob: MOCK_OOB });
     expect(result.units.c1.cbfMarker).toBe(true);
   });
@@ -238,17 +270,17 @@ describe('handleCloseCombat', () => {
     expect(result.pendingResolution.context.openingVolleySpLoss).toBeGreaterThanOrEqual(0);
   });
 
-  it('sets cbfMarker on attacker when Opening Volley causes SP loss (LOB §8.1)', () => {
-    // 'charge' OV table: die 6 → guaranteed SP loss (per combat.js OPENING_VOLLEY_TABLE)
+  it('sets cbfMarker on attacker when Opening Volley causes SP loss (LOB §5.8)', () => {
+    // 'charge' OV table: die 6 → 2 SP loss (OPENING_VOLLEY_TABLE charge row [6,6,2])
     const action = {
       ...CHARGE_ACTION,
       payload: { ...CHARGE_ACTION.payload, openingVolleyDie: 6 },
     };
     const result = handleCloseCombat(BASE_STATE, action, { oob: MOCK_OOB });
     const ctx = result.pendingResolution.context;
-    if (ctx.openingVolleySpLoss > 0) {
-      expect(result.units.u1.cbfMarker).toBe(true);
-    }
+    // Assert the table returned a loss before checking the CBF marker (prevents vacuous pass)
+    expect(ctx.openingVolleySpLoss).toBeGreaterThan(0);
+    expect(result.units.u1.cbfMarker).toBe(true);
   });
 
   describe('automatic SP loss gate — LOB §7.0 (#579)', () => {
@@ -259,66 +291,12 @@ describe('handleCloseCombat', () => {
     });
 
     it('no automatic SP defender loss when attacker has <4 SPs (LOB §7.0)', () => {
-      const oob3Sp = {
-        ...MOCK_OOB,
-        union: {
-          ...MOCK_OOB.union,
-          corps: [
-            {
-              ...MOCK_OOB.union.corps[0],
-              divisions: [
-                {
-                  ...MOCK_OOB.union.corps[0].divisions[0],
-                  brigades: [
-                    {
-                      ...MOCK_OOB.union.corps[0].divisions[0].brigades[0],
-                      regiments: [
-                        {
-                          ...MOCK_OOB.union.corps[0].divisions[0].brigades[0].regiments[0],
-                          strengthPoints: 3,
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      };
-      const result = handleCloseCombat(BASE_STATE, CHARGE_ACTION, { oob: oob3Sp });
+      const result = handleCloseCombat(BASE_STATE, CHARGE_ACTION, { oob: makeOob(3) });
       expect(result.pendingResolution.context.defenderSpLoss).toBe(0);
     });
 
-    it('defender does not get cbfMarker when attacker SPs < 4 (LOB §8.1)', () => {
-      const oob3Sp = {
-        ...MOCK_OOB,
-        union: {
-          ...MOCK_OOB.union,
-          corps: [
-            {
-              ...MOCK_OOB.union.corps[0],
-              divisions: [
-                {
-                  ...MOCK_OOB.union.corps[0].divisions[0],
-                  brigades: [
-                    {
-                      ...MOCK_OOB.union.corps[0].divisions[0].brigades[0],
-                      regiments: [
-                        {
-                          ...MOCK_OOB.union.corps[0].divisions[0].brigades[0].regiments[0],
-                          strengthPoints: 3,
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      };
-      const result = handleCloseCombat(BASE_STATE, CHARGE_ACTION, { oob: oob3Sp });
+    it('defender does not get cbfMarker when attacker SPs < 4 (LOB §5.8)', () => {
+      const result = handleCloseCombat(BASE_STATE, CHARGE_ACTION, { oob: makeOob(3) });
       expect(result.units.c1.cbfMarker).toBe(false);
     });
 
@@ -342,34 +320,7 @@ describe('handleCloseCombat', () => {
     });
 
     it('leaderLossCheckRequired is false when attacker SPs <4 (no SP loss, LOB §9.1a)', () => {
-      const oob3Sp = {
-        ...MOCK_OOB,
-        union: {
-          ...MOCK_OOB.union,
-          corps: [
-            {
-              ...MOCK_OOB.union.corps[0],
-              divisions: [
-                {
-                  ...MOCK_OOB.union.corps[0].divisions[0],
-                  brigades: [
-                    {
-                      ...MOCK_OOB.union.corps[0].divisions[0].brigades[0],
-                      regiments: [
-                        {
-                          ...MOCK_OOB.union.corps[0].divisions[0].brigades[0].regiments[0],
-                          strengthPoints: 3,
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      };
-      const result = handleCloseCombat(BASE_STATE, CHARGE_ACTION, { oob: oob3Sp });
+      const result = handleCloseCombat(BASE_STATE, CHARGE_ACTION, { oob: makeOob(3) });
       expect(result.pendingResolution.context.leaderLossCheckRequired).toBe(false);
     });
   });

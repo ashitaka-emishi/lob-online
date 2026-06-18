@@ -341,8 +341,6 @@ describe('useGameStore — loadGame scenario fetch (#583)', () => {
     );
     const store = useGameStore();
     await store.loadGame('g-scen', { moduleSlug: 'south-mountain', scenarioSlug: 'full-battle' });
-    // Scenario fetch is fire-and-forget; flush microtasks before asserting
-    await new Promise((resolve) => setTimeout(resolve, 0));
     expect(store.scenario).toEqual(scenarioData);
   });
 
@@ -357,8 +355,33 @@ describe('useGameStore — loadGame scenario fetch (#583)', () => {
     );
     const store = useGameStore();
     await store.loadGame('g-no-scen');
-    await new Promise((resolve) => setTimeout(resolve, 0));
     expect(store.scenario).toBeNull();
+  });
+
+  it('leaves scenario null and does not propagate error when scenario fetch rejects (#588 #591)', async () => {
+    // Scenario fetch failure is non-fatal: scenario stays null, gameState still populated (#588)
+    const gs = makeGameState('g-scen-fail');
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.stubGlobal('fetch', (url) => {
+      if (url.includes('/scenario')) return Promise.reject(new Error('network error'));
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(url.includes('/games/') ? gs : { gridSpec: null, hexes: null }),
+      });
+    });
+    const store = useGameStore();
+    await store.loadGame('g-scen-fail', {
+      moduleSlug: 'south-mountain',
+      scenarioSlug: 'full-battle',
+    });
+    expect(store.scenario).toBeNull();
+    expect(store.gameState).not.toBeNull(); // game state still loaded despite scenario failure
+    expect(store.error).toBeNull(); // error not set — failure is non-fatal
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[store] scenario fetch failed (non-fatal):',
+      expect.objectContaining({ message: 'network error' })
+    );
   });
 });
 

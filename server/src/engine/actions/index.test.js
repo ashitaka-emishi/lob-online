@@ -301,8 +301,10 @@ describe('getValidActions', () => {
     expect(getValidActions(state, 'union')).toEqual([]);
   });
 
-  // Task 3.4 — no soft-lock after combat sets a pending resolution (#571)
-  it('returns [RESOLVE_MORALE] when pendingResolution.type is combatResult — no soft-lock (#571)', () => {
+  // #571 — no soft-lock after combat sets a pending resolution
+  // Convention (#597): soft-lock tests verify getValidActions() scope only. Handler-level
+  // correctness (that RESOLVE_MORALE actually clears pending) is covered in resolveMorale.test.js.
+  it('getValidActions returns [RESOLVE_MORALE] when pendingResolution.type is combatResult — no soft-lock (#571)', () => {
     const state = {
       ...ACTIVITY_STATE,
       pendingResolution: {
@@ -315,8 +317,7 @@ describe('getValidActions', () => {
     expect(actions[0].type).toBe('RESOLVE_MORALE');
   });
 
-  // #571 — closingRoll and moraleCheck must also surface RESOLVE_MORALE (no soft-lock)
-  it('returns [RESOLVE_MORALE] when pendingResolution.type is closingRoll (#571)', () => {
+  it('getValidActions returns [RESOLVE_MORALE] when pendingResolution.type is closingRoll (#571)', () => {
     const state = {
       ...ACTIVITY_STATE,
       pendingResolution: {
@@ -329,7 +330,7 @@ describe('getValidActions', () => {
     expect(actions[0].type).toBe('RESOLVE_MORALE');
   });
 
-  it('returns [RESOLVE_MORALE] when pendingResolution.type is moraleCheck (#571)', () => {
+  it('getValidActions returns [RESOLVE_MORALE] when pendingResolution.type is moraleCheck (#571)', () => {
     const state = {
       ...ACTIVITY_STATE,
       pendingResolution: {

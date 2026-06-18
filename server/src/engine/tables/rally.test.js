@@ -60,6 +60,20 @@ describe('rallyRollResult (LOB §6.4 step 3)', () => {
     expect(result.success).toBe(true);
     expect(result.modifiedRoll).toBe(6);
   });
+
+  it('roll 4 + MV 0 = 4 fails — one below the threshold boundary (#620)', () => {
+    // Boundary: threshold is ≥ 5; 4 is strictly below. Ensures ≥ vs > is not regressed.
+    const result = rallyRollResult(4, 0);
+    expect(result.success).toBe(false);
+    expect(result.modifiedRoll).toBe(4);
+    expect(result.newMoraleState).toBeNull();
+  });
+
+  it('roll 1 + MV 0 = 1 always fails (minimum possible total, #620)', () => {
+    const result = rallyRollResult(1, 0);
+    expect(result.success).toBe(false);
+    expect(result.modifiedRoll).toBe(1);
+  });
 });
 
 // ─── applySection64AutoRecovery ───────────────────────────────────────────────
@@ -104,6 +118,14 @@ describe('applySection64AutoRecovery (LOB §6.4)', () => {
     const units = { u1: makeUnit('u1', 'normal') };
     const { units: result } = applySection64AutoRecovery(units);
     expect(result.u1.moraleState).toBe('normal');
+  });
+
+  it('bloodlust unit is unaffected by §6.4 and not added to unitsPendingRallyRoll (LOB §6.4 #620)', () => {
+    // bloodlust falls through all if/else branches — neither auto-recovers nor requires a roll
+    const units = { u1: makeUnit('u1', 'bloodlust') };
+    const { units: result, unitsPendingRallyRoll } = applySection64AutoRecovery(units);
+    expect(result.u1.moraleState).toBe('bloodlust');
+    expect(unitsPendingRallyRoll).not.toContain('u1');
   });
 
   it('routed unit is added to unitsPendingRallyRoll (LOB §6.4)', () => {
@@ -204,19 +226,19 @@ describe('drainAutoSteps — §6.4 automatic recovery integration', () => {
     });
     const result = drainAutoSteps(state);
     expect(result.units.u1.moraleState).toBe('normal');
-    expect(result.units.u1.cbfMarker).toBe(false); // §8.1 clears CBF after §6.4
+    expect(result.units.u1.cbfMarker).toBe(false); // §5.8c clears CBF after §6.4
   });
 
-  it('§6.4 runs BEFORE §8.1 cbfMarker clearing (ordering invariant)', () => {
-    // DG unit with cbfMarker: §6.4 flips it to shaken unconditionally (step 2),
-    // then §8.1 clears cbfMarker. Sequence order must be §6.4 → §8.1.
-    // Since DG→Sh is unconditional, this test primarily verifies the drain sequence
-    // reaches the correct final state (shaken, cbfMarker=false) in one pass.
+  it('§6.4 runs BEFORE §5.8c cbfMarker clearing — DG+cbf ends as shaken+false, not normal (#619)', () => {
+    // Discriminating case: DG+cbfMarker unit.
+    // §6.4 first: DG → shaken. §5.8c second: clears cbfMarker. Final: shaken, cbfMarker=false.
+    // If §6.4 ran twice (incorrect double-pass), DG→shaken→normal; moraleState would be 'normal'.
+    // This asserts that §6.4 ran exactly once before §5.8c cleared the marker.
     const state = makeRallyState({
       u1: makeUnit('u1', 'disorganized', true),
     });
     const result = drainAutoSteps(state);
-    expect(result.units.u1.moraleState).toBe('shaken');
-    expect(result.units.u1.cbfMarker).toBe(false);
+    expect(result.units.u1.moraleState).toBe('shaken'); // not 'normal' — §6.4 ran once
+    expect(result.units.u1.cbfMarker).toBe(false); // §5.8c cleared after §6.4
   });
 });

@@ -125,7 +125,7 @@ export function buildLeaderSideMap(leaders) {
 
 /**
  * Walk the OOB tree and return the unit object with matching id.
- * LOB §5.3 — needed to look up printed strengthPoints for SP computation.
+ * LOB §5.0 — needed to look up printed strengthPoints for SP computation (§5.0 DG ×½ rule).
  * LOB §6.1 — needed to look up morale rating for each unit being checked.
  * LOB §7.0d — needed to resolve attacker morale rating for Closing Roll threshold.
  *
@@ -133,6 +133,69 @@ export function buildLeaderSideMap(leaders) {
  * @param {string} unitId
  * @returns {object|null}
  */
+/**
+ * Build a flat Map<unitId, unitObject> index from the OOB tree for O(1) lookups (#596).
+ * Call once per loaded OOB and pass the result to findOobUnitFast() for hot-path lookups.
+ *
+ * @param {object} oob - validated OOB data from loadOob()
+ * @returns {Map<string, object>}
+ */
+export function buildUnitIndex(oob) {
+  const index = new Map();
+  if (!oob) return index;
+
+  function indexList(list) {
+    for (const item of list ?? []) {
+      if (item.id) index.set(item.id, item);
+    }
+  }
+
+  function indexBrigade(brig) {
+    indexList(brig.regiments);
+    indexList(brig.batteries);
+  }
+
+  function indexArtilleryGroup(artGroup) {
+    for (const group of Object.values(artGroup ?? {})) indexList(group.batteries);
+  }
+
+  function indexDivision(div) {
+    for (const brig of div.brigades ?? []) indexBrigade(brig);
+    indexArtilleryGroup(div.artillery);
+    indexList(div.batteries);
+  }
+
+  for (const corps of oob.union?.corps ?? []) {
+    indexList(corps.corpsUnits);
+    indexArtilleryGroup(corps.artillery);
+    for (const div of corps.divisions ?? []) indexDivision(div);
+  }
+  for (const brig of oob.union?.cavalryDivision?.brigades ?? []) indexBrigade(brig);
+  indexArtilleryGroup(oob.union?.cavalryDivision?.artillery);
+
+  for (const div of oob.confederate?.divisions ?? []) indexDivision(div);
+  indexList(oob.confederate?.independent?.cavalry);
+  indexList(oob.confederate?.independent?.artillery);
+  indexList(oob.confederate?.reserveArtillery?.batteries);
+  for (const brig of oob.confederate?.independentBrigades ?? []) {
+    indexList(brig.regiments);
+    indexArtilleryGroup(brig.artillery);
+  }
+
+  return index;
+}
+
+/**
+ * O(1) unit lookup using a pre-built index from buildUnitIndex(). (#596)
+ *
+ * @param {Map<string, object>} index - from buildUnitIndex(oob)
+ * @param {string} unitId
+ * @returns {object|null}
+ */
+export function findOobUnitFast(index, unitId) {
+  return index.get(unitId) ?? null;
+}
+
 export function findOobUnit(oob, unitId) {
   function searchList(list) {
     for (const item of list ?? []) {
@@ -277,4 +340,29 @@ export function findBrigadeForUnit(oob, unitId) {
   }
 
   return null;
+}
+
+/**
+ * LOB §5.0 / §5.6 — sum effective SPs for a list of unit states against the OOB.
+ *
+ * Each unit contributes its current SP (state.strengthPoints) falling back to the OOB
+ * printed value. When applyDgHalving is true, DG units halve their contribution (§5.0,
+ * Combat Procedure: "SPs are ×1/2 if the firing units are DG" — for the §5.6 Combat Table
+ * column only). When false, raw current SPs are used (§7.0g gate — all SPs unmodified for DG).
+ *
+ * @param {object[]} unitStates - array of on-board unit state objects
+ * @param {object} loadedOob - OOB data from loadOob() or a test fixture
+ * @param {{ applyDgHalving?: boolean }} [options]
+ * @returns {number} total effective SP contribution
+ */
+export function sumCurrentSPs(unitStates, loadedOob, { applyDgHalving = false } = {}) {
+  // LOB §5.0 — DG attacker halves current SP contribution (round down) for the §5.6 Combat Table column
+  let total = 0;
+  for (const u of unitStates) {
+    const oobUnit = findOobUnit(loadedOob, u.id);
+    if (!oobUnit) continue;
+    const current = u.strengthPoints ?? oobUnit.strengthPoints ?? 0;
+    total += applyDgHalving && u.moraleState === 'disorganized' ? Math.floor(current / 2) : current;
+  }
+  return total;
 }

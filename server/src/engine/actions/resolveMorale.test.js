@@ -380,11 +380,10 @@ describe('handleResolveMorale — routed result + cascade (LOB §6.1, §6.3)', (
     expect(result.pendingResolution.type).toBe('leaderCasualty');
   });
 
-  it('on combatResult path, leaderCasualty wins over cascade (LOB §6.3 cascade deferred to M7 #571 #577)', () => {
+  it('on combatResult path, leaderCasualty wins over cascade when SP loss triggers leader check (LOB §6.3)', () => {
     // LOB §6.3 — cascadeMorale fires only when pendingResolution is null on entry.
     // On the combatResult path the pending slot is already occupied, so cascade cannot
     // set a moraleCheck pending — leaderCasualty from SP loss wins instead.
-    // Direct unit test of cascadeMorale() with pendingResolution=null is deferred (#571, #577).
     const state = makeCombatResultState({ moraleState: 'disorganized' });
     const result = handleResolveMorale(state, moraleAction([6, 6]), { oob: MOCK_OOB });
     // roll 12/B → dg(4,1) spLoss=1; disorganized+disorganized→routed; leaderCasualty pending wins
@@ -692,5 +691,105 @@ describe('Integration: FIRE_COMBAT → RESOLVE_MORALE (LOB §5 / §6)', () => {
     const afterMorale = handleResolveMorale(afterFire, moraleAction([4, 6]), { oob: MOCK_OOB });
     expect(afterMorale.pendingResolution).not.toBeNull();
     expect(afterMorale.pendingResolution.type).toBe('leaderCasualty');
+  });
+});
+
+// ─── Phase 2 — Multi-unit defender hex and mods propagation (#590) ────────────
+
+// LOB §6.1 — each unit in the defender hex takes the morale check with the same dice
+// roll and modifiers. These tests verify both units are updated and mods do not drop.
+//
+// NOTE §6.1 divergence: the engine applies each unit's own morale rating independently.
+// Per §6.1, the stack's TOP combat unit should provide the rating for a single shared
+// check, applied to all units. This simplification is intentional for M6 but should be
+// revisited before final rules correctness sign-off. Tracked in domain-expert backlog.
+
+describe('handleResolveMorale — multi-unit defender hex (LOB §6.1 #590)', () => {
+  // Build a state with TWO confederate units in the defender hex
+  function makeTwoDefenderState() {
+    return {
+      ...makeCombatResultState({ moraleState: 'normal' }),
+      units: {
+        u1: {
+          id: 'u1',
+          hex: '10.10',
+          facing: 0,
+          moraleState: 'normal',
+          wrecked: false,
+          orders: null,
+          ammo: 'full',
+          depletionMarker: false,
+          cbfMarker: false,
+          isOnBoard: true,
+          entryTurn: null,
+          isDetached: false,
+        },
+        // Two CSA units stacked in the defender hex
+        c1: {
+          id: 'c1',
+          hex: '10.11',
+          facing: 3,
+          moraleState: 'normal',
+          wrecked: false,
+          orders: null,
+          ammo: 'full',
+          depletionMarker: false,
+          cbfMarker: false,
+          isOnBoard: true,
+          entryTurn: null,
+          isDetached: false,
+        },
+        // u2 (morale A from MOCK_OOB) also in defender hex
+        u2: {
+          id: 'u2',
+          hex: '10.11',
+          facing: 3,
+          moraleState: 'normal',
+          wrecked: false,
+          orders: null,
+          ammo: 'full',
+          depletionMarker: false,
+          cbfMarker: false,
+          isOnBoard: true,
+          entryTurn: null,
+          isDetached: false,
+        },
+      },
+    };
+  }
+
+  it('applies morale check to ALL units in the defender hex (LOB §6.1)', () => {
+    // dice [6,6]=12: morale B → dg(4,1) [disorganized], morale A → dg(3,1) [disorganized]
+    const state = makeTwoDefenderState();
+    const result = handleResolveMorale(state, moraleAction([6, 6]), { oob: MOCK_OOB });
+    // Both c1 (morale B) and u2 (morale A) are in defenderHex — both must be updated
+    expect(result.units.c1.moraleState).toBe('disorganized');
+    expect(result.units.u2.moraleState).toBe('disorganized');
+  });
+
+  it('attacker unit (u1) in a different hex is NOT affected by the morale check (LOB §6.1)', () => {
+    const state = makeTwoDefenderState();
+    const result = handleResolveMorale(state, moraleAction([6, 6]), { oob: MOCK_OOB });
+    // u1 is in attackerHex 10.10, not the defender hex 10.11
+    expect(result.units.u1.moraleState).toBe('normal');
+  });
+
+  it('mods object is propagated to each unit in the defender hex (LOB §6.1 #590)', () => {
+    // Discriminating test: roll 11 with no mods degrades both units, but leaderMoraleValue:3
+    // reduces effective roll to 8, at which morale A and B both produce NE (stay normal).
+    // If mods silently dropped, both units would still degrade — so this test can only pass
+    // if mods are correctly forwarded to every unit's morale check.
+    //
+    // Morale table (roll 11): A → sh(2,1) [shaken], B → dg(3,1) [disorganized]
+    // Morale table (roll 8):  A → NE [normal],       B → NE [normal]
+    const state = makeTwoDefenderState();
+    const result = handleResolveMorale(
+      state,
+      moraleAction([5, 6], { leaderMoraleValue: 3 }), // effective roll 8
+      { oob: MOCK_OOB }
+    );
+    // c1 (morale B) and u2 (morale A) both stay normal — roll 8 = NE for both
+    expect(result.units.c1.moraleState).toBe('normal');
+    expect(result.units.u2.moraleState).toBe('normal');
   });
 });

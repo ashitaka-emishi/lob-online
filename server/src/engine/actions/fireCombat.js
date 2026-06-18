@@ -1,5 +1,5 @@
 import { ActionError } from './actionError.js';
-import { loadOob, buildUnitSideMap, findOobUnit } from '../oob.js';
+import { loadOob, buildUnitSideMap, findOobUnit, sumCurrentSPs } from '../oob.js';
 import { computeLOS } from '../los.js';
 import { hexDistance } from '../hex.js';
 import { FireCombatPayloadSchema, parsePayload } from './payloads.js';
@@ -142,18 +142,8 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
 
   // LOB §5.6 — combat column is determined by the ATTACKER's effective SPs (not defender's).
   // Current SPs (with prior losses) are used; OOB printed SPs are only the fallback when no
-  // current SP is tracked on the unit state. DG attackers halve current SPs per LOB §5.3.
-  let effectiveSPs = 0;
-  for (const au of attackerUnits) {
-    const auInfo = unitSideMap.get(au.id);
-    if (!auInfo) continue;
-    const oobUnit = findOobUnit(loadedOob, au.id);
-    if (!oobUnit) continue;
-    // LOB §5.6 — use current SPs from unit state; fall back to printed only when absent
-    const currentSPs = au.strengthPoints ?? oobUnit.strengthPoints ?? 0;
-    // LOB §5.3 — DG attacker halves current SP contribution (round down)
-    effectiveSPs += au.moraleState === 'disorganized' ? Math.floor(currentSPs / 2) : currentSPs;
-  }
+  // current SP is tracked on the unit state. DG attackers halve current SPs per LOB §5.0.
+  let effectiveSPs = sumCurrentSPs(attackerUnits, loadedOob, { applyDgHalving: true });
 
   // LOB §5.6 — column shifts
   let netColumnShifts = 0;
@@ -179,7 +169,7 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
 
   // LOB §5.6 — target-state shifts
   const defenderIsDG = defenderUnits.some((u) => u.moraleState === 'disorganized');
-  // TODO(M7): isRear, hasProtectiveTerrain, isOpenOrderCapable require terrain/facing queries
+  // TODO(M7): isRear, hasProtectiveTerrain, isOpenOrderCapable require terrain/facing queries (#609)
   netColumnShifts += targetStateShift({
     isRear: false,
     isDG: defenderIsDG,
