@@ -140,3 +140,4 @@
 | [x] | m6-debt-closeout_20260615 | M6 Debt Closeout — ROLL_INITIATIVE Side Filter + Sync I/O Memoization (#587 #593) | 2026-06-15 | 2026-06-17 |
 | [x] | pre-m7-debt-sprint-a_20260617 | Pre-M7 Debt Sprint A — Bugs, Security, and High-Score Fixes (#571 #572 #573 #589 #594 #600 #603 #604 #605 #606) | 2026-06-17 | 2026-06-17 |
 | [x] | pre-m7-debt-sprint-b_20260617 | Pre-M7 Debt Sprint B — Test Gaps, Traceability, and Score-1/2 Cleanup (#588 #590 #591 #595 #596 #597 #607 #608 #609 #610 #614 #615 #619 #620 #622 #623) | 2026-06-17 | 2026-06-17 |
+| [ ] | m7-special-rules_20260617 | M7 — Special Rules + Victory Conditions | 2026-06-17 | 2026-06-17 |
