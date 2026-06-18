@@ -86,20 +86,20 @@ dice rather than auto-advancing. This is the first M7 action visible to the play
 
 ### Tasks
 
-- [ ] Task 2.1: Add `RALLY_ROLL` action type to `engine/actions/index.js` and
+- [x] Task 2.1: Add `RALLY_ROLL` action type to `engine/actions/index.js` and
       `engine/actions/rallyRoll.js` handler. Payload: `{ unitId, dice: [d1] }`. Applies
       `rallyRollResult(die, leaderMV)` → updates `unit.moraleState` to `'disorganized'` on
       success or leaves `'routed'` on failure.
-- [ ] Task 2.2: Extend `drainAutoSteps` to pause (return current state) when
+- [x] Task 2.2: Extend `drainAutoSteps` to pause (return current state) when
       `unitsPendingRallyRoll.length > 0` instead of auto-advancing. Store
       `pendingRallyRoll: { unitIds: [...] }` on state.
-- [ ] Task 2.3: Update `getValidActions` to return `RALLY_ROLL` candidates (one per pending
+- [x] Task 2.3: Update `getValidActions` to return `RALLY_ROLL` candidates (one per pending
       routed unit) when `pendingRallyRoll` is non-null.
-- [ ] Task 2.4: Add `rallyRoll.test.js` — unit tests for handler (success/failure/invalid
+- [x] Task 2.4: Add `rallyRoll.test.js` — unit tests for handler (success/failure/invalid
       unit), `getValidActions` gate, and the auto-drain pause behavior.
-- [ ] Task 2.5: Wire `RALLY_ROLL` into `ActionPanel.vue` — renders a die-input form for
+- [x] Task 2.5: Wire `RALLY_ROLL` into `ActionPanel.vue` — renders a die-input form for
       each pending routed unit; submits `RALLY_ROLL` with the rolled value.
-- [ ] Task 2.6: Run `npm run test` — all green.
+- [x] Task 2.6: Run `npm run test` — all green.
 
 **Verification:** `npm run test` green; a routed unit in Rally Phase pauses the loop and
 requires a `RALLY_ROLL` action before the phase can advance.
