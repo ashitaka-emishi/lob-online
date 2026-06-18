@@ -226,19 +226,19 @@ describe('drainAutoSteps — §6.4 automatic recovery integration', () => {
     });
     const result = drainAutoSteps(state);
     expect(result.units.u1.moraleState).toBe('normal');
-    expect(result.units.u1.cbfMarker).toBe(false); // §8.1 clears CBF after §6.4
+    expect(result.units.u1.cbfMarker).toBe(false); // §5.8c clears CBF after §6.4
   });
 
-  it('§6.4 runs BEFORE §8.1 cbfMarker clearing — DG+cbf ends as shaken+false, not normal (#619)', () => {
+  it('§6.4 runs BEFORE §5.8c cbfMarker clearing — DG+cbf ends as shaken+false, not normal (#619)', () => {
     // Discriminating case: DG+cbfMarker unit.
-    // §6.4 first: DG → shaken. §8.1 second: clears cbfMarker. Final: shaken, cbfMarker=false.
+    // §6.4 first: DG → shaken. §5.8c second: clears cbfMarker. Final: shaken, cbfMarker=false.
     // If §6.4 ran twice (incorrect double-pass), DG→shaken→normal; moraleState would be 'normal'.
-    // This asserts that §6.4 ran exactly once before §8.1 cleared the marker.
+    // This asserts that §6.4 ran exactly once before §5.8c cleared the marker.
     const state = makeRallyState({
       u1: makeUnit('u1', 'disorganized', true),
     });
     const result = drainAutoSteps(state);
     expect(result.units.u1.moraleState).toBe('shaken'); // not 'normal' — §6.4 ran once
-    expect(result.units.u1.cbfMarker).toBe(false); // §8.1 cleared after §6.4
+    expect(result.units.u1.cbfMarker).toBe(false); // §5.8c cleared after §6.4
   });
 });

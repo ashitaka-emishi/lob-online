@@ -107,7 +107,7 @@ export const useGameStore = defineStore('game', () => {
           const data = r.ok ? await r.json() : null;
           if (gen === _loadGeneration && data) scenario.value = data;
         } catch (e) {
-          console.warn('[store] scenario fetch failed (non-fatal):', e.message);
+          console.warn('[store] scenario fetch failed (non-fatal):', e);
         }
       }
     } catch (err) {

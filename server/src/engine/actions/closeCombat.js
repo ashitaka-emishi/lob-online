@@ -117,7 +117,7 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
   }
 
   // LOB §7.0 — sum attacker current SPs (not printed). DG halving does NOT apply to this
-  // gate — §5.3 halving is only for the Combat Table column; §7.0 uses raw current strength.
+  // gate — §5.0 DG ×½ is only for the Combat Table column; §7.0g uses all SPs unmodified for DG.
   // "SPs remaining in the attack" = current strength (with OOB printed as fallback if no marker).
   const attackerSPs = sumCurrentSPs(attackerUnits, loadedOob, { applyDgHalving: false });
 
@@ -140,13 +140,13 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
     }
   }
 
-  // TODO(M7): enforce OV abort when ovSpLoss >= attackerSPs — charge aborted (LOB §7.0b). (#609)
+  // TODO(M7): §5.4b/§7.0 — abort charge (return) before §7.0a(e) gate and Closing Roll when ovSpLoss >= attackerSPs. (#609)
 
-  // LOB §7.0c — gate is evaluated on post-Opening-Volley SPs ("remaining in the attack").
+  // LOB §7.0a(e) / §7.0 prose — gate is evaluated on post-Opening-Volley SPs ("remaining in the attack").
   // Charge Sequence: OV fires first (step 1), then automatic SP loss check (step 2).
   // LOB §5.8 — CBF marker set on each defender unit that takes a loss.
   const postOvAttackerSPs = Math.max(0, attackerSPs - ovSpLoss);
-  const defenderSpLoss = postOvAttackerSPs >= 4 ? 1 : 0; // LOB §7.0c — ≥4 SPs remaining after OV
+  const defenderSpLoss = postOvAttackerSPs >= 4 ? 1 : 0; // LOB §7.0a(e) — ≥4 SPs remaining after OV → automatic 1 SP defender loss
   if (defenderSpLoss > 0) {
     const newUnits = { ...updatedUnits };
     for (const du of defenderUnits) {
@@ -205,7 +205,7 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
         // LOB §9.1a — leader loss checked on m+ result (SP loss), not on every Closing Roll.
         // defenderSpLoss > 0 means the automatic SP loss occurred (gated on ≥4 attacker SPs).
         leaderLossCheckRequired: defenderSpLoss > 0,
-        // LOB §6.0 — charge always triggers defender morale check, independent of SP loss
+        // LOB §7.0a(f) — Charge Sequence always ends with a defender Morale Check, independent of SP loss (modifiers per §7.0g)
         moraleCheckRequired: true,
       },
     },

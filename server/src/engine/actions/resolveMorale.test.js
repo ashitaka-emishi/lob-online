@@ -696,9 +696,13 @@ describe('Integration: FIRE_COMBAT → RESOLVE_MORALE (LOB §5 / §6)', () => {
 
 // ─── Phase 2 — Multi-unit defender hex and mods propagation (#590) ────────────
 
-// LOB §6.1 — each unit in the defender hex takes the morale check independently
-// with the same dice roll and modifiers. These tests verify both units are updated
-// and that mods (when non-empty) do not silently drop.
+// LOB §6.1 — each unit in the defender hex takes the morale check with the same dice
+// roll and modifiers. These tests verify both units are updated and mods do not drop.
+//
+// NOTE §6.1 divergence: the engine applies each unit's own morale rating independently.
+// Per §6.1, the stack's TOP combat unit should provide the rating for a single shared
+// check, applied to all units. This simplification is intentional for M6 but should be
+// revisited before final rules correctness sign-off. Tracked in domain-expert backlog.
 
 describe('handleResolveMorale — multi-unit defender hex (LOB §6.1 #590)', () => {
   // Build a state with TWO confederate units in the defender hex
@@ -755,12 +759,12 @@ describe('handleResolveMorale — multi-unit defender hex (LOB §6.1 #590)', () 
   }
 
   it('applies morale check to ALL units in the defender hex (LOB §6.1)', () => {
-    // dice [6,6]=12, morale B → dg; morale A → dg; both defender units should update (#590)
+    // dice [6,6]=12: morale B → dg(4,1) [disorganized], morale A → dg(3,1) [disorganized]
     const state = makeTwoDefenderState();
     const result = handleResolveMorale(state, moraleAction([6, 6]), { oob: MOCK_OOB });
     // Both c1 (morale B) and u2 (morale A) are in defenderHex — both must be updated
-    expect(result.units.c1.moraleState).not.toBe('normal');
-    expect(result.units.u2.moraleState).not.toBe('normal');
+    expect(result.units.c1.moraleState).toBe('disorganized');
+    expect(result.units.u2.moraleState).toBe('disorganized');
   });
 
   it('attacker unit (u1) in a different hex is NOT affected by the morale check (LOB §6.1)', () => {
@@ -771,18 +775,21 @@ describe('handleResolveMorale — multi-unit defender hex (LOB §6.1 #590)', () 
   });
 
   it('mods object is propagated to each unit in the defender hex (LOB §6.1 #590)', () => {
-    // Use mods that would reduce effective roll and produce a better result.
-    // No direct way to inspect internal mods, but we verify the result differs
-    // from a no-mods roll when mods change the effective outcome.
-    // Both units in defender hex 10.11 are checked with the same dice and mods.
+    // Discriminating test: roll 11 with no mods degrades both units, but leaderMoraleValue:3
+    // reduces effective roll to 8, at which morale A and B both produce NE (stay normal).
+    // If mods silently dropped, both units would still degrade — so this test can only pass
+    // if mods are correctly forwarded to every unit's morale check.
+    //
+    // Morale table (roll 11): A → sh(2,1) [shaken], B → dg(3,1) [disorganized]
+    // Morale table (roll 8):  A → NE [normal],       B → NE [normal]
     const state = makeTwoDefenderState();
-    // With high dice (11) and morale B, expect a bad result; with a large positive mod the
-    // result would improve. Here we just verify both units are updated (mods reach both).
-    const result = handleResolveMorale(state, moraleAction([5, 6]), { oob: MOCK_OOB });
-    // c1 (morale B, roll 11 → dg(3,1)) and u2 (morale A, roll 11 → better result)
-    // Both must have had their moraleState evaluated — neither is still 'normal' with roll 11
-    // (morale A, roll 11 → sh(2,1); morale B, roll 11 → dg(3,1))
-    expect(['shaken', 'disorganized', 'routed']).toContain(result.units.c1.moraleState);
-    expect(['shaken', 'disorganized', 'routed']).toContain(result.units.u2.moraleState);
+    const result = handleResolveMorale(
+      state,
+      moraleAction([5, 6], { leaderMoraleValue: 3 }), // effective roll 8
+      { oob: MOCK_OOB }
+    );
+    // c1 (morale B) and u2 (morale A) both stay normal — roll 8 = NE for both
+    expect(result.units.c1.moraleState).toBe('normal');
+    expect(result.units.u2.moraleState).toBe('normal');
   });
 });

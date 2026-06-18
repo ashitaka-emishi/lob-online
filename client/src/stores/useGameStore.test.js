@@ -380,7 +380,7 @@ describe('useGameStore — loadGame scenario fetch (#583)', () => {
     expect(store.error).toBeNull(); // error not set — failure is non-fatal
     expect(warnSpy).toHaveBeenCalledWith(
       '[store] scenario fetch failed (non-fatal):',
-      'network error'
+      expect.objectContaining({ message: 'network error' })
     );
   });
 });

@@ -125,7 +125,7 @@ export function buildLeaderSideMap(leaders) {
 
 /**
  * Walk the OOB tree and return the unit object with matching id.
- * LOB §5.3 — needed to look up printed strengthPoints for SP computation.
+ * LOB §5.0 — needed to look up printed strengthPoints for SP computation (§5.0 DG ×½ rule).
  * LOB §6.1 — needed to look up morale rating for each unit being checked.
  * LOB §7.0d — needed to resolve attacker morale rating for Closing Roll threshold.
  *
@@ -142,6 +142,7 @@ export function buildLeaderSideMap(leaders) {
  */
 export function buildUnitIndex(oob) {
   const index = new Map();
+  if (!oob) return index;
 
   function indexList(list) {
     for (const item of list ?? []) {
@@ -342,11 +343,12 @@ export function findBrigadeForUnit(oob, unitId) {
 }
 
 /**
- * LOB §5.3 / §5.6 — sum effective SPs for a list of unit states against the OOB.
+ * LOB §5.0 / §5.6 — sum effective SPs for a list of unit states against the OOB.
  *
  * Each unit contributes its current SP (state.strengthPoints) falling back to the OOB
- * printed value. When applyDgHalving is true, DG units halve their contribution (§5.3,
- * Combat Table column only). When false, raw current SPs are used (§7.0 gate).
+ * printed value. When applyDgHalving is true, DG units halve their contribution (§5.0,
+ * Combat Procedure: "SPs are ×1/2 if the firing units are DG" — for the §5.6 Combat Table
+ * column only). When false, raw current SPs are used (§7.0g gate — all SPs unmodified for DG).
  *
  * @param {object[]} unitStates - array of on-board unit state objects
  * @param {object} loadedOob - OOB data from loadOob() or a test fixture
@@ -354,7 +356,7 @@ export function findBrigadeForUnit(oob, unitId) {
  * @returns {number} total effective SP contribution
  */
 export function sumCurrentSPs(unitStates, loadedOob, { applyDgHalving = false } = {}) {
-  // LOB §5.3 — DG attacker halves current SP contribution (round down) for combat column
+  // LOB §5.0 — DG attacker halves current SP contribution (round down) for the §5.6 Combat Table column
   let total = 0;
   for (const u of unitStates) {
     const oobUnit = findOobUnit(loadedOob, u.id);

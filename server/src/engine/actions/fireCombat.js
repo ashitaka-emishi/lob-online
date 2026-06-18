@@ -142,7 +142,7 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
 
   // LOB §5.6 — combat column is determined by the ATTACKER's effective SPs (not defender's).
   // Current SPs (with prior losses) are used; OOB printed SPs are only the fallback when no
-  // current SP is tracked on the unit state. DG attackers halve current SPs per LOB §5.3.
+  // current SP is tracked on the unit state. DG attackers halve current SPs per LOB §5.0.
   let effectiveSPs = sumCurrentSPs(attackerUnits, loadedOob, { applyDgHalving: true });
 
   // LOB §5.6 — column shifts
