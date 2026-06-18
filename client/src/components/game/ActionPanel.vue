@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch, nextTick } from 'vue';
+import { computed, ref, watch, nextTick, reactive } from 'vue';
 
 const props = defineProps({
   phase: { type: String, default: null },
@@ -53,8 +53,38 @@ function actionLabel(action) {
   if (action.type === 'ROLL_INITIATIVE' && action.payload?.leaderId) {
     return `Roll Initiative — ${action.payload.leaderId}`;
   }
+  if (action.type === 'RALLY_ROLL' && action.payload?.unitId) {
+    return `Rally Roll — ${action.payload.unitId}`;
+  }
   return toTitleCase(action.type);
 }
+
+// LOB §6.4 step 3 — per-unit die input state for RALLY_ROLL forms.
+// Keyed by unitId; each entry holds die (1–6) and optional leaderMoraleValue.
+const rallyInputs = reactive({});
+
+function getRallyInput(unitId) {
+  if (!rallyInputs[unitId]) {
+    rallyInputs[unitId] = { die: 1, leaderMoraleValue: 0 };
+  }
+  return rallyInputs[unitId];
+}
+
+function submitRallyRoll(unitId) {
+  if (props.pending) return;
+  const input = getRallyInput(unitId);
+  emit('submit-action', {
+    type: 'RALLY_ROLL',
+    payload: {
+      unitId,
+      die: Number(input.die),
+      leaderMoraleValue: Number(input.leaderMoraleValue),
+    },
+  });
+}
+
+const rallyRollActions = computed(() => props.validActions.filter((a) => a.type === 'RALLY_ROLL'));
+const nonRallyActions = computed(() => props.validActions.filter((a) => a.type !== 'RALLY_ROLL'));
 
 // Stable unique key for a candidate — type alone is not sufficient when multiple candidates
 // share the same type but differ by payload. (#559 H1)
@@ -115,8 +145,48 @@ function handleClick(action, event) {
       :aria-busy="pending"
       :aria-describedby="turn !== null && phase ? SUMMARY_ID : undefined"
     >
+      <!-- LOB §6.4 step 3 — die-input forms for pending RALLY_ROLL actions -->
+      <div v-for="action in rallyRollActions" :key="candidateKey(action)" class="rally-roll-form">
+        <span class="rally-roll-label">{{ actionLabel(action) }}</span>
+        <label class="rally-roll-field">
+          Die (1–6):
+          <input
+            v-model.number="getRallyInput(action.payload.unitId).die"
+            type="number"
+            min="1"
+            max="6"
+            class="rally-roll-input"
+            :disabled="pending"
+          />
+        </label>
+        <label class="rally-roll-field">
+          Leader MV:
+          <input
+            v-model.number="getRallyInput(action.payload.unitId).leaderMoraleValue"
+            type="number"
+            min="0"
+            max="4"
+            class="rally-roll-input"
+            :disabled="pending"
+          />
+        </label>
+        <button
+          class="action-btn"
+          :aria-disabled="pending"
+          @click="submitRallyRoll(action.payload.unitId)"
+        >
+          <span
+            v-if="pending && pendingActionType === 'RALLY_ROLL'"
+            class="spinner"
+            aria-hidden="true"
+          />
+          Roll
+        </button>
+      </div>
+
+      <!-- Standard action buttons for all non-RALLY_ROLL actions -->
       <button
-        v-for="action in validActions"
+        v-for="action in nonRallyActions"
         :key="candidateKey(action)"
         class="action-btn"
         :aria-disabled="pending"
@@ -128,7 +198,7 @@ function handleClick(action, event) {
             pending &&
             (pendingActionType
               ? pendingActionType === action.type
-              : validActions[0]?.type === action.type)
+              : nonRallyActions[0]?.type === action.type)
           "
           class="spinner"
           aria-hidden="true"
@@ -163,6 +233,38 @@ function handleClick(action, event) {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+}
+
+.rally-roll-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.5rem;
+  border: 1px solid #3a3228;
+  background: #0e0c08;
+}
+
+.rally-roll-label {
+  font-size: 0.8rem;
+  color: #8a7a6a;
+  font-weight: 600;
+}
+
+.rally-roll-field {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: #c8b89a;
+}
+
+.rally-roll-input {
+  width: 3rem;
+  background: #1a1610;
+  border: 1px solid #3a3228;
+  color: #c8b89a;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.8rem;
 }
 
 .action-btn {

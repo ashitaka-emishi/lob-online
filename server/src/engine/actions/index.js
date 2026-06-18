@@ -12,6 +12,7 @@ import { handleFireCombat } from './fireCombat.js';
 import { handleCloseCombat } from './closeCombat.js';
 import { handleResolveMorale } from './resolveMorale.js';
 import { handleResolveLeaderCasualty } from './resolveLeaderCasualty.js';
+import { handleRallyRoll } from './rallyRoll.js';
 
 export { ActionError };
 
@@ -35,6 +36,15 @@ export function getValidActions(state, playerSide) {
   }
 
   if (state.pendingResolution !== null) return [];
+
+  // LOB §6.4 step 3 — when routed units are pending rally rolls, surface one RALLY_ROLL
+  // candidate per pending unit. No other actions are valid until all rolls are resolved.
+  if (state.phase === PHASES.RALLY && state.rallyPhase?.pendingRallyRoll) {
+    return state.rallyPhase.pendingRallyRoll.unitIds.map((unitId) => ({
+      type: 'RALLY_ROLL',
+      payload: { unitId },
+    }));
+  }
 
   const { phase, step } = state;
 
@@ -193,6 +203,7 @@ export const ACTION_HANDLERS = new Map([
   ['CLOSE_COMBAT', handleCloseCombat],
   ['RESOLVE_MORALE', handleResolveMorale],
   ['RESOLVE_LEADER_CASUALTY', handleResolveLeaderCasualty],
+  ['RALLY_ROLL', handleRallyRoll],
 ]);
 
 // Current auto-advance steps: attackRecovery, flukeStoppage, rally (3 steps, 8 gives headroom for M6+)
@@ -295,8 +306,20 @@ export function drainAutoSteps(state) {
       // LOB §5.8c — clear CBF markers from all on-board units after §6.4 completes
       const unitsAfterCbf = clearCbfMarkers(unitsAfter64);
 
-      // LOB §6.3 — units still needing a rally roll after §6.4 (routed units).
-      // TODO(M7): when _unitsPendingRallyRoll.length > 0, pause for player dice and apply rally table. (#609)
+      // LOB §6.4 step 3 / §6.3 — routed units require an interactive rally roll.
+      // Pause drainAutoSteps and set pendingRallyRoll so getValidActions surfaces RALLY_ROLL.
+      if (_unitsPendingRallyRoll.length > 0) {
+        s = {
+          ...s,
+          units: unitsAfterCbf,
+          rallyPhase: {
+            ...s.rallyPhase,
+            unitsPendingRally: s.rallyPhase?.unitsPendingRally ?? [],
+            pendingRallyRoll: { unitIds: _unitsPendingRallyRoll },
+          },
+        };
+        return s; // pause — player must submit RALLY_ROLL for each pending unit
+      }
 
       const nextActivePlayer = s.activePlayer === 'union' ? 'confederate' : 'union';
       s = {

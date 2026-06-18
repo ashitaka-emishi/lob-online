@@ -194,6 +194,13 @@ export const GameStateSchema = z
     rallyPhase: z
       .object({
         unitsPendingRally: z.array(z.string()),
+        // LOB §6.4 step 3 — non-null when routed units are waiting for interactive rally dice;
+        // cleared after all unit rolls are resolved. null = no pending rally rolls.
+        pendingRallyRoll: z
+          .object({ unitIds: z.array(z.string()).min(1) })
+          .strict()
+          .nullable()
+          .default(null),
       })
       .strict()
       .nullable(),
