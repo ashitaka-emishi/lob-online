@@ -338,7 +338,8 @@ export function drainAutoSteps(state, ctx = {}) {
     if (phase === PHASES.COMMAND && step === STEPS.ATTACK_RECOVERY) {
       const scenario = ctx.scenario;
       const alreadyRolled = s.completedSteps.includes('randomEvent');
-      if (scenario?.randomEventsEnabled && !alreadyRolled && s.ordersPhase !== null) {
+      // ordersPhase is always non-null at ATTACK_RECOVERY (handleEndPhase no longer clears it here).
+      if (scenario?.randomEventsEnabled && !alreadyRolled) {
         const side = s.activePlayer;
         // Use ctx.rollFn if supplied (test injection); fall back to Math.random() at the boundary.
         const rollFn = ctx.rollFn ?? (() => Math.ceil(Math.random() * 6));
@@ -397,10 +398,13 @@ export function drainAutoSteps(state, ctx = {}) {
         s = { ...s, units: autoRecoveredUnits, pendingAttackRecovery: null };
       }
 
+      // SM §7.0 — ordersPhase kept alive through ATTACK_RECOVERY for random-event pendingRandomEvent;
+      // null it here when advancing to FLUKE_STOPPAGE (schema: ordersPhase null outside command/orders).
       s = {
         ...s,
         step: STEPS.FLUKE_STOPPAGE,
         completedSteps: [...s.completedSteps, STEPS.ATTACK_RECOVERY],
+        ordersPhase: null,
       };
       continue;
     }

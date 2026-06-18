@@ -6,13 +6,14 @@ import { ActionError } from './actionError.js';
 export function handleEndPhase(state, _action) {
   const { phase, step } = state;
 
-  // Command phase → end Orders step; drainAutoSteps handles attackRecovery → flukeStoppage → activity
+  // Command phase → end Orders step; drainAutoSteps handles attackRecovery → flukeStoppage → activity.
+  // ordersPhase is kept alive through ATTACK_RECOVERY so the random-event block can write
+  // pendingRandomEvent to it (SM §7.0). It is nulled when drainAutoSteps advances to FLUKE_STOPPAGE.
   if (phase === PHASES.COMMAND && step === STEPS.ORDERS) {
     return {
       ...state,
       step: STEPS.ATTACK_RECOVERY,
       completedSteps: [...state.completedSteps, STEPS.ORDERS],
-      ordersPhase: null,
     };
   }
 
