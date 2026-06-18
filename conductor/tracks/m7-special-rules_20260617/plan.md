@@ -175,23 +175,22 @@ UI screen.
 
 ### Tasks
 
-- [ ] Task 5.1: Consult domain-expert to confirm SM VP hex list, terrain VP values, wreck VP
+- [x] Task 5.1: Consult domain-expert to confirm SM VP hex list, terrain VP values, wreck VP
       per formation type, and all 7 victory outcome label thresholds (SM VP / LOB §11).
-- [ ] Task 5.2: Create `server/src/engine/vp.js` — `computeVP(state, scenario)` returns
+- [x] Task 5.2: Create `server/src/engine/vp.js` — `computeVP(state, scenario)` returns
       `{ union: N, confederate: N, vpLog: [...] }`. Unit tests covering terrain hex VP, wreck VP,
       and boundary thresholds.
-- [ ] Task 5.3: Add `state.vp` to `GameStateSchema` (Zod) — `{ union: number, confederate:
-number, vpLog: array }`. Validate-data green.
-- [ ] Task 5.4: Wire `computeVP` into the end-of-turn step in `index.js`; store result on
+- [x] Task 5.3: Add `state.vp`, `state.hexControl`, `state.victoryResult`, `state.gameOver`
+      to `GameStateSchema` (Zod). Validate-data green.
+- [x] Task 5.4: Wire `computeVP` into the end-of-turn step in `index.js`; store result on
       `state.vp`; emit `game:state-updated` via Socket.io.
-- [ ] Task 5.5: Add `evaluateVictory(vp, scenario)` — returns one of the 7 SM outcome labels
+- [x] Task 5.5: Add `evaluateVictory(vp, scenario)` — returns one of the 7 SM outcome labels
       or `null` if game continues. Wire into end-of-turn after VP compute; set `state.gameOver`
       and `state.victoryResult` when a condition is met.
-- [ ] Task 5.6: Add `VpPanel.vue` — displays current VP totals for both sides with a
-      per-turn sparkline or log. Wire into `GameView`.
-- [ ] Task 5.7: Add game-complete screen — when `state.gameOver` is true, render a
+- [x] Task 5.6: Add `VpPanel.vue` — displays current VP totals for both sides. Wire into `GameView`.
+- [x] Task 5.7: Add game-complete screen — when `state.gameOver` is true, render a
       full-screen result overlay in `GameView` showing outcome label and final VP totals.
-- [ ] Task 5.8: Run `npm run quality:strict` — all gates green.
+- [x] Task 5.8: Run `npm run quality:strict` — all gates green.
 - [ ] Task 5.9: Close GitHub issue #343 (M7 implementation tickets placeholder).
 
 **Verification:** `npm run quality:strict` green; VP tally matches manual calculation; game

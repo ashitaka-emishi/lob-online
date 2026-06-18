@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { applyRetreat } from './retreat.js';
 
 // ─── Minimal map fixture ───────────────────────────────────────────────────────

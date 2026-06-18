@@ -218,6 +218,27 @@ export const GameStateSchema = z
     // SM §7.0 (Confederate Order of Arrival) — true once Force A and Force B variable arrival
     // turns have been determined by 1d6 roll at game start. Prevents re-rolling.
     variableReinforcementsScheduled: z.boolean().default(false),
+    // SM §5.1 — terrain hex control: tracks which side last moved a qualifying non-Routed
+    // infantry or unlimbered artillery unit through each VP hex. Keyed by hex ID.
+    // null = uncontrolled (no qualifying unit has passed through yet).
+    hexControl: z.record(z.string(), z.enum(['union', 'confederate']).nullable()).default({}),
+    // SM §5.0–5.3 — current VP totals and victory state.
+    // vp: null until first VP computation (end of first turn). gameOver: true when game ends.
+    vp: z
+      .object({
+        union: z.number(),
+        confederate: z.number(),
+        net: z.number(),
+        vpLog: z.array(z.record(z.string(), z.unknown())),
+      })
+      .strict()
+      .nullable()
+      .default(null),
+    // SM §5.3 — the evaluated victory outcome label (e.g. 'Union Marginal Victory').
+    // null until game ends (status: 'complete').
+    victoryResult: z.string().nullable().default(null),
+    // SM §5.0 — true when the game has reached turn 45 or another terminal condition.
+    gameOver: z.boolean().default(false),
     // LOB §8.1 — non-null only during Rally Phase; tracks units with CBF markers pending rally
     rallyPhase: z
       .object({
@@ -234,10 +255,18 @@ export const GameStateSchema = z
       .nullable(),
   })
   .strict()
-  .refine((data) => (data.status === 'setup') === (data.phase === null), {
-    message: "phase must be null when status is 'setup', and non-null otherwise",
-    path: ['phase'],
-  })
+  // SM §5.0 — phase is null when status is 'setup' OR 'complete' (terminal states).
+  // During active play phase must be non-null.
+  .refine(
+    (data) =>
+      data.status === 'setup' || data.status === 'complete'
+        ? data.phase === null
+        : data.phase !== null,
+    {
+      message: "phase must be null when status is 'setup' or 'complete', non-null when 'active'",
+      path: ['phase'],
+    }
+  )
   // LOB §3.0d — activityPhase tracks mid-activation state; must be null outside Activity Phase (#378)
   .refine((data) => (data.phase === PHASES.ACTIVITY) === (data.activityPhase !== null), {
     message: "activityPhase must be non-null iff phase is 'activity'",

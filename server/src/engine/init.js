@@ -234,6 +234,10 @@ export function initGameState(scenario, gameId) {
     // SM §7.0 — variable reinforcement 1d6 rolls resolved at game init; always true after init
     variableReinforcementsScheduled: true,
     pendingAttackRecovery: null,
+    hexControl: {},
+    vp: null,
+    victoryResult: null,
+    gameOver: false,
   };
 
   return GameStateSchema.parse(state);

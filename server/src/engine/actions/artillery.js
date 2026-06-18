@@ -217,7 +217,7 @@ export function handleUnlimber(state, action, { oob: injectedOob, mapData } = {}
  *   diceRoll: 2d6 sum (2–12)
  *   ammoType: 'shell' or 'canister' (player's choice, validated against range)
  */
-export function handleFireArtillery(state, action, { oob: injectedOob, mapData } = {}) {
+export function handleFireArtillery(state, action, { oob: injectedOob, mapData: _mapData } = {}) {
   if (!state.activityPhase) {
     throw new ActionError(
       'INVALID_ACTION',

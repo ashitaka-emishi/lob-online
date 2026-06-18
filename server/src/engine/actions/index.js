@@ -24,6 +24,7 @@ import {
   handleAcknowledgeRandomEvent,
   resolveRandomEvent,
 } from './endOfTurn.js';
+import { computeVP, evaluateVictory } from '../vp.js';
 
 export { ActionError };
 
@@ -457,18 +458,58 @@ export function drainAutoSteps(state, ctx = {}) {
       }
 
       const nextActivePlayer = s.activePlayer === 'union' ? 'confederate' : 'union';
+      const nextTurn = s.turn + 1;
+
+      // SM §5.0 / SM §5.3 — compute VP and evaluate victory at end of each turn.
+      // Only runs when ctx.scenario and ctx.oob are available (production path).
+      // ctx.scenario.turnStructure.totalTurns used to detect last turn.
+      const scenario = ctx.scenario;
+      const oob =
+        ctx.oob ??
+        (() => {
+          try {
+            return loadOob();
+          } catch {
+            return null;
+          }
+        })();
+      let vpResult = s.vp;
+      let victoryResult = s.victoryResult;
+      let gameOver = s.gameOver ?? false;
+
+      if (scenario && oob && !gameOver) {
+        vpResult = computeVP({ ...s, units: unitsAfterCbf }, oob, scenario);
+        const totalTurns = scenario.turnStructure?.totalTurns ?? 45; // SM §1.0 — 45 turns
+        if (s.turn >= totalTurns) {
+          // SM §5.3 — evaluate final outcome after last turn
+          victoryResult = evaluateVictory(vpResult.net, scenario.victoryConditions?.results ?? []);
+          gameOver = true;
+        }
+      }
+
+      // SM §5.0 — when gameOver, status → 'complete'; schema requires phase=null when status='setup'
+      // but 'complete' has no phase constraint — keep phase non-null is fine. However, all
+      // phase-scoped envelopes must be null to pass the biconditionals. Set phase=null as the
+      // cleanest terminal state; the client uses status==='complete' to detect game end.
       s = {
         ...s,
-        turn: s.turn + 1,
-        phase: PHASES.COMMAND,
-        step: STEPS.ORDERS,
+        turn: nextTurn,
+        phase: gameOver ? null : PHASES.COMMAND,
+        step: gameOver ? null : STEPS.ORDERS,
         completedSteps: [],
-        activePlayer: nextActivePlayer,
+        activePlayer: gameOver ? null : nextActivePlayer,
         units: unitsAfterCbf,
         activityPhase: null,
-        ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null },
+        ordersPhase: null,
         rallyPhase: null,
+        vp: vpResult,
+        victoryResult,
+        gameOver,
+        status: gameOver ? 'complete' : s.status,
       };
+      if (!gameOver) {
+        s = { ...s, ordersPhase: { leaderRollUsed: {}, pendingOrderIssuance: null } };
+      }
       continue;
     }
 

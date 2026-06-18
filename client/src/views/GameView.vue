@@ -7,6 +7,7 @@ import HexMapOverlay from '../components/HexMapOverlay.vue';
 import UnitStatsPanel from '../components/UnitStatsPanel.vue';
 import ActionPanel from '../components/game/ActionPanel.vue';
 import TurnControl from '../components/game/TurnControl.vue';
+import VpPanel from '../components/game/VpPanel.vue';
 import { sanitizeCalibration } from '../utils/calibration.js';
 import { useOobData } from '../composables/useOobData.js';
 import { useGameStore } from '../stores/useGameStore.js';
@@ -246,7 +247,40 @@ function onImageLoad(event) {
           :local-player-side="localPlayerSide"
           @submit-action="onSubmitAction"
         />
+        <VpPanel
+          :vp="gameStore.gameState?.vp ?? null"
+          :game-over="gameStore.gameState?.gameOver ?? false"
+          :victory-result="gameStore.gameState?.victoryResult ?? null"
+        />
       </aside>
+    </div>
+
+    <!-- SM §5.3 — game-complete overlay: shown when status is 'complete' -->
+    <div
+      v-if="gameStore.gameState?.gameOver"
+      class="game-over-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Game over"
+    >
+      <div class="game-over-card">
+        <div class="game-over-title">Battle Complete</div>
+        <div class="game-over-result">
+          {{ gameStore.gameState?.victoryResult ?? 'Result unavailable' }}
+        </div>
+        <div v-if="gameStore.gameState?.vp" class="game-over-vp">
+          <span class="vp-label union">Union {{ gameStore.gameState.vp.union }} VP</span>
+          <span class="vp-sep">·</span>
+          <span class="vp-label confederate"
+            >Confederate {{ gameStore.gameState.vp.confederate }} VP</span
+          >
+          <span class="vp-sep">·</span>
+          <span class="vp-label net"
+            >Net {{ gameStore.gameState.vp.net > 0 ? '+' : ''
+            }}{{ gameStore.gameState.vp.net }}</span
+          >
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -305,5 +339,62 @@ function onImageLoad(event) {
   background: #12100c;
   border-left: 1px solid #2a2418;
   overflow-y: auto;
+}
+
+/* SM §5.3 — game-complete overlay */
+.game-over-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.game-over-card {
+  background: #1a1610;
+  border: 2px solid #8a6a30;
+  border-radius: 4px;
+  padding: 2rem 2.5rem;
+  text-align: center;
+  min-width: 320px;
+  max-width: 480px;
+}
+
+.game-over-title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #8a7a6a;
+  margin-bottom: 0.75rem;
+}
+
+.game-over-result {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #d4b870;
+  margin-bottom: 1rem;
+}
+
+.game-over-vp {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #8a7a6a;
+}
+
+.vp-label.union {
+  color: #6080c0;
+}
+
+.vp-label.confederate {
+  color: #c06040;
+}
+
+.vp-sep {
+  color: #5a4a38;
 }
 </style>
