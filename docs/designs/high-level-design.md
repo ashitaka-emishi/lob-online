@@ -23,7 +23,7 @@
 
 ---
 
-> **Implementation Status (as of 2026-06-13) — M5.5 Complete / M6 Starting**
+> **Implementation Status (as of 2026-06-21) — M7 Complete / M8 Starting**
 >
 > **M1 — Scaffold (complete):** tech stack selection, server scaffold (Express + Socket.io),
 > data models (five JSON files: map, scenario, oob, leaders, succession), Zod validation schemas,
@@ -69,8 +69,21 @@
 > module-prefixed paths, `useModuleStore`, module-level map/OOB data, scenario start states under
 > `scenarios/full-battle/`.
 >
-> **In progress:** M5.5 is sealed. M6 (combat resolution, morale checks, orders resolution pipeline)
-> is starting. South Mountain scenario data digitization ongoing (map hexes, counter linkages).
+> **M6 — Combat + Morale (complete):** full combat resolution pipeline — fire combat
+> (`actions/fireCombat.js`), close combat (`actions/closeCombat.js`), morale checks
+> (`resolveMorale.js`), morale cascade, orders resolution, rally phase, CBF removal, and
+> Zero Rule. All LOB §5–§8 rules wired into the live dispatch loop.
+>
+> **M7 — Special Rules + Victory Conditions (complete):** retreat resolution (`engine/retreat.js`),
+> interactive rally rolls (`actions/rallyRoll.js`), artillery action pipeline
+> (LIMBER/UNLIMBER/FIRE_ARTILLERY/REPLENISH_ARTILLERY in `actions/artillery.js`), end-of-turn
+> accounting (Attack Recovery, Random Events, Variable Reinforcements in `actions/endOfTurn.js`),
+> VP tracking (`engine/vp.js`: `computeVP`, `computeTerrainVP`, `computeWreckVP`, `evaluateVictory`,
+> `updateHexControl`), game-over detection. `VpPanel.vue` sidebar and game-over overlay added
+> to `GameView`. A full 45-turn South Mountain game can now be played to a scored outcome.
+>
+> **In progress:** M7 is sealed. M8 (production persistence + multiplayer) is starting.
+> South Mountain scenario data digitization ongoing (map hexes, counter linkages).
 >
 > Sections describing completed work are accurate to the implementation. Sections describing
 > planned work reflect design intent and may evolve.
@@ -217,9 +230,9 @@ A session that starts live on Saturday, continues asynchronously via Discord not
 | M4        | ✅ Done | Game state model + initializer + initial setup phase |
 | M5        | ✅ Done | Turn structure + orders + game map UI                |
 | M5.5      | ✅ Done | Multi-module platform + scenario editor enhancements |
-| M6        | 🔜 Next | Combat + morale                                      |
-| M7        | Planned | Special rules + victory conditions                   |
-| M8        | Planned | Production persistence + multiplayer                 |
+| M6        | ✅ Done | Combat + morale                                      |
+| M7        | ✅ Done | Special rules + victory conditions                   |
+| M8        | 🔜 Next | Production persistence + multiplayer                 |
 
 M3–M8 together deliver the playable South Mountain MVP. M9+ covers Enhanced Experience
 (Discord DMs, replay viewer, mobile layout) and Extended Content (additional scenarios,
@@ -231,37 +244,37 @@ Tracks which LOB v2.0 and SM rule sections are covered in each milestone and the
 status. "Engine" = pure-JS module implemented and unit-tested (testable via dev tools).
 "Loop" = wired into the live game dispatch/action pipeline.
 
-| Rule Section      | Topic                                                                | Engine   | Loop  | Status    |
-| ----------------- | -------------------------------------------------------------------- | -------- | ----- | --------- |
-| LOB §2            | Sequence of Play — turn phases, Command/Activity/Rally               | —        | M5    | Planned   |
-| LOB §3            | Movement — terrain costs, formations, road movement, ZOC             | M3       | M5    | Engine ✅ |
-| LOB §4            | Line of Sight — Slope Table, height modifiers                        | M3       | M3    | Engine ✅ |
-| LOB §5            | Fire Combat — Combat Table, Opening Volley, column shifts, depletion | M3       | M6    | Loop ✅   |
-| LOB §6            | Morale — Morale Table, state transitions, cascade                    | M3       | M6    | Loop ✅   |
-| LOB §7            | Close Combat — Closing Roll, charge sequence, charge modifiers       | M3       | M6    | Loop ✅   |
-| LOB §8            | Rally Phase — CBF removal, morale recovery                           | —        | M6    | Loop ✅   |
-| LOB §9.1          | Artillery — limbering, supply, depletion, artillery leaders          | M3 (ref) | M7    | Engine ✅ |
-| LOB §9.1a         | Leader Loss Table                                                    | M3       | M6    | Loop ✅   |
-| LOB §9.1e         | Zero Rule (attack MA roll)                                           | M3       | M6    | Loop ✅   |
-| LOB §9.3          | Loss Recovery (midnight 25% rule)                                    | —        | M7    | Planned   |
-| LOB §9.4          | Open Order — movement/combat/ZOC effects                             | M3 (ref) | M5/M6 | Engine ✅ |
-| LOB §10.6         | Command Roll + Order Acceptance                                      | M3       | M5    | Engine ✅ |
-| LOB §10.6a        | Order Delivery (turn delay calculator)                               | M3       | M5    | Engine ✅ |
-| LOB §10.7b        | Fluke Stoppage                                                       | M3       | M5    | Engine ✅ |
-| LOB §10.7c        | Reserve Requirements                                                 | M3 (ref) | M5    | Engine ✅ |
-| LOB §10.8c        | Attack Recovery                                                      | M3       | M7    | Engine ✅ |
-| LOB §11           | Victory Conditions — hex control, terrain VP, wreck VP               | —        | M7    | Planned   |
-| SM §1.1           | Special Slope Rule (50 ft contour, vertical impassable)              | M3       | M3    | Engine ✅ |
-| SM Override       | Longstreet initiative, Normal army commander rating                  | —        | M5    | Planned   |
-| SM Override       | At-start Complex Defense → Move orders                               | —        | M4    | Planned   |
-| SM Override       | Trees +1 LOS height (not +3)                                         | M3       | M3    | Engine ✅ |
-| SM §3.6           | Artillery supply trace + Pelham/Pleasonton replenishment             | M3 (ref) | M7    | Engine ✅ |
-| SM §3.x           | Setup positions, detachment rules                                    | —        | M4    | Planned   |
-| SM Reinforcements | Fixed-time arrival scheduling                                        | —        | M4    | Planned   |
-| SM Reinforcements | Variable arrival (Force A/B roll)                                    | —        | M7    | Planned   |
-| SM Random Events  | Confederate and Union event tables                                   | M3 (ref) | M7    | Engine ✅ |
-| SM VP             | Terrain hex VP, wreck VP, 7-outcome victory table                    | —        | M7    | Planned   |
-| SM Errata         | 5 official corrections (Chicago Dragoons, E/2 US, etc.)              | —        | M4    | Planned   |
+| Rule Section      | Topic                                                                | Engine   | Loop  | Status     |
+| ----------------- | -------------------------------------------------------------------- | -------- | ----- | ---------- |
+| LOB §2            | Sequence of Play — turn phases, Command/Activity/Rally               | —        | M5    | Loop ✅    |
+| LOB §3            | Movement — terrain costs, formations, road movement, ZOC             | M3       | M5    | Engine ✅  |
+| LOB §4            | Line of Sight — Slope Table, height modifiers                        | M3       | M3    | Engine ✅  |
+| LOB §5            | Fire Combat — Combat Table, Opening Volley, column shifts, depletion | M3       | M6    | Loop ✅    |
+| LOB §6            | Morale — Morale Table, state transitions, cascade                    | M3       | M6    | Loop ✅    |
+| LOB §7            | Close Combat — Closing Roll, charge sequence, charge modifiers       | M3       | M6    | Loop ✅    |
+| LOB §8            | Rally Phase — CBF removal, morale recovery                           | —        | M6    | Loop ✅    |
+| LOB §9.1          | Artillery — limbering, supply, depletion, artillery leaders          | M3 (ref) | M7    | Engine ✅  |
+| LOB §9.1a         | Leader Loss Table                                                    | M3       | M6    | Loop ✅    |
+| LOB §9.1e         | Zero Rule (attack MA roll)                                           | M3       | M6    | Loop ✅    |
+| LOB §9.3          | Loss Recovery (midnight 25% rule)                                    | —        | M7    | N/A (SM)   |
+| LOB §9.4          | Open Order — movement/combat/ZOC effects                             | M3 (ref) | M5/M6 | Engine ✅  |
+| LOB §10.6         | Command Roll + Order Acceptance                                      | M3       | M5    | Engine ✅  |
+| LOB §10.6a        | Order Delivery (turn delay calculator)                               | M3       | M5    | Engine ✅  |
+| LOB §10.7b        | Fluke Stoppage                                                       | M3       | M5    | Engine ✅  |
+| LOB §10.7c        | Reserve Requirements                                                 | M3 (ref) | M5    | Engine ✅  |
+| LOB §10.8c        | Attack Recovery                                                      | M3       | M7    | Loop ✅    |
+| LOB §11           | Victory Conditions — hex control, terrain VP, wreck VP               | M7       | M7    | Loop ✅    |
+| SM §1.1           | Special Slope Rule (50 ft contour, vertical impassable)              | M3       | M3    | Engine ✅  |
+| SM Override       | Longstreet initiative, Normal army commander rating                  | —        | M5    | Planned    |
+| SM Override       | At-start Complex Defense → Move orders                               | —        | M4    | Loop ✅    |
+| SM Override       | Trees +1 LOS height (not +3)                                         | M3       | M3    | Engine ✅  |
+| SM §3.6           | Artillery supply trace + Pelham/Pleasonton replenishment             | M3 (ref) | M7    | Partial ⚠️ |
+| SM §3.x           | Setup positions, detachment rules                                    | —        | M4    | Loop ✅    |
+| SM Reinforcements | Fixed-time arrival scheduling                                        | —        | M4    | Loop ✅    |
+| SM Reinforcements | Variable arrival (Force A/B roll)                                    | —        | M7    | Loop ✅    |
+| SM Random Events  | Confederate and Union event tables                                   | M3 (ref) | M7    | Loop ✅    |
+| SM VP             | Terrain hex VP, wreck VP, 7-outcome victory table                    | M7       | M7    | Loop ✅    |
+| SM Errata         | 5 official corrections (Chicago Dragoons, E/2 US, etc.)              | —        | M4    | Planned    |
 
 ---
 
@@ -550,8 +563,9 @@ condition evaluation. A full South Mountain game can now be played to completion
 **Rule sections:** None — all LOB v2.0 and SM rules are complete after M7. This milestone
 is infrastructure only: persistence, real-time communication, and notifications.
 
-**Goal:** Swap local file persistence for DigitalOcean Spaces, add Socket.io real-time
-updates, and Discord webhook async notifications. Production-ready MVP.
+**Goal:** Swap local file persistence for DigitalOcean Spaces, harden multiplayer auth
+(side-token faction binding), and add Discord webhook async notifications. Socket.io
+real-time updates are already wired from M5; M8 completes the production infrastructure.
 
 **Deliverables:**
 
@@ -560,9 +574,9 @@ updates, and Discord webhook async notifications. Production-ready MVP.
 - `server/src/store/sqlite.js` — `better-sqlite3` user + game index; all store queries
 - `server/src/store/index.js` — unified store API (drop-in replacement for local file store)
 - `server/src/notifications/discord.js` — `notifyWebhook(url, payload)` via plain fetch
-- Socket.io server: room-per-game, `game:state-updated` emit after each action
-- Vue: Socket.io client, real-time Pinia store update on `game:state-updated`
+- Auth hardening: bind side tokens to factions in DB (#562); enforce side on re-join (#563)
 - Discord webhook URL stored in SQLite `games` table, configurable at game creation
+- `updateHexControl` wired into the MOVE action path (SM §5.1 terrain VP, #634)
 
 **Acceptance criteria:**
 
@@ -570,6 +584,7 @@ updates, and Discord webhook async notifications. Production-ready MVP.
 - Both players receive real-time map/state updates when both are online simultaneously
 - Discord webhook fires on each action when configured; PBEM flow works without both players online
 - History log grows correctly (`000001.json`, `000002.json`, …) in Spaces
+- Side tokens bound to factions; side-switch impersonation rejected on re-join
 
 ---
 
