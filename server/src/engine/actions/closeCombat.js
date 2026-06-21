@@ -202,8 +202,10 @@ export function handleCloseCombat(state, action, { oob, mapData } = {}) {
         closingPass,
         closingThreshold,
         closingModifiedRoll,
-        // LOB §9.1a — leader loss required on any SP loss in close combat: §7.0a(e) automatic
-        // defender loss OR Opening Volley loss to the attacker (#617).
+        // LOB §9.1a — leader loss triggers on Combat Table or Opening Volley SP loss only.
+        // Charge Sequence (LOB_CHARTS): leader loss at steps 1 (OV) and 2 (§7.0c auto loss);
+        // morale check is step 3. Cascade morale SP losses do NOT trigger §9.1a — confirmed
+        // by domain-expert ruling 2026-06-21 (pre-m8-debt-sprint_20260621).
         leaderLossCheckRequired: defenderSpLoss > 0 || ovSpLoss > 0,
         // LOB §7.0a(f) — Charge Sequence always ends with a defender Morale Check, independent of SP loss (modifiers per §7.0g)
         moraleCheckRequired: true,

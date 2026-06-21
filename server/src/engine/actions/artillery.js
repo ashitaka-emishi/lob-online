@@ -14,8 +14,8 @@ import { hexDistance } from '../hex.js';
 import {
   combatResult,
   artilleryRangeShift,
-  LEFT_DEPLETION_COLUMNS,
-  RIGHT_DEPLETION_COLUMNS,
+  ORANGE_DEPLETION_COLUMNS,
+  BLUE_DEPLETION_COLUMNS,
 } from '../tables/combat.js';
 
 // LOB §3.6a — formation change costs 3 MPs in each direction
@@ -306,14 +306,16 @@ export function handleFireArtillery(state, action, { oob: injectedOob, mapData }
 
   const result = combatResult(currentSPs, netColumnShifts, diceRoll);
 
-  // LOB §8.2a — apply depletion based on which band the final column falls in
+  // LOB §8.2a — apply depletion based on which color zone the final column falls in.
+  // Orange zone (numeric cols): deplete whichever ammo type was fired.
+  // Blue zone (lettered cols A-D): canister depletion only; no depletion if shell was fired.
   let newAmmo = unit.ammo;
   const col = result.finalColumn;
-  if (LEFT_DEPLETION_COLUMNS.has(col)) {
-    // LOB §8.2a — left band: Shell Depleted (regardless of ammo type used)
-    newAmmo = 'low';
-  } else if (RIGHT_DEPLETION_COLUMNS.has(col) && ammoType === 'canister') {
-    // LOB §8.2a — right band + Canister in use: Canister Depleted
+  if (ORANGE_DEPLETION_COLUMNS.has(col)) {
+    // LOB §8.2a — orange zone: deplete whatever ammo type the battery fired
+    newAmmo = ammoType === 'canister' ? 'none' : 'low';
+  } else if (BLUE_DEPLETION_COLUMNS.has(col) && ammoType === 'canister') {
+    // LOB §8.2a — blue zone: Canister Depletion only (no depletion if shell was fired)
     newAmmo = 'none';
   }
 

@@ -68,17 +68,21 @@ export const COMBAT_TABLE = Object.freeze(_COMBAT_CELLS.map((row) => Object.free
 
 // ─── Depletion bands ───────────────────────────────────────────────────────────
 
-/**
- * Columns in the left depletion band (trigger depletion of the ammo type in use).
- * LOB_CHARTS §8.2a — left band columns call for depletion of whatever type is used.
- */
-export const LEFT_DEPLETION_COLUMNS = new Set(['-B', '-A', '1', '2-3']);
+// LOB §8.2a / LOB_CHARTS p.2 Artillery Depletion key:
+//   Orange zone (numeric cols): deplete whichever ammo type was actually fired.
+//   Blue zone (lettered cols A-D): canister depletion only — no depletion if shell was fired.
 
 /**
- * Columns in the right depletion band (trigger canister depletion when canister is in use).
- * LOB_CHARTS §8.2c — right band columns call for Canister Depletion.
+ * Columns in the orange depletion zone (numeric columns, left side of table).
+ * LOB §8.2a — orange zone: deplete whichever ammo type the battery fired (shell or canister).
  */
-export const RIGHT_DEPLETION_COLUMNS = new Set(['4-5', '6-8', 'A', 'B', 'C', 'D']);
+export const ORANGE_DEPLETION_COLUMNS = new Set(['-B', '-A', '1', '2-3', '4-5', '6-8']);
+
+/**
+ * Columns in the blue depletion zone (lettered columns, right side of table).
+ * LOB §8.2a — blue zone: Canister Depletion only; no depletion if shell was fired.
+ */
+export const BLUE_DEPLETION_COLUMNS = new Set(['A', 'B', 'C', 'D']);
 
 // ─── Opening Volley Table ──────────────────────────────────────────────────────
 
@@ -251,7 +255,8 @@ export function combatResult(effectiveSPs, netColumnShifts, diceRoll) {
 
   const moraleCheckRequired = resultType !== 'none';
   const leaderLossCheckRequired = resultType === 'full';
-  const depletionBand = LEFT_DEPLETION_COLUMNS.has(finalColumn) ? 'left' : 'right';
+  // LOB §8.2a — identify which color zone the final column falls in
+  const depletionBand = ORANGE_DEPLETION_COLUMNS.has(finalColumn) ? 'orange' : 'blue';
 
   return {
     resultType,

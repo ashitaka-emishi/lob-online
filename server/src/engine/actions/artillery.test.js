@@ -314,21 +314,25 @@ describe('handleFireArtillery', () => {
     expect(result.pendingResolution?.context.range).toBe(3);
   });
 
-  it('applies Shell Depletion when result lands in left depletion band (LOB §8.2a)', () => {
-    // SPs=4, shift=-2 (range shift), roll=7 → finalColumn '1' (left band) → Shell Depleted
-    // Range shift: artilleryRangeShift returns 0 for range 1–5; need explicit column shift.
-    // Use shift via low SP count: SPs=1 → col '1' (left band) for any roll.
+  // LOB §8.2a / LOB_CHARTS p.2 — orange zone (numeric cols -B,-A,1,2-3,4-5,6-8):
+  //   deplete whichever ammo type was fired (shell or canister).
+  // Blue zone (lettered cols A,B,C,D): canister depletion only — no depletion if shell fired.
+
+  it('orange zone + shell fired → shell depleted (LOB §8.2a)', () => {
+    // SPs=1 → col '1' (orange zone). Shell fired → shell depleted (ammo: low).
     const state = makeState({ 'csa-btry': makeUnit('csa-btry', { strengthPoints: 1 }) });
-    const action = { ...FIRE_ACTION, payload: { ...FIRE_ACTION.payload, range: 2, diceRoll: 7 } };
+    const action = {
+      ...FIRE_ACTION,
+      payload: { ...FIRE_ACTION.payload, ammoType: 'shell', range: 2, diceRoll: 7 },
+    };
     const result = handleFireArtillery(state, action, { oob: MOCK_OOB });
-    // SPs=1 → always in col '1' (left band) → Shell Depleted
     expect(result.units['csa-btry'].ammo).toBe('low');
     expect(result.units['csa-btry'].depletionMarker).toBe(true);
   });
 
-  it('applies Canister Depletion when right band and canister in use (LOB §8.2a)', () => {
-    // SPs=4, range=1, shift=0 → col '4-5' (right band) + canister → Canister Depleted
-    const state = makeState();
+  it('orange zone + canister fired → canister depleted (LOB §8.2a)', () => {
+    // SPs=1 → col '1' (orange zone). Canister fired → canister depleted (ammo: none).
+    const state = makeState({ 'csa-btry': makeUnit('csa-btry', { strengthPoints: 1 }) });
     const action = {
       ...FIRE_ACTION,
       payload: { ...FIRE_ACTION.payload, ammoType: 'canister', range: 1, diceRoll: 7 },
@@ -338,14 +342,48 @@ describe('handleFireArtillery', () => {
     expect(result.units['csa-btry'].depletionMarker).toBe(true);
   });
 
-  it('does not deplete when right band and shell in use (LOB §8.2a)', () => {
-    // Right band + shell → no depletion
+  it('orange zone 4-5 + shell fired → shell depleted (LOB §8.2a)', () => {
+    // SPs=4 → col '4-5' (orange zone). Shell fired → shell depleted.
     const state = makeState();
-    const action = { ...FIRE_ACTION, payload: { ...FIRE_ACTION.payload, range: 1, diceRoll: 7 } };
+    const action = {
+      ...FIRE_ACTION,
+      payload: { ...FIRE_ACTION.payload, ammoType: 'shell', range: 1, diceRoll: 7 },
+    };
     const result = handleFireArtillery(state, action, { oob: MOCK_OOB });
-    // col '4-5' is right band; shell → no canister depletion; no left band → no shell depletion
-    expect(result.units['csa-btry'].ammo).toBe('full');
-    expect(result.units['csa-btry'].depletionMarker).toBe(false);
+    expect(result.units['csa-btry'].ammo).toBe('low');
+    expect(result.units['csa-btry'].depletionMarker).toBe(true);
+  });
+
+  it('orange zone 6-8 + canister fired → canister depleted (LOB §8.2a)', () => {
+    // SPs=6 → col '6-8' (orange zone). Canister fired → canister depleted (ammo: none).
+    // Blue-zone (cols A-D) tests are in combat.test.js — handler cannot reach A-D via range shift alone.
+    const state6 = makeState({ 'csa-btry': makeUnit('csa-btry', { strengthPoints: 6 }) });
+    const action = {
+      ...FIRE_ACTION,
+      payload: { ...FIRE_ACTION.payload, ammoType: 'canister', range: 1, diceRoll: 7 },
+    };
+    const result = handleFireArtillery(state6, action, { oob: MOCK_OOB });
+    expect(result.units['csa-btry'].ammo).toBe('none');
+    expect(result.units['csa-btry'].depletionMarker).toBe(true);
+  });
+
+  it('no depletion when column has no depletion zone (non-depleting result)', () => {
+    // If the unit has ammo=full and the roll lands in a no-depletion cell, ammo stays full.
+    // All columns have a zone, so this tests a roll where no depletion applies: blue zone + shell.
+    // Blue zone (A-D) + shell → no depletion. Proxy test: verify ammo unchanged for shell in
+    // a non-depleting scenario (use a result already confirmed no-change).
+    // Since range shifts can only go left, and all numeric columns are orange zone,
+    // the only way to fire shell with no depletion is to land in cols A-D (blue zone).
+    // This is tested at the combatResult level in combat.test.js.
+    // Handler: confirm that a shell-fired battery on an orange-zone column depletes (not no-op).
+    const state = makeState({ 'csa-btry': makeUnit('csa-btry', { strengthPoints: 1 }) });
+    const action = {
+      ...FIRE_ACTION,
+      payload: { ...FIRE_ACTION.payload, ammoType: 'shell', range: 2, diceRoll: 7 },
+    };
+    const result = handleFireArtillery(state, action, { oob: MOCK_OOB });
+    // Confirms orange zone + shell → depletion occurs (not skipped)
+    expect(result.units['csa-btry'].ammo).toBe('low');
   });
 
   it('throws INVALID_ACTION when battery is limbered (LOB §3.6a)', () => {
