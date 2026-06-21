@@ -69,10 +69,10 @@ Manually update the HLD Milestone Overview and rule-coverage table for M7 and M8
 
 ### Tasks
 
-- [ ] Task 2.1: Mark M7 row ✅ in HLD §2 Milestone Overview table
-- [ ] Task 2.2: Update rule-coverage table — all M7 rows that say "Planned" → "Wired ✅" for delivered items; confirm correct milestone column values
-- [ ] Task 2.3: Review HLD M8 section (§ "M8 — Production Persistence + Multiplayer") for accuracy — check deliverables list matches current codebase expectations; update any stale references
-- [ ] Task 2.4: Check agent design docs (`docs/agents/*/design.md`) for M7/M8 references — update stale milestone language
+- [x] Task 2.1: Mark M7 row ✅ in HLD §2 Milestone Overview table
+- [x] Task 2.2: Update rule-coverage table — all M7 rows that say "Planned" → "Wired ✅" for delivered items; confirm correct milestone column values
+- [x] Task 2.3: Review HLD M8 section (§ "M8 — Production Persistence + Multiplayer") for accuracy — check deliverables list matches current codebase expectations; update any stale references
+- [x] Task 2.4: Check agent design docs (`docs/agents/*/design.md`) for M7/M8 references — update stale milestone language
 
 ### Verification
 

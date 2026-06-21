@@ -563,8 +563,9 @@ condition evaluation. A full South Mountain game can now be played to completion
 **Rule sections:** None — all LOB v2.0 and SM rules are complete after M7. This milestone
 is infrastructure only: persistence, real-time communication, and notifications.
 
-**Goal:** Swap local file persistence for DigitalOcean Spaces, add Socket.io real-time
-updates, and Discord webhook async notifications. Production-ready MVP.
+**Goal:** Swap local file persistence for DigitalOcean Spaces, harden multiplayer auth
+(side-token faction binding), and add Discord webhook async notifications. Socket.io
+real-time updates are already wired from M5; M8 completes the production infrastructure.
 
 **Deliverables:**
 
@@ -573,9 +574,9 @@ updates, and Discord webhook async notifications. Production-ready MVP.
 - `server/src/store/sqlite.js` — `better-sqlite3` user + game index; all store queries
 - `server/src/store/index.js` — unified store API (drop-in replacement for local file store)
 - `server/src/notifications/discord.js` — `notifyWebhook(url, payload)` via plain fetch
-- Socket.io server: room-per-game, `game:state-updated` emit after each action
-- Vue: Socket.io client, real-time Pinia store update on `game:state-updated`
+- Auth hardening: bind side tokens to factions in DB (#562); enforce side on re-join (#563)
 - Discord webhook URL stored in SQLite `games` table, configurable at game creation
+- `updateHexControl` wired into the MOVE action path (SM §5.1 terrain VP, #634)
 
 **Acceptance criteria:**
 
@@ -583,6 +584,7 @@ updates, and Discord webhook async notifications. Production-ready MVP.
 - Both players receive real-time map/state updates when both are online simultaneously
 - Discord webhook fires on each action when configured; PBEM flow works without both players online
 - History log grows correctly (`000001.json`, `000002.json`, …) in Spaces
+- Side tokens bound to factions; side-switch impersonation rejected on re-join
 
 ---
 
