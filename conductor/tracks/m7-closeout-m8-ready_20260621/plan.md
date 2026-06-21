@@ -3,7 +3,7 @@
 **Track ID:** m7-closeout-m8-ready_20260621
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-21
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -94,7 +94,7 @@ Read the open debt register and assess each item against M8 scope. Write the dev
 - [x] Task 3.4: Write devlog entry `docs/devlog/2026-06-21.md` with: M7 delivery summary, debt posture, go/no-go recommendation, and any pre-M8 debt items that should be addressed before the M8 track is created
 - [x] Task 3.5: Update `docs/devlog.md` index
 - [x] Task 3.6: Run `npm run quality:strict` — confirm all gates pass
-- [ ] Task 3.7: Commit all changes and open PR with `/pr-create`
+- [x] Task 3.7: Commit all changes and open PR with `/pr-create`
 
 ### Verification
 
