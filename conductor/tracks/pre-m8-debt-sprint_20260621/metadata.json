@@ -1,0 +1,19 @@
+{
+  "id": "pre-m8-debt-sprint_20260621",
+  "title": "Pre-M8 Debt Sprint — Artillery Depletion + Leader Loss (#633 #617)",
+  "type": "bug",
+  "status": "in_progress",
+  "created": "2026-06-21T00:00:00Z",
+  "updated": "2026-06-21T00:00:00Z",
+  "current_phase": 1,
+  "current_task": "1.1",
+  "phases": {
+    "total": 4,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 15,
+    "completed": 0
+  },
+  "commits": []
+}
