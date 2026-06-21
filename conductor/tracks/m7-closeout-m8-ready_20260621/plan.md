@@ -88,12 +88,12 @@ Read the open debt register and assess each item against M8 scope. Write the dev
 
 ### Tasks
 
-- [ ] Task 3.1: Read `docs/tech-debt/report.md` Open Debt Items — list all 10 items with scores and milestones
-- [ ] Task 3.2: Cross-reference each item against HLD M8 scope; classify as BLOCKER, MUST-RESOLVE-BEFORE-M8, or SAFE-TO-DEFER: - #612 (score 4) — CLOSE_COMBAT payload validation: auth/security surface → likely MUST-RESOLVE - #633 (score 4) — artillery depletion bands: rules-engine correctness → assess against M8 scope - #616 (score 3) — §7.0 SP gate: domain correctness → assess - #617 (score 3) — §9.1a leader loss scope: domain → assess - #613 (score 3) — §6.3 rally thresholds: dead code until M8 wiring → assess - #634 (score 3) — terrain VP wiring: deferred to M8 → MUST-RESOLVE in M8 - #562 (score 4) — side token binding: M8 multiplayer prerequisite → BLOCKER for M8 auth - #563 (score 3) — re-join side enforcement: M8 auth → BLOCKER for M8 auth - #618 (score 2) — §6.4 asymmetry: domain → assess - #621 (score 2) — Fluke/AR rule basis: M7 ambiguity → assess
-- [ ] Task 3.3: **HUMAN CONTROL POINT** — Present blocker/defer classification to user; get confirmation before writing devlog
-- [ ] Task 3.4: Write devlog entry `docs/devlog/2026-06-21.md` with: M7 delivery summary, debt posture, go/no-go recommendation, and any pre-M8 debt items that should be addressed before the M8 track is created
-- [ ] Task 3.5: Update `docs/devlog.md` index
-- [ ] Task 3.6: Run `npm run quality:strict` — confirm all gates pass
+- [x] Task 3.1: Read `docs/tech-debt/report.md` Open Debt Items — list all 10 items with scores and milestones
+- [x] Task 3.2: Cross-reference each item against HLD M8 scope; classify as BLOCKER, MUST-RESOLVE-BEFORE-M8, or SAFE-TO-DEFER: - #612 (score 4) — CLOSE_COMBAT payload validation: auth/security surface → likely MUST-RESOLVE - #633 (score 4) — artillery depletion bands: rules-engine correctness → assess against M8 scope - #616 (score 3) — §7.0 SP gate: domain correctness → assess - #617 (score 3) — §9.1a leader loss scope: domain → assess - #613 (score 3) — §6.3 rally thresholds: dead code until M8 wiring → assess - #634 (score 3) — terrain VP wiring: deferred to M8 → MUST-RESOLVE in M8 - #562 (score 4) — side token binding: M8 multiplayer prerequisite → BLOCKER for M8 auth - #563 (score 3) — re-join side enforcement: M8 auth → BLOCKER for M8 auth - #618 (score 2) — §6.4 asymmetry: domain → assess - #621 (score 2) — Fluke/AR rule basis: M7 ambiguity → assess
+- [x] Task 3.3: **HUMAN CONTROL POINT** — Present blocker/defer classification to user; get confirmation before writing devlog
+- [x] Task 3.4: Write devlog entry `docs/devlog/2026-06-21.md` with: M7 delivery summary, debt posture, go/no-go recommendation, and any pre-M8 debt items that should be addressed before the M8 track is created
+- [x] Task 3.5: Update `docs/devlog.md` index
+- [x] Task 3.6: Run `npm run quality:strict` — confirm all gates pass
 - [ ] Task 3.7: Commit all changes and open PR with `/pr-create`
 
 ### Verification
