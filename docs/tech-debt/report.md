@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-21 after M7 closeout debt reconciliation._
+_Last updated: 2026-06-21 after PR #636 (team-review pass)._
 
 ---
 
@@ -10,9 +10,9 @@ _Last updated: 2026-06-21 after M7 closeout debt reconciliation._
 | -------------------------------- | ------------------------------------------------------------------------------------------------- |
 | Open debt items                  | 5                                                                                                 |
 | Cumulative debt score (net open) | 17                                                                                                |
-| Current-milestone open debt      | 1 item (#617 score 3, M7 — §9.1a leader loss scope)                                               |
+| Current-milestone open debt      | 1 item (#617 score 3, pre-M8 — §9.1a leader loss scope, pending domain-expert ruling)             |
 | Highest-risk item                | Security: bind side tokens to factions in DB; derive player.side from token match (#562, score 4) |
-| PRs tracked                      | 300                                                                                               |
+| PRs tracked                      | 433                                                                                               |
 
 ---
 
@@ -452,6 +452,7 @@ _Last updated: 2026-06-21 after M7 closeout debt reconciliation._
 | 2026-06-21 | PR #636 (m7-closeout-m8-ready_20260621) (resolved #618)        | -2                   | —         | 600                      |
 | 2026-06-21 | PR #636 (m7-closeout-m8-ready_20260621) (resolved #621)        | -2                   | —         | 600                      |
 | 2026-06-21 | PR #636 (m7-closeout-m8-ready_20260621)                        | 0                    | -14       | 600                      |
+| 2026-06-21 | PR #636 (team-review pass)                                     | 0                    | 0         | 600                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -459,7 +460,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Moderate risk. Net open debt score is 17 across 5 items. M7 closeout reconciliation (2026-06-21) confirmed that 5 items previously listed as open (#612, #613, #616, #618, #621) were already closed on GitHub; the register has been updated. The score drops from 31 to 17.
+Moderate risk. Net open debt score is 17 across 5 items. M7 closeout reconciliation (2026-06-21) confirmed that 5 items previously listed as open (#612, #613, #616, #618, #621) were already closed on GitHub; the register has been corrected. Current debt is concentrated in two M8 security prerequisites (#562, #563 — side-token binding and re-join enforcement, total score 7), one rules-correctness bug targeted for the pre-M8 debt sprint (#633 — artillery depletion bands, score 4), one scope-pending rules question (#617 — §9.1a leader-loss cascade scope, score 3, pending domain-expert ruling), and one M8 wiring dependency (#634 — hex-control update in MOVE path, score 3). No items block starting M8 scoping, though #562 and #633 should be resolved before M8 ships to players.
 
 Debt is concentrated in two clusters: (1) **Security** — #562/#563 (score 4/3, M8, token/faction binding; hard prerequisite for multiplayer); (2) **Domain correctness** — #633 (score 4, M8, artillery depletion bands inverted vs Combat Table; recommend fixing in pre-M8 debt sprint), #617 (score 3, M7, §9.1a leader loss scope edge case), #634 (score 3, M8, terrain VP hex-control wiring deferred to MOVE action). One current-milestone item open (#617). Recommend fixing #633 before M8 implementation begins; #562/#563/#634 are M8 deliverables and will be closed there.
 
