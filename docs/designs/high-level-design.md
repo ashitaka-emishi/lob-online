@@ -244,37 +244,37 @@ Tracks which LOB v2.0 and SM rule sections are covered in each milestone and the
 status. "Engine" = pure-JS module implemented and unit-tested (testable via dev tools).
 "Loop" = wired into the live game dispatch/action pipeline.
 
-| Rule Section      | Topic                                                                | Engine   | Loop  | Status    |
-| ----------------- | -------------------------------------------------------------------- | -------- | ----- | --------- |
-| LOB §2            | Sequence of Play — turn phases, Command/Activity/Rally               | —        | M5    | Loop ✅   |
-| LOB §3            | Movement — terrain costs, formations, road movement, ZOC             | M3       | M5    | Engine ✅ |
-| LOB §4            | Line of Sight — Slope Table, height modifiers                        | M3       | M3    | Engine ✅ |
-| LOB §5            | Fire Combat — Combat Table, Opening Volley, column shifts, depletion | M3       | M6    | Loop ✅   |
-| LOB §6            | Morale — Morale Table, state transitions, cascade                    | M3       | M6    | Loop ✅   |
-| LOB §7            | Close Combat — Closing Roll, charge sequence, charge modifiers       | M3       | M6    | Loop ✅   |
-| LOB §8            | Rally Phase — CBF removal, morale recovery                           | —        | M6    | Loop ✅   |
-| LOB §9.1          | Artillery — limbering, supply, depletion, artillery leaders          | M3 (ref) | M7    | Engine ✅ |
-| LOB §9.1a         | Leader Loss Table                                                    | M3       | M6    | Loop ✅   |
-| LOB §9.1e         | Zero Rule (attack MA roll)                                           | M3       | M6    | Loop ✅   |
-| LOB §9.3          | Loss Recovery (midnight 25% rule)                                    | —        | M7    | Loop ✅   |
-| LOB §9.4          | Open Order — movement/combat/ZOC effects                             | M3 (ref) | M5/M6 | Engine ✅ |
-| LOB §10.6         | Command Roll + Order Acceptance                                      | M3       | M5    | Engine ✅ |
-| LOB §10.6a        | Order Delivery (turn delay calculator)                               | M3       | M5    | Engine ✅ |
-| LOB §10.7b        | Fluke Stoppage                                                       | M3       | M5    | Engine ✅ |
-| LOB §10.7c        | Reserve Requirements                                                 | M3 (ref) | M5    | Engine ✅ |
-| LOB §10.8c        | Attack Recovery                                                      | M3       | M7    | Engine ✅ |
-| LOB §11           | Victory Conditions — hex control, terrain VP, wreck VP               | M7       | M7    | Loop ✅   |
-| SM §1.1           | Special Slope Rule (50 ft contour, vertical impassable)              | M3       | M3    | Engine ✅ |
-| SM Override       | Longstreet initiative, Normal army commander rating                  | —        | M5    | Planned   |
-| SM Override       | At-start Complex Defense → Move orders                               | —        | M4    | Loop ✅   |
-| SM Override       | Trees +1 LOS height (not +3)                                         | M3       | M3    | Engine ✅ |
-| SM §3.6           | Artillery supply trace + Pelham/Pleasonton replenishment             | M3 (ref) | M7    | Engine ✅ |
-| SM §3.x           | Setup positions, detachment rules                                    | —        | M4    | Loop ✅   |
-| SM Reinforcements | Fixed-time arrival scheduling                                        | —        | M4    | Loop ✅   |
-| SM Reinforcements | Variable arrival (Force A/B roll)                                    | —        | M7    | Loop ✅   |
-| SM Random Events  | Confederate and Union event tables                                   | M3 (ref) | M7    | Loop ✅   |
-| SM VP             | Terrain hex VP, wreck VP, 7-outcome victory table                    | M7       | M7    | Loop ✅   |
-| SM Errata         | 5 official corrections (Chicago Dragoons, E/2 US, etc.)              | —        | M4    | Planned   |
+| Rule Section      | Topic                                                                | Engine   | Loop  | Status     |
+| ----------------- | -------------------------------------------------------------------- | -------- | ----- | ---------- |
+| LOB §2            | Sequence of Play — turn phases, Command/Activity/Rally               | —        | M5    | Loop ✅    |
+| LOB §3            | Movement — terrain costs, formations, road movement, ZOC             | M3       | M5    | Engine ✅  |
+| LOB §4            | Line of Sight — Slope Table, height modifiers                        | M3       | M3    | Engine ✅  |
+| LOB §5            | Fire Combat — Combat Table, Opening Volley, column shifts, depletion | M3       | M6    | Loop ✅    |
+| LOB §6            | Morale — Morale Table, state transitions, cascade                    | M3       | M6    | Loop ✅    |
+| LOB §7            | Close Combat — Closing Roll, charge sequence, charge modifiers       | M3       | M6    | Loop ✅    |
+| LOB §8            | Rally Phase — CBF removal, morale recovery                           | —        | M6    | Loop ✅    |
+| LOB §9.1          | Artillery — limbering, supply, depletion, artillery leaders          | M3 (ref) | M7    | Engine ✅  |
+| LOB §9.1a         | Leader Loss Table                                                    | M3       | M6    | Loop ✅    |
+| LOB §9.1e         | Zero Rule (attack MA roll)                                           | M3       | M6    | Loop ✅    |
+| LOB §9.3          | Loss Recovery (midnight 25% rule)                                    | —        | M7    | N/A (SM)   |
+| LOB §9.4          | Open Order — movement/combat/ZOC effects                             | M3 (ref) | M5/M6 | Engine ✅  |
+| LOB §10.6         | Command Roll + Order Acceptance                                      | M3       | M5    | Engine ✅  |
+| LOB §10.6a        | Order Delivery (turn delay calculator)                               | M3       | M5    | Engine ✅  |
+| LOB §10.7b        | Fluke Stoppage                                                       | M3       | M5    | Engine ✅  |
+| LOB §10.7c        | Reserve Requirements                                                 | M3 (ref) | M5    | Engine ✅  |
+| LOB §10.8c        | Attack Recovery                                                      | M3       | M7    | Loop ✅    |
+| LOB §11           | Victory Conditions — hex control, terrain VP, wreck VP               | M7       | M7    | Loop ✅    |
+| SM §1.1           | Special Slope Rule (50 ft contour, vertical impassable)              | M3       | M3    | Engine ✅  |
+| SM Override       | Longstreet initiative, Normal army commander rating                  | —        | M5    | Planned    |
+| SM Override       | At-start Complex Defense → Move orders                               | —        | M4    | Loop ✅    |
+| SM Override       | Trees +1 LOS height (not +3)                                         | M3       | M3    | Engine ✅  |
+| SM §3.6           | Artillery supply trace + Pelham/Pleasonton replenishment             | M3 (ref) | M7    | Partial ⚠️ |
+| SM §3.x           | Setup positions, detachment rules                                    | —        | M4    | Loop ✅    |
+| SM Reinforcements | Fixed-time arrival scheduling                                        | —        | M4    | Loop ✅    |
+| SM Reinforcements | Variable arrival (Force A/B roll)                                    | —        | M7    | Loop ✅    |
+| SM Random Events  | Confederate and Union event tables                                   | M3 (ref) | M7    | Loop ✅    |
+| SM VP             | Terrain hex VP, wreck VP, 7-outcome victory table                    | M7       | M7    | Loop ✅    |
+| SM Errata         | 5 official corrections (Chicago Dragoons, E/2 US, etc.)              | —        | M4    | Planned    |
 
 ---
 

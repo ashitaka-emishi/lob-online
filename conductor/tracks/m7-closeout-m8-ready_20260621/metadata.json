@@ -2,18 +2,18 @@
   "id": "m7-closeout-m8-ready_20260621",
   "title": "M7 Closeout — Doc-Sync and M8 Readiness",
   "type": "chore",
-  "status": "pending",
+  "status": "complete",
   "created": "2026-06-21T00:00:00Z",
   "updated": "2026-06-21T00:00:00Z",
-  "current_phase": 0,
+  "current_phase": 3,
   "current_task": null,
   "phases": {
     "total": 3,
-    "completed": 0
+    "completed": 3
   },
   "tasks": {
     "total": 14,
-    "completed": 0
+    "completed": 14
   },
-  "commits": []
+  "commits": ["6a656ae", "40d860e", "2ac31ea", "c7d1bf4", "a9538da", "117dbf6"]
 }

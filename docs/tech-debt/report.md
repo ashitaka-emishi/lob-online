@@ -446,12 +446,12 @@ _Last updated: 2026-06-21 after M7 closeout debt reconciliation._
 | 2026-06-17 | pre-m7-debt-sprint-b_20260617 (resolved #623)                  | -1                   | —         | 593                      |
 | 2026-06-17 | PR #631 (pre-m7-debt-sprint-b — team-review fixes in-place)    | 0                    | 0         | 593                      |
 | 2026-06-18 | PR #632 (m7-special-rules — team-review)                       | 7                    | +7        | 600                      |
-| 2026-06-21 | m7-closeout-m8-ready_20260621 (resolved #612)                  | -4                   | —         | 600                      |
-| 2026-06-21 | m7-closeout-m8-ready_20260621 (resolved #613)                  | -3                   | —         | 600                      |
-| 2026-06-21 | m7-closeout-m8-ready_20260621 (resolved #616)                  | -3                   | —         | 600                      |
-| 2026-06-21 | m7-closeout-m8-ready_20260621 (resolved #618)                  | -2                   | —         | 600                      |
-| 2026-06-21 | m7-closeout-m8-ready_20260621 (resolved #621)                  | -2                   | —         | 600                      |
-| 2026-06-21 | m7-closeout-m8-ready_20260621                                  | 0                    | -14       | 600                      |
+| 2026-06-21 | PR #636 (m7-closeout-m8-ready_20260621) (resolved #612)        | -4                   | —         | 600                      |
+| 2026-06-21 | PR #636 (m7-closeout-m8-ready_20260621) (resolved #613)        | -3                   | —         | 600                      |
+| 2026-06-21 | PR #636 (m7-closeout-m8-ready_20260621) (resolved #616)        | -3                   | —         | 600                      |
+| 2026-06-21 | PR #636 (m7-closeout-m8-ready_20260621) (resolved #618)        | -2                   | —         | 600                      |
+| 2026-06-21 | PR #636 (m7-closeout-m8-ready_20260621) (resolved #621)        | -2                   | —         | 600                      |
+| 2026-06-21 | PR #636 (m7-closeout-m8-ready_20260621)                        | 0                    | -14       | 600                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
