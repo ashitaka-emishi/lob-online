@@ -1,7 +1,7 @@
 # Track: Pre-M8 Debt Sprint — Artillery Depletion + Leader Loss
 
 **ID:** pre-m8-debt-sprint_20260621
-**Status:** Pending
+**Status:** Complete
 
 ## Documents
 
@@ -10,8 +10,8 @@
 
 ## Progress
 
-- Phases: 0/4 complete
-- Tasks: 0/15 complete
+- Phases: 4/4 complete
+- Tasks: 15/15 complete
 
 ## Quick Links
 
