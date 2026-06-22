@@ -1,0 +1,19 @@
+{
+  "id": "ci-env-fix_20260622",
+  "title": "CI Environment Fix — Lockfile Drift + Deploy Workflow Guard",
+  "type": "chore",
+  "status": "in_progress",
+  "created": "2026-06-22T00:00:00Z",
+  "updated": "2026-06-22T03:00:00Z",
+  "current_phase": 1,
+  "current_task": "1.1",
+  "phases": {
+    "total": 2,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 6,
+    "completed": 0
+  },
+  "commits": []
+}
