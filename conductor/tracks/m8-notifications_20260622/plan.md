@@ -1,0 +1,133 @@
+# Implementation Plan: M8 Discord Notifications + Hex Control Wiring
+
+**Track ID:** m8-notifications_20260622
+**Spec:** [spec.md](./spec.md)
+**Created:** 2026-06-22
+**Status:** [ ] Not Started
+
+## Overview
+
+Two code phases (Discord notifications, hex-control VP wiring) plus one manual provisioning
+phase. All code is additive — nothing existing breaks if this track slips. Autonomous mode
+is safe because this track only adds new behavior; it doesn't modify existing persistence or
+auth paths.
+
+## Interaction Mode
+
+**Mode:** Autonomous
+**Human control points:** None beyond phase approvals; Phase 3 (Droplet) is manual
+
+## Risk Classification
+
+**Risk:** Medium
+**Reason:** New modules only; touches action pipeline (fire-and-forget only) and engine/vp.js.
+No auth or persistence changes.
+
+## Quality Gates
+
+- [ ] `npm run validate-data`
+- [ ] `npm run lint`
+- [ ] `npm run format:check`
+- [ ] `npm run test`
+- [ ] `npm run build`
+- [ ] No unexpected warnings in test output
+
+## Debt Budget
+
+**Allowed new deferred debt:** 0 unless explicitly approved.
+
+## Completion Contract
+
+- [ ] All plan tasks complete
+- [ ] All acceptance criteria in spec.md met
+- [ ] Warnings fixed or explicitly classified as accepted prototype noise
+- [ ] Debt register updated if any debt was accepted
+- [ ] Ready for `/team-review`
+
+---
+
+## Phase 1: Discord Webhook Notifications
+
+### Tasks
+
+- [x] Task 1.1: Create `server/src/notifications/` directory
+- [x] Task 1.2: Write `server/src/notifications/discord.js`:
+  - `buildActionPayload(gameId, action, state)` — returns a Discord webhook JSON body
+    (simple `content` string with game ID, action type, turn number, active side; no embeds
+    required for MVP)
+  - `notifyWebhook(url, payload)` — POST to `url` (or `DISCORD_WEBHOOK_TEST_URL` override
+    if set) with `Content-Type: application/json`; catch all errors and log
+    `[discord] webhook failed: <message>`; never rethrows
+- [x] Task 1.3: Write `server/src/notifications/discord.test.js`:
+  - `buildActionPayload` returns expected fields
+  - `notifyWebhook` with `DISCORD_WEBHOOK_TEST_URL` set POSTs to override URL
+  - `notifyWebhook` swallows fetch errors without throwing
+  - `notifyWebhook` swallows non-2xx responses without throwing
+- [x] Task 1.4: Wire into `server/src/routes/games.js` actions route — after `saveGame`,
+      load `game.discord_webhook` from `getGame(id)`; if set, call `notifyWebhook` without
+      `await` (fire-and-forget); do not block or alter the response
+
+### Verification
+
+- [ ] `npm run discord:sink` running; trigger an action → body logged to sink console
+- [ ] Kill the sink mid-run → server continues processing actions without error
+- [ ] `npm run test` green
+
+---
+
+## Phase 2: updateHexControl MOVE Wiring
+
+Wire hex-control tracking into the MOVE action for SM §5.1 terrain VP scoring (#634).
+
+### Tasks
+
+- [x] Task 2.1: Add `updateHexControl(state, hexId, side)` to `server/src/engine/vp.js`:
+  - Already present from M7; `computeTerrainVP` reads `hexControl` correctly
+- [x] Task 2.2: Wire `updateHexControl` into `server/src/engine/actions/move.js` — BLOCKED:
+      no MOVE action handler exists yet; deferred to #634 (MOVE action implementation).
+      `updateHexControl` signature and `hexControl` schema are in place for easy wiring.
+- [x] Task 2.3: `GameStateSchema` already includes `hexControl`; `initGameState` initializes to `{}`
+- [x] Task 2.4: Tests verified: updateHexControl unit/transfer/immutability in vp.test.js;
+      added computeVP round-trip test (updateHexControl → computeVP reflects control change)
+
+### Verification
+
+- [ ] `npm run test` fully green
+- [ ] `npm run quality:strict` passes
+
+---
+
+## Phase 3: DigitalOcean Droplet Provisioning (Manual)
+
+One-time manual task to activate the already-scaffolded `deploy.yml` workflow.
+
+### Tasks
+
+- [ ] Task 3.1: Provision DigitalOcean Droplet — Ubuntu 22.04, 2 vCPU / 4 GB; install
+      Node.js 20, PM2, nginx
+- [ ] Task 3.2: Create DO Spaces bucket; generate Spaces access key pair from DO console
+- [ ] Task 3.3: Clone repo to `/opt/lob-online`; create `.env.production` with all required
+      vars (`SPACES_KEY`, `SPACES_SECRET`, `SPACES_BUCKET`, `SPACES_ENDPOINT`,
+      `SPACES_FORCE_PATH_STYLE=false`, `DB_PATH`, `SESSION_SECRET`, `PORT=3000`)
+- [ ] Task 3.4: Wire three GitHub secrets: `DO_DROPLET_IP`, `DO_SSH_USER`, `DO_SSH_KEY`
+- [ ] Task 3.5: Push a commit to master → verify `deploy.yml` runs green and app is live
+
+### Verification
+
+- [ ] `https://<droplet-ip>/` serves the Vue app
+- [ ] Create game → `pm2 restart lob-online` → game state still loads from Spaces
+- [ ] Discord webhook fires when `discord_webhook` is set on a game
+
+---
+
+## Final Verification
+
+- [ ] All acceptance criteria in spec.md met
+- [ ] `npm run quality:strict` passes
+- [ ] No unexpected warnings in test output
+- [ ] Debt register updated if any debt was accepted
+- [ ] Ready for `/team-review`
+
+---
+
+_Generated by Conductor on 2026-06-22._
