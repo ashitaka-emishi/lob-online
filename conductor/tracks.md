@@ -143,3 +143,4 @@
 | [ ] | m7-special-rules_20260617 | M7 — Special Rules + Victory Conditions | 2026-06-17 | 2026-06-17 |
 | [x] | m7-closeout-m8-ready_20260621 | M7 Closeout — Doc-Sync and M8 Readiness | 2026-06-21 | 2026-06-21 |
 | [x] | pre-m8-debt-sprint_20260621 | Pre-M8 Debt Sprint — Artillery Depletion + Leader Loss (#633 #617) | 2026-06-21 | 2026-06-21 |
+| [x] | ci-env-fix_20260622 | CI Environment Fix — Lockfile Drift + Deploy Workflow Guard | 2026-06-22 | 2026-06-22 |
