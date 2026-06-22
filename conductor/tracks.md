@@ -145,5 +145,5 @@
 | [x] | pre-m8-debt-sprint_20260621 | Pre-M8 Debt Sprint — Artillery Depletion + Leader Loss (#633 #617) | 2026-06-21 | 2026-06-21 |
 | [x] | ci-env-fix_20260622 | CI Environment Fix — Lockfile Drift + Deploy Workflow Guard | 2026-06-22 | 2026-06-22 |
 | [x] | m8-local-infra_20260622 | M8 Local Dev Infrastructure — MinIO Docker + Discord Sink | 2026-06-22 | 2026-06-22 |
-| [ ] | m8-persistence_20260622 | M8 Persistence + Auth Hardening — Spaces Store + SQLite Migration | 2026-06-22 | 2026-06-22 |
+| [x] | m8-persistence_20260622 | M8 Persistence + Auth Hardening — Spaces Store + SQLite Migration | 2026-06-22 | 2026-06-22 |
 | [ ] | m8-notifications_20260622 | M8 Discord Notifications + Hex Control Wiring | 2026-06-22 | 2026-06-22 |
