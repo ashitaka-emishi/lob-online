@@ -1,18 +1,18 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-22 after PR #639 (m8-local-infra)._
+_Last updated: 2026-06-22 after PR #647 (m8-persistence)._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                                             |
-| -------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Open debt items                  | 10                                                                                                |
-| Cumulative debt score (net open) | 22                                                                                                |
-| Current-milestone open debt      | 0 items (all M8)                                                                                  |
-| Highest-risk item                | Security: bind side tokens to factions in DB; derive player.side from token match (#562, score 4) |
-| PRs tracked                      | 437                                                                                               |
+| Metric                           | Value                                                                       |
+| -------------------------------- | --------------------------------------------------------------------------- |
+| Open debt items                  | 11                                                                          |
+| Cumulative debt score (net open) | 27                                                                          |
+| Current-milestone open debt      | 0 items (all M8)                                                            |
+| Highest-risk item                | sec: add requireSide auth guard to DELETE /api/v1/games/:id (#648, score 5) |
+| PRs tracked                      | 438                                                                         |
 
 ---
 
@@ -457,6 +457,7 @@ _Last updated: 2026-06-22 after PR #639 (m8-local-infra)._
 | 2026-06-21 | PR #637 (pre-m8-debt-sprint) (resolved #617)                   | -3                   | —         | 600                      |
 | 2026-06-21 | PR #637 (pre-m8-debt-sprint)                                   | 0                    | -7        | 600                      |
 | 2026-06-22 | PR #639 (m8-local-infra)                                       | 12                   | +12       | 612                      |
+| 2026-06-22 | PR #647 (m8-persistence)                                       | 5                    | +5        | 617                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -464,7 +465,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Elevated risk. Net open debt score is 22 across 10 items. PR #639 (M8 local dev infrastructure) added 12 points across 7 new items, all scoped to M8. Debt is concentrated in two categories: (1) security and auth scaffolding — #562/#563 (token/faction binding, hard prerequisites for M8 multiplayer, score 4+3) remain the highest-risk items; and (2) local dev infrastructure gaps — #640 (missing auto-bucket creation blocks first-run M8 persistence dev, score 3), #641/#643/#646 (missing SPACES_REGION, misleading webhook var name, and prod env migration note, score 2 each), and #642/#644/#645 (healthcheck, sink testability, hardcoded port, score 1 each). The infrastructure items are all resolvable during the M8 persistence and notifications tracks. #634 (terrain VP hex-control wiring) remains deferred to the M8 MOVE action implementation. No current-milestone open items.
+Elevated risk. Net open debt score is 27 across 11 items. Debt is concentrated in two categories: (1) security and auth — #648 (unauthenticated DELETE, score 5) is now the highest-risk item and a hard prerequisite before multiplayer ships; #562/#563 (token/faction binding, score 4+3) follow closely; and (2) local dev infrastructure gaps — #640 (missing auto-bucket creation, score 3), #641/#643/#646 (SPACES_REGION, webhook var naming, prod env note, score 2 each), and #642/#644/#645 (healthcheck, sink testability, hardcoded port, score 1 each). #634 (terrain VP hex-control wiring) remains deferred to the M8 MOVE action implementation. All 11 open items are M8-scoped. No current-milestone open items.
 
 ---
 
@@ -474,6 +475,7 @@ _Ordered by score descending (ties: current milestone first, then newest first).
 
 | Score | Milestone | Issue | Title                                                                                | PR Introduced | Assessment                                                                                                                                                                                                                                                                                                                                        |
 | ----- | --------- | ----- | ------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 5     | M8        | #648  | sec: add requireSide auth guard to DELETE /api/v1/games/:id                          | PR #647       | Any caller with a game ID can destroy the game without a session token — no authentication required on the delete path. Intentional deferral during single-player scaffolding phase; must be closed before M8 multiplayer ships.                                                                                                                  |
 | 4     | M8        | #562  | Security: bind side tokens to factions in DB; derive player.side from token match    | PR #561       | DB stores two opaque tokens with no faction binding; `requireSide` validates token matches either slot but never checks which side it belongs to. A player can claim either faction. Intentional single-user testing scaffolding; hard prerequisite for M8 multiplayer — requires DB migration, session rewrite, and engine authorization update. |
 | 3     | M8        | #563  | Security: enforce side binding on re-join — reject side-switch to opponent's faction | PR #561       | Re-join path accepts any `side` from request body while reusing existing token, allowing side impersonation between turns. Acknowledged scaffolding (#349); depends on #562 (token/faction binding) to derive correct side. Deferred to M8 alongside full auth hardening.                                                                         |
 | 3     | M8        | #634  | feat(vp): wire updateHexControl into movement/retreat path (SM §5.1 terrain VP)      | PR #632       | `updateHexControl` and `isVpControlEligible` are implemented but have no production caller. `state.hexControl` stays `{}` and `computeTerrainVP` always returns 0 — the dominant VP component per SM §5.1 contributes nothing to end-game tally. Wiring deferred to M8+ when the MOVE action is implemented.                                      |
