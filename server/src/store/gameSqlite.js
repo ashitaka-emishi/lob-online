@@ -2,15 +2,23 @@ import Database from 'better-sqlite3';
 
 import { UUID_RE } from '../util/uuid.js';
 
-const SCHEMA = `
+// Schema v0: original 5-column table (no faction or webhook columns)
+// Schema v1: adds side_a_faction, side_b_faction, discord_webhook
+// PRAGMA user_version gates the migration so it is safe to run on restart.
+const SCHEMA_V1 = `
   CREATE TABLE IF NOT EXISTS games (
     id TEXT PRIMARY KEY,
     side_a_token TEXT NOT NULL,
     side_b_token TEXT,
     status TEXT NOT NULL DEFAULT 'open',
-    created_at INTEGER NOT NULL
+    created_at INTEGER NOT NULL,
+    side_a_faction TEXT,
+    side_b_faction TEXT,
+    discord_webhook TEXT
   )
 `;
+
+const CURRENT_USER_VERSION = 1;
 
 export class GameNotFoundError extends Error {
   constructor(id) {
@@ -34,17 +42,48 @@ export class InvalidTokenError extends Error {
   }
 }
 
+// Run idempotent schema migration. user_version 0 = no migration applied yet.
+function migrate(db) {
+  const version = db.pragma('user_version', { simple: true });
+
+  if (version === 0) {
+    // Fresh DB or pre-v1 DB — create/migrate to v1 schema
+    db.exec(SCHEMA_V1);
+
+    // If the table already existed without the new columns (pre-v1), add them.
+    // ALTER TABLE ADD COLUMN is a no-op if the column already exists in SQLite 3.37+,
+    // but we guard with a try/catch for older SQLite versions.
+    const cols = db
+      .prepare('PRAGMA table_info(games)')
+      .all()
+      .map((r) => r.name);
+
+    if (!cols.includes('side_a_faction')) {
+      db.exec('ALTER TABLE games ADD COLUMN side_a_faction TEXT');
+    }
+    if (!cols.includes('side_b_faction')) {
+      db.exec('ALTER TABLE games ADD COLUMN side_b_faction TEXT');
+    }
+    if (!cols.includes('discord_webhook')) {
+      db.exec('ALTER TABLE games ADD COLUMN discord_webhook TEXT');
+    }
+
+    db.pragma(`user_version = ${CURRENT_USER_VERSION}`);
+  }
+  // user_version === 1: already migrated, nothing to do
+}
+
 // Factory — hoists all prepared statements at construction time (#331)
 export function createStore(db) {
-  db.exec(SCHEMA);
+  migrate(db);
 
   const stmts = {
     insert: db.prepare(
-      'INSERT INTO games (id, side_a_token, status, created_at) VALUES (?, ?, ?, ?)'
+      'INSERT INTO games (id, side_a_token, side_a_faction, discord_webhook, status, created_at) VALUES (?, ?, ?, ?, ?, ?)'
     ),
     selectById: db.prepare('SELECT * FROM games WHERE id = ?'),
     updateJoin: db.prepare(
-      "UPDATE games SET side_b_token = ?, status = 'active' WHERE id = ? AND status = 'open'"
+      "UPDATE games SET side_b_token = ?, side_b_faction = ?, status = 'active' WHERE id = ? AND status = 'open'"
     ),
     delete: db.prepare('DELETE FROM games WHERE id = ?'),
     // LIMIT 200 guards against unbounded memory growth as game count scales (#PERF-M1)
@@ -54,17 +93,17 @@ export function createStore(db) {
   };
 
   return {
-    createGame(id, sideAToken) {
-      stmts.insert.run(id, sideAToken, 'open', Date.now());
+    createGame(id, sideAToken, faction, discordWebhook = null) {
+      stmts.insert.run(id, sideAToken, faction ?? null, discordWebhook, 'open', Date.now());
       return id;
     },
 
-    joinGame(id, sideBToken) {
+    joinGame(id, sideBToken, faction) {
       // SEC-H1: contract assertion — defence-in-depth against caller bugs (#340)
       if (typeof sideBToken !== 'string' || !UUID_RE.test(sideBToken)) {
         throw new InvalidTokenError('sideBToken', sideBToken);
       }
-      const result = stmts.updateJoin.run(sideBToken, id);
+      const result = stmts.updateJoin.run(sideBToken, faction ?? null, id);
       if (result.changes === 0) {
         const row = stmts.selectById.get(id);
         if (!row) throw new GameNotFoundError(id);

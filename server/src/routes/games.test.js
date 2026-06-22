@@ -12,10 +12,11 @@ vi.mock('../auth/session.js', () => ({
 vi.mock('../store/index.js', () => ({
   saveGame: vi.fn().mockResolvedValue(undefined),
   loadGame: vi.fn(),
+  appendHistory: vi.fn().mockResolvedValue(undefined),
   createGame: vi.fn(),
   joinGame: vi.fn(),
   deleteGame: vi.fn(),
-  deleteGameFile: vi.fn().mockResolvedValue(undefined),
+  deleteGameState: vi.fn().mockResolvedValue(undefined),
   getGame: vi.fn(),
   listGames: vi.fn(),
   GameNotFoundError: class GameNotFoundError extends Error {
@@ -62,9 +63,10 @@ vi.mock('../engine/actions/index.js', () => ({
 
 import { setPlayerSession, getPlayerSession } from '../auth/session.js';
 import {
+  appendHistory,
   createGame,
   deleteGame,
-  deleteGameFile,
+  deleteGameState,
   GameNotFoundError,
   GameNotOpenError,
   InvalidTokenError,
@@ -132,7 +134,8 @@ beforeEach(() => {
   loadGame.mockResolvedValue(MINIMAL_STATE);
   getValidActions.mockReturnValue([]);
   deleteGame.mockReturnValue(undefined);
-  deleteGameFile.mockResolvedValue(undefined);
+  deleteGameState.mockResolvedValue(undefined);
+  appendHistory.mockResolvedValue(undefined);
 });
 
 describe('POST /api/v1/games', () => {
@@ -168,6 +171,35 @@ describe('POST /api/v1/games', () => {
     expect(setPlayerSession).toHaveBeenCalledOnce();
     const [, , side] = setPlayerSession.mock.calls[0];
     expect(side).toBe('union');
+  });
+
+  it('passes discordWebhook to createGame when provided', async () => {
+    const app = await buildApp();
+    await request(app)
+      .post('/api/v1/games')
+      .send({ discordWebhook: 'https://discord.com/api/webhooks/123/abc' });
+    expect(createGame).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      'union',
+      'https://discord.com/api/webhooks/123/abc'
+    );
+  });
+
+  it('returns 400 when discordWebhook is not a valid URL', async () => {
+    const app = await buildApp();
+    const res = await request(app).post('/api/v1/games').send({ discordWebhook: 'not-a-url' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/url/i);
+  });
+
+  it('returns 400 when discordWebhook uses a non-http protocol', async () => {
+    const app = await buildApp();
+    const res = await request(app)
+      .post('/api/v1/games')
+      .send({ discordWebhook: 'ftp://example.com/hook' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/http/i);
   });
 });
 
@@ -211,7 +243,7 @@ describe('POST /api/v1/games/:id/join', () => {
       .send({ side: 'confederate' });
     expect(res.status).toBe(200);
     expect(res.body.side).toBe('confederate');
-    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String));
+    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String), expect.any(String));
   });
 
   it('returns 404 when joinGame throws GameNotFoundError (#PERF-H1)', async () => {
@@ -258,8 +290,8 @@ describe('POST /api/v1/games/:id/join', () => {
     expect(res.status).toBe(400);
   });
 
-  // ARCH-H2: same-game re-join updates side (scaffolded) — joinGame not called again (#340)
-  it('returns 200 and updates side when session already holds this game (#340)', async () => {
+  // Faction binding enforced on re-join — side-switching is forbidden
+  it('returns 403 when session already holds this game but requests a different side', async () => {
     getPlayerSession.mockReturnValue({
       gameId: TEST_UUID,
       side: 'confederate',
@@ -267,10 +299,10 @@ describe('POST /api/v1/games/:id/join', () => {
     });
     const app = await buildApp();
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
-    expect(res.status).toBe(200);
-    expect(res.body.side).toBe('union');
+    expect(res.status).toBe(403);
+    expect(res.body.error).toMatch(/side already bound/i);
     expect(joinGame).not.toHaveBeenCalled();
-    expect(setPlayerSession).toHaveBeenCalledWith(expect.anything(), TEST_UUID, 'union', 'tok-1');
+    expect(setPlayerSession).not.toHaveBeenCalled();
   });
 
   it('returns 200 and keeps same side when session matches and same side requested (#340)', async () => {
@@ -288,7 +320,7 @@ describe('POST /api/v1/games/:id/join', () => {
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(200);
     expect(res.body.side).toBe('union');
-    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String));
+    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String), expect.any(String));
   });
 
   it('joins successfully as union when caller session is for a different game (#340 #407)', async () => {
@@ -302,7 +334,7 @@ describe('POST /api/v1/games/:id/join', () => {
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(200);
     expect(res.body.side).toBe('union');
-    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String));
+    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String), expect.any(String));
   });
 });
 
@@ -416,12 +448,12 @@ describe('GET /api/v1/games/:id', () => {
 });
 
 describe('DELETE /api/v1/games/:id', () => {
-  it('returns 204 and calls deleteGame + deleteGameFile (#407)', async () => {
+  it('returns 204 and calls deleteGame + deleteGameState (#407)', async () => {
     const app = await buildApp();
     const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
     expect(res.status).toBe(204);
     expect(deleteGame).toHaveBeenCalledWith(TEST_UUID);
-    expect(deleteGameFile).toHaveBeenCalledWith(TEST_UUID);
+    expect(deleteGameState).toHaveBeenCalledWith(TEST_UUID);
   });
 
   it('returns 404 when deleteGame throws GameNotFoundError (#407)', async () => {
@@ -434,8 +466,8 @@ describe('DELETE /api/v1/games/:id', () => {
     expect(res.body.error).toBe('Game not found');
   });
 
-  it('returns 500 when deleteGameFile throws (#407)', async () => {
-    deleteGameFile.mockRejectedValue(new Error('disk error'));
+  it('returns 500 when deleteGameState throws (#407)', async () => {
+    deleteGameState.mockRejectedValue(new Error('s3 error'));
     const app = await buildApp();
     const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
     expect(res.status).toBe(500);

@@ -5,9 +5,11 @@ import * as store from './index.js';
 // Verify store/index.js re-exports the full public API so routes import a stable
 // interface rather than implementation-specific files (#334)
 describe('store/index — public API surface', () => {
-  it('re-exports gameFile functions', () => {
+  it('re-exports spaces functions', () => {
     expect(typeof store.saveGame).toBe('function');
     expect(typeof store.loadGame).toBe('function');
+    expect(typeof store.appendHistory).toBe('function');
+    expect(typeof store.deleteGameState).toBe('function');
   });
 
   it('re-exports gameSqlite delegate functions', () => {

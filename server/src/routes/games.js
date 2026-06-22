@@ -11,9 +11,10 @@ import { loadMap, buildHexIndex } from '../engine/map.js';
 import { loadOob } from '../engine/oob.js';
 import { getScenario } from '../engine/scenario.js';
 import {
+  appendHistory,
   createGame,
   deleteGame,
-  deleteGameFile,
+  deleteGameState,
   GameNotFoundError,
   GameNotOpenError,
   getGame,
@@ -48,7 +49,7 @@ const _hexIndex = buildHexIndex(_mapData);
 
 const router = express.Router();
 
-// Validate :id is a UUID — prevents path traversal into gameFile storage
+// Validate :id is a UUID — prevents path traversal in Spaces key construction
 router.param('id', (req, res, next, id) => {
   if (!UUID_RE.test(id)) return res.status(400).json({ error: 'Invalid game id' });
   next();
@@ -57,12 +58,26 @@ router.param('id', (req, res, next, id) => {
 // POST /api/v1/games — create a new game, assign creator as union (USA) (#549)
 router.post('/', createLimiter, async (req, res) => {
   try {
+    const { discordWebhook } = req.body ?? {};
+
+    // Validate discordWebhook if provided — must be a plausible URL string
+    if (discordWebhook !== undefined && discordWebhook !== null) {
+      try {
+        const url = new URL(discordWebhook);
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+          return res.status(400).json({ error: 'discordWebhook must be an http or https URL' });
+        }
+      } catch {
+        return res.status(400).json({ error: 'discordWebhook must be a valid URL' });
+      }
+    }
+
     const id = randomUUID();
     const state = initGameState(_scenario, id);
 
-    // SQLite row first: a failed INSERT leaves no filesystem side-effect (#ARCH-H4)
+    // SQLite row first: a failed INSERT leaves no Spaces side-effect (#ARCH-H4)
     const sideToken = randomUUID();
-    createGame(id, sideToken);
+    createGame(id, sideToken, SIDES.UNION, discordWebhook ?? null);
     await saveGame(id, state);
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
@@ -89,10 +104,11 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
 
     const existingSession = getPlayerSession(req);
 
-    // ARCH-H2: same-game re-join updates side and re-enters without calling joinGame again.
-    // Scaffolded behavior: allows side-switching for dev/testing; full enforcement deferred.
-    // Game-switching (different gameId) overwrites the session normally. Policy in #349.
+    // Same-game re-join: enforce faction binding — cannot switch sides after initial join.
     if (existingSession?.gameId === id) {
+      if (existingSession.side !== side) {
+        return res.status(403).json({ error: 'Side already bound — cannot switch factions' });
+      }
       await regenerateSession(req);
       setPlayerSession(req, id, side, existingSession.sideToken);
       return res.json({ id, side });
@@ -101,7 +117,7 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
     const sideToken = randomUUID();
 
     // joinGame is atomic — no pre-check needed; typed errors map to 404/409 (#PERF-H1, #ARCH-M2)
-    joinGame(id, sideToken);
+    joinGame(id, sideToken, side);
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
     await regenerateSession(req);
@@ -123,7 +139,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     deleteGame(id);
-    await deleteGameFile(id);
+    await deleteGameState(id);
     res.status(204).send();
   } catch (err) {
     if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });
@@ -204,6 +220,7 @@ router.post('/:id/actions', requireSide, async (req, res) => {
       { oob: _oob, scenario: _scenario, mapData: _mapData, hexIndex: _hexIndex }
     );
     const saved = await saveGame(id, nextState);
+    await appendHistory(id, saved.version, { type, payload, playerSide, version: saved.version });
 
     // Notify connected players; they fetch the authoritative state via GET /:id (#356)
     // Guard: io may be absent in test environments or before Socket.io attaches (#482)

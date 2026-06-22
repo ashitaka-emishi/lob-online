@@ -1,8 +1,6 @@
 // NOTE: Importing from the store barrel (index.js) rather than gameSqlite.js directly
 // keeps the test mock surface consistent — games.test.js mocks the barrel and configures
 // getGame there. A direct gameSqlite import would require a separate mock entry.
-// The transitive load of gameFile.js via the barrel is a known coupling concern (#arch)
-// with negligible runtime impact for a single-server process.
 import { getGame } from '../store/index.js';
 import { getPlayerSession } from './session.js';
 

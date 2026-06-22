@@ -1,4 +1,4 @@
-export { deleteGameFile, loadGame, saveGame } from './gameFile.js';
+export { appendHistory, deleteGameState, loadGame, saveGame } from './spaces.js';
 export {
   createGame,
   deleteGame,
