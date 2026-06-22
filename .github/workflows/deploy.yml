@@ -11,7 +11,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Guard: skip deploy when M8 infra secrets are not configured.
+      # Requires three GitHub secrets wired before M8 goes live:
+      #   DO_DROPLET_IP  — DigitalOcean Droplet IP
+      #   DO_SSH_USER    — SSH user on the Droplet
+      #   DO_SSH_KEY     — Private SSH key with Droplet access
+      - name: Check infra secrets configured
+        id: check_secrets
+        run: |
+          if [ -z "$DO_DROPLET_IP" ]; then
+            echo "DO_DROPLET_IP secret not set — skipping deploy (M8 infra not provisioned)"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          DO_DROPLET_IP: ${{ secrets.DO_DROPLET_IP }}
+
       - name: Deploy via SSH
+        if: steps.check_secrets.outputs.skip == 'false'
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.DO_DROPLET_IP }}
