@@ -229,7 +229,12 @@ export function handleFireCombat(state, action, { oob, scenario, mapData, hexInd
   // is a separate pending resolution (deferred to M7; for now we set the marker on 'left' band).
   // NOTE: this is a simplification — full depletion requires a separate die roll per LOB §5.8.
   const attackerId = attackerUnits[0].id;
-  if (result.depletionBand === 'left' && updatedUnits[attackerId]) {
+  // LOB §8.2a — orange zone depletes whatever ammo type was fired; blue zone depletes canister only.
+  // Fire combat (infantry) doesn't track ammo type, so we set the marker on any depletion zone hit.
+  if (
+    (result.depletionBand === 'orange' || result.depletionBand === 'blue') &&
+    updatedUnits[attackerId]
+  ) {
     updatedUnits = {
       ...updatedUnits,
       [attackerId]: {

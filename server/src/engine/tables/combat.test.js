@@ -274,16 +274,20 @@ describe('combatResult — result structure (LOB_CHARTS §5.6)', () => {
     expect(r.finalColumn).toBe('A');
   });
 
-  it('left depletion band: -B through 2-3 → depletionBand left', () => {
-    expect(combatResult(1, 0, 7).depletionBand).toBe('left'); // column 1
-    expect(combatResult(3, 0, 7).depletionBand).toBe('left'); // column 2-3
-    expect(combatResult(1, -2, 7).depletionBand).toBe('left'); // column -B
+  // LOB §8.2a / LOB_CHARTS p.2: orange zone (cols -B,-A,1,2-3,4-5,6-8) depletes whatever
+  // ammo type was fired. Blue zone (cols A,B,C,D) depletes canister only; no depletion if shell.
+  it('orange zone: numeric cols -B,-A,1,2-3,4-5,6-8 → depletionBand orange', () => {
+    expect(combatResult(1, 0, 7).depletionBand).toBe('orange'); // column 1
+    expect(combatResult(3, 0, 7).depletionBand).toBe('orange'); // column 2-3
+    expect(combatResult(1, -2, 7).depletionBand).toBe('orange'); // column -B
+    expect(combatResult(4, 0, 7).depletionBand).toBe('orange'); // column 4-5
+    expect(combatResult(6, 0, 7).depletionBand).toBe('orange'); // column 6-8
   });
 
-  it('right depletion band: 4-5 through D → depletionBand right', () => {
-    expect(combatResult(4, 0, 7).depletionBand).toBe('right'); // column 4-5
-    expect(combatResult(6, 0, 7).depletionBand).toBe('right'); // column 6-8
-    expect(combatResult(6, 4, 7).depletionBand).toBe('right'); // column D
+  it('blue zone: lettered cols A,B,C,D → depletionBand blue', () => {
+    expect(combatResult(4, 2, 7).depletionBand).toBe('blue'); // column A (4-5 + 2 right)
+    expect(combatResult(6, 1, 7).depletionBand).toBe('blue'); // column A (6-8 + 1 right)
+    expect(combatResult(6, 4, 7).depletionBand).toBe('blue'); // column D
   });
 });
 

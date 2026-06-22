@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-21 after PR #636 (team-review pass)._
+_Last updated: 2026-06-21 after PR #637 (pre-m8-debt-sprint)._
 
 ---
 
@@ -8,11 +8,11 @@ _Last updated: 2026-06-21 after PR #636 (team-review pass)._
 
 | Metric                           | Value                                                                                             |
 | -------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Open debt items                  | 5                                                                                                 |
-| Cumulative debt score (net open) | 17                                                                                                |
-| Current-milestone open debt      | 1 item (#617 score 3, pre-M8 — §9.1a leader loss scope, pending domain-expert ruling)             |
+| Open debt items                  | 3                                                                                                 |
+| Cumulative debt score (net open) | 10                                                                                                |
+| Current-milestone open debt      | 0 items (all M8)                                                                                  |
 | Highest-risk item                | Security: bind side tokens to factions in DB; derive player.side from token match (#562, score 4) |
-| PRs tracked                      | 433                                                                                               |
+| PRs tracked                      | 436                                                                                               |
 
 ---
 
@@ -453,6 +453,9 @@ _Last updated: 2026-06-21 after PR #636 (team-review pass)._
 | 2026-06-21 | PR #636 (m7-closeout-m8-ready_20260621) (resolved #621)        | -2                   | —         | 600                      |
 | 2026-06-21 | PR #636 (m7-closeout-m8-ready_20260621)                        | 0                    | -14       | 600                      |
 | 2026-06-21 | PR #636 (team-review pass)                                     | 0                    | 0         | 600                      |
+| 2026-06-21 | PR #637 (pre-m8-debt-sprint) (resolved #633)                   | -4                   | —         | 600                      |
+| 2026-06-21 | PR #637 (pre-m8-debt-sprint) (resolved #617)                   | -3                   | —         | 600                      |
+| 2026-06-21 | PR #637 (pre-m8-debt-sprint)                                   | 0                    | -7        | 600                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -460,9 +463,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Moderate risk. Net open debt score is 17 across 5 items. M7 closeout reconciliation (2026-06-21) confirmed that 5 items previously listed as open (#612, #613, #616, #618, #621) were already closed on GitHub; the register has been corrected. Current debt is concentrated in two M8 security prerequisites (#562, #563 — side-token binding and re-join enforcement, total score 7), one rules-correctness bug targeted for the pre-M8 debt sprint (#633 — artillery depletion bands, score 4), one scope-pending rules question (#617 — §9.1a leader-loss cascade scope, score 3, pending domain-expert ruling), and one M8 wiring dependency (#634 — hex-control update in MOVE path, score 3). No items block starting M8 scoping, though #562 and #633 should be resolved before M8 ships to players.
-
-Debt is concentrated in two clusters: (1) **Security** — #562/#563 (score 4/3, M8, token/faction binding; hard prerequisite for multiplayer); (2) **Domain correctness** — #633 (score 4, M8, artillery depletion bands inverted vs Combat Table; recommend fixing in pre-M8 debt sprint), #617 (score 3, M7, §9.1a leader loss scope edge case), #634 (score 3, M8, terrain VP hex-control wiring deferred to MOVE action). One current-milestone item open (#617). Recommend fixing #633 before M8 implementation begins; #562/#563/#634 are M8 deliverables and will be closed there.
+Moderate risk. Net open debt score is 10 across 3 items. PR #637 (pre-M8 debt sprint) closed #633 (artillery depletion zones corrected per LOB §8.2a domain-expert ruling) and #617 (§9.1a leader loss scope confirmed correct — cascade morale losses intentionally excluded per Charge Sequence). All remaining debt is M8 scope: #562/#563 (security, token/faction binding — hard prerequisites for multiplayer auth) and #634 (terrain VP hex-control wiring, deferred to M8 MOVE action). No current-milestone open items.
 
 ---
 
@@ -470,13 +471,11 @@ Debt is concentrated in two clusters: (1) **Security** — #562/#563 (score 4/3,
 
 _Ordered by score descending (ties: current milestone first, then newest first). Resolved items are removed._
 
-| Score | Milestone | Issue | Title                                                                                                               | PR Introduced | Assessment                                                                                                                                                                                                                                                                                                                                        |
-| ----- | --------- | ----- | ------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 4     | M8        | #562  | Security: bind side tokens to factions in DB; derive player.side from token match                                   | PR #561       | DB stores two opaque tokens with no faction binding; `requireSide` validates token matches either slot but never checks which side it belongs to. A player can claim either faction. Intentional single-user testing scaffolding; hard prerequisite for M8 multiplayer — requires DB migration, session rewrite, and engine authorization update. |
-| 4     | M8        | #633  | fix(artillery): depletion band mapping contradicts Combat Table (LOB §8.2a/§8.2c)                                   | PR #632       | The handler maps whole left/right column bands to shell/canister depletion, but the actual LOB Charts Combat Table (lob-tables.pdf p.2) uses per-cell color bands. The mapping is inverted for the canister case and has no rule basis for shell. Requires domain-expert consultation and per-cell color-band modeling before fix.                |
-| 3     | M7        | #617  | Domain: confirm LOB §9.1a leader loss scope — §7.0c automatic loss only, or any SP loss in close combat resolution? | PR #611       | `leaderLossCheckRequired: defenderSpLoss > 0` couples leader loss only to the §7.0c automatic gate. A <4-SP charge that inflicts loss via Opening Volley or cascade would skip the leader-loss check entirely.                                                                                                                                    |
-| 3     | M8        | #563  | Security: enforce side binding on re-join — reject side-switch to opponent's faction                                | PR #561       | Re-join path accepts any `side` from request body while reusing existing token, allowing side impersonation between turns. Acknowledged scaffolding (#349); depends on #562 (token/faction binding) to derive correct side. Deferred to M8 alongside full auth hardening.                                                                         |
-| 3     | M8        | #634  | feat(vp): wire updateHexControl into movement/retreat path (SM §5.1 terrain VP)                                     | PR #632       | `updateHexControl` and `isVpControlEligible` are implemented but have no production caller. `state.hexControl` stays `{}` and `computeTerrainVP` always returns 0 — the dominant VP component per SM §5.1 contributes nothing to end-game tally. Wiring deferred to M8+ when the MOVE action is implemented.                                      |
+| Score | Milestone | Issue | Title                                                                                | PR Introduced | Assessment                                                                                                                                                                                                                                                                                                                                        |
+| ----- | --------- | ----- | ------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 4     | M8        | #562  | Security: bind side tokens to factions in DB; derive player.side from token match    | PR #561       | DB stores two opaque tokens with no faction binding; `requireSide` validates token matches either slot but never checks which side it belongs to. A player can claim either faction. Intentional single-user testing scaffolding; hard prerequisite for M8 multiplayer — requires DB migration, session rewrite, and engine authorization update. |
+| 3     | M8        | #563  | Security: enforce side binding on re-join — reject side-switch to opponent's faction | PR #561       | Re-join path accepts any `side` from request body while reusing existing token, allowing side impersonation between turns. Acknowledged scaffolding (#349); depends on #562 (token/faction binding) to derive correct side. Deferred to M8 alongside full auth hardening.                                                                         |
+| 3     | M8        | #634  | feat(vp): wire updateHexControl into movement/retreat path (SM §5.1 terrain VP)      | PR #632       | `updateHexControl` and `isVpControlEligible` are implemented but have no production caller. `state.hexControl` stays `{}` and `computeTerrainVP` always returns 0 — the dominant VP component per SM §5.1 contributes nothing to end-game tally. Wiring deferred to M8+ when the MOVE action is implemented.                                      |
 
 ---
 
