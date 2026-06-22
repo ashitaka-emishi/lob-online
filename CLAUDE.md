@@ -34,6 +34,23 @@ Four dev-only tools, all guarded by `MAP_EDITOR_ENABLED=true` in `.env`.
 
 - **Enable:** set `MAP_EDITOR_ENABLED=true` in `.env`
 
+### Local Infrastructure (M8)
+
+M8 uses two additional local services that must be running when developing persistence or notification features.
+
+**MinIO** (local S3) — start with `docker compose up -d`. Requires Docker installed. Exposes:
+
+- `http://localhost:9000` — S3 API (used by the Spaces client)
+- `http://localhost:9001` — MinIO web console (create/inspect buckets)
+
+After first boot, create the `lob-online-dev` bucket via the console at `http://localhost:9001`
+(login: `minioadmin` / `minioadmin`). This matches `SPACES_BUCKET=lob-online-dev` in `.env.example`.
+
+**Discord webhook sink** — start with `npm run discord:sink`. Starts an unauthenticated Express
+server on `http://localhost:4040` (loopback only) that logs incoming webhook POST bodies and
+returns 204. Set `DISCORD_WEBHOOK_TEST_URL=http://localhost:4040` in `.env` to route notification
+calls here instead of a real Discord channel.
+
 A `devops` agent and four skills automate the build/run/test cycle. See `docs/agents/devops/design.md` for the full spec.
 
 - `/dev-build` — format, lint, and build the client
