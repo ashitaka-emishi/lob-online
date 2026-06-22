@@ -43,6 +43,9 @@ test-results/
 # Runtime game state written by the dev server
 data/games/
 
+# MinIO local dev data volume
+data/minio/
+
 # Editor backup files
 data/modules/*/backups/
 

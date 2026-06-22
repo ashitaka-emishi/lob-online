@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-21 after PR #637 (pre-m8-debt-sprint)._
+_Last updated: 2026-06-22 after PR #639 (m8-local-infra)._
 
 ---
 
@@ -8,11 +8,11 @@ _Last updated: 2026-06-21 after PR #637 (pre-m8-debt-sprint)._
 
 | Metric                           | Value                                                                                             |
 | -------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Open debt items                  | 3                                                                                                 |
-| Cumulative debt score (net open) | 10                                                                                                |
+| Open debt items                  | 10                                                                                                |
+| Cumulative debt score (net open) | 22                                                                                                |
 | Current-milestone open debt      | 0 items (all M8)                                                                                  |
 | Highest-risk item                | Security: bind side tokens to factions in DB; derive player.side from token match (#562, score 4) |
-| PRs tracked                      | 436                                                                                               |
+| PRs tracked                      | 437                                                                                               |
 
 ---
 
@@ -456,6 +456,7 @@ _Last updated: 2026-06-21 after PR #637 (pre-m8-debt-sprint)._
 | 2026-06-21 | PR #637 (pre-m8-debt-sprint) (resolved #633)                   | -4                   | —         | 600                      |
 | 2026-06-21 | PR #637 (pre-m8-debt-sprint) (resolved #617)                   | -3                   | —         | 600                      |
 | 2026-06-21 | PR #637 (pre-m8-debt-sprint)                                   | 0                    | -7        | 600                      |
+| 2026-06-22 | PR #639 (m8-local-infra)                                       | 12                   | +12       | 612                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -463,7 +464,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Moderate risk. Net open debt score is 10 across 3 items. PR #637 (pre-M8 debt sprint) closed #633 (artillery depletion zones corrected per LOB §8.2a domain-expert ruling) and #617 (§9.1a leader loss scope confirmed correct — cascade morale losses intentionally excluded per Charge Sequence). All remaining debt is M8 scope: #562/#563 (security, token/faction binding — hard prerequisites for multiplayer auth) and #634 (terrain VP hex-control wiring, deferred to M8 MOVE action). No current-milestone open items.
+Elevated risk. Net open debt score is 22 across 10 items. PR #639 (M8 local dev infrastructure) added 12 points across 7 new items, all scoped to M8. Debt is concentrated in two categories: (1) security and auth scaffolding — #562/#563 (token/faction binding, hard prerequisites for M8 multiplayer, score 4+3) remain the highest-risk items; and (2) local dev infrastructure gaps — #640 (missing auto-bucket creation blocks first-run M8 persistence dev, score 3), #641/#643/#646 (missing SPACES_REGION, misleading webhook var name, and prod env migration note, score 2 each), and #642/#644/#645 (healthcheck, sink testability, hardcoded port, score 1 each). The infrastructure items are all resolvable during the M8 persistence and notifications tracks. #634 (terrain VP hex-control wiring) remains deferred to the M8 MOVE action implementation. No current-milestone open items.
 
 ---
 
@@ -476,6 +477,13 @@ _Ordered by score descending (ties: current milestone first, then newest first).
 | 4     | M8        | #562  | Security: bind side tokens to factions in DB; derive player.side from token match    | PR #561       | DB stores two opaque tokens with no faction binding; `requireSide` validates token matches either slot but never checks which side it belongs to. A player can claim either faction. Intentional single-user testing scaffolding; hard prerequisite for M8 multiplayer — requires DB migration, session rewrite, and engine authorization update. |
 | 3     | M8        | #563  | Security: enforce side binding on re-join — reject side-switch to opponent's faction | PR #561       | Re-join path accepts any `side` from request body while reusing existing token, allowing side impersonation between turns. Acknowledged scaffolding (#349); depends on #562 (token/faction binding) to derive correct side. Deferred to M8 alongside full auth hardening.                                                                         |
 | 3     | M8        | #634  | feat(vp): wire updateHexControl into movement/retreat path (SM §5.1 terrain VP)      | PR #632       | `updateHexControl` and `isVpControlEligible` are implemented but have no production caller. `state.hexControl` stays `{}` and `computeTerrainVP` always returns 0 — the dominant VP component per SM §5.1 contributes nothing to end-game tally. Wiring deferred to M8+ when the MOVE action is implemented.                                      |
+| 3     | M8        | #640  | Auto-create lob-online-dev bucket on docker compose up                               | PR #639       | First-run devs hit `NoSuchBucket` immediately with no documented fix; blocks local M8 persistence development until an `minio/mc` init container or manual step is documented.                                                                                                                                                                    |
+| 2     | M8        | #641  | Add SPACES_REGION to .env.example for S3 client compatibility                        | PR #639       | AWS SDK v3 requires a region even for MinIO; omission causes a silent runtime error when the S3 client is first instantiated in the persistence track.                                                                                                                                                                                            |
+| 2     | M8        | #643  | Rename DISCORD_WEBHOOK_TEST_URL to DISCORD_WEBHOOK_URL                               | PR #639       | `_TEST_` suffix is misleading for a production-load-bearing value; will cause operator confusion when M8 notification code reads it alongside the other `DISCORD_*` vars.                                                                                                                                                                         |
+| 2     | M8        | #646  | Note DO*SPACES*\_ → SPACES\_\_ rename in production deploy config                    | PR #639       | Production deploy config will silently fail once M8 persistence ships if not updated; risk window is short but consequence is a broken deploy.                                                                                                                                                                                                    |
+| 1     | M8        | #642  | Add healthcheck and restart policy to docker-compose.yml MinIO service               | PR #639       | Low impact until the bucket-init container (#640) is added, at which point `service_healthy` gating becomes load-bearing for the init container.                                                                                                                                                                                                  |
+| 1     | M8        | #644  | Separate app export from app.listen in discord-test-server.js for testability        | PR #639       | Prevents route-handler tests in the existing scripts Vitest project; minimal impact since the sink has no business logic requiring test coverage.                                                                                                                                                                                                 |
+| 1     | M8        | #645  | Make discord-test-server.js port env-configurable via DISCORD_SINK_PORT              | PR #639       | Silent drift risk between hardcoded port 4040 and .env.example value; low impact since both default to 4040 and the script is dev-only.                                                                                                                                                                                                           |
 
 ---
 
