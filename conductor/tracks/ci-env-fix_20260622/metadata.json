@@ -2,18 +2,20 @@
   "id": "ci-env-fix_20260622",
   "title": "CI Environment Fix — Lockfile Drift + Deploy Workflow Guard",
   "type": "chore",
-  "status": "in_progress",
+  "status": "complete",
   "created": "2026-06-22T00:00:00Z",
-  "updated": "2026-06-22T03:00:00Z",
-  "current_phase": 1,
-  "current_task": "1.1",
+  "updated": "2026-06-22T03:30:00Z",
+  "current_phase": 2,
   "phases": {
     "total": 2,
-    "completed": 0
+    "completed": 2
   },
   "tasks": {
     "total": 6,
-    "completed": 0
+    "completed": 6
   },
-  "commits": []
+  "commits": [
+    "d8de784: chore(ci): pin npm@11 in CI to match local dev environment",
+    "37a73e2: chore(ci): guard deploy job when M8 infra secrets not configured"
+  ]
 }
