@@ -1,0 +1,22 @@
+{
+  "id": "m8-notifications_20260622",
+  "title": "M8 Discord Notifications + Hex Control Wiring",
+  "type": "feature",
+  "status": "in_progress",
+  "created": "2026-06-22T00:00:00.000Z",
+  "updated": "2026-06-22T21:15:00.000Z",
+  "current_phase": 3,
+  "current_task": "3.1",
+  "phases": {
+    "total": 3,
+    "completed": 2
+  },
+  "tasks": {
+    "total": 14,
+    "completed": 9
+  },
+  "commits": [
+    "6d593fe: feat(notifications): Discord webhook fire-and-forget on game actions (M8)",
+    "40e5696: test(vp): add updateHexControl → computeVP round-trip test (M8 Phase 2)"
+  ]
+}

@@ -3,7 +3,7 @@
 **Track ID:** m8-notifications_20260622
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-22
-**Status:** [ ] Not Started
+**Status:** [~] In Progress (Phase 3 manual/pending)
 
 ## Overview
 
