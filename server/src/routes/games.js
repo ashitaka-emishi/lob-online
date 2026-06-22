@@ -92,7 +92,11 @@ router.post('/', createLimiter, async (req, res) => {
     try {
       await saveGame(id, state);
     } catch (err) {
-      deleteGame(id);
+      try {
+        deleteGame(id);
+      } catch (rollbackErr) {
+        console.error('[route] POST /games rollback deleteGame failed:', rollbackErr.message);
+      }
       throw err;
     }
 
@@ -206,6 +210,7 @@ router.get('/:id/actions', requireSide, async (req, res) => {
     const validActions = getValidActions(state, player.side);
     res.json({ validActions });
   } catch (err) {
+    if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });
     console.error('[route] GET /games/:id/actions error:', err.message);
     res.status(500).json({ error: 'Failed to load valid actions' });
   }
@@ -261,6 +266,7 @@ router.post('/:id/actions', requireSide, async (req, res) => {
       const clientMessage = status >= 500 ? 'Internal error processing action' : err.message;
       return res.status(status).json({ error: clientMessage });
     }
+    if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });
     console.error('[route] POST /games/:id/actions error:', err.message);
     res.status(500).json({ error: 'Failed to process action' });
   }
@@ -274,6 +280,7 @@ router.get('/:id', requireSide, async (req, res) => {
     const state = await loadGame(id);
     res.json(state);
   } catch (err) {
+    if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });
     console.error('[route] GET /games/:id error:', err.message);
     res.status(500).json({ error: 'Failed to load game' });
   }
