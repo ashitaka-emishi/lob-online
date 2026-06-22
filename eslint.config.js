@@ -41,6 +41,11 @@ export default [
       ...pluginN.configs['flat/recommended'].rules,
       'n/no-missing-import': 'error',
       'n/no-extraneous-import': 'error',
+      // fetch is stable since Node 18; plugin data is stale — ignore the global fetch warning
+      'n/no-unsupported-features/node-builtins': [
+        'error',
+        { version: '>=20.0.0', ignores: ['fetch'] },
+      ],
       'no-console': 'off',
       'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'import/order': [
