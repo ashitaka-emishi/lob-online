@@ -12,10 +12,11 @@ vi.mock('../auth/session.js', () => ({
 vi.mock('../store/index.js', () => ({
   saveGame: vi.fn().mockResolvedValue(undefined),
   loadGame: vi.fn(),
+  appendHistory: vi.fn().mockResolvedValue(undefined),
   createGame: vi.fn(),
   joinGame: vi.fn(),
   deleteGame: vi.fn(),
-  deleteGameFile: vi.fn().mockResolvedValue(undefined),
+  deleteGameState: vi.fn().mockResolvedValue(undefined),
   getGame: vi.fn(),
   listGames: vi.fn(),
   GameNotFoundError: class GameNotFoundError extends Error {
@@ -62,9 +63,10 @@ vi.mock('../engine/actions/index.js', () => ({
 
 import { setPlayerSession, getPlayerSession } from '../auth/session.js';
 import {
+  appendHistory,
   createGame,
   deleteGame,
-  deleteGameFile,
+  deleteGameState,
   GameNotFoundError,
   GameNotOpenError,
   InvalidTokenError,
@@ -132,7 +134,8 @@ beforeEach(() => {
   loadGame.mockResolvedValue(MINIMAL_STATE);
   getValidActions.mockReturnValue([]);
   deleteGame.mockReturnValue(undefined);
-  deleteGameFile.mockResolvedValue(undefined);
+  deleteGameState.mockResolvedValue(undefined);
+  appendHistory.mockResolvedValue(undefined);
 });
 
 describe('POST /api/v1/games', () => {
@@ -168,6 +171,44 @@ describe('POST /api/v1/games', () => {
     expect(setPlayerSession).toHaveBeenCalledOnce();
     const [, , side] = setPlayerSession.mock.calls[0];
     expect(side).toBe('union');
+  });
+
+  it('passes discordWebhook to createGame when provided', async () => {
+    const app = await buildApp();
+    await request(app)
+      .post('/api/v1/games')
+      .send({ discordWebhook: 'https://discord.com/api/webhooks/123/abc' });
+    expect(createGame).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      'union',
+      'https://discord.com/api/webhooks/123/abc'
+    );
+  });
+
+  it('returns 400 when discordWebhook is not a valid URL', async () => {
+    const app = await buildApp();
+    const res = await request(app).post('/api/v1/games').send({ discordWebhook: 'not-a-url' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/url/i);
+  });
+
+  it('returns 400 when discordWebhook uses http instead of https (SSRF guard)', async () => {
+    const app = await buildApp();
+    const res = await request(app)
+      .post('/api/v1/games')
+      .send({ discordWebhook: 'http://discord.com/api/webhooks/123/abc' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/https/i);
+  });
+
+  it('returns 400 when discordWebhook is a non-Discord domain (SSRF guard)', async () => {
+    const app = await buildApp();
+    const res = await request(app)
+      .post('/api/v1/games')
+      .send({ discordWebhook: 'https://169.254.169.254/latest/meta-data/' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/discord/i);
   });
 });
 
@@ -211,7 +252,7 @@ describe('POST /api/v1/games/:id/join', () => {
       .send({ side: 'confederate' });
     expect(res.status).toBe(200);
     expect(res.body.side).toBe('confederate');
-    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String));
+    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String), expect.any(String));
   });
 
   it('returns 404 when joinGame throws GameNotFoundError (#PERF-H1)', async () => {
@@ -258,8 +299,8 @@ describe('POST /api/v1/games/:id/join', () => {
     expect(res.status).toBe(400);
   });
 
-  // ARCH-H2: same-game re-join updates side (scaffolded) — joinGame not called again (#340)
-  it('returns 200 and updates side when session already holds this game (#340)', async () => {
+  // Faction binding enforced on re-join — side-switching is forbidden
+  it('returns 403 when session already holds this game but requests a different side', async () => {
     getPlayerSession.mockReturnValue({
       gameId: TEST_UUID,
       side: 'confederate',
@@ -267,10 +308,10 @@ describe('POST /api/v1/games/:id/join', () => {
     });
     const app = await buildApp();
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
-    expect(res.status).toBe(200);
-    expect(res.body.side).toBe('union');
+    expect(res.status).toBe(403);
+    expect(res.body.error).toMatch(/side already bound/i);
     expect(joinGame).not.toHaveBeenCalled();
-    expect(setPlayerSession).toHaveBeenCalledWith(expect.anything(), TEST_UUID, 'union', 'tok-1');
+    expect(setPlayerSession).not.toHaveBeenCalled();
   });
 
   it('returns 200 and keeps same side when session matches and same side requested (#340)', async () => {
@@ -280,6 +321,8 @@ describe('POST /api/v1/games/:id/join', () => {
     expect(res.status).toBe(200);
     expect(res.body.side).toBe('union');
     expect(joinGame).not.toHaveBeenCalled();
+    // Security: re-join must reuse the existing sideToken, not mint a fresh one
+    expect(setPlayerSession).toHaveBeenCalledWith(expect.anything(), TEST_UUID, 'union', 'tok-2');
   });
 
   it('joins successfully as union when caller has no session (#340 #407)', async () => {
@@ -288,7 +331,7 @@ describe('POST /api/v1/games/:id/join', () => {
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(200);
     expect(res.body.side).toBe('union');
-    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String));
+    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String), expect.any(String));
   });
 
   it('joins successfully as union when caller session is for a different game (#340 #407)', async () => {
@@ -302,13 +345,17 @@ describe('POST /api/v1/games/:id/join', () => {
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(200);
     expect(res.body.side).toBe('union');
-    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String));
+    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String), expect.any(String));
   });
 });
 
 describe('GET /api/v1/games/me', () => {
   it('returns gameId and side when player has a session (#407)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'confederate', token: 'tok-1' });
+    getPlayerSession.mockReturnValue({
+      gameId: TEST_UUID,
+      side: 'confederate',
+      sideToken: 'tok-1',
+    });
     const app = await buildApp();
     const res = await request(app).get('/api/v1/games/me');
     expect(res.status).toBe(200);
@@ -361,7 +408,7 @@ describe('POST /api/v1/games — scenario wiring', () => {
 
 describe('GET /api/v1/games/:id', () => {
   it('returns 200 with game state when player session is valid (#330)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok-1' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok-1' });
     getGame.mockReturnValue({
       id: TEST_UUID,
       status: 'active',
@@ -384,7 +431,7 @@ describe('GET /api/v1/games/:id', () => {
   });
 
   it('returns 403 when session gameId does not match the route :id — does not hit the DB (#553)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: 'other-game', side: 'union', token: 'tok-1' });
+    getPlayerSession.mockReturnValue({ gameId: 'other-game', side: 'union', sideToken: 'tok-1' });
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
     expect(res.status).toBe(403);
@@ -393,7 +440,11 @@ describe('GET /api/v1/games/:id', () => {
   });
 
   it('returns 403 when same-game session has invalid sideToken (#553)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'stale-token' });
+    getPlayerSession.mockReturnValue({
+      gameId: TEST_UUID,
+      side: 'union',
+      sideToken: 'stale-token',
+    });
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
     expect(res.status).toBe(403);
@@ -401,7 +452,7 @@ describe('GET /api/v1/games/:id', () => {
   });
 
   it('returns 404 for unknown game id (authenticated player) (#330)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok-1' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok-1' });
     getGame.mockReturnValue(null);
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
@@ -416,12 +467,12 @@ describe('GET /api/v1/games/:id', () => {
 });
 
 describe('DELETE /api/v1/games/:id', () => {
-  it('returns 204 and calls deleteGame + deleteGameFile (#407)', async () => {
+  it('returns 204 and calls deleteGame + deleteGameState (#407)', async () => {
     const app = await buildApp();
     const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
     expect(res.status).toBe(204);
     expect(deleteGame).toHaveBeenCalledWith(TEST_UUID);
-    expect(deleteGameFile).toHaveBeenCalledWith(TEST_UUID);
+    expect(deleteGameState).toHaveBeenCalledWith(TEST_UUID);
   });
 
   it('returns 404 when deleteGame throws GameNotFoundError (#407)', async () => {
@@ -434,8 +485,8 @@ describe('DELETE /api/v1/games/:id', () => {
     expect(res.body.error).toBe('Game not found');
   });
 
-  it('returns 500 when deleteGameFile throws (#407)', async () => {
-    deleteGameFile.mockRejectedValue(new Error('disk error'));
+  it('returns 500 when deleteGameState throws (#407)', async () => {
+    deleteGameState.mockRejectedValue(new Error('s3 error'));
     const app = await buildApp();
     const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
     expect(res.status).toBe(500);
@@ -469,7 +520,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('returns 403 when session gameId does not match route :id — does not hit DB (#553)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: 'other-game', side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: 'other-game', side: 'union', sideToken: 'tok' });
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/actions`)
@@ -481,7 +532,11 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('returns 403 when same-game session has invalid sideToken (#553)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'stale-token' });
+    getPlayerSession.mockReturnValue({
+      gameId: TEST_UUID,
+      side: 'union',
+      sideToken: 'stale-token',
+    });
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/actions`)
@@ -492,7 +547,7 @@ describe('POST /api/v1/games/:id/actions', () => {
 
   it('returns 403 when authenticated player for game A posts action to game B (#553)', async () => {
     const OTHER_UUID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
-    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', sideToken: 'tok' });
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/actions`)
@@ -502,7 +557,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('returns 400 when action type is missing (#356)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     const app = await buildApp();
     const res = await request(app)
@@ -513,7 +568,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('returns 409 when expectedVersion does not match state version (#332 #356)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE); // version: 3
     const app = await buildApp();
     const res = await request(app)
@@ -525,7 +580,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('dispatches action and returns saved state on success (#356)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockReturnValue(NEXT_STATE);
     saveGame.mockResolvedValue(NEXT_STATE);
@@ -548,7 +603,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('sources playerSide from session, never from request body (#387)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'confederate', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'confederate', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockReturnValue(NEXT_STATE);
     saveGame.mockResolvedValue(NEXT_STATE);
@@ -565,7 +620,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('emits game:state-updated after successful action (#356)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockReturnValue(NEXT_STATE);
     saveGame.mockResolvedValue(NEXT_STATE);
@@ -580,7 +635,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('does not emit game:state-updated when dispatch throws (#356)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockImplementation(() => {
       throw new ActionError('INVALID_ACTION', 'bad action');
@@ -593,7 +648,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('returns 422 for INVALID_ACTION without leaking stack trace (#356)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockImplementation(() => {
       throw new ActionError('INVALID_ACTION', "Action 'FOO' is not valid");
@@ -608,7 +663,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('returns 422 for UNKNOWN_ACTION (#356)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockImplementation(() => {
       throw new ActionError('UNKNOWN_ACTION', 'No handler for NOOP');
@@ -622,7 +677,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('returns 500 for INVALID_STATE without leaking stack trace (#356)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockImplementation(() => {
       throw new ActionError('INVALID_STATE', 'Schema violation');
@@ -636,7 +691,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('returns 500 for DRAIN_LOOP (#356)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockImplementation(() => {
       throw new ActionError('DRAIN_LOOP', 'Cycle detected');
@@ -649,7 +704,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('sanitizes INVALID_STATE message — internal details do not reach the client (#478)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockImplementation(() => {
       throw new ActionError(
@@ -667,7 +722,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('sanitizes DRAIN_LOOP message — internal details do not reach the client (#478)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockImplementation(() => {
       throw new ActionError(
@@ -684,7 +739,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('returns 400 for INVALID_PAYLOAD — client error, not server fault (#478)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockImplementation(() => {
       throw new ActionError('INVALID_PAYLOAD', 'ISSUE_ORDER requires unitId and orderType');
@@ -707,7 +762,7 @@ describe('POST /api/v1/games/:id/actions', () => {
 
   // Task 1.2 (#482): missing io must not produce a 500 after a successful state change
   it('returns 200 and does not throw when req.app.locals.io is absent (#482)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockReturnValue(NEXT_STATE);
     saveGame.mockResolvedValue(NEXT_STATE);
@@ -722,7 +777,7 @@ describe('POST /api/v1/games/:id/actions', () => {
 
   // Task 1.3 (#481): response body is saveGame result, not dispatch result
   it('response body reflects saveGame result, not raw dispatch result (#481)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockReturnValue({ ...NEXT_STATE, version: 10 });
     saveGame.mockResolvedValue({ ...NEXT_STATE, version: 11 });
@@ -736,7 +791,7 @@ describe('POST /api/v1/games/:id/actions', () => {
 
   // Task 1.4 (#481): absent or non-numeric expectedVersion opts out of the version guard
   it('bypasses version guard and dispatches when expectedVersion is absent (#481)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE); // version: 3
     dispatch.mockReturnValue(NEXT_STATE);
     saveGame.mockResolvedValue(NEXT_STATE);
@@ -749,7 +804,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('bypasses version guard when expectedVersion is a non-numeric string (#481)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockReturnValue(NEXT_STATE);
     saveGame.mockResolvedValue(NEXT_STATE);
@@ -765,7 +820,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   it('engages version guard when expectedVersion is 0 and state version is 0 (match → 200)', async () => {
     const zeroState = { ...ACTIVE_STATE, version: 0 };
     const zeroNext = { ...NEXT_STATE, version: 1 };
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(zeroState);
     dispatch.mockReturnValue(zeroNext);
     saveGame.mockResolvedValue(zeroNext);
@@ -778,7 +833,7 @@ describe('POST /api/v1/games/:id/actions', () => {
   });
 
   it('returns 409 when expectedVersion is 0 but state version is 3 (mismatch — guard active for zero) (#481)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE); // version: 3
     const app = await buildApp();
     const res = await request(app)
@@ -791,7 +846,7 @@ describe('POST /api/v1/games/:id/actions', () => {
 
 describe('GET /api/v1/games/:id/actions (#495)', () => {
   it('returns 200 with validActions array', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(MINIMAL_STATE);
     getValidActions.mockReturnValue([{ type: 'END_PHASE', payload: null }]);
     const app = await buildApp();
@@ -801,7 +856,7 @@ describe('GET /api/v1/games/:id/actions (#495)', () => {
   });
 
   it('passes player side from session to getValidActions', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'confederate', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'confederate', sideToken: 'tok' });
     loadGame.mockResolvedValue(MINIMAL_STATE);
     getValidActions.mockReturnValue([]);
     const app = await buildApp();
@@ -812,7 +867,7 @@ describe('GET /api/v1/games/:id/actions (#495)', () => {
   // 404 is produced by requireSide (line 31-33 of requireSide.js), not by the route body.
   // getGame returning null causes the middleware to reject before the handler runs.
   it('returns 404 when the game does not exist', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     getGame.mockReturnValue(null);
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}/actions`);
@@ -829,7 +884,7 @@ describe('GET /api/v1/games/:id/actions (#495)', () => {
 
   it('returns 401 when authenticated player for game A queries game B actions (#503)', async () => {
     const OTHER_UUID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
-    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', sideToken: 'tok' });
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}/actions`);
     expect(res.status).toBe(403);
@@ -847,7 +902,7 @@ describe('Session guard — requireSameGame (#553)', () => {
   // ── GET /api/v1/games/:id ────────────────────────────────────────────────────
 
   it('GET /:id — succeeds (200) for same-game session (#553)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(MINIMAL_STATE);
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
@@ -855,7 +910,7 @@ describe('Session guard — requireSameGame (#553)', () => {
   });
 
   it('GET /:id — returns 403 for different-game session (#553)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', sideToken: 'tok' });
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
     expect(res.status).toBe(403);
@@ -871,7 +926,7 @@ describe('Session guard — requireSameGame (#553)', () => {
   // ── GET /api/v1/games/:id/actions ────────────────────────────────────────────
 
   it('GET /:id/actions — succeeds (200) for same-game session (#553)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(MINIMAL_STATE);
     getValidActions.mockReturnValue([]);
     const app = await buildApp();
@@ -880,7 +935,7 @@ describe('Session guard — requireSameGame (#553)', () => {
   });
 
   it('GET /:id/actions — returns 403 for different-game session (#553)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', sideToken: 'tok' });
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}/actions`);
     expect(res.status).toBe(403);
@@ -897,7 +952,7 @@ describe('Session guard — requireSameGame (#553)', () => {
   // ── POST /api/v1/games/:id/actions ───────────────────────────────────────────
 
   it('POST /:id/actions — succeeds (200) for same-game session when action is legal (#553)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockReturnValue(NEXT_STATE);
     saveGame.mockResolvedValue(NEXT_STATE);
@@ -909,7 +964,7 @@ describe('Session guard — requireSameGame (#553)', () => {
   });
 
   it('POST /:id/actions — returns 403 for different-game session (#553)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', token: 'tok' });
+    getPlayerSession.mockReturnValue({ gameId: OTHER_UUID, side: 'union', sideToken: 'tok' });
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/actions`)

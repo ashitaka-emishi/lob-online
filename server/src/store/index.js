@@ -1,8 +1,8 @@
-export { deleteGameFile, loadGame, saveGame } from './gameFile.js';
+export { appendHistory, deleteGameState, loadGame, saveGame } from './spaces.js';
+export { GameNotFoundError } from './errors.js';
 export {
   createGame,
   deleteGame,
-  GameNotFoundError,
   GameNotOpenError,
   getGame,
   InvalidTokenError,

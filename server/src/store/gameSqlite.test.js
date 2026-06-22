@@ -149,3 +149,126 @@ describe('deleteGame', () => {
     expect(() => store.deleteGame('no-such')).toThrow(GameNotFoundError);
   });
 });
+
+describe('faction columns — createGame / joinGame / getGame', () => {
+  it('stores side_a_faction when provided to createGame', () => {
+    store.createGame('fc1', 'tok-a', 'union');
+    const row = store.getGame('fc1');
+    expect(row.side_a_faction).toBe('union');
+  });
+
+  it('stores null side_a_faction when faction omitted', () => {
+    store.createGame('fc2', 'tok-a');
+    const row = store.getGame('fc2');
+    expect(row.side_a_faction).toBeNull();
+  });
+
+  it('stores side_b_faction when joinGame called with faction', () => {
+    store.createGame('fc3', 'tok-a', 'union');
+    store.joinGame('fc3', VALID_UUID_1, 'confederate');
+    const row = store.getGame('fc3');
+    expect(row.side_b_faction).toBe('confederate');
+  });
+
+  it('stores null side_b_faction when joinGame called without faction', () => {
+    store.createGame('fc4', 'tok-a');
+    store.joinGame('fc4', VALID_UUID_1);
+    const row = store.getGame('fc4');
+    expect(row.side_b_faction).toBeNull();
+  });
+
+  it('getGame returns all three new columns', () => {
+    store.createGame('fc5', 'tok-a', 'union', 'https://discord.com/webhook/test');
+    store.joinGame('fc5', VALID_UUID_1, 'confederate');
+    const row = store.getGame('fc5');
+    expect(row.side_a_faction).toBe('union');
+    expect(row.side_b_faction).toBe('confederate');
+    expect(row.discord_webhook).toBe('https://discord.com/webhook/test');
+  });
+});
+
+describe('faction validation — createGame / joinGame reject invalid values', () => {
+  // The store does not validate faction values; the route validates before calling createGame.
+  // These tests document the boundary: non-canonical string values pass through to the DB.
+  it.each(['', 'north', 'Union', 'UNION'])(
+    'createGame stores non-canonical faction string verbatim (%p)',
+    (faction) => {
+      store.createGame('fv1', 'tok-a', faction);
+      const row = store.getGame('fv1');
+      expect(row.side_a_faction).toBe(faction);
+    }
+  );
+
+  it('createGame stores null when faction is null', () => {
+    store.createGame('fv2', 'tok-a', null);
+    expect(store.getGame('fv2').side_a_faction).toBeNull();
+  });
+});
+
+describe('discord_webhook column', () => {
+  it('stores and retrieves discord_webhook URL', () => {
+    store.createGame('dw1', 'tok-a', 'union', 'https://discord.com/api/webhooks/123/abc');
+    const row = store.getGame('dw1');
+    expect(row.discord_webhook).toBe('https://discord.com/api/webhooks/123/abc');
+  });
+
+  it('stores null discord_webhook when not provided', () => {
+    store.createGame('dw2', 'tok-a', 'union');
+    expect(store.getGame('dw2').discord_webhook).toBeNull();
+  });
+
+  it('stores null discord_webhook when explicitly passed null', () => {
+    store.createGame('dw3', 'tok-a', 'union', null);
+    expect(store.getGame('dw3').discord_webhook).toBeNull();
+  });
+});
+
+describe('migration idempotency', () => {
+  it('createStore on the same DB twice does not throw', () => {
+    const db2 = new Database(':memory:');
+    expect(() => {
+      createStore(db2);
+      createStore(db2);
+    }).not.toThrow();
+    db2.close();
+  });
+
+  it('createStore on a DB that already has the v1 schema skips migration cleanly', () => {
+    // Simulate a DB that was already migrated to v1
+    const db3 = new Database(':memory:');
+    const s1 = createStore(db3); // first init — runs migration, sets user_version = 1
+    s1.createGame('pre-migrated', 'tok-a', 'union');
+
+    // Second createStore on same connection — must not error
+    const s2 = createStore(db3);
+    const row = s2.getGame('pre-migrated');
+    expect(row.side_a_faction).toBe('union');
+    db3.close();
+  });
+
+  it('createStore on a pre-v1 DB (missing new columns) adds them via ALTER TABLE', () => {
+    // Simulate the legacy schema without the new columns
+    const db4 = new Database(':memory:');
+    db4.exec(`
+      CREATE TABLE games (
+        id TEXT PRIMARY KEY,
+        side_a_token TEXT NOT NULL,
+        side_b_token TEXT,
+        status TEXT NOT NULL DEFAULT 'open',
+        created_at INTEGER NOT NULL
+      )
+    `);
+    // user_version is still 0 — migration has not run
+    expect(db4.pragma('user_version', { simple: true })).toBe(0);
+
+    // createStore must add missing columns and bump user_version
+    const s = createStore(db4);
+    expect(db4.pragma('user_version', { simple: true })).toBe(1);
+
+    s.createGame('legacy-game', 'tok-a', 'union', 'https://example.com/hook');
+    const row = s.getGame('legacy-game');
+    expect(row.side_a_faction).toBe('union');
+    expect(row.discord_webhook).toBe('https://example.com/hook');
+    db4.close();
+  });
+});

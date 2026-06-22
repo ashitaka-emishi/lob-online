@@ -1,0 +1,16 @@
+{
+  "id": "m8-persistence_20260622",
+  "title": "M8 Persistence + Auth Hardening",
+  "type": "feature",
+  "status": "complete",
+  "created": "2026-06-22T00:00:00.000Z",
+  "updated": "2026-06-22T00:00:00.000Z",
+  "phases": {
+    "total": 3,
+    "completed": 3
+  },
+  "tasks": {
+    "total": 14,
+    "completed": 14
+  }
+}

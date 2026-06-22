@@ -11,9 +11,10 @@ import { loadMap, buildHexIndex } from '../engine/map.js';
 import { loadOob } from '../engine/oob.js';
 import { getScenario } from '../engine/scenario.js';
 import {
+  appendHistory,
   createGame,
   deleteGame,
-  deleteGameFile,
+  deleteGameState,
   GameNotFoundError,
   GameNotOpenError,
   getGame,
@@ -48,7 +49,7 @@ const _hexIndex = buildHexIndex(_mapData);
 
 const router = express.Router();
 
-// Validate :id is a UUID — prevents path traversal into gameFile storage
+// Validate :id is a UUID — prevents path traversal in Spaces key construction
 router.param('id', (req, res, next, id) => {
   if (!UUID_RE.test(id)) return res.status(400).json({ error: 'Invalid game id' });
   next();
@@ -57,13 +58,47 @@ router.param('id', (req, res, next, id) => {
 // POST /api/v1/games — create a new game, assign creator as union (USA) (#549)
 router.post('/', createLimiter, async (req, res) => {
   try {
+    const { discordWebhook } = req.body ?? {};
+
+    // Validate discordWebhook if provided. Restrict to Discord domains only to prevent SSRF —
+    // the server will POST to this URL, so arbitrary internal addresses must be blocked.
+    if (discordWebhook !== undefined && discordWebhook !== null) {
+      let webhookUrl;
+      try {
+        webhookUrl = new URL(discordWebhook);
+      } catch {
+        return res.status(400).json({ error: 'discordWebhook must be a valid URL' });
+      }
+      if (webhookUrl.protocol !== 'https:') {
+        return res.status(400).json({ error: 'discordWebhook must use https' });
+      }
+      if (
+        webhookUrl.hostname !== 'discord.com' &&
+        webhookUrl.hostname !== 'discordapp.com' &&
+        webhookUrl.hostname !== 'ptb.discord.com' &&
+        webhookUrl.hostname !== 'canary.discord.com'
+      ) {
+        return res.status(400).json({ error: 'discordWebhook must be a Discord webhook URL' });
+      }
+    }
+
     const id = randomUUID();
     const state = initGameState(_scenario, id);
 
-    // SQLite row first: a failed INSERT leaves no filesystem side-effect (#ARCH-H4)
+    // SQLite row first, then Spaces. If saveGame fails, roll back the SQLite row so no
+    // orphaned metadata row points at a missing Spaces object (#ARCH-H4).
     const sideToken = randomUUID();
-    createGame(id, sideToken);
-    await saveGame(id, state);
+    createGame(id, sideToken, SIDES.UNION, discordWebhook ?? null);
+    try {
+      await saveGame(id, state);
+    } catch (err) {
+      try {
+        deleteGame(id);
+      } catch (rollbackErr) {
+        console.error('[route] POST /games rollback deleteGame failed:', rollbackErr.message);
+      }
+      throw err;
+    }
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
     await regenerateSession(req);
@@ -89,10 +124,11 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
 
     const existingSession = getPlayerSession(req);
 
-    // ARCH-H2: same-game re-join updates side and re-enters without calling joinGame again.
-    // Scaffolded behavior: allows side-switching for dev/testing; full enforcement deferred.
-    // Game-switching (different gameId) overwrites the session normally. Policy in #349.
+    // Same-game re-join: enforce faction binding — cannot switch sides after initial join.
     if (existingSession?.gameId === id) {
+      if (existingSession.side !== side) {
+        return res.status(403).json({ error: 'Side already bound — cannot switch factions' });
+      }
       await regenerateSession(req);
       setPlayerSession(req, id, side, existingSession.sideToken);
       return res.json({ id, side });
@@ -101,7 +137,7 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
     const sideToken = randomUUID();
 
     // joinGame is atomic — no pre-check needed; typed errors map to 404/409 (#PERF-H1, #ARCH-M2)
-    joinGame(id, sideToken);
+    joinGame(id, sideToken, side);
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
     await regenerateSession(req);
@@ -119,11 +155,17 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
 });
 
 // DELETE /api/v1/games/:id — remove a game from the lobby
+// Spaces object is deleted before the SQLite row: deleteGameState is idempotent (S3 delete-missing
+// is a no-op), so if the process crashes between the two operations the row can be cleaned up on a
+// retry without a permanently leaked Spaces object.
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    // Verify the row exists first so we can return 404 before touching Spaces
+    const row = getGame(id);
+    if (!row) return res.status(404).json({ error: 'Game not found' });
+    await deleteGameState(id);
     deleteGame(id);
-    await deleteGameFile(id);
     res.status(204).send();
   } catch (err) {
     if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });
@@ -168,6 +210,7 @@ router.get('/:id/actions', requireSide, async (req, res) => {
     const validActions = getValidActions(state, player.side);
     res.json({ validActions });
   } catch (err) {
+    if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });
     console.error('[route] GET /games/:id/actions error:', err.message);
     res.status(500).json({ error: 'Failed to load valid actions' });
   }
@@ -204,6 +247,7 @@ router.post('/:id/actions', requireSide, async (req, res) => {
       { oob: _oob, scenario: _scenario, mapData: _mapData, hexIndex: _hexIndex }
     );
     const saved = await saveGame(id, nextState);
+    await appendHistory(id, saved.version, { type, payload, playerSide, version: saved.version });
 
     // Notify connected players; they fetch the authoritative state via GET /:id (#356)
     // Guard: io may be absent in test environments or before Socket.io attaches (#482)
@@ -222,21 +266,21 @@ router.post('/:id/actions', requireSide, async (req, res) => {
       const clientMessage = status >= 500 ? 'Internal error processing action' : err.message;
       return res.status(status).json({ error: clientMessage });
     }
+    if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });
     console.error('[route] POST /games/:id/actions error:', err.message);
     res.status(500).json({ error: 'Failed to process action' });
   }
 });
 
 // GET /api/v1/games/:id — load game state (player must have a valid session for this game)
+// requireSide already verified the row exists and the token is valid; no redundant getGame needed.
 router.get('/:id', requireSide, async (req, res) => {
   try {
     const { id } = req.params;
-    const row = getGame(id);
-    if (!row) return res.status(404).json({ error: 'Game not found' });
-
     const state = await loadGame(id);
     res.json(state);
   } catch (err) {
+    if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });
     console.error('[route] GET /games/:id error:', err.message);
     res.status(500).json({ error: 'Failed to load game' });
   }
