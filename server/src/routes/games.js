@@ -60,25 +60,41 @@ router.post('/', createLimiter, async (req, res) => {
   try {
     const { discordWebhook } = req.body ?? {};
 
-    // Validate discordWebhook if provided — must be a plausible URL string
+    // Validate discordWebhook if provided. Restrict to Discord domains only to prevent SSRF —
+    // the server will POST to this URL, so arbitrary internal addresses must be blocked.
     if (discordWebhook !== undefined && discordWebhook !== null) {
+      let webhookUrl;
       try {
-        const url = new URL(discordWebhook);
-        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-          return res.status(400).json({ error: 'discordWebhook must be an http or https URL' });
-        }
+        webhookUrl = new URL(discordWebhook);
       } catch {
         return res.status(400).json({ error: 'discordWebhook must be a valid URL' });
+      }
+      if (webhookUrl.protocol !== 'https:') {
+        return res.status(400).json({ error: 'discordWebhook must use https' });
+      }
+      if (
+        webhookUrl.hostname !== 'discord.com' &&
+        webhookUrl.hostname !== 'discordapp.com' &&
+        webhookUrl.hostname !== 'ptb.discord.com' &&
+        webhookUrl.hostname !== 'canary.discord.com'
+      ) {
+        return res.status(400).json({ error: 'discordWebhook must be a Discord webhook URL' });
       }
     }
 
     const id = randomUUID();
     const state = initGameState(_scenario, id);
 
-    // SQLite row first: a failed INSERT leaves no Spaces side-effect (#ARCH-H4)
+    // SQLite row first, then Spaces. If saveGame fails, roll back the SQLite row so no
+    // orphaned metadata row points at a missing Spaces object (#ARCH-H4).
     const sideToken = randomUUID();
     createGame(id, sideToken, SIDES.UNION, discordWebhook ?? null);
-    await saveGame(id, state);
+    try {
+      await saveGame(id, state);
+    } catch (err) {
+      deleteGame(id);
+      throw err;
+    }
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
     await regenerateSession(req);
@@ -135,11 +151,17 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
 });
 
 // DELETE /api/v1/games/:id — remove a game from the lobby
+// Spaces object is deleted before the SQLite row: deleteGameState is idempotent (S3 delete-missing
+// is a no-op), so if the process crashes between the two operations the row can be cleaned up on a
+// retry without a permanently leaked Spaces object.
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    deleteGame(id);
+    // Verify the row exists first so we can return 404 before touching Spaces
+    const row = getGame(id);
+    if (!row) return res.status(404).json({ error: 'Game not found' });
     await deleteGameState(id);
+    deleteGame(id);
     res.status(204).send();
   } catch (err) {
     if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });
@@ -245,12 +267,10 @@ router.post('/:id/actions', requireSide, async (req, res) => {
 });
 
 // GET /api/v1/games/:id — load game state (player must have a valid session for this game)
+// requireSide already verified the row exists and the token is valid; no redundant getGame needed.
 router.get('/:id', requireSide, async (req, res) => {
   try {
     const { id } = req.params;
-    const row = getGame(id);
-    if (!row) return res.status(404).json({ error: 'Game not found' });
-
     const state = await loadGame(id);
     res.json(state);
   } catch (err) {

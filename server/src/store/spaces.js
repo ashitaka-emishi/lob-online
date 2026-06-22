@@ -7,13 +7,7 @@ import {
 
 import { STATE_SCHEMA_VERSION } from '../constants/schemaVersion.js';
 import { GameStateSchema } from '../schemas/gameState.schema.js';
-
-export class GameNotFoundError extends Error {
-  constructor(id) {
-    super(`Game not found: ${id}`);
-    this.name = 'GameNotFoundError';
-  }
-}
+import { GameNotFoundError } from './errors.js';
 
 function stateKey(id) {
   return `games/${id}/state.json`;
@@ -61,12 +55,22 @@ async function streamToString(stream) {
   return Buffer.concat(chunks).toString('utf8');
 }
 
+function isNotFound(err) {
+  return err.name === 'NoSuchKey' || err.$metadata?.httpStatusCode === 404;
+}
+
 // Returns the persisted state (with incremented version). Callers must adopt the returned
 // object for any subsequent saveGame call — the in-memory state.version is now stale.
+// Note: the version check is best-effort (read-compare-write, not atomic CAS). It catches
+// stale-client overwrites in the common case but does not prevent lost updates under true
+// concurrent writes. A follow-on issue (#648-related) tracks upgrading to S3 ETag preconditions.
 export async function saveGame(id, state) {
   const { client, bucket } = getClient();
 
-  // Optimistic concurrency: if an object exists, stored version must match state.version
+  // Optimistic concurrency: if an object exists, stored version must match state.version.
+  // Only engaged when state.version is a number; undefined opts out (first write or
+  // concurrency-exempt callers).
+  let versionConflictError = null;
   if (typeof state.version === 'number') {
     try {
       const existing = await client.send(
@@ -75,13 +79,16 @@ export async function saveGame(id, state) {
       const raw = await streamToString(existing.Body);
       const stored = JSON.parse(raw);
       if (stored.version !== state.version) {
-        throw new Error(
+        versionConflictError = new Error(
           `Version conflict on game ${id}: stored=${stored.version}, expected=${state.version}`
         );
       }
     } catch (err) {
-      if (err.name !== 'NoSuchKey' && err.$metadata?.httpStatusCode !== 404) throw err;
+      // Only suppress genuine "object does not exist" — re-throw network/server errors
+      // so callers are not silently bypassing the version check on transient failures.
+      if (!isNotFound(err)) throw err;
     }
+    if (versionConflictError) throw versionConflictError;
   }
 
   const toWrite =
@@ -107,9 +114,7 @@ export async function loadGame(id) {
     const result = await client.send(new GetObjectCommand({ Bucket: bucket, Key: stateKey(id) }));
     raw = await streamToString(result.Body);
   } catch (err) {
-    if (err.name === 'NoSuchKey' || err.$metadata?.httpStatusCode === 404) {
-      throw new GameNotFoundError(id);
-    }
+    if (isNotFound(err)) throw new GameNotFoundError(id);
     throw err;
   }
 

@@ -1,19 +1,14 @@
 import {
   CreateBucketCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
   ListObjectsV2Command,
   S3Client,
 } from '@aws-sdk/client-s3';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
-import {
-  appendHistory,
-  deleteGameState,
-  GameNotFoundError,
-  initSpaces,
-  loadGame,
-  saveGame,
-} from './spaces.js';
+import { GameNotFoundError } from './errors.js';
+import { appendHistory, deleteGameState, initSpaces, loadGame, saveGame } from './spaces.js';
 
 // Integration tests — require MinIO running on localhost:9000.
 // Start with: docker compose up -d
@@ -105,6 +100,19 @@ describe('saveGame / loadGame round-trip', () => {
   });
 });
 
+describe('saveGame — version undefined (concurrency opt-out)', () => {
+  it('writes state verbatim when version is undefined (no increment, no conflict check)', async () => {
+    const noVersion = { ...BASE_STATE, version: undefined };
+    const saved = await saveGame('no-ver', noVersion);
+    // version is not incremented when it is not a number
+    expect(saved.version).toBeUndefined();
+
+    // A second save with the same undefined-version state must also succeed (no conflict check)
+    const saved2 = await saveGame('no-ver', noVersion);
+    expect(saved2.version).toBeUndefined();
+  });
+});
+
 describe('saveGame version conflict', () => {
   it('throws on version conflict when stored version differs from expected', async () => {
     // Save once — disk now has version 1
@@ -160,9 +168,6 @@ describe('deleteGameState', () => {
 
 describe('appendHistory', () => {
   it('writes correctly named history objects (zero-padded 6-digit seq)', async () => {
-    await saveGame('hist-game', BASE_STATE);
-    const v1 = await loadGame('hist-game');
-
     await appendHistory('hist-game', 1, { action: 'MOVE', turn: 1 });
     await appendHistory('hist-game', 2, { action: 'FIRE', turn: 1 });
 
@@ -174,7 +179,19 @@ describe('appendHistory', () => {
       'games/hist-game/history/000001.json',
       'games/hist-game/history/000002.json',
     ]);
-    expect(v1).toBeDefined(); // suppress unused-var lint
+  });
+
+  it('persists the payload body correctly', async () => {
+    const payload = { action: 'MOVE', turn: 3, unitId: 'u42' };
+    await appendHistory('payload-game', 7, payload);
+
+    const result = await client.send(
+      new GetObjectCommand({ Bucket: TEST_BUCKET, Key: 'games/payload-game/history/000007.json' })
+    );
+    const chunks = [];
+    for await (const chunk of result.Body) chunks.push(chunk);
+    const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+    expect(body).toEqual(payload);
   });
 
   it('history key uses post-action version as sequence number', async () => {

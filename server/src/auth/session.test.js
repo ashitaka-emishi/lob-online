@@ -25,10 +25,10 @@ describe('setPlayerSession', () => {
 });
 
 describe('getPlayerSession', () => {
-  it('returns { gameId, side, token } when all fields are set', () => {
+  it('returns { gameId, side, sideToken } when all fields are set', () => {
     const req = mockReq({ gameId: 'game-xyz', side: 'confederate', sideToken: 'tok-456' });
     const result = getPlayerSession(req);
-    expect(result).toEqual({ gameId: 'game-xyz', side: 'confederate', token: 'tok-456' });
+    expect(result).toEqual({ gameId: 'game-xyz', side: 'confederate', sideToken: 'tok-456' });
   });
 
   it('returns null when session has no gameId', () => {

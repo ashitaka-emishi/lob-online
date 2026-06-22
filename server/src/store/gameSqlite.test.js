@@ -187,6 +187,24 @@ describe('faction columns — createGame / joinGame / getGame', () => {
   });
 });
 
+describe('faction validation — createGame / joinGame reject invalid values', () => {
+  // The store does not validate faction values; the route validates before calling createGame.
+  // These tests document the boundary: non-canonical string values pass through to the DB.
+  it.each(['', 'north', 'Union', 'UNION'])(
+    'createGame stores non-canonical faction string verbatim (%p)',
+    (faction) => {
+      store.createGame('fv1', 'tok-a', faction);
+      const row = store.getGame('fv1');
+      expect(row.side_a_faction).toBe(faction);
+    }
+  );
+
+  it('createGame stores null when faction is null', () => {
+    store.createGame('fv2', 'tok-a', null);
+    expect(store.getGame('fv2').side_a_faction).toBeNull();
+  });
+});
+
 describe('discord_webhook column', () => {
   it('stores and retrieves discord_webhook URL', () => {
     store.createGame('dw1', 'tok-a', 'union', 'https://discord.com/api/webhooks/123/abc');

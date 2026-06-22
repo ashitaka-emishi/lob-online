@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 
 import { UUID_RE } from '../util/uuid.js';
+import { GameNotFoundError } from './errors.js';
 
 // Schema v0: original 5-column table (no faction or webhook columns)
 // Schema v1: adds side_a_faction, side_b_faction, discord_webhook
@@ -20,12 +21,7 @@ const SCHEMA_V1 = `
 
 const CURRENT_USER_VERSION = 1;
 
-export class GameNotFoundError extends Error {
-  constructor(id) {
-    super(`Game not found: ${id}`);
-    this.name = 'GameNotFoundError';
-  }
-}
+export { GameNotFoundError } from './errors.js';
 
 export class GameNotOpenError extends Error {
   constructor(id) {
@@ -43,32 +39,36 @@ export class InvalidTokenError extends Error {
 }
 
 // Run idempotent schema migration. user_version 0 = no migration applied yet.
+// The migration body is wrapped in a transaction so DDL + version bump are atomic:
+// a crash mid-migration leaves the DB at version 0 and is safely re-run on the next start.
 function migrate(db) {
   const version = db.pragma('user_version', { simple: true });
 
   if (version === 0) {
-    // Fresh DB or pre-v1 DB — create/migrate to v1 schema
-    db.exec(SCHEMA_V1);
+    db.transaction(() => {
+      // Fresh DB fast path: SCHEMA_V1 already includes the new columns.
+      db.exec(SCHEMA_V1);
 
-    // If the table already existed without the new columns (pre-v1), add them.
-    // ALTER TABLE ADD COLUMN is a no-op if the column already exists in SQLite 3.37+,
-    // but we guard with a try/catch for older SQLite versions.
-    const cols = db
-      .prepare('PRAGMA table_info(games)')
-      .all()
-      .map((r) => r.name);
+      // Upgrade path: if the table already existed (pre-v1, 5-col schema), add the new
+      // columns. SQLite errors on ADD COLUMN when the column already exists — the
+      // cols.includes guard prevents that; we do not rely on SQLite to no-op it.
+      const cols = db
+        .prepare('PRAGMA table_info(games)')
+        .all()
+        .map((r) => r.name);
 
-    if (!cols.includes('side_a_faction')) {
-      db.exec('ALTER TABLE games ADD COLUMN side_a_faction TEXT');
-    }
-    if (!cols.includes('side_b_faction')) {
-      db.exec('ALTER TABLE games ADD COLUMN side_b_faction TEXT');
-    }
-    if (!cols.includes('discord_webhook')) {
-      db.exec('ALTER TABLE games ADD COLUMN discord_webhook TEXT');
-    }
+      if (!cols.includes('side_a_faction')) {
+        db.exec('ALTER TABLE games ADD COLUMN side_a_faction TEXT');
+      }
+      if (!cols.includes('side_b_faction')) {
+        db.exec('ALTER TABLE games ADD COLUMN side_b_faction TEXT');
+      }
+      if (!cols.includes('discord_webhook')) {
+        db.exec('ALTER TABLE games ADD COLUMN discord_webhook TEXT');
+      }
 
-    db.pragma(`user_version = ${CURRENT_USER_VERSION}`);
+      db.pragma(`user_version = ${CURRENT_USER_VERSION}`);
+    })();
   }
   // user_version === 1: already migrated, nothing to do
 }

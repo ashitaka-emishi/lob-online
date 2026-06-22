@@ -11,11 +11,8 @@ import { getPlayerSession } from './session.js';
  *   401 — no valid player session (unauthenticated)
  *   403 — session exists but session.gameId ≠ req.params.id (authenticated for a different game)
  *   404 — game row no longer exists in the DB (game was deleted)
- *   409 — game exists but is not in 'active' status
- *         Note: 409 is returned before the token check, so a holder of a stale session
- *         for this game learns its lifecycle state. This is intentional: the 403 gate
- *         already scopes the caller to a specific game they previously joined.
- *   403 — game exists and is active, but session.sideToken does not match either side
+ *   403 — game exists but session.sideToken does not match either side (stale/rotated token)
+ *   409 — token is valid but game is not in 'active' status
  *   next — all checks pass; caller is an authorised active-side player
  */
 export function requireSide(req, res, next) {
@@ -36,11 +33,12 @@ export function requireSide(req, res, next) {
   if (!row) {
     return res.status(404).json({ error: 'Game not found' });
   }
+  // Token check before status check: an invalid token yields 403 without leaking lifecycle state.
+  if (player.sideToken !== row.side_a_token && player.sideToken !== row.side_b_token) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
   if (row.status !== 'active') {
     return res.status(409).json({ error: 'Game is not active' });
-  }
-  if (player.token !== row.side_a_token && player.token !== row.side_b_token) {
-    return res.status(403).json({ error: 'Forbidden' });
   }
 
   next();

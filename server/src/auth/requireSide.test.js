@@ -108,7 +108,7 @@ describe('requireSide', () => {
     expect(res._status).toBe(404);
   });
 
-  it('returns 409 when the game is not active (#477)', () => {
+  it('returns 409 when the game is not active but token is valid (#477)', () => {
     getGame.mockReturnValue({ ...ACTIVE_ROW, status: 'open' });
     const req = {
       params: { id: 'game-abc' },
@@ -123,6 +123,20 @@ describe('requireSide', () => {
 
   it('returns 403 when session sideToken does not match DB record (#477)', () => {
     getGame.mockReturnValue(ACTIVE_ROW);
+    const req = {
+      params: { id: 'game-abc' },
+      session: { gameId: 'game-abc', side: 'union', sideToken: 'stale-token' },
+    };
+    const res = mockRes();
+    const next = vi.fn();
+    requireSide(req, res, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(res._status).toBe(403);
+  });
+
+  // Token check comes before status check — a stale token yields 403, not 409
+  it('returns 403 (not 409) when sideToken is stale and game is not active', () => {
+    getGame.mockReturnValue({ ...ACTIVE_ROW, status: 'open' });
     const req = {
       params: { id: 'game-abc' },
       session: { gameId: 'game-abc', side: 'union', sideToken: 'stale-token' },
