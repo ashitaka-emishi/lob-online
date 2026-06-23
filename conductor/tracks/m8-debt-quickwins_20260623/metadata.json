@@ -2,17 +2,20 @@
   "id": "m8-debt-quickwins_20260623",
   "title": "M8 Debt Quick-Wins Sprint",
   "type": "chore",
-  "status": "pending",
+  "status": "complete",
   "created": "2026-06-23T00:00:00Z",
-  "updated": "2026-06-23T00:00:00Z",
+  "updated": "2026-06-23T20:00:00Z",
   "closesIssues": [641, 642, 643, 644, 645, 646, 654, 655, 656, 657],
   "debtScoreClosed": 14,
   "phases": {
     "total": 4,
-    "completed": 0
+    "completed": 4
   },
   "tasks": {
     "total": 13,
-    "completed": 0
-  }
+    "completed": 13
+  },
+  "commits": [
+    "6326073: chore(debt): M8 quick-wins — env docs, webhook var rename, sink refactor, JSDoc+tests"
+  ]
 }
