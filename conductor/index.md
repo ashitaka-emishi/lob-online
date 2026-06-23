@@ -89,7 +89,10 @@ Navigation hub for project context.
 | [pre-m6-debt-sprint_20260524](./tracks/pre-m6-debt-sprint_20260524/index.md) | Pre-M6 Debt Sprint — Issues #461–#464 | Pending |
 | [map-editor-bugs_20260524](./tracks/map-editor-bugs_20260524/index.md) | Map Editor Bug Fixes — #416, #418, #419 | Pending |
 
-| [terraform-iac_20260623](./tracks/terraform-iac_20260623/index.md) | Terraform IaC for DigitalOcean Provisioning | Pending |
+| [terraform-iac_20260623](./tracks/terraform-iac_20260623/index.md) | Terraform IaC for DigitalOcean Provisioning | Complete |
+| [m8-debt-quickwins_20260623](./tracks/m8-debt-quickwins_20260623/index.md) | M8 Debt Quick-Wins Sprint — Issues #641–#646 #654–#657 | Pending |
+| [m8-auth-guard_20260623](./tracks/m8-auth-guard_20260623/index.md) | M8 Auth Guard — requireSide on DELETE /api/v1/games/:id (#648) | Pending |
+| [m8-minio-init_20260623](./tracks/m8-minio-init_20260623/index.md) | M8 MinIO Init — Auto-Create Dev Bucket (#640 #642) | Pending |
 
 ## Getting Started
 

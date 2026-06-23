@@ -1,0 +1,18 @@
+{
+  "id": "m8-auth-guard_20260623",
+  "title": "M8 Auth Guard — requireSide on DELETE Route",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-06-23T00:00:00Z",
+  "updated": "2026-06-23T00:00:00Z",
+  "closesIssues": [648],
+  "debtScoreClosed": 5,
+  "phases": {
+    "total": 2,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 7,
+    "completed": 0
+  }
+}

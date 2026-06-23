@@ -7,6 +7,15 @@ import { getPlayerSession } from './session.js';
 /**
  * Express middleware that authorises a request as a player with an active game side.
  *
+ * On success, sets `req.game` to `{ id, status, discord_webhook }` — a safe projection of
+ * the game row that omits side_a_token and side_b_token. Routes mounted after this middleware
+ * can read `req.game` without a second DB fetch. `req.game` is only set when `next()` is called.
+ *
+ * Routes that depend on `req.game`:
+ *   GET  /:id             — served from req.game projection
+ *   GET  /:id/actions     — gate check only
+ *   POST /:id/actions     — reads req.game.discord_webhook for fire-and-forget notification
+ *
  * Response code matrix:
  *   401 — no valid player session (unauthenticated)
  *   403 — session exists but session.gameId ≠ req.params.id (authenticated for a different game)
