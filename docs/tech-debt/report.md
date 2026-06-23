@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-23 after PR #649._
+_Last updated: 2026-06-23 after PR #660._
 
 ---
 
@@ -12,7 +12,7 @@ _Last updated: 2026-06-23 after PR #649._
 | Cumulative debt score (net open) | 32                                                                          |
 | Current-milestone open debt      | 0 items (all M8)                                                            |
 | Highest-risk item                | sec: add requireSide auth guard to DELETE /api/v1/games/:id (#648, score 5) |
-| PRs tracked                      | 439                                                                         |
+| PRs tracked                      | 440                                                                         |
 
 ---
 
@@ -459,6 +459,7 @@ _Last updated: 2026-06-23 after PR #649._
 | 2026-06-22 | PR #639 (m8-local-infra)                                       | 12                   | +12       | 612                      |
 | 2026-06-22 | PR #647 (m8-persistence)                                       | 5                    | +5        | 617                      |
 | 2026-06-23 | PR #649 (m8-notifications)                                     | 5                    | +5        | 622                      |
+| 2026-06-23 | PR #660 (terraform-iac)                                        | 0                    | 0         | 622                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 

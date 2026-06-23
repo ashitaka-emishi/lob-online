@@ -51,3 +51,9 @@ data/modules/*/backups/
 
 # Claude Code internal worktree scratch directories
 .claude/worktrees/
+
+# Terraform
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.backup
+infra/terraform.tfvars

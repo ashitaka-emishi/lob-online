@@ -1,0 +1,97 @@
+#cloud-config
+
+packages:
+  - nginx
+  - git
+  - curl
+
+runcmd:
+  # Wrap all steps in a single error-capturing script so failures surface in
+  # cloud-init status rather than silently succeeding.
+  - |
+    set -euo pipefail
+    exec > /var/log/bootstrap.log 2>&1
+
+    # Install Node.js 20 via NodeSource (GPG-verified apt repo)
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+      | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" \
+      > /etc/apt/sources.list.d/nodesource.list
+    apt-get update -qq
+    apt-get install -y nodejs
+
+    # Install PM2 globally
+    npm install -g pm2
+
+    # Create service user and app directory
+    useradd --system --shell /bin/bash --create-home --home-dir /opt/lob-online lob || true
+
+    # Clone the repository
+    git clone https://github.com/ashitaka-emishi/lob-online.git /opt/lob-online/app
+    chown -R lob:lob /opt/lob-online
+
+    # Install production dependencies
+    cd /opt/lob-online/app
+    sudo -u lob npm ci --omit=dev
+
+    # Create required runtime directories
+    sudo -u lob mkdir -p /opt/lob-online/app/data
+    mkdir -p /var/log/lob-online
+    chown lob:lob /var/log/lob-online
+
+    # Write a placeholder .env — operator MUST populate this before starting the app.
+    # See PROVISIONING.md Step 7 for the complete required variable list.
+    # The app is NOT started here. Run `pm2 start` after populating this file.
+    cat > /opt/lob-online/app/.env << 'ENVEOF'
+    # IMPORTANT: Fill in all values before starting the app.
+    # Copy from .env.example in the repo for the full variable reference.
+    NODE_ENV=production
+    PORT=3000
+    CLIENT_ORIGIN=https://CHANGE_ME
+    APP_URL=https://CHANGE_ME
+    JWT_SECRET=CHANGE_ME_openssl_rand_hex_32
+    JWT_EXPIRES_IN=7d
+    SQLITE_PATH=/opt/lob-online/app/data/lob.db
+    SPACES_KEY=CHANGE_ME
+    SPACES_SECRET=CHANGE_ME
+    SPACES_BUCKET=lob-online-games
+    SPACES_ENDPOINT=https://nyc3.digitaloceanspaces.com
+    SPACES_FORCE_PATH_STYLE=false
+    DISCORD_CLIENT_ID=CHANGE_ME
+    DISCORD_CLIENT_SECRET=CHANGE_ME
+    DISCORD_CALLBACK_URL=https://CHANGE_ME/auth/discord/callback
+    ENVEOF
+    chown lob:lob /opt/lob-online/app/.env
+    chmod 600 /opt/lob-online/app/.env
+
+    # Write nginx reverse-proxy config
+    cat > /etc/nginx/sites-available/lob-online << 'NGINXEOF'
+    server {
+        listen 80;
+        server_name _;
+
+        location / {
+            proxy_pass http://127.0.0.1:3000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_cache_bypass $http_upgrade;
+        }
+    }
+    NGINXEOF
+
+    ln -sf /etc/nginx/sites-available/lob-online /etc/nginx/sites-enabled/lob-online
+    rm -f /etc/nginx/sites-enabled/default
+    systemctl enable nginx
+    systemctl restart nginx
+
+    # Configure PM2 startup (generates a systemd unit) but do NOT start the app yet.
+    # The operator must populate .env and then run:
+    #   cd /opt/lob-online/app && sudo -u lob pm2 start ecosystem.config.cjs --env production
+    #   sudo -u lob pm2 save
+    sudo -u lob pm2 startup systemd -u lob --hp /opt/lob-online || true
+
+    echo "Bootstrap complete. Populate /opt/lob-online/app/.env then start the app per PROVISIONING.md Step 7."

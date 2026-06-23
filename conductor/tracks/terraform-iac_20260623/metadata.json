@@ -1,0 +1,17 @@
+{
+  "id": "terraform-iac_20260623",
+  "title": "Terraform IaC for DigitalOcean Provisioning",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-06-23T00:00:00Z",
+  "updated": "2026-06-23T00:00:00Z",
+  "githubIssue": 659,
+  "phases": {
+    "total": 5,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 16,
+    "completed": 0
+  }
+}
