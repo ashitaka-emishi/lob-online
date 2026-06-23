@@ -11,6 +11,11 @@ import { loadMap, buildHexIndex } from '../engine/map.js';
 import { loadOob } from '../engine/oob.js';
 import { getScenario } from '../engine/scenario.js';
 import {
+  buildActionPayload,
+  isAllowedDiscordWebhook,
+  notifyWebhook,
+} from '../notifications/discord.js';
+import {
   appendHistory,
   createGame,
   deleteGame,
@@ -24,7 +29,6 @@ import {
   loadGame,
   saveGame,
 } from '../store/index.js';
-import { buildActionPayload, notifyWebhook } from '../notifications/discord.js';
 import { SIDES } from '../util/sides.js';
 import { UUID_RE } from '../util/uuid.js';
 
@@ -63,22 +67,18 @@ router.post('/', createLimiter, async (req, res) => {
 
     // Validate discordWebhook if provided. Restrict to Discord domains only to prevent SSRF —
     // the server will POST to this URL, so arbitrary internal addresses must be blocked.
+    // isAllowedDiscordWebhook is the single source of truth for the allowlist (discord.js).
     if (discordWebhook !== undefined && discordWebhook !== null) {
-      let webhookUrl;
+      let parsed;
       try {
-        webhookUrl = new URL(discordWebhook);
+        parsed = new URL(discordWebhook);
       } catch {
         return res.status(400).json({ error: 'discordWebhook must be a valid URL' });
       }
-      if (webhookUrl.protocol !== 'https:') {
+      if (parsed.protocol !== 'https:') {
         return res.status(400).json({ error: 'discordWebhook must use https' });
       }
-      if (
-        webhookUrl.hostname !== 'discord.com' &&
-        webhookUrl.hostname !== 'discordapp.com' &&
-        webhookUrl.hostname !== 'ptb.discord.com' &&
-        webhookUrl.hostname !== 'canary.discord.com'
-      ) {
+      if (!isAllowedDiscordWebhook(discordWebhook)) {
         return res.status(400).json({ error: 'discordWebhook must be a Discord webhook URL' });
       }
     }
@@ -251,9 +251,9 @@ router.post('/:id/actions', requireSide, async (req, res) => {
     await appendHistory(id, saved.version, { type, payload, playerSide, version: saved.version });
 
     // Fire-and-forget Discord webhook if the game has one configured (#M8)
-    const row = getGame(id);
-    if (row?.discord_webhook) {
-      notifyWebhook(row.discord_webhook, buildActionPayload(id, { type }, saved));
+    // req.game is populated by requireSide — no second DB read needed.
+    if (req.game?.discord_webhook) {
+      notifyWebhook(req.game.discord_webhook, buildActionPayload(id, { type }, saved));
     }
 
     // Notify connected players; they fetch the authoritative state via GET /:id (#356)

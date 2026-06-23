@@ -360,6 +360,6 @@ describe('computeVP', () => {
     const state = { hexControl, units: {} };
     const scenario = { victoryPoints: { terrain: TERRAIN_VP, wreck: WRECK_VP } };
     const { union } = computeVP(state, MOCK_OOB, scenario);
-    expect(union).toBeGreaterThanOrEqual(4); // 19.23 is worth 4 VP in TERRAIN_VP fixture
+    expect(union).toBe(4); // 19.23 is worth exactly 4 VP in TERRAIN_VP fixture
   });
 });

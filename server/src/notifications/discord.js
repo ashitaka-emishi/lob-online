@@ -1,5 +1,22 @@
 // Discord webhook notifications — fire-and-forget, never blocks the action pipeline.
-// DISCORD_WEBHOOK_TEST_URL overrides the stored URL for local dev / CI.
+// DISCORD_WEBHOOK_TEST_URL overrides the stored URL in non-production environments only.
+
+const ALLOWED_DISCORD_HOSTS = new Set([
+  'discord.com',
+  'discordapp.com',
+  'ptb.discord.com',
+  'canary.discord.com',
+]);
+
+/** Re-validate a webhook URL against the Discord allowlist (shared with the create route). */
+export function isAllowedDiscordWebhook(url) {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && ALLOWED_DISCORD_HOSTS.has(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Build the webhook POST body for a completed game action.
@@ -14,6 +31,8 @@ export function buildActionPayload(gameId, action, state) {
   const side = state.activePlayer ?? 'unknown';
   return {
     content: `[lob-online] game \`${gameId}\` — \`${action.type}\` played by **${side}** (turn ${state.turn ?? '?'})`,
+    // Suppress @everyone/@here/@role injection regardless of field contents.
+    allowed_mentions: { parse: [] },
   };
 }
 
@@ -25,7 +44,17 @@ export function buildActionPayload(gameId, action, state) {
  * @param {object} payload
  */
 export async function notifyWebhook(url, payload) {
-  const target = process.env.DISCORD_WEBHOOK_TEST_URL || url;
+  // DISCORD_WEBHOOK_TEST_URL is honoured only outside production to prevent accidental
+  // exfiltration if the variable leaks into a production environment.
+  const override =
+    process.env.NODE_ENV !== 'production' ? process.env.DISCORD_WEBHOOK_TEST_URL : undefined;
+  const target = override || url;
+
+  if (!override && !isAllowedDiscordWebhook(target)) {
+    console.warn('[discord] webhook URL failed allowlist check — skipping notification');
+    return;
+  }
+
   try {
     const res = await fetch(target, {
       method: 'POST',
