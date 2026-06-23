@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-23 after PR #660._
+_Last updated: 2026-06-23 after PR #661._
 
 ---
 
@@ -8,11 +8,11 @@ _Last updated: 2026-06-23 after PR #660._
 
 | Metric                           | Value                                                                       |
 | -------------------------------- | --------------------------------------------------------------------------- |
-| Open debt items                  | 15                                                                          |
-| Cumulative debt score (net open) | 32                                                                          |
+| Open debt items                  | 5                                                                           |
+| Cumulative debt score (net open) | 18                                                                          |
 | Current-milestone open debt      | 0 items (all M8)                                                            |
 | Highest-risk item                | sec: add requireSide auth guard to DELETE /api/v1/games/:id (#648, score 5) |
-| PRs tracked                      | 440                                                                         |
+| PRs tracked                      | 451                                                                         |
 
 ---
 
@@ -460,6 +460,17 @@ _Last updated: 2026-06-23 after PR #660._
 | 2026-06-22 | PR #647 (m8-persistence)                                       | 5                    | +5        | 617                      |
 | 2026-06-23 | PR #649 (m8-notifications)                                     | 5                    | +5        | 622                      |
 | 2026-06-23 | PR #660 (terraform-iac)                                        | 0                    | 0         | 622                      |
+| 2026-06-23 | PR #661 (m8-debt-quickwins) (resolved #641)                    | -2                   | —         | 622                      |
+| 2026-06-23 | PR #661 (m8-debt-quickwins) (resolved #642)                    | -1                   | —         | 622                      |
+| 2026-06-23 | PR #661 (m8-debt-quickwins) (resolved #643)                    | -2                   | —         | 622                      |
+| 2026-06-23 | PR #661 (m8-debt-quickwins) (resolved #644)                    | -1                   | —         | 622                      |
+| 2026-06-23 | PR #661 (m8-debt-quickwins) (resolved #645)                    | -1                   | —         | 622                      |
+| 2026-06-23 | PR #661 (m8-debt-quickwins) (resolved #646)                    | -2                   | —         | 622                      |
+| 2026-06-23 | PR #661 (m8-debt-quickwins) (resolved #654)                    | -2                   | —         | 622                      |
+| 2026-06-23 | PR #661 (m8-debt-quickwins) (resolved #655)                    | -1                   | —         | 622                      |
+| 2026-06-23 | PR #661 (m8-debt-quickwins) (resolved #656)                    | -1                   | —         | 622                      |
+| 2026-06-23 | PR #661 (m8-debt-quickwins) (resolved #657)                    | -1                   | —         | 622                      |
+| 2026-06-23 | PR #661 (m8-debt-quickwins)                                    | 0                    | -14       | 622                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -467,7 +478,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Elevated risk. Net open debt score is 32 across 15 items. Debt is concentrated in three categories: (1) security and auth — #648 (unauthenticated DELETE, score 5) is the highest-risk item and a hard prerequisite before multiplayer ships; #562/#563 (token/faction binding, score 4+3) follow closely; (2) local dev infrastructure gaps — #640 (missing auto-bucket creation, score 3), #641/#643/#646/#654 (SPACES_REGION, webhook var naming, prod env note, staging override risk, score 2 each), and #642/#644/#645 (healthcheck, sink testability, hardcoded port, score 1 each); and (3) notification layer documentation — #655/#656/#657 (req.game JSDoc, requireSide dependency, isAllowedDiscordWebhook unit tests, score 1 each). #634 (terrain VP hex-control wiring) remains deferred to the M8 MOVE action implementation. All 15 open items are M8-scoped. No current-milestone open items.
+Elevated risk. Net open debt score is 18 across 5 items, all M8-scoped. After closing 14 points via PR #661, debt is now concentrated in two categories: (1) security and auth — #648 (unauthenticated DELETE, score 5) remains the highest-risk item and a hard prerequisite before M8 multiplayer ships; #562/#563 (token/faction binding, score 4+3) are the next largest and require DB migration + session rewrite; and (2) deferred wiring — #634 (terrain VP hex-control wiring, score 3) and #640 (MinIO auto-bucket, score 3) are functional gaps that block M8 dev-infra and final VP correctness. Recommend closing #648 (auth guard) and #640/#642 (MinIO init) in the next two tracks before moving to M9.
 
 ---
 
@@ -482,16 +493,6 @@ _Ordered by score descending (ties: current milestone first, then newest first).
 | 3     | M8        | #563  | Security: enforce side binding on re-join — reject side-switch to opponent's faction | PR #561       | Re-join path accepts any `side` from request body while reusing existing token, allowing side impersonation between turns. Acknowledged scaffolding (#349); depends on #562 (token/faction binding) to derive correct side. Deferred to M8 alongside full auth hardening.                                                                         |
 | 3     | M8        | #634  | feat(vp): wire updateHexControl into movement/retreat path (SM §5.1 terrain VP)      | PR #632       | `updateHexControl` and `isVpControlEligible` are implemented but have no production caller. `state.hexControl` stays `{}` and `computeTerrainVP` always returns 0 — the dominant VP component per SM §5.1 contributes nothing to end-game tally. Wiring deferred to M8+ when the MOVE action is implemented.                                      |
 | 3     | M8        | #640  | Auto-create lob-online-dev bucket on docker compose up                               | PR #639       | First-run devs hit `NoSuchBucket` immediately with no documented fix; blocks local M8 persistence development until an `minio/mc` init container or manual step is documented.                                                                                                                                                                    |
-| 2     | M8        | #641  | Add SPACES_REGION to .env.example for S3 client compatibility                        | PR #639       | AWS SDK v3 requires a region even for MinIO; omission causes a silent runtime error when the S3 client is first instantiated in the persistence track.                                                                                                                                                                                            |
-| 2     | M8        | #643  | Rename DISCORD_WEBHOOK_TEST_URL to DISCORD_WEBHOOK_URL                               | PR #639       | `_TEST_` suffix is misleading for a production-load-bearing value; will cause operator confusion when M8 notification code reads it alongside the other `DISCORD_*` vars.                                                                                                                                                                         |
-| 2     | M8        | #646  | Note DO*SPACES*\_ → SPACES\_\_ rename in production deploy config                    | PR #639       | Production deploy config will silently fail once M8 persistence ships if not updated; risk window is short but consequence is a broken deploy.                                                                                                                                                                                                    |
-| 2     | M8        | #654  | Document DISCORD_WEBHOOK_TEST_URL staging risk in .env.example                       | PR #649       | `NODE_ENV !== 'production'` honors the override in staging, bypassing the SSRF allowlist. Production is pinned in `ecosystem.config.cjs` but behavior is undocumented for deployed non-production tiers — a footgun if a staging env inherits a leaked env var.                                                                                   |
-| 1     | M8        | #642  | Add healthcheck and restart policy to docker-compose.yml MinIO service               | PR #639       | Low impact until the bucket-init container (#640) is added, at which point `service_healthy` gating becomes load-bearing for the init container.                                                                                                                                                                                                  |
-| 1     | M8        | #644  | Separate app export from app.listen in discord-test-server.js for testability        | PR #639       | Prevents route-handler tests in the existing scripts Vitest project; minimal impact since the sink has no business logic requiring test coverage.                                                                                                                                                                                                 |
-| 1     | M8        | #645  | Make discord-test-server.js port env-configurable via DISCORD_SINK_PORT              | PR #639       | Silent drift risk between hardcoded port 4040 and .env.example value; low impact since both default to 4040 and the script is dev-only.                                                                                                                                                                                                           |
-| 1     | M8        | #655  | Document req.game contract and shape in requireSide JSDoc                            | PR #649       | JSDoc documents the response-code matrix but says nothing about setting `req.game` on success, its shape, or that handlers must not serialize it wholesale. No functional risk (projection omits token columns) but creates an undocumented implicit contract.                                                                                    |
-| 1     | M8        | #656  | Make requireSide dependency explicit in action route handler                         | PR #649       | Handler reads `req.game?.discord_webhook` with silent degradation if `requireSide` is absent. Lost notifications would be invisible. Low risk given all `/:id` routes mount `requireSide`, but the dependency is convention-only.                                                                                                                 |
-| 1     | M8        | #657  | Add unit tests for isAllowedDiscordWebhook in discord.test.js                        | PR #649       | Exported SSRF allowlist function has no direct unit tests; only indirectly exercised via a pass-through mock in route tests. Pins the security contract independently of the route layer.                                                                                                                                                         |
 
 ---
 
