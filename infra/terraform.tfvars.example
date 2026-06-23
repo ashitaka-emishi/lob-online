@@ -1,0 +1,44 @@
+# Copy this file to terraform.tfvars and fill in your values.
+# terraform.tfvars is gitignored — never commit real credentials.
+
+# DigitalOcean personal access token
+# Generate at: https://cloud.digitalocean.com/account/api/tokens
+do_token = "dop_v1_REPLACE_ME"
+
+# DigitalOcean Spaces access key pair
+# Generate at: https://cloud.digitalocean.com/account/api/spaces-keys
+# These same values must be exported as AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+# before running `terraform init` (the S3 backend reads env vars, not tfvars).
+do_spaces_access_id  = "REPLACE_ME"
+do_spaces_secret_key = "REPLACE_ME"
+
+# Fingerprint of the SSH key registered in your DO account (MD5 format)
+# List all registered keys: doctl compute ssh-key list
+# Or derive locally (replace <your_key> with id_rsa, id_ed25519, id_ecdsa, etc.):
+#   ssh-keygen -E md5 -lf ~/.ssh/<your_key>.pub | awk '{print $2}' | sed 's/MD5://'
+do_ssh_key_fingerprint = "aa:bb:cc:dd:ee:ff:00:11:22:33:44:55:66:77:88:99"
+
+# Full content of the SSH private key (used to set the DO_SSH_KEY GitHub Actions secret)
+# This is the private half of the key whose fingerprint is above.
+# Paste the entire file content including the BEGIN/END lines.
+do_ssh_private_key = <<-EOT
+  -----BEGIN OPENSSH PRIVATE KEY-----
+  REPLACE_ME
+  -----END OPENSSH PRIVATE KEY-----
+EOT
+
+# GitHub personal access token with repo + secrets scopes
+# Generate at: https://github.com/settings/tokens
+gh_token = "ghp_REPLACE_ME"
+
+# GitHub owner (username or org)
+gh_owner = "ashitaka-emishi"
+
+# GitHub repository name
+gh_repo = "lob-online"
+
+# Optional overrides (defaults are shown)
+# droplet_name = "lob-online-prod"
+# region       = "nyc3"   # NOTE: changing region also requires updating versions.tf backend endpoint
+# droplet_size = "s-2vcpu-4gb"
+# ssh_user     = "lob"    # OS user that runs PM2 and receives CI deploys

@@ -147,3 +147,4 @@
 | [x] | m8-local-infra_20260622 | M8 Local Dev Infrastructure — MinIO Docker + Discord Sink | 2026-06-22 | 2026-06-22 |
 | [x] | m8-persistence_20260622 | M8 Persistence + Auth Hardening — Spaces Store + SQLite Migration | 2026-06-22 | 2026-06-22 |
 | [~] | m8-notifications_20260622 | M8 Discord Notifications + Hex Control Wiring | 2026-06-22 | 2026-06-22 |
+| [ ] | terraform-iac_20260623 | Terraform IaC for DigitalOcean Provisioning | 2026-06-23 | 2026-06-23 |
