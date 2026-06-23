@@ -20,7 +20,7 @@ function historyKey(id, seq) {
 function createClient() {
   return new S3Client({
     endpoint: process.env.SPACES_ENDPOINT,
-    region: 'us-east-1',
+    region: process.env.SPACES_REGION ?? 'us-east-1',
     credentials: {
       accessKeyId: process.env.SPACES_KEY,
       secretAccessKey: process.env.SPACES_SECRET,

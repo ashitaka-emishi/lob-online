@@ -9,10 +9,12 @@ vi.stubGlobal('fetch', mockFetch);
 beforeEach(() => {
   vi.resetAllMocks();
   delete process.env.DISCORD_WEBHOOK_URL;
+  delete process.env.NODE_ENV;
 });
 
 afterEach(() => {
   delete process.env.DISCORD_WEBHOOK_URL;
+  delete process.env.NODE_ENV;
 });
 
 describe('buildActionPayload', () => {
@@ -71,6 +73,24 @@ describe('isAllowedDiscordWebhook', () => {
     expect(isAllowedDiscordWebhook('https://ptb.discord.com/api/webhooks/123/abc')).toBe(true);
   });
 
+  it('accepts canary.discord.com webhooks', () => {
+    expect(isAllowedDiscordWebhook('https://canary.discord.com/api/webhooks/123/abc')).toBe(true);
+  });
+
+  it('rejects http://discord.com (http not https)', () => {
+    expect(isAllowedDiscordWebhook('http://discord.com/api/webhooks/123/abc')).toBe(false);
+  });
+
+  it('rejects path-injection spoof (discord.com in path, not hostname)', () => {
+    expect(isAllowedDiscordWebhook('https://evil.example.com/discord.com/api/webhooks')).toBe(
+      false
+    );
+  });
+
+  it('rejects subdomain spoof (discord.com.evil.com)', () => {
+    expect(isAllowedDiscordWebhook('https://discord.com.evil.com/hook')).toBe(false);
+  });
+
   it('rejects http://localhost', () => {
     expect(isAllowedDiscordWebhook('http://localhost/hook')).toBe(false);
   });
@@ -110,7 +130,7 @@ describe('notifyWebhook — DISCORD_WEBHOOK_URL override', () => {
     await notifyWebhook(url, { content: 'test' });
 
     expect(mockFetch).toHaveBeenCalledWith(url, expect.objectContaining({ method: 'POST' }));
-    process.env.NODE_ENV = 'test';
+    // NODE_ENV restored by afterEach
   });
 
   it('POSTs to the stored URL when override is not set', async () => {

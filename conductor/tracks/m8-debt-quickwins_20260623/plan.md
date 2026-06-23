@@ -132,8 +132,8 @@ Add `requireSide` JSDoc and direct `isAllowedDiscordWebhook` unit tests.
 
 - [ ] Task 4.1: Extend `requireSide` JSDoc in `server/src/auth/requireSide.js` to document: - `req.game` is set on success to `{ id, status, discord_webhook }` - Which routes can rely on `req.game` being present - That `req.game` is a projection (omits token columns)
       — closes #655
-- [ ] Task 4.2: Add explicit comment in `POST /:id/actions` handler in `games.js` immediately
-      before `req.game?.discord_webhook` read: `// requireSide (mounted above) guarantees req.game`
+- [x] Task 4.2: Comment already present at `server/src/routes/games.js:254`:
+      `// req.game is populated by requireSide — no second DB read needed.`
       — closes #656
 - [ ] Task 4.3: Add direct unit tests for `isAllowedDiscordWebhook` in
       `server/src/notifications/discord.test.js`: - Returns true for `https://discord.com/api/webhooks/...` (canonical Discord CDN) - Returns true for `https://discordapp.com/api/webhooks/...` - Returns true for `https://ptb.discord.com/api/webhooks/...` - Returns false for `http://localhost/...` - Returns false for `http://127.0.0.1/...` - Returns false for an arbitrary external URL - Returns false for empty string
