@@ -61,6 +61,25 @@ vi.mock('../engine/actions/index.js', () => ({
   },
 }));
 
+vi.mock('../notifications/discord.js', () => ({
+  buildActionPayload: vi.fn().mockReturnValue({ content: 'test notification' }),
+  notifyWebhook: vi.fn().mockResolvedValue(undefined),
+  // Pass-through the real allowlist check so create-route SSRF tests remain meaningful.
+  isAllowedDiscordWebhook: vi.fn((url) => {
+    try {
+      const { protocol, hostname } = new URL(url);
+      return (
+        protocol === 'https:' &&
+        ['discord.com', 'discordapp.com', 'ptb.discord.com', 'canary.discord.com'].includes(
+          hostname
+        )
+      );
+    } catch {
+      return false;
+    }
+  }),
+}));
+
 import { setPlayerSession, getPlayerSession } from '../auth/session.js';
 import {
   appendHistory,
@@ -79,6 +98,7 @@ import {
 import { initGameState } from '../engine/init.js';
 import { getScenario } from '../engine/scenario.js';
 import { dispatch, getValidActions, ActionError } from '../engine/actions/index.js';
+import { buildActionPayload, notifyWebhook } from '../notifications/discord.js';
 
 // Fixed UUID used as a stand-in game id in route tests
 const TEST_UUID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
@@ -980,6 +1000,74 @@ describe('Session guard — requireSameGame (#553)', () => {
       .post(`/api/v1/games/${TEST_UUID}/actions`)
       .send({ type: 'END_PHASE', payload: null, expectedVersion: 0 });
     expect(res.status).toBe(401);
+  });
+
+  it('calls notifyWebhook after saveGame when game has discord_webhook configured (#M8)', async () => {
+    buildActionPayload.mockReturnValue({ content: 'test notification' });
+    notifyWebhook.mockResolvedValue(undefined);
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
+    getGame.mockReturnValue({
+      id: TEST_UUID,
+      status: 'active',
+      side_a_token: 'tok',
+      side_b_token: 'tok-b',
+      discord_webhook: 'https://discord.com/api/webhooks/123/abc',
+    });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockReturnValue(NEXT_STATE);
+    saveGame.mockResolvedValue(NEXT_STATE);
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(res.status).toBe(200);
+    expect(notifyWebhook).toHaveBeenCalledWith(
+      'https://discord.com/api/webhooks/123/abc',
+      expect.any(Object)
+    );
+  });
+
+  it('does not call notifyWebhook when discord_webhook is null (#M8)', async () => {
+    notifyWebhook.mockResolvedValue(undefined);
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
+    getGame.mockReturnValue({
+      id: TEST_UUID,
+      status: 'active',
+      side_a_token: 'tok',
+      side_b_token: 'tok-b',
+      discord_webhook: null,
+    });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockReturnValue(NEXT_STATE);
+    saveGame.mockResolvedValue(NEXT_STATE);
+    const app = await buildApp();
+    await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    expect(notifyWebhook).not.toHaveBeenCalled();
+  });
+
+  it('action response succeeds even when notifyWebhook rejects (fire-and-forget) (#M8)', async () => {
+    buildActionPayload.mockReturnValue({ content: 'test notification' });
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
+    getGame.mockReturnValue({
+      id: TEST_UUID,
+      status: 'active',
+      side_a_token: 'tok',
+      side_b_token: 'tok-b',
+      discord_webhook: 'https://discord.com/api/webhooks/123/abc',
+    });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockReturnValue(NEXT_STATE);
+    saveGame.mockResolvedValue(NEXT_STATE);
+    notifyWebhook.mockRejectedValueOnce(new Error('network timeout'));
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    // Fire-and-forget: webhook failure must not affect the action response
+    expect(res.status).toBe(200);
+    expect(res.body.version).toBe(4);
   });
 });
 

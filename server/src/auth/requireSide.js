@@ -41,5 +41,8 @@ export function requireSide(req, res, next) {
     return res.status(409).json({ error: 'Game is not active' });
   }
 
+  // Attach a safe projection of the row — omits side tokens so handlers cannot
+  // accidentally serialize secret credentials to clients.
+  req.game = { id: row.id, status: row.status, discord_webhook: row.discord_webhook };
   next();
 }

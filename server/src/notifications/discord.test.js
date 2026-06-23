@@ -28,6 +28,11 @@ describe('buildActionPayload', () => {
     expect(payload.content).toContain('3');
   });
 
+  it('sets allowed_mentions to suppress @everyone/@here injection', () => {
+    const payload = buildActionPayload('g', { type: 'X' }, { turn: 1, activePlayer: 'union' });
+    expect(payload.allowed_mentions).toEqual({ parse: [] });
+  });
+
   it('handles null activePlayer gracefully', () => {
     const payload = buildActionPayload(
       'g1',
@@ -46,10 +51,15 @@ describe('buildActionPayload', () => {
     expect(typeof payload.content).toBe('string');
     expect(payload.content.length).toBeGreaterThan(0);
   });
+
+  it('uses "?" placeholder when turn is undefined', () => {
+    const payload = buildActionPayload('g', { type: 'X' }, { activePlayer: 'union' });
+    expect(payload.content).toContain('(turn ?)');
+  });
 });
 
 describe('notifyWebhook — DISCORD_WEBHOOK_TEST_URL override', () => {
-  it('POSTs to the override URL when DISCORD_WEBHOOK_TEST_URL is set', async () => {
+  it('POSTs to the override URL when DISCORD_WEBHOOK_TEST_URL is set (non-production)', async () => {
     process.env.DISCORD_WEBHOOK_TEST_URL = 'http://localhost:4040';
     mockFetch.mockResolvedValue({ ok: true, status: 204 });
 
@@ -59,6 +69,18 @@ describe('notifyWebhook — DISCORD_WEBHOOK_TEST_URL override', () => {
       'http://localhost:4040',
       expect.objectContaining({ method: 'POST' })
     );
+  });
+
+  it('ignores DISCORD_WEBHOOK_TEST_URL in production and POSTs to stored URL', async () => {
+    process.env.DISCORD_WEBHOOK_TEST_URL = 'http://localhost:4040';
+    process.env.NODE_ENV = 'production';
+    mockFetch.mockResolvedValue({ ok: true, status: 204 });
+
+    const url = 'https://discord.com/api/webhooks/123/abc';
+    await notifyWebhook(url, { content: 'test' });
+
+    expect(mockFetch).toHaveBeenCalledWith(url, expect.objectContaining({ method: 'POST' }));
+    process.env.NODE_ENV = 'test';
   });
 
   it('POSTs to the stored URL when override is not set', async () => {
@@ -82,6 +104,20 @@ describe('notifyWebhook — DISCORD_WEBHOOK_TEST_URL override', () => {
   });
 });
 
+describe('notifyWebhook — allowlist re-validation', () => {
+  it('skips fetch when stored URL fails the Discord allowlist (non-override path)', async () => {
+    mockFetch.mockResolvedValue({ ok: true, status: 204 });
+    await notifyWebhook('https://evil.example.com/hook', { content: 'test' });
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('skips fetch when stored URL uses http (non-override path)', async () => {
+    mockFetch.mockResolvedValue({ ok: true, status: 204 });
+    await notifyWebhook('http://discord.com/api/webhooks/123/abc', { content: 'test' });
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+});
+
 describe('notifyWebhook — error swallowing', () => {
   it('does not throw when fetch rejects (network error)', async () => {
     mockFetch.mockRejectedValue(new Error('ECONNREFUSED'));
@@ -97,10 +133,7 @@ describe('notifyWebhook — error swallowing', () => {
     ).resolves.not.toThrow();
   });
 
-  it('does not call fetch when url is falsy', async () => {
-    // If the game has no discord_webhook set, the route skips notifyWebhook entirely;
-    // but if called with a falsy url and no override, fetch should still be called with
-    // the falsy value (routing logic is the caller's responsibility).
+  it('calls fetch exactly once on a successful POST', async () => {
     mockFetch.mockResolvedValue({ ok: true, status: 204 });
     await notifyWebhook('https://discord.com/api/webhooks/123/abc', {});
     expect(mockFetch).toHaveBeenCalledTimes(1);
