@@ -349,4 +349,17 @@ describe('computeVP', () => {
     expect(result.union).toBe(0);
     expect(result.confederate).toBe(0);
   });
+
+  // updateHexControl → computeVP round-trip: wiring is ready; MOVE action (#634) will call it
+  it('terrain VP increases when updateHexControl records a qualifying unit on a VP hex', () => {
+    const vpHexSet = new Set(['19.23']);
+    const infUnit = makeUnit('u1', { hex: '19.23' });
+    const infOob = { type: 'infantry' };
+    const hexControl = updateHexControl({}, '19.23', 'union', infUnit, infOob, vpHexSet);
+
+    const state = { hexControl, units: {} };
+    const scenario = { victoryPoints: { terrain: TERRAIN_VP, wreck: WRECK_VP } };
+    const { union } = computeVP(state, MOCK_OOB, scenario);
+    expect(union).toBeGreaterThanOrEqual(4); // 19.23 is worth 4 VP in TERRAIN_VP fixture
+  });
 });

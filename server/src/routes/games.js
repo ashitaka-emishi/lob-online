@@ -24,6 +24,7 @@ import {
   loadGame,
   saveGame,
 } from '../store/index.js';
+import { buildActionPayload, notifyWebhook } from '../notifications/discord.js';
 import { SIDES } from '../util/sides.js';
 import { UUID_RE } from '../util/uuid.js';
 
@@ -248,6 +249,12 @@ router.post('/:id/actions', requireSide, async (req, res) => {
     );
     const saved = await saveGame(id, nextState);
     await appendHistory(id, saved.version, { type, payload, playerSide, version: saved.version });
+
+    // Fire-and-forget Discord webhook if the game has one configured (#M8)
+    const row = getGame(id);
+    if (row?.discord_webhook) {
+      notifyWebhook(row.discord_webhook, buildActionPayload(id, { type }, saved));
+    }
 
     // Notify connected players; they fetch the authoritative state via GET /:id (#356)
     // Guard: io may be absent in test environments or before Socket.io attaches (#482)
