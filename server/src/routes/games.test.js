@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 
@@ -487,35 +487,54 @@ describe('GET /api/v1/games/:id', () => {
 });
 
 describe('DELETE /api/v1/games/:id', () => {
-  it('returns 204 and calls deleteGame + deleteGameState (#407)', async () => {
-    const app = await buildApp();
-    const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
-    expect(res.status).toBe(204);
-    expect(deleteGame).toHaveBeenCalledWith(TEST_UUID);
-    expect(deleteGameState).toHaveBeenCalledWith(TEST_UUID);
-  });
-
-  it('returns 404 when deleteGame throws GameNotFoundError (#407)', async () => {
-    deleteGame.mockImplementation(() => {
-      throw new GameNotFoundError(TEST_UUID);
-    });
+  it('returns 404 when MAP_EDITOR_ENABLED is not set (endpoint disabled in production)', async () => {
+    const prev = process.env.MAP_EDITOR_ENABLED;
+    delete process.env.MAP_EDITOR_ENABLED;
     const app = await buildApp();
     const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
     expect(res.status).toBe(404);
-    expect(res.body.error).toBe('Game not found');
+    expect(deleteGame).not.toHaveBeenCalled();
+    process.env.MAP_EDITOR_ENABLED = prev;
   });
 
-  it('returns 500 when deleteGameState throws (#407)', async () => {
-    deleteGameState.mockRejectedValue(new Error('s3 error'));
-    const app = await buildApp();
-    const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
-    expect(res.status).toBe(500);
-  });
+  describe('when MAP_EDITOR_ENABLED=true', () => {
+    beforeEach(() => {
+      process.env.MAP_EDITOR_ENABLED = 'true';
+    });
+    afterEach(() => {
+      delete process.env.MAP_EDITOR_ENABLED;
+    });
 
-  it('returns 400 for non-UUID game id', async () => {
-    const app = await buildApp();
-    const res = await request(app).delete('/api/v1/games/not-a-uuid');
-    expect(res.status).toBe(400);
+    it('returns 204 and calls deleteGame + deleteGameState (#407)', async () => {
+      const app = await buildApp();
+      const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+      expect(res.status).toBe(204);
+      expect(deleteGame).toHaveBeenCalledWith(TEST_UUID);
+      expect(deleteGameState).toHaveBeenCalledWith(TEST_UUID);
+    });
+
+    it('returns 404 when deleteGame throws GameNotFoundError (#407)', async () => {
+      deleteGame.mockImplementation(() => {
+        throw new GameNotFoundError(TEST_UUID);
+      });
+      const app = await buildApp();
+      const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+      expect(res.status).toBe(404);
+      expect(res.body.error).toBe('Game not found');
+    });
+
+    it('returns 500 when deleteGameState throws (#407)', async () => {
+      deleteGameState.mockRejectedValue(new Error('s3 error'));
+      const app = await buildApp();
+      const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+      expect(res.status).toBe(500);
+    });
+
+    it('returns 400 for non-UUID game id', async () => {
+      const app = await buildApp();
+      const res = await request(app).delete('/api/v1/games/not-a-uuid');
+      expect(res.status).toBe(400);
+    });
   });
 });
 
