@@ -160,7 +160,7 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
 // is a no-op), so if the process crashes between the two operations the row can be cleaned up on a
 // retry without a permanently leaked Spaces object.
 router.delete('/:id', async (req, res) => {
-  // Dev-only endpoint — returns 404 in production (same as non-existent route)
+  // 404 (not 403) so the endpoint is indistinguishable from a non-existent route
   if (process.env.MAP_EDITOR_ENABLED !== 'true') {
     return res.status(404).json({ error: 'Not found' });
   }
