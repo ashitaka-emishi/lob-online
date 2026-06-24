@@ -1,0 +1,18 @@
+{
+  "id": "m8-minio-init_20260623",
+  "title": "M8 MinIO Init — Auto-Create Dev Bucket on docker compose up",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-06-23T00:00:00Z",
+  "updated": "2026-06-23T00:00:00Z",
+  "closesIssues": [640, 642],
+  "debtScoreClosed": 4,
+  "phases": {
+    "total": 3,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 6,
+    "completed": 0
+  }
+}

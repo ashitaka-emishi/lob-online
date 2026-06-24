@@ -147,4 +147,7 @@
 | [x] | m8-local-infra_20260622 | M8 Local Dev Infrastructure — MinIO Docker + Discord Sink | 2026-06-22 | 2026-06-22 |
 | [x] | m8-persistence_20260622 | M8 Persistence + Auth Hardening — Spaces Store + SQLite Migration | 2026-06-22 | 2026-06-22 |
 | [~] | m8-notifications_20260622 | M8 Discord Notifications + Hex Control Wiring | 2026-06-22 | 2026-06-22 |
-| [ ] | terraform-iac_20260623 | Terraform IaC for DigitalOcean Provisioning | 2026-06-23 | 2026-06-23 |
+| [x] | terraform-iac_20260623 | Terraform IaC for DigitalOcean Provisioning | 2026-06-23 | 2026-06-23 |
+| [ ] | m8-debt-quickwins_20260623 | M8 Debt Quick-Wins Sprint — Issues #641–#646 #654–#657 | 2026-06-23 | 2026-06-23 |
+| [ ] | m8-auth-guard_20260623 | M8 Auth Guard — requireSide on DELETE /api/v1/games/:id (#648) | 2026-06-23 | 2026-06-23 |
+| [ ] | m8-minio-init_20260623 | M8 MinIO Init — Auto-Create Dev Bucket (#640 #642) | 2026-06-23 | 2026-06-23 |

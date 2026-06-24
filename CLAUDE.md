@@ -48,7 +48,7 @@ After first boot, create the `lob-online-dev` bucket via the console at `http://
 
 **Discord webhook sink** — start with `npm run discord:sink`. Starts an unauthenticated Express
 server on `http://localhost:4040` (loopback only) that logs incoming webhook POST bodies and
-returns 204. Set `DISCORD_WEBHOOK_TEST_URL=http://localhost:4040` in `.env` to route notification
+returns 204. Set `DISCORD_WEBHOOK_URL=http://localhost:4040` in `.env` to route notification
 calls here instead of a real Discord channel.
 
 A `devops` agent and four skills automate the build/run/test cycle. See `docs/agents/devops/design.md` for the full spec.

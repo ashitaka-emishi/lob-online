@@ -1,5 +1,5 @@
 // Discord webhook notifications — fire-and-forget, never blocks the action pipeline.
-// DISCORD_WEBHOOK_TEST_URL overrides the stored URL in non-production environments only.
+// DISCORD_WEBHOOK_URL overrides the stored URL in non-production environments only.
 
 const ALLOWED_DISCORD_HOSTS = new Set([
   'discord.com',
@@ -37,17 +37,17 @@ export function buildActionPayload(gameId, action, state) {
 }
 
 /**
- * POST payload to the Discord webhook URL (or DISCORD_WEBHOOK_TEST_URL override).
+ * POST payload to the Discord webhook URL (or DISCORD_WEBHOOK_URL override).
  * Swallows all errors — never throws, never blocks the caller.
  *
  * @param {string} url  — discord_webhook value from the game row
  * @param {object} payload
  */
 export async function notifyWebhook(url, payload) {
-  // DISCORD_WEBHOOK_TEST_URL is honoured only outside production to prevent accidental
+  // DISCORD_WEBHOOK_URL is honoured only outside production to prevent accidental
   // exfiltration if the variable leaks into a production environment.
   const override =
-    process.env.NODE_ENV !== 'production' ? process.env.DISCORD_WEBHOOK_TEST_URL : undefined;
+    process.env.NODE_ENV !== 'production' ? process.env.DISCORD_WEBHOOK_URL : undefined;
   const target = override || url;
 
   if (!override && !isAllowedDiscordWebhook(target)) {

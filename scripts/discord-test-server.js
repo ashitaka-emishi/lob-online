@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'url';
+
 import express from 'express';
 
 const app = express();
@@ -12,6 +14,13 @@ app.get('/', (_req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
-app.listen(4040, '127.0.0.1', () => {
-  console.log('[discord-sink] Listening on http://localhost:4040');
-});
+const port = parseInt(process.env.DISCORD_SINK_PORT ?? '4040', 10);
+
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMain) {
+  app.listen(port, '127.0.0.1', () => {
+    console.log(`[discord-sink] Listening on http://localhost:${port}`);
+  });
+}
+
+export { app };

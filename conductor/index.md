@@ -10,23 +10,15 @@ Navigation hub for project context.
 - [Workflow](./workflow.md)
 - [Tracks](./tracks.md)
 
-## Active Tracks
+## Active Tracks (M8 — in progress)
 
-| Track ID                                                                               | Title                                                                    | Status   |
-| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | -------- |
-| [m7-special-rules_20260617](./tracks/m7-special-rules_20260617/index.md)               | M7 — Special Rules + Victory Conditions                                  | Pending  |
-| [editor-polish-526-527_20260608](./tracks/editor-polish-526-527_20260608/index.md)     | Editor Polish — Issues #526 and #527                                     | Pending  |
-| [multi-scenario-platform_20260608](./tracks/multi-scenario-platform_20260608/index.md) | Multi-Scenario Platform — Scenario-Scoped Routes and Data Folders (#529) | Pending  |
-| [home-nav-menu_20260607](./tracks/home-nav-menu_20260607/index.md)                     | App Home Page and Editor Navigation Menu (#518)                          | Complete |
-| [pre-m6-debt-sprint_20260601](./tracks/pre-m6-debt-sprint_20260601/index.md)           | Pre-M6 Debt Sprint — Issues #476 #477 #478 #479 #480                     | Pending  |
-| [m5-debt-cleanup_20260603](./tracks/m5-debt-cleanup_20260603/index.md)                 | M5 Debt Cleanup Sprint                                                   | Pending  |
-| [pre-m6-debt-score_20260604](./tracks/pre-m6-debt-score_20260604/index.md)             | Pre-M6 Debt Score Sprint — Reduce Cumulative Score to < 15               | Pending  |
-| [oob-editor-bugs_20260604](./tracks/oob-editor-bugs_20260604/index.md)                 | OOB Editor Display/Data Bugs (#506)                                      | Complete |
-| [m5-closeout_20260605](./tracks/m5-closeout_20260605/index.md)                         | M5 Closeout — Checklist, Handoff Note, Milestone Closure                 | Pending  |
-| [debt-sprint-to-10_20260605](./tracks/debt-sprint-to-10_20260605/index.md)             | Debt Sprint — Score 32 → 10                                              | Pending  |
-| [pre-m6-debt-sprint_20260613](./tracks/pre-m6-debt-sprint_20260613/index.md)           | Pre-M6 Debt Sprint — Score 3+ and Low-Hanging Fruit                      | Complete |
-| [debt-sprint-2_20260613](./tracks/debt-sprint-2_20260613/index.md)                     | Pre-M6 Debt Sprint #2 — Debt, Doc Sync, Stubs                            | Pending  |
-| [m6-combat-engine_20260614](./tracks/m6-combat-engine_20260614/index.md)               | M6 Combat Engine — Fire, Melee, Morale, Rally                            | Pending  |
+| Track ID                                                                   | Title                                                          | Status   |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------- | -------- |
+| [m8-debt-quickwins_20260623](./tracks/m8-debt-quickwins_20260623/index.md) | M8 Debt Quick-Wins Sprint — Issues #641–#646 #654–#657         | Complete |
+| [m8-auth-guard_20260623](./tracks/m8-auth-guard_20260623/index.md)         | M8 Auth Guard — requireSide on DELETE /api/v1/games/:id (#648) | Pending  |
+| [m8-minio-init_20260623](./tracks/m8-minio-init_20260623/index.md)         | M8 MinIO Init — Auto-Create Dev Bucket (#640 #642)             | Pending  |
+| [terraform-iac_20260623](./tracks/terraform-iac_20260623/index.md)         | Terraform IaC for DigitalOcean Provisioning                    | Complete |
+| [m8-notifications_20260622](./tracks/m8-notifications_20260622/index.md)   | M8 Discord Notifications + Hex Control Wiring                  | Complete |
 
 ## All Tracks
 
@@ -89,7 +81,10 @@ Navigation hub for project context.
 | [pre-m6-debt-sprint_20260524](./tracks/pre-m6-debt-sprint_20260524/index.md) | Pre-M6 Debt Sprint — Issues #461–#464 | Pending |
 | [map-editor-bugs_20260524](./tracks/map-editor-bugs_20260524/index.md) | Map Editor Bug Fixes — #416, #418, #419 | Pending |
 
-| [terraform-iac_20260623](./tracks/terraform-iac_20260623/index.md) | Terraform IaC for DigitalOcean Provisioning | Pending |
+| [terraform-iac_20260623](./tracks/terraform-iac_20260623/index.md) | Terraform IaC for DigitalOcean Provisioning | Complete |
+| [m8-debt-quickwins_20260623](./tracks/m8-debt-quickwins_20260623/index.md) | M8 Debt Quick-Wins Sprint — Issues #641–#646 #654–#657 | Pending |
+| [m8-auth-guard_20260623](./tracks/m8-auth-guard_20260623/index.md) | M8 Auth Guard — requireSide on DELETE /api/v1/games/:id (#648) | Pending |
+| [m8-minio-init_20260623](./tracks/m8-minio-init_20260623/index.md) | M8 MinIO Init — Auto-Create Dev Bucket (#640 #642) | Pending |
 
 ## Getting Started
 
