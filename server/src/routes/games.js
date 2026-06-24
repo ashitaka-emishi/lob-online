@@ -155,11 +155,15 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
   }
 });
 
-// DELETE /api/v1/games/:id — remove a game from the lobby
+// DELETE /api/v1/games/:id — dev/test utility; disabled in production via MAP_EDITOR_ENABLED.
 // Spaces object is deleted before the SQLite row: deleteGameState is idempotent (S3 delete-missing
 // is a no-op), so if the process crashes between the two operations the row can be cleaned up on a
 // retry without a permanently leaked Spaces object.
 router.delete('/:id', async (req, res) => {
+  // 404 (not 403) so the endpoint is indistinguishable from a non-existent route
+  if (process.env.MAP_EDITOR_ENABLED !== 'true') {
+    return res.status(404).json({ error: 'Not found' });
+  }
   try {
     const { id } = req.params;
     // Verify the row exists first so we can return 404 before touching Spaces

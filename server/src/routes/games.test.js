@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 
@@ -487,35 +487,80 @@ describe('GET /api/v1/games/:id', () => {
 });
 
 describe('DELETE /api/v1/games/:id', () => {
-  it('returns 204 and calls deleteGame + deleteGameState (#407)', async () => {
-    const app = await buildApp();
-    const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
-    expect(res.status).toBe(204);
-    expect(deleteGame).toHaveBeenCalledWith(TEST_UUID);
-    expect(deleteGameState).toHaveBeenCalledWith(TEST_UUID);
-  });
-
-  it('returns 404 when deleteGame throws GameNotFoundError (#407)', async () => {
-    deleteGame.mockImplementation(() => {
-      throw new GameNotFoundError(TEST_UUID);
-    });
-    const app = await buildApp();
-    const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
-    expect(res.status).toBe(404);
-    expect(res.body.error).toBe('Game not found');
-  });
-
-  it('returns 500 when deleteGameState throws (#407)', async () => {
-    deleteGameState.mockRejectedValue(new Error('s3 error'));
-    const app = await buildApp();
-    const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
-    expect(res.status).toBe(500);
-  });
-
+  // UUID validation (router.param) fires before the env check, so 400 is env-independent
   it('returns 400 for non-UUID game id', async () => {
     const app = await buildApp();
     const res = await request(app).delete('/api/v1/games/not-a-uuid');
     expect(res.status).toBe(400);
+  });
+
+  it('returns 404 when MAP_EDITOR_ENABLED is not set (endpoint disabled in production)', async () => {
+    // Use try/finally so env is restored even if an assertion throws
+    delete process.env.MAP_EDITOR_ENABLED;
+    try {
+      const app = await buildApp();
+      const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+      expect(res.status).toBe(404);
+      expect(deleteGame).not.toHaveBeenCalled();
+    } finally {
+      delete process.env.MAP_EDITOR_ENABLED;
+    }
+  });
+
+  describe('when MAP_EDITOR_ENABLED=true', () => {
+    beforeEach(() => {
+      process.env.MAP_EDITOR_ENABLED = 'true';
+    });
+    afterEach(() => {
+      delete process.env.MAP_EDITOR_ENABLED;
+    });
+
+    it('returns 204 and calls deleteGameState then deleteGame in order (#407)', async () => {
+      const callOrder = [];
+      deleteGameState.mockImplementation(async () => callOrder.push('deleteGameState'));
+      deleteGame.mockImplementation(() => callOrder.push('deleteGame'));
+      const app = await buildApp();
+      const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+      expect(res.status).toBe(204);
+      expect(callOrder).toEqual(['deleteGameState', 'deleteGame']);
+    });
+
+    it('returns 404 and skips Spaces when game row does not exist (#407)', async () => {
+      getGame.mockReturnValue(null);
+      const app = await buildApp();
+      const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+      expect(res.status).toBe(404);
+      expect(res.body.error).toBe('Game not found');
+      expect(deleteGameState).not.toHaveBeenCalled();
+    });
+
+    it('returns 404 when deleteGame throws GameNotFoundError (#407)', async () => {
+      deleteGame.mockImplementation(() => {
+        throw new GameNotFoundError(TEST_UUID);
+      });
+      const app = await buildApp();
+      const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+      expect(res.status).toBe(404);
+      expect(res.body.error).toBe('Game not found');
+    });
+
+    it('returns 500 when deleteGame throws a non-GameNotFoundError (#407)', async () => {
+      deleteGame.mockImplementation(() => {
+        throw new Error('sqlite locked');
+      });
+      const app = await buildApp();
+      const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+      expect(res.status).toBe(500);
+      expect(res.body.error).toBe('Failed to delete game');
+    });
+
+    it('returns 500 and skips deleteGame when deleteGameState throws (#407)', async () => {
+      deleteGameState.mockRejectedValue(new Error('s3 error'));
+      const app = await buildApp();
+      const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+      expect(res.status).toBe(500);
+      expect(deleteGame).not.toHaveBeenCalled();
+    });
   });
 });
 

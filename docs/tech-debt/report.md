@@ -1,18 +1,18 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-23 after PR #661._
+_Last updated: 2026-06-24 after PR #662._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                       |
-| -------------------------------- | --------------------------------------------------------------------------- |
-| Open debt items                  | 5                                                                           |
-| Cumulative debt score (net open) | 18                                                                          |
-| Current-milestone open debt      | 0 items (all M8)                                                            |
-| Highest-risk item                | sec: add requireSide auth guard to DELETE /api/v1/games/:id (#648, score 5) |
-| PRs tracked                      | 451                                                                         |
+| Metric                           | Value                                                                                             |
+| -------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Open debt items                  | 4                                                                                                 |
+| Cumulative debt score (net open) | 13                                                                                                |
+| Current-milestone open debt      | 0 items (all M8)                                                                                  |
+| Highest-risk item                | Security: bind side tokens to factions in DB; derive player.side from token match (#562, score 4) |
+| PRs tracked                      | 453                                                                                               |
 
 ---
 
@@ -471,6 +471,8 @@ _Last updated: 2026-06-23 after PR #661._
 | 2026-06-23 | PR #661 (m8-debt-quickwins) (resolved #656)                    | -1                   | —         | 622                      |
 | 2026-06-23 | PR #661 (m8-debt-quickwins) (resolved #657)                    | -1                   | —         | 622                      |
 | 2026-06-23 | PR #661 (m8-debt-quickwins)                                    | 0                    | -14       | 622                      |
+| 2026-06-24 | PR #662 (m8-auth-guard)                                        | 0                    | -5        | 622                      |
+| 2026-06-24 | PR #662 (m8-auth-guard) (resolved #648)                        | -5                   | —         | 622                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -478,7 +480,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Elevated risk. Net open debt score is 18 across 5 items, all M8-scoped. After closing 14 points via PR #661, debt is now concentrated in two categories: (1) security and auth — #648 (unauthenticated DELETE, score 5) remains the highest-risk item and a hard prerequisite before M8 multiplayer ships; #562/#563 (token/faction binding, score 4+3) are the next largest and require DB migration + session rewrite; and (2) deferred wiring — #634 (terrain VP hex-control wiring, score 3) and #640 (MinIO auto-bucket, score 3) are functional gaps that block M8 dev-infra and final VP correctness. Recommend closing #648 (auth guard) and #640/#642 (MinIO init) in the next two tracks before moving to M9.
+Moderate risk. Net open debt score is 13 across 4 items, all M8-scoped. PR #662 closed #648 (score 5, unauthenticated DELETE) — the former highest-risk item — bringing the register down from 18 to 13. Remaining debt is concentrated in two categories: (1) security and auth — #562/#563 (token/faction binding, score 4+3) are the highest-risk remaining items and require DB migration, session rewrite, and engine authorization update before M8 multiplayer ships; and (2) deferred wiring — #634 (terrain VP hex-control, score 3) and #640 (MinIO auto-bucket, score 3) are functional gaps that block final VP correctness and M8 dev-infra first-run experience.
 
 ---
 
@@ -488,7 +490,6 @@ _Ordered by score descending (ties: current milestone first, then newest first).
 
 | Score | Milestone | Issue | Title                                                                                | PR Introduced | Assessment                                                                                                                                                                                                                                                                                                                                        |
 | ----- | --------- | ----- | ------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 5     | M8        | #648  | sec: add requireSide auth guard to DELETE /api/v1/games/:id                          | PR #647       | Any caller with a game ID can destroy the game without a session token — no authentication required on the delete path. Intentional deferral during single-player scaffolding phase; must be closed before M8 multiplayer ships.                                                                                                                  |
 | 4     | M8        | #562  | Security: bind side tokens to factions in DB; derive player.side from token match    | PR #561       | DB stores two opaque tokens with no faction binding; `requireSide` validates token matches either slot but never checks which side it belongs to. A player can claim either faction. Intentional single-user testing scaffolding; hard prerequisite for M8 multiplayer — requires DB migration, session rewrite, and engine authorization update. |
 | 3     | M8        | #563  | Security: enforce side binding on re-join — reject side-switch to opponent's faction | PR #561       | Re-join path accepts any `side` from request body while reusing existing token, allowing side impersonation between turns. Acknowledged scaffolding (#349); depends on #562 (token/faction binding) to derive correct side. Deferred to M8 alongside full auth hardening.                                                                         |
 | 3     | M8        | #634  | feat(vp): wire updateHexControl into movement/retreat path (SM §5.1 terrain VP)      | PR #632       | `updateHexControl` and `isVpControlEligible` are implemented but have no production caller. `state.hexControl` stays `{}` and `computeTerrainVP` always returns 0 — the dominant VP component per SM §5.1 contributes nothing to end-game tally. Wiring deferred to M8+ when the MOVE action is implemented.                                      |
