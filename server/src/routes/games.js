@@ -205,14 +205,13 @@ const ACTION_ERROR_STATUS = {
 };
 
 // GET /api/v1/games/:id/actions — return valid actions for the authenticated player. (#495)
-// Uses the same session-side sourcing as POST so clients never supply their own side.
+// Uses the same DB-derived req.side as POST so clients never supply their own side.
 router.get('/:id/actions', requireSide, async (req, res) => {
   try {
     const { id } = req.params;
     // 401/404/409/403 all handled by requireSide before we reach here.
-    const player = getPlayerSession(req);
     const state = await loadGame(id);
-    const validActions = getValidActions(state, player.side);
+    const validActions = getValidActions(state, req.side);
     res.json({ validActions });
   } catch (err) {
     if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });
@@ -232,8 +231,7 @@ router.post('/:id/actions', requireSide, async (req, res) => {
       return res.status(400).json({ error: 'action type must be a non-empty string' });
     }
 
-    const player = getPlayerSession(req);
-    const playerSide = player.side; // session-sourced; body playerSide is intentionally ignored
+    const playerSide = req.side; // DB-derived via requireSide; body playerSide is intentionally ignored
 
     const state = await loadGame(id);
 

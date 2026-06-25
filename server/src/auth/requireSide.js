@@ -7,9 +7,13 @@ import { getPlayerSession } from './session.js';
 /**
  * Express middleware that authorises a request as a player with an active game side.
  *
- * On success, sets `req.game` to `{ id, status, discord_webhook }` — a safe projection of
- * the game row that omits side_a_token and side_b_token. Any route mounted after this middleware
- * can read `req.game` without a second DB fetch. `req.game` is only set when `next()` is called.
+ * On success, sets:
+ *   - `req.game` — `{ id, status, discord_webhook }`, a safe projection omitting side tokens.
+ *   - `req.side` — the authoritative faction string derived from which DB token column matched
+ *     (`side_a_faction` when sideToken === side_a_token, else `side_b_faction`). Route handlers
+ *     must use `req.side` for player identity — never `player.side` from the session.
+ *
+ * Both `req.game` and `req.side` are only set when `next()` is called.
  *
  * Response code matrix:
  *   401 — no valid player session (unauthenticated)
@@ -17,7 +21,7 @@ import { getPlayerSession } from './session.js';
  *   404 — game row no longer exists in the DB (game was deleted)
  *   403 — game exists but session.sideToken does not match either side (stale/rotated token)
  *   409 — token is valid but game is not in 'active' status
- *   next — all checks pass; caller is an authorised active-side player
+ *   next — all checks pass; req.game and req.side populated; caller is an authorised active-side player
  */
 export function requireSide(req, res, next) {
   const player = getPlayerSession(req);
@@ -44,6 +48,12 @@ export function requireSide(req, res, next) {
   if (row.status !== 'active') {
     return res.status(409).json({ error: 'Game is not active' });
   }
+
+  // Derive authoritative side from DB token-to-faction mapping (#562).
+  // Trusting the session-stored side string is insufficient — the DB is the source of truth.
+  const derivedSide =
+    player.sideToken === row.side_a_token ? row.side_a_faction : row.side_b_faction;
+  req.side = derivedSide;
 
   // Attach a safe projection of the row — omits side tokens so handlers cannot
   // accidentally serialize secret credentials to clients.

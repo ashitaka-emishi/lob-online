@@ -145,11 +145,14 @@ beforeEach(() => {
   listGames.mockReturnValue([]);
   // Default: active game with side_a_token matching the most common test player token ('tok').
   // Tests that need a different game state (null, open, different tokens) override this.
+  // side_a_faction/side_b_faction are required for requireSide to populate req.side (#562).
   getGame.mockReturnValue({
     id: TEST_UUID,
     status: 'active',
     side_a_token: 'tok',
     side_b_token: 'tok-b',
+    side_a_faction: 'union',
+    side_b_faction: 'confederate',
   });
   loadGame.mockResolvedValue(MINIMAL_STATE);
   getValidActions.mockReturnValue([]);
@@ -434,6 +437,8 @@ describe('GET /api/v1/games/:id', () => {
       status: 'active',
       side_a_token: 'tok-1',
       side_b_token: 'tok-b',
+      side_a_faction: 'union',
+      side_b_faction: 'confederate',
     });
     loadGame.mockResolvedValue(MINIMAL_STATE);
     const app = await buildApp();
@@ -667,13 +672,18 @@ describe('POST /api/v1/games/:id/actions', () => {
     );
   });
 
-  it('sources playerSide from session, never from request body (#387)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'confederate', sideToken: 'tok' });
+  it('sources playerSide from DB-derived req.side, never from request body (#387 #562)', async () => {
+    // sideToken 'tok-b' matches side_b_token → req.side = side_b_faction = 'confederate'.
+    // Body sends playerSide: 'union' — dispatch must receive 'confederate' (DB-derived).
+    getPlayerSession.mockReturnValue({
+      gameId: TEST_UUID,
+      side: 'confederate',
+      sideToken: 'tok-b',
+    });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockReturnValue(NEXT_STATE);
     saveGame.mockResolvedValue(NEXT_STATE);
     const app = await buildApp();
-    // Caller attempts to spoof playerSide in the body — must be ignored
     await request(app)
       .post(`/api/v1/games/${TEST_UUID}/actions`)
       .send({ type: 'END_PHASE', payload: null, playerSide: 'union', expectedVersion: 3 });
@@ -920,8 +930,13 @@ describe('GET /api/v1/games/:id/actions (#495)', () => {
     expect(res.body.validActions).toEqual([{ type: 'END_PHASE', payload: null }]);
   });
 
-  it('passes player side from session to getValidActions', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'confederate', sideToken: 'tok' });
+  it('passes DB-derived req.side to getValidActions (#562)', async () => {
+    // sideToken 'tok-b' matches side_b_token → req.side = side_b_faction = 'confederate'.
+    getPlayerSession.mockReturnValue({
+      gameId: TEST_UUID,
+      side: 'confederate',
+      sideToken: 'tok-b',
+    });
     loadGame.mockResolvedValue(MINIMAL_STATE);
     getValidActions.mockReturnValue([]);
     const app = await buildApp();
@@ -1056,6 +1071,8 @@ describe('Session guard — requireSameGame (#553)', () => {
       status: 'active',
       side_a_token: 'tok',
       side_b_token: 'tok-b',
+      side_a_faction: 'union',
+      side_b_faction: 'confederate',
       discord_webhook: 'https://discord.com/api/webhooks/123/abc',
     });
     loadGame.mockResolvedValue(ACTIVE_STATE);
@@ -1080,6 +1097,8 @@ describe('Session guard — requireSameGame (#553)', () => {
       status: 'active',
       side_a_token: 'tok',
       side_b_token: 'tok-b',
+      side_a_faction: 'union',
+      side_b_faction: 'confederate',
       discord_webhook: null,
     });
     loadGame.mockResolvedValue(ACTIVE_STATE);
@@ -1100,6 +1119,8 @@ describe('Session guard — requireSameGame (#553)', () => {
       status: 'active',
       side_a_token: 'tok',
       side_b_token: 'tok-b',
+      side_a_faction: 'union',
+      side_b_faction: 'confederate',
       discord_webhook: 'https://discord.com/api/webhooks/123/abc',
     });
     loadGame.mockResolvedValue(ACTIVE_STATE);
