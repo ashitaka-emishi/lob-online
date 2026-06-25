@@ -3,7 +3,7 @@
 **Track ID:** m8-faction-binding_20260624
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-24
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -28,12 +28,12 @@ migration required.
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -104,7 +104,7 @@ const derivedSide =
 
 ### Tasks
 
-- [ ] Task 3.1: In `server/src/routes/games.js`, in the new-join path (after `joinLimiter`,
+- [x] Task 3.1: In `server/src/routes/games.js`, in the new-join path (after `joinLimiter`,
       before `joinGame`), fetch the game row and reject with 409 if `row.side_a_faction ===
 side`:
       `js
@@ -117,7 +117,7 @@ if (row.side_a_faction === side) {
       This must only apply to the new-join path (no existing session for this game), not the
       re-join path.
 
-- [ ] Task 3.2: In the re-join path (lines 129–135), replace the session-side check with a
+- [x] Task 3.2: In the re-join path (lines 129–135), replace the session-side check with a
       DB-derived faction check:
       `js
 const row = getGame(id);
@@ -131,9 +131,9 @@ if (boundFaction !== side) {
 }
 `
 
-- [ ] Task 3.3: Add test cases in `games.test.js` for: - New join: `side_a_faction` already equals requested side → 409 `'Side already taken'` - Re-join: requested side doesn't match DB-bound faction → 403 - Re-join: requested side matches DB-bound faction → 200 (happy path)
+- [x] Task 3.3: Add test cases in `games.test.js` for: - New join: `side_a_faction` already equals requested side → 409 `'Side already taken'` - Re-join: requested side doesn't match DB-bound faction → 403 - Re-join: requested side matches DB-bound faction → 200 (happy path)
 
-- [ ] Task 3.4: Run `npm run test` — all join tests pass including new cases.
+- [x] Task 3.4: Run `npm run test` — all join tests pass including new cases.
 
 ### Verification
 
@@ -146,13 +146,13 @@ if (boundFaction !== side) {
 
 ## Final Verification
 
-- [ ] `npm run quality:strict` passes
-- [ ] `req.side` set by `requireSide` on all authorized requests
-- [ ] Duplicate-faction new-join returns 409
-- [ ] Re-join with wrong faction returns 403 (DB-bound, not session-bound)
-- [ ] `player.side` no longer used for authorization in any guarded handler
-- [ ] No unexpected warnings in test output
-- [ ] Ready for `/team-review`
+- [x] `npm run quality:strict` passes
+- [x] `req.side` set by `requireSide` on all authorized requests
+- [x] Duplicate-faction new-join returns 409
+- [x] Re-join with wrong faction returns 403 (DB-bound, not session-bound)
+- [x] `player.side` no longer used for authorization in any guarded handler
+- [x] No unexpected warnings in test output
+- [x] Ready for `/team-review`
 
 ---
 

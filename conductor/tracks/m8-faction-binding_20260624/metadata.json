@@ -1,0 +1,18 @@
+{
+  "id": "m8-faction-binding_20260624",
+  "title": "M8 Faction Binding — Derive Player Side from Token, Enforce on Join/Re-Join (#562 #563)",
+  "type": "chore",
+  "status": "complete",
+  "created": "2026-06-24T00:00:00Z",
+  "updated": "2026-06-24T00:00:00Z",
+  "closesIssues": [562, 563],
+  "debtScoreClosed": 7,
+  "phases": {
+    "total": 3,
+    "completed": 3
+  },
+  "tasks": {
+    "total": 9,
+    "completed": 9
+  }
+}

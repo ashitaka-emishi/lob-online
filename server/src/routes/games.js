@@ -125,9 +125,16 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
 
     const existingSession = getPlayerSession(req);
 
-    // Same-game re-join: enforce faction binding — cannot switch sides after initial join.
+    // Same-game re-join: enforce faction binding via DB-derived side — cannot switch factions (#563).
+    // Uses the token→faction mapping in the DB rather than the session-stored side string.
     if (existingSession?.gameId === id) {
-      if (existingSession.side !== side) {
+      const reJoinRow = getGame(id);
+      if (!reJoinRow) return res.status(404).json({ error: 'Game not found' });
+      const boundFaction =
+        existingSession.sideToken === reJoinRow.side_a_token
+          ? reJoinRow.side_a_faction
+          : reJoinRow.side_b_faction;
+      if (boundFaction !== side) {
         return res.status(403).json({ error: 'Side already bound — cannot switch factions' });
       }
       await regenerateSession(req);
@@ -135,9 +142,16 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
       return res.json({ id, side });
     }
 
+    // Reject new join if the requested faction is already held by the creator (#562).
+    const joinRow = getGame(id);
+    if (!joinRow) return res.status(404).json({ error: 'Game not found' });
+    if (joinRow.side_a_faction === side) {
+      return res.status(409).json({ error: 'Side already taken' });
+    }
+
     const sideToken = randomUUID();
 
-    // joinGame is atomic — no pre-check needed; typed errors map to 404/409 (#PERF-H1, #ARCH-M2)
+    // joinGame is atomic; typed errors map to 404/409 for remaining edge cases (#PERF-H1, #ARCH-M2)
     joinGame(id, sideToken, side);
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
