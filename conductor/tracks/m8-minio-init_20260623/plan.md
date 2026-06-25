@@ -3,7 +3,7 @@
 **Track ID:** m8-minio-init_20260623
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-23
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -22,12 +22,12 @@ No app code touched. Autonomous mode is safe.
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -35,11 +35,11 @@ No app code touched. Autonomous mode is safe.
 
 ## Completion Contract
 
-- [ ] Closes #640 and #642
-- [ ] All acceptance criteria in spec.md met
-- [ ] `docker compose up -d` creates `lob-online-dev` bucket automatically
-- [ ] `npm run quality:strict` passes
-- [ ] Ready for `/team-review`
+- [x] Closes #640 and #642
+- [x] All acceptance criteria in spec.md met
+- [x] `docker compose up -d` creates `lob-online-dev` bucket automatically
+- [x] `npm run quality:strict` passes
+- [x] Ready for `/team-review`
 
 ---
 
@@ -49,7 +49,7 @@ Add healthcheck and restart policy to the existing MinIO service.
 
 ### Tasks
 
-- [ ] Task 1.1: Add `healthcheck` block to the `minio` service in `docker-compose.yml`:
+- [x] Task 1.1: Add `healthcheck` block to the `minio` service in `docker-compose.yml`:
       `yaml
 healthcheck:
   test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
@@ -59,7 +59,7 @@ healthcheck:
   start_period: 10s
 `
       — closes #642 (healthcheck)
-- [ ] Task 1.2: Add `restart: unless-stopped` to the `minio` service — closes #642 (restart)
+- [x] Task 1.2: Add `restart: unless-stopped` to the `minio` service — closes #642 (restart)
 
 ### Verification
 
@@ -74,7 +74,7 @@ Add a `minio/mc` companion service that creates `lob-online-dev` on first run.
 
 ### Tasks
 
-- [ ] Task 2.1: Add `createbuckets` service to `docker-compose.yml`:
+- [x] Task 2.1: Add `createbuckets` service to `docker-compose.yml`:
       `yaml
 createbuckets:
   image: minio/mc:latest
@@ -92,7 +92,7 @@ createbuckets:
     "
 `
       — closes #640
-- [ ] Task 2.2: Verify the entrypoint uses `$$` for shell variable expansion (YAML escaping
+- [x] Task 2.2: Verify the entrypoint uses `$$` for shell variable expansion (YAML escaping
       in docker-compose) so `${SPACES_KEY}` resolves correctly at runtime
 
 ### Verification
@@ -109,7 +109,7 @@ Remove the manual bucket-creation step from CLAUDE.md now that it is automated.
 
 ### Tasks
 
-- [ ] Task 3.1: In `CLAUDE.md` under "Local Infrastructure (M8)", remove the paragraph that
+- [x] Task 3.1: In `CLAUDE.md` under "Local Infrastructure (M8)", remove the paragraph that
       instructs the developer to manually create `lob-online-dev` via the MinIO console.
       Replace with a single sentence: "The `lob-online-dev` bucket is created automatically
       by `docker compose up -d`."

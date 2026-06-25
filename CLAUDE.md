@@ -43,8 +43,7 @@ M8 uses two additional local services that must be running when developing persi
 - `http://localhost:9000` — S3 API (used by the Spaces client)
 - `http://localhost:9001` — MinIO web console (create/inspect buckets)
 
-After first boot, create the `lob-online-dev` bucket via the console at `http://localhost:9001`
-(login: `minioadmin` / `minioadmin`). This matches `SPACES_BUCKET=lob-online-dev` in `.env.example`.
+The `lob-online-dev` bucket is created automatically by `docker compose up -d`.
 
 **Discord webhook sink** — start with `npm run discord:sink`. Starts an unauthenticated Express
 server on `http://localhost:4040` (loopback only) that logs incoming webhook POST bodies and
