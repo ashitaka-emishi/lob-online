@@ -125,9 +125,24 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
 
     const existingSession = getPlayerSession(req);
 
-    // Same-game re-join: enforce faction binding — cannot switch sides after initial join.
+    // Same-game re-join: enforce faction binding via DB-derived side — cannot switch factions (#563).
+    // Uses the token→faction mapping in the DB rather than the session-stored side string.
     if (existingSession?.gameId === id) {
-      if (existingSession.side !== side) {
+      const reJoinRow = getGame(id);
+      if (!reJoinRow) return res.status(404).json({ error: 'Game not found' });
+      // Validate the session token against the DB before deriving faction — mirrors requireSide.js:45.
+      // A stale/rotated sideToken must fail closed even when gameId still matches (#563).
+      if (
+        existingSession.sideToken !== reJoinRow.side_a_token &&
+        existingSession.sideToken !== reJoinRow.side_b_token
+      ) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+      const boundFaction =
+        existingSession.sideToken === reJoinRow.side_a_token
+          ? reJoinRow.side_a_faction
+          : reJoinRow.side_b_faction;
+      if (boundFaction !== side) {
         return res.status(403).json({ error: 'Side already bound — cannot switch factions' });
       }
       await regenerateSession(req);
@@ -135,9 +150,16 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
       return res.json({ id, side });
     }
 
+    // Reject new join if the requested faction is already held by the creator (#562).
+    const joinRow = getGame(id);
+    if (!joinRow) return res.status(404).json({ error: 'Game not found' });
+    if (joinRow.side_a_faction === side) {
+      return res.status(409).json({ error: 'Side already taken' });
+    }
+
     const sideToken = randomUUID();
 
-    // joinGame is atomic — no pre-check needed; typed errors map to 404/409 (#PERF-H1, #ARCH-M2)
+    // joinGame is atomic; typed errors map to 404/409 for remaining edge cases (#PERF-H1, #ARCH-M2)
     joinGame(id, sideToken, side);
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
@@ -205,14 +227,13 @@ const ACTION_ERROR_STATUS = {
 };
 
 // GET /api/v1/games/:id/actions — return valid actions for the authenticated player. (#495)
-// Uses the same session-side sourcing as POST so clients never supply their own side.
+// Uses the same DB-derived req.side as POST so clients never supply their own side.
 router.get('/:id/actions', requireSide, async (req, res) => {
   try {
     const { id } = req.params;
     // 401/404/409/403 all handled by requireSide before we reach here.
-    const player = getPlayerSession(req);
     const state = await loadGame(id);
-    const validActions = getValidActions(state, player.side);
+    const validActions = getValidActions(state, req.side);
     res.json({ validActions });
   } catch (err) {
     if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });
@@ -232,8 +253,7 @@ router.post('/:id/actions', requireSide, async (req, res) => {
       return res.status(400).json({ error: 'action type must be a non-empty string' });
     }
 
-    const player = getPlayerSession(req);
-    const playerSide = player.side; // session-sourced; body playerSide is intentionally ignored
+    const playerSide = req.side; // DB-derived via requireSide; body playerSide is intentionally ignored
 
     const state = await loadGame(id);
 

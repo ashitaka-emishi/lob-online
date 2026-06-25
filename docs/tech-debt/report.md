@@ -1,18 +1,18 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-24 after PR #662._
+_Last updated: 2026-06-25 after PR #663._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                                             |
-| -------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Open debt items                  | 4                                                                                                 |
-| Cumulative debt score (net open) | 13                                                                                                |
-| Current-milestone open debt      | 0 items (all M8)                                                                                  |
-| Highest-risk item                | Security: bind side tokens to factions in DB; derive player.side from token match (#562, score 4) |
-| PRs tracked                      | 453                                                                                               |
+| Metric                           | Value                                                                                           |
+| -------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Open debt items                  | 3                                                                                               |
+| Cumulative debt score (net open) | 8                                                                                               |
+| Current-milestone open debt      | 0 items (all M8)                                                                                |
+| Highest-risk item                | feat(vp): wire updateHexControl into movement/retreat path (SM §5.1 terrain VP) (#634, score 3) |
+| PRs tracked                      | 456                                                                                             |
 
 ---
 
@@ -473,6 +473,9 @@ _Last updated: 2026-06-24 after PR #662._
 | 2026-06-23 | PR #661 (m8-debt-quickwins)                                    | 0                    | -14       | 622                      |
 | 2026-06-24 | PR #662 (m8-auth-guard)                                        | 0                    | -5        | 622                      |
 | 2026-06-24 | PR #662 (m8-auth-guard) (resolved #648)                        | -5                   | —         | 622                      |
+| 2026-06-25 | PR #663 (m8-faction-binding)                                   | 2                    | -5        | 624                      |
+| 2026-06-25 | PR #663 (m8-faction-binding) (resolved #562)                   | -4                   | —         | 624                      |
+| 2026-06-25 | PR #663 (m8-faction-binding) (resolved #563)                   | -3                   | —         | 624                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -480,7 +483,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Moderate risk. Net open debt score is 13 across 4 items, all M8-scoped. PR #662 closed #648 (score 5, unauthenticated DELETE) — the former highest-risk item — bringing the register down from 18 to 13. Remaining debt is concentrated in two categories: (1) security and auth — #562/#563 (token/faction binding, score 4+3) are the highest-risk remaining items and require DB migration, session rewrite, and engine authorization update before M8 multiplayer ships; and (2) deferred wiring — #634 (terrain VP hex-control, score 3) and #640 (MinIO auto-bucket, score 3) are functional gaps that block final VP correctness and M8 dev-infra first-run experience.
+Low risk. Net open debt score is 8 across 3 items, all M8-scoped. PR #663 closed #562 and #563 (score 4+3, faction binding and re-join enforcement) — the two highest-risk remaining security items — dropping the register from 13 to 8. Remaining debt falls into two categories: (1) deferred wiring — #634 (terrain VP hex-control, score 3) is a functional gap where `computeTerrainVP` always returns 0 because `updateHexControl` has no production caller; and (2) dev-infra — #640 (MinIO auto-bucket, score 3) and #664 (new-join side_b_faction guard, score 2) are low-risk hardening items with no correctness impact today.
 
 ---
 
@@ -488,12 +491,11 @@ Moderate risk. Net open debt score is 13 across 4 items, all M8-scoped. PR #662 
 
 _Ordered by score descending (ties: current milestone first, then newest first). Resolved items are removed._
 
-| Score | Milestone | Issue | Title                                                                                | PR Introduced | Assessment                                                                                                                                                                                                                                                                                                                                        |
-| ----- | --------- | ----- | ------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 4     | M8        | #562  | Security: bind side tokens to factions in DB; derive player.side from token match    | PR #561       | DB stores two opaque tokens with no faction binding; `requireSide` validates token matches either slot but never checks which side it belongs to. A player can claim either faction. Intentional single-user testing scaffolding; hard prerequisite for M8 multiplayer — requires DB migration, session rewrite, and engine authorization update. |
-| 3     | M8        | #563  | Security: enforce side binding on re-join — reject side-switch to opponent's faction | PR #561       | Re-join path accepts any `side` from request body while reusing existing token, allowing side impersonation between turns. Acknowledged scaffolding (#349); depends on #562 (token/faction binding) to derive correct side. Deferred to M8 alongside full auth hardening.                                                                         |
-| 3     | M8        | #634  | feat(vp): wire updateHexControl into movement/retreat path (SM §5.1 terrain VP)      | PR #632       | `updateHexControl` and `isVpControlEligible` are implemented but have no production caller. `state.hexControl` stays `{}` and `computeTerrainVP` always returns 0 — the dominant VP component per SM §5.1 contributes nothing to end-game tally. Wiring deferred to M8+ when the MOVE action is implemented.                                      |
-| 3     | M8        | #640  | Auto-create lob-online-dev bucket on docker compose up                               | PR #639       | First-run devs hit `NoSuchBucket` immediately with no documented fix; blocks local M8 persistence development until an `minio/mc` init container or manual step is documented.                                                                                                                                                                    |
+| Score | Milestone | Issue | Title                                                                           | PR Introduced | Assessment                                                                                                                                                                                                                                                                                                   |
+| ----- | --------- | ----- | ------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 3     | M8        | #634  | feat(vp): wire updateHexControl into movement/retreat path (SM §5.1 terrain VP) | PR #632       | `updateHexControl` and `isVpControlEligible` are implemented but have no production caller. `state.hexControl` stays `{}` and `computeTerrainVP` always returns 0 — the dominant VP component per SM §5.1 contributes nothing to end-game tally. Wiring deferred to M8+ when the MOVE action is implemented. |
+| 3     | M8        | #640  | Auto-create lob-online-dev bucket on docker compose up                          | PR #639       | First-run devs hit `NoSuchBucket` immediately with no documented fix; blocks local M8 persistence development until an `minio/mc` init container or manual step is documented.                                                                                                                               |
+| 2     | M8        | #664  | Harden new-join faction check to guard both DB columns, not just side_a_faction | PR #663       | The collision check only tests `side_a_faction === side`. The invariant holds today (creator always holds side_a), but the check is not robust if a future game mode pre-assigns `side_b_faction` before join. Defense-in-depth fix; no correctness risk today.                                              |
 
 ---
 

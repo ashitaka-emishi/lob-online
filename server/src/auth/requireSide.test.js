@@ -12,6 +12,8 @@ const ACTIVE_ROW = {
   status: 'active',
   side_a_token: 'tok-a',
   side_b_token: 'tok-b',
+  side_a_faction: 'union',
+  side_b_faction: 'confederate',
 };
 
 function mockRes() {
@@ -55,6 +57,67 @@ describe('requireSide', () => {
     const next = vi.fn();
     requireSide(req, res, next);
     expect(next).toHaveBeenCalledOnce();
+  });
+
+  // ── req.side derivation (#562) ────────────────────────────────────────────────
+
+  it('sets req.side to side_a_faction when sideToken matches side_a_token (#562)', () => {
+    getGame.mockReturnValue(ACTIVE_ROW);
+    const req = {
+      params: { id: 'game-abc' },
+      session: { gameId: 'game-abc', side: 'union', sideToken: 'tok-a' },
+    };
+    const next = vi.fn();
+    requireSide(req, mockRes(), next);
+    expect(next).toHaveBeenCalledOnce();
+    expect(req.side).toBe('union');
+  });
+
+  it('sets req.side to side_b_faction when sideToken matches side_b_token (#562)', () => {
+    getGame.mockReturnValue(ACTIVE_ROW);
+    const req = {
+      params: { id: 'game-abc' },
+      session: { gameId: 'game-abc', side: 'confederate', sideToken: 'tok-b' },
+    };
+    const next = vi.fn();
+    requireSide(req, mockRes(), next);
+    expect(next).toHaveBeenCalledOnce();
+    expect(req.side).toBe('confederate');
+  });
+
+  it('does not set req.side on 401 (no session)', () => {
+    const req = { params: { id: 'game-abc' }, session: {} };
+    requireSide(req, mockRes(), vi.fn());
+    expect(req.side).toBeUndefined();
+  });
+
+  it('does not set req.side on 403 (wrong game)', () => {
+    const req = {
+      params: { id: 'game-abc' },
+      session: { gameId: 'other-game', side: 'union', sideToken: 'tok-a' },
+    };
+    requireSide(req, mockRes(), vi.fn());
+    expect(req.side).toBeUndefined();
+  });
+
+  it('does not set req.side on 403 (stale token)', () => {
+    getGame.mockReturnValue(ACTIVE_ROW);
+    const req = {
+      params: { id: 'game-abc' },
+      session: { gameId: 'game-abc', side: 'union', sideToken: 'stale' },
+    };
+    requireSide(req, mockRes(), vi.fn());
+    expect(req.side).toBeUndefined();
+  });
+
+  it('does not set req.side on 409 (game not active)', () => {
+    getGame.mockReturnValue({ ...ACTIVE_ROW, status: 'open' });
+    const req = {
+      params: { id: 'game-abc' },
+      session: { gameId: 'game-abc', side: 'union', sideToken: 'tok-a' },
+    };
+    requireSide(req, mockRes(), vi.fn());
+    expect(req.side).toBeUndefined();
   });
 
   it('returns 401 when there is no session — does not hit the DB', () => {

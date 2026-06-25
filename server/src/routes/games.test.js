@@ -145,11 +145,14 @@ beforeEach(() => {
   listGames.mockReturnValue([]);
   // Default: active game with side_a_token matching the most common test player token ('tok').
   // Tests that need a different game state (null, open, different tokens) override this.
+  // side_a_faction/side_b_faction are required for requireSide to populate req.side (#562).
   getGame.mockReturnValue({
     id: TEST_UUID,
     status: 'active',
     side_a_token: 'tok',
     side_b_token: 'tok-b',
+    side_a_faction: 'union',
+    side_b_faction: 'confederate',
   });
   loadGame.mockResolvedValue(MINIMAL_STATE);
   getValidActions.mockReturnValue([]);
@@ -234,6 +237,15 @@ describe('POST /api/v1/games', () => {
 
 describe('POST /api/v1/games/:id/join', () => {
   it('returns 200 with id and requested side when side is union (#407)', async () => {
+    // Override so the union slot is free (creator took confederate in this mock scenario)
+    getGame.mockReturnValue({
+      id: TEST_UUID,
+      status: 'active',
+      side_a_token: 'tok',
+      side_b_token: 'tok-b',
+      side_a_faction: 'confederate',
+      side_b_faction: null,
+    });
     const app = await buildApp();
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(200);
@@ -242,6 +254,15 @@ describe('POST /api/v1/games/:id/join', () => {
   });
 
   it('sets player session with the requested side (#335 #407)', async () => {
+    // Override so the union slot is free (creator took confederate in this mock scenario)
+    getGame.mockReturnValue({
+      id: TEST_UUID,
+      status: 'active',
+      side_a_token: 'tok',
+      side_b_token: 'tok-b',
+      side_a_faction: 'confederate',
+      side_b_faction: null,
+    });
     const app = await buildApp();
     await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(setPlayerSession).toHaveBeenCalledOnce();
@@ -280,7 +301,10 @@ describe('POST /api/v1/games/:id/join', () => {
       throw new GameNotFoundError(TEST_UUID);
     });
     const app = await buildApp();
-    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
+    // side: 'confederate' passes the duplicate-faction check (side_a_faction is 'union')
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/join`)
+      .send({ side: 'confederate' });
     expect(res.status).toBe(404);
   });
 
@@ -289,7 +313,9 @@ describe('POST /api/v1/games/:id/join', () => {
       throw new GameNotOpenError(TEST_UUID);
     });
     const app = await buildApp();
-    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/join`)
+      .send({ side: 'confederate' });
     expect(res.status).toBe(409);
     expect(res.body.error).toBe('Game is already full');
   });
@@ -299,7 +325,9 @@ describe('POST /api/v1/games/:id/join', () => {
       throw new InvalidTokenError('sideBToken', 'bad');
     });
     const app = await buildApp();
-    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/join`)
+      .send({ side: 'confederate' });
     expect(res.status).toBe(400);
   });
 
@@ -308,7 +336,9 @@ describe('POST /api/v1/games/:id/join', () => {
       throw new Error('unexpected');
     });
     const app = await buildApp();
-    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/join`)
+      .send({ side: 'confederate' });
     expect(res.status).toBe(500);
     expect(res.body.error).toBe('Failed to join game');
   });
@@ -319,12 +349,13 @@ describe('POST /api/v1/games/:id/join', () => {
     expect(res.status).toBe(400);
   });
 
-  // Faction binding enforced on re-join — side-switching is forbidden
+  // Faction binding enforced on re-join via DB-derived side (#563)
   it('returns 403 when session already holds this game but requests a different side', async () => {
+    // sideToken 'tok-b' matches side_b_token → DB-derived faction = 'confederate'; request = 'union' → 403
     getPlayerSession.mockReturnValue({
       gameId: TEST_UUID,
       side: 'confederate',
-      sideToken: 'tok-1',
+      sideToken: 'tok-b',
     });
     const app = await buildApp();
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
@@ -335,17 +366,27 @@ describe('POST /api/v1/games/:id/join', () => {
   });
 
   it('returns 200 and keeps same side when session matches and same side requested (#340)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok-2' });
+    // sideToken 'tok' matches side_a_token → DB-derived faction = 'union'; request = 'union' → ok
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
     const app = await buildApp();
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(200);
     expect(res.body.side).toBe('union');
     expect(joinGame).not.toHaveBeenCalled();
     // Security: re-join must reuse the existing sideToken, not mint a fresh one
-    expect(setPlayerSession).toHaveBeenCalledWith(expect.anything(), TEST_UUID, 'union', 'tok-2');
+    expect(setPlayerSession).toHaveBeenCalledWith(expect.anything(), TEST_UUID, 'union', 'tok');
   });
 
   it('joins successfully as union when caller has no session (#340 #407)', async () => {
+    // Override so the union slot is free (creator took confederate in this mock scenario)
+    getGame.mockReturnValue({
+      id: TEST_UUID,
+      status: 'active',
+      side_a_token: 'tok',
+      side_b_token: 'tok-b',
+      side_a_faction: 'confederate',
+      side_b_faction: null,
+    });
     getPlayerSession.mockReturnValue(null);
     const app = await buildApp();
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
@@ -355,6 +396,15 @@ describe('POST /api/v1/games/:id/join', () => {
   });
 
   it('joins successfully as union when caller session is for a different game (#340 #407)', async () => {
+    // Override so the union slot is free (creator took confederate in this mock scenario)
+    getGame.mockReturnValue({
+      id: TEST_UUID,
+      status: 'active',
+      side_a_token: 'tok',
+      side_b_token: 'tok-b',
+      side_a_faction: 'confederate',
+      side_b_faction: null,
+    });
     const OTHER_UUID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
     getPlayerSession.mockReturnValue({
       gameId: OTHER_UUID,
@@ -366,6 +416,90 @@ describe('POST /api/v1/games/:id/join', () => {
     expect(res.status).toBe(200);
     expect(res.body.side).toBe('union');
     expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String), expect.any(String));
+  });
+
+  // ── Join hardening: duplicate-faction + DB-bound re-join (#562 #563) ──────────
+
+  it('returns 409 when requested side is already held by the creator (new join) (#562)', async () => {
+    // side_a_faction is 'union' (default mock); second player tries to also join as 'union'
+    getPlayerSession.mockReturnValue(null);
+    const app = await buildApp();
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe('Side already taken');
+    expect(joinGame).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 on new join when game does not exist (#562)', async () => {
+    getPlayerSession.mockReturnValue(null);
+    getGame.mockReturnValue(null);
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/join`)
+      .send({ side: 'confederate' });
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Game not found');
+    expect(joinGame).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when re-join requested side does not match DB-bound faction (#563)', async () => {
+    // sideToken 'tok' maps to side_a_faction 'union'; player tries to switch to 'confederate'
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/join`)
+      .send({ side: 'confederate' });
+    expect(res.status).toBe(403);
+    expect(res.body.error).toMatch(/side already bound/i);
+    expect(joinGame).not.toHaveBeenCalled();
+  });
+
+  it('returns 200 when re-join requested side matches DB-bound faction (#563)', async () => {
+    // sideToken 'tok-b' maps to side_b_faction 'confederate'; player re-joins as 'confederate' — ok
+    getPlayerSession.mockReturnValue({
+      gameId: TEST_UUID,
+      side: 'confederate',
+      sideToken: 'tok-b',
+    });
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/join`)
+      .send({ side: 'confederate' });
+    expect(res.status).toBe(200);
+    expect(res.body.side).toBe('confederate');
+    expect(joinGame).not.toHaveBeenCalled();
+    expect(setPlayerSession).toHaveBeenCalledWith(
+      expect.anything(),
+      TEST_UUID,
+      'confederate',
+      'tok-b'
+    );
+  });
+
+  it('returns 404 on re-join when game row no longer exists (#563)', async () => {
+    // Session exists for this game but the game was deleted between re-join attempts
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
+    getGame.mockReturnValue(null);
+    const app = await buildApp();
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Game not found');
+    expect(joinGame).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 on re-join when session sideToken does not match either DB column (#563)', async () => {
+    // Valid gameId but stale/rotated sideToken — must fail closed (mirrors requireSide.js:45)
+    getPlayerSession.mockReturnValue({
+      gameId: TEST_UUID,
+      side: 'union',
+      sideToken: 'stale-token',
+    });
+    const app = await buildApp();
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
+    expect(res.status).toBe(403);
+    expect(res.body.error).toBe('Forbidden');
+    expect(joinGame).not.toHaveBeenCalled();
+    expect(setPlayerSession).not.toHaveBeenCalled();
   });
 });
 
@@ -434,6 +568,8 @@ describe('GET /api/v1/games/:id', () => {
       status: 'active',
       side_a_token: 'tok-1',
       side_b_token: 'tok-b',
+      side_a_faction: 'union',
+      side_b_faction: 'confederate',
     });
     loadGame.mockResolvedValue(MINIMAL_STATE);
     const app = await buildApp();
@@ -667,13 +803,18 @@ describe('POST /api/v1/games/:id/actions', () => {
     );
   });
 
-  it('sources playerSide from session, never from request body (#387)', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'confederate', sideToken: 'tok' });
+  it('sources playerSide from DB-derived req.side, never from request body (#387 #562)', async () => {
+    // sideToken 'tok-b' matches side_b_token → req.side = side_b_faction = 'confederate'.
+    // Body sends playerSide: 'union' — dispatch must receive 'confederate' (DB-derived).
+    getPlayerSession.mockReturnValue({
+      gameId: TEST_UUID,
+      side: 'confederate',
+      sideToken: 'tok-b',
+    });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockReturnValue(NEXT_STATE);
     saveGame.mockResolvedValue(NEXT_STATE);
     const app = await buildApp();
-    // Caller attempts to spoof playerSide in the body — must be ignored
     await request(app)
       .post(`/api/v1/games/${TEST_UUID}/actions`)
       .send({ type: 'END_PHASE', payload: null, playerSide: 'union', expectedVersion: 3 });
@@ -920,8 +1061,13 @@ describe('GET /api/v1/games/:id/actions (#495)', () => {
     expect(res.body.validActions).toEqual([{ type: 'END_PHASE', payload: null }]);
   });
 
-  it('passes player side from session to getValidActions', async () => {
-    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'confederate', sideToken: 'tok' });
+  it('passes DB-derived req.side to getValidActions (#562)', async () => {
+    // sideToken 'tok-b' matches side_b_token → req.side = side_b_faction = 'confederate'.
+    getPlayerSession.mockReturnValue({
+      gameId: TEST_UUID,
+      side: 'confederate',
+      sideToken: 'tok-b',
+    });
     loadGame.mockResolvedValue(MINIMAL_STATE);
     getValidActions.mockReturnValue([]);
     const app = await buildApp();
@@ -1056,6 +1202,8 @@ describe('Session guard — requireSameGame (#553)', () => {
       status: 'active',
       side_a_token: 'tok',
       side_b_token: 'tok-b',
+      side_a_faction: 'union',
+      side_b_faction: 'confederate',
       discord_webhook: 'https://discord.com/api/webhooks/123/abc',
     });
     loadGame.mockResolvedValue(ACTIVE_STATE);
@@ -1080,6 +1228,8 @@ describe('Session guard — requireSameGame (#553)', () => {
       status: 'active',
       side_a_token: 'tok',
       side_b_token: 'tok-b',
+      side_a_faction: 'union',
+      side_b_faction: 'confederate',
       discord_webhook: null,
     });
     loadGame.mockResolvedValue(ACTIVE_STATE);
@@ -1100,6 +1250,8 @@ describe('Session guard — requireSameGame (#553)', () => {
       status: 'active',
       side_a_token: 'tok',
       side_b_token: 'tok-b',
+      side_a_faction: 'union',
+      side_b_faction: 'confederate',
       discord_webhook: 'https://discord.com/api/webhooks/123/abc',
     });
     loadGame.mockResolvedValue(ACTIVE_STATE);
