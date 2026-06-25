@@ -1,35 +1,36 @@
-# Implementation Plan: M8 Auth Guard — requireSide on DELETE Route
+# Implementation Plan: M8 Auth Guard — Gate DELETE Route Behind MAP_EDITOR_ENABLED
 
 **Track ID:** m8-auth-guard_20260623
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-23
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
-Add `requireSide` middleware to `DELETE /api/v1/games/:id`. The code change is a single line;
-the bulk of this track is updating tests to supply auth where they previously hit an open
-endpoint. Checkpointed mode because this is an auth surface.
+Gate `DELETE /api/v1/games/:id` behind `MAP_EDITOR_ENABLED=true`. The endpoint is dev/test-only;
+it should be invisible in production (returns 404 when the flag is off), consistent with the
+pattern used throughout the codebase (`moduleData.js`, `mapEditor.js`). The original plan
+proposed adding `requireSide` auth, but during implementation it was clarified that DELETE is
+a dev utility with no player-auth semantics — disabling it in production is the correct fix.
 
 ## Interaction Mode
 
-**Mode:** Checkpointed
-**Human control points:** After Task 1.1 (code change) before Task 2 (test changes) — confirm
-the middleware is wired correctly before updating tests.
+**Mode:** Autonomous
+**Human control points:** None beyond phase approvals
 
 ## Risk Classification
 
-**Risk:** High
-**Reason:** Auth surface — adds access control to a previously open endpoint.
+**Risk:** Medium
+**Reason:** Modifies route-level access control; no auth surface added.
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -37,65 +38,30 @@ the middleware is wired correctly before updating tests.
 
 ## Completion Contract
 
-- [ ] Closes #648
-- [ ] All acceptance criteria in spec.md met
-- [ ] Unauthenticated DELETE returns 401; wrong-game token returns 403
-- [ ] `npm run quality:strict` passes
-- [ ] Ready for `/team-review`
+- [x] `DELETE /api/v1/games/:id` returns 404 when `MAP_EDITOR_ENABLED` is not `'true'`
+- [x] Existing DELETE tests pass when flag is set
+- [x] New test: endpoint disabled when flag is absent
+- [x] `npm run quality:strict` passes
+- [x] Ready for `/team-review`
 
 ---
 
-## Phase 1: Wire requireSide on DELETE Route
+## Phase 1: Gate DELETE Route + Update Tests
 
 ### Tasks
 
-- [ ] Task 1.1: In `server/src/routes/games.js:162`, change:
-      `js
-router.delete('/:id', async (req, res) => {
-`
-      to:
-      `js
-router.delete('/:id', requireSide, async (req, res) => {
-`
-      No other logic changes — `requireSide` already handles 401/403/404.
-- [ ] Task 1.2: Inside the handler body, replace any `getGame(id)` call used only to verify
-      existence with `req.game` (set by `requireSide`), consistent with how the actions route
-      works. If the handler currently re-fetches, eliminate the redundant fetch.
+- [x] Task 1.1: Add `MAP_EDITOR_ENABLED` guard to `DELETE /api/v1/games/:id` in `games.js`,
+      returning 404 when flag is off. Restore `getGame` existence check inside the enabled path.
+- [x] Task 1.2: Update `games.test.js` DELETE block — wrap existing tests in
+      `describe('when MAP_EDITOR_ENABLED=true')` with `beforeEach`/`afterEach` to set the flag.
+      Add top-level test: returns 404 when flag is absent and `deleteGame` is not called.
 
 ### Verification
 
-- [ ] **HUMAN CONTROL POINT:** Review the two-line diff before proceeding to test changes.
-- [ ] `npm run lint` passes on the changed file
+- [x] `npm run quality:strict` passes
+- [x] All DELETE tests pass; new disabled-in-production test passes
 
 ---
 
-## Phase 2: Update Tests
-
-### Tasks
-
-- [ ] Task 2.1: In `server/src/routes/games.test.js`, locate the DELETE route test block.
-      Add auth setup: create a game, obtain a `sideToken` via the join route, set it as a
-      session cookie matching the pattern used in `POST /:id/actions` tests.
-- [ ] Task 2.2: Add test case: `DELETE /:id` with no session cookie → 401
-- [ ] Task 2.3: Add test case: `DELETE /:id` with a valid token for a _different_ game → 403
-- [ ] Task 2.4: Update any existing DELETE success test to include a valid sideToken in the
-      session so it continues to pass.
-- [ ] Task 2.5: Run `npm run test` — all existing tests plus new auth cases must pass.
-
-### Verification
-
-- [ ] `npm run test` passes with 3 new DELETE auth assertions (401, 403, 200-with-auth)
-- [ ] No existing tests broken
-
----
-
-## Final Verification
-
-- [ ] `npm run quality:strict` passes
-- [ ] `router.delete` line in games.js includes `requireSide` as second argument
-- [ ] No unexpected warnings in test output
-- [ ] Ready for `/team-review`
-
----
-
-_Generated by Conductor on 2026-06-23._
+_Generated by Conductor on 2026-06-23. Plan revised during implementation: requireSide approach
+replaced with MAP_EDITOR_ENABLED flag after clarification that DELETE is a dev-only utility._
