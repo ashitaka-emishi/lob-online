@@ -1,18 +1,19 @@
 {
   "id": "m8-auth-guard_20260623",
-  "title": "M8 Auth Guard — requireSide on DELETE Route",
+  "title": "M8 Auth Guard — Gate DELETE Route Behind MAP_EDITOR_ENABLED",
   "type": "chore",
-  "status": "pending",
+  "status": "complete",
   "created": "2026-06-23T00:00:00Z",
-  "updated": "2026-06-23T00:00:00Z",
+  "updated": "2026-06-24T00:00:00Z",
   "closesIssues": [648],
   "debtScoreClosed": 5,
   "phases": {
-    "total": 2,
-    "completed": 0
+    "total": 1,
+    "completed": 1
   },
   "tasks": {
-    "total": 7,
-    "completed": 0
-  }
+    "total": 2,
+    "completed": 2
+  },
+  "commits": ["6756e2f: feat(security): gate DELETE /games/:id behind MAP_EDITOR_ENABLED flag"]
 }
