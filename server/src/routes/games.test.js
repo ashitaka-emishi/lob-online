@@ -475,6 +475,32 @@ describe('POST /api/v1/games/:id/join', () => {
       'tok-b'
     );
   });
+
+  it('returns 404 on re-join when game row no longer exists (#563)', async () => {
+    // Session exists for this game but the game was deleted between re-join attempts
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
+    getGame.mockReturnValue(null);
+    const app = await buildApp();
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Game not found');
+    expect(joinGame).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 on re-join when session sideToken does not match either DB column (#563)', async () => {
+    // Valid gameId but stale/rotated sideToken — must fail closed (mirrors requireSide.js:45)
+    getPlayerSession.mockReturnValue({
+      gameId: TEST_UUID,
+      side: 'union',
+      sideToken: 'stale-token',
+    });
+    const app = await buildApp();
+    const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
+    expect(res.status).toBe(403);
+    expect(res.body.error).toBe('Forbidden');
+    expect(joinGame).not.toHaveBeenCalled();
+    expect(setPlayerSession).not.toHaveBeenCalled();
+  });
 });
 
 describe('GET /api/v1/games/me', () => {

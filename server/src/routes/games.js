@@ -130,6 +130,14 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
     if (existingSession?.gameId === id) {
       const reJoinRow = getGame(id);
       if (!reJoinRow) return res.status(404).json({ error: 'Game not found' });
+      // Validate the session token against the DB before deriving faction — mirrors requireSide.js:45.
+      // A stale/rotated sideToken must fail closed even when gameId still matches (#563).
+      if (
+        existingSession.sideToken !== reJoinRow.side_a_token &&
+        existingSession.sideToken !== reJoinRow.side_b_token
+      ) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
       const boundFaction =
         existingSession.sideToken === reJoinRow.side_a_token
           ? reJoinRow.side_a_faction
