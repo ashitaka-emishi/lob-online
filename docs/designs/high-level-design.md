@@ -82,7 +82,17 @@
 > `updateHexControl`), game-over detection. `VpPanel.vue` sidebar and game-over overlay added
 > to `GameView`. A full 45-turn South Mountain game can now be played to a scored outcome.
 >
-> **In progress:** M7 is sealed. M8 (production persistence + multiplayer) is starting.
+> **M8 — Production Persistence + Multiplayer (complete, code phases):** MinIO Docker Compose
+> local dev infrastructure; Discord webhook sink dev script; DigitalOcean Spaces store for
+> game-state JSON + history; SQLite v0→v1 migration (faction + webhook columns); `requireSide`
+> middleware (DB-token validation); optimistic concurrency on save; faction binding on join/re-join
+> (DB-derived side, duplicate-faction 409, stale-token 403); Discord fire-and-forget webhook on
+> each game action (`server/src/notifications/discord.js`); hex-control VP wiring (`updateHexControl`
+> in `engine/vp.js`, `hexControl` in `GameStateSchema`); Terraform IaC for DigitalOcean provisioning
+> (`infra/`); MinIO healthcheck + `createbuckets` init container (auto-creates `lob-online-dev` bucket).
+> DigitalOcean Droplet provisioning deferred to next milestone.
+>
+> **In progress:** M8 code phases complete. DO Droplet provisioning deferred.
 > South Mountain scenario data digitization ongoing (map hexes, counter linkages).
 >
 > Sections describing completed work are accurate to the implementation. Sections describing
