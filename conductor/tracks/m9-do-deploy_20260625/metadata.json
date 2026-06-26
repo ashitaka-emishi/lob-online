@@ -1,0 +1,11 @@
+{
+  "id": "m9-do-deploy_20260625",
+  "title": "M9 DO Deployment — Provision Droplet and Wire deploy.yml (#653)",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-06-25T00:00:00Z",
+  "updated": "2026-06-25T00:00:00Z",
+  "closesIssues": [653],
+  "phases": { "total": 2, "completed": 0 },
+  "tasks": { "total": 5, "completed": 0 }
+}

@@ -598,6 +598,38 @@ real-time updates are already wired from M5; M8 completes the production infrast
 
 ---
 
+### M9 — Deployment + Completeness
+
+**Rule sections:** SM §5.1 (terrain VP via MOVE action hex-control wiring).
+
+**Goal:** Close all loose ends before South Mountain goes live — ship to production,
+implement the MOVE action, add real player identity via Discord OAuth, and complete
+the South Mountain map data.
+
+**Deliverables:**
+
+- **DO deployment** — Provision DigitalOcean Droplet (Ubuntu 22.04, Node.js 20, PM2,
+  nginx); wire three GitHub secrets; activate `deploy.yml` CI/CD pipeline (#653)
+- **MOVE action** — `server/src/engine/actions/move.js`; `MOVE` in `getValidActions()`
+  during Activity phase; `updateHexControl` wired on move (#634)
+- **Discord OAuth** — `passport-discord` strategy; `/auth/discord` + callback + logout
+  - `/auth/me` routes; `users` SQLite table; `side_a_user_id`/`side_b_user_id` on games;
+    client login flow; lobby auth guard (#668, #410)
+- **Map completion** — All 841 South Mountain hexes digitized (terrain ≠ `"unknown"`);
+  road network, stream/stone wall hexsides, and ford/bridge features complete (#669)
+- **Debt sprint** — Close 7 remaining open tech-debt items (#627 #628 #629 #650 #651
+  #652 #664)
+
+**Acceptance criteria:**
+
+- `deploy.yml` runs green; app live at Droplet IP
+- MOVE action handler passes `npm run quality:strict`; hex control updated on move
+- Discord OAuth login/logout cycle works end-to-end; lobby inaccessible without login
+- `npm run validate-data` 0 unknown-terrain warnings
+- All open M9 debt issues closed
+
+---
+
 ## 3. Backend Architecture
 
 ### Route Hierarchy

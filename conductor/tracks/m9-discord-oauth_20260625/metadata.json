@@ -1,0 +1,11 @@
+{
+  "id": "m9-discord-oauth_20260625",
+  "title": "M9 Discord OAuth — Identity Layer (#668)",
+  "type": "feature",
+  "status": "pending",
+  "created": "2026-06-25T00:00:00Z",
+  "updated": "2026-06-25T00:00:00Z",
+  "closesIssues": [668, 410],
+  "phases": { "total": 3, "completed": 0 },
+  "tasks": { "total": 10, "completed": 0 }
+}
