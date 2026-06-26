@@ -3,7 +3,7 @@
 **Track ID:** m8-notifications_20260622
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-22
-**Status:** [~] In Progress (Phase 3 manual/pending)
+**Status:** [x] Complete (Phase 3 DO provisioning deferred to next milestone)
 
 ## Overview
 
@@ -25,12 +25,12 @@ No auth or persistence changes.
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -38,11 +38,11 @@ No auth or persistence changes.
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated if any debt was accepted
-- [ ] Ready for `/team-review`
+- [x] All code tasks complete (Phases 1 & 2)
+- [x] All acceptance criteria in spec.md met for code phases
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated if any debt was accepted
+- [x] Phase 3 (DigitalOcean Droplet provisioning) deferred to next milestone — no code changes required
 
 ---
 
@@ -92,14 +92,15 @@ Wire hex-control tracking into the MOVE action for SM §5.1 terrain VP scoring (
 
 ### Verification
 
-- [ ] `npm run test` fully green
-- [ ] `npm run quality:strict` passes
+- [x] `npm run test` fully green
+- [x] `npm run quality:strict` passes
 
 ---
 
-## Phase 3: DigitalOcean Droplet Provisioning (Manual)
+## Phase 3: DigitalOcean Droplet Provisioning (Manual) — DEFERRED TO NEXT MILESTONE
 
 One-time manual task to activate the already-scaffolded `deploy.yml` workflow.
+Deferred: DO provisioning will happen in a future milestone, not M8.
 
 ### Tasks
 
