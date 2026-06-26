@@ -1,0 +1,11 @@
+{
+  "id": "m9-move-action_20260625",
+  "title": "M9 MOVE Action — Unit Movement Handler + Hex Control Wiring (#634)",
+  "type": "feature",
+  "status": "pending",
+  "created": "2026-06-25T00:00:00Z",
+  "updated": "2026-06-25T00:00:00Z",
+  "closesIssues": [634],
+  "phases": { "total": 3, "completed": 0 },
+  "tasks": { "total": 9, "completed": 0 }
+}

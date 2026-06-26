@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **lob-online** is an online game implementation of the _Line of Battle v2.0_ wargame system (Multi-Man Publishing). The first game being implemented is _South Mountain_ (RSS #4), chosen because it is a smaller, more tractable battle.
 
-**Current state:** M8 code-complete (DO deployment deferred). M1–M7 delivered rules engine, dev tools, game state, turn loop, full combat/morale/VP pipeline, and victory detection. M8 added: Spaces persistence store, SQLite faction columns, `requireSide` middleware, DB-derived faction binding, Discord fire-and-forget webhook notifications, hex-control VP wiring, Terraform IaC, and MinIO auto-init via Docker Compose. DigitalOcean Droplet provisioning is the one remaining M8 item, deferred to the next milestone. See `docs/designs/high-level-design.md` §2 for the full milestone history.
+**Current state:** M8 complete (code phases). Starting M9 — Deployment + Completeness. M9 tracks: DO Droplet provisioning, MOVE action + hex-control wiring, Discord OAuth identity, South Mountain map digitization, and remaining debt sprint. See `docs/designs/high-level-design.md` §2 for the full milestone history.
 
 ## Reference Library
 

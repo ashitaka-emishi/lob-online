@@ -152,3 +152,9 @@
 | [x] | m8-auth-guard_20260623 | M8 Auth Guard — requireSide on DELETE /api/v1/games/:id (#648) | 2026-06-23 | 2026-06-24 |
 | [x] | m8-minio-init_20260623 | M8 MinIO Init — Auto-Create Dev Bucket (#640 #642) | 2026-06-23 | 2026-06-25 |
 | [x] | m8-faction-binding_20260624 | M8 Faction Binding — Derive Player Side from Token, Enforce on Join/Re-Join (#562 #563) | 2026-06-24 | 2026-06-24 |
+
+| [ ] | m9-debt-sprint_20260625 | M9 Debt Sprint — Remaining Open Items (#627 #628 #629 #650 #651 #652 #664) | 2026-06-25 | 2026-06-25 |
+| [ ] | m9-do-deploy_20260625 | M9 DO Deployment — Provision Droplet and Wire deploy.yml (#653) | 2026-06-25 | 2026-06-25 |
+| [ ] | m9-move-action_20260625 | M9 MOVE Action — Unit Movement Handler + Hex Control Wiring (#634) | 2026-06-25 | 2026-06-25 |
+| [ ] | m9-discord-oauth_20260625 | M9 Discord OAuth — Identity Layer (#668 #410) | 2026-06-25 | 2026-06-25 |
+| [ ] | m9-map-completion_20260625 | M9 Map Completion — South Mountain Hex Digitization (#669) | 2026-06-25 | 2026-06-25 |

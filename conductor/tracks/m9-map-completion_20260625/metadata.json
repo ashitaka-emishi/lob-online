@@ -1,0 +1,11 @@
+{
+  "id": "m9-map-completion_20260625",
+  "title": "M9 Map Completion — South Mountain Hex Digitization (#669)",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-06-25T00:00:00Z",
+  "updated": "2026-06-25T00:00:00Z",
+  "closesIssues": [669],
+  "phases": { "total": 2, "completed": 0 },
+  "tasks": { "total": 4, "completed": 0 }
+}
