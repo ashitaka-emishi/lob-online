@@ -588,34 +588,46 @@ describe('handleFireCombat', () => {
     });
 
     it('CBF IS set when artillery fires on artillery with SP loss (LOB §5.8)', () => {
-      // Build an arty-vs-arty scenario: both sides have artillery units with gunType
-      const _artyOob = {
+      // Real arty-vs-arty fixture: give the CSA defender unit (c1) a gunType so findOobUnit
+      // returns an artillery entry — triggering the CBF marker path in handleFireCombat (#629).
+      const artyDefenderOob = {
         ...MOCK_OOB,
-        union: {
-          ...MOCK_OOB.union,
-          corps: [],
-          cavalryDivision: { id: 'cav-div', name: 'Cav', successionIds: [], brigades: [] },
-        },
         confederate: {
           ...MOCK_OOB.confederate,
-          divisions: [],
-          independent: { cavalry: [], artillery: [] },
-          reserveArtillery: {
-            batteries: [
-              { id: 'csa-arty', name: 'CSA Battery', gunType: 'H', strengthPoints: 4, morale: 'D' },
-            ],
-          },
-          independentBrigades: [],
+          divisions: [
+            {
+              ...MOCK_OOB.confederate.divisions[0],
+              brigades: [
+                {
+                  ...MOCK_OOB.confederate.divisions[0].brigades[0],
+                  regiments: [
+                    {
+                      id: 'c1',
+                      name: '1st CSA Battery',
+                      gunType: 'H', // artillery defender → CBF must be set
+                      strengthPoints: 5,
+                      morale: 'B',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
         },
       };
-      // Add union arty unit to a brigade-like structure accessible via findOobUnit
-      // For this test we use a simpler check: ensure CBF is set when weaponClass=artillery
-      // and the defender oob unit has gunType
-      // Since the existing fixture doesn't have arty units in the unit map with matching OOB,
-      // we verify the rule via the production code path by checking the condition logic.
-      // The functional assertion: infantry-fires-infantry → no CBF (verified above).
-      // Full arty-vs-arty path is covered by the production code guard (weaponClass === 'artillery' && gunType).
-      expect(true).toBe(true); // structural placeholder — see next test
+      // 4 SP attacker, range 1 → column '4-5', shift 0. Combat table at roll 8 (4+4): value 1
+      // (first SP-loss row for '4-5') → spLoss=1 > 0, weaponClass=artillery, gunType present → CBF.
+      const artyVsArtyAction = {
+        ...FIRE_ACTION,
+        payload: {
+          ...FIRE_ACTION.payload,
+          weaponClass: 'artillery',
+          weaponType: 'H',
+          dice: [4, 4], // roll 8 → column '4-5' produces spLoss=1 (first SP-loss result)
+        },
+      };
+      const result = handleFireCombat(BASE_STATE, artyVsArtyAction, { oob: artyDefenderOob });
+      expect(result.units.c1.cbfMarker).toBe(true);
     });
 
     it('CBF is NOT set when artillery fires on infantry (LOB §5.8)', () => {

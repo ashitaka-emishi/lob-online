@@ -125,21 +125,23 @@ export function applyMoraleToHex(state, targetHex, mods, diceRoll, getRating) {
 // ─── Morale cascade ───────────────────────────────────────────────────────────
 
 /**
- * Cascade morale upward: if all units in a brigade route, trigger a morale check
- * for the next level of the OOB hierarchy per LOB §6.3.
+ * Cascade morale: if all units in a brigade route, trigger a pending morale check
+ * for co-occupants in the triggering hex.
  *
- * LOB §6.3 — cascade travels the OOB brigade hierarchy, NOT hex co-occupants.
- * A brigade routs when all its on-board units are routed. When that happens,
- * set a pending moraleCheck for the brigade so the owning player must resolve it.
+ * Designer extension — no LOB v2.0 or SM source document defines a morale cascade mechanic.
+ * LOB §6.3 is the Retreat rule, not cascade. Brigade-scoped detection is used to correctly
+ * identify which brigade triggered the cascade; resolution applies to hex co-occupants.
+ * The closest analog in the rules is SM §7.1 Confederate Random Event #4 ("Brigade Morale"),
+ * but that is a random event, not an automatic cascade. See issue #627.
  *
  * @param {object} state - GameState after morale check applied
- * @param {string} targetHex - hex where morale check occurred (used to find the routing unit)
+ * @param {string} targetHex - hex where morale check occurred (used to find routing units)
  * @param {object|null} oob - loaded OOB data for brigade lookup
  * @returns {object} state — possibly with pendingResolution for cascade check
  */
 export function cascadeMorale(state, targetHex, oob = null) {
-  // LOB §6.3 — cascade travels brigade hierarchy, not hex scope.
-  // Gather all on-board units in the target hex to find which brigade(s) to check.
+  // Designer extension — cascade detection is brigade-scoped: gather hex units only to
+  // identify which brigade(s) to check; the brigade check itself spans all on-board members.
   const hexUnits = Object.values(state.units).filter((u) => u.isOnBoard && u.hex === targetHex);
   if (hexUnits.length === 0) return state;
 
@@ -159,7 +161,7 @@ export function cascadeMorale(state, targetHex, oob = null) {
             hex: targetHex,
             cascade: true,
             reason:
-              'all units in hex routed — degraded hex-scope heuristic (not a faithful §6.3 cascade; OOB unavailable #606)',
+              'all units in hex routed — degraded hex-scope heuristic (OOB unavailable; #606)',
           },
         },
       };
@@ -167,14 +169,14 @@ export function cascadeMorale(state, targetHex, oob = null) {
     return state;
   }
 
-  // LOB §6.3 — check each brigade represented by routed hex units.
+  // Designer extension — check each brigade represented by routed hex units.
   // When multiple brigades fully rout simultaneously, return cascade for the first one found
   // and let the next RESOLVE_MORALE cycle handle subsequent cascades (#605).
   const checkedBrigades = new Set();
   for (const unit of hexUnits) {
     if (unit.moraleState !== 'routed') continue;
 
-    // LOB §6.3 — find the brigade for this unit via OOB hierarchy.
+    // Designer extension — find the brigade for this unit via OOB hierarchy.
     // If the unit is not in any brigade (corps-level unit, battery), skip it — do not degrade.
     const brigInfo = findBrigadeForUnit(oob, unit.id);
     if (!brigInfo) continue;
@@ -182,7 +184,7 @@ export function cascadeMorale(state, targetHex, oob = null) {
     if (checkedBrigades.has(brigInfo.brigadeId)) continue;
     checkedBrigades.add(brigInfo.brigadeId);
 
-    // LOB §6.3 — brigade cascades when ALL its on-board members are routed
+    // Designer extension — brigade cascades when ALL its on-board members are routed
     const brigadeOnBoardUnits = brigInfo.unitIds.filter(
       (id) => state.units[id]?.isOnBoard ?? false
     );
@@ -199,7 +201,7 @@ export function cascadeMorale(state, targetHex, oob = null) {
             brigadeId: brigInfo.brigadeId,
             hex: targetHex,
             cascade: true,
-            reason: `brigade ${brigInfo.brigadeId} — all units routed (LOB §6.3)`,
+            reason: `brigade ${brigInfo.brigadeId} — all units routed (designer extension; see #627)`,
           },
         },
       };
@@ -280,7 +282,7 @@ export function applyRetreatsAndSpLosses(
  * @param {number} diceRoll - raw 2d6 result for the morale check
  * @param {object} mods - morale modifier flags
  * @param {Function} getRating - (unitId) => moraleRating from OOB
- * @param {object|null} oob - loaded OOB data for brigade cascade lookup (LOB §6.3)
+ * @param {object|null} oob - loaded OOB data for brigade cascade lookup (see cascadeMorale)
  * @param {object|null} mapData - loaded map data for retreat path computation (LOB §6.1)
  * @returns {object} new state with morale applied and pendingResolution cleared or updated
  */
@@ -312,7 +314,7 @@ export function resolvePendingMorale(state, diceRoll, mods, getRating, oob = nul
   const combatHex = pending.context.attackerHex ?? null;
   const afterEffects = applyRetreatsAndSpLosses(afterMorale, combatHex, unitEffects, oob, mapData);
 
-  // LOB §6.3 — check for cascade via brigade hierarchy (not hex scope)
+  // Designer extension — check for cascade via brigade hierarchy (see cascadeMorale, issue #627)
   const afterCascade = cascadeMorale(afterEffects, defenderHex, oob);
 
   // If cascade triggered a new pending resolution, preserve it; otherwise clear

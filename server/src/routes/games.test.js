@@ -287,6 +287,15 @@ describe('POST /api/v1/games/:id/join', () => {
   });
 
   it('returns 200 with confederate side when side is confederate (#407)', async () => {
+    // side_b_faction must be null for the join to pass the both-column faction guard (#664)
+    getGame.mockReturnValue({
+      id: TEST_UUID,
+      status: 'active',
+      side_a_token: 'tok',
+      side_b_token: 'tok-b',
+      side_a_faction: 'union',
+      side_b_faction: null,
+    });
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/join`)
@@ -296,12 +305,31 @@ describe('POST /api/v1/games/:id/join', () => {
     expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String), expect.any(String));
   });
 
+  it('returns 409 when side_b_faction already matches the requested faction (#664)', async () => {
+    // Default mock has side_b_faction: 'confederate' — joining as confederate must now be 409
+    const app = await buildApp();
+    const res = await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/join`)
+      .send({ side: 'confederate' });
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe('Side already taken');
+    expect(joinGame).not.toHaveBeenCalled();
+  });
+
   it('returns 404 when joinGame throws GameNotFoundError (#PERF-H1)', async () => {
     joinGame.mockImplementation(() => {
       throw new GameNotFoundError(TEST_UUID);
     });
+    // Open confederate slot so the faction guard passes (#664)
+    getGame.mockReturnValue({
+      id: TEST_UUID,
+      status: 'active',
+      side_a_token: 'tok',
+      side_b_token: 'tok-b',
+      side_a_faction: 'union',
+      side_b_faction: null,
+    });
     const app = await buildApp();
-    // side: 'confederate' passes the duplicate-faction check (side_a_faction is 'union')
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/join`)
       .send({ side: 'confederate' });
@@ -311,6 +339,15 @@ describe('POST /api/v1/games/:id/join', () => {
   it('returns 409 when joinGame throws GameNotOpenError (#PERF-H1)', async () => {
     joinGame.mockImplementation(() => {
       throw new GameNotOpenError(TEST_UUID);
+    });
+    // Open confederate slot so the faction guard passes (#664)
+    getGame.mockReturnValue({
+      id: TEST_UUID,
+      status: 'active',
+      side_a_token: 'tok',
+      side_b_token: 'tok-b',
+      side_a_faction: 'union',
+      side_b_faction: null,
     });
     const app = await buildApp();
     const res = await request(app)
@@ -324,6 +361,15 @@ describe('POST /api/v1/games/:id/join', () => {
     joinGame.mockImplementation(() => {
       throw new InvalidTokenError('sideBToken', 'bad');
     });
+    // Open confederate slot so the faction guard passes (#664)
+    getGame.mockReturnValue({
+      id: TEST_UUID,
+      status: 'active',
+      side_a_token: 'tok',
+      side_b_token: 'tok-b',
+      side_a_faction: 'union',
+      side_b_faction: null,
+    });
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/join`)
@@ -334,6 +380,15 @@ describe('POST /api/v1/games/:id/join', () => {
   it('returns 500 when joinGame throws an unexpected error', async () => {
     joinGame.mockImplementation(() => {
       throw new Error('unexpected');
+    });
+    // Open confederate slot so the faction guard passes (#664)
+    getGame.mockReturnValue({
+      id: TEST_UUID,
+      status: 'active',
+      side_a_token: 'tok',
+      side_b_token: 'tok-b',
+      side_a_faction: 'union',
+      side_b_faction: null,
     });
     const app = await buildApp();
     const res = await request(app)
@@ -1265,6 +1320,21 @@ describe('Session guard — requireSameGame (#553)', () => {
     // Fire-and-forget: webhook failure must not affect the action response
     expect(res.status).toBe(200);
     expect(res.body.version).toBe(4);
+  });
+
+  it('getGame is called exactly once per POST /actions request — no redundant DB read (#652)', async () => {
+    // requireSide calls getGame once and attaches req.game; the action handler must not
+    // call getGame a second time. This guards against regression to the pre-#652 pattern.
+    getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
+    loadGame.mockResolvedValue(ACTIVE_STATE);
+    dispatch.mockReturnValue(NEXT_STATE);
+    saveGame.mockResolvedValue(NEXT_STATE);
+    const app = await buildApp();
+    await request(app)
+      .post(`/api/v1/games/${TEST_UUID}/actions`)
+      .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
+    // getGame is called by requireSide middleware — exactly once, not twice.
+    expect(getGame).toHaveBeenCalledOnce();
   });
 });
 

@@ -166,6 +166,15 @@ describe('notifyWebhook — allowlist re-validation', () => {
     await notifyWebhook('http://discord.com/api/webhooks/123/abc', { content: 'test' });
     expect(mockFetch).not.toHaveBeenCalled();
   });
+
+  it('skips fetch when stored URL is invalid even when DISCORD_WEBHOOK_URL override is set (#651)', async () => {
+    // Defense in depth: re-validate the stored webhook at egress regardless of override.
+    // Previously the allowlist check was skipped when an override was active.
+    process.env.DISCORD_WEBHOOK_URL = 'http://localhost:4040';
+    mockFetch.mockResolvedValue({ ok: true, status: 204 });
+    await notifyWebhook('https://evil.example.com/hook', { content: 'test' });
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 });
 
 describe('notifyWebhook — error swallowing', () => {
