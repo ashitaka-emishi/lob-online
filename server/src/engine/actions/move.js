@@ -1,10 +1,10 @@
 import { ActionError } from './actionError.js';
 import { movementPath } from '../movement.js';
-import { findOobUnit } from '../oob.js';
+import { findOobUnit, buildUnitSideMap } from '../oob.js';
 import { updateHexControl } from '../vp.js';
 
 // LOB §3 — resolve the movement-table formation key for a unit.
-// Returns null for unlimbered artillery (cannot move per LOB §3.6).
+// Returns null for unlimbered artillery (cannot move per LOB §3.6a).
 function resolveMovementFormation(unit, oobUnit) {
   if (unit.formation === 'unlimbered') return null;
   if (unit.formation === 'limbered') return 'limbered';
@@ -56,7 +56,7 @@ export function resolveMove(state, action, ctx = {}) {
 
   // Guard: unit must have remaining MPs
   if ((unit.remainingMPs ?? 0) <= 0) {
-    throw new ActionError('INSUFFICIENT_MPs', `Unit '${unitId}' has no remaining movement points`);
+    throw new ActionError('INSUFFICIENT_MPS', `Unit '${unitId}' has no remaining movement points`);
   }
 
   const destination = path[path.length - 1];
@@ -70,7 +70,28 @@ export function resolveMove(state, action, ctx = {}) {
     }
   })();
 
+  // LOB §3 — verify the moving unit belongs to the acting player (mirror combat handler pattern).
+  // Skipped when ctx.oob is absent (test-stub environments without OOB injection).
+  if (ctx.oob) {
+    const unitSideMap = buildUnitSideMap(ctx.oob);
+    const unitInfo = unitSideMap.get(unitId);
+    if (unitInfo && unitInfo.side !== playerSide) {
+      throw new ActionError(
+        'INVALID_ACTION',
+        `Player '${playerSide}' cannot move ${unitInfo.side} units (LOB §3)`
+      );
+    }
+  }
+
   const formation = resolveMovementFormation(unit, oobUnit);
+
+  // LOB §3.6a — unlimbered artillery has no movement allowance; formation === null signals this.
+  if (formation === null) {
+    throw new ActionError(
+      'INVALID_MOVE',
+      `Unit '${unitId}' cannot move: unlimbered artillery has no movement allowance (LOB §3.6a)`
+    );
+  }
 
   // LOB §3 — validate path reachability and compute cost via movement engine.
   // movementPath computes the optimal path; totalCost is the authoritative MP cost to destination.
@@ -78,7 +99,15 @@ export function resolveMove(state, action, ctx = {}) {
     throw new ActionError('INVALID_ACTION', 'MOVE requires scenario and mapData in ctx');
   }
 
-  const pathResult = movementPath(unit.hex, destination, formation, ctx.scenario, ctx.mapData);
+  // ctx.hexIndex is pre-built by the route layer; passing it avoids rebuilding the 2240-hex index per call.
+  const pathResult = movementPath(
+    unit.hex,
+    destination,
+    formation,
+    ctx.scenario,
+    ctx.mapData,
+    ctx.hexIndex
+  );
 
   if (pathResult.impassable || pathResult.totalCost === Infinity) {
     throw new ActionError(
@@ -90,7 +119,7 @@ export function resolveMove(state, action, ctx = {}) {
   // LOB §3 — guard: path cost must not exceed remaining MPs
   if (pathResult.totalCost > unit.remainingMPs) {
     throw new ActionError(
-      'INSUFFICIENT_MPs',
+      'INSUFFICIENT_MPS',
       `Move to '${destination}' costs ${pathResult.totalCost} MPs but unit has ${unit.remainingMPs}`
     );
   }
@@ -107,7 +136,7 @@ export function resolveMove(state, action, ctx = {}) {
     vpHexSet
   );
 
-  // Mutate unit position and remaining MPs (immutable spread)
+  // Produce updated unit with new position and decremented MPs (immutable spread)
   const movedUnit = {
     ...unit,
     hex: destination,

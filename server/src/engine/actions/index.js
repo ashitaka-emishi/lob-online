@@ -219,7 +219,8 @@ export function getValidActions(state, playerSide) {
       });
 
       // LOB §3 — MOVE candidates: one per unit in the active hex with remaining MPs.
-      // Destination left to client; handler validates path cost against remainingMPs.
+      // Payload is intentionally partial: client must append payload.path ([start, ...hexes, dest])
+      // before submitting — see resolveMove for the full required payload contract.
       const moveCandidates = activeUnits
         .filter((u) => (u.remainingMPs ?? 0) > 0)
         .map((u) => ({ type: 'MOVE', payload: { unitId: u.id } }));
@@ -535,10 +536,10 @@ export function drainAutoSteps(state, ctx = {}) {
   );
 }
 
-// Action types that require full ctx for LOS/range validation (#594)
-// Action types that want full ctx for LOS/range validation. Enforcement is advisory —
-// handlers fall back to degraded mode when ctx is absent (accepted for test-compat; #594).
-const CTX_RECOMMENDED_ACTIONS = new Set(['FIRE_COMBAT', 'CLOSE_COMBAT']);
+// Action types that require full ctx. FIRE_COMBAT and CLOSE_COMBAT degrade gracefully when ctx
+// is absent; MOVE fails hard (throws INVALID_ACTION). All three emit a dispatch-level warning
+// so wiring gaps surface before the handler throws. (accepted for test-compat; #594)
+const CTX_RECOMMENDED_ACTIONS = new Set(['FIRE_COMBAT', 'CLOSE_COMBAT', 'MOVE']);
 
 // Pure reducer: validate → route → drain → validate output state.
 // action: { type: string, payload: object|null, playerSide: 'union'|'confederate' }

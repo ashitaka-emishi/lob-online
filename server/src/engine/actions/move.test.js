@@ -23,6 +23,31 @@ const MINIMAL_OOB = {
   confederate: { divisions: [] },
 };
 
+// OOB stubs for formation-branch tests (H6)
+const CAVALRY_OOB = {
+  union: {
+    corps: [
+      {
+        divisions: [
+          { brigades: [{ regiments: [{ id: 'u1', type: 'cavalry', strengthPoints: 4 }] }] },
+        ],
+      },
+    ],
+  },
+  confederate: { divisions: [] },
+};
+
+const LEADER_OOB = {
+  union: {
+    corps: [
+      {
+        divisions: [{ brigades: [{ regiments: [{ id: 'u1', type: 'leader' }] }] }],
+      },
+    ],
+  },
+  confederate: { divisions: [] },
+};
+
 let scenario;
 beforeAll(() => {
   scenario = loadScenario();
@@ -156,49 +181,53 @@ describe('resolveMove — valid move', () => {
     resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA });
     expect(state).toEqual(snapshot);
   });
+
+  it('succeeds when path cost exactly equals remainingMPs (boundary: totalCost === remainingMPs)', () => {
+    const state = makeState({ remainingMPs: 1 });
+    const result = resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA });
+    expect(result.units.u1.remainingMPs).toBe(0);
+    expect(result.units.u1.hex).toBe('10.11');
+  });
 });
 
-// ─── resolveMove — INSUFFICIENT_MPs ───────────────────────────────────────────
+// ─── resolveMove — INSUFFICIENT_MPS ───────────────────────────────────────────
 
-describe('resolveMove — INSUFFICIENT_MPs', () => {
-  it('throws when unit has 0 remaining MPs', () => {
+describe('resolveMove — INSUFFICIENT_MPS', () => {
+  it('throws INSUFFICIENT_MPS when unit has 0 remaining MPs', () => {
+    expect.assertions(2);
     const state = makeState({ remainingMPs: 0 });
-    expect(() => resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA })).toThrow(
-      ActionError
-    );
     try {
       resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA });
     } catch (e) {
-      expect(e.code).toBe('INSUFFICIENT_MPs');
+      expect(e).toBeInstanceOf(ActionError);
+      expect(e.code).toBe('INSUFFICIENT_MPS');
     }
   });
 
-  it('throws when unit remainingMPs is undefined (not yet activated)', () => {
+  it('throws INSUFFICIENT_MPS when unit remainingMPs is undefined (not yet activated)', () => {
+    expect.assertions(2);
     const state = makeState({ remainingMPs: undefined });
-    expect(() => resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA })).toThrow(
-      ActionError
-    );
     try {
       resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA });
     } catch (e) {
-      expect(e.code).toBe('INSUFFICIENT_MPs');
+      expect(e).toBeInstanceOf(ActionError);
+      expect(e.code).toBe('INSUFFICIENT_MPS');
     }
   });
 
-  it('throws when path cost exceeds remainingMPs', () => {
+  it('throws INSUFFICIENT_MPS when path cost exceeds remainingMPs', () => {
+    expect.assertions(2);
     // Unit has 1 MP; 2-hex path costs 2
     const state = makeState({ remainingMPs: 1 });
     const twoHexMove = {
       ...MOVE_ACTION,
       payload: { unitId: 'u1', path: ['10.10', '10.11', '10.12'] },
     };
-    expect(() => resolveMove(state, twoHexMove, { scenario, mapData: MAP_DATA })).toThrow(
-      ActionError
-    );
     try {
       resolveMove(state, twoHexMove, { scenario, mapData: MAP_DATA });
     } catch (e) {
-      expect(e.code).toBe('INSUFFICIENT_MPs');
+      expect(e).toBeInstanceOf(ActionError);
+      expect(e.code).toBe('INSUFFICIENT_MPS');
     }
   });
 });
@@ -206,18 +235,28 @@ describe('resolveMove — INSUFFICIENT_MPs', () => {
 // ─── resolveMove — INVALID_MOVE ───────────────────────────────────────────────
 
 describe('resolveMove — INVALID_MOVE', () => {
-  it('throws when destination hex is not in mapData (impassable / not digitized)', () => {
+  it('throws INVALID_MOVE when destination hex is not in mapData (impassable / not digitized)', () => {
+    expect.assertions(2);
     const state = makeState();
     const outOfBoundsMove = {
       ...MOVE_ACTION,
       payload: { unitId: 'u1', path: ['10.10', '99.99'] },
     };
-    expect(() => resolveMove(state, outOfBoundsMove, { scenario, mapData: MAP_DATA })).toThrow(
-      ActionError
-    );
     try {
       resolveMove(state, outOfBoundsMove, { scenario, mapData: MAP_DATA });
     } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
+      expect(e.code).toBe('INVALID_MOVE');
+    }
+  });
+
+  it('throws INVALID_MOVE for unlimbered artillery — no movement allowance (LOB §3.6a)', () => {
+    expect.assertions(2);
+    const state = makeState({ formation: 'unlimbered' });
+    try {
+      resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA });
+    } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
       expect(e.code).toBe('INVALID_MOVE');
     }
   });
@@ -227,65 +266,115 @@ describe('resolveMove — INVALID_MOVE', () => {
 
 describe('resolveMove — guard errors', () => {
   it('throws INVALID_ACTION when no activation is in progress', () => {
+    expect.assertions(2);
     const state = makeState({}, { activityPhase: { activatedUnits: [], currentActivation: null } });
-    expect(() => resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA })).toThrow(
-      ActionError
-    );
     try {
       resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA });
     } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
       expect(e.code).toBe('INVALID_ACTION');
     }
   });
 
   it('throws INVALID_PAYLOAD when unitId not found in state', () => {
+    expect.assertions(2);
     const state = makeState();
     const badAction = {
       ...MOVE_ACTION,
       payload: { unitId: 'nonexistent', path: ['10.10', '10.11'] },
     };
-    expect(() => resolveMove(state, badAction, { scenario, mapData: MAP_DATA })).toThrow(
-      ActionError
-    );
     try {
       resolveMove(state, badAction, { scenario, mapData: MAP_DATA });
     } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
       expect(e.code).toBe('INVALID_PAYLOAD');
     }
   });
 
   it('throws INVALID_ACTION when unit is not in the active stack hex', () => {
+    expect.assertions(2);
     // Unit is at 10.12 but activation hex is 10.10
     const state = makeState({ hex: '10.12' });
-    expect(() => resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA })).toThrow(
-      ActionError
-    );
     try {
       resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA });
     } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
       expect(e.code).toBe('INVALID_ACTION');
     }
   });
 
   it('throws INVALID_PAYLOAD when path does not start at unit hex', () => {
+    expect.assertions(2);
     const state = makeState();
     const badPath = { ...MOVE_ACTION, payload: { unitId: 'u1', path: ['10.11', '10.12'] } };
-    expect(() => resolveMove(state, badPath, { scenario, mapData: MAP_DATA })).toThrow(ActionError);
     try {
       resolveMove(state, badPath, { scenario, mapData: MAP_DATA });
     } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
       expect(e.code).toBe('INVALID_PAYLOAD');
     }
   });
 
   it('throws INVALID_PAYLOAD when path is empty or has only one hex', () => {
+    expect.assertions(2);
     const state = makeState();
     const badPath = { ...MOVE_ACTION, payload: { unitId: 'u1', path: ['10.10'] } };
-    expect(() => resolveMove(state, badPath, { scenario, mapData: MAP_DATA })).toThrow(ActionError);
     try {
       resolveMove(state, badPath, { scenario, mapData: MAP_DATA });
     } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
       expect(e.code).toBe('INVALID_PAYLOAD');
     }
+  });
+});
+
+// ─── resolveMove — formation branches (H6) ────────────────────────────────────
+
+describe('resolveMove — formation branches', () => {
+  it('limbered artillery moves normally (limbered formation path)', () => {
+    const state = makeState({ formation: 'limbered' });
+    const result = resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA });
+    expect(result.units.u1.hex).toBe('10.11');
+  });
+
+  it('cavalry unit (OOB type=cavalry) moves using mounted formation', () => {
+    const state = makeState();
+    const result = resolveMove(state, MOVE_ACTION, {
+      scenario,
+      mapData: MAP_DATA,
+      oob: CAVALRY_OOB,
+    });
+    expect(result.units.u1.hex).toBe('10.11');
+  });
+
+  it('leader unit (OOB type=leader) moves using leader formation', () => {
+    const state = makeState();
+    const result = resolveMove(state, MOVE_ACTION, {
+      scenario,
+      mapData: MAP_DATA,
+      oob: LEADER_OOB,
+    });
+    expect(result.units.u1.hex).toBe('10.11');
+  });
+});
+
+// ─── resolveMove — VP control eligibility (SM §5.1) ───────────────────────────
+
+describe('resolveMove — VP control eligibility', () => {
+  it('cavalry moving to VP hex does not claim control (SM §5.1 — cavalry ineligible)', () => {
+    const state = makeState();
+    const vpScenario = {
+      ...scenario,
+      victoryPoints: {
+        ...scenario.victoryPoints,
+        terrain: [{ hex: '10.11', unionVP: 2, confederateVP: 0 }],
+      },
+    };
+    const result = resolveMove(state, MOVE_ACTION, {
+      scenario: vpScenario,
+      mapData: MAP_DATA,
+      oob: CAVALRY_OOB,
+    });
+    expect(result.hexControl['10.11']).toBeUndefined();
   });
 });

@@ -105,3 +105,111 @@ describe('handleActivateStack', () => {
     expect(ACTIVITY_STATE).toEqual(snapshot);
   });
 });
+
+// ─── handleActivateStack — remainingMPs initialization (LOB §3) ───────────────
+
+describe('handleActivateStack — remainingMPs initialization', () => {
+  // Mirrors scenario.json movementCosts.movementAllowances structure
+  const ALLOWANCES = { line: 6, column: 6, mounted: 12, limbered: 7, leader: 12 };
+  const MOCK_SCENARIO = { movementCosts: { movementAllowances: ALLOWANCES } };
+
+  // Minimal OOB with infantry, cavalry, and leader unit entries
+  const MOCK_OOB = {
+    union: {
+      corps: [
+        {
+          divisions: [
+            {
+              brigades: [
+                {
+                  regiments: [
+                    { id: 'inf1', type: 'infantry', strengthPoints: 10 },
+                    { id: 'cav1', type: 'cavalry', strengthPoints: 4 },
+                    { id: 'lead1', type: 'leader' },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    confederate: { divisions: [] },
+  };
+
+  function makeOnBoardUnit(id, hex, overrides = {}) {
+    return {
+      id,
+      hex,
+      isOnBoard: true,
+      facing: 0,
+      moraleState: 'normal',
+      wrecked: false,
+      orders: null,
+      ammo: 'full',
+      depletionMarker: false,
+      cbfMarker: false,
+      entryTurn: null,
+      isDetached: false,
+      ...overrides,
+    };
+  }
+
+  it('sets remainingMPs to movementAllowances.line for infantry (default type)', () => {
+    const state = { ...ACTIVITY_STATE, units: { inf1: makeOnBoardUnit('inf1', '10.10') } };
+    const action = { type: 'ACTIVATE_STACK', payload: { hex: '10.10' } };
+    const result = handleActivateStack(state, action, { scenario: MOCK_SCENARIO, oob: MOCK_OOB });
+    expect(result.units.inf1.remainingMPs).toBe(6);
+  });
+
+  it('sets remainingMPs to movementAllowances.mounted for cavalry (LOB §3)', () => {
+    const state = { ...ACTIVITY_STATE, units: { cav1: makeOnBoardUnit('cav1', '10.10') } };
+    const action = { type: 'ACTIVATE_STACK', payload: { hex: '10.10' } };
+    const result = handleActivateStack(state, action, { scenario: MOCK_SCENARIO, oob: MOCK_OOB });
+    expect(result.units.cav1.remainingMPs).toBe(12);
+  });
+
+  it('sets remainingMPs to movementAllowances.leader for leader type', () => {
+    const state = { ...ACTIVITY_STATE, units: { lead1: makeOnBoardUnit('lead1', '10.10') } };
+    const action = { type: 'ACTIVATE_STACK', payload: { hex: '10.10' } };
+    const result = handleActivateStack(state, action, { scenario: MOCK_SCENARIO, oob: MOCK_OOB });
+    expect(result.units.lead1.remainingMPs).toBe(12);
+  });
+
+  it('sets remainingMPs to movementAllowances.limbered for limbered artillery', () => {
+    const state = {
+      ...ACTIVITY_STATE,
+      units: { inf1: makeOnBoardUnit('inf1', '10.10', { formation: 'limbered' }) },
+    };
+    const action = { type: 'ACTIVATE_STACK', payload: { hex: '10.10' } };
+    const result = handleActivateStack(state, action, { scenario: MOCK_SCENARIO, oob: MOCK_OOB });
+    expect(result.units.inf1.remainingMPs).toBe(7);
+  });
+
+  it('sets remainingMPs to 0 for unlimbered artillery (LOB §3.6a)', () => {
+    const state = {
+      ...ACTIVITY_STATE,
+      units: { inf1: makeOnBoardUnit('inf1', '10.10', { formation: 'unlimbered' }) },
+    };
+    const action = { type: 'ACTIVATE_STACK', payload: { hex: '10.10' } };
+    const result = handleActivateStack(state, action, { scenario: MOCK_SCENARIO, oob: MOCK_OOB });
+    expect(result.units.inf1.remainingMPs).toBe(0);
+  });
+
+  it('does not set remainingMPs on off-board units in the activated hex', () => {
+    const state = {
+      ...ACTIVITY_STATE,
+      units: { inf1: makeOnBoardUnit('inf1', '10.10', { isOnBoard: false }) },
+    };
+    const action = { type: 'ACTIVATE_STACK', payload: { hex: '10.10' } };
+    const result = handleActivateStack(state, action, { scenario: MOCK_SCENARIO, oob: MOCK_OOB });
+    expect(result.units.inf1.remainingMPs).toBeUndefined();
+  });
+
+  it('leaves units unchanged when ctx has no scenario (test-stub fallback)', () => {
+    const state = { ...ACTIVITY_STATE, units: { inf1: makeOnBoardUnit('inf1', '10.10') } };
+    const action = { type: 'ACTIVATE_STACK', payload: { hex: '10.10' } };
+    const result = handleActivateStack(state, action, {});
+    expect(result.units.inf1.remainingMPs).toBeUndefined();
+  });
+});
