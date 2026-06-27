@@ -8,11 +8,11 @@ _Last updated: 2026-06-27 after PR #671._
 
 | Metric                           | Value                                                                                           |
 | -------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Open debt items                  | 3                                                                                               |
-| Cumulative debt score (net open) | 5                                                                                               |
-| Current-milestone open debt      | 3 items (all M9)                                                                                |
+| Open debt items                  | 1                                                                                               |
+| Cumulative debt score (net open) | 3                                                                                               |
+| Current-milestone open debt      | 1 item (M9)                                                                                     |
 | Highest-risk item                | feat(vp): wire updateHexControl into movement/retreat path (SM §5.1 terrain VP) (#634, score 3) |
-| PRs tracked                      | 461                                                                                             |
+| PRs tracked                      | 459                                                                                             |
 
 ---
 
@@ -477,10 +477,8 @@ _Last updated: 2026-06-27 after PR #671._
 | 2026-06-25 | PR #663 (m8-faction-binding) (resolved #562)                   | -4                   | —         | 624                      |
 | 2026-06-25 | PR #663 (m8-faction-binding) (resolved #563)                   | -3                   | —         | 624                      |
 | 2026-06-25 | PR #666 (resolved #640 — stale register correction)            | -3                   | —         | 624                      |
-| 2026-06-27 | PR #671 (m9-debt-sprint)                                       | 2                    | 0         | 626                      |
+| 2026-06-27 | PR #671 (m9-debt-sprint)                                       | 0                    | -2        | 626                      |
 | 2026-06-27 | PR #671 (resolved #664)                                        | -2                   | —         | 626                      |
-| 2026-06-27 | PR #671 (added #672)                                           | +1                   | —         | 626                      |
-| 2026-06-27 | PR #671 (added #673)                                           | +1                   | —         | 626                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -488,7 +486,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Low risk. Net open debt score is 5 across 3 items, all M9-scoped. PR #671 (M9 debt sprint) resolved #664 (new-join side_b_faction guard, score 2) and PR #666 resolved #640 (MinIO auto-bucket, score 3) — both were stale open items now cleared. The score dropped from 8 to 5. Remaining debt falls into two categories: (1) deferred wiring — #634 (terrain VP hex-control, score 3) is a functional gap where `computeTerrainVP` always returns 0 because `updateHexControl` has no production caller; this will be resolved by the M9 MOVE action track; and (2) test refactors — #672 and #673 (score 1 each) are trivial fixture and factory extractions with no correctness risk, deferred from the PR #671 team-review.
+Low risk. Net open debt score is 3, one item remaining. PR #671 (M9 debt sprint) closed #664 (new-join side_b_faction guard, score 2) and resolved #672 and #673 (OOB fixture helper and gameRow factory) in-place before merge — all three net to zero new debt. The single remaining item is #634 (terrain VP hex-control, score 3): `computeTerrainVP` always returns 0 because `updateHexControl` has no production caller. This will be wired in by the M9 MOVE action track.
 
 ---
 
@@ -499,8 +497,6 @@ _Ordered by score descending (ties: current milestone first, then newest first).
 | Score | Milestone | Issue | Title                                                                           | PR Introduced | Assessment                                                                                                                                                                                                                                                                                |
 | ----- | --------- | ----- | ------------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 3     | M9        | #634  | feat(vp): wire updateHexControl into movement/retreat path (SM §5.1 terrain VP) | PR #632       | `updateHexControl` and `isVpControlEligible` are implemented but have no production caller. `state.hexControl` stays `{}` and `computeTerrainVP` always returns 0 — the dominant VP component per SM §5.1 contributes nothing to end-game tally. Wiring deferred to M9 MOVE action track. |
-| 1     | M9        | #672  | refactor(test): extract OOB fixture helper for arty-vs-arty CBF test            | PR #671       | The arty-vs-arty CBF test in `fireCombat.test.js` rebuilds the full OOB tree inline twice. A `withDefenderGunType(oob, 'H')` helper would reduce coupling to OOB hierarchy shape. Pure test refactor; no correctness risk.                                                                |
-| 1     | M9        | #673  | refactor(test): extract gameRow() factory to deduplicate getGame mock setups    | PR #671       | ~8 near-identical `getGame.mockReturnValue({...})` call sites in `games.test.js` differing only in faction columns. A `gameRow()` factory would centralize the shape and reduce maintenance surface. No correctness risk.                                                                 |
 
 ---
 
