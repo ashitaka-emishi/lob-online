@@ -1,8 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 
 import { dispatch, getValidActions, drainAutoSteps, ActionError } from './index.js';
+import { loadScenario } from '../scenario.js';
 
 // ── Shared fixtures ─────────────────────────────────────────────────────────
+
+let scenario;
+beforeAll(() => {
+  scenario = loadScenario();
+});
 
 const BASE_UNIT = {
   id: 'colquitt',
@@ -710,5 +716,112 @@ describe('dispatch', () => {
     state = dispatch(state, { type: 'END_PHASE', payload: null, playerSide: 'union' });
     expect(state.phase).toBe('activity');
     expect(state.activePlayer).toBe('confederate');
+  });
+});
+
+// ── MOVE action integration ──────────────────────────────────────────────────
+
+/** Minimal gridSpec that matches map.json for SM hex adjacency */
+const SM_GRID = {
+  cols: 64,
+  rows: 35,
+  dx: 39.75,
+  dy: 36,
+  hexWidth: 40.5,
+  hexHeight: 40.7,
+  imageScale: 1,
+  strokeWidth: 2,
+  orientation: 'flat',
+  evenColUp: true,
+};
+
+/** Three adjacent clear hexes used in MOVE integration tests */
+const MOVE_MAP_DATA = {
+  gridSpec: SM_GRID,
+  hexes: [
+    { hex: '10.10', terrain: 'clear' },
+    { hex: '10.11', terrain: 'clear' },
+    { hex: '10.12', terrain: 'clear' },
+  ],
+};
+
+/** Schema-valid mid-activation state: unit u1 at 10.10, remainingMPs=6 */
+const MID_ACTIVATION_STATE = {
+  ...ACTIVITY_STATE,
+  units: {
+    u1: {
+      id: 'u1',
+      hex: '10.10',
+      facing: 0,
+      moraleState: 'normal',
+      wrecked: false,
+      orders: null,
+      ammo: 'full',
+      depletionMarker: false,
+      cbfMarker: false,
+      isOnBoard: true,
+      entryTurn: null,
+      isDetached: false,
+      remainingMPs: 6,
+    },
+  },
+  activityPhase: {
+    activatedUnits: [],
+    currentActivation: {
+      hex: '10.10',
+      movedThisActivation: false,
+      openingVolley: false,
+      zeroRuleFired: false,
+    },
+  },
+};
+
+describe('dispatch — MOVE action integration (#634)', () => {
+  it('MOVE updates unit position and reduces remainingMPs via dispatch', () => {
+    const action = {
+      type: 'MOVE',
+      payload: { unitId: 'u1', path: ['10.10', '10.11'] },
+      playerSide: 'union',
+    };
+    const result = dispatch(MID_ACTIVATION_STATE, action, {
+      scenario,
+      mapData: MOVE_MAP_DATA,
+    });
+    // LOB §3 — unit moves to destination
+    expect(result.units.u1.hex).toBe('10.11');
+    // LOB §3 — 1 clear hex costs 1 MP; 6 - 1 = 5
+    expect(result.units.u1.remainingMPs).toBe(5);
+    // LOB §5.4 — movedThisActivation flag set
+    expect(result.activityPhase.currentActivation.movedThisActivation).toBe(true);
+  });
+
+  it('MOVE followed by END_ACTIVATION produces valid schema-validated state', () => {
+    const moveAction = {
+      type: 'MOVE',
+      payload: { unitId: 'u1', path: ['10.10', '10.11'] },
+      playerSide: 'union',
+    };
+    const ctx = { scenario, mapData: MOVE_MAP_DATA };
+    let state = dispatch(MID_ACTIVATION_STATE, moveAction, ctx);
+    state = dispatch(state, { type: 'END_ACTIVATION', payload: null, playerSide: 'union' });
+    expect(state.activityPhase.currentActivation).toBeNull();
+    expect(state.activityPhase.activatedUnits).toContain('10.10');
+    expect(state.units.u1.hex).toBe('10.11');
+  });
+
+  it('getValidActions returns MOVE for unit with remainingMPs > 0 during mid-activation', () => {
+    const actions = getValidActions(MID_ACTIVATION_STATE, 'union');
+    const moveAction = actions.find((a) => a.type === 'MOVE');
+    expect(moveAction).toBeDefined();
+    expect(moveAction.payload).toEqual({ unitId: 'u1' });
+  });
+
+  it('getValidActions does not return MOVE when unit remainingMPs is 0', () => {
+    const exhaustedState = {
+      ...MID_ACTIVATION_STATE,
+      units: { u1: { ...MID_ACTIVATION_STATE.units.u1, remainingMPs: 0 } },
+    };
+    const actions = getValidActions(exhaustedState, 'union');
+    expect(actions.find((a) => a.type === 'MOVE')).toBeUndefined();
   });
 });

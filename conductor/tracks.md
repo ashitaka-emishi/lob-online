@@ -155,6 +155,6 @@
 
 | [x] | m9-debt-sprint_20260625 | M9 Debt Sprint — Remaining Open Items (#627 #628 #629 #650 #651 #652 #664) | 2026-06-25 | 2026-06-26 |
 | [ ] | m9-do-deploy_20260625 | M9 DO Deployment — Provision Droplet and Wire deploy.yml (#653) | 2026-06-25 | 2026-06-25 |
-| [ ] | m9-move-action_20260625 | M9 MOVE Action — Unit Movement Handler + Hex Control Wiring (#634) | 2026-06-25 | 2026-06-25 |
+| [x] | m9-move-action_20260625 | M9 MOVE Action — Unit Movement Handler + Hex Control Wiring (#634) | 2026-06-25 | 2026-06-27 |
 | [ ] | m9-discord-oauth_20260625 | M9 Discord OAuth — Identity Layer (#668 #410) | 2026-06-25 | 2026-06-25 |
 | [ ] | m9-map-completion_20260625 | M9 Map Completion — South Mountain Hex Digitization (#669) | 2026-06-25 | 2026-06-25 |
