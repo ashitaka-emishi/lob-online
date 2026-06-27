@@ -2,10 +2,10 @@
   "id": "m9-debt-sprint_20260625",
   "title": "M9 Debt Sprint — Remaining Open Items (#627 #628 #629 #650 #651 #652 #664)",
   "type": "chore",
-  "status": "pending",
+  "status": "complete",
   "created": "2026-06-25T00:00:00Z",
-  "updated": "2026-06-25T00:00:00Z",
+  "updated": "2026-06-26T00:00:00Z",
   "closesIssues": [627, 628, 629, 650, 651, 652, 664],
-  "phases": { "total": 3, "completed": 0 },
-  "tasks": { "total": 7, "completed": 0 }
+  "phases": { "total": 3, "completed": 3 },
+  "tasks": { "total": 7, "completed": 7 }
 }
