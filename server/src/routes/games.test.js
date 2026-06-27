@@ -103,6 +103,20 @@ import { buildActionPayload, notifyWebhook } from '../notifications/discord.js';
 // Fixed UUID used as a stand-in game id in route tests
 const TEST_UUID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
+// Factory for getGame mock rows — spreads default shape then applies overrides.
+// Eliminates the repeated 6-field literal across join-route and action-route tests.
+function gameRow(overrides = {}) {
+  return {
+    id: TEST_UUID,
+    status: 'active',
+    side_a_token: 'tok',
+    side_b_token: 'tok-b',
+    side_a_faction: 'union',
+    side_b_faction: 'confederate',
+    ...overrides,
+  };
+}
+
 const MINIMAL_STATE = {
   id: TEST_UUID,
   scenarioId: 'south-mountain',
@@ -146,14 +160,7 @@ beforeEach(() => {
   // Default: active game with side_a_token matching the most common test player token ('tok').
   // Tests that need a different game state (null, open, different tokens) override this.
   // side_a_faction/side_b_faction are required for requireSide to populate req.side (#562).
-  getGame.mockReturnValue({
-    id: TEST_UUID,
-    status: 'active',
-    side_a_token: 'tok',
-    side_b_token: 'tok-b',
-    side_a_faction: 'union',
-    side_b_faction: 'confederate',
-  });
+  getGame.mockReturnValue(gameRow());
   loadGame.mockResolvedValue(MINIMAL_STATE);
   getValidActions.mockReturnValue([]);
   deleteGame.mockReturnValue(undefined);
@@ -238,14 +245,7 @@ describe('POST /api/v1/games', () => {
 describe('POST /api/v1/games/:id/join', () => {
   it('returns 200 with id and requested side when side is union (#407)', async () => {
     // Override so the union slot is free (creator took confederate in this mock scenario)
-    getGame.mockReturnValue({
-      id: TEST_UUID,
-      status: 'active',
-      side_a_token: 'tok',
-      side_b_token: 'tok-b',
-      side_a_faction: 'confederate',
-      side_b_faction: null,
-    });
+    getGame.mockReturnValue(gameRow({ side_a_faction: 'confederate', side_b_faction: null }));
     const app = await buildApp();
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(200);
@@ -255,14 +255,7 @@ describe('POST /api/v1/games/:id/join', () => {
 
   it('sets player session with the requested side (#335 #407)', async () => {
     // Override so the union slot is free (creator took confederate in this mock scenario)
-    getGame.mockReturnValue({
-      id: TEST_UUID,
-      status: 'active',
-      side_a_token: 'tok',
-      side_b_token: 'tok-b',
-      side_a_faction: 'confederate',
-      side_b_faction: null,
-    });
+    getGame.mockReturnValue(gameRow({ side_a_faction: 'confederate', side_b_faction: null }));
     const app = await buildApp();
     await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(setPlayerSession).toHaveBeenCalledOnce();
@@ -288,14 +281,7 @@ describe('POST /api/v1/games/:id/join', () => {
 
   it('returns 200 with confederate side when side is confederate (#407)', async () => {
     // side_b_faction must be null for the join to pass the both-column faction guard (#664)
-    getGame.mockReturnValue({
-      id: TEST_UUID,
-      status: 'active',
-      side_a_token: 'tok',
-      side_b_token: 'tok-b',
-      side_a_faction: 'union',
-      side_b_faction: null,
-    });
+    getGame.mockReturnValue(gameRow({ side_b_faction: null }));
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/join`)
@@ -321,14 +307,7 @@ describe('POST /api/v1/games/:id/join', () => {
       throw new GameNotFoundError(TEST_UUID);
     });
     // Open confederate slot so the faction guard passes (#664)
-    getGame.mockReturnValue({
-      id: TEST_UUID,
-      status: 'active',
-      side_a_token: 'tok',
-      side_b_token: 'tok-b',
-      side_a_faction: 'union',
-      side_b_faction: null,
-    });
+    getGame.mockReturnValue(gameRow({ side_b_faction: null }));
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/join`)
@@ -341,14 +320,7 @@ describe('POST /api/v1/games/:id/join', () => {
       throw new GameNotOpenError(TEST_UUID);
     });
     // Open confederate slot so the faction guard passes (#664)
-    getGame.mockReturnValue({
-      id: TEST_UUID,
-      status: 'active',
-      side_a_token: 'tok',
-      side_b_token: 'tok-b',
-      side_a_faction: 'union',
-      side_b_faction: null,
-    });
+    getGame.mockReturnValue(gameRow({ side_b_faction: null }));
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/join`)
@@ -362,14 +334,7 @@ describe('POST /api/v1/games/:id/join', () => {
       throw new InvalidTokenError('sideBToken', 'bad');
     });
     // Open confederate slot so the faction guard passes (#664)
-    getGame.mockReturnValue({
-      id: TEST_UUID,
-      status: 'active',
-      side_a_token: 'tok',
-      side_b_token: 'tok-b',
-      side_a_faction: 'union',
-      side_b_faction: null,
-    });
+    getGame.mockReturnValue(gameRow({ side_b_faction: null }));
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/join`)
@@ -382,14 +347,7 @@ describe('POST /api/v1/games/:id/join', () => {
       throw new Error('unexpected');
     });
     // Open confederate slot so the faction guard passes (#664)
-    getGame.mockReturnValue({
-      id: TEST_UUID,
-      status: 'active',
-      side_a_token: 'tok',
-      side_b_token: 'tok-b',
-      side_a_faction: 'union',
-      side_b_faction: null,
-    });
+    getGame.mockReturnValue(gameRow({ side_b_faction: null }));
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/join`)
@@ -434,14 +392,7 @@ describe('POST /api/v1/games/:id/join', () => {
 
   it('joins successfully as union when caller has no session (#340 #407)', async () => {
     // Override so the union slot is free (creator took confederate in this mock scenario)
-    getGame.mockReturnValue({
-      id: TEST_UUID,
-      status: 'active',
-      side_a_token: 'tok',
-      side_b_token: 'tok-b',
-      side_a_faction: 'confederate',
-      side_b_faction: null,
-    });
+    getGame.mockReturnValue(gameRow({ side_a_faction: 'confederate', side_b_faction: null }));
     getPlayerSession.mockReturnValue(null);
     const app = await buildApp();
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
@@ -452,14 +403,7 @@ describe('POST /api/v1/games/:id/join', () => {
 
   it('joins successfully as union when caller session is for a different game (#340 #407)', async () => {
     // Override so the union slot is free (creator took confederate in this mock scenario)
-    getGame.mockReturnValue({
-      id: TEST_UUID,
-      status: 'active',
-      side_a_token: 'tok',
-      side_b_token: 'tok-b',
-      side_a_faction: 'confederate',
-      side_b_faction: null,
-    });
+    getGame.mockReturnValue(gameRow({ side_a_faction: 'confederate', side_b_faction: null }));
     const OTHER_UUID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
     getPlayerSession.mockReturnValue({
       gameId: OTHER_UUID,
@@ -618,14 +562,7 @@ describe('POST /api/v1/games — scenario wiring', () => {
 describe('GET /api/v1/games/:id', () => {
   it('returns 200 with game state when player session is valid (#330)', async () => {
     getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok-1' });
-    getGame.mockReturnValue({
-      id: TEST_UUID,
-      status: 'active',
-      side_a_token: 'tok-1',
-      side_b_token: 'tok-b',
-      side_a_faction: 'union',
-      side_b_faction: 'confederate',
-    });
+    getGame.mockReturnValue(gameRow({ side_a_token: 'tok-1' }));
     loadGame.mockResolvedValue(MINIMAL_STATE);
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
@@ -1252,15 +1189,9 @@ describe('Session guard — requireSameGame (#553)', () => {
     buildActionPayload.mockReturnValue({ content: 'test notification' });
     notifyWebhook.mockResolvedValue(undefined);
     getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
-    getGame.mockReturnValue({
-      id: TEST_UUID,
-      status: 'active',
-      side_a_token: 'tok',
-      side_b_token: 'tok-b',
-      side_a_faction: 'union',
-      side_b_faction: 'confederate',
-      discord_webhook: 'https://discord.com/api/webhooks/123/abc',
-    });
+    getGame.mockReturnValue(
+      gameRow({ discord_webhook: 'https://discord.com/api/webhooks/123/abc' })
+    );
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockReturnValue(NEXT_STATE);
     saveGame.mockResolvedValue(NEXT_STATE);
@@ -1278,15 +1209,7 @@ describe('Session guard — requireSameGame (#553)', () => {
   it('does not call notifyWebhook when discord_webhook is null (#M8)', async () => {
     notifyWebhook.mockResolvedValue(undefined);
     getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
-    getGame.mockReturnValue({
-      id: TEST_UUID,
-      status: 'active',
-      side_a_token: 'tok',
-      side_b_token: 'tok-b',
-      side_a_faction: 'union',
-      side_b_faction: 'confederate',
-      discord_webhook: null,
-    });
+    getGame.mockReturnValue(gameRow({ discord_webhook: null }));
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockReturnValue(NEXT_STATE);
     saveGame.mockResolvedValue(NEXT_STATE);
@@ -1300,15 +1223,9 @@ describe('Session guard — requireSameGame (#553)', () => {
   it('action response succeeds even when notifyWebhook rejects (fire-and-forget) (#M8)', async () => {
     buildActionPayload.mockReturnValue({ content: 'test notification' });
     getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
-    getGame.mockReturnValue({
-      id: TEST_UUID,
-      status: 'active',
-      side_a_token: 'tok',
-      side_b_token: 'tok-b',
-      side_a_faction: 'union',
-      side_b_faction: 'confederate',
-      discord_webhook: 'https://discord.com/api/webhooks/123/abc',
-    });
+    getGame.mockReturnValue(
+      gameRow({ discord_webhook: 'https://discord.com/api/webhooks/123/abc' })
+    );
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockReturnValue(NEXT_STATE);
     saveGame.mockResolvedValue(NEXT_STATE);
@@ -1327,15 +1244,9 @@ describe('Session guard — requireSameGame (#553)', () => {
     // call getGame a second time. Include discord_webhook so the notify branch runs — that
     // is where the original redundant getGame call lived before #652.
     getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
-    getGame.mockReturnValue({
-      id: TEST_UUID,
-      status: 'active',
-      side_a_token: 'tok',
-      side_b_token: 'tok-b',
-      side_a_faction: 'union',
-      side_b_faction: 'confederate',
-      discord_webhook: 'https://discord.com/api/webhooks/123/abc',
-    });
+    getGame.mockReturnValue(
+      gameRow({ discord_webhook: 'https://discord.com/api/webhooks/123/abc' })
+    );
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockReturnValue(NEXT_STATE);
     saveGame.mockResolvedValue(NEXT_STATE);
