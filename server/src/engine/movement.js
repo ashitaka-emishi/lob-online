@@ -285,15 +285,16 @@ function getDirectionBetween(fromHexId, toHexId, gridSpec) {
   throw new Error(`getDirectionBetween: ${fromHexId} and ${toHexId} are not adjacent`);
 }
 
+// LOB §3.0 — charge cost of actually-entered hexes, not Dijkstra optimal.
+// LOB §3.1 — formation is treated as constant across all path steps; mid-move formation changes not yet implemented.
 /**
  * Compute the total MP cost of a submitted path by walking it pair-by-pair.
  *
- * // LOB §3 — charge cost of actually-entered hexes, not Dijkstra optimal
+ * Returns Infinity if any step is non-adjacent or impassable. Returns a plain number
+ * (scalar), unlike movementPath which returns a breakdown object.
  *
- * Returns Infinity if any step is non-adjacent or impassable.
- *
- * @param {string[]} path           - ordered hex IDs, length ≥ 1
- * @param {string} formation
+ * @param {string[]} path           - ordered hex IDs; empty path returns 0
+ * @param {string} formation        - constant across all steps (see LOB §3.1 note above)
  * @param {object} scenario         - result of loadScenario()
  * @param {object} mapData          - result of loadMap() (gridSpec required)
  * @param {Map<string, object>} [hexIndex] - pre-built hex index; built from mapData if omitted

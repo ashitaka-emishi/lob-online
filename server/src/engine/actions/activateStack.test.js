@@ -30,6 +30,8 @@ describe('handleActivateStack', () => {
     expect(result.activityPhase.currentActivation).toEqual({
       hex: '29.22',
       activatedUnitIds: [], // no units on board at that hex in ACTIVITY_STATE
+      lastMovedUnitId: null,
+      movedUnitIds: [],
       movedThisActivation: false,
       openingVolley: false,
       zeroRuleFired: false,
@@ -49,6 +51,9 @@ describe('handleActivateStack', () => {
         activatedUnits: [],
         currentActivation: {
           hex: '10.10',
+          activatedUnitIds: [],
+          lastMovedUnitId: null,
+          movedUnitIds: [],
           movedThisActivation: false,
           openingVolley: false,
           zeroRuleFired: false,

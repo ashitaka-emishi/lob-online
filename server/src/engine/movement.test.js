@@ -607,4 +607,10 @@ describe('pathCost', () => {
     // LOB §3 — 2 (woods) + 1 (clear) = 3
     expect(pathCost(['10.10', '10.11', '10.12'], 'line', scenario, GRID_ONLY, hexIndex)).toBe(3);
   });
+
+  it('returns 0 for an empty path (no hexes entered — precondition: length ≥ 1, returns 0 for [])', () => {
+    // The JSDoc precondition says length ≥ 1, but [] is not guarded internally.
+    // This test pins the behavior so a future refactor does not silently change it.
+    expect(pathCost([], 'line', scenario, GRID_ONLY, new Map())).toBe(0);
+  });
 });
