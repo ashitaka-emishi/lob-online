@@ -1,18 +1,18 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-27 after PR #671._
+_Last updated: 2026-06-27 after PR #674._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                                           |
-| -------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Open debt items                  | 1                                                                                               |
-| Cumulative debt score (net open) | 3                                                                                               |
-| Current-milestone open debt      | 1 item (M9)                                                                                     |
-| Highest-risk item                | feat(vp): wire updateHexControl into movement/retreat path (SM §5.1 terrain VP) (#634, score 3) |
-| PRs tracked                      | 459                                                                                             |
+| Metric                           | Value                                                                          |
+| -------------------------------- | ------------------------------------------------------------------------------ |
+| Open debt items                  | 7                                                                              |
+| Cumulative debt score (net open) | 16                                                                             |
+| Current-milestone open debt      | 7 items (M9)                                                                   |
+| Highest-risk item                | feat(engine): charge submitted-path cost, not Dijkstra optimal (#675, score 3) |
+| PRs tracked                      | 460                                                                            |
 
 ---
 
@@ -479,6 +479,8 @@ _Last updated: 2026-06-27 after PR #671._
 | 2026-06-25 | PR #666 (resolved #640 — stale register correction)            | -3                   | —         | 624                      |
 | 2026-06-27 | PR #671 (m9-debt-sprint)                                       | 0                    | -2        | 626                      |
 | 2026-06-27 | PR #671 (resolved #664)                                        | -2                   | —         | 626                      |
+| 2026-06-27 | PR #674 (m9-move-action)                                       | 16                   | +13       | 642                      |
+| 2026-06-27 | PR #674 (resolved #634)                                        | -3                   | —         | 642                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -486,7 +488,7 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Low risk. Net open debt score is 3, one item remaining. PR #671 (M9 debt sprint) closed #664 (new-join side_b_faction guard, score 2) and resolved #672 and #673 (OOB fixture helper and gameRow factory) in-place before merge — all three net to zero new debt. The single remaining item is #634 (terrain VP hex-control, score 3): `computeTerrainVP` always returns 0 because `updateHexControl` has no production caller. This will be wired in by the M9 MOVE action track.
+Elevated risk. Net open debt score is 16 across 7 items, all in M9. PR #674 (MOVE action handler) closed #634 (updateHexControl now wired into resolveMove) but introduced 16 points of new debt. Current debt falls into three categories: rules-correctness gaps (#675 optimal path cost, #678 VP pass-through, #680 multi-move blocked — all LOB §3 / SM §5.1 violations), a blocking I/O performance issue (#676 loadOob re-reads oob.json on every dispatch), and lower-priority structural items (#677 formation ladder duplication, #679 column formation missing, #681 IIFE helper). Items #675, #676, and #680 (all score 3) represent real gameplay correctness gaps that will manifest in the first full play test; recommend resolving all three before shipping M9.
 
 ---
 
@@ -494,9 +496,15 @@ Low risk. Net open debt score is 3, one item remaining. PR #671 (M9 debt sprint)
 
 _Ordered by score descending (ties: current milestone first, then newest first). Resolved items are removed._
 
-| Score | Milestone | Issue | Title                                                                           | PR Introduced | Assessment                                                                                                                                                                                                                                                                                |
-| ----- | --------- | ----- | ------------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 3     | M9        | #634  | feat(vp): wire updateHexControl into movement/retreat path (SM §5.1 terrain VP) | PR #632       | `updateHexControl` and `isVpControlEligible` are implemented but have no production caller. `state.hexControl` stays `{}` and `computeTerrainVP` always returns 0 — the dominant VP component per SM §5.1 contributes nothing to end-game tally. Wiring deferred to M9 MOVE action track. |
+| Score | Milestone | Issue | Title                                                                        | PR Introduced | Assessment                                                                                                                                                                                                                                    |
+| ----- | --------- | ----- | ---------------------------------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3     | M9        | #675  | feat(engine): charge submitted-path cost, not Dijkstra optimal (LOB §3)      | PR #674       | Handler charges optimal-path cost regardless of submitted path[]. Under LOB §3 a unit pays cost for hexes entered; player detours are undercharged and mid-route impassable hexes are silently bypassed.                                      |
+| 3     | M9        | #676  | perf(engine): cache loadOob() — eliminate N+2 disk reads per dispatch        | PR #674       | loadOob() re-reads and validates oob.json on every call. getValidActions invokes it N+2 times per mid-activation dispatch — synchronous disk I/O blocks the event loop on the hottest action path.                                            |
+| 3     | M9        | #680  | fix(engine): allow multiple MOVE per activation (LOB §3)                     | PR #674       | The `unit.hex === activation.hex` guard fires after the first MOVE, blocking any follow-up MOVE with remaining MPs. LOB §3 permits splitting MPs across multiple MOVE actions; a unit with 6 MPs can currently only move once per activation. |
+| 2     | M9        | #677  | refactor(engine): extract resolveFormationKey() — eliminate duplicate ladder | PR #674       | `resolveMovementFormation` and `resolveUnitMPs` encode the same decision tree. A future unit type added to one but not the other causes MP init and movement-cost formation to silently diverge.                                              |
+| 2     | M9        | #678  | feat(engine): honor SM §5.1 VP control for hexes moved through               | PR #674       | `updateHexControl` is called only for the destination hex. SM §5.1 awards control for "moved through" hexes; units sweeping across VP road hexes en route to a non-VP destination don't claim those hexes.                                    |
+| 2     | M9        | #679  | feat(engine): model column formation toggle — infantry road movement         | PR #674       | Infantry always defaults to 'line'. Column formation (road movement 0.5/hex) is never applied, understating movement range on SM's road network. Requires a CHANGE_FORMATION action.                                                          |
+| 1     | M9        | #681  | chore(engine): extract safeFindOobUnit() helper                              | PR #674       | IIFE-try/catch OOB lookup pattern duplicated in move.js, activateStack.js, and index.js. Minor readability cost, no correctness risk.                                                                                                         |
 
 ---
 
