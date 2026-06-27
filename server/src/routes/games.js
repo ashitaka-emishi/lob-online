@@ -46,7 +46,11 @@ function regenerateSession(req) {
 const createLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 const joinLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
 
-// #593/#572 — cache sync I/O and hex index at module init; data files don't change during a server session.
+// Module-init cache (#593 #572 #628): loadOob, loadMap, and getScenario perform synchronous file I/O
+// and are called exactly once at import time. All route handlers share the cached results for the
+// lifetime of the server process. Data files (oob.json, map.json, scenario.json) are read-only at
+// runtime — any change requires a server restart. buildHexIndex depends on _mapData, so it is also
+// computed here rather than per-request.
 const _oob = loadOob();
 const _mapData = loadMap();
 const _scenario = getScenario();
@@ -150,10 +154,11 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
       return res.json({ id, side });
     }
 
-    // Reject new join if the requested faction is already held by the creator (#562).
+    // Reject new join if the requested faction is already held by any player (#562 #664).
+    // Guard both columns — side_a is always the creator, but robust to future game modes.
     const joinRow = getGame(id);
     if (!joinRow) return res.status(404).json({ error: 'Game not found' });
-    if (joinRow.side_a_faction === side) {
+    if (joinRow.side_a_faction === side || joinRow.side_b_faction === side) {
       return res.status(409).json({ error: 'Side already taken' });
     }
 

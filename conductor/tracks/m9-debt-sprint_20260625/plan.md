@@ -3,7 +3,7 @@
 **Track ID:** m9-debt-sprint_20260625
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-25
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -24,12 +24,12 @@ Autonomous mode is safe.
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -37,9 +37,9 @@ Autonomous mode is safe.
 
 ## Completion Contract
 
-- [ ] All 7 issues closed (#627 #628 #629 #650 #651 #652 #664)
-- [ ] `npm run quality:strict` passes
-- [ ] Ready for `/team-review`
+- [x] All 7 issues closed (#627 #628 #629 #650 #651 #652 #664)
+- [x] `npm run quality:strict` passes
+- [x] Ready for `/team-review`
 
 ---
 
@@ -47,17 +47,17 @@ Autonomous mode is safe.
 
 ### Tasks
 
-- [ ] Task 1.1: **#664** — In `server/src/routes/games.js` join route, extend the
+- [x] Task 1.1: **#664** — In `server/src/routes/games.js` join route, extend the
       new-join collision check to guard both `side_a_faction` AND `side_b_faction`:
       return 409 if `row.side_a_faction === side || row.side_b_faction === side`
-- [ ] Task 1.2: **#652** — In `requireSide`, after the token check passes, attach
+- [x] Task 1.2: **#652** — In `requireSide`, after the token check passes, attach
       the full game row as `req.game` (already done for id/status/discord_webhook);
       update the actions route handler to read `req.game` for the game row rather
       than calling `getGame(id)` again; add test asserting `getGame` is not called twice
-- [ ] Task 1.3: **#651** — In `server/src/notifications/discord.js`, call
+- [x] Task 1.3: **#651** — In `server/src/notifications/discord.js`, call
       `isAllowedDiscordWebhook(url)` inside `notifyWebhook` before the fetch, not
       only at game-create time; log and skip silently if validation fails
-- [ ] Task 1.4: **#650** — Move the `DISCORD_WEBHOOK_URL` env-var read out of the
+- [x] Task 1.4: **#650** — Move the `DISCORD_WEBHOOK_URL` env-var read out of the
       module body in `discord.js` and into `notifyWebhook` at call time
       (`process.env.DISCORD_WEBHOOK_URL` read inside the function, not at import)
 
@@ -73,14 +73,14 @@ Autonomous mode is safe.
 
 ### Tasks
 
-- [ ] Task 2.1: **#629** — In `fireCombat.test.js`, replace the mocked arty-vs-arty
+- [x] Task 2.1: **#629** — In `fireCombat.test.js`, replace the mocked arty-vs-arty
       CBF positive case with a real fixture using actual arty unit objects from the OOB
       so the CBF trigger path exercises real data (LOB §5.8)
-- [ ] Task 2.2: **#628** — In `server/src/routes/games.js`, add a block comment above
+- [x] Task 2.2: **#628** — In `server/src/routes/games.js`, add a block comment above
       the module-init section explaining that `loadOob`, `loadMap`, and `getScenario`
       are called at import time and their results are shared across all requests (document
       the hard dependency + caching behavior)
-- [ ] Task 2.3: **#627** — Consult `domain-expert` agent to clarify whether morale
+- [x] Task 2.3: **#627** — Consult `domain-expert` agent to clarify whether morale
       cascade scope is correctly hex-scoped or should be brigade-scoped per LOB §6.3;
       implement whichever is ruled correct; update rule citation comment
 

@@ -44,16 +44,18 @@ export function buildActionPayload(gameId, action, state) {
  * @param {object} payload
  */
 export async function notifyWebhook(url, payload) {
-  // DISCORD_WEBHOOK_URL is honoured only outside production to prevent accidental
-  // exfiltration if the variable leaks into a production environment.
-  const override =
-    process.env.NODE_ENV !== 'production' ? process.env.DISCORD_WEBHOOK_URL : undefined;
-  const target = override || url;
-
-  if (!override && !isAllowedDiscordWebhook(target)) {
+  // Re-validate the stored webhook URL at egress — defense in depth against corrupted DB data (#651).
+  if (!isAllowedDiscordWebhook(url)) {
     console.warn('[discord] webhook URL failed allowlist check — skipping notification');
     return;
   }
+
+  // DISCORD_WEBHOOK_URL is honoured only outside production to prevent accidental
+  // exfiltration if the variable leaks into a production environment (#650).
+  // Read at call time (not module init) so runtime NODE_ENV changes take effect.
+  const override =
+    process.env.NODE_ENV !== 'production' ? process.env.DISCORD_WEBHOOK_URL : undefined;
+  const target = override || url;
 
   try {
     const res = await fetch(target, {

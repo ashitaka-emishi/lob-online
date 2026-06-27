@@ -575,6 +575,58 @@ describe('handleFireCombat', () => {
   });
 
   // ─── Bug #576 — CBF only for arty-vs-arty (LOB §5.8) ─────────────────────────
+
+  // Helpers: patch the confederate defender (c1) or union attacker (u1) with a gunType so
+  // findOobUnit returns an artillery entry. Avoids duplicating the full OOB tree inline.
+  function withDefenderGunType(gunType) {
+    return {
+      ...MOCK_OOB,
+      confederate: {
+        ...MOCK_OOB.confederate,
+        divisions: [
+          {
+            ...MOCK_OOB.confederate.divisions[0],
+            brigades: [
+              {
+                ...MOCK_OOB.confederate.divisions[0].brigades[0],
+                regiments: [
+                  { id: 'c1', name: '1st CSA Battery', gunType, strengthPoints: 5, morale: 'B' },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    };
+  }
+
+  function withAttackerGunType(gunType) {
+    return {
+      ...MOCK_OOB,
+      union: {
+        ...MOCK_OOB.union,
+        corps: [
+          {
+            ...MOCK_OOB.union.corps[0],
+            divisions: [
+              {
+                ...MOCK_OOB.union.corps[0].divisions[0],
+                brigades: [
+                  {
+                    ...MOCK_OOB.union.corps[0].divisions[0].brigades[0],
+                    regiments: [
+                      { id: 'u1', name: 'Union Battery', gunType, strengthPoints: 4, morale: 'B' },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    };
+  }
+
   describe('Bug #576 regression — CBF marker only set for arty-vs-arty (LOB §5.8)', () => {
     it('CBF is NOT set when infantry fires on infantry, even with SP loss', () => {
       // u1 (infantry/R) fires on c1 (infantry/R) — no CBF regardless of SP loss
@@ -588,68 +640,29 @@ describe('handleFireCombat', () => {
     });
 
     it('CBF IS set when artillery fires on artillery with SP loss (LOB §5.8)', () => {
-      // Build an arty-vs-arty scenario: both sides have artillery units with gunType
-      const _artyOob = {
-        ...MOCK_OOB,
-        union: {
-          ...MOCK_OOB.union,
-          corps: [],
-          cavalryDivision: { id: 'cav-div', name: 'Cav', successionIds: [], brigades: [] },
-        },
-        confederate: {
-          ...MOCK_OOB.confederate,
-          divisions: [],
-          independent: { cavalry: [], artillery: [] },
-          reserveArtillery: {
-            batteries: [
-              { id: 'csa-arty', name: 'CSA Battery', gunType: 'H', strengthPoints: 4, morale: 'D' },
-            ],
-          },
-          independentBrigades: [],
+      // 4 SP attacker, range 1 → column '4-5', shift 0. Combat table at roll 8 (4+4): value 1
+      // (first SP-loss row for '4-5') → spLoss=1 > 0, weaponClass=artillery, gunType present → CBF.
+      const artyVsArtyAction = {
+        ...FIRE_ACTION,
+        payload: {
+          ...FIRE_ACTION.payload,
+          weaponClass: 'artillery',
+          weaponType: 'H',
+          dice: [4, 4], // roll 8 → column '4-5' produces spLoss=1 (first SP-loss result)
         },
       };
-      // Add union arty unit to a brigade-like structure accessible via findOobUnit
-      // For this test we use a simpler check: ensure CBF is set when weaponClass=artillery
-      // and the defender oob unit has gunType
-      // Since the existing fixture doesn't have arty units in the unit map with matching OOB,
-      // we verify the rule via the production code path by checking the condition logic.
-      // The functional assertion: infantry-fires-infantry → no CBF (verified above).
-      // Full arty-vs-arty path is covered by the production code guard (weaponClass === 'artillery' && gunType).
-      expect(true).toBe(true); // structural placeholder — see next test
+      const result = handleFireCombat(BASE_STATE, artyVsArtyAction, {
+        oob: withDefenderGunType('H'),
+      });
+      // Assert the SP-loss precondition first — CBF requires spLoss > 0 (LOB §5.8).
+      // If the combat table is ever re-tuned so roll 8 yields no loss at '4-5', this test
+      // should fail here (wrong fixture) rather than silently at the marker assertion.
+      expect(result.pendingResolution.context.spLoss).toBeGreaterThan(0);
+      expect(result.units.c1.cbfMarker).toBe(true);
     });
 
     it('CBF is NOT set when artillery fires on infantry (LOB §5.8)', () => {
-      // Artillery attacker, infantry defender — no CBF (defender has no gunType)
-      const artyAttackerOob = {
-        ...MOCK_OOB,
-        union: {
-          ...MOCK_OOB.union,
-          corps: [
-            {
-              ...MOCK_OOB.union.corps[0],
-              divisions: [
-                {
-                  ...MOCK_OOB.union.corps[0].divisions[0],
-                  brigades: [
-                    {
-                      ...MOCK_OOB.union.corps[0].divisions[0].brigades[0],
-                      regiments: [
-                        {
-                          id: 'u1',
-                          name: 'Union Battery',
-                          gunType: 'H', // artillery attacker
-                          strengthPoints: 4,
-                          morale: 'B',
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      };
+      // Artillery attacker (u1 has gunType), infantry defender (c1 has no gunType) — no CBF.
       const artyAction = {
         ...FIRE_ACTION,
         payload: {
@@ -659,7 +672,7 @@ describe('handleFireCombat', () => {
           dice: [1, 1], // max loss
         },
       };
-      const result = handleFireCombat(BASE_STATE, artyAction, { oob: artyAttackerOob });
+      const result = handleFireCombat(BASE_STATE, artyAction, { oob: withAttackerGunType('H') });
       // c1 is infantry (no gunType) — CBF must not be set even if SP loss occurred
       expect(result.units.c1.cbfMarker).toBe(false);
     });

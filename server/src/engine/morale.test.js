@@ -165,7 +165,7 @@ describe('applyMoraleToHex (LOB §6.1)', () => {
 
 // ─── cascadeMorale ────────────────────────────────────────────────────────────
 
-describe('cascadeMorale (LOB §6.3)', () => {
+describe('cascadeMorale (designer extension, no LOB source; #627)', () => {
   it('does nothing when units are not all routed', () => {
     const state = {
       ...BASE_STATE,
@@ -276,7 +276,7 @@ describe('resolvePendingMorale (LOB §6.1)', () => {
     expect(stateWithCombatPending).toEqual(snapshot);
   });
 
-  it('sets leaderCasualty pending when routed unit triggers leaderLossCheck (LOB §9.1a, §6.3)', () => {
+  it('sets leaderCasualty pending when routed unit triggers leaderLossCheck (LOB §9.1a; cascade is designer extension, #627)', () => {
     // D+12 → routed + leaderLossCheck=true; leaderCasualty takes priority over cascade
     // because anyLeaderLossCheck is evaluated before cascade in resolvePendingMorale.
     const result = resolvePendingMorale(stateWithCombatPending, 12, {}, () => 'D');
@@ -295,7 +295,7 @@ describe('resolvePendingMorale (LOB §6.1)', () => {
 });
 
 // ─── Bug #577 regression — cascade uses brigade hierarchy, not hex scope ──────
-describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (LOB §6.3)', () => {
+describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (designer extension; #627)', () => {
   // OOB with two brigades: brig-a (u1, u2) and brig-b (u3)
   const MOCK_OOB = {
     _status: 'test',
@@ -375,7 +375,7 @@ describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (LOB §6.
     units,
   });
 
-  it('does NOT cascade when only one of two brigade units is routed (LOB §6.3)', () => {
+  it('does NOT cascade when only one of two brigade units is routed (designer extension; #627)', () => {
     // u1 routed, u2 normal — brig-a is not fully routed → no cascade
     const state = makeOobState({
       u1: makeUnit('u1', '10.10', 'routed'),
@@ -385,7 +385,7 @@ describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (LOB §6.
     expect(result.pendingResolution).toBeNull();
   });
 
-  it('cascades when all units in a brigade are routed, even if co-occupants from another brigade are not (LOB §6.3)', () => {
+  it('cascades when all units in a brigade are routed, even if co-occupants from another brigade are not (designer extension; #627)', () => {
     // brig-a: u1 routed, u2 routed → brigade-a fully routed → cascade
     // brig-b: u3 normal (different brigade, same hex) → must NOT prevent cascade
     const state = makeOobState({
@@ -400,7 +400,7 @@ describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (LOB §6.
     expect(result.pendingResolution.context.brigadeId).toBe('brig-a');
   });
 
-  it('does NOT cascade when only brig-b unit is routed but brig-a is normal (LOB §6.3)', () => {
+  it('does NOT cascade when only brig-b unit is routed but brig-a is normal (designer extension; #627)', () => {
     // u1 normal, u2 normal (brig-a), u3 routed (brig-b) → brig-a not routed → no cascade
     const state = makeOobState({
       u1: makeUnit('u1', '10.10', 'normal'),
@@ -413,7 +413,7 @@ describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (LOB §6.
     expect(result.pendingResolution.context.brigadeId).toBe('brig-b');
   });
 
-  it('cascadesMorale context includes brigadeId (LOB §6.3)', () => {
+  it('cascadesMorale context includes brigadeId (designer extension; #627)', () => {
     const state = makeOobState({
       u1: makeUnit('u1', '10.10', 'routed'),
       u2: makeUnit('u2', '10.10', 'routed'),
@@ -422,7 +422,7 @@ describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (LOB §6.
     expect(result.pendingResolution?.context?.brigadeId).toBe('brig-a');
   });
 
-  it('falls back to hex-scope degraded mode when oob is null (LOB §6.3)', () => {
+  it('falls back to hex-scope degraded mode when oob is null (designer extension; #627)', () => {
     // No OOB — degraded mode uses hex-scope (all in hex routed)
     const state = makeOobState({
       u1: makeUnit('u1', '10.10', 'routed'),
@@ -446,7 +446,7 @@ describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (LOB §6.
     expect(result.pendingResolution).toBeNull();
   });
 
-  it('off-board brigade members do not block cascade (LOB §6.3)', () => {
+  it('off-board brigade members do not block cascade (designer extension; #627)', () => {
     // u2 is off-board — only u1 counts as on-board for brig-a; u1 is routed → cascade
     const state = makeOobState({
       u1: makeUnit('u1', '10.10', 'routed'),
@@ -476,7 +476,7 @@ describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (LOB §6.
   });
 
   // #610 — cascade regression for cavalryDivision brigades
-  it('cascades when all units in a cavalryDivision brigade are routed (LOB §6.3)', () => {
+  it('cascades when all units in a cavalryDivision brigade are routed (designer extension; #627)', () => {
     // cavalryDivision brigades must be walked by findBrigadeForUnit (#610)
     const CAV_OOB = {
       _status: 'test',
@@ -526,7 +526,7 @@ describe('Bug #577 regression — cascadeMorale uses brigade hierarchy (LOB §6.
   });
 
   // #610 — cascade regression for confederate independentBrigades
-  it('cascades when all units in a confederate independentBrigade are routed (LOB §6.3)', () => {
+  it('cascades when all units in a confederate independentBrigade are routed (designer extension; #627)', () => {
     // independentBrigades must be walked by findBrigadeForUnit (#610)
     const IND_OOB = {
       _status: 'test',

@@ -155,16 +155,55 @@ describe('notifyWebhook — DISCORD_WEBHOOK_URL override', () => {
 });
 
 describe('notifyWebhook — allowlist re-validation', () => {
+  let warnSpy;
+  beforeEach(() => {
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('skips fetch when stored URL fails the Discord allowlist (non-override path)', async () => {
     mockFetch.mockResolvedValue({ ok: true, status: 204 });
     await notifyWebhook('https://evil.example.com/hook', { content: 'test' });
     expect(mockFetch).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[discord] webhook URL failed allowlist check — skipping notification'
+    );
   });
 
   it('skips fetch when stored URL uses http (non-override path)', async () => {
     mockFetch.mockResolvedValue({ ok: true, status: 204 });
     await notifyWebhook('http://discord.com/api/webhooks/123/abc', { content: 'test' });
     expect(mockFetch).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[discord] webhook URL failed allowlist check — skipping notification'
+    );
+  });
+
+  it('skips fetch when stored URL is invalid even when DISCORD_WEBHOOK_URL override is set (#651)', async () => {
+    // Defense in depth: re-validate the stored webhook at egress regardless of override.
+    // Previously the allowlist check was skipped when an override was active.
+    process.env.DISCORD_WEBHOOK_URL = 'http://localhost:4040';
+    mockFetch.mockResolvedValue({ ok: true, status: 204 });
+    await notifyWebhook('https://evil.example.com/hook', { content: 'test' });
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[discord] webhook URL failed allowlist check — skipping notification'
+    );
+  });
+
+  it('fetches to override target when stored URL is valid and DISCORD_WEBHOOK_URL is set (#651)', async () => {
+    // Pins the validate-stored-then-route ordering: a valid stored URL passes the allowlist,
+    // then the override redirects the actual POST to the dev loopback sink.
+    process.env.DISCORD_WEBHOOK_URL = 'http://localhost:4040';
+    process.env.NODE_ENV = 'development';
+    mockFetch.mockResolvedValue({ ok: true, status: 204 });
+    await notifyWebhook('https://discord.com/api/webhooks/123/abc', { content: 'test' });
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const [target] = mockFetch.mock.calls[0];
+    expect(target).toBe('http://localhost:4040');
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 });
 

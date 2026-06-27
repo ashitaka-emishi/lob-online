@@ -298,7 +298,8 @@ export function findOobLeader(oob, leaderId) {
  * Find the brigade that contains a given unit, walking the full OOB hierarchy.
  * Returns { brigadeId, unitIds } or null if not found.
  *
- * LOB §6.3 — cascade travels brigade hierarchy, not hex scope.
+ * Designer extension — used by morale cascade to identify the triggering brigade.
+ * Detection is brigade-scoped; resolution is hex-scoped. No LOB/SM source defines cascade (see cascadeMorale, #627).
  *
  * @param {object|null} oob - validated OOB data (returns null when oob is null)
  * @param {string} unitId
