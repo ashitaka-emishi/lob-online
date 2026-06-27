@@ -24,11 +24,12 @@ const ACTIVITY_STATE = {
 };
 
 describe('handleActivateStack', () => {
-  it('sets currentActivation to an object with the hex and default flags', () => {
+  it('sets currentActivation to an object with the hex, empty roster, and default flags', () => {
     const action = { type: 'ACTIVATE_STACK', payload: { hex: '29.22' } };
     const result = handleActivateStack(ACTIVITY_STATE, action);
     expect(result.activityPhase.currentActivation).toEqual({
       hex: '29.22',
+      activatedUnitIds: [], // no units on board at that hex in ACTIVITY_STATE
       movedThisActivation: false,
       openingVolley: false,
       zeroRuleFired: false,
@@ -103,6 +104,24 @@ describe('handleActivateStack', () => {
     const action = { type: 'ACTIVATE_STACK', payload: { hex: '29.22' } };
     handleActivateStack(ACTIVITY_STATE, action);
     expect(ACTIVITY_STATE).toEqual(snapshot);
+  });
+
+  it('populates activatedUnitIds with on-board unit IDs at the activated hex (LOB §3)', () => {
+    const state = {
+      ...ACTIVITY_STATE,
+      units: {
+        u1: { id: 'u1', hex: '29.22', isOnBoard: true },
+        u2: { id: 'u2', hex: '29.22', isOnBoard: true },
+        u3: { id: 'u3', hex: '10.10', isOnBoard: true }, // different hex — excluded
+        u4: { id: 'u4', hex: '29.22', isOnBoard: false }, // off-board — excluded
+      },
+    };
+    const action = { type: 'ACTIVATE_STACK', payload: { hex: '29.22' } };
+    const result = handleActivateStack(state, action);
+    expect(result.activityPhase.currentActivation.activatedUnitIds).toEqual(
+      expect.arrayContaining(['u1', 'u2'])
+    );
+    expect(result.activityPhase.currentActivation.activatedUnitIds).toHaveLength(2);
   });
 });
 

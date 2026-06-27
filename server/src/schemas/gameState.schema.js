@@ -172,6 +172,8 @@ export const GameStateSchema = z
         currentActivation: z
           .object({
             hex: z.string().regex(/^\d+\.\d+$/),
+            // LOB §3 — IDs of units in the activated stack; enables partial moves across MOVE actions (#680)
+            activatedUnitIds: z.array(z.string()),
             // LOB §5.4 — true when this activation included a Move action (enables Opening Volley on fire)
             movedThisActivation: z.boolean(),
             // LOB §5.4 — true when Opening Volley was triggered this activation

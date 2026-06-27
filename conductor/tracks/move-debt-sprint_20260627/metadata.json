@@ -1,0 +1,16 @@
+{
+  "id": "move-debt-sprint_20260627",
+  "title": "MOVE Debt Sprint — Path Cost + Partial Moves (#675 #680)",
+  "type": "bug",
+  "status": "complete",
+  "created": "2026-06-27T00:00:00.000Z",
+  "updated": "2026-06-27T00:00:00.000Z",
+  "phases": {
+    "total": 2,
+    "completed": 2
+  },
+  "tasks": {
+    "total": 7,
+    "completed": 7
+  }
+}

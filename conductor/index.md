@@ -10,7 +10,7 @@ Navigation hub for project context.
 - [Workflow](./workflow.md)
 - [Tracks](./tracks.md)
 
-## Active Tracks (M8 — in progress)
+## Active Tracks (M9 — in progress)
 
 | Track ID                                                                   | Title                                                          | Status   |
 | -------------------------------------------------------------------------- | -------------------------------------------------------------- | -------- |
@@ -19,6 +19,7 @@ Navigation hub for project context.
 | [m8-minio-init_20260623](./tracks/m8-minio-init_20260623/index.md)         | M8 MinIO Init — Auto-Create Dev Bucket (#640 #642)             | Pending  |
 | [terraform-iac_20260623](./tracks/terraform-iac_20260623/index.md)         | Terraform IaC for DigitalOcean Provisioning                    | Complete |
 | [m8-notifications_20260622](./tracks/m8-notifications_20260622/index.md)   | M8 Discord Notifications + Hex Control Wiring                  | Complete |
+| [move-debt-sprint_20260627](./tracks/move-debt-sprint_20260627/index.md)   | MOVE Debt Sprint — Path Cost + Partial Moves (#675 #680)       | Pending  |
 
 ## All Tracks
 

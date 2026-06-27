@@ -1,5 +1,5 @@
 import { ActionError } from './actionError.js';
-import { movementPath } from '../movement.js';
+import { pathCost } from '../movement.js';
 import { findOobUnit, buildUnitSideMap } from '../oob.js';
 import { updateHexControl } from '../vp.js';
 
@@ -38,11 +38,11 @@ export function resolveMove(state, action, ctx = {}) {
     throw new ActionError('INVALID_PAYLOAD', `MOVE: unit '${unitId}' not found in state`);
   }
 
-  // Guard: unit must be in the active stack hex (checked before path validation)
-  if (unit.hex !== activation.hex) {
+  // Guard: unit must be in the activated roster (allows partial moves — LOB §3)
+  if (!activation.activatedUnitIds?.includes(unitId)) {
     throw new ActionError(
       'INVALID_ACTION',
-      `MOVE: unit '${unitId}' is not in the active stack hex '${activation.hex}'`
+      `MOVE: unit '${unitId}' was not in the activated stack (LOB §3)`
     );
   }
 
@@ -93,34 +93,27 @@ export function resolveMove(state, action, ctx = {}) {
     );
   }
 
-  // LOB §3 — validate path reachability and compute cost via movement engine.
-  // movementPath computes the optimal path; totalCost is the authoritative MP cost to destination.
+  // LOB §3 — validate path and compute cost from the submitted hex sequence.
+  // pathCost charges the hexes the unit actually enters, not the Dijkstra optimal (#675).
   if (!ctx.scenario || !ctx.mapData) {
     throw new ActionError('INVALID_ACTION', 'MOVE requires scenario and mapData in ctx');
   }
 
   // ctx.hexIndex is pre-built by the route layer; passing it avoids rebuilding the 2240-hex index per call.
-  const pathResult = movementPath(
-    unit.hex,
-    destination,
-    formation,
-    ctx.scenario,
-    ctx.mapData,
-    ctx.hexIndex
-  );
+  const pathResult = pathCost(path, formation, ctx.scenario, ctx.mapData, ctx.hexIndex);
 
-  if (pathResult.impassable || pathResult.totalCost === Infinity) {
+  if (pathResult === Infinity) {
     throw new ActionError(
       'INVALID_MOVE',
-      `Destination '${destination}' is not reachable from '${unit.hex}'`
+      `Path to '${destination}' is impassable or contains non-adjacent hexes`
     );
   }
 
   // LOB §3 — guard: path cost must not exceed remaining MPs
-  if (pathResult.totalCost > unit.remainingMPs) {
+  if (pathResult > unit.remainingMPs) {
     throw new ActionError(
       'INSUFFICIENT_MPS',
-      `Move to '${destination}' costs ${pathResult.totalCost} MPs but unit has ${unit.remainingMPs}`
+      `Move to '${destination}' costs ${pathResult} MPs but unit has ${unit.remainingMPs}`
     );
   }
 
@@ -140,7 +133,7 @@ export function resolveMove(state, action, ctx = {}) {
   const movedUnit = {
     ...unit,
     hex: destination,
-    remainingMPs: unit.remainingMPs - pathResult.totalCost,
+    remainingMPs: unit.remainingMPs - pathResult,
   };
 
   return {

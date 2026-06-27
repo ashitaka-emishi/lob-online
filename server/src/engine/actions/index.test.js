@@ -246,6 +246,7 @@ describe('getValidActions', () => {
         activatedUnits: [],
         currentActivation: {
           hex: '29.22',
+          activatedUnitIds: [],
           movedThisActivation: false,
           openingVolley: false,
           zeroRuleFired: false,
@@ -265,6 +266,7 @@ describe('getValidActions', () => {
         activatedUnits: [],
         currentActivation: {
           hex: '29.22',
+          activatedUnitIds: [],
           movedThisActivation: false,
           openingVolley: false,
           zeroRuleFired: false,
@@ -769,6 +771,7 @@ const MID_ACTIVATION_STATE = {
     activatedUnits: [],
     currentActivation: {
       hex: '10.10',
+      activatedUnitIds: ['u1'],
       movedThisActivation: false,
       openingVolley: false,
       zeroRuleFired: false,

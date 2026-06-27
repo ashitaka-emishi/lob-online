@@ -158,3 +158,4 @@
 | [x] | m9-move-action_20260625 | M9 MOVE Action — Unit Movement Handler + Hex Control Wiring (#634) | 2026-06-25 | 2026-06-27 |
 | [ ] | m9-discord-oauth_20260625 | M9 Discord OAuth — Identity Layer (#668 #410) | 2026-06-25 | 2026-06-25 |
 | [ ] | m9-map-completion_20260625 | M9 Map Completion — South Mountain Hex Digitization (#669) | 2026-06-25 | 2026-06-25 |
+| [x] | move-debt-sprint_20260627 | MOVE Debt Sprint — Path Cost + Partial Moves (#675 #680) | 2026-06-27 | 2026-06-27 |

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 
 import { loadScenario } from './scenario.js';
 import { loadMap } from './map.js';
-import { hexEntryCost, movementPath, movementRange } from './movement.js';
+import { hexEntryCost, movementPath, movementRange, pathCost } from './movement.js';
 
 // ─── Shared fixtures ───────────────────────────────────────────────────────────
 
@@ -556,5 +556,55 @@ describe('movementRange', () => {
     const ids = result.map((r) => r.hex);
     expect(ids).not.toContain('08.09'); // blocked by vertical slope
     expect(ids).toContain('08.08'); // start always included
+  });
+});
+
+// ─── pathCost — submitted path cost (#675) ─────────────────────────────────────
+// LOB §3 — a unit pays the entry cost for each hex it actually enters
+
+describe('pathCost', () => {
+  // Minimal mapData that just supplies gridSpec; hexIndex is provided separately.
+  const GRID_ONLY = { gridSpec: SM_GRID, hexes: [] };
+
+  it('returns correct cumulative cost for a valid multi-hex path', () => {
+    const hexIndex = makeHexIndex([
+      { hex: '10.10', terrain: 'clear' },
+      { hex: '10.11', terrain: 'clear' },
+      { hex: '10.12', terrain: 'clear' },
+    ]);
+    // LOB §3 — 2 clear hexes entered, each costing 1 MP
+    expect(pathCost(['10.10', '10.11', '10.12'], 'line', scenario, GRID_ONLY, hexIndex)).toBe(2);
+  });
+
+  it('returns 0 for a single-hex path (no hexes entered)', () => {
+    const hexIndex = makeHexIndex([{ hex: '10.10', terrain: 'clear' }]);
+    expect(pathCost(['10.10'], 'line', scenario, GRID_ONLY, hexIndex)).toBe(0);
+  });
+
+  it('returns Infinity for a path containing a non-adjacent hex pair', () => {
+    const hexIndex = makeHexIndex([
+      { hex: '10.10', terrain: 'clear' },
+      { hex: '20.20', terrain: 'clear' }, // 20.20 is not adjacent to 10.10
+    ]);
+    expect(pathCost(['10.10', '20.20'], 'line', scenario, GRID_ONLY, hexIndex)).toBe(Infinity);
+  });
+
+  it('returns Infinity for a path through an impassable hexside (verticalSlope)', () => {
+    // verticalSlope on face 0 (N) of 10.10 — makes the 10.10→10.11 crossing impassable (SM §1.1)
+    const hexIndex = makeHexIndex([
+      { hex: '10.10', terrain: 'clear', edges: { 0: [{ type: 'verticalSlope' }] } },
+      { hex: '10.11', terrain: 'clear' },
+    ]);
+    expect(pathCost(['10.10', '10.11'], 'line', scenario, GRID_ONLY, hexIndex)).toBe(Infinity);
+  });
+
+  it('accumulates cost correctly for a path with mixed terrain', () => {
+    const hexIndex = makeHexIndex([
+      { hex: '10.10', terrain: 'clear' },
+      { hex: '10.11', terrain: 'woods' }, // line costs 2 for woods
+      { hex: '10.12', terrain: 'clear' }, // line costs 1 for clear
+    ]);
+    // LOB §3 — 2 (woods) + 1 (clear) = 3
+    expect(pathCost(['10.10', '10.11', '10.12'], 'line', scenario, GRID_ONLY, hexIndex)).toBe(3);
   });
 });
