@@ -1324,8 +1324,18 @@ describe('Session guard — requireSameGame (#553)', () => {
 
   it('getGame is called exactly once per POST /actions request — no redundant DB read (#652)', async () => {
     // requireSide calls getGame once and attaches req.game; the action handler must not
-    // call getGame a second time. This guards against regression to the pre-#652 pattern.
+    // call getGame a second time. Include discord_webhook so the notify branch runs — that
+    // is where the original redundant getGame call lived before #652.
     getPlayerSession.mockReturnValue({ gameId: TEST_UUID, side: 'union', sideToken: 'tok' });
+    getGame.mockReturnValue({
+      id: TEST_UUID,
+      status: 'active',
+      side_a_token: 'tok',
+      side_b_token: 'tok-b',
+      side_a_faction: 'union',
+      side_b_faction: 'confederate',
+      discord_webhook: 'https://discord.com/api/webhooks/123/abc',
+    });
     loadGame.mockResolvedValue(ACTIVE_STATE);
     dispatch.mockReturnValue(NEXT_STATE);
     saveGame.mockResolvedValue(NEXT_STATE);

@@ -2,7 +2,7 @@
  * Morale cascade engine — applies morale check results to game state and
  * propagates upward through the command hierarchy.
  *
- * LOB §6 — Morale; §6.2a — Additive Morale Effects Chart; §6.3 — cascade.
+ * LOB §6 — Morale; §6.2a — Additive Morale Effects Chart. Morale cascade is a designer extension (no LOB/SM source; see cascadeMorale and #627).
  *
  * Pure functions only — no I/O. All state mutations return new objects.
  */
@@ -276,7 +276,7 @@ export function applyRetreatsAndSpLosses(
  *
  * LOB §6.1 — called by RESOLVE_MORALE after the player supplies the morale dice roll.
  * LOB §7.0d — closingRoll resolves defender morale after close combat.
- * LOB §6.3 — moraleCheck resolves brigade cascade check.
+ * Designer extension — moraleCheck (cascade) resolution; no LOB/SM source defines cascade (see cascadeMorale, #627).
  *
  * @param {object} state - GameState with pendingResolution set
  * @param {number} diceRoll - raw 2d6 result for the morale check

@@ -627,6 +627,10 @@ describe('handleFireCombat', () => {
         },
       };
       const result = handleFireCombat(BASE_STATE, artyVsArtyAction, { oob: artyDefenderOob });
+      // Assert the SP-loss precondition first — CBF requires spLoss > 0 (LOB §5.8).
+      // If the combat table is ever re-tuned so roll 8 yields no loss at '4-5', this test
+      // should fail here (wrong fixture) rather than silently at the marker assertion.
+      expect(result.pendingResolution.context.spLoss).toBeGreaterThan(0);
       expect(result.units.c1.cbfMarker).toBe(true);
     });
 

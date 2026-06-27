@@ -276,7 +276,7 @@ describe('resolvePendingMorale (LOB §6.1)', () => {
     expect(stateWithCombatPending).toEqual(snapshot);
   });
 
-  it('sets leaderCasualty pending when routed unit triggers leaderLossCheck (LOB §9.1a, §6.3)', () => {
+  it('sets leaderCasualty pending when routed unit triggers leaderLossCheck (LOB §9.1a; cascade is designer extension, #627)', () => {
     // D+12 → routed + leaderLossCheck=true; leaderCasualty takes priority over cascade
     // because anyLeaderLossCheck is evaluated before cascade in resolvePendingMorale.
     const result = resolvePendingMorale(stateWithCombatPending, 12, {}, () => 'D');
