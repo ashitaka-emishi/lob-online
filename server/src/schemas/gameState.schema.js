@@ -86,6 +86,9 @@ export const UnitStateSchema = z
     // Confederate: D.H. Hill and D.R. Jones may each detach up to three brigades (§3.3).
     // Detached brigades hold their own order state; non-detached brigades inherit from their division.
     isDetached: z.boolean().default(false),
+    // LOB §3 — remaining movement points for this activation; absent until the stack is activated.
+    // Set by handleActivateStack from scenario.movementCosts.movementAllowances; decremented by MOVE.
+    remainingMPs: z.number().nonnegative().optional(),
   })
   .strict()
   // SM §2.3, §3.3 — a detached brigade must carry its own order state; isDetached: true with orders: null

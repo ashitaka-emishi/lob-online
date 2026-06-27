@@ -3,7 +3,7 @@
 **Track ID:** m9-move-action_20260625
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-25
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -24,12 +24,12 @@ mutation path. First action handler that mutates unit position.
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -37,10 +37,10 @@ mutation path. First action handler that mutates unit position.
 
 ## Completion Contract
 
-- [ ] Closes #634
-- [ ] All acceptance criteria in spec.md met
-- [ ] `npm run quality:strict` passes
-- [ ] Ready for `/team-review`
+- [x] Closes #634
+- [x] All acceptance criteria in spec.md met
+- [x] `npm run quality:strict` passes
+- [x] Ready for `/team-review`
 
 ---
 
@@ -48,14 +48,14 @@ mutation path. First action handler that mutates unit position.
 
 ### Tasks
 
-- [ ] Task 1.1: Write failing tests in `server/src/engine/actions/move.test.js`: - valid move reduces unit MPs by path cost - valid move updates unit `hexId` - valid move calls `updateHexControl` with destination hex and player side - move to hex outside movement range returns `INVALID_MOVE` error - move with 0 MPs remaining returns `INSUFFICIENT_MPs` error
-- [ ] Task 1.2: Create `server/src/engine/actions/move.js` — `resolveMove(state, payload, context)`: - `payload`: `{ unitId, path: [hexId, …] }` (full path, not just destination) - read unit from `state.units[unitId]`; guard not found → error - compute path cost via `movementPath` from `engine/movement.js` - guard `pathCost > unit.remainingMPs` → `INSUFFICIENT_MPs` - guard destination not in `movementRange` set → `INVALID_MOVE` - mutate: `unit.hexId = destination`, `unit.remainingMPs -= pathCost` - call `updateHexControl(state, destination, payload.side)` - return `{ result: 'moved', unitId, from, to: destination, mpCost: pathCost }`
-- [ ] Task 1.3: Make tests green
+- [x] Task 1.1: Write failing tests in `server/src/engine/actions/move.test.js`: - valid move reduces unit MPs by path cost - valid move updates unit `hexId` - valid move calls `updateHexControl` with destination hex and player side - move to hex outside movement range returns `INVALID_MOVE` error - move with 0 MPs remaining returns `INSUFFICIENT_MPs` error
+- [x] Task 1.2: Create `server/src/engine/actions/move.js` — `resolveMove(state, payload, context)`: - `payload`: `{ unitId, path: [hexId, …] }` (full path, not just destination) - read unit from `state.units[unitId]`; guard not found → error - compute path cost via `movementPath` from `engine/movement.js` - guard `pathCost > unit.remainingMPs` → `INSUFFICIENT_MPs` - guard destination not in `movementRange` set → `INVALID_MOVE` - mutate: `unit.hexId = destination`, `unit.remainingMPs -= pathCost` - call `updateHexControl(state, destination, payload.side)` - return `{ result: 'moved', unitId, from, to: destination, mpCost: pathCost }`
+- [x] Task 1.3: Make tests green
 
 ### Verification
 
-- [ ] `move.test.js` fully green
-- [ ] `npm run test` passes
+- [x] `move.test.js` fully green
+- [x] `npm run test` passes
 
 ---
 
@@ -63,20 +63,20 @@ mutation path. First action handler that mutates unit position.
 
 ### Tasks
 
-- [ ] Task 2.1: In `engine/phase.js` `getValidActions()`, during Activity phase emit
+- [x] Task 2.1: In `engine/phase.js` `getValidActions()`, during Activity phase emit
       `MOVE` candidates for each friendly unit with `remainingMPs > 0` — one candidate
       per unit with `payload: { unitId }` (destination left to client to specify)
-- [ ] Task 2.2: In `engine/phase.js` dispatch map, add `MOVE` → `resolveMove`
-- [ ] Task 2.3: In `server/src/routes/games.js`, ensure `context` passed to dispatch
+- [x] Task 2.2: In `engine/phase.js` dispatch map, add `MOVE` → `resolveMove`
+- [x] Task 2.3: In `server/src/routes/games.js`, ensure `context` passed to dispatch
       includes `side` so `resolveMove` can call `updateHexControl` with the correct side
-- [ ] Task 2.4: Add integration test: submit MOVE action via POST /actions → verify
+- [x] Task 2.4: Add integration test: submit MOVE action via POST /actions → verify
       game state reflects new unit position and hexControl update
 
 ### Verification
 
-- [ ] `getValidActions()` returns MOVE candidates during Activity phase for eligible units
-- [ ] Integration test passes
-- [ ] `npm run quality:strict` passes
+- [x] `getValidActions()` returns MOVE candidates during Activity phase for eligible units
+- [x] Integration test passes
+- [x] `npm run quality:strict` passes
 
 ---
 
@@ -84,14 +84,14 @@ mutation path. First action handler that mutates unit position.
 
 ### Tasks
 
-- [ ] Task 3.1: Confirm `UnitStateSchema` includes `remainingMPs` field (add if missing)
-- [ ] Task 3.2: Confirm `initGameState()` initializes `remainingMPs` from unit MP stat
+- [x] Task 3.1: Confirm `UnitStateSchema` includes `remainingMPs` field (add if missing)
+- [x] Task 3.2: Confirm `initGameState()` initializes `remainingMPs` from unit MP stat
       at start of each Activity phase (add Attack Recovery hook if not present)
 
 ### Verification
 
-- [ ] `npm run validate-data` clean
-- [ ] `npm run quality:strict` passes
+- [x] `npm run validate-data` clean
+- [x] `npm run quality:strict` passes
 
 ---
 

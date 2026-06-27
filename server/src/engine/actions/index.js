@@ -24,6 +24,7 @@ import {
   handleAcknowledgeRandomEvent,
   resolveRandomEvent,
 } from './endOfTurn.js';
+import { resolveMove } from './move.js';
 import { computeVP, evaluateVictory } from '../vp.js';
 
 export { ActionError };
@@ -217,8 +218,15 @@ export function getValidActions(state, playerSide) {
         return candidates;
       });
 
+      // LOB §3 — MOVE candidates: one per unit in the active hex with remaining MPs.
+      // Destination left to client; handler validates path cost against remainingMPs.
+      const moveCandidates = activeUnits
+        .filter((u) => (u.remainingMPs ?? 0) > 0)
+        .map((u) => ({ type: 'MOVE', payload: { unitId: u.id } }));
+
       return [
         { type: 'END_ACTIVATION', payload: null },
+        ...moveCandidates,
         ...closeCombatCandidates,
         // LOB §5.5 — generic FIRE_COMBAT candidate; client supplies full payload
         { type: 'FIRE_COMBAT', payload: null },
@@ -249,6 +257,7 @@ export function getValidActions(state, playerSide) {
 // prototype-chain attacks since Maps don't inherit from Object.prototype. (#CodeQL)
 export const ACTION_HANDLERS = new Map([
   ['END_PHASE', handleEndPhase],
+  ['MOVE', resolveMove],
   ['ROLL_INITIATIVE', handleRollInitiative],
   ['ISSUE_ORDER', handleIssueOrder],
   ['ACTIVATE_STACK', handleActivateStack],
