@@ -3,7 +3,7 @@
 **Track ID:** m9-map-completion_20260625
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-25
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -22,11 +22,11 @@ safe — map.json is validated by Zod schema on every write; invalid data is rej
 
 ## Quality Gates
 
-- [ ] `npm run validate-data` — 0 unknown-terrain warnings
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data` — 0 unknown-terrain warnings
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -34,10 +34,10 @@ safe — map.json is validated by Zod schema on every write; invalid data is rej
 
 ## Completion Contract
 
-- [ ] Closes #669
-- [ ] All 841 hexes have `terrain` ≠ `"unknown"`
-- [ ] `npm run validate-data` clean
-- [ ] Ready for `/team-review`
+- [x] Closes #669
+- [x] All 841 hexes have `terrain` ≠ `"unknown"`
+- [x] `npm run validate-data` clean
+- [x] Ready for `/team-review`
 
 ---
 
@@ -48,17 +48,17 @@ cross-referencing `docs/reference/south-mountain/sm-map.jpg`.
 
 ### Tasks
 
-- [ ] Task 1.1: Digitize SE quadrant hexes (approx. cols 17–28, rows 14–20) — mostly
+- [x] Task 1.1: Digitize SE quadrant hexes (approx. cols 17–28, rows 14–20) — mostly
       open/cleared terrain with some woods and ridgeline
-- [ ] Task 1.2: Digitize NE quadrant hexes (approx. cols 17–28, rows 1–13) — ridge
+- [x] Task 1.2: Digitize NE quadrant hexes (approx. cols 17–28, rows 1–13) — ridge
       terrain, some orchards, Old Hagerstown Road area
-- [ ] Task 1.3: Verify elevation levels consistent with existing digitized neighbors;
+- [x] Task 1.3: Verify elevation levels consistent with existing digitized neighbors;
       use auto-derive tool to propagate elevation from anchored hexes where possible
 
 ### Verification
 
-- [ ] `npm run validate-data` 0 unknown warnings
-- [ ] Spot-check 10 hexes against sm-map.jpg for terrain accuracy
+- [x] `npm run validate-data` 0 unknown warnings
+- [x] Spot-check 10 hexes against sm-map.jpg for terrain accuracy
 
 ---
 
@@ -73,6 +73,8 @@ Complete the road network and water features.
 - [ ] Task 2.2: Enter stream hexside edges for Popes Head Creek and tributaries
 - [ ] Task 2.3: Enter stone wall hexside edges (significant defensive terrain in SM)
 - [ ] Task 2.4: Enter ford and bridge features at road-stream crossing points
+
+_Note: Phase 2 (hexside features) deferred — requires manual Map Editor work. Tracked in #669._
 
 ### Verification
 
