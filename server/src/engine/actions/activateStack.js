@@ -46,6 +46,11 @@ export function handleActivateStack(state, action, ctx = {}) {
     );
   }
 
+  // LOB §3 — always compute the activated roster so resolveMove can check membership.
+  // Must be outside the movementAllowances guard: if nested inside, test-stub environments
+  // (no scenario) emit an empty roster and every subsequent MOVE is rejected (#680).
+  const unitsInHex = Object.values(state.units).filter((u) => u.isOnBoard && u.hex === hex);
+
   // LOB §3 — initialize remainingMPs for each unit in the activated hex.
   // Allowances come from scenario.movementCosts.movementAllowances; absent in test stubs → skip.
   const movementAllowances = ctx.scenario?.movementCosts?.movementAllowances;
@@ -58,7 +63,6 @@ export function handleActivateStack(state, action, ctx = {}) {
         return null;
       }
     })();
-    const unitsInHex = Object.values(state.units).filter((u) => u.isOnBoard && u.hex === hex);
     if (unitsInHex.length > 0) {
       updatedUnits = { ...state.units };
       for (const unit of unitsInHex) {
@@ -77,6 +81,12 @@ export function handleActivateStack(state, action, ctx = {}) {
       ...activity,
       currentActivation: {
         hex,
+        // LOB §3 — activation-time snapshot (not a live set); enables roster-membership check in resolveMove
+        activatedUnitIds: unitsInHex.map((u) => u.id),
+        // LOB §3.0d — unit currently mid-move-sequence; null until first MOVE this activation
+        lastMovedUnitId: null,
+        // LOB §3 / §3.0c — all units that have made ≥1 MOVE; used for §3.0c one-hex guarantee
+        movedUnitIds: [],
         // LOB §5.4 — tracks whether this activation included a Move action (Opening Volley trigger)
         movedThisActivation: false,
         // LOB §5.4 — set to true when Opening Volley fires this activation

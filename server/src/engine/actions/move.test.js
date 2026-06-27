@@ -102,8 +102,12 @@ function makeState(unitOverrides = {}, stateOverrides = {}) {
     units: { u1: makeUnit(unitOverrides) },
     activityPhase: {
       activatedUnits: [],
+      // activatedUnitIds: ['u1'] is load-bearing for nearly every test — do not remove without updating all callers
       currentActivation: {
         hex: '10.10',
+        activatedUnitIds: ['u1'],
+        lastMovedUnitId: null,
+        movedUnitIds: [],
         movedThisActivation: false,
         openingVolley: false,
         zeroRuleFired: false,
@@ -180,6 +184,28 @@ describe('resolveMove — valid move', () => {
     const snapshot = JSON.parse(JSON.stringify(state));
     resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA });
     expect(state).toEqual(snapshot);
+  });
+
+  it('second MOVE in same activation succeeds and charges remaining MPs (#680)', () => {
+    const initialState = makeState({ remainingMPs: 6 });
+    // First MOVE: 10.10 → 10.11 (1 MP for clear hex)
+    const afterFirstMove = resolveMove(initialState, MOVE_ACTION, { scenario, mapData: MAP_DATA });
+    expect(afterFirstMove.units.u1.hex).toBe('10.11');
+    expect(afterFirstMove.units.u1.remainingMPs).toBe(5);
+    // activatedUnitIds persists on the spread activation
+    expect(afterFirstMove.activityPhase.currentActivation.activatedUnitIds).toContain('u1');
+    // Second MOVE: 10.11 → 10.12 (1 MP for clear hex)
+    const secondMoveAction = {
+      type: 'MOVE',
+      payload: { unitId: 'u1', path: ['10.11', '10.12'] },
+      playerSide: 'union',
+    };
+    const afterSecondMove = resolveMove(afterFirstMove, secondMoveAction, {
+      scenario,
+      mapData: MAP_DATA,
+    });
+    expect(afterSecondMove.units.u1.hex).toBe('10.12');
+    expect(afterSecondMove.units.u1.remainingMPs).toBe(4);
   });
 
   it('succeeds when path cost exactly equals remainingMPs (boundary: totalCost === remainingMPs)', () => {
@@ -291,10 +317,26 @@ describe('resolveMove — guard errors', () => {
     }
   });
 
-  it('throws INVALID_ACTION when unit is not in the active stack hex', () => {
+  it('throws INVALID_ACTION when unit is not in the activated roster (LOB §3 — #680)', () => {
     expect.assertions(2);
-    // Unit is at 10.12 but activation hex is 10.10
-    const state = makeState({ hex: '10.12' });
+    // u1 present in state but excluded from activatedUnitIds
+    const state = makeState(
+      {},
+      {
+        activityPhase: {
+          activatedUnits: [],
+          currentActivation: {
+            hex: '10.10',
+            activatedUnitIds: [],
+            lastMovedUnitId: null,
+            movedUnitIds: [],
+            movedThisActivation: false,
+            openingVolley: false,
+            zeroRuleFired: false,
+          },
+        },
+      }
+    );
     try {
       resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA });
     } catch (e) {
@@ -376,5 +418,242 @@ describe('resolveMove — VP control eligibility', () => {
       oob: CAVALRY_OOB,
     });
     expect(result.hexControl['10.11']).toBeUndefined();
+  });
+});
+
+// ─── resolveMove — path cost (submitted path, not Dijkstra optimal) (#675) ────
+
+describe('resolveMove — path cost charges submitted path (#675)', () => {
+  // Routes from 10.10:
+  //   dir 0 (N)  → 10.11
+  //   dir 1 (NE) → 11.11  (also NE of 10.10, SE of 10.11 — shared neighbor)
+  // Two routes to 11.11:
+  //   cheap: 10.10 → 11.11           (1 MP, clear)
+  //   expensive: 10.10 → 10.11 → 11.11  (2 + 1 = 3 MPs if 10.11 is woods)
+
+  it('charges the submitted path cost even when Dijkstra optimal is cheaper (LOB §3 fix #675)', () => {
+    const hexIndexWithWoods = new Map([
+      ['10.10', { hex: '10.10', terrain: 'clear' }],
+      ['10.11', { hex: '10.11', terrain: 'woods' }], // woods: 2 MP for line
+      ['11.11', { hex: '11.11', terrain: 'clear' }], // NE of 10.10, SE of 10.11
+    ]);
+    const mapData = { gridSpec: SM_GRID, hexes: [] };
+    const state = makeState({ remainingMPs: 6 });
+    const woodsPathAction = {
+      type: 'MOVE',
+      payload: { unitId: 'u1', path: ['10.10', '10.11', '11.11'] },
+      playerSide: 'union',
+    };
+    // Submitted path: 10.10 → 10.11(woods, 2 MP) → 11.11(clear, 1 MP) = 3 MPs charged
+    const result = resolveMove(state, woodsPathAction, {
+      scenario,
+      mapData,
+      hexIndex: hexIndexWithWoods,
+    });
+    expect(result.units.u1.hex).toBe('11.11');
+    expect(result.units.u1.remainingMPs).toBe(3); // 6 − 3 = 3
+  });
+
+  it('throws INVALID_MOVE when submitted path crosses an impassable hexside (LOB §3)', () => {
+    expect.assertions(2);
+    // verticalSlope on face 0 (N) of 10.10 makes 10.10→10.11 impassable (SM §1.1)
+    const hexIndexWithSlope = new Map([
+      ['10.10', { hex: '10.10', terrain: 'clear', edges: { 0: [{ type: 'verticalSlope' }] } }],
+      ['10.11', { hex: '10.11', terrain: 'clear' }],
+    ]);
+    const mapData = { gridSpec: SM_GRID, hexes: [] };
+    const state = makeState({ remainingMPs: 6 });
+    try {
+      resolveMove(state, MOVE_ACTION, { scenario, mapData, hexIndex: hexIndexWithSlope });
+    } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
+      expect(e.code).toBe('INVALID_MOVE');
+    }
+  });
+});
+
+// ─── resolveMove — multi-unit stack (M3: canonical #680 scenario) ─────────────
+
+describe('resolveMove — multi-unit stack partial moves (#680)', () => {
+  // Two units in the same activated roster; u1 moves first, then u2 must still succeed.
+  // This is the canonical regression test for #680: the old unit.hex === activation.hex
+  // guard broke when u1 left the activation hex, preventing u2 from moving.
+  function makeTwoUnitState() {
+    return {
+      phase: 'activity',
+      step: 'activation',
+      hexControl: {},
+      units: {
+        u1: makeUnit({ id: 'u1', hex: '10.10', remainingMPs: 4 }),
+        u2: { ...makeUnit({ id: 'u1', hex: '10.10', remainingMPs: 4 }), id: 'u2' },
+      },
+      activityPhase: {
+        activatedUnits: [],
+        currentActivation: {
+          hex: '10.10',
+          activatedUnitIds: ['u1', 'u2'],
+          lastMovedUnitId: null,
+          movedUnitIds: [],
+          movedThisActivation: false,
+          openingVolley: false,
+          zeroRuleFired: false,
+        },
+      },
+    };
+  }
+
+  it('u2 can MOVE after u1 has moved away from the activation hex (LOB §3 — #680)', () => {
+    const state = makeTwoUnitState();
+    const u1Move = {
+      type: 'MOVE',
+      payload: { unitId: 'u1', path: ['10.10', '10.11'] },
+      playerSide: 'union',
+    };
+    const afterU1 = resolveMove(state, u1Move, { scenario, mapData: MAP_DATA });
+    expect(afterU1.units.u1.hex).toBe('10.11');
+
+    // u2 is still at 10.10; must be accepted even though activation.hex is still '10.10'
+    const u2Move = {
+      type: 'MOVE',
+      payload: { unitId: 'u2', path: ['10.10', '10.11'] },
+      playerSide: 'union',
+    };
+    const afterU2 = resolveMove(afterU1, u2Move, { scenario, mapData: MAP_DATA });
+    expect(afterU2.units.u2.hex).toBe('10.11');
+  });
+
+  it('rejects u1 resuming movement after u2 has moved (LOB §3.0d)', () => {
+    expect.assertions(2);
+    const state = makeTwoUnitState();
+    // u1 moves first
+    const u1Move = {
+      type: 'MOVE',
+      payload: { unitId: 'u1', path: ['10.10', '10.11'] },
+      playerSide: 'union',
+    };
+    const afterU1 = resolveMove(state, u1Move, { scenario, mapData: MAP_DATA });
+    // u2 moves (switches active mover)
+    const u2Move = {
+      type: 'MOVE',
+      payload: { unitId: 'u2', path: ['10.10', '10.11'] },
+      playerSide: 'union',
+    };
+    const afterU2 = resolveMove(afterU1, u2Move, { scenario, mapData: MAP_DATA });
+    // u1 tries to move again — §3.0d must block
+    const u1Resume = {
+      type: 'MOVE',
+      payload: { unitId: 'u1', path: ['10.11', '10.12'] },
+      playerSide: 'union',
+    };
+    try {
+      resolveMove(afterU2, u1Resume, { scenario, mapData: MAP_DATA });
+    } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
+      expect(e.code).toBe('INVALID_ACTION');
+    }
+  });
+});
+
+// ─── resolveMove — §3.0c one-hex move guarantee ───────────────────────────────
+
+describe('resolveMove — one-hex move guarantee (LOB §3.0c)', () => {
+  it('allows first move into expensive terrain even when cost exceeds remainingMPs (LOB §3.0c)', () => {
+    // Woods costs 2 MPs for line; unit has only 1 MP remaining — normally would be rejected.
+    const hexIndexWithWoods = new Map([
+      ['10.10', { hex: '10.10', terrain: 'clear' }],
+      ['10.11', { hex: '10.11', terrain: 'woods' }],
+    ]);
+    const mapData = { gridSpec: SM_GRID, hexes: [] };
+    const state = makeState({ remainingMPs: 1 }); // 1 MP < woods cost of 2
+    const result = resolveMove(state, MOVE_ACTION, {
+      scenario,
+      mapData,
+      hexIndex: hexIndexWithWoods,
+    });
+    expect(result.units.u1.hex).toBe('10.11');
+    expect(result.units.u1.remainingMPs).toBe(0); // clamped to 0
+  });
+
+  it('does not apply §3.0c guarantee to multi-hex paths (only one hex qualifies)', () => {
+    expect.assertions(2);
+    // Two-hex path: unit has 1 MP, each hex costs 1 — total 2. §3.0c does not apply (path > 1 hex).
+    const state = makeState({ remainingMPs: 1 });
+    const twoHexMove = {
+      ...MOVE_ACTION,
+      payload: { unitId: 'u1', path: ['10.10', '10.11', '10.12'] },
+    };
+    try {
+      resolveMove(state, twoHexMove, { scenario, mapData: MAP_DATA });
+    } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
+      expect(e.code).toBe('INSUFFICIENT_MPS');
+    }
+  });
+
+  it('does not apply §3.0c on the second move (only valid for first move of activation)', () => {
+    expect.assertions(2);
+    const hexIndexWithWoods = new Map([
+      ['10.10', { hex: '10.10', terrain: 'clear' }],
+      ['10.11', { hex: '10.11', terrain: 'clear' }],
+      ['10.12', { hex: '10.12', terrain: 'woods' }],
+    ]);
+    const mapData = { gridSpec: SM_GRID, hexes: [] };
+    const state = makeState({ remainingMPs: 2 });
+    // First MOVE into clear: costs 1 MP, remainingMPs → 1. movedUnitIds now includes 'u1'.
+    const afterFirst = resolveMove(state, MOVE_ACTION, {
+      scenario,
+      mapData,
+      hexIndex: hexIndexWithWoods,
+    });
+    expect(afterFirst.units.u1.remainingMPs).toBe(1);
+    // Second MOVE into woods (costs 2): §3.0c does not apply (not first move). Should throw.
+    const secondMove = {
+      type: 'MOVE',
+      payload: { unitId: 'u1', path: ['10.11', '10.12'] },
+      playerSide: 'union',
+    };
+    try {
+      resolveMove(afterFirst, secondMove, { scenario, mapData, hexIndex: hexIndexWithWoods });
+    } catch (e) {
+      expect(e.code).toBe('INSUFFICIENT_MPS');
+    }
+  });
+
+  it('does not apply §3.0c when unit has 0 remaining MPs', () => {
+    expect.assertions(2);
+    // 0 MPs — even one-hex guarantee requires > 0 MPs remaining
+    const hexIndexWithWoods = new Map([
+      ['10.10', { hex: '10.10', terrain: 'clear' }],
+      ['10.11', { hex: '10.11', terrain: 'woods' }],
+    ]);
+    const mapData = { gridSpec: SM_GRID, hexes: [] };
+    const state = makeState({ remainingMPs: 0 });
+    try {
+      resolveMove(state, MOVE_ACTION, { scenario, mapData, hexIndex: hexIndexWithWoods });
+    } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
+      expect(e.code).toBe('INSUFFICIENT_MPS');
+    }
+  });
+});
+
+// ─── resolveMove — path length cap (M1: DoS prevention) ──────────────────────
+
+describe('resolveMove — path length cap', () => {
+  it('throws INVALID_PAYLOAD when path exceeds MAX_PATH_HEXES', () => {
+    expect.assertions(2);
+    const state = makeState({ remainingMPs: 999 });
+    const longPath = Array.from({ length: 51 }, (_, i) => `10.${10 + i}`);
+    const longMove = {
+      type: 'MOVE',
+      payload: { unitId: 'u1', path: longPath },
+      playerSide: 'union',
+    };
+    try {
+      resolveMove(state, longMove, { scenario, mapData: MAP_DATA });
+    } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
+      expect(e.code).toBe('INVALID_PAYLOAD');
+    }
   });
 });

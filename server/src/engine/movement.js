@@ -285,6 +285,50 @@ function getDirectionBetween(fromHexId, toHexId, gridSpec) {
   throw new Error(`getDirectionBetween: ${fromHexId} and ${toHexId} are not adjacent`);
 }
 
+// LOB §3.0 — charge cost of actually-entered hexes, not Dijkstra optimal.
+// LOB §3.1 — formation is treated as constant across all path steps; mid-move formation changes not yet implemented.
+/**
+ * Compute the total MP cost of a submitted path by walking it pair-by-pair.
+ *
+ * Returns Infinity if any step is non-adjacent or impassable. Returns a plain number
+ * (scalar), unlike movementPath which returns a breakdown object.
+ *
+ * @param {string[]} path           - ordered hex IDs; empty path returns 0
+ * @param {string} formation        - constant across all steps (see LOB §3.1 note above)
+ * @param {object} scenario         - result of loadScenario()
+ * @param {object} mapData          - result of loadMap() (gridSpec required)
+ * @param {Map<string, object>} [hexIndex] - pre-built hex index; built from mapData if omitted
+ * @returns {number} total MP cost, or Infinity if the path is invalid or impassable
+ */
+export function pathCost(path, formation, scenario, mapData, hexIndex = null) {
+  const idx = hexIndex ?? buildHexIndex(mapData);
+  const gridSpec = mapData.gridSpec;
+  const noEffectSet = new Set(scenario.movementCosts.noEffectTerrain ?? []);
+  let total = 0;
+
+  for (let i = 1; i < path.length; i++) {
+    let dirIndex;
+    try {
+      dirIndex = getDirectionBetween(path[i - 1], path[i], gridSpec);
+    } catch {
+      return Infinity; // non-adjacent hex pair in submitted path
+    }
+    const cost = hexEntryCostBreakdown(
+      path[i - 1],
+      path[i],
+      dirIndex,
+      formation,
+      scenario,
+      idx,
+      noEffectSet
+    ).total;
+    if (cost === Infinity) return Infinity;
+    total += cost;
+  }
+
+  return total;
+}
+
 // ─── Path finding ──────────────────────────────────────────────────────────────
 
 /**
