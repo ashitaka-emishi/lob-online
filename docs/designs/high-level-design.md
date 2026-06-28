@@ -93,7 +93,8 @@
 > DigitalOcean Droplet provisioning deferred to next milestone.
 >
 > **In progress:** M8 code phases complete. DO Droplet provisioning deferred.
-> South Mountain scenario data digitization ongoing (map hexes, counter linkages).
+> South Mountain map terrain complete (all 841 hexes typed); hexside features (roads, streams,
+> stone walls, fords) and counter linkages still in progress.
 >
 > Sections describing completed work are accurate to the implementation. Sections describing
 > planned work reflect design intent and may evolve.
