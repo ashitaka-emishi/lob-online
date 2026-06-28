@@ -2,8 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 
 import { DEFAULT_SLUG } from '../stores/useModuleStore.js';
+import { useAuthStore } from '../stores/useAuthStore.js';
 
-export default createRouter({
+const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', component: HomeView },
@@ -13,6 +14,7 @@ export default createRouter({
     {
       path: '/modules/:moduleSlug/scenarios/:scenarioSlug/lobby',
       component: () => import('../views/LobbyView.vue'),
+      meta: { requiresAuth: true },
     },
     {
       path: '/modules/:moduleSlug/lobby',
@@ -69,3 +71,16 @@ export default createRouter({
     { path: '/tools/table-test', redirect: `/modules/${DEFAULT_SLUG}/tools/table-test` },
   ],
 });
+
+// Guard routes marked requiresAuth — redirect to home if the user is not logged in.
+// fetchMe is called once per page load (the initialized flag prevents redundant calls).
+router.beforeEach(async (to) => {
+  if (!to.meta.requiresAuth) return;
+  const authStore = useAuthStore();
+  if (!authStore.initialized) {
+    await authStore.fetchMe();
+  }
+  if (!authStore.isLoggedIn) return '/';
+});
+
+export default router;
