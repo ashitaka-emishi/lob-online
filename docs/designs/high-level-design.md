@@ -92,9 +92,15 @@
 > (`infra/`); MinIO healthcheck + `createbuckets` init container (auto-creates `lob-online-dev` bucket).
 > DigitalOcean Droplet provisioning deferred to next milestone.
 >
-> **In progress:** M8 code phases complete. DO Droplet provisioning deferred.
-> South Mountain map terrain complete (all 841 hexes typed); hexside features (roads, streams,
-> stone walls, fords) and counter linkages still in progress.
+> **M9 — Deployment + Completeness (in progress):** South Mountain map terrain complete (all
+> 841 hexes typed). MOVE action handler wired (`engine/actions/move.js`): submitted-path cost
+> via `pathCost`, `activatedUnitIds` partial-move roster, hex control update. Discord OAuth
+> identity layer: `passport` + `passport-discord` server strategy; SQLite v1→v2 migration
+> (users table + `side_a/b_user_id` FK columns); `requireAuth` middleware on games routes;
+> dev-mode poorman auth (`POST /auth/dev/login`) gated by `AUTH_DEV_MODE`; `useAuthStore`
+> Pinia store; Vue Router nav guard on `/lobby`; `HomeView` login button + disabled nav when
+> logged out; `LobbyView` username/avatar header. DigitalOcean Droplet provisioning still
+> pending.
 >
 > Sections describing completed work are accurate to the implementation. Sections describing
 > planned work reflect design intent and may evolve.
