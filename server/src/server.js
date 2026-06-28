@@ -13,6 +13,8 @@ import { Server } from 'socket.io';
 
 import { initDb, getDb } from './store/gameSqlite.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import passport, { configurePassport } from './auth/discord.js';
+import authRouter from './routes/auth.js';
 import gamesRouter from './routes/games.js';
 import oobRouter from './routes/oob.js';
 import leadersRouter from './routes/leaders.js';
@@ -92,6 +94,11 @@ export async function startServer() {
   });
   app.use(sessionMiddleware);
 
+  // Passport — must come after express-session so req.session is available (#m9-discord-oauth)
+  configurePassport();
+  app.use(passport.initialize());
+  app.use(passport.session());
+
   // CSRF defense: reject state-mutating requests whose Origin doesn't match the known
   // client origin. This guards cookie-authenticated routes against cross-site request
   // forgery from other origins. Full synchronizer-token CSRF is deferred to M8 (#350).
@@ -112,6 +119,17 @@ export async function startServer() {
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true, uptime: process.uptime() });
   });
+
+  // Auth routes — Discord OAuth + /auth/me + /auth/logout
+  app.use('/auth', authRouter);
+  console.log('[server] auth API enabled at /auth');
+
+  // Dev-mode poorman auth — POST /auth/dev/login with { code } for local testing without Discord
+  if (process.env.AUTH_DEV_MODE === 'true') {
+    const { default: devAuthRouter } = await import('./routes/devAuth.js');
+    app.use('/auth/dev', devAuthRouter);
+    console.log('[server] dev auth enabled at /auth/dev (AUTH_DEV_MODE=true)');
+  }
 
   // Game API
   app.use('/api/v1/games', gamesRouter);
