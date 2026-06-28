@@ -5,7 +5,10 @@ export {
   deleteGame,
   GameNotOpenError,
   getGame,
+  getUser,
   InvalidTokenError,
   joinGame,
   listGames,
+  listGamesByUser,
+  upsertUser,
 } from './gameSqlite.js';

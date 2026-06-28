@@ -1,21 +1,35 @@
 import passport from 'passport';
 import { Strategy as DiscordStrategy } from 'passport-discord';
 
-// Serialize only the user id into the session; deserialize restores the full user object.
-// Phase 1: full user object is stored in the session directly (no DB lookup yet).
-// Phase 2 will replace deserializeUser with a DB read from the users table.
-passport.serializeUser((user, done) => {
-  done(null, user);
-});
+// Configure passport with a live DB reference. Called once from server.js after initDb().
+// Hoists all prepared statements at call time so per-request paths hit no extra SQLite overhead.
+export function configurePassport(db) {
+  const getUserStmt = db.prepare('SELECT id, username, avatar FROM users WHERE id = ?');
+  const upsertUserStmt = db.prepare(
+    'INSERT INTO users (id, username, avatar, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET username = excluded.username, avatar = excluded.avatar'
+  );
 
-passport.deserializeUser((user, done) => {
-  done(null, user);
-});
+  // Serialize only the user id into the session.
+  passport.serializeUser((user, done) => {
+    done(null, user.id);
+  });
 
-// Configure the Discord OAuth2 strategy.
-// Phase 1: verify callback stores user in session without a DB upsert.
-// Phase 2 will add the users-table upsert inside the verify callback.
-export function configurePassport() {
+  // Deserialize: look up the full user row from the DB.
+  // Dev-mode synthetic users (id prefix "dev-") are reconstituted without a DB hit so
+  // local testing works without real Discord credentials or DB-persisted users.
+  passport.deserializeUser((id, done) => {
+    if (typeof id === 'string' && id.startsWith('dev-')) {
+      const code = id.slice(4);
+      return done(null, { id, username: `DevUser ${code}`, avatar: null });
+    }
+    try {
+      const user = getUserStmt.get(id);
+      done(null, user ?? false);
+    } catch (err) {
+      done(err);
+    }
+  });
+
   const { DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_CALLBACK_URL } = process.env;
 
   if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET || !DISCORD_CALLBACK_URL) {
@@ -39,7 +53,12 @@ export function configurePassport() {
           username: profile.username,
           avatar: profile.avatar ?? null,
         };
-        done(null, user);
+        try {
+          upsertUserStmt.run(user.id, user.username, user.avatar, Date.now());
+          done(null, user);
+        } catch (err) {
+          done(err);
+        }
       }
     )
   );

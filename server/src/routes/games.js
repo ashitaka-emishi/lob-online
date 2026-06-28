@@ -25,7 +25,7 @@ import {
   getGame,
   InvalidTokenError,
   joinGame,
-  listGames,
+  listGamesByUser,
   loadGame,
   saveGame,
 } from '../store/index.js';
@@ -93,7 +93,7 @@ router.post('/', createLimiter, async (req, res) => {
     // SQLite row first, then Spaces. If saveGame fails, roll back the SQLite row so no
     // orphaned metadata row points at a missing Spaces object (#ARCH-H4).
     const sideToken = randomUUID();
-    createGame(id, sideToken, SIDES.UNION, discordWebhook ?? null);
+    createGame(id, sideToken, SIDES.UNION, discordWebhook ?? null, req.user?.id ?? null);
     try {
       await saveGame(id, state);
     } catch (err) {
@@ -165,7 +165,7 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
     const sideToken = randomUUID();
 
     // joinGame is atomic; typed errors map to 404/409 for remaining edge cases (#PERF-H1, #ARCH-M2)
-    joinGame(id, sideToken, side);
+    joinGame(id, sideToken, side, req.user?.id ?? null);
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
     await regenerateSession(req);
@@ -206,9 +206,9 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// GET /api/v1/games — list all games
-router.get('/', (_req, res) => {
-  res.json(listGames());
+// GET /api/v1/games — list games belonging to the authenticated user (#668)
+router.get('/', (req, res) => {
+  res.json(listGamesByUser(req.user.id));
 });
 
 // GET /api/v1/games/me — current player's session identity

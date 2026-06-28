@@ -5,7 +5,8 @@ import { GameNotFoundError } from './errors.js';
 
 // Schema v0: original 5-column table (no faction or webhook columns)
 // Schema v1: adds side_a_faction, side_b_faction, discord_webhook
-// PRAGMA user_version gates the migration so it is safe to run on restart.
+// Schema v2: adds users table, side_a_user_id + side_b_user_id on games
+// PRAGMA user_version gates migrations so they are safe to run on restart.
 const SCHEMA_V1 = `
   CREATE TABLE IF NOT EXISTS games (
     id TEXT PRIMARY KEY,
@@ -19,7 +20,16 @@ const SCHEMA_V1 = `
   )
 `;
 
-const CURRENT_USER_VERSION = 1;
+const SCHEMA_V2_USERS = `
+  CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    username TEXT NOT NULL,
+    avatar TEXT,
+    created_at INTEGER NOT NULL
+  )
+`;
+
+const CURRENT_USER_VERSION = 2;
 
 export { GameNotFoundError } from './errors.js';
 
@@ -39,38 +49,49 @@ export class InvalidTokenError extends Error {
 }
 
 // Run idempotent schema migration. user_version 0 = no migration applied yet.
-// The migration body is wrapped in a transaction so DDL + version bump are atomic:
-// a crash mid-migration leaves the DB at version 0 and is safely re-run on the next start.
+// Each migration block is wrapped in a single transaction so DDL + version bump are atomic:
+// a crash mid-migration leaves the DB at the prior version and is safely re-run on restart.
 function migrate(db) {
   const version = db.pragma('user_version', { simple: true });
 
-  if (version === 0) {
+  if (version < 2) {
     db.transaction(() => {
-      // Fresh DB fast path: SCHEMA_V1 already includes the new columns.
-      db.exec(SCHEMA_V1);
+      if (version === 0) {
+        // Fresh or pre-v1 DB: create games table (includes v1 columns), then add any
+        // that are missing (guards against old 5-col schema still at user_version 0).
+        db.exec(SCHEMA_V1);
+        const v1cols = db
+          .prepare('PRAGMA table_info(games)')
+          .all()
+          .map((r) => r.name);
+        if (!v1cols.includes('side_a_faction')) {
+          db.exec('ALTER TABLE games ADD COLUMN side_a_faction TEXT');
+        }
+        if (!v1cols.includes('side_b_faction')) {
+          db.exec('ALTER TABLE games ADD COLUMN side_b_faction TEXT');
+        }
+        if (!v1cols.includes('discord_webhook')) {
+          db.exec('ALTER TABLE games ADD COLUMN discord_webhook TEXT');
+        }
+      }
 
-      // Upgrade path: if the table already existed (pre-v1, 5-col schema), add the new
-      // columns. SQLite errors on ADD COLUMN when the column already exists — the
-      // cols.includes guard prevents that; we do not rely on SQLite to no-op it.
-      const cols = db
+      // v2 changes — apply whether arriving from v0 or v1.
+      db.exec(SCHEMA_V2_USERS);
+      const v2cols = db
         .prepare('PRAGMA table_info(games)')
         .all()
         .map((r) => r.name);
-
-      if (!cols.includes('side_a_faction')) {
-        db.exec('ALTER TABLE games ADD COLUMN side_a_faction TEXT');
+      if (!v2cols.includes('side_a_user_id')) {
+        db.exec('ALTER TABLE games ADD COLUMN side_a_user_id TEXT');
       }
-      if (!cols.includes('side_b_faction')) {
-        db.exec('ALTER TABLE games ADD COLUMN side_b_faction TEXT');
-      }
-      if (!cols.includes('discord_webhook')) {
-        db.exec('ALTER TABLE games ADD COLUMN discord_webhook TEXT');
+      if (!v2cols.includes('side_b_user_id')) {
+        db.exec('ALTER TABLE games ADD COLUMN side_b_user_id TEXT');
       }
 
       db.pragma(`user_version = ${CURRENT_USER_VERSION}`);
     })();
   }
-  // user_version === 1: already migrated, nothing to do
+  // user_version === 2: already migrated, nothing to do
 }
 
 // Factory — hoists all prepared statements at construction time (#331)
@@ -79,31 +100,46 @@ export function createStore(db) {
 
   const stmts = {
     insert: db.prepare(
-      'INSERT INTO games (id, side_a_token, side_a_faction, discord_webhook, status, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+      'INSERT INTO games (id, side_a_token, side_a_faction, discord_webhook, status, created_at, side_a_user_id) VALUES (?, ?, ?, ?, ?, ?, ?)'
     ),
     selectById: db.prepare('SELECT * FROM games WHERE id = ?'),
     updateJoin: db.prepare(
-      "UPDATE games SET side_b_token = ?, side_b_faction = ?, status = 'active' WHERE id = ? AND status = 'open'"
+      "UPDATE games SET side_b_token = ?, side_b_faction = ?, side_b_user_id = ?, status = 'active' WHERE id = ? AND status = 'open'"
     ),
     delete: db.prepare('DELETE FROM games WHERE id = ?'),
     // LIMIT 200 guards against unbounded memory growth as game count scales (#PERF-M1)
     selectAll: db.prepare(
       'SELECT id, status, created_at FROM games ORDER BY created_at DESC LIMIT 200'
     ),
+    selectByUser: db.prepare(
+      'SELECT id, status, created_at FROM games WHERE side_a_user_id = ? OR side_b_user_id = ? ORDER BY created_at DESC LIMIT 200'
+    ),
+    upsertUser: db.prepare(
+      'INSERT INTO users (id, username, avatar, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET username = excluded.username, avatar = excluded.avatar'
+    ),
+    getUserById: db.prepare('SELECT id, username, avatar FROM users WHERE id = ?'),
   };
 
   return {
-    createGame(id, sideAToken, faction, discordWebhook = null) {
-      stmts.insert.run(id, sideAToken, faction ?? null, discordWebhook, 'open', Date.now());
+    createGame(id, sideAToken, faction, discordWebhook = null, sideAUserId = null) {
+      stmts.insert.run(
+        id,
+        sideAToken,
+        faction ?? null,
+        discordWebhook,
+        'open',
+        Date.now(),
+        sideAUserId
+      );
       return id;
     },
 
-    joinGame(id, sideBToken, faction) {
+    joinGame(id, sideBToken, faction, sideBUserId = null) {
       // SEC-H1: contract assertion — defence-in-depth against caller bugs (#340)
       if (typeof sideBToken !== 'string' || !UUID_RE.test(sideBToken)) {
         throw new InvalidTokenError('sideBToken', sideBToken);
       }
-      const result = stmts.updateJoin.run(sideBToken, faction ?? null, id);
+      const result = stmts.updateJoin.run(sideBToken, faction ?? null, sideBUserId, id);
       if (result.changes === 0) {
         const row = stmts.selectById.get(id);
         if (!row) throw new GameNotFoundError(id);
@@ -122,6 +158,18 @@ export function createStore(db) {
 
     listGames() {
       return stmts.selectAll.all();
+    },
+
+    listGamesByUser(userId) {
+      return stmts.selectByUser.all(userId, userId);
+    },
+
+    upsertUser(id, username, avatar) {
+      stmts.upsertUser.run(id, username, avatar ?? null, Date.now());
+    },
+
+    getUser(id) {
+      return stmts.getUserById.get(id) ?? null;
     },
   };
 }
@@ -153,3 +201,6 @@ export const joinGame = (...args) => requireStore().joinGame(...args);
 export const deleteGame = (...args) => requireStore().deleteGame(...args);
 export const getGame = (...args) => requireStore().getGame(...args);
 export const listGames = (...args) => requireStore().listGames(...args);
+export const listGamesByUser = (...args) => requireStore().listGamesByUser(...args);
+export const upsertUser = (...args) => requireStore().upsertUser(...args);
+export const getUser = (...args) => requireStore().getUser(...args);

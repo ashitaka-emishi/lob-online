@@ -14,6 +14,7 @@ import { Server } from 'socket.io';
 import { initDb, getDb } from './store/gameSqlite.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import passport, { configurePassport } from './auth/discord.js';
+import { requireAuth } from './auth/requireAuth.js';
 import authRouter from './routes/auth.js';
 import gamesRouter from './routes/games.js';
 import oobRouter from './routes/oob.js';
@@ -95,7 +96,7 @@ export async function startServer() {
   app.use(sessionMiddleware);
 
   // Passport — must come after express-session so req.session is available (#m9-discord-oauth)
-  configurePassport();
+  configurePassport(getDb());
   app.use(passport.initialize());
   app.use(passport.session());
 
@@ -131,8 +132,8 @@ export async function startServer() {
     console.log('[server] dev auth enabled at /auth/dev (AUTH_DEV_MODE=true)');
   }
 
-  // Game API
-  app.use('/api/v1/games', gamesRouter);
+  // Game API — requireAuth ensures all game routes have a known user identity (#668)
+  app.use('/api/v1/games', requireAuth, gamesRouter);
   console.log('[server] game API enabled at /api/v1/games');
 
   // Scenario data API — production-safe, not gated by MAP_EDITOR_ENABLED (#431)

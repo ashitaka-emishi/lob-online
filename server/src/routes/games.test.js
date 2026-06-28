@@ -19,6 +19,7 @@ vi.mock('../store/index.js', () => ({
   deleteGameState: vi.fn().mockResolvedValue(undefined),
   getGame: vi.fn(),
   listGames: vi.fn(),
+  listGamesByUser: vi.fn(),
   GameNotFoundError: class GameNotFoundError extends Error {
     constructor(id) {
       super(`Game not found: ${id}`);
@@ -91,7 +92,7 @@ import {
   InvalidTokenError,
   getGame,
   joinGame,
-  listGames,
+  listGamesByUser,
   loadGame,
   saveGame,
 } from '../store/index.js';
@@ -140,9 +141,10 @@ async function buildApp() {
   app.locals.io = { to: mockTo };
   app.locals._mockEmit = mockEmit;
   app.locals._mockTo = mockTo;
-  // Minimal session stub — regenerate resets session and invokes callback (#SEC-M1)
+  // Minimal session + auth stub — regenerate resets session; req.user reflects a logged-in player
   app.use((req, _res, next) => {
     req.session = { regenerate: (cb) => cb() };
+    req.user = { id: 'test-user-id', username: 'Test Player', avatar: null };
     next();
   });
   app.use('/api/v1/games', router);
@@ -156,7 +158,7 @@ beforeEach(() => {
   getScenario.mockReturnValue({ id: 'south-mountain', turnStructure: {} });
   initGameState.mockReturnValue(MINIMAL_STATE);
   createGame.mockReturnValue(TEST_UUID);
-  listGames.mockReturnValue([]);
+  listGamesByUser.mockReturnValue([]);
   // Default: active game with side_a_token matching the most common test player token ('tok').
   // Tests that need a different game state (null, open, different tokens) override this.
   // side_a_faction/side_b_faction are required for requireSide to populate req.side (#562).
@@ -212,7 +214,8 @@ describe('POST /api/v1/games', () => {
       expect.any(String),
       expect.any(String),
       'union',
-      'https://discord.com/api/webhooks/123/abc'
+      'https://discord.com/api/webhooks/123/abc',
+      'test-user-id'
     );
   });
 
@@ -288,7 +291,12 @@ describe('POST /api/v1/games/:id/join', () => {
       .send({ side: 'confederate' });
     expect(res.status).toBe(200);
     expect(res.body.side).toBe('confederate');
-    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String), expect.any(String));
+    expect(joinGame).toHaveBeenCalledWith(
+      TEST_UUID,
+      expect.any(String),
+      expect.any(String),
+      'test-user-id'
+    );
   });
 
   it('returns 409 when side_b_faction already matches the requested faction (#664)', async () => {
@@ -398,7 +406,12 @@ describe('POST /api/v1/games/:id/join', () => {
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(200);
     expect(res.body.side).toBe('union');
-    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String), expect.any(String));
+    expect(joinGame).toHaveBeenCalledWith(
+      TEST_UUID,
+      expect.any(String),
+      expect.any(String),
+      'test-user-id'
+    );
   });
 
   it('joins successfully as union when caller session is for a different game (#340 #407)', async () => {
@@ -414,7 +427,12 @@ describe('POST /api/v1/games/:id/join', () => {
     const res = await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(res.status).toBe(200);
     expect(res.body.side).toBe('union');
-    expect(joinGame).toHaveBeenCalledWith(TEST_UUID, expect.any(String), expect.any(String));
+    expect(joinGame).toHaveBeenCalledWith(
+      TEST_UUID,
+      expect.any(String),
+      expect.any(String),
+      'test-user-id'
+    );
   });
 
   // ── Join hardening: duplicate-faction + DB-bound re-join (#562 #563) ──────────
@@ -525,16 +543,16 @@ describe('GET /api/v1/games/me', () => {
 });
 
 describe('GET /api/v1/games', () => {
-  it('returns 200 with empty array when no games', async () => {
-    listGames.mockReturnValue([]);
+  it('returns 200 with empty array when user has no games', async () => {
+    listGamesByUser.mockReturnValue([]);
     const app = await buildApp();
     const res = await request(app).get('/api/v1/games');
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
   });
 
-  it('returns list from store', async () => {
-    listGames.mockReturnValue([
+  it('returns only the calling user games from the store', async () => {
+    listGamesByUser.mockReturnValue([
       { id: 'g1', status: 'open' },
       { id: 'g2', status: 'active' },
     ]);
@@ -542,6 +560,7 @@ describe('GET /api/v1/games', () => {
     const res = await request(app).get('/api/v1/games');
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(2);
+    expect(listGamesByUser).toHaveBeenCalledWith('test-user-id');
   });
 });
 
