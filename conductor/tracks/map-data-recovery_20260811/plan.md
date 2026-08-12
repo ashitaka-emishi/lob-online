@@ -67,32 +67,52 @@ No merges, no code changes — this phase produces information, not modification
 
 ### Tasks
 
-- [ ] Task 1.1: Export `stash@{0}` to a durable location: `git stash show -p stash@{0} >
-/tmp/stash-0-full.patch` (or a dedicated `archive/stash-0-map-recovery` branch via
-      `git stash branch`). Confirm the export is readable independent of the stash stack
-      before touching the stash further — do not drop or pop it until this is verified safe.
-- [ ] Task 1.2: Extract stashed `map.json`
-      (`git show stash@{0}:data/scenarios/south-mountain/map.json`) and diff it hex-by-hex
-      against current `data/modules/south-mountain/map.json`. Categorize: hexes present only
-      in the stash (net-new coverage), hexes present in both with different terrain/elevation
-      (conflicts — current is likely stale, but verify), hexes present only in current
-      (post-2026-05-23 edits, e.g. the M9 unknown→clear pass — must not be silently discarded).
-- [ ] Task 1.3: Diff `git show stash@{0}:server/src/engine/hex.js` and
-      `git show stash@{0}:server/src/schemas/map.schema.js` against current versions of those
-      files. Determine whether the boundary-mirror-face validation logic is still structurally
-      compatible, or whether intervening changes (e.g. perf work referenced in `hex.js`'s
-      module-level caches, #294) require adapting the stashed fix rather than reapplying it
-      verbatim.
-- [ ] Task 1.4: Diff the stashed `client/src/composables/useEdgeLineLayer.js`,
-      `client/src/formulas/edge-model.js`, `client/src/components/HexMapOverlay.vue`,
-      `client/src/views/tools/MapEditorView.vue` (plus their tests) against current versions.
-      Note what's still relevant vs. superseded by later, unrelated work on those same files.
-- [ ] Task 1.5: Write a short diff-analysis report (counts, categories, specific conflicts,
-      recommended merge strategy) and present it to the user.
+- [x] Task 1.1: Exported via both methods for redundancy: patch file at
+      `/tmp/lob-stash-recovery/stash-0-full.patch`, and `git stash branch
+  archive/stash-0-map-recovery stash@{0}` — committed (`1ef6a62`) and pushed to
+      `origin/archive/stash-0-map-recovery`. The stash is now preserved in three independent
+      places (patch file, local commit, remote branch) and was dropped from the stash stack
+      by `git stash branch` as part of that operation, as expected.
+- [x] Task 1.2: Diffed hex-by-hex. Stash: 2261 hexes. Current: 841 hexes, all 841 also present
+      in stash (zero current-only hexes — nothing unique to lose). 1420 net-new hexes in stash.
+      160 hexes present in both with conflicting terrain/elevation — checked programmatically
+      for any case where current is better: zero found. Stash is a strict superset/improvement
+      in every measurable respect (terrain specificity, elevation completeness, edge/hexside
+      data coverage).
+- [x] Task 1.3: `hex.js` diff is comment-only (no logic change). `map.schema.js` diff is
+      exactly the boundary-mirror-face feature (`FaceIndex` enum widened to include '3'-'5',
+      `validateBoundaryMirrorFaces` function) — confirmed via direct diff that **no other
+      change has landed in `map.schema.js` since 2026-05-23**, so this is a clean, isolated
+      reapply with no intervening-change risk. `movement.js` stash diff is comment-only; current
+      master has since added an unrelated `pathCost()` function (#675/#680) not present in the
+      stash — must be preserved, not touched.
+- [x] Task 1.4: Diffed all four files + tests against current master: - `useEdgeLineLayer.js` (16-line diff) — clean, isolated, straightforward reapply - `HexMapOverlay.vue` (45-line diff) — mostly clean; current has since added a
+      `selectedUnitId` prop (#480) and a terrain-default comment (#419) not in the stash —
+      must be preserved during reapply - `edge-model.js` (129-line diff) — **not a clean reapply**. Current's `canonicalOwner()`
+      still has the exact bug the stash fixes (confirmed by reading current code directly:
+      `return { ownerId: neighbourId ?? hexId, ownerFace: faceIndex - 3 }` — for boundary
+      hexes, `ownerFace` is wrongly remapped even when there's no neighbour to own it,
+      colliding with the hex's own faces 0-2). Current has independently gained a _different_,
+      complementary fix since — `stripNonPlayableBoundaryEdges`/`isEdgeAtNonPlayableBoundary`
+      (also citing #418) — which strips edges at playable/non-playable boundaries but does
+      not touch `canonicalOwner`'s grid-edge bug. The two are unrelated sub-fixes for the same
+      umbrella issue (#418) and don't conflict, but must be integrated function-by-function,
+      not patched wholesale — current also renamed/restructured `CONTOUR_TYPES`/`SLOPE_TYPES`
+      and now imports from `config/feature-types.js`, which the stash predates. - `MapEditorView.vue` (249-line diff) — most complex file. Current has grown substantially
+      since 2026-05-23: module-slug routing (`useRoute()`), `EditorNav` component, a
+      `beforeSave` hook wired to `stripNonPlayableBoundaryEdges`. Needs careful, deliberate
+      reconciliation in Phase 4, not a blind reapply. - Test files: `useEdgeLineLayer.test.js` (45-line diff) straightforward.
+      `map.schema.test.js` (38-line diff) — one old test (`rejects edges with face index "3"
+      (non-canonical)`) needs replacing with the stash's two new tests reflecting the changed
+      schema behavior. `edge-model.test.js` (290-line diff) — largest test diff, needs
+      function-by-function reconciliation in Phase 2/4, mirroring the source file's complexity.
+- [x] Task 1.5: Report written and presented to user (see conversation) — see summary below.
 
 ### Verification
 
-- [ ] Stash content is durably preserved outside the stash stack
+- [x] Stash content is durably preserved outside the stash stack — patch file, commit
+      `1ef6a62` on `archive/stash-0-map-recovery`, and pushed to
+      `origin/archive/stash-0-map-recovery`
 - [ ] **Human checkpoint:** user approves the diff-analysis report and merge strategy before
       Phase 2 begins
 
