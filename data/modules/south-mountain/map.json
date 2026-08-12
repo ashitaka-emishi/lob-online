@@ -1,7 +1,7 @@
 {
   "_status": "partial",
-  "_description": "The 841 hex records present here all have a concrete `terrain` value (0 `unknown`), but that is NOT the same as a complete map: gridSpec declares a 64x35 (2240-cell) grid and only 841 cells — mostly columns 1-30 — have any record at all. 376 of the 841 were set to \"clear\" as a bulk design-decision default (see conductor/tracks/m9-map-completion_20260625/metadata.json), not read off sm-map.jpg. 6 of the 10 scenario VP hexes are unreachable by the movement engine (server/src/engine/movement.js treats unrecorded hexes as impassable), and 75 hexes are missing elevation. A much more complete dataset (2261 hexes, 0 unknown, spanning columns 1-63) was recovered from a forgotten local git stash and is being reviewed for integration — see issue #689. Hexside features (roads, streams, stone walls, fords/bridges) are also still pending — tracked in issue #685. Two scenario setupZone/referenceHex anchors (38.31, 36.27) have no hex record at all — see _todoHexes below.",
-  "_digitizationNote": "Do not read \"0 unknown terrain\" as \"map complete\" — it only means the 841 hexes that happen to be recorded here all have a terrain value. Real coverage is far short of the 2240-cell grid. See _description and issue #689 (stash recovery) before treating this file as ready for full-map play.",
+  "_description": "2261 hexes recorded, 0 unknown terrain, spanning the full playable grid (columns 1-63, rows 1-35). Recovered from a forgotten git stash (map-data-recovery_20260811, #689) that sat unapplied for ~2.5 months; merged and re-verified against the live engine, not just re-asserted: all 10/10 scenario VP hexes are reachable by the movement pathfinder (hexNeighbors() BFS), 97.5% of hexes (2205/2261) are connected in one component (the other 56 are row 00/36 calibration border markers, outside the real 1-35 row grid — expected, not a gap), and only 48 hexes (2.1%) are missing elevation. Both prior setupZone/referenceHex gaps (38.31, 36.27) are now covered. Hexside features are substantially present (777/2261 hexes carry edge data: 258 road, 125 trail, 49 pike, 48 stream, 122 stoneWall, 2 bridge, plus 677 contour/elevation features) but have NOT been independently spot-checked against docs/reference/south-mountain/sm-map.jpg segment-by-segment — that visual audit, plus a full playtest, is issue #685's remaining scope. _status stays \"partial\" until that audit closes it out.",
+  "_digitizationNote": "Terrain and VP-hex reachability are verified complete (see #689's closing summary for the verification method). What remains before flipping _status to \"available\" is #685's visual audit of the road/stream/stone-wall network against sm-map.jpg and a full playtest — not a data-coverage problem, a verification-completeness one.",
   "scenario": "south-mountain",
   "layout": "pointy-top",
   "hexIdFormat": "col.row",
@@ -19463,20 +19463,5 @@
       "elevation": 20
     }
   ],
-  "_todoHexes": {
-    "_note": "These setupZone/referenceHex anchors from scenario.json's setup section are not present in this file's hexes list. engine/init.js (M4 initial pass) places zone-constrained units directly at referenceHex, so these two hexes need real terrain/elevation data before those units set up on defined ground. The third referenceHex (18.05, Union Cavalry Division) is already present.",
-    "hexes": [
-      {
-        "referenceHex": "38.31",
-        "usedBy": "Anderson Brigade (A/dH) setup zone, scenario.json setup.confederate",
-        "constraint": "within2Of"
-      },
-      {
-        "referenceHex": "36.27",
-        "usedBy": "Reserve Artillery batteries setup zone, scenario.json setup.confederate",
-        "constraint": "within3Of"
-      }
-    ]
-  },
   "_savedAt": 1774326738616
 }

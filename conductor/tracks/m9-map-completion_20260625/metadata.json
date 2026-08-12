@@ -4,9 +4,9 @@
   "type": "chore",
   "status": "partial",
   "created": "2026-06-25T00:00:00Z",
-  "updated": "2026-08-11T00:00:00Z",
+  "updated": "2026-08-12T00:00:00Z",
   "closesIssues": [669],
   "phases": { "total": 2, "completed": 1 },
   "tasks": { "total": 7, "completed": 3 },
-  "notes": "Phase 1 (typing the 841 then-recorded hexes) complete: all 376 unknown hexes set to clear (unknown ≈ clear per design decision). Phase 2 (hexside features: roads, streams, stone walls, fords) deferred to manual Map Editor work, tracked in #685. Track was previously marked status: 'complete' in tracks.md, which overstated matters further: the underlying map has real coverage gaps beyond hexside features (only ~37% of the 2240-cell grid has any hex record, 6/10 VP hexes unreachable). Corrected during /team-review on docs-issue-sync_20260811 (PR #687); coverage gap now tracked in #689."
+  "notes": "Phase 1 (typing the 841 then-recorded hexes) complete: all 376 unknown hexes set to clear (unknown ≈ clear per design decision). Phase 2 (hexside features: roads, streams, stone walls, fords) deferred to manual Map Editor work, tracked in #685. Track was previously marked status: 'complete' in tracks.md, which overstated matters further: the underlying map had real coverage gaps beyond hexside features (only ~37% of the 2240-cell grid had any hex record, 6/10 VP hexes unreachable). Corrected during /team-review on docs-issue-sync_20260811 (PR #687); coverage gap tracked in #689 and resolved by map-data-recovery_20260811 (2261 hexes, full grid coverage, all VP hexes reachable). That same recovery substantially advanced this track's own deferred Phase 2 too — 777/2261 hexes now carry edge/hexside data — but Phase 2 stays open here since the recovered data hasn't been visually audited against sm-map.jpg for road/stream/wall network completeness; that audit is #685's remaining scope, not this track's."
 }
