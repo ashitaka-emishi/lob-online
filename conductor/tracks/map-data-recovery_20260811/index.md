@@ -1,7 +1,7 @@
 # Track: South Mountain Map Data Recovery — Stash Integration
 
 **ID:** map-data-recovery_20260811
-**Status:** Pending
+**Status:** Complete
 
 ## Documents
 
@@ -10,8 +10,10 @@
 
 ## Progress
 
-- Phases: 0/5 complete
-- Tasks: 0/22 complete
+- Phases: 5/5 complete
+- Tasks: 24/24 complete
+- Closed #689 with full summary; posted an informational comment on #685
+- South Mountain map: 841 → 2261 hexes, all 10/10 VP hexes reachable (was 4/10)
 
 ## Quick Links
 

@@ -21,7 +21,7 @@ Navigation hub for project context.
 | [m8-notifications_20260622](./tracks/m8-notifications_20260622/index.md)   | M8 Discord Notifications + Hex Control Wiring                  | Complete |
 | [move-debt-sprint_20260627](./tracks/move-debt-sprint_20260627/index.md)   | MOVE Debt Sprint — Path Cost + Partial Moves (#675 #680)       | Pending  |
 | [docs-issue-sync_20260811](./tracks/docs-issue-sync_20260811/index.md)     | Documentation, Data-Metadata, and Issue-Tracker Sync           | Complete |
-| [map-data-recovery_20260811](./tracks/map-data-recovery_20260811/index.md) | South Mountain Map Data Recovery — Stash Integration (#689)    | Pending  |
+| [map-data-recovery_20260811](./tracks/map-data-recovery_20260811/index.md) | South Mountain Map Data Recovery — Stash Integration (#689)    | Complete |
 
 ## All Tracks
 

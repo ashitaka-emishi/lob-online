@@ -3,7 +3,7 @@
 **Track ID:** map-data-recovery_20260811
 **Type:** Chore
 **Created:** 2026-08-11
-**Status:** Draft
+**Status:** Complete
 
 ## Summary
 
@@ -55,35 +55,35 @@ directly will conflict, and even where it doesn't conflict cleanly, silently acc
 
 ## Acceptance Criteria
 
-- [ ] `stash@{0}` exported to a durable, non-stash location (patch file and/or dedicated
+- [x] `stash@{0}` exported to a durable, non-stash location (patch file and/or dedicated
       branch) before any further work, so it cannot be lost to an accidental `git stash drop`
       or GC
-- [ ] Stashed `map.json` diffed hex-by-hex against current `data/modules/south-mountain/map.json`;
+- [x] Stashed `map.json` diffed hex-by-hex against current `data/modules/south-mountain/map.json`;
       differences categorized (net-new hexes, changed terrain, changed elevation, any hexes
       present in both with conflicting data)
-- [ ] Stashed `hex.js`/`map.schema.js` boundary-mirror-face changes reviewed against current
+- [x] Stashed `hex.js`/`map.schema.js` boundary-mirror-face changes reviewed against current
       versions of those files; determined whether the fix is still correct as-is or needs
       adaptation to schema/engine changes made since 2026-05-23
-- [ ] Recovered hex data merged into current `map.json` (schema-valid; correct path; `_savedAt`
+- [x] Recovered hex data merged into current `map.json` (schema-valid; correct path; `_savedAt`
       and internal metadata fields updated accurately — not restating "digitization complete")
-- [ ] Boundary-mirror-face schema/engine fix reapplied (adapted as needed) with tests
-- [ ] `npm run validate-data` shows dramatically improved coverage — target: 0 (or a small,
+- [x] Boundary-mirror-face schema/engine fix reapplied (adapted as needed) with tests
+- [x] `npm run validate-data` shows dramatically improved coverage — target: 0 (or a small,
       explicitly-documented remainder) `referenceHex`/coverage warnings
-- [ ] VP-hex reachability re-verified via the same `hexNeighbors()` BFS method used to find the
+- [x] VP-hex reachability re-verified via the same `hexNeighbors()` BFS method used to find the
       original gap — target: 10/10 reachable, or explicitly documented exceptions with reasons
-- [ ] Elevation completeness re-verified — target: 0 (or documented remainder) missing
-- [ ] Stashed component/composable changes (`HexMapOverlay.vue`, `MapEditorView.vue`,
+- [x] Elevation completeness re-verified — target: 0 (or documented remainder) missing
+- [x] Stashed component/composable changes (`HexMapOverlay.vue`, `MapEditorView.vue`,
       `useEdgeLineLayer.js`, `edge-model.js`, and their tests) reviewed and reconciled with
       current versions — reapplied if still correct and needed, discarded with reasoning if
       superseded
-- [ ] Full test suite passes; `npm run quality:strict` passes
-- [ ] `map.json` `_status`/`_description`/`_digitizationNote`/`_todoHexes` updated to reflect
+- [x] Full test suite passes; `npm run quality:strict` passes
+- [x] `map.json` `_status`/`_description`/`_digitizationNote`/`_todoHexes` updated to reflect
       the true final state (not reflipped to "complete" without the verification above backing
       it up)
-- [ ] `docs/library.md`, `docs/library.json`, `docs/agents/domain-expert/design.md`,
+- [x] `docs/library.md`, `docs/library.json`, `docs/agents/domain-expert/design.md`,
       `docs/designs/high-level-design.md` (the locations corrected in PR #687) updated again to
       reflect genuine completion, or the real remaining gap if any
-- [ ] Issue #689 closed with a summary of what was recovered, what was adapted, and what (if
+- [x] Issue #689 closed with a summary of what was recovered, what was adapted, and what (if
       anything) remains
 
 ## Dependencies
