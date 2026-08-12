@@ -1,7 +1,8 @@
 import { computed } from 'vue';
 import { edgeLineFull, edgeToCenter } from '../utils/hexGeometry.js';
 
-const CANONICAL_EDGE_DIRS = ['N', 'NE', 'SE'];
+const EDGE_DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
+const CANONICAL_EDGE_DIRS = EDGE_DIRS.slice(0, 3);
 
 // Mirror directions and the face index on the canonical neighbor for each:
 //   S edge  → neighbor-S's face 0 (N)
@@ -39,7 +40,8 @@ export function useEdgeLineLayer(cells, overlayConfig, neighborMap) {
     const nbMap = includeMirrors ? (neighborMap?.value ?? null) : null;
 
     return cells.value.map((cell) => {
-      const canonicalFaces = CANONICAL_EDGE_DIRS.map((dir, fi) => ({
+      const directFaces = EDGE_DIRS.map((dir, fi) => ({
+        key: `direct-${dir}`,
         dir,
         lineAttrs: lineAttrFn(cell, dir),
         groups: groups.map((group) => ({
@@ -55,6 +57,7 @@ export function useEdgeLineLayer(cells, overlayConfig, neighborMap) {
             const neighbor = nbMap.get(`${cell.id}:${dir}`);
             const fi = MIRROR_TO_CANONICAL_FI[mi];
             return {
+              key: `mirror-${dir}`,
               dir,
               lineAttrs: lineAttrFn(cell, dir),
               groups: groups.map((group) => ({
@@ -65,7 +68,7 @@ export function useEdgeLineLayer(cells, overlayConfig, neighborMap) {
           })
         : [];
 
-      return { id: cell.id, edgeFaces: [...canonicalFaces, ...mirrorFaces] };
+      return { id: cell.id, edgeFaces: [...directFaces, ...mirrorFaces] };
     });
   }
 

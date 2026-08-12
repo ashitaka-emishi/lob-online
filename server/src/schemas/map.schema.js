@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { hexNeighborInDir } from '../engine/hex.js';
 
 const HexId = z.string().regex(/^\d+\.\d+$/, 'Hex ID must be in col.row format (e.g. "19.23")');
 
@@ -33,11 +34,12 @@ const EdgeFeature = z.object({
   losHeightBonus: z.number().optional(),
 });
 
-// Canonical edge ownership: only face indices 0, 1, 2 are stored on this hex.
-// Faces 3, 4, 5 are stored on the neighbour hex as face index (dir − 3).
-// NOTE: JSON object keys are always strings, so face indices are stored as '0', '1', '2'.
+// Canonical edge ownership: interior mirror faces 3, 4, 5 are stored on the
+// neighbour hex as face index (dir − 3). Boundary mirror faces have no neighbour,
+// so they are stored directly on this hex as 3, 4, or 5.
+// NOTE: JSON object keys are always strings, so face indices are stored as '0'...'5'.
 // Any consumer performing arithmetic on face keys must use parseInt(face, 10).
-const FaceIndex = z.enum(['0', '1', '2']);
+const FaceIndex = z.enum(['0', '1', '2', '3', '4', '5']);
 
 const HexEntry = z.object({
   hex: HexId,
@@ -105,6 +107,21 @@ function validateCoexistence(hex, hexIdx, ctx) {
         path: ['hexes', hexIdx, 'edges', face],
       });
     }
+  }
+}
+
+function validateBoundaryMirrorFaces(hex, hexIdx, gridSpec, ctx) {
+  if (!gridSpec) return;
+  if (!hex.edges) return;
+  for (const face of Object.keys(hex.edges)) {
+    const faceIndex = Number(face);
+    if (faceIndex < 3) continue;
+    if (hexNeighborInDir(hex.hex, faceIndex, gridSpec) === null) continue;
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Hex ${hex.hex} face ${face}: faces 3-5 may only be stored directly on map boundaries`,
+      path: ['hexes', hexIdx, 'edges', face],
+    });
   }
 }
 
@@ -197,6 +214,7 @@ export const MapSchema = z
           }
         }
       }
+      validateBoundaryMirrorFaces(hex, i, data.gridSpec, ctx);
       validateCoexistence(hex, i, ctx);
     }
   });

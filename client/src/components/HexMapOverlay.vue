@@ -359,9 +359,10 @@ const { cellsForEdges, throughHexSegments } = useEdgeLineLayer(
 );
 
 // ── Road edge count — 2+ threshold for through-hex rendering ─────────────────
-// Counts all road-bearing edges touching each hex (canonical + neighbor's canonical).
+// Counts all road-bearing edges touching each hex (direct boundary edges + neighbor canonical).
 // Hexes with fewer than 2 road edges are suppressed in the ThroughHexLayer.
-const CANONICAL_DIRS_ROAD = ['N', 'NE', 'SE'];
+const EDGE_DIRS_ROAD = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
+const CANONICAL_DIRS_ROAD = EDGE_DIRS_ROAD.slice(0, 3);
 
 const roadEdgeCountMap = computed(() => {
   if (props.overlayConfig.edgeLine?.style !== 'through-hex') return new Map();
@@ -369,10 +370,11 @@ const roadEdgeCountMap = computed(() => {
   const nbMap = gridData.value.neighborMap;
   for (const cell of cells.value) {
     const hexId = cell.id;
-    for (let fi = 0; fi < 3; fi++) {
+    for (let fi = 0; fi < EDGE_DIRS_ROAD.length; fi++) {
       const hasRoad = cell.edges?.[fi]?.some((f) => ROAD_LINE_TYPES.has(f.type));
       if (!hasRoad) continue;
       counts.set(hexId, (counts.get(hexId) ?? 0) + 1);
+      if (fi >= CANONICAL_DIRS_ROAD.length) continue;
       const neighbor = nbMap.get(`${hexId}:${CANONICAL_DIRS_ROAD[fi]}`);
       if (neighbor) counts.set(neighbor.id, (counts.get(neighbor.id) ?? 0) + 1);
     }
@@ -396,7 +398,7 @@ const GLYPH_EDGE_ROTATION = { N: 0, NE: 60, SE: -60, S: 0, SW: 60, NW: -60 };
 // Pre-computing x/y/transform avoids calling edgeMidpoint 2-3× per glyph in the template.
 function _buildGlyphEdges(featureType) {
   return cells.value.flatMap((cell) =>
-    CANONICAL_DIRS_ROAD.flatMap((dir, fi) => {
+    EDGE_DIRS_ROAD.flatMap((dir, fi) => {
       const hasFeat = cell.edges?.[fi]?.some((f) => f.type === featureType);
       if (!hasFeat) return [];
       const mid = edgeMidpoint(cell.corners, dir);
@@ -673,14 +675,14 @@ defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
 
         <!-- EdgeLineLayer — road, stream, contour, and other edge features ───
              Uses cellsForEdges (computed) to avoid inline .filter() on each
-             render. Only canonical faces 0/1/2 (N/NE/SE) are stored per hex;
-             faces 3/4/5 live on the neighbour as face 0/1/2.               -->
+             render. Interior mirror faces 3/4/5 live on the neighbour as
+             face 0/1/2; boundary mirror faces remain on this hex.           -->
         <g
           v-if="overlayConfig.edgeLine && overlayConfig.edgeLine.style !== 'through-hex'"
           class="layer-edge-lines"
         >
           <template v-for="cell in cellsForEdges" :key="'edges-' + cell.id">
-            <template v-for="face in cell.edgeFaces" :key="face.dir">
+            <template v-for="face in cell.edgeFaces" :key="face.key ?? face.dir">
               <template v-for="(gd, gi) in face.groups" :key="gi">
                 <line
                   v-for="feat in gd.features"
@@ -701,7 +703,7 @@ defineExpose({ isPaintMouseDown, hoverInfo, gridGeometry });
              Only renders hexes with 2+ road edges; outlines drawn first then roads on top. -->
         <g v-if="overlayConfig.edgeLine?.style === 'through-hex'" class="layer-through-hex-lines">
           <template v-for="cell in filteredThroughHexSegments" :key="'thru-' + cell.id">
-            <template v-for="face in cell.edgeFaces" :key="face.dir">
+            <template v-for="face in cell.edgeFaces" :key="face.key ?? face.dir">
               <template v-for="(gd, gi) in face.groups" :key="gi">
                 <!-- Outline pass (wider, behind) -->
                 <line

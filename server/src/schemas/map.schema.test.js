@@ -10,6 +10,19 @@ const MINIMAL_VALID = {
   hexes: [],
 };
 
+const TEST_GRID_SPEC = {
+  cols: 64,
+  rows: 35,
+  dx: 100,
+  dy: 50,
+  hexWidth: 35,
+  hexHeight: 35,
+  imageScale: 1,
+  strokeWidth: 0.5,
+  orientation: 'flat',
+  evenColUp: true,
+};
+
 describe('MapSchema — HexId validation', () => {
   it('accepts valid hex id "06.10"', () => {
     const result = MapSchema.safeParse({
@@ -885,10 +898,26 @@ describe('MapSchema — integer face-index edge keys (#135)', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects edges with face index "3" (non-canonical)', () => {
+  it('accepts boundary mirror face indices "3", "4", "5"', () => {
     const result = MapSchema.safeParse({
       ...MINIMAL_VALID,
-      hexes: [{ hex: '01.01', terrain: 'clear', edges: { 3: [{ type: 'stream' }] } }],
+      gridSpec: TEST_GRID_SPEC,
+      hexes: [
+        {
+          hex: '01.01',
+          terrain: 'clear',
+          edges: { 3: [{ type: 'stream' }], 4: [{ type: 'road' }], 5: [{ type: 'elevation' }] },
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects direct mirror face indices "3", "4", "5" when the neighbour exists', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: TEST_GRID_SPEC,
+      hexes: [{ hex: '03.03', terrain: 'clear', edges: { 3: [{ type: 'stream' }] } }],
     });
     expect(result.success).toBe(false);
   });

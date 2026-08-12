@@ -6,7 +6,8 @@
  *
  * Coordinate system: flat-top hexes, EVEN_Q offset (evenColUp: true).
  * Edge canonical ownership: faces 0 (N), 1 (NE), 2 (SE) are stored on each hex;
- * faces 3 (S), 4 (SW), 5 (NW) are stored on the neighbor as (dirIndex − 3).
+ * interior faces 3 (S), 4 (SW), 5 (NW) are stored on the neighbor as
+ * (dirIndex − 3). Boundary faces 3-5 stay on their physical hex.
  * See map.schema.js for the authoritative definition.
  */
 

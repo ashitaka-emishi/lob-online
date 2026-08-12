@@ -204,7 +204,7 @@ function handleEdgeClearAll(allowedTypes) {
   if (!mapData.value) return;
   for (const hex of mapData.value.hexes) {
     if (!hex.edges) continue;
-    for (const face of [0, 1, 2]) {
+    for (const face of [0, 1, 2, 3, 4, 5]) {
       if (!hex.edges[face]) continue;
       hex.edges[face] = hex.edges[face].filter(
         (f) => !allowedTypes.includes(typeof f === 'string' ? f : f.type)
@@ -472,14 +472,14 @@ function onEdgeRightClick({ hexId, dir }) {
   }
 }
 
-// Clears all features of the given types from every canonical edge (0/1/2) of hexId.
+// Clears all features of the given types from every edge of hexId, including boundary mirrors.
 function handleHexEdgeClearAll(hexId, types) {
   if (!mapData.value) return;
   const idx = hexIndex.value.get(hexId) ?? -1;
   if (idx < 0) return;
   const hex = mapData.value.hexes[idx];
   if (!hex.edges) return;
-  for (const face of [0, 1, 2]) {
+  for (const face of [0, 1, 2, 3, 4, 5]) {
     if (!hex.edges[face]) continue;
     hex.edges[face] = hex.edges[face].filter(
       (f) => !types.includes(typeof f === 'string' ? f : f.type)
