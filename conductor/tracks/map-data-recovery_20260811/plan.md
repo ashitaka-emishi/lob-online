@@ -55,9 +55,9 @@ used across multiple tools — all Checkpointed-surface triggers per
 
 ## Phase 0: Prerequisite
 
-- [ ] Confirm PR #687 (`docs-issue-sync_20260811`) has merged to `master`. If not yet merged,
+- [x] Confirm PR #687 (`docs-issue-sync_20260811`) has merged to `master`. If not yet merged,
       halt and wait — this track's baseline assumptions (corrected `validate-data.js`,
-      accurate `map.json` metadata) depend on it.
+      accurate `map.json` metadata) depend on it. Merged 2026-08-12, commit `7a5221a`.
 
 ---
 
