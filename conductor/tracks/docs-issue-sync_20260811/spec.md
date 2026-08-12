@@ -3,7 +3,7 @@
 **Track ID:** docs-issue-sync_20260811
 **Type:** Chore
 **Created:** 2026-08-11
-**Status:** Draft
+**Status:** Complete
 
 ## Summary
 
@@ -36,32 +36,32 @@ gate, `sameSite: 'lax'` cookie).
 
 ## Acceptance Criteria
 
-- [ ] `data/modules/south-mountain/map.json`: `_description`/`_digitizationNote` rewritten to
+- [x] `data/modules/south-mountain/map.json`: `_description`/`_digitizationNote` rewritten to
       state terrain digitization is complete (841/841, 0 unknown) and hexside features are
       pending (tracked in #685); stale `_todoHexes` block removed (its setup-position zones
       are already resolved in `scenario.json`); `_status` stays `"partial"` (accurate — hexside
       features are still incomplete)
-- [ ] `docs/library.md` SM_MAP_DATA row (line 51) updated from "🔧 scaffold, 31 known hexes" to
+- [x] `docs/library.md` SM_MAP_DATA row (line 51) updated from "🔧 scaffold, 31 known hexes" to
       reflect terrain-complete/hexside-pending state
-- [ ] `docs/library.json` SM_MAP_DATA entry (`description`/`status`) updated to match
-- [ ] `docs/agents/domain-expert/design.md` SM_MAP_DATA row (line 45) updated — no longer says
+- [x] `docs/library.json` SM_MAP_DATA entry (`description`/`status`) updated to match
+- [x] `docs/agents/domain-expert/design.md` SM_MAP_DATA row (line 45) updated — no longer says
       "partial, digitization in progress"
-- [ ] `docs/designs/high-level-design.md` risk-register row (~line 2190) updated — terrain
+- [x] `docs/designs/high-level-design.md` risk-register row (~line 2190) updated — terrain
       digitization is resolved; hexside features tracked separately in #685
-- [ ] `conductor/tracks.md` line 160: `m9-map-completion_20260625` checkbox flipped `[ ]` →
+- [x] `conductor/tracks.md` line 160: `m9-map-completion_20260625` checkbox flipped `[ ]` →
       `[x]` to match its own `metadata.json`/`plan.md` (`status: "complete"`)
-- [ ] `conductor/tracks/m9-discord-oauth_20260625/metadata.json` updated: `status`
+- [x] `conductor/tracks/m9-discord-oauth_20260625/metadata.json` updated: `status`
       `"pending"` → `"complete"`, `phases.completed` 0 → 3, `tasks.completed` 0 → 10, `updated`
       timestamp refreshed — to match its own `plan.md` (`[x] Complete`, all tasks checked,
       "Completed 2026-06-28")
-- [ ] 13 stale GitHub issues closed, each with a comment citing the PR/commit that resolved it
+- [x] 13 stale GitHub issues closed, each with a comment citing the PR/commit that resolved it
       on `origin/master`: #344, #410, #506, #550, #554, #556, #627, #628, #629, #650, #651,
       #652, #680
-- [ ] Remaining open issues (#653, #668, #676, #677, #678, #679, #681, #685) reconfirmed as
+- [x] Remaining open issues (#653, #668, #676, #677, #678, #679, #681, #685) reconfirmed as
       genuinely unresolved (or, for #668, unmerged) and left open — no action. #668 explicitly
       flagged for the user: its implementation is complete on `feat/m9-discord-oauth` but that
       branch has no PR and is not merged
-- [ ] `npm run validate-data`, `npm run lint`, `npm run format:check` all pass after edits
+- [x] `npm run validate-data`, `npm run lint`, `npm run format:check` all pass after edits
 
 ## Dependencies
 
