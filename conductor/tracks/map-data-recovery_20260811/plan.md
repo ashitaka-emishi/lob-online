@@ -69,7 +69,7 @@ No merges, no code changes — this phase produces information, not modification
 
 - [x] Task 1.1: Exported via both methods for redundancy: patch file at
       `/tmp/lob-stash-recovery/stash-0-full.patch`, and `git stash branch
-  archive/stash-0-map-recovery stash@{0}` — committed (`1ef6a62`) and pushed to
+archive/stash-0-map-recovery stash@{0}` — committed (`1ef6a62`) and pushed to
       `origin/archive/stash-0-map-recovery`. The stash is now preserved in three independent
       places (patch file, local commit, remote branch) and was dropped from the stash stack
       by `git stash branch` as part of that operation, as expected.
@@ -103,7 +103,7 @@ No merges, no code changes — this phase produces information, not modification
       `beforeSave` hook wired to `stripNonPlayableBoundaryEdges`. Needs careful, deliberate
       reconciliation in Phase 4, not a blind reapply. - Test files: `useEdgeLineLayer.test.js` (45-line diff) straightforward.
       `map.schema.test.js` (38-line diff) — one old test (`rejects edges with face index "3"
-      (non-canonical)`) needs replacing with the stash's two new tests reflecting the changed
+(non-canonical)`) needs replacing with the stash's two new tests reflecting the changed
       schema behavior. `edge-model.test.js` (290-line diff) — largest test diff, needs
       function-by-function reconciliation in Phase 2/4, mirroring the source file's complexity.
 - [x] Task 1.5: Report written and presented to user (see conversation) — see summary below.
@@ -113,8 +113,8 @@ No merges, no code changes — this phase produces information, not modification
 - [x] Stash content is durably preserved outside the stash stack — patch file, commit
       `1ef6a62` on `archive/stash-0-map-recovery`, and pushed to
       `origin/archive/stash-0-map-recovery`
-- [ ] **Human checkpoint:** user approves the diff-analysis report and merge strategy before
-      Phase 2 begins
+- [x] **Human checkpoint:** user approved the diff-analysis report and merge strategy
+      ("proceed")
 
 ---
 
@@ -122,21 +122,29 @@ No merges, no code changes — this phase produces information, not modification
 
 ### Tasks
 
-- [ ] Task 2.1: Reapply or adapt the boundary-mirror-face schema change to current
-      `server/src/schemas/map.schema.js` (`FaceIndex` enum widening, `validateBoundaryMirrorFaces`)
-- [ ] Task 2.2: Reapply or adapt the corresponding `server/src/engine/hex.js` doc/comment
-      updates
-- [ ] Task 2.3: Add/update tests for the boundary-mirror-face validation
-      (`map.schema.test.js`), reconciling with the stashed test changes from Task 1.3
-- [ ] Task 2.4: Run the full test suite; fix any regressions surfaced by the schema/engine
-      change interacting with code written after 2026-05-23
+- [x] Task 2.1: Reapplied the boundary-mirror-face schema change to
+      `server/src/schemas/map.schema.js` — `FaceIndex` enum widened to `'0'`-`'5'`,
+      `validateBoundaryMirrorFaces` added and wired into the `superRefine` hex loop, comment
+      block updated, `hexNeighborInDir` imported from `engine/hex.js`
+- [x] Task 2.2: Reapplied the corresponding comment updates in `server/src/engine/hex.js` and
+      `server/src/engine/movement.js` (both comment-only, no logic change, matching the Task
+      1.3 finding)
+- [x] Task 2.3: Replaced the single obsolete test (`rejects edges with face index "3"
+    (non-canonical)`) with the stash's two tests (`accepts boundary mirror face indices...`,
+      `rejects direct mirror face indices... when the neighbour exists`) plus the
+      `TEST_GRID_SPEC` fixture they need, in `map.schema.test.js`
+- [x] Task 2.4: Full test suite run — no regressions
 
 ### Verification
 
-- [ ] `npm run test` green, no regressions
-- [ ] `npm run validate-data` still passes against current (pre-merge) `map.json`
-- [ ] **Human checkpoint:** user approves the schema/engine changes before Phase 3's data
-      merge begins
+- [x] `npm run test` — 3250 passed (3249 + 1 net new test), 12 pre-existing skips, 0 failures,
+      0 regressions
+- [x] `npm run validate-data` still passes against current (pre-merge) `map.json` — 0 errors,
+      3 warnings (1 pre-existing + 2 expected `referenceHex` warnings, to be resolved by the
+      Phase 3 data merge)
+- [x] `npm run lint` / `npm run format:check` clean
+- [x] **Human checkpoint:** pending — presenting Phase 2 changes for approval before Phase 3's
+      data merge begins
 
 ---
 
