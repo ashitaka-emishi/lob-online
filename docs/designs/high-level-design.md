@@ -93,10 +93,11 @@
 > DigitalOcean Droplet provisioning deferred to next milestone.
 >
 > **In progress:** M8 code phases complete. DO Droplet provisioning deferred.
-> South Mountain map: full playable grid coverage recovered from a forgotten git stash
-> (map-data-recovery_20260811, #689) — 2261 hexes, 0 unknown terrain, all 10/10 VP hexes
-> reachable. Hexside features (roads, streams, stone walls, fords) substantially present but
-> pending visual audit against sm-map.jpg, tracked in #685. Counter linkages still in progress.
+> South Mountain map: recovered from a forgotten git stash (map-data-recovery_20260811, #689)
+> — 2261 hexes, 0 unknown terrain, all 10/10 VP hexes reachable, 2205/2240 in-grid coverage
+> (column 64 has zero records, open question tracked in #691). Hexside features (roads,
+> streams, stone walls, fords) substantially present but pending visual audit against
+> sm-map.jpg, tracked in #685. Counter linkages still in progress.
 >
 > Sections describing completed work are accurate to the implementation. Sections describing
 > planned work reflect design intent and may evolve.
@@ -618,10 +619,11 @@ the South Mountain map data.
 - **Discord OAuth** — `passport-discord` strategy; `/auth/discord` + callback + logout
   - `/auth/me` routes; `users` SQLite table; `side_a_user_id`/`side_b_user_id` on games;
     client login flow; lobby auth guard (#668, #410)
-- **Map completion** — all 2261 South Mountain hexes typed (terrain ≠ `"unknown"`), full
-  playable grid coverage, all 10/10 VP hexes reachable — recovered from a forgotten git
-  stash (map-data-recovery_20260811, #689). Road network, stream/stone wall hexsides, and
-  ford/bridge features substantially present, pending visual audit (#685)
+- **Map completion** — all 2261 South Mountain hexes typed (terrain ≠ `"unknown"`), all
+  10/10 VP hexes reachable, 2205/2240 in-grid coverage (column 64 open question, #691) —
+  recovered from a forgotten git stash (map-data-recovery_20260811, #689). Road network,
+  stream/stone wall hexsides, and ford/bridge features substantially present, pending
+  visual audit (#685)
 - **Debt sprint** — Close 7 remaining open tech-debt items (#627 #628 #629 #650 #651
   #652 #664)
 
@@ -2183,10 +2185,10 @@ DISCORD_CALLBACK_URL=http://localhost:3000/auth/discord/callback
 
 ### Data Modeling
 
-| Risk                                                                                                                                                                                                                                                                        | Severity              | Mitigation                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Map digitisation** — Converting `sm-map.jpg` to `map.json` (every hex with coordinates, terrain type, elevation, road/trail flags) is manual work across a 2240-cell (64x35) grid.                                                                                        | ~~High~~ **Resolved** | Map editor dev tool built (`MapEditorView` + `HexMapOverlay` + `CalibrationControls` + `HexEditPanel`). M9 (#669) typed all then-recorded hexes; map-data-recovery_20260811 (#689) recovered a forgotten git stash and merged its 2261-hex dataset plus a boundary-hex schema fix — full playable grid coverage, all 10/10 VP hexes reachable, verified via `hexNeighbors()` BFS against the live engine, not just re-asserted. Hexside-network visual audit tracked separately in #685. |
-| **GS_OOB hierarchy depth** — Leader attachment/detachment mid-game, the difference between in-command and out-of-command ranges, and the exact OOB hierarchy (army → corps → division → brigade → regiment) needs careful schema design before any combat logic is written. | Medium                | `oob.json` and `leaders.json` are built and Zod-validated. Schema reviewed against sm-regimental-roster.pdf. Hierarchy encoding confirmed before rules engine work begins.                                                                                                                                                                                                                                                                                                               |
+| Risk                                                                                                                                                                                                                                                                        | Severity                      | Mitigation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Map digitisation** — Converting `sm-map.jpg` to `map.json` (every hex with coordinates, terrain type, elevation, road/trail flags) is manual work across a 2240-cell (64x35) grid.                                                                                        | ~~High~~ **Reduced — Medium** | Map editor dev tool built (`MapEditorView` + `HexMapOverlay` + `CalibrationControls` + `HexEditPanel`). M9 (#669) typed all then-recorded hexes; map-data-recovery_20260811 (#689) recovered a forgotten git stash and merged its 2261-hex dataset plus a boundary-hex schema fix — all 10/10 VP hexes now reachable, verified via `hexNeighbors()` BFS against the live engine, not just re-asserted. Not fully resolved: 2205/2240 in-grid coverage, column 64 has zero records (open question, #691); hexside-network visual audit still open (#685). |
+| **GS_OOB hierarchy depth** — Leader attachment/detachment mid-game, the difference between in-command and out-of-command ranges, and the exact OOB hierarchy (army → corps → division → brigade → regiment) needs careful schema design before any combat logic is written. | Medium                        | `oob.json` and `leaders.json` are built and Zod-validated. Schema reviewed against sm-regimental-roster.pdf. Hierarchy encoding confirmed before rules engine work begins.                                                                                                                                                                                                                                                                                                                                                                               |
 
 ---
 

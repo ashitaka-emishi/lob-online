@@ -1,7 +1,7 @@
 {
   "_status": "partial",
-  "_description": "2261 hexes recorded, 0 unknown terrain, spanning the full playable grid (columns 1-63, rows 1-35). Recovered from a forgotten git stash (map-data-recovery_20260811, #689) that sat unapplied for ~2.5 months; merged and re-verified against the live engine, not just re-asserted: all 10/10 scenario VP hexes are reachable by the movement pathfinder (hexNeighbors() BFS), 97.5% of hexes (2205/2261) are connected in one component (the other 56 are row 00/36 calibration border markers, outside the real 1-35 row grid — expected, not a gap), and only 48 hexes (2.1%) are missing elevation. Both prior setupZone/referenceHex gaps (38.31, 36.27) are now covered. Hexside features are substantially present (777/2261 hexes carry edge data: 258 road, 125 trail, 49 pike, 48 stream, 122 stoneWall, 2 bridge, plus 677 contour/elevation features) but have NOT been independently spot-checked against docs/reference/south-mountain/sm-map.jpg segment-by-segment — that visual audit, plus a full playtest, is issue #685's remaining scope. _status stays \"partial\" until that audit closes it out.",
-  "_digitizationNote": "Terrain and VP-hex reachability are verified complete (see #689's closing summary for the verification method). What remains before flipping _status to \"available\" is #685's visual audit of the road/stream/stone-wall network against sm-map.jpg and a full playtest — not a data-coverage problem, a verification-completeness one.",
+  "_description": "2261 hexes recorded, 0 unknown terrain. In-grid coverage: 2205/2240 cells (98.4%) — columns 1-63 of the declared 64-column grid; column 64 (35 cells) has zero records in every version of this data, including the original 2026-05-23 stash this was recovered from, so it predates map-data-recovery_20260811 and is a genuine open question (calibration artifact — gridSpec.cols may need to be 63 — vs. a real undigitized strip), tracked in #691. Recovered from a forgotten git stash (#689, ~2.5 months unapplied); the recovered data itself already validated against the schema as it existed before that recovery (no hex in this file uses faces 3-5) — the FaceIndex/validateBoundaryMirrorFaces schema widening that shipped alongside it is forward-looking editor capability, not something the data merge required. Re-verified against the live engine, not just re-asserted: all 10/10 scenario VP hexes reachable (hexNeighbors() BFS), 100% elevation completeness among the 2205 playable in-grid hexes (the other 56 are row 00/36 calibration border markers, expected, not a gap). Both prior setupZone/referenceHex gaps (38.31, 36.27) are now covered. Hexside features: 757 hexes carry at least one real feature, 1213 populated faces total (258 road, 125 trail, 49 pike, 48 stream, 122 stoneWall, 2 bridge, 677 contour/elevation) — up from a baseline of 0 real features. Not independently spot-checked against docs/reference/south-mountain/sm-map.jpg segment-by-segment; that visual audit, plus a full playtest, is issue #685's remaining scope. _status stays \"partial\" until that audit and #691 both close out.",
+  "_digitizationNote": "Terrain and VP-hex reachability are verified against the live engine (see #689's closing summary for the method). What remains before flipping _status to \"available\": #685's visual audit of the road/stream/stone-wall network against sm-map.jpg and a full playtest, plus #691's column-64 resolution.",
   "scenario": "south-mountain",
   "layout": "pointy-top",
   "hexIdFormat": "col.row",
@@ -30,7 +30,7 @@
     "verticalSlope",
     "stoneWall",
     "elevation",
-    "fence",
+    "ford",
     "bridge"
   ],
   "elevationSystem": {

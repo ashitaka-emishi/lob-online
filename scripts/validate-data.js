@@ -14,7 +14,7 @@ import { dirname, join } from 'node:path';
 import { OOBSchema } from '../server/src/schemas/oob.schema.js';
 import { LeadersSchema } from '../server/src/schemas/leaders.schema.js';
 import { ScenarioSchema } from '../server/src/schemas/scenario.schema.js';
-import { MapSchema } from '../server/src/schemas/map.schema.js';
+import { EDGE_FEATURE_TYPE_VALUES, MapSchema } from '../server/src/schemas/map.schema.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '../data/modules/south-mountain');
@@ -388,6 +388,40 @@ if (map) {
     );
   } else {
     pass(`All ${totalHexes} hexes have a terrain type`);
+  }
+
+  // #690 review — the previous "all hexes have terrain" check is self-referential: it only
+  // measures the recorded hexes array, not whether the declared grid is actually covered.
+  // That gap (gridSpec says 64 cols, but col 64 has zero records — #691) was invisible to
+  // this script until now.
+  const { cols, rows } = rawMap.gridSpec ?? {};
+  if (cols && rows) {
+    const inGridCount = rawMap.hexes.filter((h) => {
+      const [col, row] = h.hex.split('.').map(Number);
+      return col >= 1 && col <= cols && row >= 1 && row <= rows;
+    }).length;
+    const totalSlots = cols * rows;
+    if (inGridCount < totalSlots) {
+      warn(
+        `${inGridCount}/${totalSlots} in-grid cells (${cols}x${rows}) have a hex record — grid coverage incomplete`
+      );
+    } else {
+      pass(`All ${totalSlots} in-grid cells (${cols}x${rows}) have a hex record`);
+    }
+  }
+
+  // #690 review — edgeFeatureTypes is a UI-facing registry (populates EdgeEditPanel.vue's
+  // type dropdown); an entry not in the schema's EDGE_FEATURE_TYPE_VALUES is selectable in
+  // the editor but unsavable (schema rejects it on write). Caught 'fence' this way — never a
+  // valid schema type, silently offered as an option for as long as the registry existed.
+  const registry = rawMap.edgeFeatureTypes ?? [];
+  const invalidRegistryEntries = registry.filter((t) => !EDGE_FEATURE_TYPE_VALUES.includes(t));
+  if (invalidRegistryEntries.length > 0) {
+    fail(
+      `edgeFeatureTypes contains type(s) not in the schema's EDGE_FEATURE_TYPE_VALUES: ${invalidRegistryEntries.join(', ')} — selectable in the editor but would fail to save`
+    );
+  } else if (registry.length > 0) {
+    pass(`edgeFeatureTypes registry (${registry.length} types) all schema-valid`);
   }
 }
 

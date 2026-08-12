@@ -295,6 +295,82 @@ cost = 1), preserving the test's original intent rather than just changing the e
 
 ---
 
+## Phase 6: `/agent-teams:team-review` Findings (Security, Performance, Architecture)
+
+Three parallel `agent-teams:team-reviewer` agents reviewed PR #690 before merge — same
+adaptation as PR #687 (no `Teammate`/`TaskCreate`/`TaskList` in this environment). The
+architecture reviewer was explicitly briefed on the failure mode PR #687's reviews kept
+catching (a claim true of the structure measured, false as a claim about the real world) and
+told to re-verify everything independently rather than trust the PR's framing. All findings
+below were independently re-verified before acting, not taken on the reviewer's word.
+
+### Tasks
+
+- [x] Task 6.1 (Security + Performance, converged HIGH after architecture confirmed it):
+      `validateBoundaryMirrorFaces` early-returned on `!gridSpec` (which is `.optional()`),
+      letting faces 3-5 through on any hex — interior or not — when a payload simply omitted
+      `gridSpec`. A second hole: `hexNeighborInDir` returns `null` for any out-of-grid hex ID,
+      auto-classifying it as "boundary" with no bounds check, and permanently caching it in
+      `hex.js`'s unbounded `_parseCache`/`_formatCache` (documented invariant: "callers must
+      validate against the map index first" — this call site didn't). Fixed: fail closed when
+      `gridSpec` is absent; bounds-check hex IDs against the grid via cheap string parsing
+      before calling the memoized helper. 3 new regression tests, verified against both
+      reviewers' exact repro cases.
+- [x] Task 6.2 (Security + Performance, converged completeness gap): `edge-strip.js` and its
+      client mirror in `edge-model.js` only ever iterated canonical faces 0-2, so a
+      non-playable boundary hex's own faces 3-5 were never cleaned up by
+      `stripNonPlayableBoundaryEdges`. Widening the loop bound was sufficient — the existing
+      `isEdgeAtNonPlayableBoundary(hex, adjHex)` predicate already handles `adjHex === null`
+      correctly. 4 new tests (3 server, 1 cross-implementation parity).
+- [x] Task 6.3 (Architecture): added explicit contract documentation (`movement.js`,
+      `map.schema.js`) that boundary-owned faces 3-5 are authoring/render-only — the rules
+      engine never reads a hex's own faces 3-5, since movement always crosses between two real
+      hexes and a map-boundary hexside has no far side to cross. True by construction before,
+      undocumented until now.
+- [x] Task 6.4 (Architecture, MEDIUM): the devlog's framing — "the old schema simply rejected
+      [the recovered] data outright" — doesn't hold. Verified: neither the stash's original
+      `map.json` nor the merged result contains a single populated face 3-5; both parse cleanly
+      against the pre-#690 schema unchanged. The schema widening is forward-looking editor
+      capability bundled with the recovery, not something the data merge required. Corrected in
+      the devlog with an explicit note, rather than silently rewritten.
+- [x] Task 6.5 (Architecture, MEDIUM): `gridSpec` declares a 64-column grid, but column 64 has
+      zero hex records in every version of this data — including the original 2026-05-23 stash,
+      so this predates the recovery entirely. Real in-grid coverage is 2205/2240 (98.4%), not
+      "full playable grid coverage" as five doc locations claimed. Filed #691 (unresolved:
+      calibration artifact vs. genuine undigitized strip); corrected all five locations plus
+      `CLAUDE.md`; softened the HLD risk register from `~~High~~ **Resolved**` to
+      `~~High~~ **Reduced — Medium**` since it named its own open sub-items in the same cell.
+- [x] Task 6.6 (Architecture, LOW): "156 → 777 hexes" hexside-coverage counted `edges: {}`
+      scaffolding as coverage — all 156 of master's were empty. Honest comparison: 0 → 757
+      hexes with a real feature (1213 populated faces), a better result stated correctly.
+      Corrected across `map.json`/`library.md`/`library.json`/devlog.
+- [x] Task 6.7 (Architecture, LOW): elevation-completeness denominator mixed playable and
+      non-playable hexes ("97.9%" measured against 2261, excluding the 56 non-playable markers
+      inconsistently with how the connectivity figure was already framed). Corrected to 100%
+      among the 2205 playable in-grid hexes.
+- [x] Task 6.8 (Architecture, LOW): the 0-`ford`/2-`bridge` gap flagged to #685 was
+      under-diagnosed as a digitization shortfall. Root cause: `map.json`'s `edgeFeatureTypes`
+      registry — which populates `EdgeEditPanel.vue`'s type dropdown — never included `ford`
+      (a valid schema type) and included `fence` (not a valid schema type, present nowhere else
+      in the codebase). Fixed the registry; added a `validate-data.js` check asserting
+      `edgeFeatureTypes ⊆ EDGE_FEATURE_TYPE_VALUES` so this class of drift can't recur silently.
+      Also added a grid-coverage assertion (declared `cols × rows` vs. actual in-grid hex
+      count) — this would have caught Task 6.5's gap automatically; it now surfaces as an
+      explicit warning instead of silent absence.
+- [x] Task 6.9: followed up on the already-closed #689 with a correction comment covering
+      Tasks 6.4-6.8, rather than leaving the original closing summary as the uncorrected record.
+      Updated the #685 comment with the corrected hexside numbers and the `ford`/`fence` root
+      cause.
+
+### Verification
+
+- [x] `npm run validate-data` — 0 errors, 2 warnings (1 pre-existing + 1 new, expected
+      grid-coverage warning for #691)
+- [x] `npm run lint` / `npm run format:check` / `npm run test` (3259 passed, 0 regressions)
+- [x] #691 filed with a clear resolution path; #689 and #685 both carry corrected records
+
+---
+
 ## Final Verification
 
 - [x] All acceptance criteria in spec.md met
