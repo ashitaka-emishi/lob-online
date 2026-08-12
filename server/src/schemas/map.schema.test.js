@@ -922,6 +922,37 @@ describe('MapSchema — integer face-index edge keys (#135)', () => {
     expect(result.success).toBe(false);
   });
 
+  // ── Fail-closed regressions (#690 review) ────────────────────────────────────
+  // validateBoundaryMirrorFaces must not be bypassable by omitting gridSpec or by using
+  // a hex ID outside the declared grid — both previously let an interior-equivalent face
+  // 3-5 through unchecked, since there was nothing to test "boundary-ness" against.
+
+  it('rejects interior face 3 when gridSpec is entirely absent (fail closed)', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      hexes: [{ hex: '03.03', terrain: 'clear', edges: { 3: [{ type: 'stream' }] } }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a hex ID outside gridSpec bounds carrying face 3', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: TEST_GRID_SPEC,
+      hexes: [{ hex: '99.99', terrain: 'clear', edges: { 3: [{ type: 'stream' }] } }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('still accepts a genuine in-grid boundary hex when gridSpec is present', () => {
+    const result = MapSchema.safeParse({
+      ...MINIMAL_VALID,
+      gridSpec: TEST_GRID_SPEC,
+      hexes: [{ hex: '01.01', terrain: 'clear', edges: { 3: [{ type: 'stream' }] } }],
+    });
+    expect(result.success).toBe(true);
+  });
+
   it('rejects edge feature with unknown type', () => {
     const result = MapSchema.safeParse({
       ...MINIMAL_VALID,
