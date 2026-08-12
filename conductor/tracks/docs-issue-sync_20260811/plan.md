@@ -66,9 +66,14 @@ route, or UI logic changes. Issue closures are repo-visible but follow the estab
       map-digitization row to reflect terrain-complete status
 - [x] Task 1.6: `conductor/tracks.md` line 160 — flip `m9-map-completion_20260625` checkbox
       `[ ]` → `[x]`
-- [x] Task 1.7: `conductor/tracks/m9-discord-oauth_20260625/metadata.json` — update `status`,
-      `phases.completed`, `tasks.completed`, `updated` to match its own completed `plan.md`;
-      note added explaining the branch is unmerged so #668 stays open
+- [x] Task 1.7: `conductor/tracks/m9-discord-oauth_20260625/metadata.json` — initial edit
+      wrongly set `status: "complete"` by going off `plan.md` as it reads on the unmerged
+      `feat/m9-discord-oauth` branch. Caught by `/code-review` on the PR: this branch's own
+      `plan.md` (same directory, part of `origin/master`) still reads `[ ] Not Started` with
+      0/34 boxes checked, since the OAuth implementation isn't in this tree. Corrected to
+      `status: "pending"`, `0/3` phases, `0/10` tasks — matching this tree's actual `plan.md` —
+      with a note explaining the real completion lives on the unmerged branch and this file
+      should flip to `complete` only once that branch is PR'd and merged
 
 ### Verification
 

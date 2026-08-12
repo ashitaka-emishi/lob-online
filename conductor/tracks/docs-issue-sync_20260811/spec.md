@@ -50,10 +50,14 @@ gate, `sameSite: 'lax'` cookie).
       digitization is resolved; hexside features tracked separately in #685
 - [x] `conductor/tracks.md` line 160: `m9-map-completion_20260625` checkbox flipped `[ ]` →
       `[x]` to match its own `metadata.json`/`plan.md` (`status: "complete"`)
-- [x] `conductor/tracks/m9-discord-oauth_20260625/metadata.json` updated: `status`
-      `"pending"` → `"complete"`, `phases.completed` 0 → 3, `tasks.completed` 0 → 10, `updated`
-      timestamp refreshed — to match its own `plan.md` (`[x] Complete`, all tasks checked,
-      "Completed 2026-06-28")
+- [x] `conductor/tracks/m9-discord-oauth_20260625/metadata.json` kept in sync with the
+      `plan.md` that actually exists in this tree (on `origin/master` / this branch): that
+      `plan.md` reads `[ ] Not Started`, 0/34 boxes checked — because the OAuth implementation
+      isn't in this tree, only on the unmerged `feat/m9-discord-oauth` branch. `metadata.json`
+      stays `"pending"`, `0/3` phases, `0/10` tasks, with a note pointing at the real completion
+      state on the other branch. (An earlier draft of this fix wrongly set `status: "complete"`
+      by reading `plan.md` while that other branch was checked out — caught and corrected via
+      `/code-review` before merge.)
 - [x] 13 stale GitHub issues closed, each with a comment citing the PR/commit that resolved it
       on `origin/master`: #344, #410, #506, #550, #554, #556, #627, #628, #629, #650, #651,
       #652, #680
