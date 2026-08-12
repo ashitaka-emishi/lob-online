@@ -265,13 +265,19 @@ function checkVPHexesInMap(scenario, map) {
 function checkSetupHexesInMap(scenario, map) {
   const mapHexIds = new Set(map.hexes.map((h) => h.hex));
 
-  // Collect exact hexes referenced in setup
+  // Collect exact hexes and setupZone/referenceHex anchors referenced in setup, across
+  // both sides — engine/init.js places zone-constrained units directly at referenceHex
+  // (M4 initial pass), so an absent referenceHex means those units set up on undefined terrain.
   const setupHexes = new Set();
-  for (const entry of scenario.setup?.confederate ?? []) {
-    if (entry.hex) setupHexes.add(entry.hex);
-    if (Array.isArray(entry.units)) {
-      for (const u of entry.units) {
-        if (u?.hex) setupHexes.add(u.hex);
+  const referenceHexes = new Set();
+  for (const side of [scenario.setup?.union, scenario.setup?.confederate]) {
+    for (const entry of side ?? []) {
+      if (entry.hex) setupHexes.add(entry.hex);
+      if (entry.referenceHex) referenceHexes.add(entry.referenceHex);
+      if (Array.isArray(entry.units)) {
+        for (const u of entry.units) {
+          if (u?.hex) setupHexes.add(u.hex);
+        }
       }
     }
   }
@@ -285,6 +291,20 @@ function checkSetupHexesInMap(scenario, map) {
     }
   }
   pass(`Setup hex presence in map checked — ${ok}/${setupHexes.size} exact hexes found`);
+
+  let refOk = 0;
+  for (const hex of referenceHexes) {
+    if (mapHexIds.has(hex)) {
+      refOk++;
+    } else {
+      warn(
+        `Setup referenceHex "${hex}" is not present in map.hexes — zone-constrained units set up on undefined terrain (see map.json _todoHexes)`
+      );
+    }
+  }
+  if (referenceHexes.size > 0) {
+    pass(`Setup referenceHex presence in map checked — ${refOk}/${referenceHexes.size} found`);
+  }
 }
 
 function checkEntryHexesInMap(scenario, map) {

@@ -20,6 +20,7 @@ Navigation hub for project context.
 | [terraform-iac_20260623](./tracks/terraform-iac_20260623/index.md)         | Terraform IaC for DigitalOcean Provisioning                    | Complete |
 | [m8-notifications_20260622](./tracks/m8-notifications_20260622/index.md)   | M8 Discord Notifications + Hex Control Wiring                  | Complete |
 | [move-debt-sprint_20260627](./tracks/move-debt-sprint_20260627/index.md)   | MOVE Debt Sprint — Path Cost + Partial Moves (#675 #680)       | Pending  |
+| [docs-issue-sync_20260811](./tracks/docs-issue-sync_20260811/index.md)     | Documentation, Data-Metadata, and Issue-Tracker Sync           | Complete |
 
 ## All Tracks
 

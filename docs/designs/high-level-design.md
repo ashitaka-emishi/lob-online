@@ -93,8 +93,10 @@
 > DigitalOcean Droplet provisioning deferred to next milestone.
 >
 > **In progress:** M8 code phases complete. DO Droplet provisioning deferred.
-> South Mountain map terrain complete (all 841 hexes typed); hexside features (roads, streams,
-> stone walls, fords) and counter linkages still in progress.
+> South Mountain map: the 841 currently-recorded hexes are all typed, but real grid coverage is
+> only ~37% of the 2240-cell map and 6/10 VP hexes are unreachable by the movement engine — not
+> complete. A recoverable 2261-hex dataset exists in a git stash; integration tracked in #689.
+> Hexside features (roads, streams, stone walls, fords) and counter linkages still in progress.
 >
 > Sections describing completed work are accurate to the implementation. Sections describing
 > planned work reflect design intent and may evolve.
@@ -616,8 +618,11 @@ the South Mountain map data.
 - **Discord OAuth** — `passport-discord` strategy; `/auth/discord` + callback + logout
   - `/auth/me` routes; `users` SQLite table; `side_a_user_id`/`side_b_user_id` on games;
     client login flow; lobby auth guard (#668, #410)
-- **Map completion** — All 841 South Mountain hexes digitized (terrain ≠ `"unknown"`);
-  road network, stream/stone wall hexsides, and ford/bridge features complete (#669)
+- **Map completion** — the 841 currently-recorded South Mountain hexes are all typed
+  (terrain ≠ `"unknown"`, #669), but real grid coverage is only ~37% of the 2240-cell map
+  and 6/10 VP hexes are unreachable; a recoverable 2261-hex dataset exists in a git stash
+  (#689). Road network, stream/stone wall hexsides, and ford/bridge features still pending
+  (#685)
 - **Debt sprint** — Close 7 remaining open tech-debt items (#627 #628 #629 #650 #651
   #652 #664)
 
@@ -2179,10 +2184,10 @@ DISCORD_CALLBACK_URL=http://localhost:3000/auth/discord/callback
 
 ### Data Modeling
 
-| Risk                                                                                                                                                                                                                                                                        | Severity              | Mitigation                                                                                                                                                                 |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Map digitisation** — Converting `sm-map.jpg` to `map.json` (every hex with coordinates, terrain type, elevation, road/trail flags) is manual work for ~600+ hexes.                                                                                                        | ~~High~~ **Resolved** | Map editor dev tool built (`MapEditorView` + `HexMapOverlay` + `CalibrationControls` + `HexEditPanel`). Terrain digitization is in progress via the tool.                  |
-| **GS_OOB hierarchy depth** — Leader attachment/detachment mid-game, the difference between in-command and out-of-command ranges, and the exact OOB hierarchy (army → corps → division → brigade → regiment) needs careful schema design before any combat logic is written. | Medium                | `oob.json` and `leaders.json` are built and Zod-validated. Schema reviewed against sm-regimental-roster.pdf. Hierarchy encoding confirmed before rules engine work begins. |
+| Risk                                                                                                                                                                                                                                                                        | Severity | Mitigation                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Map digitisation** — Converting `sm-map.jpg` to `map.json` (every hex with coordinates, terrain type, elevation, road/trail flags) is manual work across a 2240-cell (64x35) grid.                                                                                        | High     | Map editor dev tool built (`MapEditorView` + `HexMapOverlay` + `CalibrationControls` + `HexEditPanel`). M9 (#669) typed all 841 then-recorded hexes, but real coverage is only ~37% of the grid and 6/10 VP hexes are unreachable by the movement engine — not resolved. A recoverable 2261-hex dataset (0 unknown, columns 1-63) exists in a forgotten git stash along with a boundary-hex schema fix; integration tracked in #689. Hexside features tracked separately in #685. |
+| **GS_OOB hierarchy depth** — Leader attachment/detachment mid-game, the difference between in-command and out-of-command ranges, and the exact OOB hierarchy (army → corps → division → brigade → regiment) needs careful schema design before any combat logic is written. | Medium   | `oob.json` and `leaders.json` are built and Zod-validated. Schema reviewed against sm-regimental-roster.pdf. Hierarchy encoding confirmed before rules engine work begins.                                                                                                                                                                                                                                                                                                        |
 
 ---
 
@@ -2206,10 +2211,10 @@ DISCORD_CALLBACK_URL=http://localhost:3000/auth/discord/callback
 
 ### Hex Map
 
-| Risk                                                                                                                                           | Severity | Mitigation                                                                                                                                                                                                                                             |
-| ---------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **SVG performance on large maps** — ~600 hexes × multiple SVG elements each = potentially thousands of DOM nodes.                              | Medium   | Use Vue's `v-for` with stable `:key` values so the virtual DOM patches minimally. Benchmark on a mid-range tablet early. If needed, switch hex terrain to a static SVG background image and overlay only units + UI elements as interactive DOM nodes. |
-| **Honeycomb.js LOS integration** — Honeycomb.js provides hex geometry but not LOS ray-casting with terrain height. Custom LOS must be written. | Medium   | LOS is server-side only (in `engine/los.js`). The client highlights valid targets based on the server's response; it does not compute LOS itself. This separation keeps the client simple.                                                             |
+| Risk                                                                                                                                                                        | Severity | Mitigation                                                                                                                                                                                                                                             |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **SVG performance on large maps** — 841 hexes × multiple SVG elements each = potentially thousands of DOM nodes; hexside features (#685) will add further per-hex elements. | Medium   | Use Vue's `v-for` with stable `:key` values so the virtual DOM patches minimally. Benchmark on a mid-range tablet early. If needed, switch hex terrain to a static SVG background image and overlay only units + UI elements as interactive DOM nodes. |
+| **Honeycomb.js LOS integration** — Honeycomb.js provides hex geometry but not LOS ray-casting with terrain height. Custom LOS must be written.                              | Medium   | LOS is server-side only (in `engine/los.js`). The client highlights valid targets based on the server's response; it does not compute LOS itself. This separation keeps the client simple.                                                             |
 
 ---
 
