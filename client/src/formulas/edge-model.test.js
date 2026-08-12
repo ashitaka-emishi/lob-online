@@ -52,6 +52,12 @@ describe('formulas/edge-model', () => {
         expect(ownerFace).toBeLessThan(3);
       }
     });
+
+    it('boundary faces 3–5 stay on the clicked hex with their physical face', () => {
+      expect(canonicalOwner('05.01', 3, GRID_SPEC)).toEqual({ ownerId: '05.01', ownerFace: 3 });
+      expect(canonicalOwner('01.05', 4, GRID_SPEC)).toEqual({ ownerId: '01.05', ownerFace: 4 });
+      expect(canonicalOwner('01.10', 5, GRID_SPEC)).toEqual({ ownerId: '01.10', ownerFace: 5 });
+    });
   });
 
   describe('getEdgeFeatures(hexMap, hexId, faceIndex, gridSpec)', () => {

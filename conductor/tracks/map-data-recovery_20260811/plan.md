@@ -179,8 +179,8 @@ cost = 1), preserving the test's original intent rather than just changing the e
 - [x] VP-hex reachability (10/10) and elevation completeness (97.9%) results recorded above
 - [x] `npm run test` — 3250 passed, 0 regressions after the `movement.test.js` fix
 - [x] `npm run lint` / `npm run format:check` clean
-- [ ] **Human checkpoint:** user approves the merged `map.json` and verification results before
-      Phase 4/5 proceed
+- [x] **Human checkpoint:** user approved the merged `map.json` and verification results
+      ("proceed")
 
 ---
 
@@ -188,16 +188,68 @@ cost = 1), preserving the test's original intent rather than just changing the e
 
 ### Tasks
 
-- [ ] Task 4.1: Reconcile `HexMapOverlay.vue` per the Task 1.4 analysis
-- [ ] Task 4.2: Reconcile `MapEditorView.vue`
-- [ ] Task 4.3: Reconcile `useEdgeLineLayer.js` + test
-- [ ] Task 4.4: Reconcile `edge-model.js` + test
+- [x] Task 4.3 (done first — foundational, `HexMapOverlay.vue` consumes its output shape):
+      `useEdgeLineLayer.js` — `directFaces` now iterates all 6 `EDGE_DIRS` (was 3 canonical
+      only) so boundary hexes' own faces 3-5 render; each face entry got a `key` field
+      (`direct-${dir}`/`mirror-${dir}`) since direct and mirror entries can now share the same
+      `dir` value. Removed a genuinely-unused `CANONICAL_EDGE_DIRS` var that was dead code even
+      in the original stash (caught by lint, not present in Task 1.4's diff analysis). Test:
+      updated the "three canonical faces" assertion to all six, added back the boundary-mirror
+      regression test; left the unrelated #456 full-edge-geometry regression test untouched.
+- [x] Task 4.1: `HexMapOverlay.vue` — `roadEdgeCountMap`/`_buildGlyphEdges` now iterate all 6
+      `EDGE_DIRS_ROAD` (was 3), template `:key` updated to `face.key ?? face.dir` (two call
+      sites) to match the new keyed shape. Preserved current's independent additions untouched:
+      `selectedUnitId` prop (#480), the `#419` terrain-default comment, and the
+      `:selected-unit-id` binding.
+- [x] Task 4.4: `edge-model.js` — fixed only `canonicalOwner()`: boundary faces (no neighbour
+      in that direction) now resolve to `{ ownerId: hexId, ownerFace: faceIndex }` instead of
+      wrongly remapping to `faceIndex - 3` and colliding with the hex's own canonical faces.
+      Deliberately left `validateCoexistence`'s `SLOPE_TYPES` (current) vs. the stash's
+      `CONTOUR_TYPES` untouched — that's current's own later, correct, independent evolution
+      (a separate `applyContourPaint` "replace" tool now owns contour-replace semantics,
+      `validateCoexistence` was deliberately narrowed to slope-only rejection); reapplying the
+      stash's version would have been a regression, not a fix. Test: added back the
+      `canonicalOwner` boundary-faces regression test; left `applyContourPaint`,
+      `isEdgeAtNonPlayableBoundary`, `stripNonPlayableBoundaryEdges`, and the
+      elevation-coexists-with-slope test (current's own later work) untouched.
+- [x] Task 4.2: `MapEditorView.vue` — found and fixed exactly two boundary-fix-relevant sites
+      via targeted grep after ruling out everything else in the 249-line diff as current's own
+      independent evolution (`EDGE_DISPATCH` restructuring, `mutateEdgeFeatures` extraction,
+      `isNonPlayableBoundary`/`showEdgeNotice`/`beforeSave` stripping, module-slug routing,
+      `EditorNav`, removed legacy `'unknown'→'clear'` watch): `handleEdgeClearAll` (global
+      clear-by-type across the whole map) and `handleHexEdgeClearAll` (clear-by-type for one
+      hex) both iterated only faces `[0,1,2]`, which would silently leave orphaned data on a
+      boundary hex's own faces 3-5. Both now iterate `[0,1,2,3,4,5]`. Left `countEdgeFeatures`
+      untouched — it's explicitly scoped to canonical faces 0-2 for the unrelated
+      playable-boundary-stripping feature, not a bug.
 
 ### Verification
 
-- [ ] Full test suite green
-- [ ] Manual smoke test in Map Editor (`npm run dev:map-editor`) and Map Test Tool — map
-      renders correctly across the newly-recovered eastern region
+- [x] Full test suite green: 3252 passed (3250 + 2 net new boundary-regression tests), 12
+      pre-existing skips, 0 failures, 0 regressions
+- [x] `npm run lint` clean (after removing the dead `CANONICAL_EDGE_DIRS` var)
+- [x] `npm run format:check` clean
+- [x] Manual smoke test in Map Editor and Map Test Tool via `/dev-start` + Playwright, module
+      `SM`. Found and fixed one additional pre-existing bug blocking the test: `MAP_IMAGE` in
+      `MapEditorView.vue`, `MapTestView.vue`, and `GameView.vue` hardcoded
+      `/tools/map-editor/assets/reference/sm-map.jpg`, but the file moved to
+      `docs/reference/south-mountain/sm-map.jpg` during the multi-module platform split
+      (`92bfe78`, #529) and these three paths were never updated — confirmed present on
+      `master` itself, unrelated to the stash. Its impact was invisible while the map only had
+      841 sparse hexes mostly within the fallback `1400x900` canvas size
+      (`imgNaturalWidth`/`imgNaturalHeight` default before the image's `@load` handler fires);
+      recovering the full-width data made it visible for the first time — the canvas literally
+      couldn't grow to fit the newly-populated eastern columns because the reference image
+      404'd and the `@load` handler that resizes the canvas to the image's real dimensions
+      never fired. Fixed all three paths (added the missing `south-mountain/` segment) with
+      user confirmation. After the fix: canvas correctly resizes to `3804x2471` (was stuck at
+      `1400x900`), full grid scrolls into view, hex overlay aligns correctly with the reference
+      photo across the whole map including the recovered eastern region (visually confirmed —
+      Monument Hill / Washington Monument / M. Zittle landmarks near Sharpsburg). Road Tool
+      painted and rendered a road correctly through boundary-region hexes with no visual
+      glitches or console errors — direct confirmation of the `useEdgeLineLayer.js`/
+      `HexMapOverlay.vue` changes working in the live app. Stream Tool and Map Test Tool both
+      loaded cleanly. Zero console errors across all four tool views after the fix.
 
 ---
 

@@ -24,12 +24,12 @@ describe('useEdgeLineLayer', () => {
     expect(cellsForEdges.value.length).toBe(2);
   });
 
-  it('cellsForEdges includes three canonical edge faces per cell (N, NE, SE)', () => {
+  it('cellsForEdges includes all six physical edge faces per cell', () => {
     const cells = ref([makeCell('01.01')]);
     const overlayConfig = ref({ edgeLine: { featureGroups: [] } });
     const { cellsForEdges } = useEdgeLineLayer(cells, overlayConfig);
     const faces = cellsForEdges.value[0].edgeFaces.map((f) => f.dir);
-    expect(faces).toEqual(['N', 'NE', 'SE']);
+    expect(faces).toEqual(['N', 'NE', 'SE', 'S', 'SW', 'NW']);
   });
 
   it('cellsForEdges returns [] when style is through-hex', () => {
@@ -65,6 +65,19 @@ describe('useEdgeLineLayer', () => {
     const northFace = cellsForEdges.value[0].edgeFaces.find((f) => f.dir === 'N');
     expect(northFace.groups[0].features.length).toBe(1);
     expect(northFace.groups[0].features[0].type).toBe('trail');
+  });
+
+  it('matching boundary mirror edge features appear in the physical face group', () => {
+    const cell = makeCell('01.01', { 3: [{ type: 'stream' }] }); // face 3 = S
+    const cells = ref([cell]);
+    const overlayConfig = ref({
+      edgeLine: {
+        featureGroups: [{ types: ['stream'], color: '#4a90d9', strokeWidth: 4 }],
+      },
+    });
+    const { cellsForEdges } = useEdgeLineLayer(cells, overlayConfig);
+    const southFace = cellsForEdges.value[0].edgeFaces.find((f) => f.dir === 'S');
+    expect(southFace.groups[0].features).toEqual([{ type: 'stream' }]);
   });
 
   it('reacts to cells ref change', () => {

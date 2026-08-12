@@ -1,7 +1,7 @@
 import { computed } from 'vue';
 import { edgeLineFull, edgeToCenter } from '../utils/hexGeometry.js';
 
-const CANONICAL_EDGE_DIRS = ['N', 'NE', 'SE'];
+const EDGE_DIRS = ['N', 'NE', 'SE', 'S', 'SW', 'NW'];
 
 // Mirror directions and the face index on the canonical neighbor for each:
 //   S edge  → neighbor-S's face 0 (N)
@@ -39,7 +39,11 @@ export function useEdgeLineLayer(cells, overlayConfig, neighborMap) {
     const nbMap = includeMirrors ? (neighborMap?.value ?? null) : null;
 
     return cells.value.map((cell) => {
-      const canonicalFaces = CANONICAL_EDGE_DIRS.map((dir, fi) => ({
+      // All 6 faces read directly from this hex — canonical faces 0-2 always live here;
+      // faces 3-5 are present here only for boundary hexes (map.schema.js
+      // validateBoundaryMirrorFaces), empty otherwise.
+      const directFaces = EDGE_DIRS.map((dir, fi) => ({
+        key: `direct-${dir}`,
         dir,
         lineAttrs: lineAttrFn(cell, dir),
         groups: groups.map((group) => ({
@@ -48,13 +52,16 @@ export function useEdgeLineLayer(cells, overlayConfig, neighborMap) {
         })),
       }));
 
-      // Mirror edges (S, SW, NW) — features live on the adjacent hex's canonical face.
-      // Required for through-hex so each hex draws center→edge segments for all 6 directions.
+      // Mirror edges (S, SW, NW) — for interior hexes, features live on the adjacent
+      // hex's canonical face. Required for through-hex so each hex draws center→edge
+      // segments for all 6 directions. Boundary hexes have no neighbor here, so this
+      // resolves to empty features — directFaces already carries their real data.
       const mirrorFaces = nbMap
         ? MIRROR_EDGE_DIRS.map((dir, mi) => {
             const neighbor = nbMap.get(`${cell.id}:${dir}`);
             const fi = MIRROR_TO_CANONICAL_FI[mi];
             return {
+              key: `mirror-${dir}`,
               dir,
               lineAttrs: lineAttrFn(cell, dir),
               groups: groups.map((group) => ({
@@ -65,7 +72,7 @@ export function useEdgeLineLayer(cells, overlayConfig, neighborMap) {
           })
         : [];
 
-      return { id: cell.id, edgeFaces: [...canonicalFaces, ...mirrorFaces] };
+      return { id: cell.id, edgeFaces: [...directFaces, ...mirrorFaces] };
     });
   }
 

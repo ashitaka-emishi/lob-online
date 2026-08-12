@@ -9,7 +9,7 @@ import HexInspectorPanel from '../../components/tools/map-test/HexInspectorPanel
 import LosPanel from '../../components/tools/map-test/LosPanel.vue';
 import CommandRangePanel from '../../components/tools/map-test/CommandRangePanel.vue';
 
-const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
+const MAP_IMAGE = '/tools/map-editor/assets/reference/south-mountain/sm-map.jpg';
 
 // ── Map data ──────────────────────────────────────────────────────────────────
 

@@ -1,8 +1,10 @@
 /**
  * Canonical edge ownership, lookup, and coexistence validation.
  *
- * Edges are stored on the hex with the lower face index (0–2). Faces 3–5 are
- * "mirror" faces — they resolve to face (faceIndex − 3) on the adjacent hex.
+ * Edges are stored on the hex with the lower face index (0–2). Interior faces
+ * 3–5 are "mirror" faces — they resolve to face (faceIndex − 3) on the
+ * adjacent hex. Boundary faces 3–5 have no adjacent owner, so they remain on
+ * the clicked hex as their physical face index.
  *
  * Face → direction mapping (flat-top, EVEN_Q, clockwise from top):
  *   0: N, 1: NE, 2: SE, 3: S, 4: SW, 5: NW
@@ -30,7 +32,8 @@ export function oppositeFace(faceIndex) {
  * Returns the canonical owner hex and face for an edge.
  *
  * Faces 0–2 are owned by the hex itself.
- * Faces 3–5 are owned by the adjacent neighbour at (faceIndex − 3).
+ * Interior faces 3–5 are owned by the adjacent neighbour at (faceIndex − 3).
+ * Boundary faces 3–5 are owned by this hex at the original face index.
  *
  * @param {string} hexId - e.g. '05.05'
  * @param {number} faceIndex - 0–5
@@ -43,7 +46,9 @@ export function canonicalOwner(hexId, faceIndex, gridSpec) {
   }
   const dir = FACE_TO_DIR[faceIndex];
   const neighbourId = adjacentHexId(hexId, dir, gridSpec);
-  return { ownerId: neighbourId ?? hexId, ownerFace: faceIndex - 3 };
+  return neighbourId
+    ? { ownerId: neighbourId, ownerFace: faceIndex - 3 }
+    : { ownerId: hexId, ownerFace: faceIndex };
 }
 
 /**
