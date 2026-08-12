@@ -130,7 +130,7 @@ archive/stash-0-map-recovery stash@{0}` — committed (`1ef6a62`) and pushed to
       `server/src/engine/movement.js` (both comment-only, no logic change, matching the Task
       1.3 finding)
 - [x] Task 2.3: Replaced the single obsolete test (`rejects edges with face index "3"
-    (non-canonical)`) with the stash's two tests (`accepts boundary mirror face indices...`,
+(non-canonical)`) with the stash's two tests (`accepts boundary mirror face indices...`,
       `rejects direct mirror face indices... when the neighbour exists`) plus the
       `TEST_GRID_SPEC` fixture they need, in `map.schema.test.js`
 - [x] Task 2.4: Full test suite run — no regressions
@@ -143,8 +143,7 @@ archive/stash-0-map-recovery stash@{0}` — committed (`1ef6a62`) and pushed to
       3 warnings (1 pre-existing + 2 expected `referenceHex` warnings, to be resolved by the
       Phase 3 data merge)
 - [x] `npm run lint` / `npm run format:check` clean
-- [x] **Human checkpoint:** pending — presenting Phase 2 changes for approval before Phase 3's
-      data merge begins
+- [x] **Human checkpoint:** user approved the Phase 2 schema/engine changes ("proceed")
 
 ---
 
@@ -152,21 +151,34 @@ archive/stash-0-map-recovery stash@{0}` — committed (`1ef6a62`) and pushed to
 
 ### Tasks
 
-- [ ] Task 3.1: Merge recovered hex records into current `data/modules/south-mountain/map.json`,
-      applying the categorization from Task 1.2 (add net-new hexes, resolve conflicts per the
-      approved strategy, preserve post-stash edits)
-- [ ] Task 3.2: Re-run `npm run validate-data`; address any new schema or referential-integrity
-      violations surfaced by the merged data
-- [ ] Task 3.3: Re-verify VP-hex reachability using `hexNeighbors()` BFS (the same method used
-      to discover the original gap) — record the result
-- [ ] Task 3.4: Re-verify elevation completeness — record the result
-- [ ] Task 3.5: Re-verify the two `_todoHexes` referenceHex anchors (`38.31`, `36.27`) are now
-      covered, if the stash includes them
+- [x] Task 3.1: Verified first that every non-`hexes` top-level field (`vpHexes`, `entryHexes`,
+      `terrainTypes`, `hexFeatureTypes`, `edgeFeatureTypes`, `elevationSystem`, `layout`,
+      `hexIdFormat`) is byte-identical between stash and current — nothing to reconcile there.
+      Replaced `hexes` wholesale with the stash's 2261-hex array (approved Phase 1 strategy:
+      strict superset, zero current-only hexes existed to preserve).
+- [x] Task 3.2: `npm run validate-data` — 0 errors, 1 warning (pre-existing, unrelated).
+      Schema valid including the new boundary-mirror-face rule from Phase 2. Setup referenceHex
+      presence: 3/3 (up from 1/3).
+- [x] Task 3.3: Re-verified via `hexNeighbors()` BFS against the actual merged file — **10/10
+      VP hexes reachable** (up from 4/10), 2205/2261 hexes (97.5%) connected from the main
+      component.
+- [x] Task 3.4: Elevation completeness: 48/2261 missing (2.1%) — improved from 75/841 (8.9%).
+- [x] Task 3.5: Both `_todoHexes` referenceHex anchors (`38.31`, `36.27`) now present and
+      confirmed covered by `validate-data`'s referenceHex check.
+
+Full test suite caught one real regression: `movement.test.js` — a test named "adjacent
+clear-terrain hexes cost 1 for line formation" used hexes `19.23`→`20.23`, assuming clear
+terrain. The recovered data correctly shows `20.23` is `woods` (LOB §3 line-formation cost 2,
+confirmed against `scenario.json` `movementCosts`) — the engine was right, the test's premise
+was stale. Fixed by swapping to `19.23`→`18.22` (verified both clear, no hexside features,
+cost = 1), preserving the test's original intent rather than just changing the expected value.
 
 ### Verification
 
-- [ ] `npm run validate-data` clean or near-clean (documented exceptions only)
-- [ ] VP-hex reachability and elevation results recorded and reviewed
+- [x] `npm run validate-data` clean (1 pre-existing unrelated warning only)
+- [x] VP-hex reachability (10/10) and elevation completeness (97.9%) results recorded above
+- [x] `npm run test` — 3250 passed, 0 regressions after the `movement.test.js` fix
+- [x] `npm run lint` / `npm run format:check` clean
 - [ ] **Human checkpoint:** user approves the merged `map.json` and verification results before
       Phase 4/5 proceed
 
