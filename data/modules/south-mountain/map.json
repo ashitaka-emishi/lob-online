@@ -1,7 +1,7 @@
 {
   "_status": "partial",
-  "_description": "Full terrain digitization complete (841/841 hexes, 0 unknown). Hexside features (roads, streams, stone walls, fords/bridges) remain pending \u2014 tracked in issue #685.",
-  "_digitizationNote": "Terrain type and elevation are populated for all hexes. Remaining work is hexside edge features (road/stream/wall/ford networks); see #685 for the checklist and cross-reference docs/reference/south-mountain/sm-map.jpg.",
+  "_description": "The 841 hex records present here all have a concrete `terrain` value (0 `unknown`), but that is NOT the same as a complete map: gridSpec declares a 64x35 (2240-cell) grid and only 841 cells \u2014 mostly columns 1-30 \u2014 have any record at all. 376 of the 841 were set to \"clear\" as a bulk design-decision default (see conductor/tracks/m9-map-completion_20260625/metadata.json), not read off sm-map.jpg. 6 of the 10 scenario VP hexes are unreachable by the movement engine (server/src/engine/movement.js treats unrecorded hexes as impassable), and 75 hexes are missing elevation. A much more complete dataset (2261 hexes, 0 unknown, spanning columns 1-63) was recovered from a forgotten local git stash and is being reviewed for integration \u2014 see issue #689. Hexside features (roads, streams, stone walls, fords/bridges) are also still pending \u2014 tracked in issue #685. Two scenario setupZone/referenceHex anchors (38.31, 36.27) have no hex record at all \u2014 see _todoHexes below.",
+  "_digitizationNote": "Do not read \"0 unknown terrain\" as \"map complete\" \u2014 it only means the 841 hexes that happen to be recorded here all have a terrain value. Real coverage is far short of the 2240-cell grid. See _description and issue #689 (stash recovery) before treating this file as ready for full-map play.",
   "scenario": "south-mountain",
   "layout": "pointy-top",
   "hexIdFormat": "col.row",
@@ -4995,5 +4995,20 @@
       }
     }
   ],
+  "_todoHexes": {
+    "_note": "These setupZone/referenceHex anchors from scenario.json's setup section are not present in this file's hexes list. engine/init.js (M4 initial pass) places zone-constrained units directly at referenceHex, so these two hexes need real terrain/elevation data before those units set up on defined ground. The third referenceHex (18.05, Union Cavalry Division) is already present.",
+    "hexes": [
+      {
+        "referenceHex": "38.31",
+        "usedBy": "Anderson Brigade (A/dH) setup zone, scenario.json setup.confederate",
+        "constraint": "within2Of"
+      },
+      {
+        "referenceHex": "36.27",
+        "usedBy": "Reserve Artillery batteries setup zone, scenario.json setup.confederate",
+        "constraint": "within3Of"
+      }
+    ]
+  },
   "_savedAt": 1774326738616
 }

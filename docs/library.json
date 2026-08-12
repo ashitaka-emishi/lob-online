@@ -137,7 +137,7 @@
           {
             "id": "SM_MAP_DATA",
             "filename": "data/modules/south-mountain/map.json",
-            "description": "Hex map data — terrain digitization complete (841/841 hexes, 0 unknown); hexside features (roads, streams, walls, fords) pending, tracked in #685",
+            "description": "Hex map data — 841 recorded hexes all typed (0 unknown), but grid is 2240 cells (64x35) and only ~37% has any record; 6/10 VP hexes unreachable by the movement engine. Recoverable 2261-hex dataset found in a git stash, integration tracked in #689. Hexside features (roads, streams, walls, fords) also pending, tracked in #685",
             "status": "partial",
             "hexCount": 841
           },

@@ -10,8 +10,10 @@
 
 ## Progress
 
-- Phases: 2/2 complete
-- Tasks: 15/15 complete
+- Phases: 3/3 complete
+- Tasks: 25/25 complete
+- Filed #688 (DELETE ownership residual) and #689 (map coverage gap + recoverable git-stash
+  dataset) during `/team-review`; #689 requires a separate follow-up recovery track
 
 ## Quick Links
 

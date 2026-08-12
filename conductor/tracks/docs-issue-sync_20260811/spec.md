@@ -9,18 +9,21 @@
 
 Reconcile project documentation, `map.json` internal metadata, Conductor track records, and
 GitHub issue state with the actual current state of the codebase. Surfaced while auditing
-South Mountain map/OOB/leaders data completeness: several docs still describe pre-M9 states
-that were already resolved, two track records disagree with their own plan.md, and 14 open
-GitHub issues are already fixed by commits merged to `master`.
+South Mountain map/OOB/leaders data completeness: several docs still described the pre-M9
+"scaffold" state even though M9 had moved the ball forward (though, per Phase 3 below, not
+nearly as far as those same docs went on to claim once "fixed" the first time), one track
+registry row disagreed with the track's own `metadata.json`, and 13 open GitHub issues were
+already fixed by commits merged to `master` but never closed.
 
 ## Context
 
-South Mountain terrain digitization completed in M9 (`m9-map-completion_20260625`, PR #684,
-closing issue #669): all 841 hexes now have concrete terrain (0 `unknown`). Hexside features
-(roads/streams/stone walls/fords) remain genuinely incomplete and are correctly tracked in
-open issue #685 — that follow-up work is explicitly out of scope here. OOB (`oob.json`) and
-leaders (`leaders.json`) data are complete and their docs already say so correctly; no changes
-needed there.
+South Mountain terrain-_typing_ completed in M9 (`m9-map-completion_20260625`, PR #684,
+closing issue #669): all 841 then-recorded hexes have concrete terrain (0 `unknown`). This is
+**not** the same as map completion — see Phase 3 / #689: real hex coverage is only ~37% of
+the 2240-cell grid, and 6 of 10 VP hexes are unreachable by the movement engine. Hexside
+features (roads/streams/stone walls/fords) are separately, correctly tracked in open issue
+#685. OOB (`oob.json`) and leaders (`leaders.json`) data are complete and their docs already
+say so correctly; no changes needed there.
 
 Separately, a broader open-issue sweep (all 21 open issues, cross-referenced against
 `git log --all --grep` and `gh pr view --json mergedAt`) found 14 candidate issues whose
@@ -34,22 +37,33 @@ its four items are resolved by commits already on `origin/master` independent of
 OAuth branch (session-fixation guard, faction-binding-on-rejoin, `MAP_EDITOR_ENABLED` DELETE
 gate, `sameSite: 'lax'` cookie).
 
+**Update after `/team-review` (Phase 3):** the first pass at this track repeated the same
+class of error it set out to fix — see Phase 3 in `plan.md` for the full account, including
+the discovery of a forgotten git stash (`stash@{0}`) holding a much more complete map dataset,
+now tracked in #689.
+
 ## Acceptance Criteria
 
-- [x] `data/modules/south-mountain/map.json`: `_description`/`_digitizationNote` rewritten to
-      state terrain digitization is complete (841/841, 0 unknown) and hexside features are
-      pending (tracked in #685); stale `_todoHexes` block removed (its setup-position zones
-      are already resolved in `scenario.json`); `_status` stays `"partial"` (accurate — hexside
-      features are still incomplete)
-- [x] `docs/library.md` SM_MAP_DATA row (line 51) updated from "🔧 scaffold, 31 known hexes" to
-      reflect terrain-complete/hexside-pending state
+- [x] `data/modules/south-mountain/map.json`: `_description`/`_digitizationNote` accurately
+      state that the 841 recorded hexes are all typed (0 unknown) but real grid coverage is
+      only ~37% of the 2240-cell map, 6/10 VP hexes are unreachable, hexside features are
+      pending (#685), and a recoverable fuller dataset exists in a git stash (#689); `_todoHexes`
+      restored with corrected content (the two genuinely-missing referenceHex anchors, not the
+      stale original block); `_status` stays `"partial"`
+- [x] `docs/library.md` SM_MAP_DATA row (line 51) updated to state the real coverage gap and
+      point to #689, not "digitization complete"
 - [x] `docs/library.json` SM_MAP_DATA entry (`description`/`status`) updated to match
-- [x] `docs/agents/domain-expert/design.md` SM_MAP_DATA row (line 45) updated — no longer says
-      "partial, digitization in progress"
-- [x] `docs/designs/high-level-design.md` risk-register row (~line 2190) updated — terrain
-      digitization is resolved; hexside features tracked separately in #685
-- [x] `conductor/tracks.md` line 160: `m9-map-completion_20260625` checkbox flipped `[ ]` →
-      `[x]` to match its own `metadata.json`/`plan.md` (`status: "complete"`)
+- [x] `docs/agents/domain-expert/design.md` SM_MAP_DATA row (line 45) updated to state the real
+      coverage gap; also fixes a pre-existing `hexsideTypes` → `terrainTypes` typo
+- [x] `docs/designs/high-level-design.md` — three locations (line ~96 status blockquote, line
+      ~619 M9 deliverables list, line ~2184 risk register) reverted from "Resolved"/"complete"
+      framing to state the real coverage gap and point to #689; line ~2211 SVG-performance risk
+      row's stale "~600 hexes" corrected to 841
+- [x] `conductor/tracks.md` line 160: `m9-map-completion_20260625` checkbox reverted to `[ ]`
+      — its own `metadata.json` (`phases: 1/2`, `tasks: 3/7`) and `plan.md` (7 unchecked boxes)
+      never actually supported `[x] Complete`; that file's own `status` field is now corrected
+      to `"partial"` too, and its `plan.md`'s stale `#669` hexside-feature pointer fixed to
+      `#685`/`#689`
 - [x] `conductor/tracks/m9-discord-oauth_20260625/metadata.json` kept in sync with the
       `plan.md` that actually exists in this tree (on `origin/master` / this branch): that
       `plan.md` reads `[ ] Not Started`, 0/34 boxes checked — because the OAuth implementation
@@ -69,8 +83,11 @@ gate, `sameSite: 'lax'` cookie).
 
 ## Dependencies
 
-None. Pure documentation/metadata/JSON-comment-field and GitHub issue-state corrections — no
-application code, schema, or engine logic changes.
+Mostly documentation/metadata/JSON-comment-field and GitHub issue-state corrections. Two small
+exceptions surfaced by `/team-review` (Phase 3): one non-functional security comment in
+`server/src/routes/games.js` (no logic change), and one additive `warn`-level check in
+`scripts/validate-data.js` (`checkSetupHexesInMap`, referenceHex coverage) — neither changes
+runtime behavior.
 
 ## Out of Scope
 
@@ -82,11 +99,16 @@ application code, schema, or engine logic changes.
   own pre-existing drift (duplicate rows, stale "Pending" statuses) unrelated to this session's
   findings — flagged for a future track, not fixed here
 - Any change to `oob.json`, `leaders.json`, or their docs (already accurate)
+- Implementing the DELETE-route ownership check described in #688 — comment + issue only
+- Recovering/integrating the stashed 2261-hex map dataset and boundary-face schema fix (#689)
+  — this PR documents the gap and the recovery path accurately; the recovery itself is a
+  separate, dedicated Checkpointed/High-risk track (rules-engine + schema + shared components)
 
 ## Technical Notes
 
-- `map.json` and `library.json` are schema-validated (`server/src/schemas/map.schema.js`) —
-  run `npm run validate-data` after edits.
+- `map.json` is schema-validated (`server/src/schemas/map.schema.js`) — run
+  `npm run validate-data` after edits. `docs/library.json` is an unvalidated documentation
+  manifest kept in sync with `docs/library.md` by hand; no script or server module reads it.
 - Issue closing follows the existing repo convention (see prior track
   `issue-closeout_20260504`): `gh issue close <n> --comment "<citation>"`.
 - Verification method used for each "already resolved" issue: `git log --all --grep="#<n>"`

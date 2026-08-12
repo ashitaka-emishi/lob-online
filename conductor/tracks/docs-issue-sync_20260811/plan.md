@@ -35,7 +35,14 @@ route, or UI logic changes. Issue closures are repo-visible but follow the estab
 
 ## Debt Budget
 
-**Allowed new deferred debt:** 0.
+**Allowed new deferred debt:** 0 for the originally-scoped doc-sync work. `/team-review`
+(Phase 3) surfaced two previously-unknown, genuine gaps outside this PR's own scope to fix:
+a DELETE-route security residual (#688, score 2) and the South Mountain map coverage gap
+(#689, score not yet assigned — pending the dedicated recovery track, likely High given
+rules-engine/schema impact). Both filed with debt scores and written assessments per the
+Immediate Debt-Capture Policy before this PR merges; neither is a debt item _created_ by this
+PR's own changes, both pre-existed and were discovered by reviewing this PR's claims against
+reality.
 
 ## Completion Contract
 
@@ -112,6 +119,73 @@ route, or UI logic changes. Issue closures are repo-visible but follow the estab
 - [x] `gh issue list --state open` dropped from 21 to 8 (#653, #668, #676, #677, #678, #679,
       #681, #685) — confirmed via `gh issue list --state open`
 - [x] Each closed issue has exactly one closing comment citing its resolving PR/commit
+
+---
+
+## Phase 3: `/team-review` Findings (Security, Performance, Architecture)
+
+Three parallel `agent-teams:team-reviewer` agents reviewed PR #687 before merge. All
+findings were independently re-verified (not taken on the reviewer's word) before acting.
+
+### Tasks
+
+- [x] Task 3.1 (Security): `DELETE /api/v1/games/:id` has no ownership check, relying solely
+      on `MAP_EDITOR_ENABLED` never being true in production. Added a residual-risk code
+      comment at `server/src/routes/games.js:189` and filed #688 (tech-debt) with the proper
+      fix.
+- [x] Task 3.2 (Security): `spec.md` wrongly claimed `docs/library.json` is schema-validated
+      like `map.json`. Corrected — it's an unvalidated manifest.
+- [x] Task 3.3 (Security/Architecture): `_todoHexes` was removed from `map.json` on a false
+      premise ("zones already resolved in scenario.json") — the two referenceHex anchors
+      (`38.31`, `36.27`) are genuinely absent from `map.hexes`, and `engine/init.js` places
+      zone-constrained units directly at `referenceHex`. Restored `_todoHexes` (corrected
+      content, not the original stale block) and added a `referenceHex` presence check to
+      `scripts/validate-data.js` (as a `warn`, not `fail`, since the gap is real and known) —
+      also fixed that function to check `scenario.setup.union`, not just `.confederate`.
+- [x] Task 3.4 (Performance): HLD's "SVG performance on large maps" risk row still said
+      "~600 hexes" 27 lines from a row this PR already corrected to 841. Fixed.
+- [x] Task 3.5 (Architecture, HIGH): "841/841 hexes, 0 unknown" was a self-referential count
+      — true of `map.json`'s `hexes` array, false as a claim about the South Mountain map.
+      `gridSpec` declares a 2240-cell (64x35) grid; only 841 cells have any record, almost all
+      in columns 1-30. Independently verified via `hexNeighbors()`
+      (`server/src/engine/hex.js`) with a real BFS: 6 of 10 scenario VP hexes are unreachable
+      by the movement pathfinder, which treats unrecorded hexes as impassable
+      (`movement.js:144`). 75 hexes are missing `elevation`. Investigated further per user
+      request ("I thought I had a more complete map checked in at one point") and found the
+      explanation: `stash@{0}` on this machine, created 2026-05-23 and never applied, contains
+      a 2261-hex version of `map.json` (0 unknown, real terrain variety, columns 1-63) plus a
+      bundled boundary-hex schema fix (`hex.js`/`map.schema.js`) that likely caused the stash
+      to be set aside and forgotten. Filed #689 documenting the gap and the recoverable data;
+      corrected all five propagated "digitization complete"/"Resolved" claims (`map.json`,
+      `library.md`, `library.json`, `domain-expert/design.md`, HLD — 3 locations) to state the
+      real coverage gap and point to #689 instead.
+- [x] Task 3.6 (Architecture, MEDIUM): `m9-map-completion_20260625`'s `tracks.md` row was
+      flipped to `[x]` in Phase 1 based on its `metadata.json` `status: "complete"` field
+      alone, without noticing that file's own `phases: 1/2`, `tasks: 3/7` sibling fields (and
+      its `plan.md`, 7 unchecked boxes) said otherwise — the same failure mode as the
+      `m9-discord-oauth` bug, not yet caught the first time through. Reverted `tracks.md` to
+      `[ ]`, corrected `metadata.json` `status` to `"partial"`, and fixed `plan.md`'s stale
+      "Tracked in #669" (#669 is closed) to point at #685 and #689.
+- [x] Task 3.7 (Architecture, LOW): `domain-expert/design.md`'s SM_MAP_DATA row (rewritten in
+      Phase 1) named a nonexistent `hexsideTypes` registry key — pre-existing error, propagated
+      instead of fixed. Corrected to `terrainTypes`.
+- [x] Task 3.8 (Architecture, LOW): the new `docs-issue-sync_20260811` row in `tracks.md` was
+      added after a blank line, breaking the markdown table (pre-existing defect elsewhere in
+      the file, not fixed repo-wide — just not repeated here). Fixed for this row.
+- [x] Task 3.9 (Architecture, LOW): `spec.md`'s Summary said "14 open GitHub issues" (stale,
+      pre-correction draft — actually 13) and mischaracterized the `m9-discord-oauth` drift as
+      "two track records disagree with their own plan.md" when only one file (`tracks.md` vs.
+      `metadata.json`) actually disagreed by that point. Corrected both.
+- [x] Task 3.10: conductor/index.md's pre-existing drift (stale statuses, missing M9 tracks)
+      confirmed out of scope per spec.md — no action, disclosed not hidden.
+
+### Verification
+
+- [x] `npm run validate-data` — 0 errors, 3 warnings (1 pre-existing unrelated + 2 new
+      `referenceHex` warnings, both expected and explained)
+- [x] `npm run lint` / `npm run format:check` / `npm run test` all pass
+- [x] #688 and #689 filed with debt scores and written assessments per Immediate
+      Debt-Capture Policy
 
 ---
 
