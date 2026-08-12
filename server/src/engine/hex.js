@@ -8,9 +8,10 @@
  * Direction index mapping (matches wedgeElevations array order in map.json):
  *   0 = N, 1 = NE, 2 = SE, 3 = S, 4 = SW, 5 = NW
  *
- * Edge canonical ownership: only faces 0 (N), 1 (NE), 2 (SE) are stored on
- * each hex. Faces 3 (S), 4 (SW), 5 (NW) are stored on the neighbor hex as
- * face (dirIndex − 3). See map.schema.js for the authoritative definition.
+ * Edge canonical ownership: faces 0 (N), 1 (NE), 2 (SE) are stored on each hex.
+ * Interior faces 3-5 (S), (SW), (NW) are stored on the neighbor hex as face
+ * (dirIndex − 3). Boundary faces 3-5 stay on their physical hex. See
+ * map.schema.js for the authoritative definition.
  */
 
 // LOB — hex geometry and coordinate system (flat-top EVEN_Q offset, general LOB map convention)

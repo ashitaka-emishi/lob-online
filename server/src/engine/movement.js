@@ -6,7 +6,8 @@
  *
  * Coordinate system: flat-top hexes, EVEN_Q offset (evenColUp: true).
  * Edge canonical ownership: faces 0 (N), 1 (NE), 2 (SE) are stored on each hex;
- * faces 3 (S), 4 (SW), 5 (NW) are stored on the neighbor as (dirIndex − 3).
+ * interior faces 3 (S), 4 (SW), 5 (NW) are stored on the neighbor as
+ * (dirIndex − 3). Boundary faces 3-5 stay on their physical hex.
  * See map.schema.js for the authoritative definition.
  */
 
@@ -42,6 +43,15 @@ function deriveSlopeType(wedgeElevations, dirIdx) {
  * Canonical ownership (see map.schema.js):
  *   dirIndex 0,1,2 (N,NE,SE) → stored in fromHex.edges[dirIndex]
  *   dirIndex 3,4,5 (S,SW,NW) → stored in toHex.edges[dirIndex - 3]
+ *
+ * Boundary-owned faces 3-5 (map.schema.js validateBoundaryMirrorFaces, #689) — where a
+ * map-edge hex stores its own faces 3-5 directly, since there is no neighbour to mirror
+ * onto — are intentionally never read here. Movement always crosses between two real,
+ * in-grid hexes (toHex exists), so a boundary hexside (no hex on the far side) never
+ * appears as a fromHex/toHex pair in the first place; there is no crossing to look up
+ * features for. Faces 3-5 on a boundary hex are authoring/render-only data for the map
+ * editor (client/src/composables/useEdgeLineLayer.js, HexMapOverlay.vue) — this function
+ * and the rest of the rules engine do not consume them, by design.
  *
  * Elevation-type features (slope, extremeSlope, verticalSlope) are derived from
  * toHex.wedgeElevations at the entering direction if not already present as explicit

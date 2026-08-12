@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { hexNeighborInDir } from '../engine/hex.js';
+
 const HexId = z.string().regex(/^\d+\.\d+$/, 'Hex ID must be in col.row format (e.g. "19.23")');
 
 const TerrainType = z.enum([
@@ -33,11 +35,17 @@ const EdgeFeature = z.object({
   losHeightBonus: z.number().optional(),
 });
 
-// Canonical edge ownership: only face indices 0, 1, 2 are stored on this hex.
-// Faces 3, 4, 5 are stored on the neighbour hex as face index (dir − 3).
-// NOTE: JSON object keys are always strings, so face indices are stored as '0', '1', '2'.
+// Canonical edge ownership: interior mirror faces 3, 4, 5 are stored on the
+// neighbour hex as face index (dir − 3). Boundary mirror faces have no neighbour,
+// so they are stored directly on this hex as 3, 4, or 5.
+// NOTE: JSON object keys are always strings, so face indices are stored as '0'...'5'.
 // Any consumer performing arithmetic on face keys must use parseInt(face, 10).
-const FaceIndex = z.enum(['0', '1', '2']);
+// Boundary-owned faces 3-5 are authoring/render-only data for the map editor
+// (client/src/composables/useEdgeLineLayer.js, HexMapOverlay.vue). The rules engine
+// (server/src/engine/movement.js getHexsideFeatures) never reads a hex's own faces 3-5 —
+// a map-boundary hexside has no hex on the far side, so movement never crosses it. This
+// enum's job is validating what the editor may persist, not what the engine consumes.
+const FaceIndex = z.enum(['0', '1', '2', '3', '4', '5']);
 
 const HexEntry = z.object({
   hex: HexId,
@@ -71,6 +79,49 @@ const HexEntry = z.object({
 // without duplication. Both sets are subsets of EDGE_FEATURE_TYPE_VALUES.
 export const ELEVATION_TYPES = new Set(['elevation', 'slope', 'extremeSlope', 'verticalSlope']);
 export const ROUTE_TYPES = new Set(['road', 'trail', 'pike']);
+
+function validateBoundaryMirrorFaces(hex, hexIdx, gridSpec, ctx) {
+  if (!hex.edges) return;
+  const facesAbove2 = Object.keys(hex.edges).filter((f) => Number(f) >= 3);
+  if (facesAbove2.length === 0) return;
+
+  // Without gridSpec the boundary invariant can't be checked — fail closed rather than
+  // silently accepting faces 3-5 on what might be an interior hex (#690 review finding).
+  if (!gridSpec) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Hex ${hex.hex}: faces 3-5 require gridSpec so boundary status can be verified`,
+      path: ['hexes', hexIdx, 'edges'],
+    });
+    return;
+  }
+
+  // Bounds-check against the grid rectangle directly (no cache lookup) before calling
+  // hexNeighborInDir, which memoizes every hex ID it sees in an unbounded, never-evicted
+  // module-level cache (hex.js:41-43's documented "callers must validate against the map
+  // index first" contract). An out-of-grid ID would otherwise read as an automatic boundary
+  // (hexNeighborInDir returns null for anything outside the rectangle) and get cached forever.
+  const [col, row] = hex.hex.split('.').map(Number);
+  const inGrid = col >= 1 && col <= gridSpec.cols && row >= 1 && row <= gridSpec.rows;
+  if (!inGrid) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Hex ${hex.hex}: outside gridSpec bounds, cannot carry edge faces`,
+      path: ['hexes', hexIdx, 'edges'],
+    });
+    return;
+  }
+
+  for (const face of facesAbove2) {
+    const faceIndex = Number(face);
+    if (hexNeighborInDir(hex.hex, faceIndex, gridSpec) === null) continue;
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Hex ${hex.hex} face ${face}: faces 3-5 may only be stored directly on map boundaries`,
+      path: ['hexes', hexIdx, 'edges', face],
+    });
+  }
+}
 
 function validateCoexistence(hex, hexIdx, ctx) {
   if (!hex.edges) return;
@@ -197,6 +248,7 @@ export const MapSchema = z
           }
         }
       }
+      validateBoundaryMirrorFaces(hex, i, data.gridSpec, ctx);
       validateCoexistence(hex, i, ctx);
     }
   });

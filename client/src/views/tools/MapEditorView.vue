@@ -40,7 +40,7 @@ import { adjacentHexId } from '../../utils/hexGeometry.js';
 
 const MAP_DRAFT_KEY_V1 = 'lob-map-editor-mapdata-v1';
 const MAP_DRAFT_KEY = 'lob-map-editor-mapdata-south-mountain-v2';
-const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
+const MAP_IMAGE = '/tools/map-editor/assets/reference/south-mountain/sm-map.jpg';
 
 const _route = useRoute();
 // #542 — reactive; watch below re-fetches on slug change
@@ -264,7 +264,7 @@ function handleEdgeClearAll(allowedTypes) {
   if (!mapData.value) return;
   for (const hex of mapData.value.hexes) {
     if (!hex.edges) continue;
-    for (const face of [0, 1, 2]) {
+    for (const face of [0, 1, 2, 3, 4, 5]) {
       if (!hex.edges[face]) continue;
       hex.edges[face] = hex.edges[face].filter(
         (f) => !allowedTypes.includes(typeof f === 'string' ? f : f.type)
@@ -543,14 +543,14 @@ function onEdgeRightClick({ hexId, dir }) {
   }
 }
 
-// Clears all features of the given types from every canonical edge (0/1/2) of hexId.
+// Clears all features of the given types from every edge of hexId, including boundary mirrors.
 function handleHexEdgeClearAll(hexId, types) {
   if (!mapData.value) return;
   const idx = hexIndex.value.get(hexId) ?? -1;
   if (idx < 0) return;
   const hex = mapData.value.hexes[idx];
   if (!hex.edges) return;
-  for (const face of [0, 1, 2]) {
+  for (const face of [0, 1, 2, 3, 4, 5]) {
     if (!hex.edges[face]) continue;
     hex.edges[face] = hex.edges[face].filter(
       (f) => !types.includes(typeof f === 'string' ? f : f.type)

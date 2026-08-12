@@ -142,6 +142,45 @@ describe('stripNonPlayableBoundaryEdges (engine/edge-strip.js) (#492)', () => {
     stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
     expect(Object.prototype.hasOwnProperty.call(hexes[0], 'edges')).toBe(false);
   });
+
+  // ── Boundary-owned faces 3-5 (#689) ──────────────────────────────────────────
+  // 01.01 is a genuine grid-corner hex in this GRID_SPEC (cols:64, rows:35) — faces 3, 4,
+  // and 5 have no neighbour, so per map.schema.js's validateBoundaryMirrorFaces they are
+  // stored directly on this hex, not mirrored onto a neighbour.
+
+  it('strips boundary-owned face 3 (S) when the hex itself is non-playable', () => {
+    const hexes = [{ hex: '01.01', playable: false, edges: { 3: [{ type: 'stream' }] } }];
+    const count = stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
+    expect(count).toBe(1);
+    expect(hexes[0].edges).toBeUndefined();
+  });
+
+  it('preserves boundary-owned faces 3-5 when the hex is playable', () => {
+    const hexes = [
+      {
+        hex: '01.01',
+        edges: { 3: [{ type: 'stream' }], 4: [{ type: 'road' }], 5: [{ type: 'elevation' }] },
+      },
+    ];
+    const count = stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
+    expect(count).toBe(0);
+    expect(hexes[0].edges[3]).toEqual([{ type: 'stream' }]);
+    expect(hexes[0].edges[4]).toEqual([{ type: 'road' }]);
+    expect(hexes[0].edges[5]).toEqual([{ type: 'elevation' }]);
+  });
+
+  it('strips a mix of canonical and boundary-owned faces in one pass', () => {
+    const hexes = [
+      {
+        hex: '01.01',
+        playable: false,
+        edges: { 0: [{ type: 'road' }], 3: [{ type: 'stream' }] },
+      },
+    ];
+    const count = stripNonPlayableBoundaryEdges(hexes, GRID_SPEC);
+    expect(count).toBe(2);
+    expect(hexes[0].edges).toBeUndefined();
+  });
 });
 
 // ── Cross-implementation parity (#504) ────────────────────────────────────────
@@ -208,6 +247,18 @@ describe('stripNonPlayableBoundaryEdges — server/client parity (#504)', () => 
     expect(serverHexes).toEqual(clientHexes);
     expect(serverHexes[0].edges[0]).toEqual([{ type: 'road' }]);
     expect(serverCount).toBe(0);
+  });
+
+  it('both strip boundary-owned face 3 identically when the hex itself is non-playable (#689)', () => {
+    const serverHexes = [{ hex: '01.01', playable: false, edges: { 3: [{ type: 'stream' }] } }];
+    const clientHexes = [{ hex: '01.01', playable: false, edges: { 3: [{ type: 'stream' }] } }];
+
+    const serverCount = stripNonPlayableBoundaryEdges(serverHexes, GRID_SPEC);
+    clientStrip(clientHexes, GRID_SPEC);
+
+    expect(serverHexes).toEqual(clientHexes);
+    expect(serverHexes[0].edges).toBeUndefined();
+    expect(serverCount).toBe(1);
   });
 
   // Even-column tests: EVEN_Q offset shifts NE/SE neighbors differently for even columns.

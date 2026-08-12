@@ -1,8 +1,10 @@
 /**
  * Canonical edge ownership, lookup, and coexistence validation.
  *
- * Edges are stored on the hex with the lower face index (0–2). Faces 3–5 are
- * "mirror" faces — they resolve to face (faceIndex − 3) on the adjacent hex.
+ * Edges are stored on the hex with the lower face index (0–2). Interior faces
+ * 3–5 are "mirror" faces — they resolve to face (faceIndex − 3) on the
+ * adjacent hex. Boundary faces 3–5 have no adjacent owner, so they remain on
+ * the clicked hex as their physical face index.
  *
  * Face → direction mapping (flat-top, EVEN_Q, clockwise from top):
  *   0: N, 1: NE, 2: SE, 3: S, 4: SW, 5: NW
@@ -30,7 +32,8 @@ export function oppositeFace(faceIndex) {
  * Returns the canonical owner hex and face for an edge.
  *
  * Faces 0–2 are owned by the hex itself.
- * Faces 3–5 are owned by the adjacent neighbour at (faceIndex − 3).
+ * Interior faces 3–5 are owned by the adjacent neighbour at (faceIndex − 3).
+ * Boundary faces 3–5 are owned by this hex at the original face index.
  *
  * @param {string} hexId - e.g. '05.05'
  * @param {number} faceIndex - 0–5
@@ -43,7 +46,9 @@ export function canonicalOwner(hexId, faceIndex, gridSpec) {
   }
   const dir = FACE_TO_DIR[faceIndex];
   const neighbourId = adjacentHexId(hexId, dir, gridSpec);
-  return { ownerId: neighbourId ?? hexId, ownerFace: faceIndex - 3 };
+  return neighbourId
+    ? { ownerId: neighbourId, ownerFace: faceIndex - 3 }
+    : { ownerId: hexId, ownerFace: faceIndex };
 }
 
 /**
@@ -175,9 +180,13 @@ export function removeEdgeFeature(hexMap, hexId, faceIndex, type, gridSpec) {
 
 // Each edge is shared between exactly two hexes and owned by exactly one.
 // Faces 0–2 (N, NE, SE) are the canonical "owner" faces in the EVEN_Q offset
-// convention used by edge storage; faces 3–5 resolve to their mirror on the
-// adjacent hex. Iterating only 0–2 visits every owned edge exactly once.
-const CANONICAL_FACE_DIRS = ['N', 'NE', 'SE'];
+// convention used by edge storage; interior faces 3–5 resolve to their mirror on the
+// adjacent hex, so iterating 0-2 visits every interior-owned edge exactly once. Faces
+// 3-5 are also checked below because map-boundary hexes store them directly on
+// themselves (validateBoundaryMirrorFaces in map.schema.js, #689) — for those,
+// adjacentHexId returns null, so adjHex is null and only this hex's own playability
+// applies via isEdgeAtNonPlayableBoundary.
+const EDGE_FACE_DIRS = FACE_TO_DIR;
 
 /**
  * Returns true when the edge between `hex` and `adjHex` crosses a
@@ -197,8 +206,9 @@ export function isEdgeAtNonPlayableBoundary(hex, adjHex) {
 }
 
 /**
- * Removes edge features stored on canonical faces (0–2) that cross a playable/
- * non-playable hex boundary.  Mutates `hexes` in place.
+ * Removes edge features stored on faces 0-5 that cross a playable/non-playable hex
+ * boundary (faces 0-2 via the adjacent hex; boundary-owned faces 3-5 via this hex's own
+ * playability). Mutates `hexes` in place.
  *
  * // SM map convention (#418) — hex edges may not lie on a playable/non-playable
  * // boundary; such edges are stripped at save time to prevent invalid persisted data.
@@ -216,9 +226,9 @@ export function stripNonPlayableBoundaryEdges(hexes, gridSpec) {
 
   for (const hex of hexes) {
     if (!hex.edges) continue;
-    for (let fi = 0; fi < CANONICAL_FACE_DIRS.length; fi++) {
+    for (let fi = 0; fi < EDGE_FACE_DIRS.length; fi++) {
       if (!hex.edges[fi] || hex.edges[fi].length === 0) continue;
-      const adjId = adjacentHexId(hex.hex, CANONICAL_FACE_DIRS[fi], gridSpec);
+      const adjId = adjacentHexId(hex.hex, EDGE_FACE_DIRS[fi], gridSpec);
       const adjHex = adjId ? hexMap.get(adjId) : null;
       if (isEdgeAtNonPlayableBoundary(hex, adjHex)) {
         delete hex.edges[fi];

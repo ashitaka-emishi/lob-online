@@ -12,7 +12,7 @@ import { sanitizeCalibration } from '../utils/calibration.js';
 import { useOobData } from '../composables/useOobData.js';
 import { useGameStore } from '../stores/useGameStore.js';
 
-const MAP_IMAGE = '/tools/map-editor/assets/reference/sm-map.jpg';
+const MAP_IMAGE = '/tools/map-editor/assets/reference/south-mountain/sm-map.jpg';
 
 const route = useRoute();
 const gameStore = useGameStore();

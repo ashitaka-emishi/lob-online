@@ -471,8 +471,10 @@ describe('movementPath', () => {
   });
 
   it('adjacent clear-terrain hexes cost 1 for line formation', () => {
-    // LOB §3 / SM movement chart — clear terrain = 1 MP for line
-    const result = movementPath('19.23', '20.23', 'line', scenario, mapData);
+    // LOB §3 / SM movement chart — clear terrain = 1 MP for line.
+    // 19.23 → 18.22: both clear terrain, no hexside features (map-data-recovery_20260811,
+    // #689) — 20.23 is genuinely 'woods' in the recovered data, no longer a clear-terrain pair.
+    const result = movementPath('19.23', '18.22', 'line', scenario, mapData);
     expect(result.totalCost).toBe(1);
   });
 
