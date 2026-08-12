@@ -55,20 +55,55 @@ No map-data changes — this phase produces a determination, not a fix.
 
 ### Tasks
 
-- [ ] Task 1.1: Start the dev server (`/dev-start` or equivalent), navigate to the Map Editor
-      for module `SM` (`/modules/SM/tools/map-editor`)
-- [ ] Task 1.2: Compute the expected pixel position of column 64 from `gridSpec`
-      (`dx: 39.75`, `hexWidth: 40.5`, `cols: 64`) and compare against the reference image's
-      real natural width (3804px) — does the calibrated grid overlay for column 64 fall inside
-      or past the image's right edge?
-- [ ] Task 1.3: Visually inspect (screenshot via Playwright) the grid overlay at the
-      column-64 position against `sm-map.jpg` — is there real printed hex/terrain content
-      there, or does the overlay extend past the printed map?
-- [ ] Task 1.4: Document the determination and evidence in this plan.md
+- [x] Task 1.1: Started the dev server, navigated to the Map Editor for module `SM` via
+      Playwright (`http://localhost:5173/modules/SM/tools/map-editor`)
+- [x] Task 1.2: Queried the live app's own computed grid geometry (honeycomb-grid library,
+      not a hand-derived formula) directly via `page.evaluate`: `gridSpec.cols: 64` puts
+      column 64's hex bounding box at `x=3786.75` to `x=3867.75` (width 81px — `hexWidth: 40.5`
+      is a radius, confirmed). The reference image (`sm-map.jpg`) has a real natural width of
+      **3804px**. Column 64's hex extends **63.75px past the image's right edge** — 78.7% of
+      the hex has no corresponding source pixels at all (the file simply ends at x=3804).
+      Column 63's hex (`x=3726`–`3807`) fits essentially flush against the edge.
+- [x] Task 1.3: Cropped the raw `sm-map.jpg` at the exact computed boundary (not a screenshot
+      of the rendered app, to rule out any client-side rendering artifact) across 4 independent
+      rows spanning the full map height (near-top, upper-middle, lower, bottom), with the
+      column-64 boundary drawn in as a precise marker line. **Consistent finding across all
+      four**: real printed terrain (woods, roads, streams, hex grid lines) extends right through
+      the marker line — this is not a blank calibration overshoot. But per Task 1.2's
+      measurement, only the leftmost ~21% (17.25px of 81px) of column 64's hex has any image
+      data; the remaining ~79% is off the physical scan entirely.
+- [x] Task 1.4: Determination documented below.
+
+### Determination
+
+**Column 64 is neither a pure calibration artifact nor a normal genuine gap — it's a partial
+"sliver" hex at the true physical edge of the printed map**, consistent with the user's
+hypothesis mid-investigation ("column 64 may not have been clickable or ever set because it's
+a half hex on the map"). Real terrain exists for roughly the leftmost 21% of the hex; the
+remaining ~79% has no source pixels because the physical map sheet ends mid-hex. A full,
+normally-digitized hex (matching the terrain/elevation quality of the rest of the map) cannot
+be produced for column 64 — there isn't enough of the printed map left to represent.
+
+This is architecturally similar to the already-established convention in this same file for
+the 56 row-`00`/`36` border-marker hexes (recorded with `playable: false`, `terrain: "clear"`,
+outside the real 1–35 row range) — but not identical, since those are fully outside the
+declared row range, while column 64 sits partially inside a hex-width of real content.
+
+**Recommended resolution** (for human checkpoint approval): record the 35 column-64 hexes
+(rows 1–35) using the same `playable: false` convention as the row-marker hexes — `terrain`
+set generically (e.g. `"clear"`, matching the border-marker precedent) rather than attempting
+per-hex terrain typing that the source material can't actually support, with a `_note`
+documenting the partial-hex reason. Keep `gridSpec.cols: 64` as-is (it's not wrong — the grid
+rectangle legitimately needs to extend that far to capture the real 21%-sliver content for
+rendering/calibration purposes; only playable _gameplay_ hexes are excluded). Update
+`validate-data.js`'s grid-coverage check to also exclude column 64 the same way it (implicitly,
+via `playable: false` hexes still counting as "recorded") already handles rows 00/36, so the
+check reports true 100% coverage of the _playable_ grid rather than continuing to warn.
 
 ### Verification
 
-- [ ] Clear, evidenced determination reached: calibration artifact vs. genuine gap
+- [x] Clear, evidenced determination reached: partial edge-sliver hex, not calibration artifact
+      or normal genuine gap
 - [ ] **Human checkpoint:** user approves the determination and the resulting resolution plan
       before Phase 2 begins
 
