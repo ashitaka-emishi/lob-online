@@ -137,9 +137,9 @@
           {
             "id": "SM_MAP_DATA",
             "filename": "data/modules/south-mountain/map.json",
-            "description": "Hex map data — scaffold with known hexes, full digitization pending",
+            "description": "Hex map data — terrain digitization complete (841/841 hexes, 0 unknown); hexside features (roads, streams, walls, fords) pending, tracked in #685",
             "status": "partial",
-            "hexCount": 31
+            "hexCount": 841
           },
           {
             "id": "SM_SCENARIO",

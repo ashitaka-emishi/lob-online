@@ -53,26 +53,29 @@ route, or UI logic changes. Issue closures are repo-visible but follow the estab
 
 ### Tasks
 
-- [ ] Task 1.1: `data/modules/south-mountain/map.json` — rewrite `_description` and
+- [x] Task 1.1: `data/modules/south-mountain/map.json` — rewrite `_description` and
       `_digitizationNote` to state terrain digitization is complete (841/841 hexes, 0
       `unknown`) and hexside features (roads/streams/walls/fords) are pending, tracked in #685;
-      remove the stale `_todoHexes` block (zones already resolved in `scenario.json` setup)
-- [ ] Task 1.2: `docs/library.md` line 51 — update SM_MAP_DATA status marker and description
-- [ ] Task 1.3: `docs/library.json` SM_MAP_DATA entry — update `description`/`status` to match
+      remove the stale `_todoHexes` block (zones already resolved in `scenario.json` setup) and
+      the now-obsolete `_digitizationPlan` block
+- [x] Task 1.2: `docs/library.md` line 51 — update SM_MAP_DATA status marker and description
+- [x] Task 1.3: `docs/library.json` SM_MAP_DATA entry — update `description`/`status` to match
       library.md
-- [ ] Task 1.4: `docs/agents/domain-expert/design.md` line 45 — update SM_MAP_DATA row
-- [ ] Task 1.5: `docs/designs/high-level-design.md` risk-register row (~line 2190) — update
+- [x] Task 1.4: `docs/agents/domain-expert/design.md` line 45 — update SM_MAP_DATA row
+- [x] Task 1.5: `docs/designs/high-level-design.md` risk-register row (line 2184) — update
       map-digitization row to reflect terrain-complete status
-- [ ] Task 1.6: `conductor/tracks.md` line 160 — flip `m9-map-completion_20260625` checkbox
+- [x] Task 1.6: `conductor/tracks.md` line 160 — flip `m9-map-completion_20260625` checkbox
       `[ ]` → `[x]`
-- [ ] Task 1.7: `conductor/tracks/m9-discord-oauth_20260625/metadata.json` — update `status`,
-      `phases.completed`, `tasks.completed`, `updated` to match its own completed `plan.md`
+- [x] Task 1.7: `conductor/tracks/m9-discord-oauth_20260625/metadata.json` — update `status`,
+      `phases.completed`, `tasks.completed`, `updated` to match its own completed `plan.md`;
+      note added explaining the branch is unmerged so #668 stays open
 
 ### Verification
 
-- [ ] `npm run validate-data` — 0 warnings, map.json and library.json still schema-valid
-- [ ] `npm run lint` / `npm run format:check` pass
-- [ ] Manual read-through: no remaining "scaffold" / "in progress" / "31 known hexes" language
+- [x] `npm run validate-data` — 0 errors (1 pre-existing unrelated warning), map.json and
+      library.json still schema-valid
+- [x] `npm run lint` / `npm run format:check` pass
+- [x] Manual read-through: no remaining "scaffold" / "in progress" / "31 known hexes" language
       describing South Mountain terrain digitization anywhere in `docs/`
 
 ---
