@@ -22,7 +22,7 @@ Navigation hub for project context.
 | [move-debt-sprint_20260627](./tracks/move-debt-sprint_20260627/index.md)               | MOVE Debt Sprint — Path Cost + Partial Moves (#675 #680)       | Pending  |
 | [docs-issue-sync_20260811](./tracks/docs-issue-sync_20260811/index.md)                 | Documentation, Data-Metadata, and Issue-Tracker Sync           | Complete |
 | [map-data-recovery_20260811](./tracks/map-data-recovery_20260811/index.md)             | South Mountain Map Data Recovery — Stash Integration (#689)    | Complete |
-| [map-col64-investigation_20260812](./tracks/map-col64-investigation_20260812/index.md) | South Mountain Map — Column 64 Investigation (#691)            | Pending  |
+| [map-col64-investigation_20260812](./tracks/map-col64-investigation_20260812/index.md) | South Mountain Map — Column 64 Investigation (#691)            | Complete |
 
 ## All Tracks
 

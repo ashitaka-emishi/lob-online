@@ -3,7 +3,7 @@
 **Track ID:** map-col64-investigation_20260812
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-08-12
-**Status:** [ ] Not Started
+**Status:** [x] Complete
 
 ## Overview
 
@@ -27,24 +27,24 @@ Classified High upfront since the branch isn't known before Phase 1 completes.
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
-**Allowed new deferred debt:** 0 unless explicitly approved.
+**Allowed new deferred debt:** 0 unless explicitly approved. None accepted.
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Ground truth determined with documented evidence
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Ground truth determined with documented evidence
 - [ ] Issue #691 closed with the resolution
-- [ ] `validate-data`'s grid-coverage check passes cleanly
+- [x] `validate-data`'s grid-coverage check passes cleanly
 - [ ] Ready for `/team-review`
 
 ---
@@ -89,59 +89,65 @@ the 56 row-`00`/`36` border-marker hexes (recorded with `playable: false`, `terr
 outside the real 1–35 row range) — but not identical, since those are fully outside the
 declared row range, while column 64 sits partially inside a hex-width of real content.
 
-**Recommended resolution** (for human checkpoint approval): record the 35 column-64 hexes
-(rows 1–35) using the same `playable: false` convention as the row-marker hexes — `terrain`
-set generically (e.g. `"clear"`, matching the border-marker precedent) rather than attempting
-per-hex terrain typing that the source material can't actually support, with a `_note`
-documenting the partial-hex reason. Keep `gridSpec.cols: 64` as-is (it's not wrong — the grid
-rectangle legitimately needs to extend that far to capture the real 21%-sliver content for
-rendering/calibration purposes; only playable _gameplay_ hexes are excluded). Update
-`validate-data.js`'s grid-coverage check to also exclude column 64 the same way it (implicitly,
-via `playable: false` hexes still counting as "recorded") already handles rows 00/36, so the
-check reports true 100% coverage of the _playable_ grid rather than continuing to warn.
+**Initial recommendation (superseded — see correction below):** record the 35 column-64 hexes
+with `playable: false`, matching the row-marker hexes' flag, while keeping `gridSpec.cols: 64`.
+
+**Correction found before implementation began:** `playable` is consulted **only** by
+`edge-strip.js` (edge-feature stripping at authoring time) — nothing in `movement.js` or
+`hex.js` checks it. Reachability is gated purely by `gridSpec.cols`/`gridSpec.rows` bounds in
+`hexNeighborInDir`; that bounds check, not the `playable` flag, is the actual mechanism that
+makes rows 00/36 unreachable today (`gridSpec.rows: 35` excludes rows outside 1–35
+structurally). Keeping `gridSpec.cols: 64` and adding column-64 hex records would leave column
+64 **inside** the bounds check — units could path-find into these partial/phantom hexes despite
+`playable: false`, since nothing in the engine actually enforces that flag for movement. That
+would be a real latent bug, not just a cosmetic label mismatch.
+
+**Corrected, approved resolution:** set `gridSpec.cols: 63`. This excludes column 64 from the
+reachable grid via the same mechanism already used for rows 00/36 (bounds-check exclusion, not
+a flag the engine doesn't enforce) — consistent, not divergent. No column-64 hex records are
+added. The real-sliver nuance discovered during Phase 1 is preserved in `map.json`'s
+`_description` as documentation, not fabricated as hex data the source material can't actually
+support. `validate-data.js`'s grid-coverage check requires no code change — recomputing
+`cols × rows` with `cols: 63` automatically yields `2205/2205 = 100%`, since all 2205 in-bounds
+cells already have records.
 
 ### Verification
 
 - [x] Clear, evidenced determination reached: partial edge-sliver hex, not calibration artifact
       or normal genuine gap
-- [ ] **Human checkpoint:** user approves the determination and the resulting resolution plan
-      before Phase 2 begins
+- [x] **Human checkpoint:** user approved the determination; a flaw in the initial recommended
+      resolution was found and corrected before implementation (see above), then re-approved
 
 ---
 
 ## Phase 2: Resolution
 
-Exactly one of the following sub-plans applies, per Phase 1's determination.
+Corrected approach (see Phase 1's "Correction found before implementation began"): `gridSpec.cols`
+should be `63`, matching the reachability-exclusion mechanism already used for rows 00/36. No
+column-64 hex records are added.
 
-### Tasks — if calibration artifact (gridSpec.cols should be 63)
+### Tasks
 
-- [ ] Task 2a.1: Fix `gridSpec.cols` to `63` in `data/modules/south-mountain/map.json`
-- [ ] Task 2a.2: Update `map.json`'s `_description`/`_digitizationNote` to drop the column-64
-      caveat entirely
-- [ ] Task 2a.3: Update every "2240-cell"/"64x35" reference: `docs/library.md`,
+- [x] Task 2.1: Fixed `gridSpec.cols` to `63` in `data/modules/south-mountain/map.json`
+- [x] Task 2.2: Updated `map.json`'s `_description`/`_digitizationNote` — dropped the column-64
+      coverage-gap caveat, replaced with a note explaining the excluded partial-sliver edge
+      column and why exclusion via `gridSpec.cols` (not a `playable: false` record) was
+      necessary for correct reachability
+- [x] Task 2.3: Updated every "2240-cell"/"64x35" reference: `docs/library.md`,
       `docs/library.json`, `docs/agents/domain-expert/design.md`,
-      `docs/designs/high-level-design.md` (including reverting the risk-register row from
-      `Reduced — Medium` back to a clean `Resolved`, since the coverage gap that kept it at
-      Medium will no longer exist), `CLAUDE.md`
-- [ ] Task 2a.4: Confirm `validate-data.js`'s grid-coverage check passes cleanly with no code
-      change (it recomputes from `gridSpec.cols × rows`, so fixing the constant alone resolves
-      the warning)
+      `docs/designs/high-level-design.md` (3 locations, including the risk-register row
+      reverted from `Reduced — Medium` back to a clean `Resolved`), `CLAUDE.md`
+- [x] Task 2.4: Confirmed `validate-data.js`'s grid-coverage check passes cleanly with no code
+      change — `All 2205 in-grid cells (63x35) have a hex record`
 
-### Tasks — if genuine gap (35 hexes need digitizing)
+### Verification
 
-- [ ] Task 2b.1: Digitize the 35 column-64 hexes via the Map Editor (terrain, elevation, and
-      any hexside features), cross-referencing `sm-map.jpg`
-- [ ] Task 2b.2: Re-verify VP-hex reachability and elevation completeness are unaffected
-      (should only improve, never regress)
-- [ ] Task 2b.3: Update `map.json`'s `_description`/`_digitizationNote` and the same doc
-      locations as 2a.3 to reflect true 100% in-grid coverage (risk register back to
-      `Resolved`)
-- [ ] Task 2b.4: Confirm `validate-data.js`'s grid-coverage check passes cleanly
-
-### Verification (either path)
-
-- [ ] `npm run validate-data` — grid-coverage check passes, 0 errors
-- [ ] Full test suite green, `npm run build` succeeds
+- [x] `npm run validate-data` — grid-coverage check passes, 0 errors, 1 pre-existing unrelated
+      warning
+- [x] Full test suite green (3259 passed, 0 regressions), `npm run build` succeeds
+- [x] VP-hex reachability re-verified against the corrected `gridSpec`: still 10/10, 2205/2261
+      connected (column 64's absence never affected reachability — it had no records either way;
+      the change tightens the declared bounds to match reality, not a functional fix)
 - [ ] Issue #691 closed with the resolution and evidence
 
 ---

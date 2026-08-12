@@ -3,7 +3,7 @@
 **Track ID:** map-col64-investigation_20260812
 **Type:** Chore
 **Created:** 2026-08-12
-**Status:** Draft
+**Status:** Complete
 
 ## Summary
 
@@ -42,21 +42,29 @@ Two possibilities, not yet distinguished:
 
 ## Acceptance Criteria
 
-- [ ] Grid overlay at column 64's calibrated pixel position visually inspected against
-      `sm-map.jpg` via the Map Editor (module `SM`), with evidence (screenshot or precise
-      description) documented in this track's `plan.md`
-- [ ] Ground truth determined: calibration artifact vs. genuine undigitized strip
-- [ ] **If calibration artifact:** `gridSpec.cols` fixed to `63`; every "2240-cell"/"64x35"
-      reference updated across `map.json` internal metadata, `docs/library.md`,
-      `docs/library.json`, `docs/agents/domain-expert/design.md`,
-      `docs/designs/high-level-design.md`; `validate-data.js`'s grid-coverage check
-      automatically resolves to a clean pass (no code change needed there)
-- [ ] **If genuine gap:** the ~35 missing column-64 hexes digitized via the Map Editor
-      (terrain, elevation, and any hexside features), matching the quality bar of the rest of
-      the recovered map
-- [ ] Issue #691 closed with the resolution and the evidence from the investigation
-- [ ] `npm run validate-data` grid-coverage check passes cleanly (100% in-grid coverage)
-- [ ] Full quality suite green (`validate-data`, `lint`, `format:check`, `test`, `build`)
+- [x] Grid overlay at column 64's calibrated pixel position visually inspected against
+      `sm-map.jpg` — the live app's own computed geometry directly, plus precise pixel-marked
+      crops of the raw reference image across 4 rows spanning the full map height (more
+      rigorous than the originally-planned single Map Editor screenshot, since the first check
+      surfaced an ambiguous result that needed cross-validation)
+- [x] Ground truth determined: **neither** of the two originally-hypothesized outcomes exactly
+      — column 64 is a partial "sliver" hex at the true physical edge of the printed map. Real
+      terrain exists for ~21% of the hex (17px of 81px width); the remaining ~79% has no source
+      pixels because the physical scan ends at x=3804. Not a pure calibration overshoot (there
+      is real content), not a normal digitizable gap (there isn't enough content for a full hex)
+- [x] Resolution applied: `gridSpec.cols` fixed to `63` — the same reachability-exclusion
+      mechanism already used for rows 00/36 (bounds-check in `hexNeighborInDir`, not a
+      `playable: false` flag, which the engine doesn't actually enforce for movement). Initial
+      recommendation (record 35 `playable: false` hex entries, keep `cols: 64`) was caught and
+      corrected before implementation — it would have left column 64 reachable by the movement
+      engine despite the flag. Every "2240-cell"/"64x35" reference updated across `map.json`
+      internal metadata, `docs/library.md`, `docs/library.json`,
+      `docs/agents/domain-expert/design.md`, `docs/designs/high-level-design.md` (3 locations),
+      `CLAUDE.md`
+- [x] Issue #691 closed with the resolution and the evidence from the investigation
+- [x] `npm run validate-data` grid-coverage check passes cleanly — `2205/2205` (100%)
+- [x] Full quality suite green (`validate-data`, `lint`, `format:check`, `test` — 3259 passed,
+      0 regressions, `build`)
 
 ## Dependencies
 
