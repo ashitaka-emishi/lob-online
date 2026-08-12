@@ -1,0 +1,12 @@
+{
+  "id": "map-col64-investigation_20260812",
+  "title": "South Mountain Map — Column 64 Investigation",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-08-12T00:00:00Z",
+  "updated": "2026-08-12T00:00:00Z",
+  "closesIssues": [691],
+  "phases": { "total": 2, "completed": 0 },
+  "tasks": { "total": 8, "completed": 0 },
+  "notes": "Resolves whether South Mountain's declared 64-column grid has a real undigitized column 64 or gridSpec.cols is a calibration artifact (should be 63). Column 64 has zero hex records in every version of the map data, predating map-data-recovery_20260811 (#689). Checkpointed/High-risk: outcome-dependent, branches into two resolution paths after Phase 1's visual investigation."
+}
