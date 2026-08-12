@@ -160,3 +160,4 @@
 | [ ] | m9-map-completion_20260625 | M9 Map Completion — South Mountain Hex Digitization (#669, #689) | 2026-06-25 | 2026-08-11 |
 | [x] | move-debt-sprint_20260627 | MOVE Debt Sprint — Path Cost + Partial Moves (#675 #680) | 2026-06-27 | 2026-06-27 |
 | [x] | docs-issue-sync_20260811 | Documentation, Data-Metadata, and Issue-Tracker Sync (#344 #410 #506 #550 #554 #556 #627 #628 #629 #650 #651 #652 #680) | 2026-08-11 | 2026-08-11 |
+| [ ] | map-data-recovery_20260811 | South Mountain Map Data Recovery — Stash Integration (#689) | 2026-08-11 | 2026-08-11 |
