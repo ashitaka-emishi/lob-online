@@ -1,0 +1,19 @@
+{
+  "id": "auth-debt-sprint_20260813",
+  "title": "Auth Debt Sprint — Issues #698-700",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-08-13T00:00:00Z",
+  "updated": "2026-08-13T00:00:00Z",
+  "closesIssues": [698, 699, 700],
+  "filedIssues": [],
+  "phases": {
+    "total": 6,
+    "completed": 1
+  },
+  "tasks": {
+    "total": 25,
+    "completed": 5
+  },
+  "notes": "Phase 1 (investigation) complete: 12 of 13 findings confirmed still live (finding #699-1, the dependency-risk comment, was already added in PR #701 itself and is dropped from scope). requireSide status-code question (finding #698-5) resolved with the user after a client-code audit confirmed no behavior depends on it: change 401 to 403. Implementation (Phases 2-4) not yet started."
+}
