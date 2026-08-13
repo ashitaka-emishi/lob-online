@@ -162,4 +162,4 @@
 | [x] | docs-issue-sync_20260811 | Documentation, Data-Metadata, and Issue-Tracker Sync (#344 #410 #506 #550 #554 #556 #627 #628 #629 #650 #651 #652 #680) | 2026-08-11 | 2026-08-11 |
 | [x] | map-data-recovery_20260811 | South Mountain Map Data Recovery — Stash Integration (#689) | 2026-08-11 | 2026-08-12 |
 | [x] | map-col64-investigation_20260812 | South Mountain Map — Column 64 Investigation (#691) | 2026-08-12 | 2026-08-12 |
-| [ ] | map-data-debt-sprint_20260813 | Map Data Debt Sprint — Issues #693-696 | 2026-08-13 | 2026-08-13 |
+| [x] | map-data-debt-sprint_20260813 | Map Data Debt Sprint — Issues #693-696 | 2026-08-13 | 2026-08-13 |

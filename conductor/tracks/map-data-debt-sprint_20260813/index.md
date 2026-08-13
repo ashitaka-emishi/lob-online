@@ -1,7 +1,7 @@
 # Track: Map Data Debt Sprint — Issues #693-696
 
 **ID:** map-data-debt-sprint_20260813
-**Status:** In Progress
+**Status:** Complete
 
 ## Documents
 
@@ -10,8 +10,9 @@
 
 ## Progress
 
-- Phases: 4/5 complete
-- Tasks: 15/19 complete
+- Phases: 5/5 complete
+- Tasks: 19/19 complete
+- [PR #697](https://github.com/ashitaka-emishi/lob-online/pull/697)
 
 ## Quick Links
 

@@ -3,7 +3,7 @@
 **Track ID:** map-data-debt-sprint_20260813
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-08-13
-**Status:** [~] In Progress
+**Status:** [x] Complete
 
 ## Overview
 
@@ -44,8 +44,8 @@ a data validation schema (`map.schema.js`), and the build-gate script itself
 - [x] All plan tasks complete
 - [x] All acceptance criteria in spec.md met
 - [x] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated if any debt was accepted
-- [ ] Ready for `/team-review`
+- [x] Debt register updated if any debt was accepted
+- [x] Ready for `/team-review`
 
 ## Phase 1: #693 — gridSpec.cols x rows regression test
 
@@ -140,21 +140,23 @@ silently regress.
 - [x] Task 5.1: Ran full quality suite (validate-data, lint, format:check, test — 160 files /
       3277 tests, build). All green; one pre-existing accepted-noise warning (`longstreet`
       commandsId) unrelated to this track.
-- [ ] Task 5.2: Close issues #693, #694, #695, #696 with a summary comment on each describing
-      what was done and linking the PR.
-- [ ] Task 5.3: Update `docs/tech-debt/report.md` — remove the four resolved rows from Open
-      Debt Items, append resolution rows to Debt Over Time, recalculate Executive Summary and
-      Risk Assessment per the `/tech-debt-report` "Resolving Debt Items" procedure.
-- [ ] Task 5.4: Run `/plan-wrap` (devlog entry, CLAUDE.md/high-level-design.md review).
-- [ ] Task 5.5: Run `/pr-create`.
+- [x] Task 5.2: Closed issues #693, #694, #695, #696 with a summary comment on each describing
+      what was done and linking PR #697.
+- [x] Task 5.3: Updated `docs/tech-debt/report.md` — removed the four resolved rows from Open
+      Debt Items, appended four resolution rows to Debt Over Time against PR #697, recalculated
+      Executive Summary (open items 9 -> 5, net open score 18 -> 10) and rewrote Risk Assessment.
+- [x] Task 5.4: Ran `/plan-wrap` — quality gates re-verified, devlog closeout entry added,
+      CLAUDE.md and high-level-design.md reviewed (no updates needed — this track was
+      test-coverage/doc-hygiene cleanup, not a milestone or architectural change).
+- [x] Task 5.5: Ran `/pr-create` — [PR #697](https://github.com/ashitaka-emishi/lob-online/pull/697) opened.
 
 ### Final Verification
 
 - [x] All acceptance criteria in spec.md met
-- [ ] All four issues closed
-- [ ] Debt register reflects 4 fewer open items (18 -> 10 net open score)
+- [x] All four issues closed
+- [x] Debt register reflects 4 fewer open items (18 -> 10 net open score)
 - [x] Full quality suite green
-- [ ] Ready for `/team-review`
+- [x] Ready for `/team-review`
 
 ---
 

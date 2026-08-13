@@ -2,15 +2,15 @@
   "id": "map-data-debt-sprint_20260813",
   "title": "Map Data Debt Sprint — Issues #693-696",
   "type": "chore",
-  "status": "in_progress",
+  "status": "complete",
   "created": "2026-08-13T00:00:00Z",
-  "updated": "2026-08-13T02:10:00Z",
+  "updated": "2026-08-13T02:25:00Z",
   "phases": {
     "total": 5,
-    "completed": 4
+    "completed": 5
   },
   "tasks": {
     "total": 19,
-    "completed": 15
+    "completed": 19
   }
 }
