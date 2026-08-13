@@ -1,19 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { useCalibration, STORAGE_KEY } from './useCalibration.js';
-
-const DEFAULT_CALIBRATION = {
-  cols: 64,
-  rows: 35,
-  dx: 0,
-  dy: 0,
-  hexWidth: 35,
-  hexHeight: 35,
-  imageScale: 1,
-  orientation: 'flat',
-  strokeWidth: 1,
-  evenColUp: true,
-  northOffset: 0,
-};
+// #693 — import the real default rather than a hand-copied duplicate, so this test cannot
+// silently drift out of sync with it (the exact bug class #691/#693 addressed for map.json).
+import { DEFAULT_CALIBRATION } from '../utils/calibration.js';
 
 describe('useCalibration', () => {
   beforeEach(() => {

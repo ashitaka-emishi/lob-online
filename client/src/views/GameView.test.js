@@ -271,8 +271,8 @@ describe('GameView — calibration from gridSpec (#406)', () => {
     const wrapper = await mountGameView({ gridSpec: null });
     const overlay = wrapper.findComponent({ name: 'HexMapOverlay' });
     const cal = overlay.props('calibration');
-    // Default cols/rows from DEFAULT_CALIBRATION
-    expect(cal.cols).toBe(64);
+    // Default cols/rows from DEFAULT_CALIBRATION (#693 — matches SM gridSpec.cols)
+    expect(cal.cols).toBe(63);
     expect(cal.rows).toBe(35);
   });
 
