@@ -3,14 +3,15 @@
 **Track ID:** engine-debt-sprint_20260813
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-08-13
-**Status:** [x] Complete
+**Status:** [ ] In Progress
 
 ## Overview
 
-Five phases: a domain-expert consultation gate, three independent code-cleanup items
+Seven phases: a domain-expert consultation gate, three independent code-cleanup items
 (#676/#677/#681, implemented together since they touch overlapping call sites), the scoped
-rules fix for #678, and a closeout that also resolved #679 by descoping it rather than
-implementing it as originally filed.
+rules fix for #678, resolving #679 by descoping it rather than implementing it as originally
+filed, a full `/team-review` pass, fixing everything that review found (including one real
+correctness bug), and final closeout.
 
 ## Interaction Mode
 
@@ -42,11 +43,11 @@ gap — filed per the Immediate Debt-Capture Policy, not silently dropped.)
 
 ## Completion Contract
 
-- [x] All plan tasks complete
+- [ ] All plan tasks complete (Phase 7, Tasks 7.2-7.4 remain)
 - [x] All acceptance criteria in spec.md met (or explicitly descoped with reasoning — #679)
 - [x] Warnings fixed or explicitly classified as accepted prototype noise
-- [x] Debt register updated
-- [x] Ready for `/team-review`
+- [ ] Debt register updated (Task 7.3)
+- [x] Ready for `/team-review` — complete, findings fixed in place (Phase 6)
 
 ---
 
@@ -90,7 +91,11 @@ convention, `domain-expert` was consulted before any implementation scoping.
       sites that still matched the exact IIFE pattern (move.js, and the index.js hot path
       already touched by Task 2.1). Two other originally-cited locations had drifted to a
       different pattern (`ctx.oob ?? loadOob()`, resolving the whole OOB object, not a
-      per-unit lookup) — left as-is, noted in the issue-closing comment.
+      per-unit lookup) — left as-is, noted in the issue-closing comment. **Correction (Phase
+      6):** the "left as-is" call was only half right — `activateStack.js:56-62` really is the
+      whole-OOB pattern, but `activateStack.js:66` (`loadedOob ? findOobUnit(loadedOob,
+unit.id) : null`) is the same per-unit lookup #681 was filed against, just not wrapped
+      in an IIFE like the others. `/team-review` caught this; fixed in Phase 6.
 - [x] Task 2.4: Add regression tests — `formation.test.js` for `resolveFormationKey`,
       `safeFindOobUnit` tests in `oob.test.js`, and a spy-based test in `index.test.js`
       asserting `loadOob()` is called exactly once regardless of active-unit count.
@@ -146,7 +151,7 @@ convention, `domain-expert` was consulted before any implementation scoping.
 
 ---
 
-## Phase 5: Closeout
+## Phase 5: Pre-Review Closeout
 
 ### Tasks
 
@@ -154,18 +159,87 @@ convention, `domain-expert` was consulted before any implementation scoping.
       `build`).
 - [x] Task 5.2: Close #676, #677, #678, #681 with summary comments.
 - [x] Task 5.3: Register track in `conductor/tracks.md` and `conductor/index.md`.
-- [ ] Task 5.4: Run `/team-review`.
-- [ ] Task 5.5: Update `docs/tech-debt/report.md` (remove #676/#677/#678/#679/#681, add #703)
+- [x] Task 5.4: Run `/team-review` (5 dimensions — security, architecture, testing,
+      maintainability, domain, given this track touches shared rules-engine logic).
+
+### Verification
+
+- [x] All 5 reviewers ran; security and domain came back clean (no findings), the other three
+      found real, verified issues (see Phase 6)
+
+---
+
+## Phase 6: Review-Fix Response
+
+`/team-review` found one real correctness bug (independently confirmed by two reviewers,
+verified by me before fixing) plus several architecture/testing/doc issues. Per this project's
+coding-standards.md rule that debt-cleanup PRs must not generate new deferred debt, all
+findings were fixed in place — none deferred.
+
+### Tasks
+
+- [x] Task 6.1: Fix the real bug — `resolveMovementFormationKey` misclassified artillery as
+      infantry `'line'` whenever `unit.formation` was unset (every battery's state at game
+      setup — `init.js` never sets it) or the OOB record had no `type` field (true for every
+      real SM battery, which carries `gunType` instead). Combined with Phase 3's own path-walk
+      change, this would have let such a unit illegally move using infantry costs AND claim
+      every VP hex along that illegal path. Fixed to check `gunType` and apply the
+      `unit.formation ?? 'unlimbered'` default used at every other artillery call site in this
+      codebase; kept `unit.formation` authoritative independent of OOB availability
+      (degraded-mode safe — this ordering detail caused one self-caught regression before the
+      fix was correct). Mutation-verified; added `move.js`-level integration tests with
+      real-shaped (gunType, no type) artillery fixtures.
+- [x] Task 6.2: Fix `activateStack.js:66` — the #681 duplicate the initial pass missed (see
+      Phase 2 correction note above).
+- [x] Task 6.3: Rename `resolveFormationKey` → `resolveMovementFormationKey` — collided with
+      an unrelated private function already in `movement.js` and with `tables/formations.js`'s
+      combat-effects lookup. Header comment now disambiguates both.
+- [x] Task 6.4: Thread `ctx` through `getValidActions`, reusing `ctx.oob` when the caller
+      already holds one (dispatch and the route layer both do) instead of always calling
+      `loadOob()` — closes the DI inconsistency Phase 2's #676 fix left behind. Added a test
+      proving zero `loadOob()` calls when `ctx.oob` is supplied.
+- [x] Task 6.5: Strengthen three under-specified regression tests (each mutation-verified to
+      have been vacuous before, and to correctly fail after): `move.js`'s unlimbered-artillery
+      test asserted only the error code, which stayed green even with the LOB §3.6a guard
+      deleted; the `#676` `loadOob`-call-count test never confirmed the per-unit loop it exists
+      to protect was actually reached; `formation.test.js`'s artillery fixtures used a shape no
+      real SM battery has (`type: 'artillery'` instead of `gunType`).
+- [x] Task 6.6: Doc fixes — `oob.js`'s `loadOob` docstring corrected (the dev-mode hot-reload
+      rationale doesn't hold for route-served requests, which already cache at module-init);
+      `vp.js`'s `updateHexControl` docstring was stale (predated even #635); `safeFindOobUnit`
+      now warns on a genuinely malformed OOB tree instead of silently collapsing it into the
+      same null return as the two normal-and-silent cases.
+
+### Verification
+
+- [x] Full suite green (169 files / 3387 tests, zero unexpected warnings — including a leaked
+      `console.warn` from Task 6.6 that a test needed to spy on rather than let leak)
+- [x] Every strengthened/added test mutation-verified against its target fix
+
+---
+
+## Phase 7: Closeout
+
+### Tasks
+
+- [x] Task 7.1: Reconcile `spec.md`, `plan.md`, `metadata.json`, `index.md` with the actual
+      delivered state (`/team-review`'s maintainability pass found the same conductor
+      metadata-drift bug class this project has hit before — task counts and completion
+      status had drifted from `plan.md`'s real checkbox count).
+- [ ] Task 7.2: Remove the `tech-debt` label from #704 (maintainability finding — it was
+      labeled `tech-debt` on filing, contradicting the recorded "not debt, a feature" ruling).
+- [ ] Task 7.3: Update `docs/tech-debt/report.md` (remove #676/#677/#678/#679/#681, add #703)
       once the PR number is known.
-- [ ] Task 5.6: Run `/plan-wrap` and `/pr-create`.
+- [ ] Task 7.4: Run `/pr-create`.
 
 ### Final Verification
 
 - [ ] All acceptance criteria in spec.md met or explicitly descoped
 - [ ] All five issues closed (four resolved, one replaced), two follow-ups filed
-- [ ] Debt register reflects net -8 (closed 10, added 2)
+- [ ] Debt register reflects net -8 in score (5 items closed, score 10; 1 item added, #703
+      score 2)
 - [ ] Full quality suite green
-- [ ] Ready for `/team-review`
+- [x] `/team-review` complete, all findings fixed in place
 
 ---
 
