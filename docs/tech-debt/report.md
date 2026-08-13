@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-08-13 after PR #692._
+_Last updated: 2026-08-13 after PR #697._
 
 ---
 
@@ -8,11 +8,11 @@ _Last updated: 2026-08-13 after PR #692._
 
 | Metric                           | Value                                                                                 |
 | -------------------------------- | ------------------------------------------------------------------------------------- |
-| Open debt items                  | 9                                                                                     |
-| Cumulative debt score (net open) | 18                                                                                    |
-| Current-milestone open debt      | 9 items (M9)                                                                          |
+| Open debt items                  | 5                                                                                     |
+| Cumulative debt score (net open) | 10                                                                                    |
+| Current-milestone open debt      | 5 items (M9)                                                                          |
 | Highest-risk item                | perf(engine): cache loadOob() — eliminate N+2 disk reads per dispatch (#676, score 3) |
-| PRs tracked                      | 462                                                                                   |
+| PRs tracked                      | 463                                                                                   |
 
 ---
 
@@ -485,6 +485,11 @@ _Last updated: 2026-08-13 after PR #692._
 | 2026-06-27 | PR #683 (resolved #675)                                        | -3                   | —         | 642                      |
 | 2026-06-27 | PR #683 (resolved #680)                                        | -3                   | —         | 642                      |
 | 2026-08-13 | PR #692                                                        | 8                    | +8        | 650                      |
+| 2026-08-13 | PR #697 (map-data-debt-sprint)                                 | 0                    | -8        | 650                      |
+| 2026-08-13 | PR #697 (resolved #693)                                        | -2                   | —         | 650                      |
+| 2026-08-13 | PR #697 (resolved #694)                                        | -2                   | —         | 650                      |
+| 2026-08-13 | PR #697 (resolved #695)                                        | -2                   | —         | 650                      |
+| 2026-08-13 | PR #697 (resolved #696)                                        | -2                   | —         | 650                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -492,20 +497,17 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Elevated risk by the numeric threshold, though the composition is broad rather than
-concentrated: net open debt score is 18 across 9 items, all in M9, and none scores above 3 —
-this crossed the 16-30 band by accumulating four new score-2 items (PR #692) on top of the
-prior 10, not by any single severe finding. The highest-risk item remains #676 (loadOob
-synchronous disk I/O on every dispatch, score 3), a performance hazard rather than a
-rules-correctness issue. The four new items from #692's `/team-review` (#693-#696) are all
-test-coverage and documentation-duplication gaps surfaced while resolving the column-64 grid
-question — none pose an immediate correctness risk, but #695 (`playable:false` has no movement
-semantics) already caused one real near-miss during that PR's own implementation and is worth
-prioritizing before it causes a second. The pre-existing items are structural (#677 formation
-ladder duplication), missing mechanics (#678 VP pass-through, #679 column formation), and minor
-cleanup (#681 IIFE helper). Recommend folding #693-#696 into the next debt sprint alongside
-#676/#678 rather than treating the numeric jump as urgent on its own — the item count, not
-severity, is what moved.
+Moderate risk. Net open debt score is 10 across 5 items, all in M9, and none scores above 3.
+PR #697 (map-data-debt-sprint_20260813) closed the four score-2 items #693-#696 that pushed
+the register into the elevated band after PR #692 — a regression test for `gridSpec.cols`
+(which also surfaced and fixed a live instance of the same risk in `calibration.js`'s stale
+default), a promoted-to-blocking `validate-data.js` check with new test coverage, a documented
+and pinned `playable` field, and a library.json/map.json sync test. The remaining items are the
+same pre-existing set carried from PR #674: a performance hazard (#676, loadOob synchronous
+disk I/O, score 3), structural duplication (#677 formation ladder), missing mechanics (#678 VP
+pass-through, #679 column formation), and minor cleanup (#681 IIFE helper). None are urgent in
+isolation; recommend folding #676/#678/#679 into the next debt sprint once M9 deployment work
+allows.
 
 ---
 
@@ -513,17 +515,13 @@ severity, is what moved.
 
 _Ordered by score descending (ties: current milestone first, then newest first). Resolved items are removed._
 
-| Score | Milestone | Issue | Title                                                                                                   | PR Introduced | Assessment                                                                                                                                                                                                            |
-| ----- | --------- | ----- | ------------------------------------------------------------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 3     | M9        | #676  | perf(engine): cache loadOob() — eliminate N+2 disk reads per dispatch                                   | PR #674       | loadOob() re-reads and validates oob.json on every call. getValidActions invokes it N+2 times per mid-activation dispatch — synchronous disk I/O blocks the event loop on the hottest action path.                    |
-| 2     | M9        | #693  | test: no regression guard for gridSpec.cols=63; map editor is a live write path that could revert it    | PR #692       | Mutation-proven unguarded (reverting cols to 64 keeps all tests green). The map editor writes gridSpec back to disk and seeds calibration from localStorage before any server load, a plausible silent-revert vector. |
-| 2     | M9        | #694  | test: validate-data.js grid-coverage check is a non-blocking warning with zero test coverage            | PR #692       | The check exits 0 even in a mutated broken state, and the script itself has no automated test coverage — nothing proves the checker logic still fires correctly after a future refactor.                              |
-| 2     | M9        | #695  | arch: playable:false has no movement semantics — undocumented, unenforced, no regression test           | PR #692       | Only edge-strip.js/edge-model.js read the flag; movement.js/hex.js/los.js never do. This exact gap caused this track's own initial wrong fix attempt for #691.                                                        |
-| 2     | M9        | #696  | docs: South Mountain map-status facts duplicated across 7 live locations with no single source of truth | PR #692       | Consistent today but maintained entirely by hand across map.json, library.md/json, domain-expert design.md, and 3 HLD locations — third PR in a row (#687, #690, #692) to pay the resync cost.                        |
-| 2     | M9        | #677  | refactor(engine): extract resolveFormationKey() — eliminate duplicate ladder                            | PR #674       | `resolveMovementFormation` and `resolveUnitMPs` encode the same decision tree. A future unit type added to one but not the other causes MP init and movement-cost formation to silently diverge.                      |
-| 2     | M9        | #678  | feat(engine): honor SM §5.1 VP control for hexes moved through                                          | PR #674       | `updateHexControl` is called only for the destination hex. SM §5.1 awards control for "moved through" hexes; units sweeping across VP road hexes en route to a non-VP destination don't claim those hexes.            |
-| 2     | M9        | #679  | feat(engine): model column formation toggle — infantry road movement                                    | PR #674       | Infantry always defaults to 'line'. Column formation (road movement 0.5/hex) is never applied, understating movement range on SM's road network. Requires a CHANGE_FORMATION action.                                  |
-| 1     | M9        | #681  | chore(engine): extract safeFindOobUnit() helper                                                         | PR #674       | IIFE-try/catch OOB lookup pattern duplicated in move.js, activateStack.js, and index.js. Minor readability cost, no correctness risk.                                                                                 |
+| Score | Milestone | Issue | Title                                                                        | PR Introduced | Assessment                                                                                                                                                                                                 |
+| ----- | --------- | ----- | ---------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3     | M9        | #676  | perf(engine): cache loadOob() — eliminate N+2 disk reads per dispatch        | PR #674       | loadOob() re-reads and validates oob.json on every call. getValidActions invokes it N+2 times per mid-activation dispatch — synchronous disk I/O blocks the event loop on the hottest action path.         |
+| 2     | M9        | #677  | refactor(engine): extract resolveFormationKey() — eliminate duplicate ladder | PR #674       | `resolveMovementFormation` and `resolveUnitMPs` encode the same decision tree. A future unit type added to one but not the other causes MP init and movement-cost formation to silently diverge.           |
+| 2     | M9        | #678  | feat(engine): honor SM §5.1 VP control for hexes moved through               | PR #674       | `updateHexControl` is called only for the destination hex. SM §5.1 awards control for "moved through" hexes; units sweeping across VP road hexes en route to a non-VP destination don't claim those hexes. |
+| 2     | M9        | #679  | feat(engine): model column formation toggle — infantry road movement         | PR #674       | Infantry always defaults to 'line'. Column formation (road movement 0.5/hex) is never applied, understating movement range on SM's road network. Requires a CHANGE_FORMATION action.                       |
+| 1     | M9        | #681  | chore(engine): extract safeFindOobUnit() helper                              | PR #674       | IIFE-try/catch OOB lookup pattern duplicated in move.js, activateStack.js, and index.js. Minor readability cost, no correctness risk.                                                                      |
 
 ---
 

@@ -10,7 +10,7 @@
 
 // South Mountain map scale — matches the real SM scenario dimensions.
 export const STUB_GRID_SPEC_WIRE = {
-  cols: 64,
+  cols: 63,
   rows: 35,
   hexWidth: 40.5,
   hexHeight: 40.7,

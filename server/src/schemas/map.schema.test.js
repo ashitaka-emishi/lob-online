@@ -10,6 +10,9 @@ const MINIMAL_VALID = {
   hexes: [],
 };
 
+// Synthetic gridSpec — not the real SM map (SM is 63x35, see
+// data/modules/south-mountain/map.json, #691); these tests exercise schema shape validation,
+// not production dimensions.
 const TEST_GRID_SPEC = {
   cols: 64,
   rows: 35,

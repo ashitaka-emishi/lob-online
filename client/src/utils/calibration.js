@@ -1,7 +1,9 @@
 const VALID_ORIENTATIONS = ['flat', 'pointy'];
 
 export const DEFAULT_CALIBRATION = {
-  cols: 64,
+  // #691 / #693 — matches the corrected SM gridSpec.cols (63); a stale 64 here was a live
+  // write path that could silently revert the #691 fix via a cached localStorage calibration.
+  cols: 63,
   rows: 35,
   dx: 0,
   dy: 0,
