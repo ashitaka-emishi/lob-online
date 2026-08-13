@@ -156,6 +156,25 @@ describe('HomeView', () => {
     expect(wrapper.find('[data-testid="login-btn"]').exists()).toBe(false);
   });
 
+  // #699 — logout() was implemented and tested at the store level but unreachable from the UI.
+  it('shows a logout button when logged in, hidden when logged out', async () => {
+    const wrapper = makeWrapper();
+    expect(wrapper.find('[data-testid="logout-btn"]').exists()).toBe(true);
+
+    mockAuthStore.isLoggedIn = false;
+    mockAuthStore.currentUser = null;
+    vi.resetModules();
+    HomeView = (await import('./HomeView.vue')).default;
+    const loggedOutWrapper = makeWrapper();
+    expect(loggedOutWrapper.find('[data-testid="logout-btn"]').exists()).toBe(false);
+  });
+
+  it('clicking the logout button calls authStore.logout()', async () => {
+    const wrapper = makeWrapper();
+    await wrapper.find('[data-testid="logout-btn"]').trigger('click');
+    expect(mockAuthStore.logout).toHaveBeenCalledOnce();
+  });
+
   it('lobby link is a disabled span when not logged in', async () => {
     mockAuthStore.isLoggedIn = false;
     mockAuthStore.currentUser = null;

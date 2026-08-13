@@ -180,5 +180,34 @@ describe('configurePassport', () => {
       verify('token', 'refresh', { id: 'discord-1', username: 'Alice', avatar: 'x' }, done);
       expect(done).toHaveBeenCalledWith(null, { id: 'discord-1', username: 'Alice', avatar: 'x' });
     });
+
+    // #699 — a malformed profile must surface as a typed auth failure (done(err)), not reach
+    // upsertUser() and fail as a raw, unexplained SQLite error.
+    it('calls done with a typed error and does not upsert when the profile is missing a username', () => {
+      process.env.DISCORD_CLIENT_ID = 'cid';
+      process.env.DISCORD_CLIENT_SECRET = 'secret';
+      process.env.DISCORD_CALLBACK_URL = 'http://localhost/cb';
+      const db = makeDb();
+      configurePassport(db);
+      const verify = DiscordStrategy.lastVerify;
+      const done = vi.fn();
+      verify('token', 'refresh', { id: 'discord-1', avatar: 'x' }, done);
+      expect(done).toHaveBeenCalledWith(expect.any(Error));
+      expect(done.mock.calls[0][0].message).toMatch(/Invalid Discord profile/);
+      expect(db._runStmt.run).not.toHaveBeenCalled();
+    });
+
+    it('calls done with a typed error when the profile id is not a string', () => {
+      process.env.DISCORD_CLIENT_ID = 'cid';
+      process.env.DISCORD_CLIENT_SECRET = 'secret';
+      process.env.DISCORD_CALLBACK_URL = 'http://localhost/cb';
+      const db = makeDb();
+      configurePassport(db);
+      const verify = DiscordStrategy.lastVerify;
+      const done = vi.fn();
+      verify('token', 'refresh', { id: 12345, username: 'Alice', avatar: null }, done);
+      expect(done).toHaveBeenCalledWith(expect.any(Error));
+      expect(db._runStmt.run).not.toHaveBeenCalled();
+    });
   });
 });

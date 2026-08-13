@@ -1,6 +1,7 @@
 import passport from 'passport';
 import { Strategy as DiscordStrategy } from 'passport-discord';
 
+import { DiscordProfileSchema } from '../schemas/discordProfile.schema.js';
 import { createUserQueries } from '../store/gameSqlite.js';
 
 // DEPENDENCY RISK: passport-discord@0.1.4 is deprecated upstream ("no longer maintained",
@@ -82,11 +83,19 @@ export function configurePassport(db) {
         state: true,
       },
       (_accessToken, _refreshToken, profile, done) => {
-        const user = {
+        // #699 — validate the profile shape before it reaches upsertUser(), so a malformed
+        // profile (an unexpected shape from an upstream passport-discord/Discord API change)
+        // surfaces as a typed auth failure instead of a raw SQLite error from an unexpected
+        // value hitting a NOT NULL column.
+        const parsed = DiscordProfileSchema.safeParse({
           id: profile.id,
           username: profile.username,
           avatar: profile.avatar ?? null,
-        };
+        });
+        if (!parsed.success) {
+          return done(new Error(`Invalid Discord profile: ${parsed.error.message}`));
+        }
+        const user = parsed.data;
         try {
           upsertUser(user.id, user.username, user.avatar);
           done(null, user);
