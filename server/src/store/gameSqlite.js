@@ -118,6 +118,16 @@ export function createStore(db) {
       'INSERT INTO users (id, username, avatar, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET username = excluded.username, avatar = excluded.avatar'
     ),
     getUserById: db.prepare('SELECT id, username, avatar FROM users WHERE id = ?'),
+    // #m9-discord-oauth review — reissue a side's token to its recorded owner (identity, not
+    // sideToken, is the WHERE clause here) so a player who lost their session (logout, cookie
+    // expiry, new device) can recover access to a game they already own, without needing the
+    // old sideToken. The ownership match is enforced in SQL, not just by the caller.
+    reclaimSideAToken: db.prepare(
+      'UPDATE games SET side_a_token = ? WHERE id = ? AND side_a_user_id = ?'
+    ),
+    reclaimSideBToken: db.prepare(
+      'UPDATE games SET side_b_token = ? WHERE id = ? AND side_b_user_id = ?'
+    ),
   };
 
   return {
@@ -171,6 +181,21 @@ export function createStore(db) {
     getUser(id) {
       return stmts.getUserById.get(id) ?? null;
     },
+
+    // Reissues the token for whichever recorded side (union/confederate) matches `faction`
+    // AND is owned by `userId`. Returns true if a row was updated, false if this user does
+    // not own that faction on this game (caller should fall through to normal join/409 logic).
+    reclaimSideToken(id, faction, userId, newToken) {
+      const row = stmts.selectById.get(id);
+      if (!row) throw new GameNotFoundError(id);
+      if (row.side_a_faction === faction) {
+        return stmts.reclaimSideAToken.run(newToken, id, userId).changes > 0;
+      }
+      if (row.side_b_faction === faction) {
+        return stmts.reclaimSideBToken.run(newToken, id, userId).changes > 0;
+      }
+      return false;
+    },
   };
 }
 
@@ -204,3 +229,4 @@ export const listGames = (...args) => requireStore().listGames(...args);
 export const listGamesByUser = (...args) => requireStore().listGamesByUser(...args);
 export const upsertUser = (...args) => requireStore().upsertUser(...args);
 export const getUser = (...args) => requireStore().getUser(...args);
+export const reclaimSideToken = (...args) => requireStore().reclaimSideToken(...args);

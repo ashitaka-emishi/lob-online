@@ -10,5 +10,6 @@ export {
   joinGame,
   listGames,
   listGamesByUser,
+  reclaimSideToken,
   upsertUser,
 } from './gameSqlite.js';

@@ -20,6 +20,7 @@ vi.mock('../store/index.js', () => ({
   getGame: vi.fn(),
   listGames: vi.fn(),
   listGamesByUser: vi.fn(),
+  reclaimSideToken: vi.fn(),
   GameNotFoundError: class GameNotFoundError extends Error {
     constructor(id) {
       super(`Game not found: ${id}`);
@@ -94,6 +95,7 @@ import {
   joinGame,
   listGamesByUser,
   loadGame,
+  reclaimSideToken,
   saveGame,
 } from '../store/index.js';
 import { initGameState } from '../engine/init.js';
@@ -146,10 +148,24 @@ async function buildApp() {
   // session.passport.user, so the route must call req.login() again — #m9-discord-oauth
   // review finding, session.regenerate() silently logged the caller out of every create/join).
   // Exposed on app.locals so tests can assert it was actually called after the request completes.
-  const loginSpy = vi.fn((user, cb) => cb());
+  // callOrder additionally proves ORDER: regenerate must fully resolve before login runs (if
+  // login ran first, passport's own internal regenerate — via req.login — would immediately
+  // wipe the identity it just wrote, reproducing the original bug under a different shape).
+  // A plain "was login called" assertion cannot catch a reordering; this can.
+  const callOrder = [];
+  app.locals._callOrder = callOrder;
+  const loginSpy = vi.fn((user, cb) => {
+    callOrder.push('login');
+    cb();
+  });
   app.locals._loginSpy = loginSpy;
   app.use((req, _res, next) => {
-    req.session = { regenerate: (cb) => cb() };
+    req.session = {
+      regenerate: (cb) => {
+        callOrder.push('regenerate');
+        cb();
+      },
+    };
     req.user = { id: 'test-user-id', username: 'Test Player', avatar: null };
     req.login = loginSpy;
     next();
@@ -172,6 +188,9 @@ beforeEach(() => {
   getGame.mockReturnValue(gameRow());
   loadGame.mockResolvedValue(MINIMAL_STATE);
   getValidActions.mockReturnValue([]);
+  // Default: this user does not already own a side on the game being joined — the reclaim
+  // path is opt-in per test via reclaimSideToken.mockReturnValue(true).
+  reclaimSideToken.mockReturnValue(false);
   deleteGame.mockReturnValue(undefined);
   deleteGameState.mockResolvedValue(undefined);
   appendHistory.mockResolvedValue(undefined);
@@ -222,6 +241,9 @@ describe('POST /api/v1/games', () => {
     await request(app).post('/api/v1/games').send({});
     expect(app.locals._loginSpy).toHaveBeenCalledOnce();
     expect(app.locals._loginSpy.mock.calls[0][0]).toMatchObject({ id: 'test-user-id' });
+    // Order matters: regenerate must resolve before login runs, or login's own internal
+    // regenerate (passport does this too) would immediately discard what it just wrote.
+    expect(app.locals._callOrder).toEqual(['regenerate', 'login']);
   });
 
   it('passes discordWebhook to createGame when provided', async () => {
@@ -293,6 +315,7 @@ describe('POST /api/v1/games/:id/join', () => {
     await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(app.locals._loginSpy).toHaveBeenCalledOnce();
     expect(app.locals._loginSpy.mock.calls[0][0]).toMatchObject({ id: 'test-user-id' });
+    expect(app.locals._callOrder).toEqual(['regenerate', 'login']);
   });
 
   it('returns 400 when side is missing from request body (#407)', async () => {
@@ -523,6 +546,7 @@ describe('POST /api/v1/games/:id/join', () => {
     // #m9-discord-oauth review finding — the same-game re-join branch also regenerates the
     // session (SEC-M1) and must re-establish the passport login, same as create/first-join.
     expect(app.locals._loginSpy).toHaveBeenCalledOnce();
+    expect(app.locals._callOrder).toEqual(['regenerate', 'login']);
   });
 
   it('returns 404 on re-join when game row no longer exists (#563)', async () => {
@@ -549,6 +573,49 @@ describe('POST /api/v1/games/:id/join', () => {
     expect(res.body.error).toBe('Forbidden');
     expect(joinGame).not.toHaveBeenCalled();
     expect(setPlayerSession).not.toHaveBeenCalled();
+  });
+
+  // ── Identity-based reclaim (#m9-discord-oauth review finding) ─────────────────
+
+  describe('identity-based reclaim', () => {
+    it('reissues a token and succeeds when this user already owns the requested side (no session)', async () => {
+      // No existingSession (getPlayerSession default-mocked to null in this file's beforeEach)
+      // — session was lost (logout/expiry), but reclaimSideToken reports this user owns it.
+      reclaimSideToken.mockReturnValue(true);
+      const app = await buildApp();
+      const res = await request(app)
+        .post(`/api/v1/games/${TEST_UUID}/join`)
+        .send({ side: 'union' });
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ id: TEST_UUID, side: 'union' });
+      expect(reclaimSideToken).toHaveBeenCalledWith(
+        TEST_UUID,
+        'union',
+        'test-user-id',
+        expect.any(String)
+      );
+      expect(joinGame).not.toHaveBeenCalled();
+      expect(setPlayerSession).toHaveBeenCalledOnce();
+    });
+
+    it('re-establishes the passport login on a successful reclaim (SEC-M1)', async () => {
+      reclaimSideToken.mockReturnValue(true);
+      const app = await buildApp();
+      await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
+      expect(app.locals._loginSpy).toHaveBeenCalledOnce();
+      expect(app.locals._callOrder).toEqual(['regenerate', 'login']);
+    });
+
+    it('falls through to normal join logic (409) when reclaim reports no ownership', async () => {
+      reclaimSideToken.mockReturnValue(false);
+      // Default gameRow() has both factions already assigned — 409 "side already taken"
+      const app = await buildApp();
+      const res = await request(app)
+        .post(`/api/v1/games/${TEST_UUID}/join`)
+        .send({ side: 'union' });
+      expect(res.status).toBe(409);
+      expect(res.body.error).toBe('Side already taken');
+    });
   });
 });
 
@@ -711,6 +778,45 @@ describe('DELETE /api/v1/games/:id', () => {
       expect(res.status).toBe(404);
       expect(res.body.error).toBe('Game not found');
       expect(deleteGameState).not.toHaveBeenCalled();
+    });
+
+    // ── Ownership check (#m9-discord-oauth review finding) ───────────────────────
+
+    it('returns 404 (not 403) when the caller does not own either recorded side', async () => {
+      getGame.mockReturnValue(
+        gameRow({ side_a_user_id: 'someone-else', side_b_user_id: 'also-someone-else' })
+      );
+      const app = await buildApp();
+      const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+      expect(res.status).toBe(404);
+      expect(res.body.error).toBe('Game not found');
+      expect(deleteGameState).not.toHaveBeenCalled();
+      expect(deleteGame).not.toHaveBeenCalled();
+    });
+
+    it('returns 204 when the caller owns side A', async () => {
+      getGame.mockReturnValue(gameRow({ side_a_user_id: 'test-user-id', side_b_user_id: null }));
+      const app = await buildApp();
+      const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+      expect(res.status).toBe(204);
+    });
+
+    it('returns 204 when the caller owns side B', async () => {
+      getGame.mockReturnValue(
+        gameRow({ side_a_user_id: 'someone-else', side_b_user_id: 'test-user-id' })
+      );
+      const app = await buildApp();
+      const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+      expect(res.status).toBe(204);
+    });
+
+    it('returns 204 for a legacy row with no recorded owner on either side', async () => {
+      // gameRow() default has no side_a_user_id/side_b_user_id fields — undefined, not null;
+      // must not be misread as "owner is undefined, reject" (undefined !== null is true).
+      getGame.mockReturnValue(gameRow());
+      const app = await buildApp();
+      const res = await request(app).delete(`/api/v1/games/${TEST_UUID}`);
+      expect(res.status).toBe(204);
     });
 
     it('returns 404 when deleteGame throws GameNotFoundError (#407)', async () => {

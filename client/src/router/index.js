@@ -72,15 +72,17 @@ const router = createRouter({
   ],
 });
 
-// Guard routes marked requiresAuth — redirect to home if the user is not logged in.
-// fetchMe is called once per page load (the initialized flag prevents redundant calls).
+// #m9-discord-oauth review finding — fetchMe used to run only when navigating to a
+// requiresAuth route, so a fresh page load into "/" (e.g. the Discord OAuth callback
+// redirect) never populated auth state at all: HomeView showed "logged out" until the user
+// happened to navigate somewhere guarded. fetchMe now runs on every first navigation
+// regardless of the target route; the initialized flag still prevents redundant calls.
 router.beforeEach(async (to) => {
-  if (!to.meta.requiresAuth) return;
   const authStore = useAuthStore();
   if (!authStore.initialized) {
     await authStore.fetchMe();
   }
-  if (!authStore.isLoggedIn) return '/';
+  if (to.meta.requiresAuth && !authStore.isLoggedIn) return '/';
 });
 
 export default router;

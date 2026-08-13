@@ -372,3 +372,43 @@ describe('listGamesByUser', () => {
     expect(store.listGamesByUser('nobody')).toEqual([]);
   });
 });
+
+// #m9-discord-oauth review finding — lets a player who lost their session (logout, cookie
+// expiry, new device) recover access to a game they already own, without their old sideToken.
+describe('reclaimSideToken', () => {
+  it('reissues side_a_token when the caller owns side A', () => {
+    store.createGame('g1', 'old-token-a', 'union', null, 'owner-a');
+    const ok = store.reclaimSideToken('g1', 'union', 'owner-a', 'new-token-a');
+    expect(ok).toBe(true);
+    expect(store.getGame('g1').side_a_token).toBe('new-token-a');
+  });
+
+  it('reissues side_b_token when the caller owns side B', () => {
+    store.createGame('g1', 'tok-a', 'union', null, 'owner-a');
+    store.joinGame('g1', VALID_UUID_1, 'confederate', 'owner-b');
+    const ok = store.reclaimSideToken('g1', 'confederate', 'owner-b', 'new-token-b');
+    expect(ok).toBe(true);
+    expect(store.getGame('g1').side_b_token).toBe('new-token-b');
+    // Side A's token must be untouched by a side-B reclaim
+    expect(store.getGame('g1').side_a_token).toBe('tok-a');
+  });
+
+  it('returns false and makes no change when the caller does not own the matching faction', () => {
+    store.createGame('g1', 'tok-a', 'union', null, 'owner-a');
+    const ok = store.reclaimSideToken('g1', 'union', 'someone-else', 'new-token');
+    expect(ok).toBe(false);
+    expect(store.getGame('g1').side_a_token).toBe('tok-a');
+  });
+
+  it('returns false when no side on the game matches the requested faction', () => {
+    store.createGame('g1', 'tok-a', 'union', null, 'owner-a');
+    const ok = store.reclaimSideToken('g1', 'confederate', 'owner-a', 'new-token');
+    expect(ok).toBe(false);
+  });
+
+  it('throws GameNotFoundError when the game does not exist', () => {
+    expect(() => store.reclaimSideToken('nope', 'union', 'owner-a', 'new-token')).toThrow(
+      GameNotFoundError
+    );
+  });
+});

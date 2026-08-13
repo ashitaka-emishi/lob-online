@@ -125,11 +125,18 @@ export async function startServer() {
   app.use('/auth', authRouter);
   console.log('[server] auth API enabled at /auth');
 
-  // Dev-mode poorman auth — POST /auth/dev/login with { code } for local testing without Discord
-  if (process.env.AUTH_DEV_MODE === 'true') {
+  // Dev-mode poorman auth — POST /auth/dev/login with { code } for local testing without Discord.
+  // /team-review (security) — NODE_ENV !== 'production' is a second, independent gate: a stray
+  // AUTH_DEV_MODE=true surviving into a production .env (e.g. copied from .env.example, or left
+  // over from a staging toggle) cannot mount an unauthenticated login endpoint in production.
+  if (process.env.AUTH_DEV_MODE === 'true' && process.env.NODE_ENV !== 'production') {
     const { default: devAuthRouter } = await import('./routes/devAuth.js');
     app.use('/auth/dev', devAuthRouter);
     console.log('[server] dev auth enabled at /auth/dev (AUTH_DEV_MODE=true)');
+  } else if (process.env.AUTH_DEV_MODE === 'true') {
+    console.warn(
+      '[server] AUTH_DEV_MODE=true but NODE_ENV=production — dev auth NOT mounted (fail closed)'
+    );
   }
 
   // Game API — requireAuth ensures all game routes have a known user identity (#668)
