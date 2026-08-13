@@ -3,7 +3,7 @@
 **Track ID:** engine-debt-sprint_20260813
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-08-13
-**Status:** [ ] In Progress
+**Status:** [x] Complete (PR #705 open, awaiting merge)
 
 ## Overview
 
@@ -49,7 +49,7 @@ rather than fixed in place; see Phase 8).
 - [x] All plan tasks complete
 - [x] All acceptance criteria in spec.md met (or explicitly descoped with reasoning — #679)
 - [x] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated (Task 7.3 — pending `/tech-debt-report` against PR #705)
+- [x] Debt register updated (Task 7.3 — `/tech-debt-report` run against PR #705)
 - [x] Ready for `/team-review` — complete, findings fixed in place (Phase 6, Phase 8)
 
 ---
@@ -231,16 +231,16 @@ findings were fixed in place — none deferred.
       status had drifted from `plan.md`'s real checkbox count).
 - [x] Task 7.2: Remove the `tech-debt` label from #704 (maintainability finding — it was
       labeled `tech-debt` on filing, contradicting the recorded "not debt, a feature" ruling).
-- [ ] Task 7.3: Update `docs/tech-debt/report.md` (remove #676/#677/#678/#679/#681, add #703
-      and #706) once the PR number is known — known as of Task 7.4 (PR #705).
+- [x] Task 7.3: Update `docs/tech-debt/report.md` (removed #676/#677/#678/#679/#681, added #703
+      and #706) via `/tech-debt-report` against PR #705.
 - [x] Task 7.4: Run `/pr-create` — PR #705 opened against `master`.
 
 ### Final Verification
 
 - [x] All acceptance criteria in spec.md met or explicitly descoped
 - [x] All five issues closed (four resolved, one replaced), two follow-ups filed
-- [ ] Debt register reflects net -5 in score (5 items closed, score 10; 2 items added, #703
-      score 2 + #706 score 3 = 5) — pending `/tech-debt-report` against PR #705
+- [x] Debt register reflects net -5 in score (5 items closed, score 10; 2 items added, #703
+      score 2 + #706 score 3 = 5) — net open debt 17 → 12
 - [x] Full quality suite green (169 files / 3390 tests, zero unexpected warnings)
 - [x] `/team-review` complete, all findings fixed in place (Phase 6, Phase 8)
 
