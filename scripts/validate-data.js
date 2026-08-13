@@ -392,8 +392,12 @@ if (map) {
 
   // #690 review — the previous "all hexes have terrain" check is self-referential: it only
   // measures the recorded hexes array, not whether the declared grid is actually covered.
-  // That gap (gridSpec says 64 cols, but col 64 has zero records — #691) was invisible to
-  // this script until now.
+  // That class of gap was invisible to this script until this check was added. It caught
+  // exactly one instance: gridSpec then declared 64 cols while col 64 had zero records.
+  // Resolved in #691 — col 64 is a partial sliver hex off the physical map edge (only ~21%
+  // of the hex has real source pixels), so gridSpec.cols was corrected to 63, not digitized.
+  // This check now reports 2205/2205 with no code change, since it recomputes from
+  // gridSpec.cols x rows.
   const { cols, rows } = rawMap.gridSpec ?? {};
   if (cols && rows) {
     const inGridCount = rawMap.hexes.filter((h) => {

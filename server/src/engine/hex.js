@@ -38,7 +38,7 @@ export const DIR_CUBE_DELTAS = [
 // ─── ID parsing ────────────────────────────────────────────────────────────────
 
 // #294 — module-level caches eliminate repeated string allocations in the Dijkstra hot path.
-// Bounded: keyspace = one entry per valid hex ID on a fixed map (64×35 = 2240 max for SM).
+// Bounded: keyspace = one entry per valid hex ID on a fixed map (63×35 = 2205 max for SM, #691).
 // All callers must validate hex IDs against the map index before reaching these functions.
 const _parseCache = new Map();
 // Integer-indexed sparse array: _formatCache[col][row] — zero-allocation on hit path.

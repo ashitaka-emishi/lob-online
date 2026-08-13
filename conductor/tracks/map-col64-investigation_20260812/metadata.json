@@ -1,0 +1,12 @@
+{
+  "id": "map-col64-investigation_20260812",
+  "title": "South Mountain Map — Column 64 Investigation",
+  "type": "chore",
+  "status": "complete",
+  "created": "2026-08-12T00:00:00Z",
+  "updated": "2026-08-12T00:00:00Z",
+  "closesIssues": [691],
+  "phases": { "total": 2, "completed": 2 },
+  "tasks": { "total": 8, "completed": 8 },
+  "notes": "Resolved: column 64 is a partial sliver hex at the true physical edge of sm-map.jpg (~21% real content, ~79% off the physical scan, confirmed by pixel-level inspection across 4 rows). gridSpec.cols corrected from 64 to 63 -- excludes it via the same bounds-check mechanism already used for rows 00/36, not a playable:false flag (which the engine doesn't enforce for movement -- an initial recommendation using that flag was caught and corrected before implementation). validate-data grid-coverage now 2205/2205 (100%). 3259 tests passed, 0 regressions."
+}

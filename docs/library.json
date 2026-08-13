@@ -137,7 +137,7 @@
           {
             "id": "SM_MAP_DATA",
             "filename": "data/modules/south-mountain/map.json",
-            "description": "Hex map data — 2261 hexes, 0 unknown terrain, recovered from a forgotten git stash (map-data-recovery_20260811, #689). In-grid coverage 2205/2240 (98.4%) — column 64 has zero records, open question tracked in #691. All 10/10 VP hexes reachable, 100% elevation completeness among playable hexes. 757 hexes carry real hexside features (1213 populated faces) but pending visual audit against sm-map.jpg, tracked in #685",
+            "description": "Hex map data — 2261 hexes, 0 unknown terrain, recovered from a forgotten git stash (map-data-recovery_20260811, #689). 100% in-grid coverage (2205/2205, 63x35 grid — #691 found the map's apparent 64th column is an unplayable partial-sliver edge hex, gridSpec.cols corrected accordingly). All 10/10 VP hexes reachable, 100% elevation completeness among playable hexes. 757 hexes carry real hexside features (1213 populated faces) but pending visual audit against sm-map.jpg, tracked in #685",
             "status": "partial",
             "hexCount": 2261
           },

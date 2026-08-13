@@ -8,8 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Current state:** M8 complete (code phases). M9 — Deployment + Completeness — in progress.
 Completed M9 tracks: debt sprint, MOVE action + hex-control wiring, South Mountain map data
-(841 → 2261 hexes, all VP hexes reachable — recovered from a forgotten git stash, #689;
-2205/2240 in-grid coverage, column 64 open question in #691; hexside-network visual audit +
+(841 → 2261 hexes, all VP hexes reachable, 100% in-grid coverage — recovered from a forgotten
+git stash, #689; column-64 grid-bounds question resolved, #691; hexside-network visual audit +
 playtest still open in #685). Remaining M9: DO Droplet
 provisioning; Discord OAuth identity is implemented on an unmerged branch
 (`feat/m9-discord-oauth`), not yet in `master`. See `docs/designs/high-level-design.md` §2 for

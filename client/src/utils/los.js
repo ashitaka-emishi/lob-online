@@ -163,7 +163,10 @@ export function dirFromDelta(dq, dr) {
  */
 export function evaluateLos(hexAId, hexBId, mapData, options = {}) {
   const { treeLosHeight = 1 } = options;
-  const gridSpec = mapData.gridSpec ?? { cols: 64, rows: 35, evenColUp: true };
+  // Only `rows` is used below (col→row conversion); `cols` was a stale, unused SM-specific
+  // magic number (#691) and has been dropped rather than corrected, since carrying an unused
+  // field invites the same drift again.
+  const gridSpec = mapData.gridSpec ?? { rows: 35, evenColUp: true };
 
   // Build hex lookup index
   const hexIndex = {};
