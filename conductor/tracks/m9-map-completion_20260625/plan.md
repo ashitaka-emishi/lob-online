@@ -3,7 +3,10 @@
 **Track ID:** m9-map-completion_20260625
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-06-25
-**Status:** [x] Complete
+**Status:** [~] Partial — Phase 1 complete, Phase 2 deferred to #685. Was incorrectly marked
+`[x] Complete` (and `tracks.md` incorrectly checked off); corrected during `/team-review` on
+`docs-issue-sync_20260811` (PR #687) after discovering the underlying map also has a real
+coverage gap beyond hexside features — tracked in #689.
 
 ## Overview
 
@@ -74,7 +77,9 @@ Complete the road network and water features.
 - [ ] Task 2.3: Enter stone wall hexside edges (significant defensive terrain in SM)
 - [ ] Task 2.4: Enter ford and bridge features at road-stream crossing points
 
-_Note: Phase 2 (hexside features) deferred — requires manual Map Editor work. Tracked in #669._
+_Note: Phase 2 (hexside features) deferred — requires manual Map Editor work. #669 is closed;
+tracked in #685. Underlying map coverage gap (only ~37% of the 2240-cell grid recorded, 6/10
+VP hexes unreachable) tracked separately in #689._
 
 ### Verification
 

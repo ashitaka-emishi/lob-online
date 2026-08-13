@@ -186,6 +186,10 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
 // Spaces object is deleted before the SQLite row: deleteGameState is idempotent (S3 delete-missing
 // is a no-op), so if the process crashes between the two operations the row can be cleaned up on a
 // retry without a permanently leaked Spaces object.
+// SECURITY residual (#410 item 1, #688): no ownership check below — this route is safe ONLY
+// because MAP_EDITOR_ENABLED must never be 'true' in production/staging. If that flag is ever
+// on outside local dev, any caller who knows a game UUID can delete it. Do not relax the gate
+// without adding a getPlayerSession(req)?.gameId === id guard first.
 router.delete('/:id', async (req, res) => {
   // 404 (not 403) so the endpoint is indistinguishable from a non-existent route
   if (process.env.MAP_EDITOR_ENABLED !== 'true') {

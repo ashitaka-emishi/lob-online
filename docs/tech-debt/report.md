@@ -1,6 +1,6 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-06-27 after PR #683._
+_Last updated: 2026-08-13 after PR #697._
 
 ---
 
@@ -12,7 +12,7 @@ _Last updated: 2026-06-27 after PR #683._
 | Cumulative debt score (net open) | 10                                                                                    |
 | Current-milestone open debt      | 5 items (M9)                                                                          |
 | Highest-risk item                | perf(engine): cache loadOob() — eliminate N+2 disk reads per dispatch (#676, score 3) |
-| PRs tracked                      | 461                                                                                   |
+| PRs tracked                      | 463                                                                                   |
 
 ---
 
@@ -484,6 +484,12 @@ _Last updated: 2026-06-27 after PR #683._
 | 2026-06-27 | PR #683 (move-debt-sprint team-review)                         | 0                    | -6        | 642                      |
 | 2026-06-27 | PR #683 (resolved #675)                                        | -3                   | —         | 642                      |
 | 2026-06-27 | PR #683 (resolved #680)                                        | -3                   | —         | 642                      |
+| 2026-08-13 | PR #692                                                        | 8                    | +8        | 650                      |
+| 2026-08-13 | PR #697 (map-data-debt-sprint)                                 | 0                    | -8        | 650                      |
+| 2026-08-13 | PR #697 (resolved #693)                                        | -2                   | —         | 650                      |
+| 2026-08-13 | PR #697 (resolved #694)                                        | -2                   | —         | 650                      |
+| 2026-08-13 | PR #697 (resolved #695)                                        | -2                   | —         | 650                      |
+| 2026-08-13 | PR #697 (resolved #696)                                        | -2                   | —         | 650                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -491,7 +497,17 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Moderate risk. Net open debt score is 10 across 5 items, all in M9. PR #683 (MOVE debt sprint team-review) resolved the two highest-priority rules-correctness gaps (#675 submitted-path cost and #680 multi-move blocking), dropping the net score from 16 to 10 with no new debt introduced. The highest-risk remaining item is #676 (loadOob synchronous disk I/O on every dispatch, score 3), which is a performance hazard rather than a rules-correctness issue. The remaining items are structural (#677 formation ladder duplication), missing mechanics (#678 VP pass-through, #679 column formation), and minor cleanup (#681 IIFE helper). None of the remaining items pose an immediate gameplay correctness risk, but #676 and #678 should be addressed before the first full play test.
+Moderate risk. Net open debt score is 10 across 5 items, all in M9, and none scores above 3.
+PR #697 (map-data-debt-sprint_20260813) closed the four score-2 items #693-#696 that pushed
+the register into the elevated band after PR #692 — a regression test for `gridSpec.cols`
+(which also surfaced and fixed a live instance of the same risk in `calibration.js`'s stale
+default), a promoted-to-blocking `validate-data.js` check with new test coverage, a documented
+and pinned `playable` field, and a library.json/map.json sync test. The remaining items are the
+same pre-existing set carried from PR #674: a performance hazard (#676, loadOob synchronous
+disk I/O, score 3), structural duplication (#677 formation ladder), missing mechanics (#678 VP
+pass-through, #679 column formation), and minor cleanup (#681 IIFE helper). None are urgent in
+isolation; recommend folding #676/#678/#679 into the next debt sprint once M9 deployment work
+allows.
 
 ---
 

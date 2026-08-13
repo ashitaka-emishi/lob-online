@@ -1,0 +1,13 @@
+{
+  "id": "docs-issue-sync_20260811",
+  "title": "Documentation, Data-Metadata, and Issue-Tracker Sync",
+  "type": "chore",
+  "status": "complete",
+  "created": "2026-08-11T00:00:00Z",
+  "updated": "2026-08-11T00:00:00Z",
+  "closesIssues": [344, 410, 506, 550, 554, 556, 627, 628, 629, 650, 651, 652, 680],
+  "opensIssues": [688, 689],
+  "phases": { "total": 3, "completed": 3 },
+  "tasks": { "total": 25, "completed": 25 },
+  "notes": "Phase 3 added after /team-review surfaced that Phase 1's original doc-accuracy fix repeated the exact drift bug it set out to correct (see plan.md). Filed #688 (DELETE ownership residual) and #689 (map coverage gap + recoverable git-stash dataset, stash@{0}). #689 requires a separate dedicated recovery track before it can close."
+}

@@ -298,8 +298,8 @@ describe('useGameStore — gridSpec and hexes from /map-config (#406)', () => {
     );
     const store = useGameStore();
     await store.loadGame('g4');
-    // cols: NaN should be sanitized to the default (64)
-    expect(store.gridSpec.cols).toBe(64);
+    // cols: NaN should be sanitized to the default (#693 — matches DEFAULT_CALIBRATION.cols)
+    expect(store.gridSpec.cols).toBe(63);
     expect(store.gridSpec.rows).toBe(35);
   });
 

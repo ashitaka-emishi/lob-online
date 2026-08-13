@@ -16,7 +16,9 @@ import {
   OPPOSITE_DIR_INDEX,
 } from './hex.js';
 
-// SM map grid spec
+// Synthetic 64x35 grid — arbitrary bounds for neighbor/bounds-check tests, not the real SM
+// map (SM is 63x35, see data/modules/south-mountain/map.json, #691). Deliberately not coupled
+// to production data; these tests exercise the bounds-check mechanism itself.
 const GRID = { cols: 64, rows: 35 };
 
 // ─── ID parsing ────────────────────────────────────────────────────────────────

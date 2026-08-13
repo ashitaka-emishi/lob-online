@@ -40,13 +40,13 @@ All PDFs live in `docs/reference/`:
 
 Data files consulted for model reviews live in `data/modules/south-mountain/`:
 
-| ID                | File                                  | Contents                                                                                                                                                                |
-| ----------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SM_MAP_DATA       | `map.json`                            | Hex terrain, gridSpec calibration, VP/entry hexes, type registries (hexsideTypes, hexFeatureTypes, edgeFeatureTypes) — partial, digitization in progress via map editor |
-| GS_OOB            | `oob.json`                            | 219 units, brigade/division hierarchy, wreck thresholds                                                                                                                 |
-| GS_LEADERS        | `leaders.json`                        | 48 leaders, ratings, special rule flags                                                                                                                                 |
-| SM_SCENARIO_DATA  | `scenarios/full-battle/scenario.json` | Turn structure, reinforcements, VP conditions, movement costs, random events                                                                                            |
-| SM_AUTODETECT_CFG | `map-autodetect-config.json`          | Auto-detect configuration: elevation color palette, confidence threshold, seed hex list (confirmed hexes used as few-shot examples for Vision API classification)       |
+| ID                | File                                  | Contents                                                                                                                                                                                                    |
+| ----------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SM_MAP_DATA       | `map.json`                            | Hex terrain, gridSpec calibration, VP/entry hexes, type registries (terrainTypes, hexFeatureTypes, edgeFeatureTypes). See `docs/library.md` for current hex counts, coverage status, and open items (#685). |
+| GS_OOB            | `oob.json`                            | 219 units, brigade/division hierarchy, wreck thresholds                                                                                                                                                     |
+| GS_LEADERS        | `leaders.json`                        | 48 leaders, ratings, special rule flags                                                                                                                                                                     |
+| SM_SCENARIO_DATA  | `scenarios/full-battle/scenario.json` | Turn structure, reinforcements, VP conditions, movement costs, random events                                                                                                                                |
+| SM_AUTODETECT_CFG | `map-autodetect-config.json`          | Auto-detect configuration: elevation color palette, confidence threshold, seed hex list (confirmed hexes used as few-shot examples for Vision API classification)                                           |
 
 ### Priority Hierarchy
 

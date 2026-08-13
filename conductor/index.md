@@ -12,14 +12,18 @@ Navigation hub for project context.
 
 ## Active Tracks (M9 — in progress)
 
-| Track ID                                                                   | Title                                                          | Status   |
-| -------------------------------------------------------------------------- | -------------------------------------------------------------- | -------- |
-| [m8-debt-quickwins_20260623](./tracks/m8-debt-quickwins_20260623/index.md) | M8 Debt Quick-Wins Sprint — Issues #641–#646 #654–#657         | Complete |
-| [m8-auth-guard_20260623](./tracks/m8-auth-guard_20260623/index.md)         | M8 Auth Guard — requireSide on DELETE /api/v1/games/:id (#648) | Pending  |
-| [m8-minio-init_20260623](./tracks/m8-minio-init_20260623/index.md)         | M8 MinIO Init — Auto-Create Dev Bucket (#640 #642)             | Pending  |
-| [terraform-iac_20260623](./tracks/terraform-iac_20260623/index.md)         | Terraform IaC for DigitalOcean Provisioning                    | Complete |
-| [m8-notifications_20260622](./tracks/m8-notifications_20260622/index.md)   | M8 Discord Notifications + Hex Control Wiring                  | Complete |
-| [move-debt-sprint_20260627](./tracks/move-debt-sprint_20260627/index.md)   | MOVE Debt Sprint — Path Cost + Partial Moves (#675 #680)       | Pending  |
+| Track ID                                                                               | Title                                                          | Status   |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------- | -------- |
+| [m8-debt-quickwins_20260623](./tracks/m8-debt-quickwins_20260623/index.md)             | M8 Debt Quick-Wins Sprint — Issues #641–#646 #654–#657         | Complete |
+| [m8-auth-guard_20260623](./tracks/m8-auth-guard_20260623/index.md)                     | M8 Auth Guard — requireSide on DELETE /api/v1/games/:id (#648) | Pending  |
+| [m8-minio-init_20260623](./tracks/m8-minio-init_20260623/index.md)                     | M8 MinIO Init — Auto-Create Dev Bucket (#640 #642)             | Pending  |
+| [terraform-iac_20260623](./tracks/terraform-iac_20260623/index.md)                     | Terraform IaC for DigitalOcean Provisioning                    | Complete |
+| [m8-notifications_20260622](./tracks/m8-notifications_20260622/index.md)               | M8 Discord Notifications + Hex Control Wiring                  | Complete |
+| [move-debt-sprint_20260627](./tracks/move-debt-sprint_20260627/index.md)               | MOVE Debt Sprint — Path Cost + Partial Moves (#675 #680)       | Pending  |
+| [docs-issue-sync_20260811](./tracks/docs-issue-sync_20260811/index.md)                 | Documentation, Data-Metadata, and Issue-Tracker Sync           | Complete |
+| [map-data-recovery_20260811](./tracks/map-data-recovery_20260811/index.md)             | South Mountain Map Data Recovery — Stash Integration (#689)    | Complete |
+| [map-col64-investigation_20260812](./tracks/map-col64-investigation_20260812/index.md) | South Mountain Map — Column 64 Investigation (#691)            | Complete |
+| [map-data-debt-sprint_20260813](./tracks/map-data-debt-sprint_20260813/index.md)       | Map Data Debt Sprint — Issues #693-696                         | Complete |
 
 ## All Tracks
 

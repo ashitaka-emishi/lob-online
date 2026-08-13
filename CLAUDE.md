@@ -6,7 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **lob-online** is an online game implementation of the _Line of Battle v2.0_ wargame system (Multi-Man Publishing). The first game being implemented is _South Mountain_ (RSS #4), chosen because it is a smaller, more tractable battle.
 
-**Current state:** M9 in progress. Completed M9 tracks: debt sprint, MOVE action + hex-control wiring, South Mountain map digitization (all 841 hexes), Discord OAuth identity (passport + SQLite users table + client auth store). Remaining M9: DO Droplet provisioning. See `docs/designs/high-level-design.md` §2 for the full milestone history.
+**Current state:** M8 complete (code phases). M9 — Deployment + Completeness — in progress.
+Completed M9 tracks: debt sprint, MOVE action + hex-control wiring, South Mountain map data
+(841 → 2261 hexes, all VP hexes reachable, 100% in-grid coverage — recovered from a forgotten
+git stash, #689; column-64 grid-bounds question resolved, #691; hexside-network visual audit +
+playtest still open in #685; map-data debt sprint closed #693-696). Remaining M9: DO Droplet
+provisioning; Discord OAuth identity (passport + SQLite users table + client auth store) is
+implemented on `feat/m9-discord-oauth`, in review for merge into `master`. See
+`docs/designs/high-level-design.md` §2 for the full milestone history.
 
 ## Reference Library
 

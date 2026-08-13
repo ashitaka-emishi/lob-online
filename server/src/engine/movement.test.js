@@ -122,6 +122,21 @@ describe('hexEntryCost — terrain costs from SM movement chart', () => {
     const hexIndex = makeHexIndex([{ hex: '10.10', terrain: 'clear' }]);
     expect(hexEntryCost('10.10', '99.99', 0, 'line', scenario, hexIndex)).toBe(Infinity);
   });
+
+  // #695 — characterization test: the schema's playable field (map.schema.js) is not read
+  // anywhere in this module. This pins that as current, deliberate behavior — playable:false
+  // is a save-path edge-stripping flag (see engine/edge-strip.js, consulted at map-editor
+  // save time via routes/mapEditor.js), not a movement gate — rather than leaving it as a
+  // silent, undiscovered gap. Actually enforcing playable:false as impassable would be a
+  // rules-behavior change requiring domain-expert sign-off, out of scope here (see
+  // map-data-debt-sprint_20260813/spec.md).
+  it('playable: false does not affect movement cost — the field is not consulted here', () => {
+    const hexIndex = makeHexIndex([
+      { hex: '10.10', terrain: 'clear' },
+      { hex: '10.11', terrain: 'clear', playable: false },
+    ]);
+    expect(hexEntryCost('10.10', '10.11', 0, 'line', scenario, hexIndex)).toBe(1);
+  });
 });
 
 // ─── hexEntryCost — hexside costs (stream, slope, elevation) ──────────────────
@@ -471,8 +486,10 @@ describe('movementPath', () => {
   });
 
   it('adjacent clear-terrain hexes cost 1 for line formation', () => {
-    // LOB §3 / SM movement chart — clear terrain = 1 MP for line
-    const result = movementPath('19.23', '20.23', 'line', scenario, mapData);
+    // LOB §3 / SM movement chart — clear terrain = 1 MP for line.
+    // 19.23 → 18.22: both clear terrain, no hexside features (map-data-recovery_20260811,
+    // #689) — 20.23 is genuinely 'woods' in the recovered data, no longer a clear-terrain pair.
+    const result = movementPath('19.23', '18.22', 'line', scenario, mapData);
     expect(result.totalCost).toBe(1);
   });
 
