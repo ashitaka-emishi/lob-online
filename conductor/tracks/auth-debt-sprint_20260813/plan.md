@@ -162,32 +162,35 @@ sessionmanager.js` to confirm finding #698-1's premise (it unconditionally calls
 
 ### Tasks
 
-- [ ] Task 4.1: Add direct route-level tests for `GET /auth/discord` (redirects into the
+- [x] Task 4.1: Add direct route-level tests for `GET /auth/discord` (redirects into the
       `passport.authenticate('discord')` flow) and `GET /auth/discord/callback`'s
       `failureRedirect: '/?error=auth'` path in `auth.test.js` (new or existing file).
-- [ ] Task 4.2: Fix the three SQLite migration test gaps in `gameSqlite.test.js`: change the
+- [x] Task 4.2: Fix the three SQLite migration test gaps in `gameSqlite.test.js`: change the
       pre-v1 (`db4`) test to insert its row via raw SQL _before_ calling `createStore`, matching
       the v1 (`db5`) test's already-correct pattern; add a `side_b_user_id` assertion to both the
       v0 and v1 migration tests; add a new test that migrates a _file-based_ (not `:memory:`) DB,
       closes the connection, reopens with a fresh `Database` instance, and confirms the schema
       and data survived.
-- [ ] Task 4.3: Add a `useAuthStore.test.js` case asserting `store.loading` is `true` while
+- [x] Task 4.3: Add a `useAuthStore.test.js` case asserting `store.loading` is `true` while
       `fetchMe()`'s fetch promise is pending and `false` after it resolves (using a
       controllable/deferred mock rather than an immediately-resolved one).
-- [ ] Task 4.4: Normalize `req.user?.id` to `req.user.id` at the three inconsistent call sites in
-      `games.js` (lines ~111, ~180, ~198), matching the two already-bare call sites — `requireAuth`
-      guarantees `req.user` truthy for every route in this router.
-- [ ] Task 4.5: Add `meta: { requiresAuth: true }` to the `GameView` route in
+- [x] Task 4.4: Normalize `req.user?.id` to `req.user.id` at the three inconsistent call sites in
+      `games.js`, matching the two already-bare call sites — `requireAuth` guarantees `req.user`
+      truthy for every route in this router. Also fixed the same pattern in `requireSide.js`
+      (found while investigating, same finding class, not separately itemized in #700's text).
+- [x] Task 4.5: Add `meta: { requiresAuth: true }` to the `GameView` route in
       `client/src/router/index.js`, matching the lobby route's existing guard.
 
 ### Verification
 
-- [ ] All new/modified tests pass; migration test file's mutation-sensitivity confirmed by
+- [x] All new/modified tests pass; migration test file's mutation-sensitivity confirmed by
       reverting Task 4.2's insert-order fix and observing the test still incorrectly passes
-      pre-fix (proving the gap was real), then confirming it's fixed post-change
-- [ ] A router test (new or existing) confirms an unauthenticated visit to a game URL redirects
-      to `/`, matching the lobby route's existing coverage
-- [ ] `npm run lint` clean after the `?.` → `.` normalization (no new unused-optional-chaining
+      pre-fix (proving the gap was real), then confirming it's fixed post-change. Additionally
+      mutation-verified with a data-loss simulation (a migration that drops and recreates the
+      table) — both the pre-v1 test and the new file-based round-trip test caught it.
+- [x] A router test confirms an unauthenticated visit to a game URL redirects to `/`, matching
+      the lobby route's existing coverage
+- [x] `npm run lint` clean after the `?.` → `.` normalization (no new unused-optional-chaining
       warnings)
 
 ---
