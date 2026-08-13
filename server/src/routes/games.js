@@ -102,7 +102,7 @@ router.post('/', createLimiter, async (req, res) => {
     // SQLite row first, then Spaces. If saveGame fails, roll back the SQLite row so no
     // orphaned metadata row points at a missing Spaces object (#ARCH-H4).
     const sideToken = randomUUID();
-    createGame(id, sideToken, SIDES.UNION, discordWebhook ?? null, req.user?.id ?? null);
+    createGame(id, sideToken, SIDES.UNION, discordWebhook ?? null, req.user.id);
     try {
       await saveGame(id, state);
     } catch (err) {
@@ -171,7 +171,7 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
     // logged-in user as the owner of the requested side. Reissue a fresh token instead of
     // 409ing them out of a game they already own; ownership is enforced in SQL (see
     // reclaimSideToken), not just by this check.
-    if (req.user?.id) {
+    if (req.user.id) {
       const reclaimedToken = randomUUID();
       if (reclaimSideToken(id, side, req.user.id, reclaimedToken)) {
         await regenerateSession(req);
@@ -189,7 +189,7 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
     const sideToken = randomUUID();
 
     // joinGame is atomic; typed errors map to 404/409 for remaining edge cases (#PERF-H1, #ARCH-M2)
-    joinGame(id, sideToken, side, req.user?.id ?? null);
+    joinGame(id, sideToken, side, req.user.id);
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
     await regenerateSession(req);

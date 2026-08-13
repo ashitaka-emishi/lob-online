@@ -20,6 +20,28 @@ describe('useAuthStore', () => {
     expect(store.initialized).toBe(false);
   });
 
+  // #700 — loading is part of the store's public surface (returned from setup()) but had no
+  // dedicated test; only initialized/currentUser were asserted around fetchMe(). Uses a
+  // manually-resolved deferred promise so the assertion mid-flight is meaningful (an
+  // already-resolved mock can't distinguish "loading" from "not loading" at the check point).
+  it('loading is true while fetchMe is pending and false once it resolves', async () => {
+    let resolveFetch;
+    fetch.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveFetch = resolve;
+      })
+    );
+    const store = useAuthStore();
+    expect(store.loading).toBe(false);
+
+    const fetchMePromise = store.fetchMe();
+    expect(store.loading).toBe(true);
+
+    resolveFetch({ ok: true, json: async () => ({ id: 'u1', username: 'Alice', avatar: null }) });
+    await fetchMePromise;
+    expect(store.loading).toBe(false);
+  });
+
   it('fetchMe sets currentUser on 200 response', async () => {
     const user = { id: 'u1', username: 'Alice', avatar: null };
     fetch.mockResolvedValueOnce({ ok: true, json: async () => user });

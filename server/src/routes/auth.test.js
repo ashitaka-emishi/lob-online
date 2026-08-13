@@ -10,6 +10,7 @@ vi.mock('../auth/discord.js', () => ({
   configurePassport: vi.fn(),
 }));
 
+import passport from '../auth/discord.js';
 import authRouter from './auth.js';
 
 function mockRes() {
@@ -29,6 +30,38 @@ function getHandler(method, path) {
   const layer = authRouter.stack.find((l) => l.route?.path === path && l.route?.methods?.[method]);
   return layer?.route?.stack?.[0]?.handle;
 }
+
+// #700 — the Discord strategy dispatch itself (as opposed to the surrounding routing/session
+// infrastructure, already covered by games.auth-integration.test.js's dev-auth flow) had no
+// direct route-level test. router.get(path, passport.authenticate(...)) calls
+// passport.authenticate() once, at module-eval time (when auth.js is imported above), to build
+// the middleware — the mocked passport.authenticate.mock.calls already reflect both routes'
+// registration by the time these tests run.
+describe('GET /auth/discord', () => {
+  it("dispatches passport.authenticate('discord') with no options (no failureRedirect)", () => {
+    expect(passport.authenticate).toHaveBeenCalledWith('discord');
+  });
+});
+
+describe('GET /auth/discord/callback', () => {
+  it("dispatches passport.authenticate('discord', { failureRedirect: '/?error=auth' })", () => {
+    expect(passport.authenticate).toHaveBeenCalledWith('discord', {
+      failureRedirect: '/?error=auth',
+    });
+  });
+
+  it('redirects to / after passport.authenticate succeeds and calls next()', () => {
+    const layer = authRouter.stack.find(
+      (l) => l.route?.path === '/discord/callback' && l.route?.methods?.get
+    );
+    // Second middleware in the stack — the route's own success handler, run after
+    // passport.authenticate's mocked middleware (stack[0]) calls next().
+    const successHandler = layer.route.stack[1].handle;
+    const res = { redirect: vi.fn() };
+    successHandler({}, res);
+    expect(res.redirect).toHaveBeenCalledWith('/');
+  });
+});
 
 describe('GET /auth/me', () => {
   it('returns 401 when req.user is absent', () => {

@@ -56,9 +56,11 @@ export function requireSide(req, res, next) {
   // attached to the session, making side_a_user_id/side_b_user_id purely decorative. Only
   // enforced when the DB has an owner recorded for the matched side — pre-migration rows and
   // any row created without a logged-in user (legacy data) have a null owner and are not
-  // affected. req.user is guaranteed non-null here because requireAuth runs first (server.js).
+  // affected. req.user is guaranteed non-null here because requireAuth runs first (server.js) —
+  // #700 review finding: the `?.` on req.user?.id elsewhere in this codebase implied a code
+  // path (req.user absent) that can't actually occur; normalized to bare access here too.
   const ownerId = player.sideToken === row.side_a_token ? row.side_a_user_id : row.side_b_user_id;
-  if (ownerId && req.user?.id !== ownerId) {
+  if (ownerId && req.user.id !== ownerId) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 

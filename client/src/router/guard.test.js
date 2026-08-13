@@ -11,6 +11,7 @@ import { DEFAULT_SLUG } from '../stores/useModuleStore.js';
 import router from './index.js';
 
 const LOBBY_PATH = `/modules/${DEFAULT_SLUG}/scenarios/full-battle/lobby`;
+const GAME_PATH = `/modules/${DEFAULT_SLUG}/scenarios/full-battle/games/test-game-id`;
 
 describe('router auth guard', () => {
   beforeEach(() => {
@@ -55,5 +56,20 @@ describe('router auth guard', () => {
     fetch.mockResolvedValue({ ok: false });
     await router.push('/about');
     expect(router.currentRoute.value.path).toBe('/about');
+  });
+
+  // #700 — the game route had no requiresAuth guard, unlike the lobby route; a logged-out user
+  // deep-linking straight to a game URL got a broken screen instead of being sent to log in
+  // (the server already 401s correctly — this closes the matching client-side UX gap).
+  it('redirects to / when navigating directly to a game URL while logged out', async () => {
+    fetch.mockResolvedValue({ ok: false });
+    await router.push(GAME_PATH);
+    expect(router.currentRoute.value.path).toBe('/');
+  });
+
+  it('allows navigation to a game URL when logged in', async () => {
+    fetch.mockResolvedValue({ ok: true, json: async () => ({ id: 'u1', username: 'Alice' }) });
+    await router.push(GAME_PATH);
+    expect(router.currentRoute.value.path).toBe(GAME_PATH);
   });
 });

@@ -23,6 +23,10 @@ const router = createRouter({
     {
       path: '/modules/:moduleSlug/scenarios/:scenarioSlug/games/:id',
       component: () => import('../views/GameView.vue'),
+      // #700 — was missing this guard unlike the lobby route; the server already 401s an
+      // unauthenticated request, but a logged-out user deep-linking straight to a game URL got
+      // a broken screen instead of being redirected to log in.
+      meta: { requiresAuth: true },
     },
     {
       path: '/modules/:moduleSlug/games/:id',

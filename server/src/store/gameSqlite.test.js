@@ -1,3 +1,8 @@
+import { randomUUID } from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
 import Database from 'better-sqlite3';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -271,15 +276,33 @@ describe('migration idempotency', () => {
     // user_version is still 0 — migration has not run
     expect(db4.pragma('user_version', { simple: true })).toBe(0);
 
+    // #700 — insert a row on the pre-migration (5-column, no side_a_faction) schema BEFORE
+    // createStore runs, mirroring the v1 test below. Previously this test only inserted AFTER
+    // migration, via the already-migrated store's own createGame() — which exercises the v0->v2
+    // *column-add* path but proves nothing about whether a row that existed on disk *before*
+    // migration survives it, the actual risk a migration test exists to catch.
+    db4
+      .prepare(
+        "INSERT INTO games (id, side_a_token, status, created_at) VALUES ('pre-v1-game', 'tok-legacy', 'open', 1)"
+      )
+      .run();
+
     // createStore must add missing columns and bump user_version to 2
     const s = createStore(db4);
     expect(db4.pragma('user_version', { simple: true })).toBe(2);
+
+    // The pre-existing row survived migration with new columns NULL
+    const preExistingRow = s.getGame('pre-v1-game');
+    expect(preExistingRow.side_a_faction).toBeNull();
+    expect(preExistingRow.side_a_user_id).toBeNull();
+    expect(preExistingRow.side_b_user_id).toBeNull();
 
     s.createGame('legacy-game', 'tok-a', 'union', 'https://example.com/hook');
     const row = s.getGame('legacy-game');
     expect(row.side_a_faction).toBe('union');
     expect(row.discord_webhook).toBe('https://example.com/hook');
     expect(row.side_a_user_id).toBeNull();
+    expect(row.side_b_user_id).toBeNull();
     db4.close();
   });
 
@@ -311,9 +334,52 @@ describe('migration idempotency', () => {
     const row = s.getGame('v1-game');
     expect(row.side_a_faction).toBe('union');
     expect(row.side_a_user_id).toBeNull();
+    // #700 — side_a_user_id was already asserted; side_b_user_id (added by the same ALTER TABLE
+    // batch) had no coverage of its own.
+    expect(row.side_b_user_id).toBeNull();
     // users table was created
     expect(() => db5.prepare('SELECT * FROM users').all()).not.toThrow();
     db5.close();
+  });
+
+  // #700 — every migration test above uses a fresh, single-connection :memory: DB. None
+  // verified the actual production path: a DB file written to disk, closed, then reopened with
+  // a brand-new Database instance and connection (which is what happens on every server
+  // restart) — a schema/pragma detail that only round-trips correctly through a real file could
+  // pass every :memory: test above and still fail here.
+  it('migrates a file-based DB, and the migration survives closing and reopening with a fresh connection', () => {
+    const filePath = path.join(os.tmpdir(), `gameSqlite-migration-test-${randomUUID()}.db`);
+    try {
+      const db6 = new Database(filePath);
+      db6.exec(`
+        CREATE TABLE games (
+          id TEXT PRIMARY KEY,
+          side_a_token TEXT NOT NULL,
+          side_b_token TEXT,
+          status TEXT NOT NULL DEFAULT 'open',
+          created_at INTEGER NOT NULL
+        )
+      `);
+      db6
+        .prepare(
+          "INSERT INTO games (id, side_a_token, status, created_at) VALUES ('file-game', 'tok-file', 'open', 1)"
+        )
+        .run();
+      const s6 = createStore(db6);
+      s6.createGame('file-game-2', 'tok-file-2', 'confederate', null, 'user-file');
+      db6.close();
+
+      // Fresh connection, fresh createStore call — the real restart path.
+      const db6b = new Database(filePath);
+      expect(db6b.pragma('user_version', { simple: true })).toBe(2);
+      const s6b = createStore(db6b);
+      expect(db6b.pragma('user_version', { simple: true })).toBe(2); // still 2 — no re-migration
+      expect(s6b.getGame('file-game').side_a_faction).toBeNull();
+      expect(s6b.getGame('file-game-2').side_a_user_id).toBe('user-file');
+      db6b.close();
+    } finally {
+      fs.rmSync(filePath, { force: true });
+    }
   });
 });
 
