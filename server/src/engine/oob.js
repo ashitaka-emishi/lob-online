@@ -257,6 +257,24 @@ export function findOobUnit(oob, unitId) {
 }
 
 /**
+ * #681 — resolves a unit against a possibly-absent OOB, swallowing lookup errors, so callers
+ * don't each duplicate the same `oob ? findOobUnit(oob, id) : null` wrapped in try/catch.
+ * Returns null (not a throw) when oob is absent or the lookup fails — degraded-mode contract
+ * shared by all call sites that need "best effort, never crash the action pipeline."
+ *
+ * @param {import('zod').infer<import('../schemas/oob.schema.js').OOBSchema> | null | undefined} oob
+ * @param {string} unitId
+ * @returns {object | null}
+ */
+export function safeFindOobUnit(oob, unitId) {
+  try {
+    return oob ? findOobUnit(oob, unitId) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Walk the OOB tree and return the formation (corps/division/brigade) with matching id.
  * Used to look up leaders for succession resolution and leader casualty checks.
  *

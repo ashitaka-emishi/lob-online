@@ -6,6 +6,7 @@ import {
   findBrigadeForUnit,
   buildUnitIndex,
   findOobUnitFast,
+  safeFindOobUnit,
   sumCurrentSPs,
 } from './oob.js';
 
@@ -99,6 +100,30 @@ describe('findOobUnit', () => {
 
   it('returns null for unknown id', () => {
     expect(findOobUnit(OOB, 'no-such')).toBeNull();
+  });
+});
+
+// ─── safeFindOobUnit (#681) ────────────────────────────────────────────────
+
+describe('safeFindOobUnit', () => {
+  it('finds a unit when oob is present and valid', () => {
+    expect(safeFindOobUnit(OOB, 'r1')?.id).toBe('r1');
+  });
+
+  it('returns null when oob is null', () => {
+    expect(safeFindOobUnit(null, 'r1')).toBeNull();
+  });
+
+  it('returns null when oob is undefined', () => {
+    expect(safeFindOobUnit(undefined, 'r1')).toBeNull();
+  });
+
+  it('returns null (not throw) when the OOB shape is malformed', () => {
+    expect(safeFindOobUnit({ union: null, confederate: null }, 'r1')).toBeNull();
+  });
+
+  it('returns null for an unknown unit id, same as findOobUnit', () => {
+    expect(safeFindOobUnit(OOB, 'no-such')).toBeNull();
   });
 });
 

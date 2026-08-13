@@ -2,7 +2,13 @@ import { GameStateSchema } from '../../schemas/gameState.schema.js';
 import { PHASES, STEPS } from '../../constants/phases.js';
 import { MORALE_PENDING_TYPES } from '../../constants/resolution.js';
 import { ActionError } from './actionError.js';
-import { loadOob, buildUnitSideMap, loadLeaders, buildLeaderSideMap, findOobUnit } from '../oob.js';
+import {
+  loadOob,
+  buildUnitSideMap,
+  loadLeaders,
+  buildLeaderSideMap,
+  safeFindOobUnit,
+} from '../oob.js';
 import { applySection64AutoRecovery } from '../tables/rally.js';
 import { handleEndPhase } from './endPhase.js';
 import { handleRollInitiative, handleIssueOrder } from './issueOrder.js';
@@ -141,11 +147,13 @@ export function getValidActions(state, playerSide) {
       const activeHex = activation.hex;
 
       // LOB §5.5 / §7.0 — build unit → side map to filter friendly vs. enemy targets.
-      // loadOob() reads from disk; this is acceptable for the candidate-generation path
-      // since getValidActions is informational (handlers re-validate independently).
+      // #676 — loadOob() reads from disk; hoisted to a single call reused below for the
+      // per-unit artillery lookup too, instead of re-reading once per active unit.
+      let oob;
       let unitSideMap;
       try {
-        unitSideMap = buildUnitSideMap(loadOob());
+        oob = loadOob();
+        unitSideMap = buildUnitSideMap(oob);
       } catch {
         // If OOB is unavailable, degrade gracefully to END_ACTIVATION only
         return [{ type: 'END_ACTIVATION', payload: null }];
@@ -192,13 +200,7 @@ export function getValidActions(state, playerSide) {
 
       // LOB §3.6 / §8.2 — artillery action candidates for batteries in the active hex
       const artilleryCandidates = activeUnits.flatMap((u) => {
-        const oobUnit = (() => {
-          try {
-            return findOobUnit(loadOob(), u.id);
-          } catch {
-            return null;
-          }
-        })();
+        const oobUnit = safeFindOobUnit(oob, u.id);
         if (!oobUnit || (oobUnit.type !== 'artillery' && oobUnit.gunType === undefined)) return [];
         const formation = u.formation ?? 'unlimbered';
         const candidates = [];

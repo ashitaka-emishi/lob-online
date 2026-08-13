@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 
 import { dispatch, getValidActions, drainAutoSteps, ActionError } from './index.js';
+import * as oobModule from '../oob.js';
 import { loadScenario } from '../scenario.js';
 
 // ── Shared fixtures ─────────────────────────────────────────────────────────
@@ -832,5 +833,36 @@ describe('dispatch — MOVE action integration (#634)', () => {
     };
     const actions = getValidActions(exhaustedState, 'union');
     expect(actions.find((a) => a.type === 'MOVE')).toBeUndefined();
+  });
+
+  // #676 — loadOob() previously re-read+re-validated oob.json from disk once for
+  // buildUnitSideMap and again per active unit in the artillery-candidate loop (N+1 reads per
+  // getValidActions call). Hoisted to a single call, reused for both. Two real union artillery
+  // units at the same activated hex exercise the per-unit loop with N=2.
+  it('calls loadOob() exactly once per getValidActions call, regardless of active-unit count', () => {
+    const spy = vi.spyOn(oobModule, 'loadOob');
+    spy.mockClear();
+    const state = {
+      ...MID_ACTIVATION_STATE,
+      units: {
+        '1nh-lt': { ...MID_ACTIVATION_STATE.units.u1, id: '1nh-lt', hex: '10.10' },
+        'l1ny-lt': { ...MID_ACTIVATION_STATE.units.u1, id: 'l1ny-lt', hex: '10.10' },
+      },
+      activityPhase: {
+        activatedUnits: [],
+        currentActivation: {
+          hex: '10.10',
+          activatedUnitIds: ['1nh-lt', 'l1ny-lt'],
+          lastMovedUnitId: null,
+          movedUnitIds: [],
+          movedThisActivation: false,
+          openingVolley: false,
+          zeroRuleFired: false,
+        },
+      },
+    };
+    getValidActions(state, 'union');
+    expect(spy).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
   });
 });

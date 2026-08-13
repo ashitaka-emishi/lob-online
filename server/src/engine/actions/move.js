@@ -1,17 +1,16 @@
 import { ActionError } from './actionError.js';
+import { resolveFormationKey } from './formation.js';
 import { pathCost } from '../movement.js';
-import { findOobUnit, buildUnitSideMap } from '../oob.js';
+import { buildUnitSideMap, safeFindOobUnit } from '../oob.js';
 import { updateHexControl } from '../vp.js';
 
 // LOB §3 — resolve the movement-table formation key for a unit.
-// Returns null for unlimbered artillery (cannot move per LOB §3.6a).
+// Returns null for unlimbered artillery (cannot move per LOB §3.6a) — the 'unlimbered'
+// sentinel from resolveFormationKey (#677) maps to null here since this call site's "cannot
+// move" behavior is a null check by the caller, not the string itself.
 function resolveMovementFormation(unit, oobUnit) {
-  if (unit.formation === 'unlimbered') return null;
-  if (unit.formation === 'limbered') return 'limbered';
-  const type = oobUnit?.type;
-  if (type === 'cavalry') return 'mounted';
-  if (type === 'leader') return 'leader';
-  return 'line'; // infantry default
+  const key = resolveFormationKey(unit, oobUnit);
+  return key === 'unlimbered' ? null : key;
 }
 
 // LOB §3 / SM §5.1 — MOVE action handler.
@@ -84,13 +83,7 @@ export function resolveMove(state, action, ctx = {}) {
   const destination = path[path.length - 1];
 
   // Resolve OOB unit for formation and VP eligibility checks
-  const oobUnit = (() => {
-    try {
-      return ctx.oob ? findOobUnit(ctx.oob, unitId) : null;
-    } catch {
-      return null;
-    }
-  })();
+  const oobUnit = safeFindOobUnit(ctx.oob, unitId);
 
   // LOB §3 — verify the moving unit belongs to the acting player (mirror combat handler pattern).
   // Skipped when ctx.oob is absent (test-stub environments without OOB injection).
