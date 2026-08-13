@@ -121,7 +121,7 @@ export function resolveMove(state, action, ctx = {}) {
     throw new ActionError('INVALID_ACTION', 'MOVE requires scenario and mapData in ctx');
   }
 
-  // ctx.hexIndex is pre-built by the route layer; passing it avoids rebuilding the 2240-hex index per call.
+  // ctx.hexIndex is pre-built by the route layer; passing it avoids rebuilding the ~2.3k-hex index per call.
   const pathResult = pathCost(path, formation, ctx.scenario, ctx.mapData, ctx.hexIndex);
 
   if (pathResult === Infinity) {
