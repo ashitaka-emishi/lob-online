@@ -7,11 +7,12 @@
 
 ## Overview
 
-Seven phases: a domain-expert consultation gate, three independent code-cleanup items
+Eight phases: a domain-expert consultation gate, three independent code-cleanup items
 (#676/#677/#681, implemented together since they touch overlapping call sites), the scoped
 rules fix for #678, resolving #679 by descoping it rather than implementing it as originally
 filed, a full `/team-review` pass, fixing everything that review found (including one real
-correctness bug), and final closeout.
+correctness bug), closeout, and a mandatory targeted second-pass review (triggered because the
+review-fix diff itself touched rules-engine paths) that found and fixed a second real bug.
 
 ## Interaction Mode
 
@@ -37,17 +38,19 @@ follow-up filed; #679: descoped entirely, replacement feature issue filed) befor
 
 ## Debt Budget
 
-**Allowed new deferred debt:** 0 unless explicitly approved. (One new debt item, #703, was
-explicitly approved by the user as the correct way to descope #678's non-MOVE traversal
-gap — filed per the Immediate Debt-Capture Policy, not silently dropped.)
+**Allowed new deferred debt:** 0 unless explicitly approved. Two new debt items were filed
+under the Immediate Debt-Capture Policy, not silently dropped: #703 (user-approved way to
+descope #678's non-MOVE traversal gap) and #706 (UNLIMBER MP-deduction gap, discovered during
+the mandatory second-pass review of Phase 6 — pre-existing, not caused by this branch, so filed
+rather than fixed in place; see Phase 8).
 
 ## Completion Contract
 
-- [ ] All plan tasks complete (Phase 7, Tasks 7.2-7.4 remain)
+- [x] All plan tasks complete
 - [x] All acceptance criteria in spec.md met (or explicitly descoped with reasoning — #679)
 - [x] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated (Task 7.3)
-- [x] Ready for `/team-review` — complete, findings fixed in place (Phase 6)
+- [ ] Debt register updated (Task 7.3 — pending `/tech-debt-report` against PR #705)
+- [x] Ready for `/team-review` — complete, findings fixed in place (Phase 6, Phase 8)
 
 ---
 
@@ -226,20 +229,69 @@ findings were fixed in place — none deferred.
       delivered state (`/team-review`'s maintainability pass found the same conductor
       metadata-drift bug class this project has hit before — task counts and completion
       status had drifted from `plan.md`'s real checkbox count).
-- [ ] Task 7.2: Remove the `tech-debt` label from #704 (maintainability finding — it was
+- [x] Task 7.2: Remove the `tech-debt` label from #704 (maintainability finding — it was
       labeled `tech-debt` on filing, contradicting the recorded "not debt, a feature" ruling).
-- [ ] Task 7.3: Update `docs/tech-debt/report.md` (remove #676/#677/#678/#679/#681, add #703)
-      once the PR number is known.
+- [ ] Task 7.3: Update `docs/tech-debt/report.md` (remove #676/#677/#678/#679/#681, add #703
+      and #706) once the PR number is known — known as of Task 7.4 (PR #705).
 - [x] Task 7.4: Run `/pr-create` — PR #705 opened against `master`.
 
 ### Final Verification
 
 - [x] All acceptance criteria in spec.md met or explicitly descoped
 - [x] All five issues closed (four resolved, one replaced), two follow-ups filed
-- [ ] Debt register reflects net -8 in score (5 items closed, score 10; 1 item added, #703
-      score 2) — pending `/tech-debt-report` against PR #705
-- [x] Full quality suite green (169 files / 3387 tests, zero unexpected warnings)
-- [x] `/team-review` complete, all findings fixed in place
+- [ ] Debt register reflects net -5 in score (5 items closed, score 10; 2 items added, #703
+      score 2 + #706 score 3 = 5) — pending `/tech-debt-report` against PR #705
+- [x] Full quality suite green (169 files / 3390 tests, zero unexpected warnings)
+- [x] `/team-review` complete, all findings fixed in place (Phase 6, Phase 8)
+
+---
+
+## Phase 8: Second-Pass Review Response
+
+Per this project's quality rails, a review-fix diff that touches rules-engine/domain-critical
+paths (Phase 6 touched formation resolution and `getValidActions`'s dispatch hot path) requires
+a targeted second-pass review before closeout. Ran two agents against Phase 6's fix commit
+(`8f8ca68`): a `domain-expert` rules check on the artillery-classification fix, and a
+correctness/maintainability reviewer on the diff itself.
+
+### Tasks
+
+- [x] Task 8.1: Domain-expert confirmed the artillery-classification fix (Task 6.1) is
+      rules-accurate — Unlimbered-by-default for unset `formation` matches LOB §3.6a, and the
+      `gunType` discriminator has zero false positives/negatives against the real SM OOB. One
+      caveat noted (not a defect): no scenario data captures a battery's starting formation —
+      out of scope for this fix.
+- [x] Task 8.2: Correctness reviewer mutation-verified all three Phase 6 claims independently
+      and confirmed the `ctx.oob` threading and `activateStack.js:66` fix are non-breaking, but
+      found one real MEDIUM bug: correctly classifying unset-formation batteries as Unlimbered
+      (0 MP) left `handleLimber` with no mechanism to restore `remainingMPs`, since it only ever
+      flipped `unit.formation` and never touched MPs — permanently blocking limber-then-move
+      within one activation for every real battery (previously masked by the artillery
+      misclassification bug accidentally supplying a nonzero, if wrong, MP pool).
+- [x] Task 8.3: Consulted domain-expert on the exact LOB §3.6a mechanic — confirmed limbering
+      grants the Limbered movement allowance (7) less the 3 MP formation-change cost (net 4 MP),
+      not a cost on top of 0. Fixed `handleLimber` to compute
+      `remainingMPs = movementAllowances.limbered - FORMATION_CHANGE_MP_COST` on success (falls
+      back to leaving `remainingMPs` untouched when `scenario.movementCosts` is absent, matching
+      `activateStack.js`'s existing test-stub convention). Verified end-to-end against the real
+      South Mountain OOB/scenario (0 MP → LIMBER → 4 MP) and mutation-verified.
+- [x] Task 8.4: Identified the symmetric UNLIMBER gap (no MP deducted when unlimbering) but
+      determined it is NOT a regression from this branch — a battery starting an activation
+      already Limbered was already correctly initialized with nonzero MPs regardless of the
+      classification fix, so this was already reachable pre-PR #705. Filed as #706
+      (`tech-debt`, score 3, milestone M9) rather than fixed here, per the distinction between
+      "caused by this PR" (fix in place) and "discovered incidentally, pre-existing" (file it).
+- [x] Task 8.5: Fixed three LOW test-quality findings from the correctness reviewer: a vacuous
+      `e.code`-only assertion in `move.test.js` (the exact pattern Phase 6 fixed elsewhere in
+      the same file), an orphaned comment left behind by a describe-block split in
+      `index.test.js`, and a dropped formation-vs-conflicting-oobUnit precedence test case in
+      `formation.test.js`.
+
+### Verification
+
+- [x] Full suite green (169 files / 3390 tests, zero unexpected warnings)
+- [x] New/strengthened tests mutation-verified against their target fix
+- [x] #706 filed with `tech-debt` label, score 3, milestone M9
 
 ---
 

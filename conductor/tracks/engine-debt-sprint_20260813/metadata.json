@@ -6,14 +6,14 @@
   "created": "2026-08-13T00:00:00Z",
   "updated": "2026-08-13T00:00:00Z",
   "closesIssues": [676, 677, 678, 679, 681],
-  "filedIssues": [703, 704],
+  "filedIssues": [703, 704, 706],
   "phases": {
-    "total": 7,
-    "completed": 6
+    "total": 8,
+    "completed": 7
   },
   "tasks": {
-    "total": 27,
-    "completed": 24
+    "total": 32,
+    "completed": 31
   },
-  "notes": "PR #705 opened against master; all quality gates green (169 files / 3387 tests). Debt register update (/tech-debt-report against #705) still pending. All four resolvable issues (#676, #677, #678, #681) closed with summaries; #679 closed and replaced by #704; #703 filed as the descoped-scope follow-up for #678. A full /team-review pass (Phase 6) found and fixed one real correctness bug (artillery misclassification) plus several architecture/testing/doc findings, all in place. Status will flip to complete once PR #705 merges."
+  "notes": "PR #705 opened against master; all quality gates green (169 files / 3390 tests). A mandatory targeted second-pass review (Phase 8, triggered because Phase 6's fix touched rules-engine paths) found and fixed a real MEDIUM bug: LIMBER never restored remainingMPs after the artillery-classification fix correctly zeroed it for Unlimbered batteries, blocking limber-then-move entirely. Fixed per a domain-expert ruling (LOB §3.6a: remainingMPs = Limbered allowance - 3 MP cost). The symmetric UNLIMBER gap was pre-existing (not caused by this branch) and filed as #706 instead. Debt register update (/tech-debt-report against #705) still pending — Task 7.3. All four resolvable issues (#676, #677, #678, #681) closed with summaries; #679 closed and replaced by #704; #703 filed as the descoped-scope follow-up for #678. Status will flip to complete once PR #705 merges."
 }
