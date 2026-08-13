@@ -834,11 +834,6 @@ describe('dispatch — MOVE action integration (#634)', () => {
     const actions = getValidActions(exhaustedState, 'union');
     expect(actions.find((a) => a.type === 'MOVE')).toBeUndefined();
   });
-
-  // #676 — loadOob() previously re-read+re-validated oob.json from disk once for
-  // buildUnitSideMap and again per active unit in the artillery-candidate loop (N+1 reads per
-  // getValidActions call). Hoisted to a single call, reused for both. Two real union artillery
-  // units at the same activated hex exercise the per-unit loop with N=2.
 });
 
 // #676 — misfiled inside the MOVE-integration describe block previously; this tests

@@ -279,13 +279,18 @@ describe('resolveMove — valid move', () => {
   // End-to-end guard against the exact bug found in review: with the pre-fix classification,
   // this unit would have been allowed to move AND claim VP hexes along its path.
   it('throws INVALID_MOVE for a real-shaped artillery unit with unset formation (#m9 review)', () => {
+    // #m9 review, second pass — asserting only e.code left this mutation-invisible in the same
+    // way the unlimbered-artillery test above was (pathCost also returns Infinity for an
+    // unrecognized formation key, so a deleted classification branch would still throw
+    // INVALID_MOVE for the wrong reason). Asserting the message pins the actual guard.
     const state = makeState({ formation: undefined });
-    expect.assertions(2);
+    expect.assertions(3);
     try {
       resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA, oob: ARTILLERY_OOB });
     } catch (e) {
       expect(e).toBeInstanceOf(ActionError);
       expect(e.code).toBe('INVALID_MOVE');
+      expect(e.message).toMatch(/unlimbered artillery has no movement allowance/);
     }
   });
 

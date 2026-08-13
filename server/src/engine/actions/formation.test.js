@@ -61,4 +61,13 @@ describe('resolveMovementFormationKey', () => {
     expect(resolveMovementFormationKey({ formation: 'unlimbered' }, null)).toBe('unlimbered');
     expect(resolveMovementFormationKey({ formation: 'limbered' }, null)).toBe('limbered');
   });
+
+  // #m9 review, second pass — dropped when the fixtures above were reshaped to real gunType
+  // OOB data; re-added since it's the one case proving unit.formation wins even against a
+  // conflicting, non-null oobUnit (not just an absent one, covered above).
+  it('unit.formation takes precedence over a conflicting oobUnit.type', () => {
+    expect(resolveMovementFormationKey({ formation: 'limbered' }, { type: 'cavalry' })).toBe(
+      'limbered'
+    );
+  });
 });

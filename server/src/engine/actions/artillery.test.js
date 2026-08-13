@@ -51,6 +51,12 @@ const MOCK_OOB = {
   },
 };
 
+// LOB §3.6a — Limbered allowance (7) minus the 3 MP formation-change cost, matching
+// data/modules/south-mountain/scenario.json's real movementAllowances table.
+const MOCK_SCENARIO = {
+  movementCosts: { movementAllowances: { line: 6, limbered: 7, mounted: 12, leader: 12 } },
+};
+
 // ─── State factory ────────────────────────────────────────────────────────────
 
 function makeUnit(id, overrides = {}) {
@@ -159,6 +165,25 @@ describe('handleLimber', () => {
   it('throws INVALID_PAYLOAD when unitId missing', () => {
     const action = { type: 'LIMBER', payload: {}, playerSide: 'confederate' };
     expect(() => handleLimber(makeState(), action, { oob: MOCK_OOB })).toThrow(ActionError);
+  });
+
+  // #m9 review, second pass — domain-expert ruling: LOB §3.6a's "move using its remaining MA"
+  // is meaningless if MPs aren't restored on LIMBER. activateStack.js correctly zeroes
+  // remainingMPs for a still-Unlimbered battery at activation start (Unlimbered cannot move at
+  // all); without this, LIMBER never granted the Limbered MA back, permanently blocking
+  // limber-then-move in one activation for every real battery.
+  it('grants remainingMPs = Limbered allowance minus the 3 MP formation-change cost (LOB §3.6a)', () => {
+    const state = makeState();
+    const result = handleLimber(state, LIMBER_ACTION, { oob: MOCK_OOB, scenario: MOCK_SCENARIO });
+    expect(result.units['csa-btry'].remainingMPs).toBe(4); // 7 - 3
+  });
+
+  it('leaves remainingMPs untouched when scenario.movementCosts is absent (test-stub convention)', () => {
+    const state = makeState({
+      'csa-btry': makeUnit('csa-btry', { remainingMPs: 0 }),
+    });
+    const result = handleLimber(state, LIMBER_ACTION, { oob: MOCK_OOB });
+    expect(result.units['csa-btry'].remainingMPs).toBe(0);
   });
 });
 
