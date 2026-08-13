@@ -69,6 +69,10 @@ const HexEntry = z.object({
   entryHex: z.boolean().optional(),
   side: z.enum(['union', 'confederate']).optional(),
   setupUnits: z.array(z.string()).optional(),
+  // #695 — scope: consulted only by edge-strip.js/edge-model.js for edge-feature stripping
+  // (client-side rendering). NOT enforced by the movement/pathfinding engine — a hex recorded
+  // here with playable: false still costs/paths normally in movement.js. See
+  // movement.test.js's playable-flag characterization test for the pinned behavior.
   playable: z.boolean().optional(),
   autoDetected: z.boolean().optional(),
   detectionConfidence: z.number().min(0).max(1).optional(),
