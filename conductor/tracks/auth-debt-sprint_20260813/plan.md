@@ -82,39 +82,53 @@ sessionmanager.js` to confirm finding #698-1's premise (it unconditionally calls
 
 ### Tasks
 
-- [ ] Task 2.1: Simplify `regenerateSession()` in `games.js` — since `req.user` is always
+- [x] Task 2.1: Simplify `regenerateSession()` in `games.js` — since `req.user` is always
       non-null at every call site (requireAuth guarantee), drop the explicit
       `req.session.regenerate()` + conditional `req.login()` and call `req.login(req.user, cb)`
       directly, relying on its internal regenerate for the session-fixation defense. Removes one
       SQLite session-store round-trip per create/join.
-- [ ] Task 2.2: Make `configurePassport()` idempotent — passport's own `serializeUser`/
+- [x] Task 2.2: Make `configurePassport()` idempotent — passport's own `serializeUser`/
       `deserializeUser` accumulate handlers across calls (`passport.js` internals push onto an
       array); guard so a second call replaces rather than appends. Add a regression test calling
       `configurePassport` twice and asserting only one deserializer fires (or an equivalent
       call-count assertion).
-- [ ] Task 2.3: Extract `createUserQueries(db)` in `gameSqlite.js` — a small factory returning
+- [x] Task 2.3: Extract `createUserQueries(db)` in `gameSqlite.js` — a small factory returning
       `{ upsertUser, getUser }` bound to prepared statements on the given `db` handle. Have
       `createStore(db)` use it internally for the `users`-table statements (replacing its inline
       duplicates) and have `discord.js`'s `configurePassport(db)` call it directly instead of its
       own inline `db.prepare(...)` pair. Preserves `configurePassport(db)`'s existing signature —
       no test call-site rewrites needed.
-- [ ] Task 2.4: Add a forward-version guard to `migrate()` in `gameSqlite.js` —
+- [x] Task 2.4: Add a forward-version guard to `migrate()` in `gameSqlite.js` —
       `if (version > CURRENT_USER_VERSION) throw new Error(...)` before the `if (version < 2)`
       branch, so an older binary opened against a newer DB fails loudly instead of silently
       proceeding against a schema it doesn't understand.
-- [ ] Task 2.5: Change `requireSide.js`'s `if (!player)` branch from 401 to 403 (user-approved
+- [x] Task 2.5: Change `requireSide.js`'s `if (!player)` branch from 401 to 403 (user-approved
       finding #698-5) and update the file's own response-code-matrix docstring to match. Update
-      the existing regression test asserting 401 for this branch.
+      the existing regression test asserting 401 for this branch. Found and updated 6 more
+      call-site tests in `games.test.js` exercising the same branch that weren't anticipated
+      when this task was scoped.
 
 ### Verification
 
-- [ ] `games.test.js`, `discord.test.js`, `gameSqlite.test.js`, `requireSide.test.js` (or
+- [x] `games.test.js`, `discord.test.js`, `gameSqlite.test.js`, `requireSide.test.js` (or
       equivalent) all pass with updated/new assertions
-- [ ] Mutation-verify: the idempotency test fails if the fix is reverted; the migration guard
+- [x] Mutation-verify: the idempotency test fails if the fix is reverted; the migration guard
       test fails if the `throw` is removed; the status-code test fails if reverted to 401
-- [ ] `games.auth-integration.test.js` (real passport + session) still passes unmodified —
+      (8 tests across 2 files caught it). Also mutation-verified `regenerateSession()` itself
+      against a full no-op, which surfaced a real coverage gap in
+      `games.auth-integration.test.js` (fixed — see below).
+- [x] `games.auth-integration.test.js` (real passport + session) still passes unmodified —
       confirms the `regenerateSession()` simplification preserves the login-after-regenerate
       behavior it exists to protect
+- [x] Correction: mutation-testing `regenerateSession()` reduced to a full no-op revealed that
+      no existing test (mocked or real-integration) would have caught it — every "stays logged
+      in" assertion trivially holds if the session is never touched. Added a new test to
+      `games.auth-integration.test.js` asserting the session ID (connect.sid cookie) actually
+      changes across create, independent of identity persistence; mutation-verified.
+- [x] Correction: `server.startup.test.js`'s `gameSqlite.js` mock didn't include the new
+      `createUserQueries` export, which `configurePassport()` (called at real server startup)
+      now depends on — caught by the full-suite run, not anticipated when this task was scoped.
+      Added to the mock.
 
 ---
 
