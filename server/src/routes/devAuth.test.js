@@ -24,10 +24,13 @@ function mockRes() {
   return res;
 }
 
-// Pull the POST /login handler out of the router stack for unit testing
+// Pull the POST /login handler out of the router stack for unit testing. Uses the LAST
+// middleware in the route's stack, not the first — the route now also has a rate limiter
+// (CodeQL js/missing-rate-limiting) mounted ahead of the actual handler, and grabbing
+// stack[0] would silently test the rate limiter instead of the login logic.
 function getLoginHandler() {
   const layer = devAuthRouter.stack.find((l) => l.route?.path === '/login');
-  return layer?.route?.stack?.[0]?.handle;
+  return layer?.route?.stack?.at(-1)?.handle;
 }
 
 describe('POST /auth/dev/login', () => {

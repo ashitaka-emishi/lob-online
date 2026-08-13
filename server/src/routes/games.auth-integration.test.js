@@ -50,9 +50,27 @@ beforeAll(() => {
 
   app = express();
   app.use(express.json());
-  app.use(session({ secret: 'test-secret', resave: false, saveUninitialized: false }));
+  app.use(
+    session({
+      secret: 'test-secret',
+      resave: false,
+      saveUninitialized: false,
+      cookie: { secure: false, httpOnly: true, sameSite: 'lax' },
+    })
+  );
   app.use(passport.initialize());
   app.use(passport.session());
+  // Mirrors server.js's CSRF defense (Origin check on state-mutating requests) so this
+  // integration test's app shape matches the real middleware stack, not just a subset of it.
+  app.use((req, res, next) => {
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+      const origin = req.get('Origin');
+      if (origin && origin !== 'http://localhost:5173') {
+        return res.status(403).json({ error: 'Forbidden: cross-origin request blocked' });
+      }
+    }
+    next();
+  });
   app.use('/auth', authRouter);
   app.use('/auth/dev', devAuthRouter);
   app.use('/api/v1/games', requireAuth, gamesRouter);
