@@ -34,10 +34,24 @@ import { UUID_RE } from '../util/uuid.js';
 
 // Promisify session.regenerate — prevents session fixation by rotating the session ID
 // before writing new identity. (#411)
+//
+// req.session.regenerate() discards the existing session outright and builds a fresh one,
+// which wipes passport's serialized identity (req.session.passport.user) along with it.
+// Left alone, the caller's Discord/dev-auth login silently drops on every create/join —
+// req.user is still populated for the remainder of THIS request (passport reads it once via
+// deserializeUser before the route runs), but any subsequent request presents as logged out,
+// since nothing had re-called req.login() to write it back into the new session. Capture
+// req.user before regenerating and restore it after, so the two session-fixation defenses
+// (SEC-M1 for sideToken, passport's own regenerate-friendly login) don't fight each other.
 function regenerateSession(req) {
-  return new Promise((resolve, reject) =>
-    req.session.regenerate((e) => (e ? reject(e) : resolve()))
-  );
+  const user = req.user;
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err) => {
+      if (err) return reject(err);
+      if (!user) return resolve();
+      req.login(user, (loginErr) => (loginErr ? reject(loginErr) : resolve()));
+    });
+  });
 }
 
 // #589 — split create/join limiters so aggressive game-creation is throttled tighter than joins.

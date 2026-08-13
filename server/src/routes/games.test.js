@@ -141,10 +141,17 @@ async function buildApp() {
   app.locals.io = { to: mockTo };
   app.locals._mockEmit = mockEmit;
   app.locals._mockTo = mockTo;
-  // Minimal session + auth stub — regenerate resets session; req.user reflects a logged-in player
+  // Minimal session + auth stub — regenerate resets session; req.user reflects a logged-in
+  // player. req.login mimics passport: re-populates req.user (a real regenerate() wipes
+  // session.passport.user, so the route must call req.login() again — #m9-discord-oauth
+  // review finding, session.regenerate() silently logged the caller out of every create/join).
+  // Exposed on app.locals so tests can assert it was actually called after the request completes.
+  const loginSpy = vi.fn((user, cb) => cb());
+  app.locals._loginSpy = loginSpy;
   app.use((req, _res, next) => {
     req.session = { regenerate: (cb) => cb() };
     req.user = { id: 'test-user-id', username: 'Test Player', avatar: null };
+    req.login = loginSpy;
     next();
   });
   app.use('/api/v1/games', router);
@@ -203,6 +210,18 @@ describe('POST /api/v1/games', () => {
     expect(setPlayerSession).toHaveBeenCalledOnce();
     const [, , side] = setPlayerSession.mock.calls[0];
     expect(side).toBe('union');
+  });
+
+  // #m9-discord-oauth review finding — session.regenerate() (SEC-M1, session-fixation
+  // defense) wipes passport's serialized identity along with the rest of the session. Without
+  // a re-login after regenerate, the creator's Discord/dev-auth session silently drops on
+  // every game creation: /auth/me and GET /api/v1/games would 401 immediately afterward, even
+  // though the game itself was created successfully with the right side_a_user_id.
+  it('re-establishes the passport login after regenerating the session (SEC-M1)', async () => {
+    const app = await buildApp();
+    await request(app).post('/api/v1/games').send({});
+    expect(app.locals._loginSpy).toHaveBeenCalledOnce();
+    expect(app.locals._loginSpy.mock.calls[0][0]).toMatchObject({ id: 'test-user-id' });
   });
 
   it('passes discordWebhook to createGame when provided', async () => {
@@ -264,6 +283,16 @@ describe('POST /api/v1/games/:id/join', () => {
     expect(setPlayerSession).toHaveBeenCalledOnce();
     const [, , side] = setPlayerSession.mock.calls[0];
     expect(side).toBe('union');
+  });
+
+  // #m9-discord-oauth review finding — same regenerate-drops-login gap as the create route
+  // (SEC-M1); a joiner would appear logged out immediately after joining.
+  it('re-establishes the passport login after regenerating the session (SEC-M1)', async () => {
+    getGame.mockReturnValue(gameRow({ side_a_faction: 'confederate', side_b_faction: null }));
+    const app = await buildApp();
+    await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
+    expect(app.locals._loginSpy).toHaveBeenCalledOnce();
+    expect(app.locals._loginSpy.mock.calls[0][0]).toMatchObject({ id: 'test-user-id' });
   });
 
   it('returns 400 when side is missing from request body (#407)', async () => {
@@ -491,6 +520,9 @@ describe('POST /api/v1/games/:id/join', () => {
       'confederate',
       'tok-b'
     );
+    // #m9-discord-oauth review finding — the same-game re-join branch also regenerates the
+    // session (SEC-M1) and must re-establish the passport login, same as create/first-join.
+    expect(app.locals._loginSpy).toHaveBeenCalledOnce();
   });
 
   it('returns 404 on re-join when game row no longer exists (#563)', async () => {
