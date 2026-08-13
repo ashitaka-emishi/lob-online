@@ -26,6 +26,17 @@ const DATA_DIR = join(__dirname, '../data/modules/south-mountain');
 let errors = 0;
 let warnings = 0;
 
+// #694 — test-only accessors: the checker functions below mutate module-level counters as a
+// side effect (matching the rest of this script's style). Tests import these to reset state
+// between cases and read the resulting counts without needing a console spy.
+export function _resetCountersForTests() {
+  errors = 0;
+  warnings = 0;
+}
+export function _getCountersForTests() {
+  return { errors, warnings };
+}
+
 function pass(msg) {
   console.log(`  ✓ ${msg}`);
 }
@@ -165,7 +176,7 @@ function _collectLeaderCommandsIds(leaders) {
 // Cross-reference checks
 // ──────────────────────────────────────────────────────────────────────────────
 
-function checkLeaderCommandsReferenceOOB(leaders, unitIds) {
+export function checkLeaderCommandsReferenceOOB(leaders, unitIds) {
   const allLeaders = [
     ...leaders.union.army,
     ...leaders.union.corps,
@@ -208,7 +219,7 @@ function collectLeaderIds(leaders) {
   return ids;
 }
 
-function checkScenarioUnitsInOOB(scenario, unitIds) {
+export function checkScenarioUnitsInOOB(scenario, unitIds) {
   const allRefUnits = new Set();
 
   // setup union
@@ -247,7 +258,7 @@ function checkScenarioUnitsInOOB(scenario, unitIds) {
   );
 }
 
-function checkVPHexesInMap(scenario, map) {
+export function checkVPHexesInMap(scenario, map) {
   const mapHexIds = new Set(map.hexes.map((h) => h.hex));
   const vpHexes = scenario.victoryPoints?.terrain ?? [];
 
@@ -262,7 +273,7 @@ function checkVPHexesInMap(scenario, map) {
   pass(`VP hex presence in map checked — ${ok}/${vpHexes.length} found`);
 }
 
-function checkSetupHexesInMap(scenario, map) {
+export function checkSetupHexesInMap(scenario, map) {
   const mapHexIds = new Set(map.hexes.map((h) => h.hex));
 
   // Collect exact hexes and setupZone/referenceHex anchors referenced in setup, across
@@ -307,7 +318,7 @@ function checkSetupHexesInMap(scenario, map) {
   }
 }
 
-function checkEntryHexesInMap(scenario, map) {
+export function checkEntryHexesInMap(scenario, map) {
   const mapHexIds = new Set(map.hexes.map((h) => h.hex));
   const allRefs = [];
 
@@ -331,94 +342,39 @@ function checkEntryHexesInMap(scenario, map) {
   pass(`Reinforcement entry hexes in map checked — ${ok}/${allRefs.length} found`);
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Main
-// ──────────────────────────────────────────────────────────────────────────────
-
-console.log('lob-online — M0 Data Validation');
-console.log('=================================');
-
-section('1. Loading JSON files');
-const rawOOB = loadJSON('oob.json');
-const rawLeaders = loadJSON('leaders.json');
-const rawScenario = loadScenarioJSON();
-const rawMap = loadJSON('map.json');
-
-if (!rawOOB || !rawLeaders || !rawScenario || !rawMap) {
-  console.error('\nFatal: one or more files failed to load. Fix above errors first.\n');
-  process.exit(1);
-}
-pass('All four JSON files loaded');
-
-section('2. Schema validation');
-const oob = validate(OOBSchema, rawOOB, 'oob.json');
-const leaders = validate(LeadersSchema, rawLeaders, 'leaders.json');
-const scenario = validate(ScenarioSchema, rawScenario, 'scenarios/full-battle/scenario.json');
-const map = validate(MapSchema, rawMap, 'map.json');
-
-section('3. Cross-reference checks');
-
-if (oob && leaders) {
-  const unitIds = collectUnitIds(oob);
-  const leaderIds = collectLeaderIds(leaders);
-  const allIds = new Set([...unitIds, ...leaderIds]);
-  pass(
-    `OOB unit ID pool: ${unitIds.size} unit IDs + ${leaderIds.size} leader IDs = ${allIds.size} total`
-  );
-  checkLeaderCommandsReferenceOOB(leaders, allIds);
-
-  if (scenario) {
-    checkScenarioUnitsInOOB(scenario, allIds);
-  }
-}
-
-if (scenario && map) {
-  checkVPHexesInMap(rawScenario, rawMap);
-  checkSetupHexesInMap(rawScenario, rawMap);
-  checkEntryHexesInMap(rawScenario, rawMap);
-}
-
-section('4. Map completeness');
-if (map) {
-  const unknownTerrain = rawMap.hexes.filter((h) => h.terrain === 'unknown').length;
-  const totalHexes = rawMap.hexes.length;
-  if (unknownTerrain > 0) {
-    warn(
-      `${unknownTerrain}/${totalHexes} hexes have terrain="unknown" — map digitization incomplete`
+// #690 review — the previous "all hexes have terrain" check is self-referential: it only
+// measures the recorded hexes array, not whether the declared grid is actually covered. That
+// class of gap was invisible to this script until this check was added. It caught exactly one
+// instance: gridSpec then declared 64 cols while col 64 had zero records. Resolved in #691 —
+// col 64 is a partial sliver hex off the physical map edge (only ~21% of the hex has real
+// source pixels), so gridSpec.cols was corrected to 63, not digitized. This check now reports
+// 2205/2205 with no code change, since it recomputes from gridSpec.cols x rows.
+// #694 — promoted from warn() to fail(): an undersized/oversized cols or rows value silently
+// opens phantom grid cells to the pathfinder (hex.js gates reachability purely on gridSpec
+// bounds), so a coverage gap here is a correctness hazard, not a cosmetic one.
+export function checkGridCoverage(map) {
+  const { cols, rows } = map.gridSpec ?? {};
+  if (!cols || !rows) return;
+  const inGridCount = map.hexes.filter((h) => {
+    const [col, row] = h.hex.split('.').map(Number);
+    return col >= 1 && col <= cols && row >= 1 && row <= rows;
+  }).length;
+  const totalSlots = cols * rows;
+  if (inGridCount < totalSlots) {
+    fail(
+      `${inGridCount}/${totalSlots} in-grid cells (${cols}x${rows}) have a hex record — grid coverage incomplete`
     );
   } else {
-    pass(`All ${totalHexes} hexes have a terrain type`);
+    pass(`All ${totalSlots} in-grid cells (${cols}x${rows}) have a hex record`);
   }
+}
 
-  // #690 review — the previous "all hexes have terrain" check is self-referential: it only
-  // measures the recorded hexes array, not whether the declared grid is actually covered.
-  // That class of gap was invisible to this script until this check was added. It caught
-  // exactly one instance: gridSpec then declared 64 cols while col 64 had zero records.
-  // Resolved in #691 — col 64 is a partial sliver hex off the physical map edge (only ~21%
-  // of the hex has real source pixels), so gridSpec.cols was corrected to 63, not digitized.
-  // This check now reports 2205/2205 with no code change, since it recomputes from
-  // gridSpec.cols x rows.
-  const { cols, rows } = rawMap.gridSpec ?? {};
-  if (cols && rows) {
-    const inGridCount = rawMap.hexes.filter((h) => {
-      const [col, row] = h.hex.split('.').map(Number);
-      return col >= 1 && col <= cols && row >= 1 && row <= rows;
-    }).length;
-    const totalSlots = cols * rows;
-    if (inGridCount < totalSlots) {
-      warn(
-        `${inGridCount}/${totalSlots} in-grid cells (${cols}x${rows}) have a hex record — grid coverage incomplete`
-      );
-    } else {
-      pass(`All ${totalSlots} in-grid cells (${cols}x${rows}) have a hex record`);
-    }
-  }
-
-  // #690 review — edgeFeatureTypes is a UI-facing registry (populates EdgeEditPanel.vue's
-  // type dropdown); an entry not in the schema's EDGE_FEATURE_TYPE_VALUES is selectable in
-  // the editor but unsavable (schema rejects it on write). Caught 'fence' this way — never a
-  // valid schema type, silently offered as an option for as long as the registry existed.
-  const registry = rawMap.edgeFeatureTypes ?? [];
+// #690 review — edgeFeatureTypes is a UI-facing registry (populates EdgeEditPanel.vue's type
+// dropdown); an entry not in the schema's EDGE_FEATURE_TYPE_VALUES is selectable in the editor
+// but unsavable (schema rejects it on write). Caught 'fence' this way — never a valid schema
+// type, silently offered as an option for as long as the registry existed.
+export function checkEdgeFeatureTypesRegistry(map) {
+  const registry = map.edgeFeatureTypes ?? [];
   const invalidRegistryEntries = registry.filter((t) => !EDGE_FEATURE_TYPE_VALUES.includes(t));
   if (invalidRegistryEntries.length > 0) {
     fail(
@@ -429,14 +385,82 @@ if (map) {
   }
 }
 
-section('Summary');
-console.log(`  Errors:   ${errors}`);
-console.log(`  Warnings: ${warnings}`);
+// ──────────────────────────────────────────────────────────────────────────────
+// Main
+// ──────────────────────────────────────────────────────────────────────────────
 
-if (errors === 0) {
-  console.log('\n✓ All checks passed.\n');
-  process.exit(0);
-} else {
-  console.error(`\n✗ ${errors} error(s) found — fix before proceeding.\n`);
-  process.exit(1);
+// #694 — guarded so scripts/validate-data.test.js can import the checker functions above
+// without triggering a full run (real file loads + process.exit) as a module side effect.
+const isDirectRun = import.meta.url === `file://${process.argv[1]}`;
+if (isDirectRun) {
+  console.log('lob-online — M0 Data Validation');
+  console.log('=================================');
+
+  section('1. Loading JSON files');
+  const rawOOB = loadJSON('oob.json');
+  const rawLeaders = loadJSON('leaders.json');
+  const rawScenario = loadScenarioJSON();
+  const rawMap = loadJSON('map.json');
+
+  if (!rawOOB || !rawLeaders || !rawScenario || !rawMap) {
+    console.error('\nFatal: one or more files failed to load. Fix above errors first.\n');
+    process.exit(1);
+  }
+  pass('All four JSON files loaded');
+
+  section('2. Schema validation');
+  const oob = validate(OOBSchema, rawOOB, 'oob.json');
+  const leaders = validate(LeadersSchema, rawLeaders, 'leaders.json');
+  const scenario = validate(ScenarioSchema, rawScenario, 'scenarios/full-battle/scenario.json');
+  const map = validate(MapSchema, rawMap, 'map.json');
+
+  section('3. Cross-reference checks');
+
+  if (oob && leaders) {
+    const unitIds = collectUnitIds(oob);
+    const leaderIds = collectLeaderIds(leaders);
+    const allIds = new Set([...unitIds, ...leaderIds]);
+    pass(
+      `OOB unit ID pool: ${unitIds.size} unit IDs + ${leaderIds.size} leader IDs = ${allIds.size} total`
+    );
+    checkLeaderCommandsReferenceOOB(leaders, allIds);
+
+    if (scenario) {
+      checkScenarioUnitsInOOB(scenario, allIds);
+    }
+  }
+
+  if (scenario && map) {
+    checkVPHexesInMap(rawScenario, rawMap);
+    checkSetupHexesInMap(rawScenario, rawMap);
+    checkEntryHexesInMap(rawScenario, rawMap);
+  }
+
+  section('4. Map completeness');
+  if (map) {
+    const unknownTerrain = rawMap.hexes.filter((h) => h.terrain === 'unknown').length;
+    const totalHexes = rawMap.hexes.length;
+    if (unknownTerrain > 0) {
+      warn(
+        `${unknownTerrain}/${totalHexes} hexes have terrain="unknown" — map digitization incomplete`
+      );
+    } else {
+      pass(`All ${totalHexes} hexes have a terrain type`);
+    }
+
+    checkGridCoverage(rawMap);
+    checkEdgeFeatureTypesRegistry(rawMap);
+  }
+
+  section('Summary');
+  console.log(`  Errors:   ${errors}`);
+  console.log(`  Warnings: ${warnings}`);
+
+  if (errors === 0) {
+    console.log('\n✓ All checks passed.\n');
+    process.exit(0);
+  } else {
+    console.error(`\n✗ ${errors} error(s) found — fix before proceeding.\n`);
+    process.exit(1);
+  }
 }
