@@ -1,15 +1,15 @@
 import { ActionError } from './actionError.js';
-import { resolveFormationKey } from './formation.js';
+import { resolveMovementFormationKey } from './formation.js';
 import { pathCost } from '../movement.js';
 import { buildUnitSideMap, safeFindOobUnit } from '../oob.js';
 import { updateHexControl } from '../vp.js';
 
 // LOB §3 — resolve the movement-table formation key for a unit.
 // Returns null for unlimbered artillery (cannot move per LOB §3.6a) — the 'unlimbered'
-// sentinel from resolveFormationKey (#677) maps to null here since this call site's "cannot
-// move" behavior is a null check by the caller, not the string itself.
+// sentinel from resolveMovementFormationKey (#677) maps to null here since this call site's
+// "cannot move" behavior is a null check by the caller, not the string itself.
 function resolveMovementFormation(unit, oobUnit) {
-  const key = resolveFormationKey(unit, oobUnit);
+  const key = resolveMovementFormationKey(unit, oobUnit);
   return key === 'unlimbered' ? null : key;
 }
 
@@ -139,10 +139,12 @@ export function resolveMove(state, action, ctx = {}) {
   }
 
   // SM §5.1 — update hex control for every hex the unit enters along the path, not just the
-  // destination (#678, per domain-expert ruling). path[0] (the starting hex) is excluded —
-  // this move doesn't disturb whatever control claim already exists there. updateHexControl
-  // internally gates via isVpControlEligible (non-Routed, infantry-only, unlimbered-artillery
-  // for the occupy case) — a unit that is actually MOVING is never eligible-unlimbered-artillery
+  // destination (#678, per domain-expert ruling). path[0] is excluded as the unit's starting
+  // *position* — this move doesn't disturb whatever control claim already exists there — but a
+  // path that re-enters it later (e.g. a back-and-forth move) does correctly claim it on that
+  // later visit, since updateHexControl is idempotent per hex. updateHexControl internally
+  // gates via isVpControlEligible (non-Routed, infantry-only, unlimbered-artillery for the
+  // occupy case) — a unit that is actually MOVING is never eligible-unlimbered-artillery
   // (LOB §3.6a: unlimbered artillery cannot move at all), so no additional artillery
   // special-casing is needed here; the existing eligibility gate already excludes it.
   const vpHexSet = new Set((ctx.scenario.victoryPoints?.terrain ?? []).map((e) => e.hex));

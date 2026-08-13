@@ -1,40 +1,64 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveFormationKey } from './formation.js';
+import { resolveMovementFormationKey } from './formation.js';
 
 // #677 — single source of truth for the classification ladder previously duplicated between
 // move.js's resolveMovementFormation and activateStack.js's resolveUnitMPs.
-describe('resolveFormationKey', () => {
+describe('resolveMovementFormationKey', () => {
   it('returns "unlimbered" for unlimbered artillery', () => {
-    expect(resolveFormationKey({ formation: 'unlimbered' }, { type: 'artillery' })).toBe(
+    expect(resolveMovementFormationKey({ formation: 'unlimbered' }, { gunType: 'R' })).toBe(
       'unlimbered'
     );
   });
 
   it('returns "limbered" for limbered artillery', () => {
-    expect(resolveFormationKey({ formation: 'limbered' }, { type: 'artillery' })).toBe('limbered');
+    expect(resolveMovementFormationKey({ formation: 'limbered' }, { gunType: 'R' })).toBe(
+      'limbered'
+    );
   });
 
   it('returns "mounted" for cavalry', () => {
-    expect(resolveFormationKey({ formation: null }, { type: 'cavalry' })).toBe('mounted');
+    expect(resolveMovementFormationKey({ formation: null }, { type: 'cavalry' })).toBe('mounted');
   });
 
   it('returns "leader" for leader units', () => {
-    expect(resolveFormationKey({ formation: null }, { type: 'leader' })).toBe('leader');
+    expect(resolveMovementFormationKey({ formation: null }, { type: 'leader' })).toBe('leader');
   });
 
   it('defaults to "line" for infantry', () => {
-    expect(resolveFormationKey({ formation: null }, { type: 'infantry' })).toBe('line');
+    expect(resolveMovementFormationKey({ formation: null }, { type: 'infantry' })).toBe('line');
   });
 
   it('defaults to "line" when oobUnit is absent (degraded mode)', () => {
-    expect(resolveFormationKey({ formation: null }, null)).toBe('line');
+    expect(resolveMovementFormationKey({ formation: null }, null)).toBe('line');
   });
 
-  it('unit.formation takes precedence over oobUnit.type', () => {
-    // A unit explicitly marked limbered should report limbered even if oobUnit.type
-    // (e.g. stale/mismatched data) says cavalry — unit.formation is the source of truth
-    // for artillery-specific states.
-    expect(resolveFormationKey({ formation: 'limbered' }, { type: 'cavalry' })).toBe('limbered');
+  // #m9 review finding — real SM batteries carry gunType with no `type` field at all
+  // (verified against data/modules/south-mountain/oob.json — e.g. unit '1nh-lt': { gunType:
+  // 'R', strengthPoints: 4, ... }, no `type` key). A classification ladder that only checked
+  // oobUnit.type would silently misclassify every real battery as infantry.
+  it('identifies artillery via gunType alone, matching real SM OOB shape (no type field)', () => {
+    expect(resolveMovementFormationKey({ formation: 'limbered' }, { gunType: 'R' })).toBe(
+      'limbered'
+    );
+    expect(resolveMovementFormationKey({ formation: null }, { gunType: 'R' })).toBe('unlimbered');
+  });
+
+  // #m9 review finding — a battery whose formation field was never initialized (e.g. freshly
+  // set up, before any LIMBER/UNLIMBER action) must default to unlimbered, not fall through to
+  // the infantry default. Matches the `unit.formation ?? 'unlimbered'` convention used at every
+  // other artillery call site in this codebase (vp.js, actions/index.js, artillery.js).
+  it('defaults an artillery unit with unset formation to unlimbered, not line', () => {
+    expect(resolveMovementFormationKey({ formation: undefined }, { gunType: 'R' })).toBe(
+      'unlimbered'
+    );
+    expect(resolveMovementFormationKey({}, { type: 'artillery' })).toBe('unlimbered');
+  });
+
+  it('unit.formation is trusted independent of oobUnit — degraded mode stays correct', () => {
+    // No oobUnit at all (ctx.oob absent) — unit.formation alone must still be authoritative
+    // for artillery, since move.js/activateStack.js's degraded-mode fallback relies on this.
+    expect(resolveMovementFormationKey({ formation: 'unlimbered' }, null)).toBe('unlimbered');
+    expect(resolveMovementFormationKey({ formation: 'limbered' }, null)).toBe('limbered');
   });
 });

@@ -13,9 +13,13 @@ const DEFAULT_OOB_PATH = join(__dirname, '../../../data/modules/south-mountain/o
 const DEFAULT_LEADERS_PATH = join(__dirname, '../../../data/modules/south-mountain/leaders.json');
 
 /**
- * Load and validate oob.json. Reads and parses the file synchronously on each call.
- * Not cached — re-reads on every call so dev-mode edits via the OOB editor take effect
- * without restart. For production, consider a module-level cache if per-request latency matters.
+ * Load and validate oob.json. Reads and parses the file synchronously on each call — not
+ * cached at this layer, so calling it directly (bypassing ctx.oob) picks up dev-mode OOB
+ * editor edits without a restart. #676 review: this property only holds for direct/test
+ * callers — the production route layer (server/src/routes/games.js) already caches a single
+ * loaded copy at module-init time and injects it as ctx.oob, so route-served requests do NOT
+ * observe live edits either way; only a genuinely uncached call site (like a test, or a
+ * caller that doesn't thread ctx.oob through) re-reads per call.
  *
  * @param {string} [oobPath] - Override the default path (for tests).
  * @returns {import('zod').infer<typeof OOBSchema>} Validated OOB data.
@@ -267,9 +271,15 @@ export function findOobUnit(oob, unitId) {
  * @returns {object | null}
  */
 export function safeFindOobUnit(oob, unitId) {
+  if (!oob) return null; // absent OOB (degraded mode) — normal, silent
   try {
-    return oob ? findOobUnit(oob, unitId) : null;
-  } catch {
+    return findOobUnit(oob, unitId);
+  } catch (err) {
+    // #m9 review — a thrown lookup (as opposed to oob absent, or unitId simply not found —
+    // findOobUnit returns null for that, doesn't throw) means the OOB tree is structurally
+    // malformed, a genuine data-corruption signal worth surfacing, unlike the other two cases
+    // this function collapses into the same null return.
+    console.warn(`[oob] safeFindOobUnit('${unitId}') failed — malformed OOB: ${err.message}`);
     return null;
   }
 }

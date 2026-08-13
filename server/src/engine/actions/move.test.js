@@ -37,6 +37,22 @@ const CAVALRY_OOB = {
   confederate: { divisions: [] },
 };
 
+// #m9 review finding — real SM batteries carry `gunType` with no `type` field at all
+// (verified against data/modules/south-mountain/oob.json — e.g. '1nh-lt': { gunType: 'R', ... }).
+// A fixture using `type: 'artillery'` (as this file previously did) doesn't exercise the real
+// shape and would have hidden the artillery-misclassification bug this fixture now guards against.
+const ARTILLERY_OOB = {
+  union: {
+    corps: [
+      {
+        artillery: { corpsArt: { batteries: [{ id: 'u1', gunType: 'R', strengthPoints: 4 }] } },
+        divisions: [],
+      },
+    ],
+  },
+  confederate: { divisions: [] },
+};
+
 const LEADER_OOB = {
   union: {
     corps: [
@@ -257,6 +273,46 @@ describe('resolveMove — valid move', () => {
     expect(result.hexControl['10.11']).toBeUndefined();
   });
 
+  // #m9 review finding — an artillery unit whose formation field is unset (e.g. freshly set
+  // up, before any LIMBER/UNLIMBER action) must be blocked from moving at all (LOB §3.6a:
+  // unlimbered artillery cannot move), not silently misclassified as movable line infantry.
+  // End-to-end guard against the exact bug found in review: with the pre-fix classification,
+  // this unit would have been allowed to move AND claim VP hexes along its path.
+  it('throws INVALID_MOVE for a real-shaped artillery unit with unset formation (#m9 review)', () => {
+    const state = makeState({ formation: undefined });
+    expect.assertions(2);
+    try {
+      resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA, oob: ARTILLERY_OOB });
+    } catch (e) {
+      expect(e).toBeInstanceOf(ActionError);
+      expect(e.code).toBe('INVALID_MOVE');
+    }
+  });
+
+  it('a limbered artillery unit can move through a VP hex but does not claim it (SM §5.1 — must be unlimbered)', () => {
+    const state = makeState({ formation: 'limbered' });
+    const vpScenario = {
+      ...scenario,
+      victoryPoints: {
+        ...scenario.victoryPoints,
+        terrain: [{ hex: '10.11', unionVP: 2, confederateVP: 0 }],
+      },
+    };
+    const threeHexMove = {
+      ...MOVE_ACTION,
+      payload: { unitId: 'u1', path: ['10.10', '10.11', '10.12'] },
+    };
+    const result = resolveMove(state, threeHexMove, {
+      scenario: vpScenario,
+      mapData: MAP_DATA,
+      oob: ARTILLERY_OOB,
+    });
+    // The move itself succeeds (limbered artillery can move)...
+    expect(result.units.u1.hex).toBe('10.12');
+    // ...but SM §5.1 requires UNLIMBERED artillery for VP control, so no claim is made.
+    expect(result.hexControl['10.11']).toBeUndefined();
+  });
+
   it('leaves hexControl unchanged when destination is not a VP hex', () => {
     const state = makeState();
     const result = resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA });
@@ -361,13 +417,19 @@ describe('resolveMove — INVALID_MOVE', () => {
   });
 
   it('throws INVALID_MOVE for unlimbered artillery — no movement allowance (LOB §3.6a)', () => {
-    expect.assertions(2);
+    // #m9 review finding — asserting only e.code left this mutation-invisible: deleting the
+    // key === 'unlimbered' ? null : key mapping in move.js's resolveMovementFormation still
+    // throws INVALID_MOVE (via a different path — pathCost returns Infinity for an
+    // unrecognized formation key), so the code-only assertion passed for the wrong reason.
+    // Asserting the message pins the actual LOB §3.6a guard, not just "some INVALID_MOVE fired".
+    expect.assertions(3);
     const state = makeState({ formation: 'unlimbered' });
     try {
       resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA });
     } catch (e) {
       expect(e).toBeInstanceOf(ActionError);
       expect(e.code).toBe('INVALID_MOVE');
+      expect(e.message).toMatch(/unlimbered artillery has no movement allowance/);
     }
   });
 });

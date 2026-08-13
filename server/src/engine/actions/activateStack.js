@@ -1,13 +1,14 @@
 import { ActionError } from './actionError.js';
-import { resolveFormationKey } from './formation.js';
-import { loadOob, findOobUnit } from '../oob.js';
+import { resolveMovementFormationKey } from './formation.js';
+import { loadOob, safeFindOobUnit } from '../oob.js';
 
 // LOB §3 — resolve movement allowance for a unit from scenario movementAllowances.
 // Artillery formation state determines whether the unit can move at all. The 'unlimbered'
-// sentinel from resolveFormationKey (#677) maps to 0 MP here — this call site's "cannot move"
-// behavior is a zero allowance, not a thrown error (compare move.js's null-then-throw).
+// sentinel from resolveMovementFormationKey (#677) maps to 0 MP here — this call site's
+// "cannot move" behavior is a zero allowance, not a thrown error (compare move.js's
+// null-then-throw).
 function resolveUnitMPs(unit, oobUnit, movementAllowances) {
-  const key = resolveFormationKey(unit, oobUnit);
+  const key = resolveMovementFormationKey(unit, oobUnit);
   if (key === 'unlimbered') return 0;
   return movementAllowances[key] ?? 0;
 }
@@ -63,7 +64,10 @@ export function handleActivateStack(state, action, ctx = {}) {
     if (unitsInHex.length > 0) {
       updatedUnits = { ...state.units };
       for (const unit of unitsInHex) {
-        const oobUnit = loadedOob ? findOobUnit(loadedOob, unit.id) : null;
+        // #681 — safeFindOobUnit(oob, unitId) replaces the equivalent inline null-check;
+        // was missed in the initial #681 pass since it wasn't wrapped in a try/catch IIFE
+        // like the other three sites, but it's the same per-unit-lookup duplication.
+        const oobUnit = safeFindOobUnit(loadedOob, unit.id);
         const mps = resolveUnitMPs(unit, oobUnit, movementAllowances);
         updatedUnits[unit.id] = { ...unit, remainingMPs: mps };
       }

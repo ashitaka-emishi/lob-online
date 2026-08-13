@@ -839,9 +839,13 @@ describe('dispatch — MOVE action integration (#634)', () => {
   // buildUnitSideMap and again per active unit in the artillery-candidate loop (N+1 reads per
   // getValidActions call). Hoisted to a single call, reused for both. Two real union artillery
   // units at the same activated hex exercise the per-unit loop with N=2.
-  it('calls loadOob() exactly once per getValidActions call, regardless of active-unit count', () => {
+});
+
+// #676 — misfiled inside the MOVE-integration describe block previously; this tests
+// getValidActions's OOB-read count, unrelated to MOVE or #634.
+describe('getValidActions — loadOob() call count (#676)', () => {
+  it('calls loadOob() exactly once per call, regardless of active-unit count', () => {
     const spy = vi.spyOn(oobModule, 'loadOob');
-    spy.mockClear();
     const state = {
       ...MID_ACTIVATION_STATE,
       units: {
@@ -861,8 +865,32 @@ describe('dispatch — MOVE action integration (#634)', () => {
         },
       },
     };
-    getValidActions(state, 'union');
-    expect(spy).toHaveBeenCalledTimes(1);
-    spy.mockRestore();
+    try {
+      const actions = getValidActions(state, 'union');
+      // Pins that the per-unit artillery loop (the code loadOob's single-call fix actually
+      // protects) was reached with both units, not short-circuited before line 202 — without
+      // this, the call-count assertion alone would stay green even if that loop were deleted.
+      // Both fixture ids are real gunType: 'R' batteries (data/modules/south-mountain/oob.json).
+      expect(actions.filter((a) => a.type === 'LIMBER')).toHaveLength(2);
+      expect(spy).toHaveBeenCalledTimes(1);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  // #676 review (architecture) — getValidActions previously ignored ctx entirely, so even
+  // dispatch()/games.js callers holding an already-loaded OOB still triggered a fresh
+  // loadOob() every call. Threading ctx.oob through closes that: 0 disk reads, not 1, when
+  // the caller already has a validated copy in scope.
+  it('calls loadOob() zero times when ctx.oob is supplied', () => {
+    const realOob = oobModule.loadOob(); // load once, outside the spy
+    const spy = vi.spyOn(oobModule, 'loadOob');
+    try {
+      const actions = getValidActions(MID_ACTIVATION_STATE, 'union', { oob: realOob });
+      expect(actions.length).toBeGreaterThan(0);
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

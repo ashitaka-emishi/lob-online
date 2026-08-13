@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import {
   findOobUnit,
@@ -118,8 +118,15 @@ describe('safeFindOobUnit', () => {
     expect(safeFindOobUnit(undefined, 'r1')).toBeNull();
   });
 
-  it('returns null (not throw) when the OOB shape is malformed', () => {
-    expect(safeFindOobUnit({ union: null, confederate: null }, 'r1')).toBeNull();
+  it('returns null (not throw) when the OOB shape is malformed, and warns (data-corruption signal)', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      expect(safeFindOobUnit({ union: null, confederate: null }, 'r1')).toBeNull();
+      expect(warnSpy).toHaveBeenCalledOnce();
+      expect(warnSpy.mock.calls[0][0]).toContain('r1');
+    } finally {
+      warnSpy.mockRestore();
+    }
   });
 
   it('returns null for an unknown unit id, same as findOobUnit', () => {

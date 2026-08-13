@@ -38,7 +38,12 @@ export { ActionError };
 // LOB §2.1 — returns the legal action candidates for playerSide in the current state.
 // Each candidate is { type, payload } where payload is concrete when derivable from state,
 // or null when the client must supply it at submission time. (#550)
-export function getValidActions(state, playerSide) {
+// ctx.oob (#676 review) — reuses the caller's already-loaded/validated OOB when available
+// (dispatch and the route layer both hold one), falling back to loadOob() only when absent
+// (e.g. direct test calls). Every other OOB consumer in the engine already uses this
+// ctx.oob ?? loadOob() seam; this was the one holdout, silently re-reading oob.json even when
+// a validated copy was already in scope one call frame up.
+export function getValidActions(state, playerSide, ctx = {}) {
   if (state.status !== 'active') return [];
   if (state.activePlayer !== playerSide) return [];
 
@@ -116,7 +121,7 @@ export function getValidActions(state, playerSide) {
     // as a safe fallback. If OOB is unavailable, all on-board units are included (degraded mode).
     let unitSideMapForOrders;
     try {
-      unitSideMapForOrders = buildUnitSideMap(loadOob());
+      unitSideMapForOrders = buildUnitSideMap(ctx.oob ?? loadOob());
     } catch {
       unitSideMapForOrders = null;
     }
@@ -147,12 +152,13 @@ export function getValidActions(state, playerSide) {
       const activeHex = activation.hex;
 
       // LOB §5.5 / §7.0 — build unit → side map to filter friendly vs. enemy targets.
-      // #676 — loadOob() reads from disk; hoisted to a single call reused below for the
-      // per-unit artillery lookup too, instead of re-reading once per active unit.
+      // #676 — reuse ctx.oob (dispatch/route layer already hold a loaded+validated copy) when
+      // available, hoisted to a single call reused below for the per-unit artillery lookup
+      // too, instead of re-reading oob.json from disk once per active unit.
       let oob;
       let unitSideMap;
       try {
-        oob = loadOob();
+        oob = ctx.oob ?? loadOob();
         unitSideMap = buildUnitSideMap(oob);
       } catch {
         // If OOB is unavailable, degrade gracefully to END_ACTIVATION only
@@ -568,7 +574,7 @@ export function dispatch(state, action, ctx = {}) {
     );
   }
 
-  const validActions = getValidActions(state, playerSide);
+  const validActions = getValidActions(state, playerSide, ctx);
   // Type-only gate — payload is NOT validated here. The candidate list in getValidActions is
   // informational for the UI (which concrete moves are available); each handler re-validates
   // its own payload against state independently. (#550 review M1)
