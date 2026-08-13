@@ -136,25 +136,25 @@ sessionmanager.js` to confirm finding #698-1's premise (it unconditionally calls
 
 ### Tasks
 
-- [ ] Task 3.1: (Dropped — already resolved in PR #701, confirmed in Phase 1.)
-- [ ] Task 3.2: Add a Zod schema (`server/src/schemas/discordProfile.schema.js` or inline in
-      `discord.js`, matching project convention of schemas living in `server/src/schemas/`)
+- [x] Task 3.1: (Dropped — already resolved in PR #701, confirmed in Phase 1.)
+- [x] Task 3.2: Add a Zod schema (`server/src/schemas/discordProfile.schema.js`)
       validating the Discord profile shape (`id: string`, `username: string`,
       `avatar: string | null`) before it reaches `upsertUser`. On validation failure, `done()`
       with a typed auth error rather than letting a malformed profile hit SQLite raw.
-- [ ] Task 3.3: Add a logout control to `HomeView.vue`, next to the existing `.user-info` span
+- [x] Task 3.3: Add a logout control to `HomeView.vue`, next to the existing `.user-info` span
       (visible only when `authStore.isLoggedIn`), calling `authStore.logout()` and clearing the
-      session. Style to match the existing `.menu-btn` family.
+      session. Styled to match the existing `.menu-btn` family. Visually verified live in a
+      browser via the dev-auth flow (login -> logout correctly returns to logged-out UI state).
 
 ### Verification
 
-- [ ] New Zod schema has its own test file (valid profile, missing field, wrong type) per
+- [x] New Zod schema has its own test file (valid profile, missing field, wrong type) per
       project convention (co-located `*.schema.test.js`)
-- [ ] `discord.test.js` gets a case exercising the invalid-profile path through the strategy
+- [x] `discord.test.js` gets a case exercising the invalid-profile path through the strategy
       verify callback
-- [ ] `HomeView.test.js` (or equivalent) gets a test clicking the new logout control and
-      asserting `authStore.logout` is called and the UI reverts to the logged-out state
-- [ ] Mutation-verify the new tests against their target behavior
+- [x] `HomeView.test.js` gets tests clicking the new logout control and asserting
+      `authStore.logout` is called and the button is hidden when logged out
+- [x] Mutation-verify the new tests against their target behavior
 
 ---
 
