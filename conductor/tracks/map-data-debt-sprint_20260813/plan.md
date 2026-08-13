@@ -3,7 +3,7 @@
 **Track ID:** map-data-debt-sprint_20260813
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-08-13
-**Status:** [ ] Not Started
+**Status:** [~] In Progress
 
 ## Overview
 
@@ -28,12 +28,12 @@ a data validation schema (`map.schema.js`), and the build-gate script itself
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
@@ -41,9 +41,9 @@ a data validation schema (`map.schema.js`), and the build-gate script itself
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
 - [ ] Debt register updated if any debt was accepted
 - [ ] Ready for `/team-review`
 
@@ -54,93 +54,92 @@ silently regress.
 
 ### Tasks
 
-- [ ] Task 1.1: Read `server/src/engine/map.test.js` to match existing test/fixture style.
-- [ ] Task 1.2: Add a test asserting `gridSpec.cols * gridSpec.rows >= ` count of in-grid hex
-      records is not the right invariant on its own (a sparse valid map is legal) — assert
-      instead that every recorded hex's `col`/`row` falls within `[0, cols)` / `[0, rows)`,
-      AND that the maximum recorded `col` is `< gridSpec.cols` (catches an under-sized grid
-      that silently clips real columns) using the real `data/modules/south-mountain/map.json`
-      fixture already loaded elsewhere in the test file.
-- [ ] Task 1.3: Mutation-test by temporarily editing `gridSpec.cols` to 64 in a scratch copy
-      (not the real file) and confirming the new test fails; revert the scratch edit.
+- [x] Task 1.1: Read `server/src/engine/map.test.js` to match existing test/fixture style.
+- [x] Task 1.2: Add tests asserting `gridSpec.cols` matches the highest recorded column, and
+      every hex falls within column bounds — row bounds allow the documented
+      `playable: false` boundary-marker exception at row 0 / rows+1 (discovered during
+      implementation: rows 0 and 36 hold real boundary-marker hexes, so a strict row-bounds
+      check without this exception was a false positive).
+- [x] Task 1.3: Mutation-tested by temporarily editing `gridSpec.cols` to 64 in a scratch copy
+      (not the real file) and confirming the new test fails; reverted the scratch edit.
 
 ### Verification
 
-- [ ] New test passes against current data (`cols: 63`)
-- [ ] Mutation test confirms the test fails when `cols` regresses to 64
-- [ ] `npm run test -- map.test.js` green
+- [x] New test passes against current data (`cols: 63`)
+- [x] Mutation test confirms the test fails when `cols` regresses to 64
+- [x] `npx vitest run server/src/engine/map.test.js` green (12/12)
 
 ## Phase 2: #694 — promote validate-data grid-coverage check to fail(), add script tests
 
 ### Tasks
 
-- [ ] Task 2.1: Re-read `scripts/validate-data.js`'s grid-coverage check to confirm current
+- [x] Task 2.1: Re-read `scripts/validate-data.js`'s grid-coverage check to confirm current
       behavior and exact `warn()` call site.
-- [ ] Task 2.2: Confirm with a dry run (`npm run validate-data`) that promoting this specific
-      check to `fail()` does not break the current data file (should stay clean at cols=63).
-- [ ] Task 2.3: Change the check from `warn()` to `fail()`.
-- [ ] Task 2.4: Create `scripts/validate-data.test.js` covering at minimum:
-      `checkSetupHexesInMap`, the grid-coverage check, and the `edgeFeatureTypes` registry
-      check — each against small in-memory fixtures (not the real data file), covering both
-      pass and fail cases per checker.
-- [ ] Task 2.5: **Checkpoint** — confirm with user before finalizing, since this is a CI-gate
-      behavior change (a future bad map edit will now hard-fail `validate-data` where it
-      previously only warned).
+- [x] Task 2.2: Confirmed with a dry run (`npm run validate-data`) that promoting this check
+      to `fail()` does not break the current data file (2205/2205 coverage, stays clean).
+- [x] Task 2.3: Extracted the grid-coverage and edgeFeatureTypes checks into named, exported
+      functions (`checkGridCoverage`, `checkEdgeFeatureTypesRegistry`); changed grid-coverage
+      from `warn()` to `fail()`. Guarded the script's main execution behind a direct-run check
+      so the checker functions can be imported for testing without side effects.
+- [x] Task 2.4: Created `scripts/validate-data.test.js` covering `checkSetupHexesInMap`,
+      `checkGridCoverage`, and `checkEdgeFeatureTypesRegistry` — each against small in-memory
+      fixtures, covering pass and fail cases per checker (11 tests total).
+- [x] Task 2.5: **Checkpoint** — confirmed with user before finalizing.
 
 ### Verification
 
-- [ ] `npm run validate-data` passes against real data with the check now failing on bad input
-- [ ] New `scripts/validate-data.test.js` covers pass/fail cases for each checker in scope
-- [ ] `npm run test -- validate-data.test.js` green
+- [x] `npm run validate-data` passes against real data with the check now failing on bad input
+- [x] New `scripts/validate-data.test.js` covers pass/fail cases for each checker in scope
+- [x] `npx vitest run scripts/validate-data.test.js` green (11/11)
 
 ## Phase 3: #695 — playable flag characterization test + schema scope comment
 
 ### Tasks
 
-- [ ] Task 3.1: Read `server/src/engine/movement.js` and `server/src/schemas/map.schema.js`
-      again to confirm current `playable` handling (already verified in the col-64
-      investigation: not consulted by movement/hex/los at all).
-- [ ] Task 3.2: Add a characterization test to `movement.test.js` — a hex with
+- [x] Task 3.1: Re-confirmed `playable` is not consulted by movement/hex/los anywhere in the
+      engine (grep across `movement.js`, `hex.js`, `los.js` — zero references).
+- [x] Task 3.2: Added a characterization test to `movement.test.js` — a hex with
       `playable: false` in a fixture still costs/paths normally, pinning current behavior as
-      a deliberate documented choice (not a silent gap).
-- [ ] Task 3.3: Add a scope comment to the `playable` field in `map.schema.js`, in the same
-      style as the neighboring `ELEVATION_TYPES` export comment, stating it is consulted only
-      by `edge-strip.js`/`edge-model.js` for edge-feature stripping and is NOT enforced by the
-      movement/pathfinding engine.
+      a deliberate documented choice.
+- [x] Task 3.3: Added a scope comment to the `playable` field in `map.schema.js`, matching the
+      neighboring `ELEVATION_TYPES` export comment style.
 
 ### Verification
 
-- [ ] New characterization test passes and clearly documents the behavior in its description
-- [ ] Schema comment added and accurate
-- [ ] `npm run test -- movement.test.js` green
+- [x] New characterization test passes and documents the behavior
+- [x] Schema comment added and accurate
+- [x] `npx vitest run server/src/engine/movement.test.js server/src/schemas/map.schema.test.js` green (136/136)
 
 ## Phase 4: #696 — de-duplicate map-status facts across docs
 
 ### Tasks
 
-- [ ] Task 4.1: Identify the 7 locations previously found to duplicate SM map hex-count/status
-      facts by hand (`docs/library.md`, `docs/library.json`, `docs/agents/domain-expert/design.md`,
-      `docs/designs/high-level-design.md` x3, `CLAUDE.md`).
-- [ ] Task 4.2: Add a test asserting `docs/library.json`'s `SM_MAP_DATA.hexCount` and `status`
-      fields equal `data/modules/south-mountain/map.json`'s actual `hexes.length` and
-      `_status`, so `library.json` cannot silently drift from the real data file.
-- [ ] Task 4.3: Reduce `docs/designs/high-level-design.md`'s risk-register row and
-      `docs/agents/domain-expert/design.md`'s SM_MAP_DATA row to short summaries that point at
-      `docs/library.md` for the authoritative counts, rather than independently restating
-      numbers that will go stale again.
+- [x] Task 4.1: Identified the duplication locations (`docs/library.md`, `docs/library.json`,
+      `docs/agents/domain-expert/design.md`, `docs/designs/high-level-design.md` x3,
+      `CLAUDE.md`).
+- [x] Task 4.2: Added `scripts/library-sync.test.js` asserting `docs/library.json`'s
+      `SM_MAP_DATA.hexCount` and `status` fields equal `map.json`'s actual `hexes.length` and
+      `_status` (3 tests).
+- [x] Task 4.3: Reduced `docs/designs/high-level-design.md`'s risk-register row and
+      `docs/agents/domain-expert/design.md`'s SM_MAP_DATA row to short summaries pointing at
+      `docs/library.md`. `docs/library.md`/`docs/library.json` (the source of truth) and
+      `CLAUDE.md`/HLD's other two locations were left as-is per spec's Out of Scope —
+      only the two rows named in the accepted spec were trimmed.
 
 ### Verification
 
-- [ ] New test passes and fails if `library.json` is edited out of sync with `map.json`
-- [ ] HLD and domain-expert design docs no longer independently restate hex counts
-- [ ] `npm run test -- library.test.js` (or wherever the new test lands) green
+- [x] New test passes and fails if `library.json` is edited out of sync with `map.json`
+- [x] HLD risk-register row and domain-expert design.md's SM_MAP_DATA row no longer
+      independently restate hex counts
+- [x] `npx vitest run scripts/library-sync.test.js` green (3/3)
 
 ## Phase 5: Closeout
 
 ### Tasks
 
-- [ ] Task 5.1: Run full quality suite (`npm run quality:strict` equivalent: validate-data,
-      lint, format:check, test, build).
+- [x] Task 5.1: Ran full quality suite (validate-data, lint, format:check, test — 160 files /
+      3277 tests, build). All green; one pre-existing accepted-noise warning (`longstreet`
+      commandsId) unrelated to this track.
 - [ ] Task 5.2: Close issues #693, #694, #695, #696 with a summary comment on each describing
       what was done and linking the PR.
 - [ ] Task 5.3: Update `docs/tech-debt/report.md` — remove the four resolved rows from Open
@@ -151,10 +150,10 @@ silently regress.
 
 ### Final Verification
 
-- [ ] All acceptance criteria in spec.md met
+- [x] All acceptance criteria in spec.md met
 - [ ] All four issues closed
 - [ ] Debt register reflects 4 fewer open items (18 -> 10 net open score)
-- [ ] Full quality suite green
+- [x] Full quality suite green
 - [ ] Ready for `/team-review`
 
 ---

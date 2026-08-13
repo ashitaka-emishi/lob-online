@@ -1,7 +1,7 @@
 # Track: Map Data Debt Sprint — Issues #693-696
 
 **ID:** map-data-debt-sprint_20260813
-**Status:** Pending
+**Status:** In Progress
 
 ## Documents
 
@@ -10,8 +10,8 @@
 
 ## Progress
 
-- Phases: 0/5 complete
-- Tasks: 0/20 complete
+- Phases: 4/5 complete
+- Tasks: 15/19 complete
 
 ## Quick Links
 
