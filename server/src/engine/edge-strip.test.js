@@ -3,8 +3,9 @@ import { describe, it, expect } from 'vitest';
 import { stripNonPlayableBoundaryEdges } from './edge-strip.js';
 import { stripNonPlayableBoundaryEdges as clientStrip } from '../../../client/src/formulas/edge-model.js';
 
-// Minimal gridSpec for the south-mountain map (flat-top, EVEN_Q, 5-col offset).
-// All hex adjacency tests use column 5 (odd) as the primary hex.
+// Minimal synthetic gridSpec (flat-top, EVEN_Q, 5-col offset) — not the real SM map
+// (SM is 63x35, see data/modules/south-mountain/map.json, #691). Deliberately not coupled
+// to production data; these tests only exercise adjacency around column 5 (odd).
 const GRID_SPEC = {
   cols: 64,
   rows: 35,

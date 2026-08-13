@@ -25,35 +25,23 @@ describe('docs/library.json — SM_MAP_DATA sync with real map.json', () => {
   const library = readJSON('docs/library.json');
   const map = readJSON('data/modules/south-mountain/map.json');
 
-  function findSmMapDataEntry(node) {
-    if (Array.isArray(node)) {
-      for (const item of node) {
-        const found = findSmMapDataEntry(item);
-        if (found) return found;
-      }
-      return null;
-    }
-    if (node && typeof node === 'object') {
-      if (node.id === 'SM_MAP_DATA') return node;
-      for (const value of Object.values(node)) {
-        const found = findSmMapDataEntry(value);
-        if (found) return found;
-      }
-    }
-    return null;
-  }
-
-  const smMapData = findSmMapDataEntry(library);
+  // /team-review on #697 — addressed by known path (fileLibrary.games['south-mountain'].dataModels)
+  // rather than a generic recursive walk: library.json's shape is fixed, and a direct lookup
+  // fails loudly if SM_MAP_DATA is ever moved rather than silently matching a stale duplicate
+  // elsewhere in the document.
+  const smMapData = library.fileLibrary?.games?.['south-mountain']?.dataModels?.find(
+    (f) => f.id === 'SM_MAP_DATA'
+  );
 
   it('finds the SM_MAP_DATA entry in library.json', () => {
-    expect(smMapData).not.toBeNull();
+    expect(smMapData).toBeDefined();
   });
 
   it('hexCount matches map.json hexes.length', () => {
-    expect(smMapData.hexCount).toBe(map.hexes.length);
+    expect(smMapData?.hexCount).toBe(map.hexes.length);
   });
 
   it('status matches map.json _status', () => {
-    expect(smMapData.status).toBe(map._status);
+    expect(smMapData?.status).toBe(map._status);
   });
 });

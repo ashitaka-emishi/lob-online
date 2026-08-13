@@ -125,10 +125,11 @@ describe('hexEntryCost — terrain costs from SM movement chart', () => {
 
   // #695 — characterization test: the schema's playable field (map.schema.js) is not read
   // anywhere in this module. This pins that as current, deliberate behavior — playable:false
-  // is a documentation/UI-stripping flag (see edge-strip.js/edge-model.js), not a movement
-  // gate — rather than leaving it as a silent, undiscovered gap. Actually enforcing
-  // playable:false as impassable would be a rules-behavior change requiring domain-expert
-  // sign-off, out of scope here (see map-data-debt-sprint_20260813/spec.md).
+  // is a save-path edge-stripping flag (see engine/edge-strip.js, consulted at map-editor
+  // save time via routes/mapEditor.js), not a movement gate — rather than leaving it as a
+  // silent, undiscovered gap. Actually enforcing playable:false as impassable would be a
+  // rules-behavior change requiring domain-expert sign-off, out of scope here (see
+  // map-data-debt-sprint_20260813/spec.md).
   it('playable: false does not affect movement cost — the field is not consulted here', () => {
     const hexIndex = makeHexIndex([
       { hex: '10.10', terrain: 'clear' },

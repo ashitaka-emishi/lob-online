@@ -4,21 +4,39 @@
  * These exercise the checkers directly against small in-memory fixtures — not the real
  * data files — so a checker's own logic is verified in isolation from the current state of
  * data/modules/south-mountain/. Importing validate-data.js does not run the full script:
- * the main block is guarded behind an `import.meta.url === process.argv[1]` direct-run check.
+ * the main block is guarded behind a realpath-resolved direct-run check (see the
+ * "direct-run guard" describe block below).
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, symlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   _getCountersForTests,
   _resetCountersForTests,
   checkEdgeFeatureTypesRegistry,
+  checkEntryHexesInMap,
   checkGridCoverage,
   checkSetupHexesInMap,
+  checkVPHexesInMap,
 } from './validate-data.js';
 
 beforeEach(() => {
   _resetCountersForTests();
+  // /team-review on #697 — the checkers log via console.error/warn as a side effect (pass()
+  // still logs to console.log, left visible). Suppressed here so intentional fail/warn test
+  // cases don't leak stderr noise into every `npm run test` run.
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe('checkGridCoverage', () => {
@@ -40,18 +58,31 @@ describe('checkGridCoverage', () => {
     expect(_getCountersForTests()).toEqual({ errors: 1, warnings: 0 });
   });
 
-  it('does not count boundary-marker hexes recorded outside the declared row bounds', () => {
+  it('does not credit a boundary-marker hex outside the declared row bounds toward coverage', () => {
+    // /team-review on #697 — the grid is sized so an out-of-bounds hex being wrongly counted
+    // would mask the missing 01.01 (2 records >= 1 totalSlots would incorrectly pass); only a
+    // filter that actually excludes 01.00 detects the real gap. Mutation-verified: removing
+    // the row-bounds filter from checkGridCoverage makes this test fail.
     const map = {
       gridSpec: { cols: 1, rows: 1 },
-      hexes: [{ hex: '01.00', playable: false }, { hex: '01.01' }],
+      hexes: [{ hex: '01.00', playable: false }],
     };
     checkGridCoverage(map);
-    expect(_getCountersForTests()).toEqual({ errors: 0, warnings: 0 });
+    expect(_getCountersForTests()).toEqual({ errors: 1, warnings: 0 });
   });
 
-  it('is a no-op when gridSpec is missing cols/rows', () => {
+  it('fails (does not silently pass) when gridSpec is missing cols/rows', () => {
     checkGridCoverage({ gridSpec: {}, hexes: [] });
-    expect(_getCountersForTests()).toEqual({ errors: 0, warnings: 0 });
+    expect(_getCountersForTests()).toEqual({ errors: 1, warnings: 0 });
+  });
+
+  it('counts duplicate hex IDs once — does not let a duplicate record mask a real gap', () => {
+    const map = {
+      gridSpec: { cols: 2, rows: 1 },
+      hexes: [{ hex: '01.01' }, { hex: '01.01' }],
+    };
+    checkGridCoverage(map);
+    expect(_getCountersForTests()).toEqual({ errors: 1, warnings: 0 });
   });
 });
 
@@ -104,5 +135,78 @@ describe('checkSetupHexesInMap', () => {
     };
     checkSetupHexesInMap(scenario, map);
     expect(_getCountersForTests().errors).toBeGreaterThan(0);
+  });
+});
+
+describe('checkVPHexesInMap', () => {
+  const map = { hexes: [{ hex: '01.01' }, { hex: '02.02' }] };
+
+  it('passes when every VP hex is present in the map', () => {
+    const scenario = { victoryPoints: { terrain: [{ hex: '01.01' }] } };
+    checkVPHexesInMap(scenario, map);
+    expect(_getCountersForTests()).toEqual({ errors: 0, warnings: 0 });
+  });
+
+  it('fails when a VP hex is not present in the map', () => {
+    const scenario = { victoryPoints: { terrain: [{ hex: '99.99' }] } };
+    checkVPHexesInMap(scenario, map);
+    expect(_getCountersForTests()).toEqual({ errors: 1, warnings: 0 });
+  });
+
+  it('is a no-op (no failures) when victoryPoints.terrain is absent', () => {
+    checkVPHexesInMap({}, map);
+    expect(_getCountersForTests()).toEqual({ errors: 0, warnings: 0 });
+  });
+});
+
+describe('checkEntryHexesInMap', () => {
+  const map = { hexes: [{ hex: '01.01' }, { hex: '02.02' }] };
+
+  it('passes when every reinforcement entry hex is present in the map', () => {
+    const scenario = {
+      reinforcements: { union: [{ entryHex: '01.01' }], confederate: [] },
+    };
+    checkEntryHexesInMap(scenario, map);
+    expect(_getCountersForTests()).toEqual({ errors: 0, warnings: 0 });
+  });
+
+  it('fails when a group entryHex is not present in the map', () => {
+    const scenario = {
+      reinforcements: { union: [{ entryHex: '99.99' }], confederate: [] },
+    };
+    checkEntryHexesInMap(scenario, map);
+    expect(_getCountersForTests()).toEqual({ errors: 1, warnings: 0 });
+  });
+
+  it('checks variableTable entryHex entries, not just the group-level entryHex', () => {
+    const scenario = {
+      reinforcements: {
+        union: [{ variableTable: [{ entryHex: '99.99' }] }],
+        confederate: [],
+      },
+    };
+    checkEntryHexesInMap(scenario, map);
+    expect(_getCountersForTests()).toEqual({ errors: 1, warnings: 0 });
+  });
+});
+
+// /team-review (second pass) on #697 — the direct-run guard itself (the exact code that
+// makes this whole file importable) previously had zero regression coverage; a naive
+// `import.meta.url === \`file://${process.argv[1]}\`` comparison silently skipped all
+// validation and exited 0 whenever the invocation path needed URL-encoding or went through
+// a symlink. Reproduces that precise double failure mode (space in the path AND a symlink)
+// via a real child process, since the guard only matters under actual `node <path>` execution.
+describe('direct-run guard', () => {
+  it('still runs the full validation when invoked via a symlinked path containing a space', () => {
+    const scriptPath = fileURLToPath(new URL('./validate-data.js', import.meta.url));
+    const dir = mkdtempSync(join(tmpdir(), 'validate data '));
+    const linkPath = join(dir, 'vd.mjs');
+    symlinkSync(scriptPath, linkPath);
+
+    const result = spawnSync(process.execPath, [linkPath], { encoding: 'utf8' });
+
+    expect(result.stdout).toContain('lob-online — M0 Data Validation');
+    expect(result.stdout).toContain('Summary');
+    expect(result.status).toBe(0);
   });
 });

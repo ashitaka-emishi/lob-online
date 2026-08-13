@@ -7,8 +7,8 @@
  * Usage:  node scripts/validate-data.js
  */
 
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { readFileSync, realpathSync } from 'node:fs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import { OOBSchema } from '../server/src/schemas/oob.schema.js';
@@ -176,7 +176,7 @@ function _collectLeaderCommandsIds(leaders) {
 // Cross-reference checks
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function checkLeaderCommandsReferenceOOB(leaders, unitIds) {
+function checkLeaderCommandsReferenceOOB(leaders, unitIds) {
   const allLeaders = [
     ...leaders.union.army,
     ...leaders.union.corps,
@@ -219,7 +219,7 @@ function collectLeaderIds(leaders) {
   return ids;
 }
 
-export function checkScenarioUnitsInOOB(scenario, unitIds) {
+function checkScenarioUnitsInOOB(scenario, unitIds) {
   const allRefUnits = new Set();
 
   // setup union
@@ -354,15 +354,29 @@ export function checkEntryHexesInMap(scenario, map) {
 // bounds), so a coverage gap here is a correctness hazard, not a cosmetic one.
 export function checkGridCoverage(map) {
   const { cols, rows } = map.gridSpec ?? {};
-  if (!cols || !rows) return;
-  const inGridCount = map.hexes.filter((h) => {
-    const [col, row] = h.hex.split('.').map(Number);
-    return col >= 1 && col <= cols && row >= 1 && row <= rows;
-  }).length;
+  // /team-review on #697 — gridSpec is z.optional() in MapSchema, but hex.js's reachability
+  // functions gate purely on gridSpec.cols/rows: a map without them is unusable by the engine.
+  // A missing gridSpec used to make this check a silent no-op; fail closed instead, matching
+  // the precedent set by validateBoundaryMirrorFaces elsewhere in map.schema.js.
+  if (!cols || !rows) {
+    fail('map.gridSpec.cols/rows missing — cannot verify grid coverage');
+    return;
+  }
+  // /team-review on #697 — count distinct hex IDs, not raw records: MapSchema does not
+  // enforce hex-id uniqueness, so a duplicate record could previously mask a real gap
+  // (inGridCount reaching totalSlots without every cell actually being covered).
+  const inGridIds = new Set(
+    map.hexes
+      .filter((h) => {
+        const [col, row] = h.hex.split('.').map(Number);
+        return col >= 1 && col <= cols && row >= 1 && row <= rows;
+      })
+      .map((h) => h.hex)
+  );
   const totalSlots = cols * rows;
-  if (inGridCount < totalSlots) {
+  if (inGridIds.size < totalSlots) {
     fail(
-      `${inGridCount}/${totalSlots} in-grid cells (${cols}x${rows}) have a hex record — grid coverage incomplete`
+      `${inGridIds.size}/${totalSlots} in-grid cells (${cols}x${rows}) have a hex record — grid coverage incomplete`
     );
   } else {
     pass(`All ${totalSlots} in-grid cells (${cols}x${rows}) have a hex record`);
@@ -391,7 +405,13 @@ export function checkEdgeFeatureTypesRegistry(map) {
 
 // #694 — guarded so scripts/validate-data.test.js can import the checker functions above
 // without triggering a full run (real file loads + process.exit) as a module side effect.
-const isDirectRun = import.meta.url === `file://${process.argv[1]}`;
+// /team-review on #697 — a naive `file://${process.argv[1]}` string comparison fails open
+// (silently skips the guard, exits 0 with zero validation performed) whenever the checkout
+// path needs URL-encoding (spaces, '#', '?', non-ASCII segments) or is invoked through a
+// symlink — import.meta.url is always realpath-resolved by Node's ESM loader, while argv[1]
+// is not. realpathSync + pathToFileURL reproduces both transforms so the comparison is exact.
+const isDirectRun =
+  Boolean(process.argv[1]) && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
 if (isDirectRun) {
   console.log('lob-online — M0 Data Validation');
   console.log('=================================');

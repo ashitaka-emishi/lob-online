@@ -2,6 +2,20 @@ import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_CALIBRATION, sanitizeCalibration } from './calibration.js';
 
+// /team-review on #697 — a literal pin, since useCalibration.test.js now imports
+// DEFAULT_CALIBRATION directly (replacing a hand-copied duplicate that had drifted to 64),
+// which makes its own assertions against DEFAULT_CALIBRATION tautological. This is the one
+// place that pins the actual value against the corrected #691/#693 grid width. Deliberately
+// redundant with server/src/engine/calibration-client-contract.test.js (which pins the same
+// fields against the real map.json rather than a literal) — if this test's literal ever needs
+// updating, that contract test's failure is what explains why.
+describe('DEFAULT_CALIBRATION (#691 / #693)', () => {
+  it('cols/rows match the corrected South Mountain grid dimensions', () => {
+    expect(DEFAULT_CALIBRATION.cols).toBe(63);
+    expect(DEFAULT_CALIBRATION.rows).toBe(35);
+  });
+});
+
 describe('sanitizeCalibration (#424)', () => {
   it('returns all DEFAULT_CALIBRATION keys when given a complete valid input', () => {
     const input = {
@@ -83,14 +97,14 @@ describe('sanitizeCalibration (#424)', () => {
 
   it('fills in all DEFAULT_CALIBRATION fields when given a sparse object (production wire format)', () => {
     const result = sanitizeCalibration({
-      cols: 64,
+      cols: 63,
       rows: 35,
       hexWidth: 40.5,
       hexHeight: 40.7,
       imageScale: 1,
     });
     expect(result).toEqual({
-      cols: 64,
+      cols: 63,
       rows: 35,
       hexWidth: 40.5,
       hexHeight: 40.7,

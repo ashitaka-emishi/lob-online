@@ -7,7 +7,7 @@ export const FIXTURE = {
   id: 'south-mountain',
   hexes: [],
   gridSpec: {
-    cols: 64,
+    cols: 63,
     rows: 35,
     dx: 0,
     dy: 0,
