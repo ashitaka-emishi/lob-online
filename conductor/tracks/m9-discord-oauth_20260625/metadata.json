@@ -2,11 +2,11 @@
   "id": "m9-discord-oauth_20260625",
   "title": "M9 Discord OAuth — Identity Layer (#668)",
   "type": "feature",
-  "status": "pending",
+  "status": "complete",
   "created": "2026-06-25T00:00:00Z",
   "updated": "2026-08-13T00:00:00Z",
   "closesIssues": [668, 410],
-  "phases": { "total": 3, "completed": 0 },
-  "tasks": { "total": 14, "completed": 0 },
-  "notes": "Deliberately still 'pending' — this file reflects MASTER's state, which does not yet contain the OAuth implementation. plan.md on feat/m9-discord-oauth is marked Complete (14/14 tasks) because the implementation is done there (Phases 1-3: 36445b3/2082908/d013176, plus a master-merge and a same-day auth-lifecycle fix, and /team-review fixes for #668/#410's original findings). Flip this file to status: complete with tasks.completed: 14 in the same commit that merges the PR — not before. Issue #668 stays open for the same reason."
+  "phases": { "total": 3, "completed": 3 },
+  "tasks": { "total": 14, "completed": 14 },
+  "notes": "Merged to master via PR #701 (2026-08-13). Implementation: Phases 1-3 (36445b3/2082908/d013176), a master-merge bringing 7 weeks of intervening history current, a same-day auth-lifecycle fix (session.regenerate() dropping passport login), and a full /team-review pass that found and fixed 7 High-severity findings (2 genuine security vulnerabilities plus session-lifecycle/identity-authorization gaps). Deferred architecture/test-coverage debt tracked in #698, #699, #700. Issue #668 closed."
 }
