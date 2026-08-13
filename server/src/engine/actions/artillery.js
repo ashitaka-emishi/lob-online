@@ -46,13 +46,14 @@ function isArtilleryUnit(oobUnit) {
 /**
  * LIMBER action handler.
  *
- * LOB §3.6a — an Unlimbered battery spends 3 MPs to change to Limbered formation.
+ * LOB §3.6a — an Unlimbered battery changes to Limbered formation, then may move using its
+ * remaining MA: the Limbered movement allowance less the 3 MP formation-change cost.
  * May not limber if the unit has already moved this activation (MPs are spent before movement).
  * Limbering is otherwise unrestricted (no range gate from enemy).
  *
  * Payload: { unitId: string }
  */
-export function handleLimber(state, action, { oob: injectedOob } = {}) {
+export function handleLimber(state, action, { oob: injectedOob, scenario } = {}) {
   if (!state.activityPhase) {
     throw new ActionError('INVALID_ACTION', 'LIMBER is only valid during the Activity Phase');
   }
@@ -100,11 +101,31 @@ export function handleLimber(state, action, { oob: injectedOob } = {}) {
     );
   }
 
+  // LOB §3.6a — "must change to Limbered formation first (costing 3 MPs) and then move using
+  // its remaining MA": the battery's activation MA IS the Limbered allowance, with the 3 MP
+  // formation-change fee paid out of it, not a separate cost on top of the Unlimbered 0 MP it
+  // was initialized with (#m9 review, second pass — activateStack.js correctly zeroes
+  // remainingMPs for a still-Unlimbered battery at activation start, since Unlimbered cannot
+  // move at all; without this recalculation here, LIMBER never restored the MP pool the battery
+  // needs to actually use its "remaining MA," permanently blocking limber-then-move within one
+  // activation for every real battery, since none start a scenario with formation pre-set).
+  // Absent scenario.movementCosts (test stubs without a scenario, matching activateStack.js's
+  // existing convention) → leave remainingMPs untouched rather than assume a value.
+  const movementAllowances = scenario?.movementCosts?.movementAllowances;
+  const updatedUnit =
+    movementAllowances?.limbered !== undefined
+      ? {
+          ...unit,
+          formation: 'limbered',
+          remainingMPs: Math.max(0, movementAllowances.limbered - FORMATION_CHANGE_MP_COST),
+        }
+      : { ...unit, formation: 'limbered' };
+
   return {
     ...state,
     units: {
       ...state.units,
-      [unitId]: { ...unit, formation: 'limbered' },
+      [unitId]: updatedUnit,
     },
   };
 }

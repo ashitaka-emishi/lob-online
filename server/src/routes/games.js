@@ -282,7 +282,7 @@ router.get('/:id/actions', requireSide, async (req, res) => {
     const { id } = req.params;
     // 401/404/409/403 all handled by requireSide before we reach here.
     const state = await loadGame(id);
-    const validActions = getValidActions(state, req.side);
+    const validActions = getValidActions(state, req.side, { oob: _oob });
     res.json({ validActions });
   } catch (err) {
     if (err instanceof GameNotFoundError) return res.status(404).json({ error: 'Game not found' });

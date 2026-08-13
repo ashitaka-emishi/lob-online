@@ -1,17 +1,16 @@
 import { ActionError } from './actionError.js';
+import { resolveMovementFormationKey } from './formation.js';
 import { pathCost } from '../movement.js';
-import { findOobUnit, buildUnitSideMap } from '../oob.js';
+import { buildUnitSideMap, safeFindOobUnit } from '../oob.js';
 import { updateHexControl } from '../vp.js';
 
 // LOB §3 — resolve the movement-table formation key for a unit.
-// Returns null for unlimbered artillery (cannot move per LOB §3.6a).
+// Returns null for unlimbered artillery (cannot move per LOB §3.6a) — the 'unlimbered'
+// sentinel from resolveMovementFormationKey (#677) maps to null here since this call site's
+// "cannot move" behavior is a null check by the caller, not the string itself.
 function resolveMovementFormation(unit, oobUnit) {
-  if (unit.formation === 'unlimbered') return null;
-  if (unit.formation === 'limbered') return 'limbered';
-  const type = oobUnit?.type;
-  if (type === 'cavalry') return 'mounted';
-  if (type === 'leader') return 'leader';
-  return 'line'; // infantry default
+  const key = resolveMovementFormationKey(unit, oobUnit);
+  return key === 'unlimbered' ? null : key;
 }
 
 // LOB §3 / SM §5.1 — MOVE action handler.
@@ -84,13 +83,7 @@ export function resolveMove(state, action, ctx = {}) {
   const destination = path[path.length - 1];
 
   // Resolve OOB unit for formation and VP eligibility checks
-  const oobUnit = (() => {
-    try {
-      return ctx.oob ? findOobUnit(ctx.oob, unitId) : null;
-    } catch {
-      return null;
-    }
-  })();
+  const oobUnit = safeFindOobUnit(ctx.oob, unitId);
 
   // LOB §3 — verify the moving unit belongs to the acting player (mirror combat handler pattern).
   // Skipped when ctx.oob is absent (test-stub environments without OOB injection).
@@ -145,17 +138,27 @@ export function resolveMove(state, action, ctx = {}) {
     );
   }
 
-  // SM §5.1 — update hex control for VP hexes the unit moves through.
-  // updateHexControl returns unchanged hexControl when destination is not a VP hex.
+  // SM §5.1 — update hex control for every hex the unit enters along the path, not just the
+  // destination (#678, per domain-expert ruling). path[0] is excluded as the unit's starting
+  // *position* — this move doesn't disturb whatever control claim already exists there — but a
+  // path that re-enters it later (e.g. a back-and-forth move) does correctly claim it on that
+  // later visit, since updateHexControl is idempotent per hex. updateHexControl internally
+  // gates via isVpControlEligible (non-Routed, infantry-only, unlimbered-artillery for the
+  // occupy case) — a unit that is actually MOVING is never eligible-unlimbered-artillery
+  // (LOB §3.6a: unlimbered artillery cannot move at all), so no additional artillery
+  // special-casing is needed here; the existing eligibility gate already excludes it.
   const vpHexSet = new Set((ctx.scenario.victoryPoints?.terrain ?? []).map((e) => e.hex));
-  const updatedHexControl = updateHexControl(
-    state.hexControl,
-    destination,
-    playerSide,
-    unit,
-    oobUnit,
-    vpHexSet
-  );
+  let updatedHexControl = state.hexControl;
+  for (const enteredHex of path.slice(1)) {
+    updatedHexControl = updateHexControl(
+      updatedHexControl,
+      enteredHex,
+      playerSide,
+      unit,
+      oobUnit,
+      vpHexSet
+    );
+  }
 
   // Produce updated unit with new position and decremented MPs (immutable spread).
   // LOB §3.0c — clamp to 0: when the one-hex guarantee applies, cost may exceed remainingMPs.

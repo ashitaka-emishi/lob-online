@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 
 import { dispatch, getValidActions, drainAutoSteps, ActionError } from './index.js';
+import * as oobModule from '../oob.js';
 import { loadScenario } from '../scenario.js';
 
 // ── Shared fixtures ─────────────────────────────────────────────────────────
@@ -832,5 +833,59 @@ describe('dispatch — MOVE action integration (#634)', () => {
     };
     const actions = getValidActions(exhaustedState, 'union');
     expect(actions.find((a) => a.type === 'MOVE')).toBeUndefined();
+  });
+});
+
+// #676 — misfiled inside the MOVE-integration describe block previously; this tests
+// getValidActions's OOB-read count, unrelated to MOVE or #634.
+describe('getValidActions — loadOob() call count (#676)', () => {
+  it('calls loadOob() exactly once per call, regardless of active-unit count', () => {
+    const spy = vi.spyOn(oobModule, 'loadOob');
+    const state = {
+      ...MID_ACTIVATION_STATE,
+      units: {
+        '1nh-lt': { ...MID_ACTIVATION_STATE.units.u1, id: '1nh-lt', hex: '10.10' },
+        'l1ny-lt': { ...MID_ACTIVATION_STATE.units.u1, id: 'l1ny-lt', hex: '10.10' },
+      },
+      activityPhase: {
+        activatedUnits: [],
+        currentActivation: {
+          hex: '10.10',
+          activatedUnitIds: ['1nh-lt', 'l1ny-lt'],
+          lastMovedUnitId: null,
+          movedUnitIds: [],
+          movedThisActivation: false,
+          openingVolley: false,
+          zeroRuleFired: false,
+        },
+      },
+    };
+    try {
+      const actions = getValidActions(state, 'union');
+      // Pins that the per-unit artillery loop (the code loadOob's single-call fix actually
+      // protects) was reached with both units, not short-circuited before line 202 — without
+      // this, the call-count assertion alone would stay green even if that loop were deleted.
+      // Both fixture ids are real gunType: 'R' batteries (data/modules/south-mountain/oob.json).
+      expect(actions.filter((a) => a.type === 'LIMBER')).toHaveLength(2);
+      expect(spy).toHaveBeenCalledTimes(1);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  // #676 review (architecture) — getValidActions previously ignored ctx entirely, so even
+  // dispatch()/games.js callers holding an already-loaded OOB still triggered a fresh
+  // loadOob() every call. Threading ctx.oob through closes that: 0 disk reads, not 1, when
+  // the caller already has a validated copy in scope.
+  it('calls loadOob() zero times when ctx.oob is supplied', () => {
+    const realOob = oobModule.loadOob(); // load once, outside the spy
+    const spy = vi.spyOn(oobModule, 'loadOob');
+    try {
+      const actions = getValidActions(MID_ACTIVATION_STATE, 'union', { oob: realOob });
+      expect(actions.length).toBeGreaterThan(0);
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

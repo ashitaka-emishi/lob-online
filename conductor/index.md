@@ -24,6 +24,7 @@ Navigation hub for project context.
 | [map-data-recovery_20260811](./tracks/map-data-recovery_20260811/index.md)             | South Mountain Map Data Recovery — Stash Integration (#689)    | Complete |
 | [map-col64-investigation_20260812](./tracks/map-col64-investigation_20260812/index.md) | South Mountain Map — Column 64 Investigation (#691)            | Complete |
 | [map-data-debt-sprint_20260813](./tracks/map-data-debt-sprint_20260813/index.md)       | Map Data Debt Sprint — Issues #693-696                         | Complete |
+| [engine-debt-sprint_20260813](./tracks/engine-debt-sprint_20260813/index.md)           | Engine Debt Sprint — Issues #676-679, #681                     | Pending  |
 
 ## All Tracks
 

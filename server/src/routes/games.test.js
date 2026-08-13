@@ -1221,7 +1221,13 @@ describe('GET /api/v1/games/:id/actions (#495)', () => {
     getValidActions.mockReturnValue([]);
     const app = await buildApp();
     await request(app).get(`/api/v1/games/${TEST_UUID}/actions`);
-    expect(getValidActions).toHaveBeenCalledWith(MINIMAL_STATE, 'confederate');
+    // #676 review — third arg is the real module-init-cached OOB (ctx.oob), threaded through
+    // so getValidActions reuses it instead of re-reading oob.json from disk.
+    expect(getValidActions).toHaveBeenCalledWith(
+      MINIMAL_STATE,
+      'confederate',
+      expect.objectContaining({ oob: expect.any(Object) })
+    );
   });
 
   // 404 is produced by requireSide (line 31-33 of requireSide.js), not by the route body.

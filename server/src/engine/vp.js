@@ -79,10 +79,12 @@ export function isVpControlEligible(unit, oobUnit) {
  * Return an updated hexControl map after a unit moves to (or through) newHex.
  *
  * SM §5.1 — "the player who last occupied or moved through the hex" claims control.
- * Must be called by the movement handler whenever a qualifying unit enters a hex in vpHexSet.
- * NOTE: terrain VP is not yet tracked during play — no movement handler calls this yet.
- * Wiring deferred to M8+ when the MOVE action is implemented. See #635.
- * Until then, state.hexControl stays {} and computeTerrainVP always returns 0.
+ * Called by server/src/engine/actions/move.js's resolveMove for every hex entered along the
+ * submitted path (#678) — currently the ONLY writer of state.hexControl. Control is
+ * path-historical (can't be derived from a position snapshot), so any future code path that
+ * relocates a unit (retreat, charge advance, Skedaddle — tracked in #703; scenario setup
+ * placement — untracked) must call this explicitly, or VP will silently under-count for that
+ * path.
  *
  * @param {object} hexControl  — current { hex: 'union'|'confederate'|null } map
  * @param {string} hex         — hex the unit moved into

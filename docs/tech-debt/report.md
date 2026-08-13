@@ -1,18 +1,18 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-08-13 after PR #701._
+_Last updated: 2026-08-13 after PR #705._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                                                    |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Open debt items                  | 8                                                                                                        |
-| Cumulative debt score (net open) | 17                                                                                                       |
-| Current-milestone open debt      | 8 items (M9)                                                                                             |
-| Highest-risk item                | Auth architecture debt: session lifecycle coupling, migration ladder, module duplication (#698, score 3) |
-| PRs tracked                      | 464                                                                                                      |
+| Metric                           | Value                                                                   |
+| -------------------------------- | ----------------------------------------------------------------------- |
+| Open debt items                  | 5                                                                       |
+| Cumulative debt score (net open) | 12                                                                      |
+| Current-milestone open debt      | 5 items (M9)                                                            |
+| Highest-risk item                | UNLIMBER does not deduct the 3 MP formation-change cost (#706, score 3) |
+| PRs tracked                      | 465                                                                     |
 
 ---
 
@@ -491,6 +491,12 @@ _Last updated: 2026-08-13 after PR #701._
 | 2026-08-13 | PR #697 (resolved #695)                                        | -2                   | —         | 650                      |
 | 2026-08-13 | PR #697 (resolved #696)                                        | -2                   | —         | 650                      |
 | 2026-08-13 | PR #701 (m9-discord-oauth)                                     | 7                    | +7        | 657                      |
+| 2026-08-13 | PR #705 (engine-debt-sprint)                                   | 5                    | -5        | 662                      |
+| 2026-08-13 | PR #705 (resolved #676)                                        | -3                   | —         | 662                      |
+| 2026-08-13 | PR #705 (resolved #677)                                        | -2                   | —         | 662                      |
+| 2026-08-13 | PR #705 (resolved #678)                                        | -2                   | —         | 662                      |
+| 2026-08-13 | PR #705 (resolved #679)                                        | -2                   | —         | 662                      |
+| 2026-08-13 | PR #705 (resolved #681)                                        | -1                   | —         | 662                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -498,22 +504,21 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Elevated risk. Net open debt score is 17 across 8 items, all in M9. PR #701 (M9 Discord OAuth)
-added 3 new items (#698 score 3, #699 and #700 score 2 each) — an expected regression for a
-substantial new-feature PR that shipped a full identity/session/persistence layer, not a sign
-of the PR being under-reviewed: all 7 High-severity findings from a 4-dimension `/team-review`
-plus every security-flavored Medium were fixed in place (login-CSRF via a missing OAuth
-`state` parameter, an `AUTH_DEV_MODE` default/gating footgun, a session-lifecycle bug that
-permanently locked players out of their own games, decorative identity authorization) — what's
-deferred is architectural cleanup (#698: session-regeneration redundancy, non-idempotent
-passport config, migration ladder structure) and lower-value follow-ups (#699, #700), not
-unresolved risk from the review itself. Composition is broad rather than concentrated: the
-highest score is 3, tied between the new auth architecture item and the pre-existing #676
-(loadOob synchronous disk I/O). The remaining pre-existing items are carried from PR #674:
-structural duplication (#677 formation ladder), missing mechanics (#678 VP pass-through, #679
-column formation), and minor cleanup (#681 IIFE helper). Recommend a debt-reduction pass
-before the next major auth-adjacent change — the session-lifecycle/migration-ladder debt in
-#698 specifically compounds with each additional schema or auth surface added on top of it.
+Moderate risk. Net open debt score is 12 across 5 items, all in M9 — down from 17 across 8 after
+PR #705 closed all five items carried from PR #674 (#676, #677, #678, #679, #681; net -5 after
+the two new items it deferred). The auth-architecture cluster from PR #701 (#698 session
+lifecycle/migration ladder, #699 dependency/boundary-validation, #700 remaining test-coverage
+follow-ups) is unchanged and still the largest concentration of open debt. PR #705 itself
+contributes two new items: #703 (SM §5.1 VP control for non-MOVE traversal — retreat,
+charge-advance, Skedaddle — explicitly descoped with user approval) and #706 (UNLIMBER not
+deducting its LOB §3.6b MP cost), the latter now tied for highest score with #698. #706 is
+notable for how it surfaced: not from the primary `/team-review` but from a second-pass review
+mandated by this project's quality rails because the review-fix diff itself touched rules-engine
+paths — that second pass also caught and fixed a real MEDIUM bug (LIMBER never restoring MPs
+after a formation change) before it shipped, rather than deferring it. Recommend closing #706
+opportunistically alongside any future artillery-mechanics work, since it's a small, well-scoped
+companion to the LIMBER fix already merged in #705; the auth cluster remains the item most
+worth a dedicated debt-reduction pass before further auth-adjacent changes.
 
 ---
 
@@ -523,14 +528,11 @@ _Ordered by score descending (ties: current milestone first, then newest first).
 
 | Score | Milestone | Issue | Title                                                                                    | PR Introduced | Assessment                                                                                                                                                                                                                                                                                                                                  |
 | ----- | --------- | ----- | ---------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3     | M9        | #706  | UNLIMBER does not deduct the 3 MP formation-change cost (LOB §3.6b)                      | PR #705       | `handleUnlimber` flips formation without deducting the MP cost LOB §3.6b requires — a battery can currently unlimber for free. Not a regression from PR #705 (already reachable pre-existing), discovered while investigating the related LIMBER MP fix in that PR.                                                                         |
 | 3     | M9        | #698  | Auth architecture debt: session lifecycle coupling, migration ladder, module duplication | PR #701       | Nothing actively broken — behavior verified correct — but compounding auth/persistence architecture debt (redundant session regeneration, non-idempotent passport config, duplicated SQL between auth and store layers, an if/else migration ladder with no forward-version guard) that will make the next schema change materially harder. |
-| 3     | M9        | #676  | perf(engine): cache loadOob() — eliminate N+2 disk reads per dispatch                    | PR #674       | loadOob() re-reads and validates oob.json on every call. getValidActions invokes it N+2 times per mid-activation dispatch — synchronous disk I/O blocks the event loop on the hottest action path.                                                                                                                                          |
 | 2     | M9        | #699  | Discord OAuth: dependency risk, boundary validation, and missing logout UI               | PR #701       | `passport-discord@0.1.4` deprecated upstream (assessed acceptable to ship — thin shim over actively-maintained passport-oauth2). No Zod boundary validation on the OAuth profile; a fully-tested logout store action has no UI control to reach it.                                                                                         |
 | 2     | M9        | #700  | Discord OAuth: remaining test-coverage and doc-accuracy follow-ups                       | PR #701       | Direct route-level tests for the Discord strategy dispatch, three narrow SQLite migration test gaps, an untested loading ref, an optional-chaining inconsistency, and a missing client-side route guard on GameView (server already 401s correctly).                                                                                        |
-| 2     | M9        | #677  | refactor(engine): extract resolveFormationKey() — eliminate duplicate ladder             | PR #674       | `resolveMovementFormation` and `resolveUnitMPs` encode the same decision tree. A future unit type added to one but not the other causes MP init and movement-cost formation to silently diverge.                                                                                                                                            |
-| 2     | M9        | #678  | feat(engine): honor SM §5.1 VP control for hexes moved through                           | PR #674       | `updateHexControl` is called only for the destination hex. SM §5.1 awards control for "moved through" hexes; units sweeping across VP road hexes en route to a non-VP destination don't claim those hexes.                                                                                                                                  |
-| 2     | M9        | #679  | feat(engine): model column formation toggle — infantry road movement                     | PR #674       | Infantry always defaults to 'line'. Column formation (road movement 0.5/hex) is never applied, understating movement range on SM's road network. Requires a CHANGE_FORMATION action.                                                                                                                                                        |
-| 1     | M9        | #681  | chore(engine): extract safeFindOobUnit() helper                                          | PR #674       | IIFE-try/catch OOB lookup pattern duplicated in move.js, activateStack.js, and index.js. Minor readability cost, no correctness risk.                                                                                                                                                                                                       |
+| 2     | M9        | #703  | SM §5.1 VP control for hexes moved through during retreat/charge-advance/Skedaddle       | PR #705       | Domain-expert-confirmed textual gap in the #678 fix's scope — the same "moved through" rule applies to non-MOVE traversal, explicitly descoped from PR #705's MOVE-only implementation with user approval.                                                                                                                                  |
 
 ---
 
