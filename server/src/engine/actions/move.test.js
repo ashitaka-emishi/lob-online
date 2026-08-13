@@ -173,6 +173,90 @@ describe('resolveMove — valid move', () => {
     expect(result.hexControl['10.11']).toBe('union');
   });
 
+  // #678 — SM §5.1 grants control to a hex a qualifying unit "occupied or moved through," not
+  // just the destination. Verified against domain-expert ruling: infantry-only, non-Routed.
+  it('updates hexControl for an intermediate VP hex the unit moves through, not just the destination (#678)', () => {
+    const state = makeState();
+    const vpScenario = {
+      ...scenario,
+      victoryPoints: {
+        ...scenario.victoryPoints,
+        // 10.11 is intermediate (not the destination) on a 10.10 -> 10.11 -> 10.12 move
+        terrain: [{ hex: '10.11', unionVP: 2, confederateVP: 0 }],
+      },
+    };
+    const threeHexMove = {
+      ...MOVE_ACTION,
+      payload: { unitId: 'u1', path: ['10.10', '10.11', '10.12'] },
+    };
+    const result = resolveMove(state, threeHexMove, {
+      scenario: vpScenario,
+      mapData: MAP_DATA,
+      oob: MINIMAL_OOB,
+    });
+    expect(result.hexControl['10.11']).toBe('union');
+  });
+
+  it("does not claim the unit's starting hex, even if it is a VP hex (#678)", () => {
+    const state = makeState();
+    const vpScenario = {
+      ...scenario,
+      victoryPoints: {
+        ...scenario.victoryPoints,
+        // 10.10 is the START hex — this move must not touch its existing control claim
+        terrain: [{ hex: '10.10', unionVP: 2, confederateVP: 0 }],
+      },
+    };
+    const result = resolveMove(state, MOVE_ACTION, {
+      scenario: vpScenario,
+      mapData: MAP_DATA,
+      oob: MINIMAL_OOB,
+    });
+    expect(result.hexControl['10.10']).toBeUndefined();
+  });
+
+  it('does not grant control for a moved-through VP hex to a cavalry unit (SM §5.1 exclusion)', () => {
+    const state = makeState();
+    const vpScenario = {
+      ...scenario,
+      victoryPoints: {
+        ...scenario.victoryPoints,
+        terrain: [{ hex: '10.11', unionVP: 2, confederateVP: 0 }],
+      },
+    };
+    const threeHexMove = {
+      ...MOVE_ACTION,
+      payload: { unitId: 'u1', path: ['10.10', '10.11', '10.12'] },
+    };
+    const result = resolveMove(state, threeHexMove, {
+      scenario: vpScenario,
+      mapData: MAP_DATA,
+      oob: CAVALRY_OOB,
+    });
+    expect(result.hexControl['10.11']).toBeUndefined();
+  });
+
+  it('does not grant control for a moved-through VP hex to a Routed unit (SM §5.1)', () => {
+    const state = makeState({ moraleState: 'routed' });
+    const vpScenario = {
+      ...scenario,
+      victoryPoints: {
+        ...scenario.victoryPoints,
+        terrain: [{ hex: '10.11', unionVP: 2, confederateVP: 0 }],
+      },
+    };
+    const threeHexMove = {
+      ...MOVE_ACTION,
+      payload: { unitId: 'u1', path: ['10.10', '10.11', '10.12'] },
+    };
+    const result = resolveMove(state, threeHexMove, {
+      scenario: vpScenario,
+      mapData: MAP_DATA,
+      oob: MINIMAL_OOB,
+    });
+    expect(result.hexControl['10.11']).toBeUndefined();
+  });
+
   it('leaves hexControl unchanged when destination is not a VP hex', () => {
     const state = makeState();
     const result = resolveMove(state, MOVE_ACTION, { scenario, mapData: MAP_DATA });

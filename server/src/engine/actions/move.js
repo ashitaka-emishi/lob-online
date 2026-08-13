@@ -138,17 +138,25 @@ export function resolveMove(state, action, ctx = {}) {
     );
   }
 
-  // SM §5.1 — update hex control for VP hexes the unit moves through.
-  // updateHexControl returns unchanged hexControl when destination is not a VP hex.
+  // SM §5.1 — update hex control for every hex the unit enters along the path, not just the
+  // destination (#678, per domain-expert ruling). path[0] (the starting hex) is excluded —
+  // this move doesn't disturb whatever control claim already exists there. updateHexControl
+  // internally gates via isVpControlEligible (non-Routed, infantry-only, unlimbered-artillery
+  // for the occupy case) — a unit that is actually MOVING is never eligible-unlimbered-artillery
+  // (LOB §3.6a: unlimbered artillery cannot move at all), so no additional artillery
+  // special-casing is needed here; the existing eligibility gate already excludes it.
   const vpHexSet = new Set((ctx.scenario.victoryPoints?.terrain ?? []).map((e) => e.hex));
-  const updatedHexControl = updateHexControl(
-    state.hexControl,
-    destination,
-    playerSide,
-    unit,
-    oobUnit,
-    vpHexSet
-  );
+  let updatedHexControl = state.hexControl;
+  for (const enteredHex of path.slice(1)) {
+    updatedHexControl = updateHexControl(
+      updatedHexControl,
+      enteredHex,
+      playerSide,
+      unit,
+      oobUnit,
+      vpHexSet
+    );
+  }
 
   // Produce updated unit with new position and decremented MPs (immutable spread).
   // LOB §3.0c — clamp to 0: when the one-hex guarantee applies, cost may exceed remainingMPs.
