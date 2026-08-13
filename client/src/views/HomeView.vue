@@ -1,11 +1,14 @@
 <script setup>
 import { RouterLink } from 'vue-router';
+
 import { useEditorsEnabled } from '../composables/useEditorsEnabled.js';
+import { useAuthStore } from '../stores/useAuthStore.js';
 import { useModuleStore, MODULES } from '../stores/useModuleStore.js';
 import MenuLayout from '../components/MenuLayout.vue';
 
 const editorsEnabled = useEditorsEnabled();
 const moduleStore = useModuleStore();
+const authStore = useAuthStore();
 </script>
 
 <template>
@@ -28,21 +31,47 @@ const moduleStore = useModuleStore();
           </select>
         </div>
         <nav class="menu" aria-label="Main menu">
+          <a
+            v-if="!authStore.isLoggedIn"
+            href="/auth/discord"
+            class="menu-btn login-btn"
+            data-testid="login-btn"
+          >
+            Login with Discord
+          </a>
+          <span v-else class="user-info" data-testid="user-info">
+            {{ authStore.currentUser.username }}
+          </span>
+
           <RouterLink
+            v-if="authStore.isLoggedIn"
             :to="moduleStore.defaultScenarioPath('/lobby')"
             data-testid="lobby-link"
             class="menu-btn"
           >
             Lobby
           </RouterLink>
+          <span v-else class="menu-btn disabled" aria-disabled="true" data-testid="lobby-link">
+            Lobby
+          </span>
+
           <RouterLink
-            v-if="editorsEnabled"
+            v-if="editorsEnabled && authStore.isLoggedIn"
             :to="moduleStore.modulePath('/tools/map-editor')"
             data-testid="editor-link"
             class="menu-btn editor-btn"
           >
             Editor
           </RouterLink>
+          <span
+            v-else-if="editorsEnabled && !authStore.isLoggedIn"
+            class="menu-btn editor-btn disabled"
+            aria-disabled="true"
+            data-testid="editor-link"
+          >
+            Editor
+          </span>
+
           <RouterLink to="/about" data-testid="about-link" class="menu-btn about-btn">
             About
           </RouterLink>
@@ -138,9 +167,33 @@ h1 {
   color: #e8d8b0;
 }
 
+.menu-btn.disabled {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+
 .about-btn {
   font-size: 0.85rem;
   color: #8a7a6a;
   border-color: #3a3020;
+}
+
+.login-btn {
+  border-color: #5b74a8;
+  background: rgba(30, 40, 70, 0.6);
+  color: #a0b8e8;
+}
+
+.login-btn:hover {
+  background: rgba(50, 65, 110, 0.9);
+  color: #c0d0f8;
+}
+
+.user-info {
+  font-size: 0.85rem;
+  color: #a89a7a;
+  text-align: center;
+  letter-spacing: 0.04em;
 }
 </style>

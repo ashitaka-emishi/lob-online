@@ -2,7 +2,18 @@
   <MenuLayout>
     <div class="lobby-bg">
       <div class="lobby">
-        <h1>Game Lobby</h1>
+        <div class="lobby-header">
+          <h1>Game Lobby</h1>
+          <div v-if="authStore.currentUser" class="user-badge" data-testid="user-badge">
+            <img
+              v-if="authStore.currentUser.avatar"
+              :src="`https://cdn.discordapp.com/avatars/${authStore.currentUser.id}/${authStore.currentUser.avatar}.png`"
+              :alt="authStore.currentUser.username"
+              class="user-avatar"
+            />
+            <span class="user-name">{{ authStore.currentUser.username }}</span>
+          </div>
+        </div>
 
         <div v-if="store.error" class="error" role="alert">{{ store.error }}</div>
 
@@ -78,9 +89,11 @@
 import { onMounted } from 'vue';
 
 import MenuLayout from '../components/MenuLayout.vue';
+import { useAuthStore } from '../stores/useAuthStore.js';
 import { useLobbyStore } from '../stores/lobby.js';
 
 const store = useLobbyStore();
+const authStore = useAuthStore();
 
 onMounted(() => {
   store.fetchGames();
@@ -106,6 +119,32 @@ function statusLabel(status) {
   border: 1px solid #2a2418;
   border-radius: 6px;
   padding: 1.5rem 2rem;
+}
+
+.lobby-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #a89a7a;
+}
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.user-name {
+  letter-spacing: 0.03em;
 }
 
 .error {

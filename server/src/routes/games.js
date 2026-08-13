@@ -25,8 +25,9 @@ import {
   getGame,
   InvalidTokenError,
   joinGame,
-  listGames,
+  listGamesByUser,
   loadGame,
+  reclaimSideToken,
   saveGame,
 } from '../store/index.js';
 import { SIDES } from '../util/sides.js';
@@ -34,10 +35,24 @@ import { UUID_RE } from '../util/uuid.js';
 
 // Promisify session.regenerate — prevents session fixation by rotating the session ID
 // before writing new identity. (#411)
+//
+// req.session.regenerate() discards the existing session outright and builds a fresh one,
+// which wipes passport's serialized identity (req.session.passport.user) along with it.
+// Left alone, the caller's Discord/dev-auth login silently drops on every create/join —
+// req.user is still populated for the remainder of THIS request (passport reads it once via
+// deserializeUser before the route runs), but any subsequent request presents as logged out,
+// since nothing had re-called req.login() to write it back into the new session. Capture
+// req.user before regenerating and restore it after, so the two session-fixation defenses
+// (SEC-M1 for sideToken, passport's own regenerate-friendly login) don't fight each other.
 function regenerateSession(req) {
-  return new Promise((resolve, reject) =>
-    req.session.regenerate((e) => (e ? reject(e) : resolve()))
-  );
+  const user = req.user;
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err) => {
+      if (err) return reject(err);
+      if (!user) return resolve();
+      req.login(user, (loginErr) => (loginErr ? reject(loginErr) : resolve()));
+    });
+  });
 }
 
 // #589 — split create/join limiters so aggressive game-creation is throttled tighter than joins.
@@ -93,7 +108,7 @@ router.post('/', createLimiter, async (req, res) => {
     // SQLite row first, then Spaces. If saveGame fails, roll back the SQLite row so no
     // orphaned metadata row points at a missing Spaces object (#ARCH-H4).
     const sideToken = randomUUID();
-    createGame(id, sideToken, SIDES.UNION, discordWebhook ?? null);
+    createGame(id, sideToken, SIDES.UNION, discordWebhook ?? null, req.user?.id ?? null);
     try {
       await saveGame(id, state);
     } catch (err) {
@@ -154,10 +169,25 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
       return res.json({ id, side });
     }
 
-    // Reject new join if the requested faction is already held by any player (#562 #664).
-    // Guard both columns — side_a is always the creator, but robust to future game modes.
     const joinRow = getGame(id);
     if (!joinRow) return res.status(404).json({ error: 'Game not found' });
+
+    // Identity-based reclaim (#m9-discord-oauth review finding) — the session for this game
+    // was lost (logout, session-cookie expiry, new device) but the DB still records this
+    // logged-in user as the owner of the requested side. Reissue a fresh token instead of
+    // 409ing them out of a game they already own; ownership is enforced in SQL (see
+    // reclaimSideToken), not just by this check.
+    if (req.user?.id) {
+      const reclaimedToken = randomUUID();
+      if (reclaimSideToken(id, side, req.user.id, reclaimedToken)) {
+        await regenerateSession(req);
+        setPlayerSession(req, id, side, reclaimedToken);
+        return res.json({ id, side });
+      }
+    }
+
+    // Reject new join if the requested faction is already held by any player (#562 #664).
+    // Guard both columns — side_a is always the creator, but robust to future game modes.
     if (joinRow.side_a_faction === side || joinRow.side_b_faction === side) {
       return res.status(409).json({ error: 'Side already taken' });
     }
@@ -165,7 +195,7 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
     const sideToken = randomUUID();
 
     // joinGame is atomic; typed errors map to 404/409 for remaining edge cases (#PERF-H1, #ARCH-M2)
-    joinGame(id, sideToken, side);
+    joinGame(id, sideToken, side, req.user?.id ?? null);
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
     await regenerateSession(req);
@@ -186,10 +216,10 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
 // Spaces object is deleted before the SQLite row: deleteGameState is idempotent (S3 delete-missing
 // is a no-op), so if the process crashes between the two operations the row can be cleaned up on a
 // retry without a permanently leaked Spaces object.
-// SECURITY residual (#410 item 1, #688): no ownership check below — this route is safe ONLY
-// because MAP_EDITOR_ENABLED must never be 'true' in production/staging. If that flag is ever
-// on outside local dev, any caller who knows a game UUID can delete it. Do not relax the gate
-// without adding a getPlayerSession(req)?.gameId === id guard first.
+// #m9-discord-oauth review — the prior residual risk (#410 item 1, #688) was "no ownership
+// check; safe only because MAP_EDITOR_ENABLED must never be true outside local dev." Now that
+// side_a_user_id/side_b_user_id exist, an ownership check is cheap and closes the gap
+// independently of the flag, rather than relying on it as the sole defense.
 router.delete('/:id', async (req, res) => {
   // 404 (not 403) so the endpoint is indistinguishable from a non-existent route
   if (process.env.MAP_EDITOR_ENABLED !== 'true') {
@@ -200,6 +230,14 @@ router.delete('/:id', async (req, res) => {
     // Verify the row exists first so we can return 404 before touching Spaces
     const row = getGame(id);
     if (!row) return res.status(404).json({ error: 'Game not found' });
+    // 404 (not 403) here too — same "indistinguishable from non-existent" reasoning. A row
+    // with no recorded owner on either side (legacy/pre-migration data) is left deletable,
+    // matching the pre-existing behavior for that data rather than locking it permanently.
+    const isOwner = row.side_a_user_id === req.user.id || row.side_b_user_id === req.user.id;
+    const hasAnyOwner = row.side_a_user_id != null || row.side_b_user_id != null;
+    if (hasAnyOwner && !isOwner) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
     await deleteGameState(id);
     deleteGame(id);
     res.status(204).send();
@@ -210,9 +248,9 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// GET /api/v1/games — list all games
-router.get('/', (_req, res) => {
-  res.json(listGames());
+// GET /api/v1/games — list games belonging to the authenticated user (#668)
+router.get('/', (req, res) => {
+  res.json(listGamesByUser(req.user.id));
 });
 
 // GET /api/v1/games/me — current player's session identity

@@ -2,8 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 
 import { DEFAULT_SLUG } from '../stores/useModuleStore.js';
+import { useAuthStore } from '../stores/useAuthStore.js';
 
-export default createRouter({
+const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', component: HomeView },
@@ -13,6 +14,7 @@ export default createRouter({
     {
       path: '/modules/:moduleSlug/scenarios/:scenarioSlug/lobby',
       component: () => import('../views/LobbyView.vue'),
+      meta: { requiresAuth: true },
     },
     {
       path: '/modules/:moduleSlug/lobby',
@@ -69,3 +71,18 @@ export default createRouter({
     { path: '/tools/table-test', redirect: `/modules/${DEFAULT_SLUG}/tools/table-test` },
   ],
 });
+
+// #m9-discord-oauth review finding — fetchMe used to run only when navigating to a
+// requiresAuth route, so a fresh page load into "/" (e.g. the Discord OAuth callback
+// redirect) never populated auth state at all: HomeView showed "logged out" until the user
+// happened to navigate somewhere guarded. fetchMe now runs on every first navigation
+// regardless of the target route; the initialized flag still prevents redundant calls.
+router.beforeEach(async (to) => {
+  const authStore = useAuthStore();
+  if (!authStore.initialized) {
+    await authStore.fetchMe();
+  }
+  if (to.meta.requiresAuth && !authStore.isLoggedIn) return '/';
+});
+
+export default router;

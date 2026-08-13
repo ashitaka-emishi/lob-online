@@ -92,13 +92,20 @@
 > (`infra/`); MinIO healthcheck + `createbuckets` init container (auto-creates `lob-online-dev` bucket).
 > DigitalOcean Droplet provisioning deferred to next milestone.
 >
-> **In progress:** M8 code phases complete. DO Droplet provisioning deferred.
-> South Mountain map: recovered from a forgotten git stash (map-data-recovery_20260811, #689)
-> — 2261 hexes, 0 unknown terrain, all 10/10 VP hexes reachable, 100% in-grid coverage
-> (2205/2205, 63x35 grid — #691 resolved the map's apparent 64th column as an unplayable
-> partial-sliver edge hex, not a digitization gap). Hexside features (roads, streams, stone
-> walls, fords) substantially present but pending visual audit against sm-map.jpg, tracked in
-> #685. Counter linkages still in progress.
+> **M9 — Deployment + Completeness (in progress):** South Mountain map: recovered from a
+> forgotten git stash (map-data-recovery_20260811, #689) — 2261 hexes, 0 unknown terrain, all
+> 10/10 VP hexes reachable, 100% in-grid coverage (2205/2205, 63x35 grid — #691 resolved the
+> map's apparent 64th column as an unplayable partial-sliver edge hex, not a digitization gap).
+> Hexside features (roads, streams, stone walls, fords) substantially present but pending
+> visual audit against sm-map.jpg, tracked in #685. MOVE action handler wired
+> (`engine/actions/move.js`): submitted-path cost via `pathCost`, `activatedUnitIds`
+> partial-move roster, hex control update. Discord OAuth identity layer (`feat/m9-discord-oauth`,
+> in review for merge): `passport` + `passport-discord` server strategy; SQLite v1→v2 migration
+> (users table + `side_a/b_user_id` FK columns); `requireAuth` middleware on games routes;
+> dev-mode poorman auth (`POST /auth/dev/login`) gated by `AUTH_DEV_MODE`; `useAuthStore`
+> Pinia store; Vue Router nav guard on `/lobby`; `HomeView` login button + disabled nav when
+> logged out; `LobbyView` username/avatar header. DigitalOcean Droplet provisioning still
+> pending.
 >
 > Sections describing completed work are accurate to the implementation. Sections describing
 > planned work reflect design intent and may evolve.
@@ -1286,7 +1293,9 @@ function treeHeight(scenarioRules) {
 ### Conventions
 
 - Base path: `/api/v1`
-- Auth: JWT in `httpOnly` cookie named `lob_session`
+- Auth: server-side session (`express-session` + `better-sqlite3-session-store`), passport
+  identity serialized into the session. `httpOnly` cookie named `connect.sid` (the
+  `express-session` default). No JWT — the session id is opaque; identity lives server-side.
 - All request bodies: `Content-Type: application/json`
 - All responses: `Content-Type: application/json`
 - Versioning: URL path (`/api/v1`). Breaking changes bump to `/api/v2`.
@@ -1297,23 +1306,33 @@ function treeHeight(scenarioRules) {
 
 #### `GET /auth/discord`
 
-Redirects browser to Discord authorization page. No request body.
+Redirects browser to Discord's OAuth2 authorization page (`passport-discord` strategy,
+`scope: identify`). Uses passport-oauth2's session-backed `state` parameter for login-CSRF
+protection. No request body.
 
 #### `GET /auth/discord/callback`
 
-Discord redirects here after user approves. Server exchanges code for Discord user profile, upserts user in SQLite, issues JWT cookie.
+Discord redirects here after user approves. Server exchanges the code for a Discord user
+profile (`id`, `username`, `avatar`), upserts the user in SQLite (`users` table), and
+serializes the user id into the session (`passport.serializeUser`). On failure (denied
+consent, invalid state), redirects to `/?error=auth`.
 
 **Response (redirect to frontend):**
 
 ```
 302 Found
-Set-Cookie: lob_session=<jwt>; HttpOnly; Secure; SameSite=Lax; Path=/
 Location: /
 ```
 
+#### `POST /auth/dev/login`
+
+Local-development-only alternative to the real OAuth flow — mints a session for a
+caller-supplied `{ code }` without any Discord credential check. Mounted only when
+`AUTH_DEV_MODE=true` **and** `NODE_ENV !== 'production'`; unmounted (404) otherwise.
+
 #### `POST /auth/logout`
 
-Clears the JWT cookie.
+Clears the session's passport identity (`req.logout()`).
 
 **Response:**
 
@@ -1321,24 +1340,24 @@ Clears the JWT cookie.
 { "ok": true }
 ```
 
-```
-Set-Cookie: lob_session=; Max-Age=0; HttpOnly; ...
-```
-
 #### `GET /auth/me`
 
-Returns the authenticated user's profile.
+Returns the authenticated user's profile from the session, or `401` if not authenticated.
 
 **Response:**
 
 ```json
 {
-  "id": "usr_a1b2c3",
-  "discordId": "123456789012345678",
-  "username": "Generalissimo#1234",
-  "avatarUrl": "https://cdn.discordapp.com/avatars/..."
+  "id": "123456789012345678",
+  "username": "Generalissimo",
+  "avatar": "a1b2c3d4e5f6..."
 }
 ```
+
+#### `GET /api/v1/games`
+
+Lists games where the authenticated user is `side_a_user_id` or `side_b_user_id`. Requires
+authentication (`requireAuth` middleware, mounted ahead of the whole games router).
 
 ---
 

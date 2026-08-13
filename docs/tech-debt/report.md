@@ -1,18 +1,18 @@
 # Technical Debt Report — lob-online
 
-_Last updated: 2026-08-13 after PR #697._
+_Last updated: 2026-08-13 after PR #701._
 
 ---
 
 ## Executive Summary
 
-| Metric                           | Value                                                                                 |
-| -------------------------------- | ------------------------------------------------------------------------------------- |
-| Open debt items                  | 5                                                                                     |
-| Cumulative debt score (net open) | 10                                                                                    |
-| Current-milestone open debt      | 5 items (M9)                                                                          |
-| Highest-risk item                | perf(engine): cache loadOob() — eliminate N+2 disk reads per dispatch (#676, score 3) |
-| PRs tracked                      | 463                                                                                   |
+| Metric                           | Value                                                                                                    |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Open debt items                  | 8                                                                                                        |
+| Cumulative debt score (net open) | 17                                                                                                       |
+| Current-milestone open debt      | 8 items (M9)                                                                                             |
+| Highest-risk item                | Auth architecture debt: session lifecycle coupling, migration ladder, module duplication (#698, score 3) |
+| PRs tracked                      | 464                                                                                                      |
 
 ---
 
@@ -490,6 +490,7 @@ _Last updated: 2026-08-13 after PR #697._
 | 2026-08-13 | PR #697 (resolved #694)                                        | -2                   | —         | 650                      |
 | 2026-08-13 | PR #697 (resolved #695)                                        | -2                   | —         | 650                      |
 | 2026-08-13 | PR #697 (resolved #696)                                        | -2                   | —         | 650                      |
+| 2026-08-13 | PR #701 (m9-discord-oauth)                                     | 7                    | +7        | 657                      |
 
 _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt added minus debt closed per PR (negative = net improvement); populated on main PR rows only, "—" on resolution sub-rows. "Cumulative Added" is a gross historical total that only increases; it differs from the Executive Summary net score once items are resolved._
 
@@ -497,17 +498,22 @@ _One row is appended per PR cycle by `/tech-debt-report`. "Net Delta" = debt add
 
 ## Risk Assessment
 
-Moderate risk. Net open debt score is 10 across 5 items, all in M9, and none scores above 3.
-PR #697 (map-data-debt-sprint_20260813) closed the four score-2 items #693-#696 that pushed
-the register into the elevated band after PR #692 — a regression test for `gridSpec.cols`
-(which also surfaced and fixed a live instance of the same risk in `calibration.js`'s stale
-default), a promoted-to-blocking `validate-data.js` check with new test coverage, a documented
-and pinned `playable` field, and a library.json/map.json sync test. The remaining items are the
-same pre-existing set carried from PR #674: a performance hazard (#676, loadOob synchronous
-disk I/O, score 3), structural duplication (#677 formation ladder), missing mechanics (#678 VP
-pass-through, #679 column formation), and minor cleanup (#681 IIFE helper). None are urgent in
-isolation; recommend folding #676/#678/#679 into the next debt sprint once M9 deployment work
-allows.
+Elevated risk. Net open debt score is 17 across 8 items, all in M9. PR #701 (M9 Discord OAuth)
+added 3 new items (#698 score 3, #699 and #700 score 2 each) — an expected regression for a
+substantial new-feature PR that shipped a full identity/session/persistence layer, not a sign
+of the PR being under-reviewed: all 7 High-severity findings from a 4-dimension `/team-review`
+plus every security-flavored Medium were fixed in place (login-CSRF via a missing OAuth
+`state` parameter, an `AUTH_DEV_MODE` default/gating footgun, a session-lifecycle bug that
+permanently locked players out of their own games, decorative identity authorization) — what's
+deferred is architectural cleanup (#698: session-regeneration redundancy, non-idempotent
+passport config, migration ladder structure) and lower-value follow-ups (#699, #700), not
+unresolved risk from the review itself. Composition is broad rather than concentrated: the
+highest score is 3, tied between the new auth architecture item and the pre-existing #676
+(loadOob synchronous disk I/O). The remaining pre-existing items are carried from PR #674:
+structural duplication (#677 formation ladder), missing mechanics (#678 VP pass-through, #679
+column formation), and minor cleanup (#681 IIFE helper). Recommend a debt-reduction pass
+before the next major auth-adjacent change — the session-lifecycle/migration-ladder debt in
+#698 specifically compounds with each additional schema or auth surface added on top of it.
 
 ---
 
@@ -515,13 +521,16 @@ allows.
 
 _Ordered by score descending (ties: current milestone first, then newest first). Resolved items are removed._
 
-| Score | Milestone | Issue | Title                                                                        | PR Introduced | Assessment                                                                                                                                                                                                 |
-| ----- | --------- | ----- | ---------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 3     | M9        | #676  | perf(engine): cache loadOob() — eliminate N+2 disk reads per dispatch        | PR #674       | loadOob() re-reads and validates oob.json on every call. getValidActions invokes it N+2 times per mid-activation dispatch — synchronous disk I/O blocks the event loop on the hottest action path.         |
-| 2     | M9        | #677  | refactor(engine): extract resolveFormationKey() — eliminate duplicate ladder | PR #674       | `resolveMovementFormation` and `resolveUnitMPs` encode the same decision tree. A future unit type added to one but not the other causes MP init and movement-cost formation to silently diverge.           |
-| 2     | M9        | #678  | feat(engine): honor SM §5.1 VP control for hexes moved through               | PR #674       | `updateHexControl` is called only for the destination hex. SM §5.1 awards control for "moved through" hexes; units sweeping across VP road hexes en route to a non-VP destination don't claim those hexes. |
-| 2     | M9        | #679  | feat(engine): model column formation toggle — infantry road movement         | PR #674       | Infantry always defaults to 'line'. Column formation (road movement 0.5/hex) is never applied, understating movement range on SM's road network. Requires a CHANGE_FORMATION action.                       |
-| 1     | M9        | #681  | chore(engine): extract safeFindOobUnit() helper                              | PR #674       | IIFE-try/catch OOB lookup pattern duplicated in move.js, activateStack.js, and index.js. Minor readability cost, no correctness risk.                                                                      |
+| Score | Milestone | Issue | Title                                                                                    | PR Introduced | Assessment                                                                                                                                                                                                                                                                                                                                  |
+| ----- | --------- | ----- | ---------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3     | M9        | #698  | Auth architecture debt: session lifecycle coupling, migration ladder, module duplication | PR #701       | Nothing actively broken — behavior verified correct — but compounding auth/persistence architecture debt (redundant session regeneration, non-idempotent passport config, duplicated SQL between auth and store layers, an if/else migration ladder with no forward-version guard) that will make the next schema change materially harder. |
+| 3     | M9        | #676  | perf(engine): cache loadOob() — eliminate N+2 disk reads per dispatch                    | PR #674       | loadOob() re-reads and validates oob.json on every call. getValidActions invokes it N+2 times per mid-activation dispatch — synchronous disk I/O blocks the event loop on the hottest action path.                                                                                                                                          |
+| 2     | M9        | #699  | Discord OAuth: dependency risk, boundary validation, and missing logout UI               | PR #701       | `passport-discord@0.1.4` deprecated upstream (assessed acceptable to ship — thin shim over actively-maintained passport-oauth2). No Zod boundary validation on the OAuth profile; a fully-tested logout store action has no UI control to reach it.                                                                                         |
+| 2     | M9        | #700  | Discord OAuth: remaining test-coverage and doc-accuracy follow-ups                       | PR #701       | Direct route-level tests for the Discord strategy dispatch, three narrow SQLite migration test gaps, an untested loading ref, an optional-chaining inconsistency, and a missing client-side route guard on GameView (server already 401s correctly).                                                                                        |
+| 2     | M9        | #677  | refactor(engine): extract resolveFormationKey() — eliminate duplicate ladder             | PR #674       | `resolveMovementFormation` and `resolveUnitMPs` encode the same decision tree. A future unit type added to one but not the other causes MP init and movement-cost formation to silently diverge.                                                                                                                                            |
+| 2     | M9        | #678  | feat(engine): honor SM §5.1 VP control for hexes moved through                           | PR #674       | `updateHexControl` is called only for the destination hex. SM §5.1 awards control for "moved through" hexes; units sweeping across VP road hexes en route to a non-VP destination don't claim those hexes.                                                                                                                                  |
+| 2     | M9        | #679  | feat(engine): model column formation toggle — infantry road movement                     | PR #674       | Infantry always defaults to 'line'. Column formation (road movement 0.5/hex) is never applied, understating movement range on SM's road network. Requires a CHANGE_FORMATION action.                                                                                                                                                        |
+| 1     | M9        | #681  | chore(engine): extract safeFindOobUnit() helper                                          | PR #674       | IIFE-try/catch OOB lookup pattern duplicated in move.js, activateStack.js, and index.js. Minor readability cost, no correctness risk.                                                                                                                                                                                                       |
 
 ---
 

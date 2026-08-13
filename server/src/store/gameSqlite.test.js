@@ -233,10 +233,10 @@ describe('migration idempotency', () => {
     db2.close();
   });
 
-  it('createStore on a DB that already has the v1 schema skips migration cleanly', () => {
-    // Simulate a DB that was already migrated to v1
+  it('createStore on a DB that already has the v2 schema skips migration cleanly', () => {
+    // Simulate a DB that was already migrated to v2
     const db3 = new Database(':memory:');
-    const s1 = createStore(db3); // first init — runs migration, sets user_version = 1
+    const s1 = createStore(db3); // first init — runs migration, sets user_version = 2
     s1.createGame('pre-migrated', 'tok-a', 'union');
 
     // Second createStore on same connection — must not error
@@ -246,8 +246,8 @@ describe('migration idempotency', () => {
     db3.close();
   });
 
-  it('createStore on a pre-v1 DB (missing new columns) adds them via ALTER TABLE', () => {
-    // Simulate the legacy schema without the new columns
+  it('createStore on a pre-v1 DB (missing new columns) adds all columns and sets user_version = 2', () => {
+    // Simulate the legacy schema without the v1/v2 columns
     const db4 = new Database(':memory:');
     db4.exec(`
       CREATE TABLE games (
@@ -261,14 +261,154 @@ describe('migration idempotency', () => {
     // user_version is still 0 — migration has not run
     expect(db4.pragma('user_version', { simple: true })).toBe(0);
 
-    // createStore must add missing columns and bump user_version
+    // createStore must add missing columns and bump user_version to 2
     const s = createStore(db4);
-    expect(db4.pragma('user_version', { simple: true })).toBe(1);
+    expect(db4.pragma('user_version', { simple: true })).toBe(2);
 
     s.createGame('legacy-game', 'tok-a', 'union', 'https://example.com/hook');
     const row = s.getGame('legacy-game');
     expect(row.side_a_faction).toBe('union');
     expect(row.discord_webhook).toBe('https://example.com/hook');
+    expect(row.side_a_user_id).toBeNull();
     db4.close();
+  });
+
+  it('createStore on a v1 DB migrates to v2 cleanly', () => {
+    // Build a v1 DB by hand (as if it was created before the v2 migration)
+    const db5 = new Database(':memory:');
+    db5.exec(`
+      CREATE TABLE games (
+        id TEXT PRIMARY KEY,
+        side_a_token TEXT NOT NULL,
+        side_b_token TEXT,
+        status TEXT NOT NULL DEFAULT 'open',
+        created_at INTEGER NOT NULL,
+        side_a_faction TEXT,
+        side_b_faction TEXT,
+        discord_webhook TEXT
+      )
+    `);
+    db5.pragma('user_version = 1');
+    db5
+      .prepare(
+        "INSERT INTO games (id, side_a_token, status, created_at, side_a_faction) VALUES ('v1-game', 'tok', 'open', 1, 'union')"
+      )
+      .run();
+
+    const s = createStore(db5);
+    expect(db5.pragma('user_version', { simple: true })).toBe(2);
+    // Existing v1 game is preserved and new columns are NULL
+    const row = s.getGame('v1-game');
+    expect(row.side_a_faction).toBe('union');
+    expect(row.side_a_user_id).toBeNull();
+    // users table was created
+    expect(() => db5.prepare('SELECT * FROM users').all()).not.toThrow();
+    db5.close();
+  });
+});
+
+describe('side_a_user_id / side_b_user_id columns', () => {
+  it('stores side_a_user_id when provided to createGame', () => {
+    store.createGame('uid1', 'tok-a', 'union', null, 'user-abc');
+    expect(store.getGame('uid1').side_a_user_id).toBe('user-abc');
+  });
+
+  it('stores null side_a_user_id when omitted', () => {
+    store.createGame('uid2', 'tok-a', 'union');
+    expect(store.getGame('uid2').side_a_user_id).toBeNull();
+  });
+
+  it('stores side_b_user_id when joinGame called with userId', () => {
+    store.createGame('uid3', 'tok-a', 'union');
+    store.joinGame('uid3', VALID_UUID_1, 'confederate', 'user-xyz');
+    expect(store.getGame('uid3').side_b_user_id).toBe('user-xyz');
+  });
+
+  it('stores null side_b_user_id when joinGame called without userId', () => {
+    store.createGame('uid4', 'tok-a');
+    store.joinGame('uid4', VALID_UUID_1);
+    expect(store.getGame('uid4').side_b_user_id).toBeNull();
+  });
+});
+
+describe('upsertUser / getUser', () => {
+  it('inserts a new user and retrieves it', () => {
+    store.upsertUser('u1', 'Alice', 'abc123');
+    const user = store.getUser('u1');
+    expect(user).toEqual({ id: 'u1', username: 'Alice', avatar: 'abc123' });
+  });
+
+  it('updates username and avatar on conflict', () => {
+    store.upsertUser('u2', 'Bob', null);
+    store.upsertUser('u2', 'Robert', 'new-avatar');
+    const user = store.getUser('u2');
+    expect(user.username).toBe('Robert');
+    expect(user.avatar).toBe('new-avatar');
+  });
+
+  it('stores null avatar when not provided', () => {
+    store.upsertUser('u3', 'Charlie', null);
+    expect(store.getUser('u3').avatar).toBeNull();
+  });
+
+  it('returns null for unknown user id', () => {
+    expect(store.getUser('nonexistent')).toBeNull();
+  });
+});
+
+describe('listGamesByUser', () => {
+  it('returns only games where the user is side_a or side_b', () => {
+    store.createGame('g-mine-a', 'tok-a', 'union', null, 'me');
+    store.createGame('g-mine-b', 'tok-b', 'union');
+    store.joinGame('g-mine-b', VALID_UUID_1, 'confederate', 'me');
+    store.createGame('g-other', 'tok-c', 'union', null, 'other-user');
+    const rows = store.listGamesByUser('me');
+    const ids = rows.map((r) => r.id).sort();
+    expect(ids).toEqual(['g-mine-a', 'g-mine-b']);
+  });
+
+  it('returns empty array when user has no games', () => {
+    store.createGame('g1', 'tok-a', 'union', null, 'someone-else');
+    expect(store.listGamesByUser('nobody')).toEqual([]);
+  });
+});
+
+// #m9-discord-oauth review finding — lets a player who lost their session (logout, cookie
+// expiry, new device) recover access to a game they already own, without their old sideToken.
+describe('reclaimSideToken', () => {
+  it('reissues side_a_token when the caller owns side A', () => {
+    store.createGame('g1', 'old-token-a', 'union', null, 'owner-a');
+    const ok = store.reclaimSideToken('g1', 'union', 'owner-a', 'new-token-a');
+    expect(ok).toBe(true);
+    expect(store.getGame('g1').side_a_token).toBe('new-token-a');
+  });
+
+  it('reissues side_b_token when the caller owns side B', () => {
+    store.createGame('g1', 'tok-a', 'union', null, 'owner-a');
+    store.joinGame('g1', VALID_UUID_1, 'confederate', 'owner-b');
+    const ok = store.reclaimSideToken('g1', 'confederate', 'owner-b', 'new-token-b');
+    expect(ok).toBe(true);
+    expect(store.getGame('g1').side_b_token).toBe('new-token-b');
+    // Side A's token must be untouched by a side-B reclaim
+    expect(store.getGame('g1').side_a_token).toBe('tok-a');
+  });
+
+  it('returns false and makes no change when the caller does not own the matching faction', () => {
+    store.createGame('g1', 'tok-a', 'union', null, 'owner-a');
+    const ok = store.reclaimSideToken('g1', 'union', 'someone-else', 'new-token');
+    expect(ok).toBe(false);
+    expect(store.getGame('g1').side_a_token).toBe('tok-a');
+  });
+
+  it('returns false when no side on the game matches the requested faction', () => {
+    store.createGame('g1', 'tok-a', 'union', null, 'owner-a');
+    const ok = store.reclaimSideToken('g1', 'confederate', 'owner-a', 'new-token');
+    expect(ok).toBe(false);
+  });
+
+  it('throws GameNotFoundError when the game does not exist', () => {
+    expect(() => store.reclaimSideToken('nope', 'union', 'owner-a', 'new-token')).toThrow(
+      GameNotFoundError
+    );
   });
 });

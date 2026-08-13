@@ -13,6 +13,9 @@ import { Server } from 'socket.io';
 
 import { initDb, getDb } from './store/gameSqlite.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import passport, { configurePassport } from './auth/discord.js';
+import { requireAuth } from './auth/requireAuth.js';
+import authRouter from './routes/auth.js';
 import gamesRouter from './routes/games.js';
 import oobRouter from './routes/oob.js';
 import leadersRouter from './routes/leaders.js';
@@ -92,6 +95,11 @@ export async function startServer() {
   });
   app.use(sessionMiddleware);
 
+  // Passport — must come after express-session so req.session is available (#m9-discord-oauth)
+  configurePassport(getDb());
+  app.use(passport.initialize());
+  app.use(passport.session());
+
   // CSRF defense: reject state-mutating requests whose Origin doesn't match the known
   // client origin. This guards cookie-authenticated routes against cross-site request
   // forgery from other origins. Full synchronizer-token CSRF is deferred to M8 (#350).
@@ -113,8 +121,26 @@ export async function startServer() {
     res.json({ ok: true, uptime: process.uptime() });
   });
 
-  // Game API
-  app.use('/api/v1/games', gamesRouter);
+  // Auth routes — Discord OAuth + /auth/me + /auth/logout
+  app.use('/auth', authRouter);
+  console.log('[server] auth API enabled at /auth');
+
+  // Dev-mode poorman auth — POST /auth/dev/login with { code } for local testing without Discord.
+  // /team-review (security) — NODE_ENV !== 'production' is a second, independent gate: a stray
+  // AUTH_DEV_MODE=true surviving into a production .env (e.g. copied from .env.example, or left
+  // over from a staging toggle) cannot mount an unauthenticated login endpoint in production.
+  if (process.env.AUTH_DEV_MODE === 'true' && process.env.NODE_ENV !== 'production') {
+    const { default: devAuthRouter } = await import('./routes/devAuth.js');
+    app.use('/auth/dev', devAuthRouter);
+    console.log('[server] dev auth enabled at /auth/dev (AUTH_DEV_MODE=true)');
+  } else if (process.env.AUTH_DEV_MODE === 'true') {
+    console.warn(
+      '[server] AUTH_DEV_MODE=true but NODE_ENV=production — dev auth NOT mounted (fail closed)'
+    );
+  }
+
+  // Game API — requireAuth ensures all game routes have a known user identity (#668)
+  app.use('/api/v1/games', requireAuth, gamesRouter);
   console.log('[server] game API enabled at /api/v1/games');
 
   // Scenario data API — production-safe, not gated by MAP_EDITOR_ENABLED (#431)

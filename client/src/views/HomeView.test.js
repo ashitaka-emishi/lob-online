@@ -1,7 +1,24 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { createRouter, createWebHistory } from 'vue-router';
+
+// Hoisted so the vi.mock factory can close over it; mutate per-test to vary auth state.
+const { mockAuthStore } = vi.hoisted(() => {
+  const mockAuthStore = {
+    isLoggedIn: true,
+    currentUser: { id: 'test-user', username: 'Test Player', avatar: null },
+    initialized: true,
+    loading: false,
+    fetchMe: vi.fn(),
+    logout: vi.fn(),
+  };
+  return { mockAuthStore };
+});
+
+vi.mock('../stores/useAuthStore.js', () => ({
+  useAuthStore: () => mockAuthStore,
+}));
 
 const stubRouter = createRouter({
   history: createWebHistory(),
@@ -26,6 +43,9 @@ function makeWrapper(router = stubRouter) {
 
 describe('HomeView', () => {
   beforeEach(async () => {
+    // Reset to logged-in state so existing module/URL tests are unaffected
+    mockAuthStore.isLoggedIn = true;
+    mockAuthStore.currentUser = { id: 'test-user', username: 'Test Player', avatar: null };
     vi.stubEnv('VITE_MAP_EDITOR_ENABLED', 'true');
     vi.resetModules();
     localStorage.clear();
@@ -116,5 +136,45 @@ describe('HomeView', () => {
     const wrapper = makeWrapper();
     const aboutLink = wrapper.find('[data-testid="about-link"]');
     expect(aboutLink.attributes('href')).toBe('/about');
+  });
+
+  // ── Auth state ───────────────────────────────────────────────────────────────
+
+  it('shows Discord login button when not logged in', async () => {
+    mockAuthStore.isLoggedIn = false;
+    mockAuthStore.currentUser = null;
+    vi.resetModules();
+    HomeView = (await import('./HomeView.vue')).default;
+    const wrapper = makeWrapper();
+    expect(wrapper.find('[data-testid="login-btn"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="user-info"]').exists()).toBe(false);
+  });
+
+  it('shows username and hides login button when logged in', () => {
+    const wrapper = makeWrapper();
+    expect(wrapper.find('[data-testid="user-info"]').text()).toContain('Test Player');
+    expect(wrapper.find('[data-testid="login-btn"]').exists()).toBe(false);
+  });
+
+  it('lobby link is a disabled span when not logged in', async () => {
+    mockAuthStore.isLoggedIn = false;
+    mockAuthStore.currentUser = null;
+    vi.resetModules();
+    HomeView = (await import('./HomeView.vue')).default;
+    const wrapper = makeWrapper();
+    const lobbyLink = wrapper.find('[data-testid="lobby-link"]');
+    expect(lobbyLink.element.tagName).toBe('SPAN');
+    expect(lobbyLink.attributes('aria-disabled')).toBe('true');
+  });
+
+  it('editor link is a disabled span when not logged in', async () => {
+    mockAuthStore.isLoggedIn = false;
+    mockAuthStore.currentUser = null;
+    vi.resetModules();
+    HomeView = (await import('./HomeView.vue')).default;
+    const wrapper = makeWrapper();
+    const editorLink = wrapper.find('[data-testid="editor-link"]');
+    expect(editorLink.element.tagName).toBe('SPAN');
+    expect(editorLink.attributes('aria-disabled')).toBe('true');
   });
 });

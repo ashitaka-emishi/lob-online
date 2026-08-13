@@ -20,7 +20,8 @@ import { getPlayerSession } from './session.js';
  *   403 — session exists but session.gameId ≠ req.params.id (authenticated for a different game)
  *   404 — game row no longer exists in the DB (game was deleted)
  *   403 — game exists but session.sideToken does not match either side (stale/rotated token)
- *   409 — token is valid but game is not in 'active' status
+ *   403 — token matches, but the DB-recorded owner (side_a/b_user_id) ≠ req.user.id
+ *   409 — token and identity are valid but game is not in 'active' status
  *   next — all checks pass; req.game and req.side populated; caller is an authorised active-side player
  */
 export function requireSide(req, res, next) {
@@ -45,6 +46,18 @@ export function requireSide(req, res, next) {
   if (player.sideToken !== row.side_a_token && player.sideToken !== row.side_b_token) {
     return res.status(403).json({ error: 'Forbidden' });
   }
+
+  // Identity ownership check (#m9-discord-oauth review — security finding): without this,
+  // possession of a sideToken authorizes side access regardless of which Discord identity is
+  // attached to the session, making side_a_user_id/side_b_user_id purely decorative. Only
+  // enforced when the DB has an owner recorded for the matched side — pre-migration rows and
+  // any row created without a logged-in user (legacy data) have a null owner and are not
+  // affected. req.user is guaranteed non-null here because requireAuth runs first (server.js).
+  const ownerId = player.sideToken === row.side_a_token ? row.side_a_user_id : row.side_b_user_id;
+  if (ownerId && req.user?.id !== ownerId) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
   if (row.status !== 'active') {
     return res.status(409).json({ error: 'Game is not active' });
   }

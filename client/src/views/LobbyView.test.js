@@ -7,7 +7,12 @@ vi.mock('../stores/lobby.js', () => ({
   useLobbyStore: vi.fn(),
 }));
 
+vi.mock('../stores/useAuthStore.js', () => ({
+  useAuthStore: vi.fn(),
+}));
+
 import { useLobbyStore } from '../stores/lobby.js';
+import { useAuthStore } from '../stores/useAuthStore.js';
 import LobbyView from './LobbyView.vue';
 
 const stubRouter = createRouter({
@@ -43,9 +48,18 @@ function makeStore(overrides = {}) {
   return base;
 }
 
-function mountLobby(storeOverrides = {}) {
+function makeAuthStore(overrides = {}) {
+  return {
+    currentUser: { id: 'test-user', username: 'Test Player', avatar: null },
+    isLoggedIn: true,
+    ...overrides,
+  };
+}
+
+function mountLobby(storeOverrides = {}, authOverrides = {}) {
   setActivePinia(createPinia());
   useLobbyStore.mockReturnValue(makeStore(storeOverrides));
+  useAuthStore.mockReturnValue(makeAuthStore(authOverrides));
   return mount(LobbyView, {
     global: { plugins: [stubRouter] },
   });
@@ -240,5 +254,17 @@ describe('LobbyView', () => {
     expect(
       wrapper.find('[data-testid="join-csa-btn"]').attributes('aria-describedby')
     ).toBeUndefined();
+  });
+
+  // ── Auth header ──────────────────────────────────────────────────────────────
+
+  it('shows username in the lobby header when logged in', () => {
+    const wrapper = mountLobby({}, { currentUser: { id: 'u1', username: 'Alice', avatar: null } });
+    expect(wrapper.find('[data-testid="user-badge"]').text()).toContain('Alice');
+  });
+
+  it('hides user badge when currentUser is null', () => {
+    const wrapper = mountLobby({}, { currentUser: null });
+    expect(wrapper.find('[data-testid="user-badge"]').exists()).toBe(false);
   });
 });

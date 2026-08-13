@@ -210,4 +210,61 @@ describe('requireSide', () => {
     expect(next).not.toHaveBeenCalled();
     expect(res._status).toBe(403);
   });
+
+  // ── Identity ownership check (#m9-discord-oauth review) ────────────────────────
+
+  it('calls next() when req.user.id matches the DB-recorded owner of the matched side', () => {
+    getGame.mockReturnValue({ ...ACTIVE_ROW, side_a_user_id: 'user-1' });
+    const req = {
+      params: { id: 'game-abc' },
+      session: { gameId: 'game-abc', side: 'union', sideToken: 'tok-a' },
+      user: { id: 'user-1' },
+    };
+    const res = mockRes();
+    const next = vi.fn();
+    requireSide(req, res, next);
+    expect(next).toHaveBeenCalledOnce();
+  });
+
+  it('returns 403 when req.user.id does not match the DB-recorded owner (token valid, wrong identity)', () => {
+    getGame.mockReturnValue({ ...ACTIVE_ROW, side_a_user_id: 'user-1' });
+    const req = {
+      params: { id: 'game-abc' },
+      session: { gameId: 'game-abc', side: 'union', sideToken: 'tok-a' },
+      user: { id: 'someone-else' },
+    };
+    const res = mockRes();
+    const next = vi.fn();
+    requireSide(req, res, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(res._status).toBe(403);
+  });
+
+  it('calls next() when the matched side has no recorded owner (legacy/pre-migration row)', () => {
+    // side_a_user_id absent entirely — must not be treated as "owner is undefined, reject"
+    getGame.mockReturnValue(ACTIVE_ROW);
+    const req = {
+      params: { id: 'game-abc' },
+      session: { gameId: 'game-abc', side: 'union', sideToken: 'tok-a' },
+      user: { id: 'anyone' },
+    };
+    const res = mockRes();
+    const next = vi.fn();
+    requireSide(req, res, next);
+    expect(next).toHaveBeenCalledOnce();
+  });
+
+  it('checks ownership against the correct column for side B', () => {
+    getGame.mockReturnValue({ ...ACTIVE_ROW, side_b_user_id: 'user-2' });
+    const req = {
+      params: { id: 'game-abc' },
+      session: { gameId: 'game-abc', side: 'confederate', sideToken: 'tok-b' },
+      user: { id: 'someone-else' },
+    };
+    const res = mockRes();
+    const next = vi.fn();
+    requireSide(req, res, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(res._status).toBe(403);
+  });
 });
