@@ -143,29 +143,22 @@ async function buildApp() {
   app.locals.io = { to: mockTo };
   app.locals._mockEmit = mockEmit;
   app.locals._mockTo = mockTo;
-  // Minimal session + auth stub — regenerate resets session; req.user reflects a logged-in
-  // player. req.login mimics passport: re-populates req.user (a real regenerate() wipes
-  // session.passport.user, so the route must call req.login() again — #m9-discord-oauth
-  // review finding, session.regenerate() silently logged the caller out of every create/join).
-  // Exposed on app.locals so tests can assert it was actually called after the request completes.
-  // callOrder additionally proves ORDER: regenerate must fully resolve before login runs (if
-  // login ran first, passport's own internal regenerate — via req.login — would immediately
-  // wipe the identity it just wrote, reproducing the original bug under a different shape).
-  // A plain "was login called" assertion cannot catch a reordering; this can.
+  // Minimal session + auth stub. req.login mimics passport's real SessionManager.logIn
+  // (node_modules/passport/lib/sessionmanager.js): it regenerates the session itself before
+  // re-serializing identity — regenerateSession() in games.js no longer calls
+  // req.session.regenerate() explicitly (#698 — that was a redundant second store round-trip,
+  // since req.login() always does it internally). callOrder is pushed by loginSpy itself now,
+  // mirroring that single real call; kept as an array (not a boolean) so the shape matches
+  // games.auth-integration.test.js, which verifies the true ordering against real passport.
+  // Exposed on app.locals so tests can assert login ran with the right identity.
   const callOrder = [];
   app.locals._callOrder = callOrder;
   const loginSpy = vi.fn((user, cb) => {
-    callOrder.push('login');
+    callOrder.push('regenerate', 'login');
     cb();
   });
   app.locals._loginSpy = loginSpy;
   app.use((req, _res, next) => {
-    req.session = {
-      regenerate: (cb) => {
-        callOrder.push('regenerate');
-        cb();
-      },
-    };
     req.user = { id: 'test-user-id', username: 'Test Player', avatar: null };
     req.login = loginSpy;
     next();
@@ -689,11 +682,11 @@ describe('GET /api/v1/games/:id', () => {
     expect(res.body.turn).toBe(1);
   });
 
-  it('returns 401 when there is no player session (#330)', async () => {
+  it('returns 403 when there is no player session (#330, #698)', async () => {
     getPlayerSession.mockReturnValue(null);
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('returns 403 when session gameId does not match the route :id — does not hit the DB (#553)', async () => {
@@ -860,13 +853,13 @@ const ACTIVE_STATE = {
 const NEXT_STATE = { ...ACTIVE_STATE, version: 4 };
 
 describe('POST /api/v1/games/:id/actions', () => {
-  it('returns 401 when player has no session (#356)', async () => {
+  it('returns 403 when player has no session (#356, #698)', async () => {
     getPlayerSession.mockReturnValue(null);
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/actions`)
       .send({ type: 'END_PHASE', payload: null, expectedVersion: 3 });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('returns 403 when session gameId does not match route :id — does not hit DB (#553)', async () => {
@@ -1241,11 +1234,11 @@ describe('GET /api/v1/games/:id/actions (#495)', () => {
     expect(res.body.error).toBe('Game not found');
   });
 
-  it('returns 401 when the request has no authenticated session', async () => {
+  it('returns 403 when there is no game-side session (#698)', async () => {
     getPlayerSession.mockReturnValue(null);
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}/actions`);
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('returns 401 when authenticated player for game A queries game B actions (#503)', async () => {
@@ -1282,11 +1275,11 @@ describe('Session guard — requireSameGame (#553)', () => {
     expect(res.status).toBe(403);
   });
 
-  it('GET /:id — returns 401 for missing session (#553)', async () => {
+  it('GET /:id — returns 403 for missing session (#553, #698)', async () => {
     getPlayerSession.mockReturnValue(null);
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}`);
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   // ── GET /api/v1/games/:id/actions ────────────────────────────────────────────
@@ -1308,11 +1301,11 @@ describe('Session guard — requireSameGame (#553)', () => {
     expect(getValidActions).not.toHaveBeenCalled();
   });
 
-  it('GET /:id/actions — returns 401 for missing session (#553)', async () => {
+  it('GET /:id/actions — returns 403 for missing session (#553, #698)', async () => {
     getPlayerSession.mockReturnValue(null);
     const app = await buildApp();
     const res = await request(app).get(`/api/v1/games/${TEST_UUID}/actions`);
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   // ── POST /api/v1/games/:id/actions ───────────────────────────────────────────
@@ -1339,13 +1332,13 @@ describe('Session guard — requireSameGame (#553)', () => {
     expect(dispatch).not.toHaveBeenCalled();
   });
 
-  it('POST /:id/actions — returns 401 for missing session (#553)', async () => {
+  it('POST /:id/actions — returns 403 for missing session (#553, #698)', async () => {
     getPlayerSession.mockReturnValue(null);
     const app = await buildApp();
     const res = await request(app)
       .post(`/api/v1/games/${TEST_UUID}/actions`)
       .send({ type: 'END_PHASE', payload: null, expectedVersion: 0 });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('calls notifyWebhook after saveGame when game has discord_webhook configured (#M8)', async () => {

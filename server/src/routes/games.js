@@ -33,25 +33,19 @@ import {
 import { SIDES } from '../util/sides.js';
 import { UUID_RE } from '../util/uuid.js';
 
-// Promisify session.regenerate — prevents session fixation by rotating the session ID
-// before writing new identity. (#411)
+// Promisify the session-fixation defense before writing new game-side identity. (#411)
 //
-// req.session.regenerate() discards the existing session outright and builds a fresh one,
-// which wipes passport's serialized identity (req.session.passport.user) along with it.
-// Left alone, the caller's Discord/dev-auth login silently drops on every create/join —
-// req.user is still populated for the remainder of THIS request (passport reads it once via
-// deserializeUser before the route runs), but any subsequent request presents as logged out,
-// since nothing had re-called req.login() to write it back into the new session. Capture
-// req.user before regenerating and restore it after, so the two session-fixation defenses
-// (SEC-M1 for sideToken, passport's own regenerate-friendly login) don't fight each other.
+// req.login() (passport's SessionManager.logIn, node_modules/passport/lib/sessionmanager.js)
+// unconditionally calls req.session.regenerate() itself before re-serializing the user into the
+// fresh session — there is no option to suppress it. An earlier version of this function called
+// req.session.regenerate() explicitly first and then req.login(), which regenerated the session
+// twice (two SQLite session-store round trips) for every create/join (#698). req.user is
+// guaranteed non-null here — every route that calls this is mounted under requireAuth
+// (server.js) — so req.login() alone provides both the identity write-back this function exists
+// for AND the SEC-M1 session-fixation rotation, in one store round trip.
 function regenerateSession(req) {
-  const user = req.user;
   return new Promise((resolve, reject) => {
-    req.session.regenerate((err) => {
-      if (err) return reject(err);
-      if (!user) return resolve();
-      req.login(user, (loginErr) => (loginErr ? reject(loginErr) : resolve()));
-    });
+    req.login(req.user, (err) => (err ? reject(err) : resolve()));
   });
 }
 

@@ -224,6 +224,16 @@ describe('discord_webhook column', () => {
 });
 
 describe('migration idempotency', () => {
+  // #698 — without a forward-version guard, a binary opening a DB written by a newer version
+  // would silently fall through (version < 2 is false) and proceed against a schema it doesn't
+  // understand, rather than refusing to start.
+  it('createStore throws when the DB user_version is newer than this binary supports', () => {
+    const dbFuture = new Database(':memory:');
+    dbFuture.pragma('user_version = 99');
+    expect(() => createStore(dbFuture)).toThrow(/newer than this binary supports/);
+    dbFuture.close();
+  });
+
   it('createStore on the same DB twice does not throw', () => {
     const db2 = new Database(':memory:');
     expect(() => {

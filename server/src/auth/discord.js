@@ -1,6 +1,8 @@
 import passport from 'passport';
 import { Strategy as DiscordStrategy } from 'passport-discord';
 
+import { createUserQueries } from '../store/gameSqlite.js';
+
 // DEPENDENCY RISK: passport-discord@0.1.4 is deprecated upstream ("no longer maintained",
 // confirmed via `npm view passport-discord deprecated`). It's a ~150-line shim over the
 // actively-maintained passport-oauth2 — all security-relevant logic (token exchange, state
@@ -11,10 +13,23 @@ import { Strategy as DiscordStrategy } from 'passport-discord';
 // Configure passport with a live DB reference. Called once from server.js after initDb().
 // Hoists all prepared statements at call time so per-request paths hit no extra SQLite overhead.
 export function configurePassport(db) {
-  const getUserStmt = db.prepare('SELECT id, username, avatar FROM users WHERE id = ?');
-  const upsertUserStmt = db.prepare(
-    'INSERT INTO users (id, username, avatar, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET username = excluded.username, avatar = excluded.avatar'
-  );
+  // #698 — was a byte-identical duplicate of gameSqlite.js's own upsertUser/getUser prepared
+  // statements; a future users-table schema change only had to be applied there, but nothing
+  // enforced it, and this copy had no coverage of its own. Shared factory now used by both.
+  const { getUser, upsertUser } = createUserQueries(db);
+
+  // #698 — passport.serializeUser()/deserializeUser() push onto internal arrays
+  // (_serializers/_deserializers, authenticator.js) rather than replacing; passport's public
+  // API has no "reset" call. A second configurePassport() in the same process (multi-init test
+  // contexts, a future hot-restart pattern) would otherwise leave the FIRST-registered
+  // deserializer permanently in effect — deserializeUser tries stack[0] first and only falls
+  // through on an explicit 'pass', which this deserializer never returns — silently keeping a
+  // stale handler bound to a closed DB instance active for the rest of the process. Resetting
+  // here makes configurePassport() safe to call more than once; passport.use() below doesn't
+  // need the same treatment since strategies are keyed by name (an object, not an array) and
+  // re-registering 'discord' naturally replaces the prior entry.
+  passport._serializers = [];
+  passport._deserializers = [];
 
   // Serialize only the user id into the session.
   passport.serializeUser((user, done) => {
@@ -35,7 +50,7 @@ export function configurePassport(db) {
       return done(null, { id, username: `DevUser ${code}`, avatar: null });
     }
     try {
-      const user = getUserStmt.get(id);
+      const user = getUser(id);
       done(null, user ?? false);
     } catch (err) {
       done(err);
@@ -73,7 +88,7 @@ export function configurePassport(db) {
           avatar: profile.avatar ?? null,
         };
         try {
-          upsertUserStmt.run(user.id, user.username, user.avatar, Date.now());
+          upsertUser(user.id, user.username, user.avatar);
           done(null, user);
         } catch (err) {
           done(err);

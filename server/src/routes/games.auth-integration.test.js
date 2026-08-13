@@ -76,10 +76,37 @@ beforeAll(() => {
   app.use('/api/v1/games', requireAuth, gamesRouter);
 });
 
+// Extracts the connect.sid value from a supertest response's Set-Cookie header (express-session's
+// default cookie name; the beforeAll session() config above doesn't override it).
+function sessionId(res) {
+  const setCookie = res.headers['set-cookie'];
+  if (!setCookie) return null;
+  const raw = setCookie.find((c) => c.startsWith('connect.sid='));
+  return raw ? raw.split(';')[0] : null;
+}
+
 describe('auth lifecycle — real session/passport, no mocked req.login (#m9-discord-oauth)', () => {
   it('rejects unauthenticated requests to /api/v1/games', async () => {
     const res = await request(app).get('/api/v1/games');
     expect(res.status).toBe(401);
+  });
+
+  // #698 review, second pass — mutation-testing regenerateSession() to a full no-op (neither
+  // req.session.regenerate() nor req.login() called) surfaced that no existing test in this
+  // suite would have caught it: every "stays logged in" assertion below trivially holds if the
+  // session is never touched at all, since nothing wipes req.user in the first place. This test
+  // exists specifically to verify the SEC-M1 property those tests can't: that the session ID
+  // actually rotates on create, independent of whether identity happens to survive.
+  it('rotates the session ID on create (SEC-M1 session-fixation defense)', async () => {
+    const agent = request.agent(app);
+    const loginRes = await agent.post('/auth/dev/login').send({ code: 'itest-rotate' }).expect(200);
+    const sidBefore = sessionId(loginRes);
+    expect(sidBefore).toBeTruthy();
+
+    const createRes = await agent.post('/api/v1/games').send({}).expect(201);
+    const sidAfter = sessionId(createRes);
+    expect(sidAfter).toBeTruthy();
+    expect(sidAfter).not.toBe(sidBefore);
   });
 
   it("login -> create game -> stays logged in -> game appears in the user's list", async () => {

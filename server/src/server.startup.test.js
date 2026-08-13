@@ -19,6 +19,9 @@ vi.mock('./store/gameSqlite.js', () => ({
   joinGame: vi.fn(),
   getGame: vi.fn(),
   listGames: vi.fn(),
+  // #698 — configurePassport() (called by startServer, exercised below) now calls this
+  // instead of preparing its own duplicate statements.
+  createUserQueries: vi.fn().mockReturnValue({ getUser: vi.fn(), upsertUser: vi.fn() }),
 }));
 
 vi.mock('better-sqlite3-session-store', () => ({

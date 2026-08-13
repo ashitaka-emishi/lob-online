@@ -118,6 +118,34 @@ describe('configurePassport', () => {
     });
   });
 
+  // #698 — passport.serializeUser()/deserializeUser() push onto internal arrays rather than
+  // replacing; without a reset, a second configurePassport() call in the same process leaves
+  // the FIRST-registered deserializer (bound to a possibly-closed db) permanently in effect,
+  // since deserializeUser's real stack-traversal tries stack[0] first and this deserializer
+  // never returns the 'pass' sentinel needed to fall through.
+  describe('idempotency', () => {
+    it('a second configurePassport() call does not accumulate deserializers', () => {
+      configurePassport(makeDb());
+      configurePassport(makeDb());
+      expect(passport._deserializers).toHaveLength(1);
+      expect(passport._serializers).toHaveLength(1);
+    });
+
+    it('after a second configurePassport() call, only the latest db is consulted', () => {
+      const dbA = makeDb({ userRow: { id: 'u1', username: 'FromA', avatar: null } });
+      const dbB = makeDb({ userRow: { id: 'u1', username: 'FromB', avatar: null } });
+      configurePassport(dbA);
+      configurePassport(dbB);
+
+      // Real stack traversal (not the spy's direct-call shortcut the tests above use) — this
+      // is what actually runs when a request deserializes a session.
+      const done = vi.fn();
+      passport.deserializeUser('u1', done);
+      expect(done).toHaveBeenCalledWith(null, { id: 'u1', username: 'FromB', avatar: null });
+      expect(dbA._getStmt.get).not.toHaveBeenCalled();
+    });
+  });
+
   describe('DiscordStrategy configuration', () => {
     it('registers a strategy with state: true (login CSRF protection) when Discord env vars are set', () => {
       process.env.DISCORD_CLIENT_ID = 'cid';
