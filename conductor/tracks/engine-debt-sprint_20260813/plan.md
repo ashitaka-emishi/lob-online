@@ -230,15 +230,15 @@ findings were fixed in place — none deferred.
       labeled `tech-debt` on filing, contradicting the recorded "not debt, a feature" ruling).
 - [ ] Task 7.3: Update `docs/tech-debt/report.md` (remove #676/#677/#678/#679/#681, add #703)
       once the PR number is known.
-- [ ] Task 7.4: Run `/pr-create`.
+- [x] Task 7.4: Run `/pr-create` — PR #705 opened against `master`.
 
 ### Final Verification
 
-- [ ] All acceptance criteria in spec.md met or explicitly descoped
-- [ ] All five issues closed (four resolved, one replaced), two follow-ups filed
+- [x] All acceptance criteria in spec.md met or explicitly descoped
+- [x] All five issues closed (four resolved, one replaced), two follow-ups filed
 - [ ] Debt register reflects net -8 in score (5 items closed, score 10; 1 item added, #703
-      score 2)
-- [ ] Full quality suite green
+      score 2) — pending `/tech-debt-report` against PR #705
+- [x] Full quality suite green (169 files / 3387 tests, zero unexpected warnings)
 - [x] `/team-review` complete, all findings fixed in place
 
 ---
