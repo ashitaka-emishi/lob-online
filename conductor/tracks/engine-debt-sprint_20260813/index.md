@@ -1,7 +1,7 @@
 # Track: Engine Debt Sprint — Issues #676-679, #681
 
 **ID:** engine-debt-sprint_20260813
-**Status:** Pending (PR #705 open, awaiting merge)
+**Status:** Complete (PR #705 merged)
 
 ## Documents
 
