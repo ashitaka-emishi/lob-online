@@ -165,6 +165,53 @@ column-64 hex records are added.
 
 ---
 
+## Phase 3: `/team-review` Findings
+
+Five reviewers spawned (security, architecture, testing, maintainability, domain — the
+default set plus `domain` given the PR's core change affects hex reachability semantics).
+Three completed (security, testing, maintainability); architecture and domain hit an API
+session rate limit mid-run and could not be retried within this session.
+
+### Tasks
+
+- [x] Task 3.1: Fixed `plan.md` checkbox contradictions — `Status: Complete` while "issue
+      closed" and the entire Final Verification section were unchecked, the same self-inflicted
+      drift bug class flagged twice before in sibling PRs this week
+- [x] Task 3.2: Fixed stale `2240`/`64x35`/`cols: 64` references the PR's own "every reference
+      updated" claim (Task 2.3) missed: `validate-data.js`'s now-inaccurate present-tense
+      comment, `hex.js`'s cache-bound comment, `move.js`'s hex-index comment, `los.js`'s
+      dead-code fallback (dropped the unused `cols` field entirely rather than just correcting
+      the number), and `hex.test.js`'s misleading "SM map grid spec" comment on a synthetic
+      fixture (independently flagged by two reviewers)
+- [x] Task 3.3: Softened the HLD risk-register row from `Resolved` to `Reduced — Low` — its own
+      mitigation text admits hexside-network audit (#685) is still open, the same overclaiming
+      pattern PR #687 was filed to fix
+- [x] Task 3.4: Added a one-line pointer in `map-data-recovery_20260811/index.md` noting the
+      column-64 gap it left open is now resolved here
+- [x] Task 3.5: Filed 4 consolidated debt issues for cross-cutting gaps correctly out of scope
+      for this narrow fix to close itself: #693 (no regression test for `gridSpec.cols=63`),
+      #694 (`validate-data` grid-coverage check is `warn` not `fail`, zero script test
+      coverage), #695 (`playable: false` has no movement semantics — the exact gap that caused
+      this track's own initial wrong fix attempt), #696 (map-status facts duplicated across 7
+      doc locations, third PR in a row to pay that cost)
+
+### Second-Pass Trigger Check
+
+Incremental fix diff touches 20 files, but only one line of actual code changed — a field
+removed from a default-parameter fallback in `client/src/utils/los.js`'s `evaluateLos()`.
+Independently verified (not taken from a reviewer's claim): the removed `cols` field was never
+read anywhere in the function, and `evaluateLos` has zero non-test callers anywhere in the
+codebase — unreachable dead code. Functionally equivalent to deleting an unused local variable,
+not a behavioral change to any live rules-engine path, despite matching the "LOS" trigger
+category by filename. **Second-pass review not required.**
+
+### Verification
+
+- [x] `npm run validate-data`, `npm run lint`, `npm run format:check`, `npm run test` (3259
+      passed, 0 regressions), `npm run build` all pass after fixes
+
+---
+
 ## Final Verification
 
 - [x] All acceptance criteria in spec.md met
