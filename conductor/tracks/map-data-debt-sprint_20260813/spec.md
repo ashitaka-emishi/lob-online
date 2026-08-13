@@ -3,7 +3,7 @@
 **Track ID:** map-data-debt-sprint_20260813
 **Type:** Chore
 **Created:** 2026-08-13
-**Status:** Draft
+**Status:** Complete
 
 ## Summary
 
@@ -29,28 +29,33 @@ Debt register: this track closes 4 items totaling score 8 (net open debt 18 → 
 
 ## Acceptance Criteria
 
-- [ ] #693: `server/src/engine/map.test.js` has a data-invariant regression test asserting
-      `gridSpec.cols x rows` equals the count of in-grid hex records — asserting the invariant,
-      not hardcoding the literal `63`, so it fails whether the value regresses to 64 _or_
-      someone shrinks it further while deleting real columns. Mutation-tested (temporarily
-      reverting `gridSpec.cols` to 64 and confirming the new test fails) before considering
-      this closed.
-- [ ] #694: `scripts/validate-data.js`'s grid-coverage check promoted from `warn()` to `fail()`.
+- [x] #693: `server/src/engine/map.test.js` has data-invariant regression tests guarding
+      `gridSpec.cols` — implemented as `cols` matching the highest recorded column plus a
+      per-hex column-bounds check (a `cols x rows == in-grid record count` formula, as
+      originally sketched, would have been satisfiable by a map that both under-declares
+      `cols` and is missing real columns; the max-column invariant catches that case).
+      Asserts the invariant, not the literal `63`, so it fails whether the value regresses to
+      64 _or_ someone shrinks it further while deleting real columns. Mutation-tested
+      (temporarily reverting `gridSpec.cols` to 64 and confirming the new test fails) before
+      considering this closed. Also fixed a live instance of the same drift class:
+      `client/src/utils/calibration.js`'s `DEFAULT_CALIBRATION.cols` was still 64.
+- [x] #694: `scripts/validate-data.js`'s grid-coverage check promoted from `warn()` to `fail()`.
       New `scripts/validate-data.test.js` exercises the checker functions
-      (`checkSetupHexesInMap`, the grid-coverage check, `edgeFeatureTypes` registry check, at
-      minimum) against small in-memory fixtures, not the real data file.
-- [ ] #695: `movement.test.js` has a characterization test documenting that `playable: false`
+      (`checkSetupHexesInMap`, `checkVPHexesInMap`, `checkEntryHexesInMap`, the grid-coverage
+      check, `edgeFeatureTypes` registry check) against small in-memory fixtures, not the real
+      data file.
+- [x] #695: `movement.test.js` has a characterization test documenting that `playable: false`
       does not gate movement (pins current behavior — a deliberate choice to record, not
       silently enforce). `map.schema.js`'s `playable` field gets a scope comment in the same
       style as the neighboring `ELEVATION_TYPES` export.
-- [ ] #696: a test asserting `docs/library.json`'s `SM_MAP_DATA.hexCount` and `status` fields
+- [x] #696: a test asserting `docs/library.json`'s `SM_MAP_DATA.hexCount` and `status` fields
       equal `data/modules/south-mountain/map.json`'s actual `hexes.length` and `_status`. HLD's
       risk-register row and `docs/agents/domain-expert/design.md`'s SM_MAP_DATA row reduced to
       short summaries pointing at `docs/library.md` for the counts, rather than independently
       restating them.
-- [ ] All four issues (#693, #694, #695, #696) closed with a summary of what was done
-- [ ] Debt register (`docs/tech-debt/report.md`) updated to reflect the four resolved items
-- [ ] Full quality suite green (`validate-data`, `lint`, `format:check`, `test`, `build`)
+- [x] All four issues (#693, #694, #695, #696) closed with a summary of what was done
+- [x] Debt register (`docs/tech-debt/report.md`) updated to reflect the four resolved items
+- [x] Full quality suite green (`validate-data`, `lint`, `format:check`, `test`, `build`)
 
 ## Dependencies
 
