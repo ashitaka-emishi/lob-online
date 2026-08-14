@@ -274,7 +274,8 @@ const ACTION_ERROR_STATUS = {
 router.get('/:id/actions', requireSide, async (req, res) => {
   try {
     const { id } = req.params;
-    // 401/404/409/403 all handled by requireSide before we reach here.
+    // 403/404/409 all handled by requireSide before we reach here (#698 — was 401/404/409/403,
+    // requireSide's "no game-side session" branch is 403 now, not 401).
     const state = await loadGame(id);
     const validActions = getValidActions(state, req.side, { oob: _oob });
     res.json({ validActions });

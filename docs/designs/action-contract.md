@@ -42,7 +42,7 @@ Client                      Server
 ActionPanel.vue             POST /api/v1/games/:id/actions
  │  emits submit-action      │
  │                           │  requireSide middleware
- │                           │   ├─ 401 no session
+ │                           │   ├─ 403 no game-side session
  │                           │   ├─ 403 session is for a different game
  │                           │   ├─ 404 game deleted
  │                           │   ├─ 409 game not active
@@ -248,8 +248,8 @@ warning and skips the emit — no error is returned.
 | ---- | ----------------------------- | ------------------------------------------------------------------------------------------- |
 | 400  | Route type-check              | `type` is missing or not a string (`games.js:169`) — bare error, not an `ActionError`       |
 | 400  | `ActionError INVALID_PAYLOAD` | Handler-side payload validation failed; message reaches client verbatim (`games.js:203`)    |
-| 401  | `requireSide`                 | No player session                                                                           |
-| 403  | `requireSide`                 | Session is for a different game, or sideToken invalid                                       |
+| 401  | `requireAuth`                 | No authenticated (Discord/dev) session at all — mounted before `requireSide` (`server.js`)  |
+| 403  | `requireSide`                 | No game-side session for this game (wrong game, none at all), or sideToken invalid          |
 | 404  | `requireSide`                 | Game not found                                                                              |
 | 409  | `requireSide` / route         | Game not active, or version conflict                                                        |
 | 422  | `ActionError INVALID_ACTION`  | Wrong turn, type not in valid-actions list, or no handler registered (`UNKNOWN_ACTION`)     |

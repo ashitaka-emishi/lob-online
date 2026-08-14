@@ -4,10 +4,11 @@ import os from 'node:os';
 import path from 'node:path';
 
 import Database from 'better-sqlite3';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   createStore,
+  createUserQueries,
   GameNotFoundError,
   GameNotOpenError,
   InvalidTokenError,
@@ -372,8 +373,15 @@ describe('migration idempotency', () => {
       // Fresh connection, fresh createStore call — the real restart path.
       const db6b = new Database(filePath);
       expect(db6b.pragma('user_version', { simple: true })).toBe(2);
+      // #700 review, second pass — asserting only that user_version is still 2 afterward is
+      // vacuous under mutation: an idempotent migration body that unconditionally re-runs (e.g.
+      // guarded by `version < 3` instead of `version < 2`) still leaves user_version at 2, since
+      // it rewrites the same value. migrate()'s DDL work only happens inside db.transaction(...);
+      // spying on it directly proves migration was actually SKIPPED, not just idempotent.
+      const transactionSpy = vi.spyOn(db6b, 'transaction');
       const s6b = createStore(db6b);
-      expect(db6b.pragma('user_version', { simple: true })).toBe(2); // still 2 — no re-migration
+      expect(transactionSpy).not.toHaveBeenCalled();
+      expect(db6b.pragma('user_version', { simple: true })).toBe(2);
       expect(s6b.getGame('file-game').side_a_faction).toBeNull();
       expect(s6b.getGame('file-game-2').side_a_user_id).toBe('user-file');
       db6b.close();
@@ -429,6 +437,27 @@ describe('upsertUser / getUser', () => {
 
   it('returns null for unknown user id', () => {
     expect(store.getUser('nonexistent')).toBeNull();
+  });
+});
+
+// #700 review, second pass — createUserQueries(db) is called directly by discord.js on a
+// caller-supplied db, with no guarantee (enforced by this module) that migration has already
+// run on it. Without this guard, calling it too early fails with a generic
+// "SqliteError: no such table: users" rather than a message pointing at the actual mistake.
+describe('createUserQueries — fail-fast guard', () => {
+  it('throws a clear error when called before the users table exists', () => {
+    const unmigratedDb = new Database(':memory:');
+    expect(() => createUserQueries(unmigratedDb)).toThrow(/before migration/);
+    unmigratedDb.close();
+  });
+
+  it('works normally once migration has run', () => {
+    const migratedDb = new Database(':memory:');
+    createStore(migratedDb); // runs migrate()
+    const queries = createUserQueries(migratedDb);
+    queries.upsertUser('u-direct', 'Direct', null);
+    expect(queries.getUser('u-direct').username).toBe('Direct');
+    migratedDb.close();
   });
 });
 

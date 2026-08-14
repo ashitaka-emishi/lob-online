@@ -43,7 +43,7 @@ const authStore = useAuthStore();
             {{ authStore.currentUser.username }}
             <button
               type="button"
-              class="logout-btn"
+              class="menu-btn logout-btn"
               data-testid="logout-btn"
               @click="authStore.logout()"
             >
@@ -212,17 +212,6 @@ h1 {
 .logout-btn {
   font-size: 0.75rem;
   padding: 0.15rem 0.5rem;
-  border: 1px solid #5a4a30;
-  border-radius: 4px;
-  background: rgba(40, 32, 18, 0.6);
-  color: #c8b890;
   cursor: pointer;
-  letter-spacing: 0.03em;
-  transition: background 0.15s;
-}
-
-.logout-btn:hover {
-  background: rgba(60, 48, 24, 0.9);
-  color: #e8d8b0;
 }
 </style>

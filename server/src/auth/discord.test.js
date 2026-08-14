@@ -26,8 +26,15 @@ function makeDb({ userRow, throwOnGet, throwOnRun } = {}) {
       if (throwOnRun) throw new Error('db locked');
     }),
   };
+  // #700 review, second pass — createUserQueries() (gameSqlite.js) now checks sqlite_master for
+  // the users table before preparing statements. This mock has no real schema, so that check
+  // must be routed to its own always-truthy stub, distinct from getStmt (the real getUserStmt).
+  const tableCheckStmt = { get: vi.fn(() => ({ name: 'users' })) };
   return {
-    prepare: vi.fn((sql) => (sql.startsWith('SELECT') ? getStmt : runStmt)),
+    prepare: vi.fn((sql) => {
+      if (sql.includes('sqlite_master')) return tableCheckStmt;
+      return sql.startsWith('SELECT') ? getStmt : runStmt;
+    }),
     _getStmt: getStmt,
     _runStmt: runStmt,
   };
@@ -124,6 +131,20 @@ describe('configurePassport', () => {
   // since deserializeUser's real stack-traversal tries stack[0] first and this deserializer
   // never returns the 'pass' sentinel needed to fall through.
   describe('idempotency', () => {
+    // #700 review, second pass — _serializers/_deserializers are undocumented passport
+    // internals; a version bump could rename or restructure them, silently turning the reset
+    // into a no-op instead of the accumulation bug it exists to prevent. Guarding the shape
+    // turns that into a loud failure.
+    it('throws if passport._serializers or _deserializers is not an array (internals changed shape)', () => {
+      const savedSerializers = passport._serializers;
+      passport._serializers = 'not-an-array';
+      try {
+        expect(() => configurePassport(makeDb())).toThrow(/passport internals changed shape/);
+      } finally {
+        passport._serializers = savedSerializers;
+      }
+    });
+
     it('a second configurePassport() call does not accumulate deserializers', () => {
       configurePassport(makeDb());
       configurePassport(makeDb());
@@ -177,8 +198,19 @@ describe('configurePassport', () => {
       configurePassport(db);
       const verify = DiscordStrategy.lastVerify;
       const done = vi.fn();
-      verify('token', 'refresh', { id: 'discord-1', username: 'Alice', avatar: 'x' }, done);
-      expect(done).toHaveBeenCalledWith(null, { id: 'discord-1', username: 'Alice', avatar: 'x' });
+      // #700 review, second pass — id must be a Discord snowflake (numeric string) now that
+      // DiscordProfileSchema constrains its shape.
+      verify(
+        'token',
+        'refresh',
+        { id: '123456789012345678', username: 'Alice', avatar: 'x' },
+        done
+      );
+      expect(done).toHaveBeenCalledWith(null, {
+        id: '123456789012345678',
+        username: 'Alice',
+        avatar: 'x',
+      });
     });
 
     // #699 — a malformed profile must surface as a typed auth failure (done(err)), not reach
@@ -191,7 +223,7 @@ describe('configurePassport', () => {
       configurePassport(db);
       const verify = DiscordStrategy.lastVerify;
       const done = vi.fn();
-      verify('token', 'refresh', { id: 'discord-1', avatar: 'x' }, done);
+      verify('token', 'refresh', { id: '123456789012345678', avatar: 'x' }, done);
       expect(done).toHaveBeenCalledWith(expect.any(Error));
       expect(done.mock.calls[0][0].message).toMatch(/Invalid Discord profile/);
       expect(db._runStmt.run).not.toHaveBeenCalled();

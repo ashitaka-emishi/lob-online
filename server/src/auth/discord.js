@@ -29,6 +29,21 @@ export function configurePassport(db) {
   // here makes configurePassport() safe to call more than once; passport.use() below doesn't
   // need the same treatment since strategies are keyed by name (an object, not an array) and
   // re-registering 'discord' naturally replaces the prior entry.
+  //
+  // #700 review, second pass — two things worth being explicit about:
+  // 1. This wipes the WHOLE passport singleton's serializer/deserializer stack, not just
+  //    entries registered by this module — safe only as long as configurePassport() remains the
+  //    sole registrar of passport.serializeUser/deserializeUser in this codebase (true today; a
+  //    future second auth source registering before this runs would be silently dropped).
+  // 2. `_serializers`/`_deserializers` are undocumented, underscore-prefixed passport internals
+  //    (not covered by its semver guarantee) — a passport version bump could rename or
+  //    restructure them, silently turning this reset into a no-op. Guard the shape so that
+  //    fails loudly instead.
+  if (!Array.isArray(passport._serializers) || !Array.isArray(passport._deserializers)) {
+    throw new Error(
+      "[discord] passport._serializers/_deserializers are not arrays — passport internals changed shape; configurePassport()'s idempotency reset (#698) needs updating for this passport version."
+    );
+  }
   passport._serializers = [];
   passport._deserializers = [];
 

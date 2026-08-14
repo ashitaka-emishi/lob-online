@@ -147,16 +147,14 @@ async function buildApp() {
   // (node_modules/passport/lib/sessionmanager.js): it regenerates the session itself before
   // re-serializing identity — regenerateSession() in games.js no longer calls
   // req.session.regenerate() explicitly (#698 — that was a redundant second store round-trip,
-  // since req.login() always does it internally). callOrder is pushed by loginSpy itself now,
-  // mirroring that single real call; kept as an array (not a boolean) so the shape matches
-  // games.auth-integration.test.js, which verifies the true ordering against real passport.
-  // Exposed on app.locals so tests can assert login ran with the right identity.
-  const callOrder = [];
-  app.locals._callOrder = callOrder;
-  const loginSpy = vi.fn((user, cb) => {
-    callOrder.push('regenerate', 'login');
-    cb();
-  });
+  // since req.login() always does it internally). Exposed on app.locals so tests can assert
+  // login ran with the right identity. #700 review, second pass — this file previously also
+  // tracked a "callOrder" array asserting ['regenerate', 'login'], but loginSpy pushed both
+  // strings itself as a hardcoded pair, so that assertion could only ever fail when login wasn't
+  // called at all — already covered by toHaveBeenCalledOnce() below. The real ordering guarantee
+  // (regenerate-before-login) is entirely internal to passport now and is verified against real
+  // passport in games.auth-integration.test.js, not meaningfully testable via this mock.
+  const loginSpy = vi.fn((user, cb) => cb());
   app.locals._loginSpy = loginSpy;
   app.use((req, _res, next) => {
     req.user = { id: 'test-user-id', username: 'Test Player', avatar: null };
@@ -234,9 +232,6 @@ describe('POST /api/v1/games', () => {
     await request(app).post('/api/v1/games').send({});
     expect(app.locals._loginSpy).toHaveBeenCalledOnce();
     expect(app.locals._loginSpy.mock.calls[0][0]).toMatchObject({ id: 'test-user-id' });
-    // Order matters: regenerate must resolve before login runs, or login's own internal
-    // regenerate (passport does this too) would immediately discard what it just wrote.
-    expect(app.locals._callOrder).toEqual(['regenerate', 'login']);
   });
 
   it('passes discordWebhook to createGame when provided', async () => {
@@ -308,7 +303,6 @@ describe('POST /api/v1/games/:id/join', () => {
     await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
     expect(app.locals._loginSpy).toHaveBeenCalledOnce();
     expect(app.locals._loginSpy.mock.calls[0][0]).toMatchObject({ id: 'test-user-id' });
-    expect(app.locals._callOrder).toEqual(['regenerate', 'login']);
   });
 
   it('returns 400 when side is missing from request body (#407)', async () => {
@@ -539,7 +533,6 @@ describe('POST /api/v1/games/:id/join', () => {
     // #m9-discord-oauth review finding — the same-game re-join branch also regenerates the
     // session (SEC-M1) and must re-establish the passport login, same as create/first-join.
     expect(app.locals._loginSpy).toHaveBeenCalledOnce();
-    expect(app.locals._callOrder).toEqual(['regenerate', 'login']);
   });
 
   it('returns 404 on re-join when game row no longer exists (#563)', async () => {
@@ -596,7 +589,6 @@ describe('POST /api/v1/games/:id/join', () => {
       const app = await buildApp();
       await request(app).post(`/api/v1/games/${TEST_UUID}/join`).send({ side: 'union' });
       expect(app.locals._loginSpy).toHaveBeenCalledOnce();
-      expect(app.locals._callOrder).toEqual(['regenerate', 'login']);
     });
 
     it('falls through to normal join logic (409) when reclaim reports no ownership', async () => {

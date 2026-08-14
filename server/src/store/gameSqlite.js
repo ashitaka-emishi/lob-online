@@ -108,9 +108,26 @@ function migrate(db) {
 // #698 — shared `users`-table query builder. Previously createStore() (game persistence) and
 // discord.js's configurePassport() (passport identity lookups) each held their own byte-identical
 // upsertUser/getUser prepared statements — a future users-table schema change only had to be
-// applied here, but nothing enforced that, and only this copy (via createGame/joinGame's tests)
-// had exercised coverage. discord.js now calls this directly instead of duplicating the SQL.
+// applied here, but nothing enforced that, and only this copy (via gameSqlite.test.js's
+// `upsertUser / getUser` suite) had exercised coverage. discord.js now calls this directly
+// instead of duplicating the SQL.
+//
+// #700 review, second pass — createStore(db) always calls migrate(db) before this, so the
+// `users` table exists by the time its prepared statements run. discord.js's configurePassport(db)
+// calls this directly on a caller-supplied db, with no such guarantee enforced by this module —
+// it only works because server.js happens to call initDb() before configurePassport(getDb()).
+// Fail fast with a clear message rather than a cryptic "no such table: users" SqliteError if a
+// future caller (or a reordering in server.js) breaks that assumption.
 export function createUserQueries(db) {
+  const usersTableExists = db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'users'")
+    .get();
+  if (!usersTableExists) {
+    throw new Error(
+      '[gameSqlite] createUserQueries() called before migration — the users table does not exist yet. Call initDb() (or createStore(db)) on this connection first.'
+    );
+  }
+
   const upsertUserStmt = db.prepare(
     'INSERT INTO users (id, username, avatar, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET username = excluded.username, avatar = excluded.avatar'
   );
@@ -252,6 +269,4 @@ export const deleteGame = (...args) => requireStore().deleteGame(...args);
 export const getGame = (...args) => requireStore().getGame(...args);
 export const listGames = (...args) => requireStore().listGames(...args);
 export const listGamesByUser = (...args) => requireStore().listGamesByUser(...args);
-export const upsertUser = (...args) => requireStore().upsertUser(...args);
-export const getUser = (...args) => requireStore().getUser(...args);
 export const reclaimSideToken = (...args) => requireStore().reclaimSideToken(...args);

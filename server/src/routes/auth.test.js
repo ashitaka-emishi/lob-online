@@ -1,16 +1,25 @@
 import { describe, it, expect, vi } from 'vitest';
 
-// Mock discord.js before importing auth.js to prevent passport.use() side-effects
+// Mock discord.js before importing auth.js to prevent passport.use() side-effects.
+// #700 review, second pass — passport.authenticate.mock.calls is a module-global log, not tied
+// to a specific route; asserting against it directly (as an earlier version of this file did)
+// stayed green even when the two routes' authenticate() arguments were swapped in auth.js,
+// since BOTH calls were still present in the log somewhere. Tagging the returned middleware with
+// the args it was built from, then reading that tag off the ACTUAL registered handler for each
+// route, ties the assertion to the real per-route wiring instead of the global call history.
 vi.mock('../auth/discord.js', () => ({
   default: {
-    authenticate: vi.fn(() => (_req, _res, next) => next()),
+    authenticate: vi.fn((...args) => {
+      const middleware = (_req, _res, next) => next();
+      middleware._authArgs = args;
+      return middleware;
+    }),
     session: vi.fn(() => (_req, _res, next) => next()),
     initialize: vi.fn(() => (_req, _res, next) => next()),
   },
   configurePassport: vi.fn(),
 }));
 
-import passport from '../auth/discord.js';
 import authRouter from './auth.js';
 
 function mockRes() {
@@ -31,23 +40,27 @@ function getHandler(method, path) {
   return layer?.route?.stack?.[0]?.handle;
 }
 
+// #700 — the args passport.authenticate() was actually called with, for the GET handler
+// registered at this path (not the global mock call log — see the vi.mock comment above).
+function authArgsFor(path) {
+  return getHandler('get', path)._authArgs;
+}
+
 // #700 — the Discord strategy dispatch itself (as opposed to the surrounding routing/session
 // infrastructure, already covered by games.auth-integration.test.js's dev-auth flow) had no
-// direct route-level test. router.get(path, passport.authenticate(...)) calls
-// passport.authenticate() once, at module-eval time (when auth.js is imported above), to build
-// the middleware — the mocked passport.authenticate.mock.calls already reflect both routes'
-// registration by the time these tests run.
+// direct route-level test.
 describe('GET /auth/discord', () => {
   it("dispatches passport.authenticate('discord') with no options (no failureRedirect)", () => {
-    expect(passport.authenticate).toHaveBeenCalledWith('discord');
+    expect(authArgsFor('/discord')).toEqual(['discord']);
   });
 });
 
 describe('GET /auth/discord/callback', () => {
   it("dispatches passport.authenticate('discord', { failureRedirect: '/?error=auth' })", () => {
-    expect(passport.authenticate).toHaveBeenCalledWith('discord', {
-      failureRedirect: '/?error=auth',
-    });
+    expect(authArgsFor('/discord/callback')).toEqual([
+      'discord',
+      { failureRedirect: '/?error=auth' },
+    ]);
   });
 
   it('redirects to / after passport.authenticate succeeds and calls next()', () => {
