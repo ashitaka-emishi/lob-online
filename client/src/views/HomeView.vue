@@ -213,5 +213,6 @@ h1 {
   font-size: 0.75rem;
   padding: 0.15rem 0.5rem;
   cursor: pointer;
+  letter-spacing: 0.03em;
 }
 </style>

@@ -6,7 +6,7 @@
   "created": "2026-08-13T00:00:00Z",
   "updated": "2026-08-13T23:15:00Z",
   "closesIssues": [698, 699, 700],
-  "filedIssues": [],
+  "filedIssues": [708],
   "phases": {
     "total": 6,
     "completed": 4
