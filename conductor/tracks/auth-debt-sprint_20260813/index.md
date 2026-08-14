@@ -1,7 +1,7 @@
 # Track: Auth Debt Sprint — Issues #698-700
 
 **ID:** auth-debt-sprint_20260813
-**Status:** In Progress
+**Status:** Complete (PR #709 merged)
 
 ## Documents
 
@@ -10,8 +10,8 @@
 
 ## Progress
 
-- Phases: 5/6 complete
-- Tasks: 23/25 complete
+- Phases: 6/6 complete
+- Tasks: 25/25 complete
 
 ## Quick Links
 

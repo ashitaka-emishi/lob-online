@@ -3,7 +3,7 @@
 **Track ID:** auth-debt-sprint_20260813
 **Spec:** [spec.md](./spec.md)
 **Created:** 2026-08-13
-**Status:** [ ] In Progress
+**Status:** [x] Complete (PR #709 merged)
 
 ## Overview
 
@@ -31,24 +31,26 @@ Checkpointed trigger in `.claude/rules/agentic-quality-rails.md` except rules-en
 
 ## Quality Gates
 
-- [ ] `npm run validate-data`
-- [ ] `npm run lint`
-- [ ] `npm run format:check`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] No unexpected warnings in test output
+- [x] `npm run validate-data`
+- [x] `npm run lint`
+- [x] `npm run format:check`
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] No unexpected warnings in test output
 
 ## Debt Budget
 
-**Allowed new deferred debt:** 0 unless explicitly approved.
+**Allowed new deferred debt:** 0 unless explicitly approved. One new debt item, #708, was filed
+for two findings the review determined to be genuinely pre-existing and out of this track's
+scope, not silently dropped.
 
 ## Completion Contract
 
-- [ ] All plan tasks complete
-- [ ] All acceptance criteria in spec.md met
-- [ ] Warnings fixed or explicitly classified as accepted prototype noise
-- [ ] Debt register updated (#698, #699, #700 closed)
-- [ ] Ready for `/team-review`
+- [x] All plan tasks complete
+- [x] All acceptance criteria in spec.md met
+- [x] Warnings fixed or explicitly classified as accepted prototype noise
+- [x] Debt register updated (#698, #699, #700 closed; #708 filed)
+- [x] Ready for `/team-review` — complete, all findings fixed in place
 
 ---
 
@@ -233,16 +235,15 @@ sessionmanager.js` to confirm finding #698-1's premise (it unconditionally calls
 - [x] Task 6.2: Reconcile `spec.md`, `plan.md`, `metadata.json`, `index.md` with actual delivered
       state before opening the PR (checked proactively this time, given the recurring drift class
       this project has hit on the last two tracks).
-- [ ] Task 6.3: Run `/pr-create`.
-- [ ] Task 6.4: Run `/tech-debt-report` against the real PR number.
+- [x] Task 6.3: Run `/pr-create` — PR #709 opened against `master`, merged.
+- [x] Task 6.4: Run `/tech-debt-report` against PR #709.
 
 ### Final Verification
 
 - [x] All acceptance criteria in spec.md met
 - [x] All three issues closed
-- [ ] Debt register reflects -7 in score (3 items closed: #698 score 3, #699 score 2, #700
-      score 2), plus +2 for #708 (user-approved, filed for two genuinely pre-existing, out-of-
-      scope findings) — net -5, pending `/tech-debt-report` against the real PR number
+- [x] Debt register reflects -5 net (3 items closed: #698 score 3, #699 score 2, #700 score 2 =
+      -7; 1 item added: #708 score 2) — net open debt 12 -> 7
 - [x] Full quality suite green
 - [x] `/team-review` complete, all findings fixed in place (including the mandatory second-pass
       review of the review-fix commit)

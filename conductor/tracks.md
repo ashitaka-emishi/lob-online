@@ -164,4 +164,4 @@
 | [x] | map-col64-investigation_20260812 | South Mountain Map — Column 64 Investigation (#691) | 2026-08-12 | 2026-08-12 |
 | [x] | map-data-debt-sprint_20260813 | Map Data Debt Sprint — Issues #693-696 | 2026-08-13 | 2026-08-13 |
 | [x] | engine-debt-sprint_20260813 | Engine Debt Sprint — Issues #676-679, #681 | 2026-08-13 | 2026-08-13 |
-| [ ] | auth-debt-sprint_20260813 | Auth Debt Sprint — Issues #698-700 | 2026-08-13 | 2026-08-13 |
+| [x] | auth-debt-sprint_20260813 | Auth Debt Sprint — Issues #698-700 | 2026-08-13 | 2026-08-14 |
