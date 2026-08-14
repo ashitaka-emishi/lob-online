@@ -3,7 +3,7 @@
 **Track ID:** auth-debt-sprint_20260813
 **Type:** Chore
 **Created:** 2026-08-13
-**Status:** Draft
+**Status:** Complete
 
 ## Summary
 
@@ -68,15 +68,18 @@ which expects deferred debt to be revisited, not left open indefinitely.
 
 ## Acceptance Criteria
 
-- [ ] All 13 findings addressed: fixed in place, or explicitly re-deferred with updated reasoning
-      if investigation reveals a fix is riskier than the original finding implied
-- [ ] Finding 5 (`requireSide` status code) resolved with an explicit decision (change or
-      confirm-as-is), not left ambiguous
-- [ ] Finding 8 (logout UI) ships a real, reachable control — not just wiring
-- [ ] No new debt introduced (project rule: debt-cleanup PRs must not generate new deferred debt)
-- [ ] Full quality suite green; no unexpected warnings
-- [ ] `/team-review` run given the High-risk classification (auth/session surface); a targeted
-      second-pass review runs if the review-fix diff itself touches auth/session/persistence
+- [x] All 13 findings addressed: 12 fixed in place; finding 6 (dependency-risk comment) was
+      already resolved in PR #701 itself, confirmed during Phase 1 investigation and dropped
+      from this track's live scope
+- [x] Finding 5 (`requireSide` status code) resolved with an explicit decision (change or
+      confirm-as-is), not left ambiguous — user chose 403, confirmed via a client-code audit
+- [x] Finding 8 (logout UI) ships a real, reachable control — not just wiring; browser-verified
+- [x] No new debt introduced by the fixes themselves; two genuinely pre-existing, out-of-scope
+      findings surfaced by `/team-review` were filed as #708 (score 2) rather than silently
+      dropped or force-fit into this track's scope
+- [x] Full quality suite green; no unexpected warnings
+- [x] `/team-review` run given the High-risk classification (auth/session surface); a targeted
+      second-pass review ran on the review-fix commit (it touched auth/session/persistence)
 
 ## Dependencies
 

@@ -199,18 +199,29 @@ sessionmanager.js` to confirm finding #698-1's premise (it unconditionally calls
 
 ### Tasks
 
-- [ ] Task 5.1: Run full quality suite (`validate-data`, `lint`, `format:check`, `test`, `build`).
-- [ ] Task 5.2: Run `/team-review` — security, architecture, testing, maintainability given the
+- [x] Task 5.1: Run full quality suite (`validate-data`, `lint`, `format:check`, `test`, `build`).
+- [x] Task 5.2: Run `/team-review` — security, architecture, testing, maintainability given the
       High-risk auth/session/persistence surface (domain-expert not needed; no rules-engine logic
-      touched).
-- [ ] Task 5.3: Fix all findings in place per the project's no-new-debt-on-debt-cleanup rule; run
-      a targeted second-pass review if the review-fix diff itself touches auth/session/
-      persistence/migrations (same trigger class that caught the LIMBER bug in PR #705).
+      touched). Security: clean of anything above Low (3 Low). Architecture: 1 Medium (an
+      unenforced migration-before-query ordering hazard in the new `createUserQueries` factory) + 4 Low. Testing: 1 Medium mutation-confirmed vacuous test (`auth.test.js`'s OAuth-option
+      assertions) + 2 Low (one also mutation-confirmed). Maintainability: 2 Medium (a third
+      recurrence of this project's conductor-metadata-drift bug class; a stale 401-referencing
+      comment) + 4 Low.
+- [x] Task 5.3: Fixed all 14 findings in place (4 Medium, 10 Low) per the no-new-debt rule. Two
+      genuinely pre-existing, out-of-scope findings (not caused by this branch) filed as #708
+      instead of fixed: `useAuthStore.logout()` clearing state on network failure (a deliberate,
+      tested, pre-existing tradeoff — a product decision, not a bug) and `games.js`'s reliance on
+      `requireAuth` being mounted externally in `server.js`. The fix commit itself touched
+      auth/session/persistence surfaces, triggering a mandatory targeted second-pass review (same
+      trigger class that caught the LIMBER bug in PR #705) — it confirmed the commit correct via
+      independent mutation-testing of the 5 substantive fixes, plus 3 more trivial Low findings
+      (a stale doc reference to the removed exports, `metadata.json`'s `filedIssues` not yet
+      recording #708, a 1-property CSS delta), all fixed in a follow-up commit.
 
 ### Verification
 
-- [ ] All review findings resolved (fixed in place, or re-deferred with updated reasoning and a
-      fresh issue if a finding turns out to be a legitimately separate, larger piece of work)
+- [x] All review findings resolved (fixed in place, or filed as #708 with reasoning for the two
+      genuinely pre-existing, out-of-scope items)
 
 ---
 
@@ -218,8 +229,8 @@ sessionmanager.js` to confirm finding #698-1's premise (it unconditionally calls
 
 ### Tasks
 
-- [ ] Task 6.1: Close #698, #699, #700 with summary comments.
-- [ ] Task 6.2: Reconcile `spec.md`, `plan.md`, `metadata.json`, `index.md` with actual delivered
+- [x] Task 6.1: Close #698, #699, #700 with summary comments.
+- [x] Task 6.2: Reconcile `spec.md`, `plan.md`, `metadata.json`, `index.md` with actual delivered
       state before opening the PR (checked proactively this time, given the recurring drift class
       this project has hit on the last two tracks).
 - [ ] Task 6.3: Run `/pr-create`.
@@ -227,12 +238,14 @@ sessionmanager.js` to confirm finding #698-1's premise (it unconditionally calls
 
 ### Final Verification
 
-- [ ] All acceptance criteria in spec.md met
-- [ ] All three issues closed
+- [x] All acceptance criteria in spec.md met
+- [x] All three issues closed
 - [ ] Debt register reflects -7 in score (3 items closed: #698 score 3, #699 score 2, #700
-      score 2), net delta depends on whether review surfaces any pre-approved new debt
-- [ ] Full quality suite green
-- [ ] `/team-review` complete, all findings fixed in place
+      score 2), plus +2 for #708 (user-approved, filed for two genuinely pre-existing, out-of-
+      scope findings) — net -5, pending `/tech-debt-report` against the real PR number
+- [x] Full quality suite green
+- [x] `/team-review` complete, all findings fixed in place (including the mandatory second-pass
+      review of the review-fix commit)
 
 ---
 
