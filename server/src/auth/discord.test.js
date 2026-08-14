@@ -26,8 +26,15 @@ function makeDb({ userRow, throwOnGet, throwOnRun } = {}) {
       if (throwOnRun) throw new Error('db locked');
     }),
   };
+  // #700 review, second pass — createUserQueries() (gameSqlite.js) now checks sqlite_master for
+  // the users table before preparing statements. This mock has no real schema, so that check
+  // must be routed to its own always-truthy stub, distinct from getStmt (the real getUserStmt).
+  const tableCheckStmt = { get: vi.fn(() => ({ name: 'users' })) };
   return {
-    prepare: vi.fn((sql) => (sql.startsWith('SELECT') ? getStmt : runStmt)),
+    prepare: vi.fn((sql) => {
+      if (sql.includes('sqlite_master')) return tableCheckStmt;
+      return sql.startsWith('SELECT') ? getStmt : runStmt;
+    }),
     _getStmt: getStmt,
     _runStmt: runStmt,
   };
@@ -118,6 +125,48 @@ describe('configurePassport', () => {
     });
   });
 
+  // #698 — passport.serializeUser()/deserializeUser() push onto internal arrays rather than
+  // replacing; without a reset, a second configurePassport() call in the same process leaves
+  // the FIRST-registered deserializer (bound to a possibly-closed db) permanently in effect,
+  // since deserializeUser's real stack-traversal tries stack[0] first and this deserializer
+  // never returns the 'pass' sentinel needed to fall through.
+  describe('idempotency', () => {
+    // #700 review, second pass — _serializers/_deserializers are undocumented passport
+    // internals; a version bump could rename or restructure them, silently turning the reset
+    // into a no-op instead of the accumulation bug it exists to prevent. Guarding the shape
+    // turns that into a loud failure.
+    it('throws if passport._serializers or _deserializers is not an array (internals changed shape)', () => {
+      const savedSerializers = passport._serializers;
+      passport._serializers = 'not-an-array';
+      try {
+        expect(() => configurePassport(makeDb())).toThrow(/passport internals changed shape/);
+      } finally {
+        passport._serializers = savedSerializers;
+      }
+    });
+
+    it('a second configurePassport() call does not accumulate deserializers', () => {
+      configurePassport(makeDb());
+      configurePassport(makeDb());
+      expect(passport._deserializers).toHaveLength(1);
+      expect(passport._serializers).toHaveLength(1);
+    });
+
+    it('after a second configurePassport() call, only the latest db is consulted', () => {
+      const dbA = makeDb({ userRow: { id: 'u1', username: 'FromA', avatar: null } });
+      const dbB = makeDb({ userRow: { id: 'u1', username: 'FromB', avatar: null } });
+      configurePassport(dbA);
+      configurePassport(dbB);
+
+      // Real stack traversal (not the spy's direct-call shortcut the tests above use) — this
+      // is what actually runs when a request deserializes a session.
+      const done = vi.fn();
+      passport.deserializeUser('u1', done);
+      expect(done).toHaveBeenCalledWith(null, { id: 'u1', username: 'FromB', avatar: null });
+      expect(dbA._getStmt.get).not.toHaveBeenCalled();
+    });
+  });
+
   describe('DiscordStrategy configuration', () => {
     it('registers a strategy with state: true (login CSRF protection) when Discord env vars are set', () => {
       process.env.DISCORD_CLIENT_ID = 'cid';
@@ -149,8 +198,48 @@ describe('configurePassport', () => {
       configurePassport(db);
       const verify = DiscordStrategy.lastVerify;
       const done = vi.fn();
-      verify('token', 'refresh', { id: 'discord-1', username: 'Alice', avatar: 'x' }, done);
-      expect(done).toHaveBeenCalledWith(null, { id: 'discord-1', username: 'Alice', avatar: 'x' });
+      // #700 review, second pass — id must be a Discord snowflake (numeric string) now that
+      // DiscordProfileSchema constrains its shape.
+      verify(
+        'token',
+        'refresh',
+        { id: '123456789012345678', username: 'Alice', avatar: 'x' },
+        done
+      );
+      expect(done).toHaveBeenCalledWith(null, {
+        id: '123456789012345678',
+        username: 'Alice',
+        avatar: 'x',
+      });
+    });
+
+    // #699 — a malformed profile must surface as a typed auth failure (done(err)), not reach
+    // upsertUser() and fail as a raw, unexplained SQLite error.
+    it('calls done with a typed error and does not upsert when the profile is missing a username', () => {
+      process.env.DISCORD_CLIENT_ID = 'cid';
+      process.env.DISCORD_CLIENT_SECRET = 'secret';
+      process.env.DISCORD_CALLBACK_URL = 'http://localhost/cb';
+      const db = makeDb();
+      configurePassport(db);
+      const verify = DiscordStrategy.lastVerify;
+      const done = vi.fn();
+      verify('token', 'refresh', { id: '123456789012345678', avatar: 'x' }, done);
+      expect(done).toHaveBeenCalledWith(expect.any(Error));
+      expect(done.mock.calls[0][0].message).toMatch(/Invalid Discord profile/);
+      expect(db._runStmt.run).not.toHaveBeenCalled();
+    });
+
+    it('calls done with a typed error when the profile id is not a string', () => {
+      process.env.DISCORD_CLIENT_ID = 'cid';
+      process.env.DISCORD_CLIENT_SECRET = 'secret';
+      process.env.DISCORD_CALLBACK_URL = 'http://localhost/cb';
+      const db = makeDb();
+      configurePassport(db);
+      const verify = DiscordStrategy.lastVerify;
+      const done = vi.fn();
+      verify('token', 'refresh', { id: 12345, username: 'Alice', avatar: null }, done);
+      expect(done).toHaveBeenCalledWith(expect.any(Error));
+      expect(db._runStmt.run).not.toHaveBeenCalled();
     });
   });
 });

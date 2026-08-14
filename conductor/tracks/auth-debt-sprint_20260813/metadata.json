@@ -1,0 +1,19 @@
+{
+  "id": "auth-debt-sprint_20260813",
+  "title": "Auth Debt Sprint — Issues #698-700",
+  "type": "chore",
+  "status": "in_progress",
+  "created": "2026-08-13T00:00:00Z",
+  "updated": "2026-08-14T03:30:00Z",
+  "closesIssues": [698, 699, 700],
+  "filedIssues": [708],
+  "phases": {
+    "total": 6,
+    "completed": 5
+  },
+  "tasks": {
+    "total": 25,
+    "completed": 23
+  },
+  "notes": "Phases 1-5 complete and committed: all 12 live findings from #698/#699/#700 fixed (finding #699-1 was already resolved in PR #701 itself, dropped from scope in Phase 1). requireSide status-code question (finding #698-5) resolved with the user: 401 -> 403. A full 4-dimension /team-review (security, architecture, testing, maintainability) found 14 real issues (4 Medium, 10 Low), including two mutation-confirmed vacuous tests and a third recurrence of this project's conductor-metadata-drift bug class -- all fixed in place. The review-fix commit itself touched auth/session/persistence, triggering a mandatory second-pass review, which confirmed the commit correct and found 3 more trivial Low findings, also fixed. Two genuinely pre-existing, out-of-scope findings filed as #708 rather than fixed. All three issues (#698/#699/#700) closed. Phase 6 (closeout): issues closed and track docs reconciled; /pr-create and /tech-debt-report still pending."
+}

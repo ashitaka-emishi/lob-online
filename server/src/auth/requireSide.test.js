@@ -85,7 +85,7 @@ describe('requireSide', () => {
     expect(req.side).toBe('confederate');
   });
 
-  it('does not set req.side on 401 (no session)', () => {
+  it('does not set req.side on 403 (no game-side session)', () => {
     const req = { params: { id: 'game-abc' }, session: {} };
     requireSide(req, mockRes(), vi.fn());
     expect(req.side).toBeUndefined();
@@ -120,13 +120,17 @@ describe('requireSide', () => {
     expect(req.side).toBeUndefined();
   });
 
-  it('returns 401 when there is no session — does not hit the DB', () => {
+  // #698 — was 401 until this review. requireAuth (server.js) runs before this middleware on
+  // every route and already guarantees the caller is authenticated, so this branch means "no
+  // game-side session for this game," not "we don't know who you are" — 403 matches the
+  // identical semantics of the wrong-game-session check right below.
+  it('returns 403 when there is no game-side session — does not hit the DB', () => {
     const req = { params: { id: 'game-abc' }, session: {} };
     const res = mockRes();
     const next = vi.fn();
     requireSide(req, res, next);
     expect(next).not.toHaveBeenCalled();
-    expect(res._status).toBe(401);
+    expect(res._status).toBe(403);
     expect(getGame).not.toHaveBeenCalled();
   });
 
@@ -143,7 +147,7 @@ describe('requireSide', () => {
     expect(getGame).not.toHaveBeenCalled();
   });
 
-  it('returns 401 when session is missing sideToken — does not hit the DB', () => {
+  it('returns 403 when session is missing sideToken — does not hit the DB', () => {
     const req = {
       params: { id: 'game-abc' },
       session: { gameId: 'game-abc', side: 'union' },
@@ -152,7 +156,7 @@ describe('requireSide', () => {
     const next = vi.fn();
     requireSide(req, res, next);
     expect(next).not.toHaveBeenCalled();
-    expect(res._status).toBe(401);
+    expect(res._status).toBe(403);
     expect(getGame).not.toHaveBeenCalled();
   });
 

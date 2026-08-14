@@ -1,6 +1,9 @@
 import passport from 'passport';
 import { Strategy as DiscordStrategy } from 'passport-discord';
 
+import { DiscordProfileSchema } from '../schemas/discordProfile.schema.js';
+import { createUserQueries } from '../store/gameSqlite.js';
+
 // DEPENDENCY RISK: passport-discord@0.1.4 is deprecated upstream ("no longer maintained",
 // confirmed via `npm view passport-discord deprecated`). It's a ~150-line shim over the
 // actively-maintained passport-oauth2 — all security-relevant logic (token exchange, state
@@ -11,10 +14,38 @@ import { Strategy as DiscordStrategy } from 'passport-discord';
 // Configure passport with a live DB reference. Called once from server.js after initDb().
 // Hoists all prepared statements at call time so per-request paths hit no extra SQLite overhead.
 export function configurePassport(db) {
-  const getUserStmt = db.prepare('SELECT id, username, avatar FROM users WHERE id = ?');
-  const upsertUserStmt = db.prepare(
-    'INSERT INTO users (id, username, avatar, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET username = excluded.username, avatar = excluded.avatar'
-  );
+  // #698 — was a byte-identical duplicate of gameSqlite.js's own upsertUser/getUser prepared
+  // statements; a future users-table schema change only had to be applied there, but nothing
+  // enforced it, and this copy had no coverage of its own. Shared factory now used by both.
+  const { getUser, upsertUser } = createUserQueries(db);
+
+  // #698 — passport.serializeUser()/deserializeUser() push onto internal arrays
+  // (_serializers/_deserializers, authenticator.js) rather than replacing; passport's public
+  // API has no "reset" call. A second configurePassport() in the same process (multi-init test
+  // contexts, a future hot-restart pattern) would otherwise leave the FIRST-registered
+  // deserializer permanently in effect — deserializeUser tries stack[0] first and only falls
+  // through on an explicit 'pass', which this deserializer never returns — silently keeping a
+  // stale handler bound to a closed DB instance active for the rest of the process. Resetting
+  // here makes configurePassport() safe to call more than once; passport.use() below doesn't
+  // need the same treatment since strategies are keyed by name (an object, not an array) and
+  // re-registering 'discord' naturally replaces the prior entry.
+  //
+  // #700 review, second pass — two things worth being explicit about:
+  // 1. This wipes the WHOLE passport singleton's serializer/deserializer stack, not just
+  //    entries registered by this module — safe only as long as configurePassport() remains the
+  //    sole registrar of passport.serializeUser/deserializeUser in this codebase (true today; a
+  //    future second auth source registering before this runs would be silently dropped).
+  // 2. `_serializers`/`_deserializers` are undocumented, underscore-prefixed passport internals
+  //    (not covered by its semver guarantee) — a passport version bump could rename or
+  //    restructure them, silently turning this reset into a no-op. Guard the shape so that
+  //    fails loudly instead.
+  if (!Array.isArray(passport._serializers) || !Array.isArray(passport._deserializers)) {
+    throw new Error(
+      "[discord] passport._serializers/_deserializers are not arrays — passport internals changed shape; configurePassport()'s idempotency reset (#698) needs updating for this passport version."
+    );
+  }
+  passport._serializers = [];
+  passport._deserializers = [];
 
   // Serialize only the user id into the session.
   passport.serializeUser((user, done) => {
@@ -35,7 +66,7 @@ export function configurePassport(db) {
       return done(null, { id, username: `DevUser ${code}`, avatar: null });
     }
     try {
-      const user = getUserStmt.get(id);
+      const user = getUser(id);
       done(null, user ?? false);
     } catch (err) {
       done(err);
@@ -67,13 +98,21 @@ export function configurePassport(db) {
         state: true,
       },
       (_accessToken, _refreshToken, profile, done) => {
-        const user = {
+        // #699 — validate the profile shape before it reaches upsertUser(), so a malformed
+        // profile (an unexpected shape from an upstream passport-discord/Discord API change)
+        // surfaces as a typed auth failure instead of a raw SQLite error from an unexpected
+        // value hitting a NOT NULL column.
+        const parsed = DiscordProfileSchema.safeParse({
           id: profile.id,
           username: profile.username,
           avatar: profile.avatar ?? null,
-        };
+        });
+        if (!parsed.success) {
+          return done(new Error(`Invalid Discord profile: ${parsed.error.message}`));
+        }
+        const user = parsed.data;
         try {
-          upsertUserStmt.run(user.id, user.username, user.avatar, Date.now());
+          upsertUser(user.id, user.username, user.avatar);
           done(null, user);
         } catch (err) {
           done(err);

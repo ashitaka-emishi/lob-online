@@ -41,6 +41,14 @@ const authStore = useAuthStore();
           </a>
           <span v-else class="user-info" data-testid="user-info">
             {{ authStore.currentUser.username }}
+            <button
+              type="button"
+              class="menu-btn logout-btn"
+              data-testid="logout-btn"
+              @click="authStore.logout()"
+            >
+              Logout
+            </button>
           </span>
 
           <RouterLink
@@ -195,5 +203,16 @@ h1 {
   color: #a89a7a;
   text-align: center;
   letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.logout-btn {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  cursor: pointer;
+  letter-spacing: 0.03em;
 }
 </style>

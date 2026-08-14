@@ -757,7 +757,7 @@ server/src/
 │   ├── spaces.js       can be swapped without touching the other.
 │   ├── sqlite.js
 │   └── index.js        re-exports { saveGameState, loadGameState,
-│                         appendHistory, getUser, upsertUser, ... }
+│                         appendHistory, ... }
 │
 ├── auth/
 │   ├── discord.js      passport-discord strategy + callback handler

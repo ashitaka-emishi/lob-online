@@ -54,6 +54,17 @@ export class InvalidTokenError extends Error {
 function migrate(db) {
   const version = db.pragma('user_version', { simple: true });
 
+  // #698 — without this guard, a binary built against an older CURRENT_USER_VERSION that opens
+  // a DB file written by a newer binary falls through to the `version === 2: already migrated,
+  // nothing to do` comment below and proceeds silently against a schema it doesn't understand —
+  // a newer schema could rename/repurpose a column this binary still reads/writes under old
+  // assumptions. Fail loudly instead: refuse to start rather than risk silent data corruption.
+  if (version > CURRENT_USER_VERSION) {
+    throw new Error(
+      `Database schema version ${version} is newer than this binary supports (max ${CURRENT_USER_VERSION}). Refusing to start — upgrade the binary before opening this database.`
+    );
+  }
+
   if (version < 2) {
     db.transaction(() => {
       if (version === 0) {
@@ -94,9 +105,49 @@ function migrate(db) {
   // user_version === 2: already migrated, nothing to do
 }
 
+// #698 — shared `users`-table query builder. Previously createStore() (game persistence) and
+// discord.js's configurePassport() (passport identity lookups) each held their own byte-identical
+// upsertUser/getUser prepared statements — a future users-table schema change only had to be
+// applied here, but nothing enforced that, and only this copy (via gameSqlite.test.js's
+// `upsertUser / getUser` suite) had exercised coverage. discord.js now calls this directly
+// instead of duplicating the SQL.
+//
+// #700 review, second pass — createStore(db) always calls migrate(db) before this, so the
+// `users` table exists by the time its prepared statements run. discord.js's configurePassport(db)
+// calls this directly on a caller-supplied db, with no such guarantee enforced by this module —
+// it only works because server.js happens to call initDb() before configurePassport(getDb()).
+// Fail fast with a clear message rather than a cryptic "no such table: users" SqliteError if a
+// future caller (or a reordering in server.js) breaks that assumption.
+export function createUserQueries(db) {
+  const usersTableExists = db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'users'")
+    .get();
+  if (!usersTableExists) {
+    throw new Error(
+      '[gameSqlite] createUserQueries() called before migration — the users table does not exist yet. Call initDb() (or createStore(db)) on this connection first.'
+    );
+  }
+
+  const upsertUserStmt = db.prepare(
+    'INSERT INTO users (id, username, avatar, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET username = excluded.username, avatar = excluded.avatar'
+  );
+  const getUserStmt = db.prepare('SELECT id, username, avatar FROM users WHERE id = ?');
+
+  return {
+    upsertUser(id, username, avatar) {
+      upsertUserStmt.run(id, username, avatar ?? null, Date.now());
+    },
+    getUser(id) {
+      return getUserStmt.get(id) ?? null;
+    },
+  };
+}
+
 // Factory — hoists all prepared statements at construction time (#331)
 export function createStore(db) {
   migrate(db);
+
+  const userQueries = createUserQueries(db);
 
   const stmts = {
     insert: db.prepare(
@@ -114,10 +165,6 @@ export function createStore(db) {
     selectByUser: db.prepare(
       'SELECT id, status, created_at FROM games WHERE side_a_user_id = ? OR side_b_user_id = ? ORDER BY created_at DESC LIMIT 200'
     ),
-    upsertUser: db.prepare(
-      'INSERT INTO users (id, username, avatar, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET username = excluded.username, avatar = excluded.avatar'
-    ),
-    getUserById: db.prepare('SELECT id, username, avatar FROM users WHERE id = ?'),
     // #m9-discord-oauth review — reissue a side's token to its recorded owner (identity, not
     // sideToken, is the WHERE clause here) so a player who lost their session (logout, cookie
     // expiry, new device) can recover access to a game they already own, without needing the
@@ -174,13 +221,8 @@ export function createStore(db) {
       return stmts.selectByUser.all(userId, userId);
     },
 
-    upsertUser(id, username, avatar) {
-      stmts.upsertUser.run(id, username, avatar ?? null, Date.now());
-    },
-
-    getUser(id) {
-      return stmts.getUserById.get(id) ?? null;
-    },
+    upsertUser: userQueries.upsertUser,
+    getUser: userQueries.getUser,
 
     // Reissues the token for whichever recorded side (union/confederate) matches `faction`
     // AND is owned by `userId`. Returns true if a row was updated, false if this user does
@@ -227,6 +269,4 @@ export const deleteGame = (...args) => requireStore().deleteGame(...args);
 export const getGame = (...args) => requireStore().getGame(...args);
 export const listGames = (...args) => requireStore().listGames(...args);
 export const listGamesByUser = (...args) => requireStore().listGamesByUser(...args);
-export const upsertUser = (...args) => requireStore().upsertUser(...args);
-export const getUser = (...args) => requireStore().getUser(...args);
 export const reclaimSideToken = (...args) => requireStore().reclaimSideToken(...args);

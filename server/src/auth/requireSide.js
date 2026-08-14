@@ -16,8 +16,10 @@ import { getPlayerSession } from './session.js';
  * Both `req.game` and `req.side` are only set when `next()` is called.
  *
  * Response code matrix:
- *   401 — no valid player session (unauthenticated)
- *   403 — session exists but session.gameId ≠ req.params.id (authenticated for a different game)
+ *   403 — no game-side session for this game (session.gameId ≠ req.params.id, or no game-side
+ *         session at all — req.user is already guaranteed non-null here, requireAuth runs
+ *         first, so this is never "unauthenticated"; it's "authenticated but not authorized
+ *         for this game" — #698)
  *   404 — game row no longer exists in the DB (game was deleted)
  *   403 — game exists but session.sideToken does not match either side (stale/rotated token)
  *   403 — token matches, but the DB-recorded owner (side_a/b_user_id) ≠ req.user.id
@@ -26,11 +28,13 @@ import { getPlayerSession } from './session.js';
  */
 export function requireSide(req, res, next) {
   const player = getPlayerSession(req);
-  // No session at all → 401 (unauthenticated). Session exists but for a different game → 403
-  // (#553). These two cases must be distinct: 401 means "prove who you are"; 403 means "you
-  // proved who you are, but you don't own this game."
+  // #698 — was 401 ("unauthenticated") until this review: requireAuth (server.js) now runs
+  // before every route that uses this middleware and already guarantees the caller is
+  // authenticated, so reaching this branch means "no game-side session for THIS game," not
+  // "we don't know who you are." 403 matches the identical semantics of the very next check
+  // (wrong-game session) below.
   if (!player) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return res.status(403).json({ error: 'Forbidden' });
   }
   if (player.gameId !== req.params.id) {
     return res.status(403).json({ error: 'Forbidden' });
@@ -52,9 +56,11 @@ export function requireSide(req, res, next) {
   // attached to the session, making side_a_user_id/side_b_user_id purely decorative. Only
   // enforced when the DB has an owner recorded for the matched side — pre-migration rows and
   // any row created without a logged-in user (legacy data) have a null owner and are not
-  // affected. req.user is guaranteed non-null here because requireAuth runs first (server.js).
+  // affected. req.user is guaranteed non-null here because requireAuth runs first (server.js) —
+  // #700 review finding: the `?.` on req.user?.id elsewhere in this codebase implied a code
+  // path (req.user absent) that can't actually occur; normalized to bare access here too.
   const ownerId = player.sideToken === row.side_a_token ? row.side_a_user_id : row.side_b_user_id;
-  if (ownerId && req.user?.id !== ownerId) {
+  if (ownerId && req.user.id !== ownerId) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 

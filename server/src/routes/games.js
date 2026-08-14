@@ -33,25 +33,19 @@ import {
 import { SIDES } from '../util/sides.js';
 import { UUID_RE } from '../util/uuid.js';
 
-// Promisify session.regenerate — prevents session fixation by rotating the session ID
-// before writing new identity. (#411)
+// Promisify the session-fixation defense before writing new game-side identity. (#411)
 //
-// req.session.regenerate() discards the existing session outright and builds a fresh one,
-// which wipes passport's serialized identity (req.session.passport.user) along with it.
-// Left alone, the caller's Discord/dev-auth login silently drops on every create/join —
-// req.user is still populated for the remainder of THIS request (passport reads it once via
-// deserializeUser before the route runs), but any subsequent request presents as logged out,
-// since nothing had re-called req.login() to write it back into the new session. Capture
-// req.user before regenerating and restore it after, so the two session-fixation defenses
-// (SEC-M1 for sideToken, passport's own regenerate-friendly login) don't fight each other.
+// req.login() (passport's SessionManager.logIn, node_modules/passport/lib/sessionmanager.js)
+// unconditionally calls req.session.regenerate() itself before re-serializing the user into the
+// fresh session — there is no option to suppress it. An earlier version of this function called
+// req.session.regenerate() explicitly first and then req.login(), which regenerated the session
+// twice (two SQLite session-store round trips) for every create/join (#698). req.user is
+// guaranteed non-null here — every route that calls this is mounted under requireAuth
+// (server.js) — so req.login() alone provides both the identity write-back this function exists
+// for AND the SEC-M1 session-fixation rotation, in one store round trip.
 function regenerateSession(req) {
-  const user = req.user;
   return new Promise((resolve, reject) => {
-    req.session.regenerate((err) => {
-      if (err) return reject(err);
-      if (!user) return resolve();
-      req.login(user, (loginErr) => (loginErr ? reject(loginErr) : resolve()));
-    });
+    req.login(req.user, (err) => (err ? reject(err) : resolve()));
   });
 }
 
@@ -108,7 +102,7 @@ router.post('/', createLimiter, async (req, res) => {
     // SQLite row first, then Spaces. If saveGame fails, roll back the SQLite row so no
     // orphaned metadata row points at a missing Spaces object (#ARCH-H4).
     const sideToken = randomUUID();
-    createGame(id, sideToken, SIDES.UNION, discordWebhook ?? null, req.user?.id ?? null);
+    createGame(id, sideToken, SIDES.UNION, discordWebhook ?? null, req.user.id);
     try {
       await saveGame(id, state);
     } catch (err) {
@@ -177,7 +171,7 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
     // logged-in user as the owner of the requested side. Reissue a fresh token instead of
     // 409ing them out of a game they already own; ownership is enforced in SQL (see
     // reclaimSideToken), not just by this check.
-    if (req.user?.id) {
+    if (req.user.id) {
       const reclaimedToken = randomUUID();
       if (reclaimSideToken(id, side, req.user.id, reclaimedToken)) {
         await regenerateSession(req);
@@ -195,7 +189,7 @@ router.post('/:id/join', joinLimiter, async (req, res) => {
     const sideToken = randomUUID();
 
     // joinGame is atomic; typed errors map to 404/409 for remaining edge cases (#PERF-H1, #ARCH-M2)
-    joinGame(id, sideToken, side, req.user?.id ?? null);
+    joinGame(id, sideToken, side, req.user.id);
 
     // Rotate session id before writing identity — prevents session fixation (#SEC-M1)
     await regenerateSession(req);
@@ -280,7 +274,8 @@ const ACTION_ERROR_STATUS = {
 router.get('/:id/actions', requireSide, async (req, res) => {
   try {
     const { id } = req.params;
-    // 401/404/409/403 all handled by requireSide before we reach here.
+    // 403/404/409 all handled by requireSide before we reach here (#698 — was 401/404/409/403,
+    // requireSide's "no game-side session" branch is 403 now, not 401).
     const state = await loadGame(id);
     const validActions = getValidActions(state, req.side, { oob: _oob });
     res.json({ validActions });
